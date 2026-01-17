@@ -1,7 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { render, screen } from "@/test/custom-render";
 import { MyIssuesList } from "./MyIssuesList";
 
@@ -11,9 +11,9 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock company context
-vi.mock("@/hooks/useCompanyContext", () => ({
-  useCompany: () => ({ companySlug: "test-company" }),
+// Mock organization context
+vi.mock("@/hooks/useOrgContext", () => ({
+  useOrganization: () => ({ orgSlug: "test-organization" }),
 }));
 
 // Mock navigation hook
@@ -85,8 +85,8 @@ describe("MyIssuesList", () => {
   it("should render card header", () => {
     render(<MyIssuesList {...defaultProps} />);
 
-    expect(screen.getByText("My Issues")).toBeInTheDocument();
-    expect(screen.getByText("Track your assigned and created issues")).toBeInTheDocument();
+    expect(screen.getByText("Feed")).toBeInTheDocument();
+    expect(screen.getByText("Track your active contributions")).toBeInTheDocument();
   });
 
   it("should render loading skeleton when data is undefined", () => {
@@ -107,45 +107,43 @@ describe("MyIssuesList", () => {
   it("should render empty state when no assigned issues", () => {
     render(<MyIssuesList {...defaultProps} displayIssues={[]} />);
 
-    expect(screen.getByText("No issues found")).toBeInTheDocument();
-    expect(
-      screen.getByText("You don't have any assigned issues. Visit a project to get started."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Inbox Clear")).toBeInTheDocument();
+    expect(screen.getByText("No pending items in your feed.")).toBeInTheDocument();
   });
 
   it("should render empty state when no created issues", () => {
     render(<MyIssuesList {...defaultProps} issueFilter="created" displayIssues={[]} />);
 
-    expect(screen.getByText("No issues found")).toBeInTheDocument();
-    expect(
-      screen.getByText("You haven't created any issues yet. Visit a project to create one."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Inbox Clear")).toBeInTheDocument();
+    expect(screen.getByText("No pending items in your feed.")).toBeInTheDocument();
   });
 
   it("should render assigned issues tab with correct count", () => {
     render(<MyIssuesList {...defaultProps} />);
 
-    expect(screen.getByText(`Assigned (${mockIssues.length})`)).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: /Assigned/i });
+    expect(button).toHaveTextContent(`Assigned(${mockIssues.length})`);
   });
 
   it("should render created issues tab with correct count", () => {
     render(<MyIssuesList {...defaultProps} />);
 
-    expect(screen.getByText(`Created (${mockCreatedIssues.length})`)).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: /Created/i });
+    expect(button).toHaveTextContent(`Created(${mockCreatedIssues.length})`);
   });
 
   it("should highlight active tab (assigned)", () => {
     render(<MyIssuesList {...defaultProps} issueFilter="assigned" />);
 
-    const assignedTab = screen.getByLabelText("Show assigned issues");
-    expect(assignedTab).toHaveClass("border-brand-indigo-border");
+    const assignedTab = screen.getByLabelText("Filter Assigned");
+    expect(assignedTab).toHaveClass("border-brand-600");
   });
 
   it("should highlight active tab (created)", () => {
     render(<MyIssuesList {...defaultProps} issueFilter="created" />);
 
-    const createdTab = screen.getByLabelText("Show created issues");
-    expect(createdTab).toHaveClass("border-brand-indigo-border");
+    const createdTab = screen.getByLabelText("Filter Created");
+    expect(createdTab).toHaveClass("border-brand-600");
   });
 
   it("should call onFilterChange when switching to assigned tab", async () => {
@@ -156,7 +154,7 @@ describe("MyIssuesList", () => {
       <MyIssuesList {...defaultProps} onFilterChange={onFilterChange} issueFilter="created" />,
     );
 
-    const assignedTab = screen.getByLabelText("Show assigned issues");
+    const assignedTab = screen.getByLabelText("Filter Assigned");
     await user.click(assignedTab);
 
     expect(onFilterChange).toHaveBeenCalledWith("assigned");
@@ -168,7 +166,7 @@ describe("MyIssuesList", () => {
 
     render(<MyIssuesList {...defaultProps} onFilterChange={onFilterChange} />);
 
-    const createdTab = screen.getByLabelText("Show created issues");
+    const createdTab = screen.getByLabelText("Filter Created");
     await user.click(createdTab);
 
     expect(onFilterChange).toHaveBeenCalledWith("created");
@@ -212,28 +210,28 @@ describe("MyIssuesList", () => {
     await user.click(firstIssue);
 
     expect(mockNavigate).toHaveBeenCalledWith({
-      to: ROUTE_PATTERNS.projects.board,
-      params: { companySlug: "test-company", key: "PROJ" },
+      to: ROUTES.projects.board.path,
+      params: { orgSlug: "test-organization", key: "PROJ" },
     });
   });
 
   it("should render View My Workspaces button in empty state", () => {
     render(<MyIssuesList {...defaultProps} displayIssues={[]} />);
 
-    expect(screen.getByText("View My Workspaces")).toBeInTheDocument();
+    expect(screen.getByText("Explore Projects")).toBeInTheDocument();
   });
 
-  it("should navigate to projects when clicking View My Workspaces", async () => {
+  it("should navigate to projects when clicking Explore Projects", async () => {
     const user = userEvent.setup();
 
     render(<MyIssuesList {...defaultProps} displayIssues={[]} />);
 
-    const button = screen.getByText("View My Workspaces");
+    const button = screen.getByText("Explore Projects");
     await user.click(button);
 
     expect(mockNavigate).toHaveBeenCalledWith({
-      to: ROUTE_PATTERNS.workspaces.list,
-      params: { companySlug: "test-company" },
+      to: ROUTES.workspaces.list.path,
+      params: { orgSlug: "test-organization" },
     });
   });
 
@@ -254,8 +252,8 @@ describe("MyIssuesList", () => {
   it("should have correct accessibility attributes", () => {
     render(<MyIssuesList {...defaultProps} />);
 
-    const assignedTab = screen.getByLabelText("Show assigned issues");
-    const createdTab = screen.getByLabelText("Show created issues");
+    const assignedTab = screen.getByLabelText("Filter Assigned");
+    const createdTab = screen.getByLabelText("Filter Created");
 
     expect(assignedTab).toHaveAttribute("type", "button");
     expect(createdTab).toHaveAttribute("type", "button");
@@ -266,7 +264,9 @@ describe("MyIssuesList", () => {
       <MyIssuesList {...defaultProps} myIssues={[]} myCreatedIssues={[]} displayIssues={[]} />,
     );
 
-    expect(screen.getByText("Assigned (0)")).toBeInTheDocument();
-    expect(screen.getByText("Created (0)")).toBeInTheDocument();
+    const assignedBtn = screen.getByRole("button", { name: /Assigned/i });
+    expect(assignedBtn).toHaveTextContent("Assigned(0)");
+    const createdBtn = screen.getByRole("button", { name: /Created/i });
+    expect(createdBtn).toHaveTextContent("Created(0)");
   });
 });

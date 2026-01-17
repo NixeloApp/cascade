@@ -8,12 +8,12 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
-import { ROUTE_PATTERNS } from "@/config/routes";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { ROUTES } from "@/config/routes";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { CreateProjectFromTemplate } from "./CreateProjectFromTemplate";
 
 export function ProjectsList() {
-  const { companyId, companySlug } = useCompany();
+  const { organizationId, orgSlug } = useOrganization();
   const navigate = useNavigate();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -24,15 +24,15 @@ export function ProjectsList() {
     loadMore,
   } = usePaginatedQuery(
     api.projects.getCurrentUserProjects,
-    { companyId },
+    { organizationId },
     { initialNumItems: 20 },
   );
 
   const handleProjectCreated = async (_projectId: string, projectKey: string) => {
     setIsCreateOpen(false);
     await navigate({
-      to: ROUTE_PATTERNS.projects.board,
-      params: { companySlug, key: projectKey },
+      to: ROUTES.projects.board.path,
+      params: { orgSlug, key: projectKey },
     });
   };
 
@@ -76,8 +76,8 @@ export function ProjectsList() {
           {projects.map((project) => (
             <Link
               key={project._id}
-              to={ROUTE_PATTERNS.projects.board}
-              params={{ companySlug, key: project.key }}
+              to={ROUTES.projects.board.path}
+              params={{ orgSlug, key: project.key }}
             >
               <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
                 <Flex direction="column" gap="md">

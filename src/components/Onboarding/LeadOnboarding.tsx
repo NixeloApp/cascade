@@ -32,10 +32,10 @@ export function LeadOnboarding({
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
 
   const createSampleProject = useMutation(api.onboarding.createSampleProject);
-  const createCompany = useMutation(api.companies.createCompany);
+  const createOrganization = useMutation(api.organizations.createOrganization);
   const completeOnboarding = useMutation(api.onboarding.completeOnboardingFlow);
 
-  const handleCreateWorkspace = async () => {
+  const handleCreateOrganization = async () => {
     if (!projectName.trim()) {
       setWorkspaceError("Please enter a project name");
       return;
@@ -45,7 +45,7 @@ export function LeadOnboarding({
     setWorkspaceError(null);
 
     try {
-      const result = await createCompany({
+      const result = await createOrganization({
         name: projectName.trim(),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
@@ -190,7 +190,7 @@ export function LeadOnboarding({
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !isCreating) {
-                  handleCreateWorkspace();
+                  handleCreateOrganization();
                 }
               }}
               className="text-center text-lg"
@@ -206,7 +206,7 @@ export function LeadOnboarding({
           <Button
             variant="primary"
             size="lg"
-            onClick={handleCreateWorkspace}
+            onClick={handleCreateOrganization}
             disabled={isCreating || !projectName.trim()}
             className="w-full h-12 text-lg font-semibold transition-all duration-300 hover:shadow-xl active:scale-95"
           >

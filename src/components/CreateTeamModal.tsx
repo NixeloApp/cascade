@@ -18,8 +18,8 @@ import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
-import { ROUTE_PATTERNS } from "@/config/routes";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { ROUTES } from "@/config/routes";
+import { useOrganization } from "@/hooks/useOrgContext";
 
 interface CreateTeamModalProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ export function CreateTeamModal({
   workspaceId,
   workspaceSlug,
 }: CreateTeamModalProps) {
-  const { companyId, companySlug } = useCompany();
+  const { organizationId, orgSlug } = useOrganization();
   const navigate = useNavigate();
   const createTeam = useMutation(api.teams.createTeam);
 
@@ -53,14 +53,14 @@ export function CreateTeamModal({
         name,
         description: description.trim() || undefined,
         isPrivate,
-        companyId: companyId as Id<"companies">,
+        organizationId: organizationId as Id<"organizations">,
         workspaceId,
       });
 
       toast.success("Team created successfully");
       navigate({
-        to: ROUTE_PATTERNS.workspaces.teams.detail,
-        params: { companySlug, workspaceSlug, teamSlug },
+        to: ROUTES.workspaces.teams.detail.path,
+        params: { orgSlug, workspaceSlug, teamSlug },
       });
       onClose();
 

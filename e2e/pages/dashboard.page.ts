@@ -139,13 +139,13 @@ export class DashboardPage extends BasePage {
     this.loadingSpinner = page.locator(".animate-spin");
 
     // Dashboard specific content - match actual UI headings
-    this.myIssuesSection = page.getByRole("heading", { name: /my issues/i });
-    this.projectsSection = page.getByRole("heading", { name: /my workspaces|my projects/i });
+    this.myIssuesSection = page.getByRole("heading", { name: /feed/i }).first();
+    this.projectsSection = page.getByRole("heading", { name: /workspaces/i });
     this.recentActivitySection = page.getByText(/recent activity/i);
     this.quickStatsSection = page.getByText(/quick stats/i);
     // Issue filter tabs: "Assigned (0)" and "Created (0)"
-    this.assignedTab = page.getByRole("button", { name: /assigned/i });
-    this.createdTab = page.getByRole("button", { name: /created/i });
+    this.assignedTab = page.getByRole("button", { name: /filter assigned/i });
+    this.createdTab = page.getByRole("button", { name: /filter created/i });
 
     // Modals - Command Palette (no aria-label, identify by input placeholder)
     this.commandPaletteInput = page.getByPlaceholder(/type a command/i);
@@ -185,9 +185,9 @@ export class DashboardPage extends BasePage {
   // Navigation
   // ===================
 
-  async goto(companySlug?: string) {
-    // Use provided slug or default to TEST_COMPANY_SLUG
-    const slug = companySlug || "nixelo-e2e";
+  async goto(orgSlug?: string) {
+    // Use provided slug or default to TEST_ORG_SLUG
+    const slug = orgSlug || "nixelo-e2e";
     const dashboardUrl = `/${slug}/dashboard`;
 
     // Determine baseURL from current URL
@@ -470,7 +470,7 @@ export class DashboardPage extends BasePage {
   }
 
   async expectLoaded() {
-    // Wait longer for company context to load (auth tokens, company data)
+    // Wait longer for organization context to load (auth tokens, organization data)
     await expect(this.loadingSpinner).not.toBeVisible({ timeout: 15000 });
   }
 }

@@ -2,18 +2,18 @@
  * Workspaces - Department-level organization
  *
  * Workspaces sit above teams in the hierarchy:
- * Company → Workspaces (departments) → Teams → Projects → Issues
+ * organization → Workspaces (departments) → Teams → Projects → Issues
  */
 
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { isCompanyAdmin } from "./companies";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { isOrganizationAdmin } from "./organizations";
 
 /**
  * Create a new workspace (department)
- * Only company admins can create workspaces
+ * Only organization admins can create workspaces
  */
 export const create = mutation({
   args: {
@@ -21,20 +21,22 @@ export const create = mutation({
     slug: v.string(),
     description: v.optional(v.string()),
     icon: v.optional(v.string()),
-    companyId: v.id("companies"),
+    organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    // Check if user is company admin
-    const isAdmin = await isCompanyAdmin(ctx, args.companyId, userId);
-    if (!isAdmin) throw new Error("Only company admins can create workspaces");
+    // Check if user is organization admin
+    const isAdmin = await isOrganizationAdmin(ctx, args.organizationId, userId);
+    if (!isAdmin) throw new Error("Only organization admins can create workspaces");
 
-    // Check if slug is unique within company
+    // Check if slug is unique within organization
     const existing = await ctx.db
       .query("workspaces")
-      .withIndex("by_company_slug", (q) => q.eq("companyId", args.companyId).eq("slug", args.slug))
+      .withIndex("by_organization_slug", (q) =>
+        q.eq("organizationId", args.organizationId).eq("slug", args.slug),
+      )
       .first();
 
     if (existing) {
@@ -46,7 +48,7 @@ export const create = mutation({
       slug: args.slug,
       description: args.description,
       icon: args.icon,
-      companyId: args.companyId,
+      organizationId: args.organizationId,
       createdBy: userId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -57,17 +59,17 @@ export const create = mutation({
 });
 
 /**
- * List all workspaces for a company
+ * List all workspaces for a organization
  */
 export const list = query({
-  args: { companyId: v.id("companies") },
+  args: { organizationId: v.id("organizations") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
     const workspaces = await ctx.db
       .query("workspaces")
-      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
       .collect();
 
     return workspaces;
@@ -95,7 +97,7 @@ export const get = query({
  */
 export const getBySlug = query({
   args: {
-    companyId: v.id("companies"),
+    organizationId: v.id("organizations"),
     slug: v.string(),
   },
   handler: async (ctx, args) => {
@@ -104,7 +106,9 @@ export const getBySlug = query({
 
     const workspace = await ctx.db
       .query("workspaces")
-      .withIndex("by_company_slug", (q) => q.eq("companyId", args.companyId).eq("slug", args.slug))
+      .withIndex("by_organization_slug", (q) =>
+        q.eq("organizationId", args.organizationId).eq("slug", args.slug),
+      )
       .first();
 
     if (!workspace) throw new Error("Workspace not found");
@@ -136,11 +140,10 @@ export const update = mutation({
     const workspace = await ctx.db.get(args.id);
     if (!workspace) throw new Error("Workspace not found");
 
-    // Check permissions: Only company admins can update workspaces
-    // Check permissions: Only company admins can delete workspaces
-    const isAdmin = await isCompanyAdmin(ctx, workspace.companyId, userId);
+    // Check permissions: Only organization admins can update workspaces
+    const isAdmin = await isOrganizationAdmin(ctx, workspace.organizationId, userId);
     if (!isAdmin) {
-      throw new Error("Only company admins can perform this action");
+      throw new Error("Only organization admins can perform this action");
     }
 
     await ctx.db.patch(args.id, {
@@ -167,12 +170,12 @@ export const remove = mutation({
     const workspace = await ctx.db.get(args.id);
     if (!workspace) throw new Error("Workspace not found");
 
-    // Check permissions (workspace admin or company admin)
+    // Check permissions (workspace admin or organization admin)
     const isCreator = workspace.createdBy === userId;
-    const isCompAdmin = await isCompanyAdmin(ctx, workspace.companyId, userId);
+    const isOrgAdmin = await isOrganizationAdmin(ctx, workspace.organizationId, userId);
 
-    if (!(isCreator || isCompAdmin)) {
-      throw new Error("Only workspace admins or company admins can delete workspaces");
+    if (!(isCreator || isOrgAdmin)) {
+      throw new Error("Only workspace admins or organization admins can delete workspaces");
     }
 
     // Check if workspace has teams or projects

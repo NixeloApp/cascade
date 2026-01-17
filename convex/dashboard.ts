@@ -326,3 +326,53 @@ export const getMyStats = query({
     };
   },
 });
+
+// Get the single most important task for the Focus Zone
+export const getFocusTask = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    // Fetch highest priority uncompleted tasks
+    const issues = await ctx.db
+      .query("issues")
+      .withIndex("by_assignee", (q) => q.eq("assigneeId", userId))
+      .filter((q) => q.and(notDeleted(q), q.neq(q.field("status"), "done")))
+      .collect();
+
+    if (issues.length === 0) return null;
+
+    // Priority ordering: highest > high > medium > low > lowest
+    const priorityMap: Record<string, number> = {
+      highest: 5,
+      high: 4,
+      medium: 3,
+      low: 2,
+      lowest: 1,
+    };
+
+    const focusTask = issues.sort((a, b) => {
+      const pA = priorityMap[a.priority || "none"] || 0;
+      const pB = priorityMap[b.priority || "none"] || 0;
+      if (pA !== pB) return pB - pA;
+      return b.updatedAt - a.updatedAt; // Newest first for same priority
+    })[0];
+
+    // Enrich with project details
+    if (focusTask.projectId) {
+      const project = await ctx.db.get(focusTask.projectId);
+      return {
+        ...focusTask,
+        projectName: project?.name || "Unknown",
+        projectKey: project?.key || "???",
+      };
+    }
+
+    return {
+      ...focusTask,
+      projectName: "Unknown",
+      projectKey: "???",
+    };
+  },
+});

@@ -15,7 +15,7 @@ import {
   resetTestWorkspaceEndpoint,
   seedTemplatesEndpoint,
   setupRbacProjectEndpoint,
-  updateCompanySettingsEndpoint,
+  updateOrganizationSettingsEndpoint,
   verifyTestUserEndpoint,
 } from "./e2e";
 import {
@@ -143,11 +143,11 @@ http.route({
   handler: debugVerifyPasswordEndpoint,
 });
 
-// Update company settings for testing different profiles
+// Update organization settings for testing different profiles
 http.route({
-  path: "/e2e/update-company-settings",
+  path: "/e2e/update-organization-settings",
   method: "POST",
-  handler: updateCompanySettingsEndpoint,
+  handler: updateOrganizationSettingsEndpoint,
 });
 
 // Seed built-in project templates

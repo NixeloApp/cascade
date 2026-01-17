@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 
 export const Route = createFileRoute("/_auth/onboarding")({
   component: OnboardingPage,
@@ -27,7 +27,7 @@ function OnboardingPage() {
 
   // Queries
   const inviteStatus = useQuery(api.onboarding.checkInviteStatus);
-  const userCompanies = useQuery(api.companies.getUserCompanies);
+  const userOrganizations = useQuery(api.organizations.getUserOrganizations);
 
   // Mutations
   const setPersona = useMutation(api.onboarding.setOnboardingPersona);
@@ -57,40 +57,40 @@ function OnboardingPage() {
     }
   };
 
-  // Navigate to the user's company dashboard
-  const navigateToCompany = () => {
-    if (userCompanies && userCompanies.length > 0) {
-      // Use the first company available
-      const slug = userCompanies[0].slug;
+  // Navigate to the user's organization dashboard
+  const navigateToOrganization = () => {
+    if (userOrganizations && userOrganizations.length > 0) {
+      // Use the first organization available
+      const slug = userOrganizations[0].slug;
       if (slug) {
         navigate({
-          to: ROUTE_PATTERNS.dashboard,
-          params: { companySlug: slug },
+          to: ROUTES.dashboard.path,
+          params: { orgSlug: slug },
         });
         return;
       }
     }
 
-    // Fallback - redirect to /app gateway to trigger company initialization
+    // Fallback - redirect to /app gateway to trigger organization initialization
     // (This is essential for the "team_member" flow or if the query is momentarily stale)
-    navigate({ to: ROUTE_PATTERNS.app });
+    navigate({ to: ROUTES.app.path });
   };
 
   const handleComplete = async () => {
     await completeOnboarding();
-    navigateToCompany();
+    navigateToOrganization();
   };
 
   const handleSkip = async () => {
     await completeOnboarding();
-    navigateToCompany();
+    navigateToOrganization();
   };
 
   // Called when project is created during lead/member flow
   const handleWorkspaceCreated = (slug: string) => {
     navigate({
-      to: ROUTE_PATTERNS.dashboard,
-      params: { companySlug: slug },
+      to: ROUTES.dashboard.path,
+      params: { orgSlug: slug },
     });
   };
 

@@ -5,8 +5,8 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/sidebar/SidebarTeamItem";
-import { ROUTE_PATTERNS } from "@/config/routes";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { ROUTES } from "@/config/routes";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import {
   Calendar,
@@ -34,11 +34,11 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { isCollapsed, isMobileOpen, toggleCollapse, closeMobile } = useSidebarState();
 
-  // Get company from URL context
-  const { companySlug, companyName, companyId } = useCompany();
+  // Get organization from URL context
+  const { orgSlug, organizationName, organizationId } = useOrganization();
 
   // All hooks must be called unconditionally
-  const isAdmin = useQuery(api.users.isCompanyAdmin);
+  const isAdmin = useQuery(api.users.isOrganizationAdmin);
   const showTimeTracking = isAdmin === true;
 
   // Section expand states
@@ -54,8 +54,8 @@ export function AppSidebar() {
   // Data
   const documentsResult = useQuery(api.documents.list, { limit: 11 });
   const documents = documentsResult?.documents;
-  const workspaces = useQuery(api.workspaces.list, { companyId });
-  const teams = useQuery(api.teams.getCompanyTeams, { companyId });
+  const workspaces = useQuery(api.workspaces.list, { organizationId });
+  const teams = useQuery(api.teams.getOrganizationTeams, { organizationId });
   const myProjects = useQuery(api.dashboard.getMyProjects);
   const defaultProject = myProjects?.[0];
 
@@ -75,8 +75,8 @@ export function AppSidebar() {
         isPublic: false,
       });
       navigate({
-        to: ROUTE_PATTERNS.documents.detail,
-        params: { companySlug, id: docId },
+        to: ROUTES.documents.detail.path,
+        params: { orgSlug, id: docId },
       });
       showSuccess("Document created");
       closeMobile();
@@ -91,11 +91,11 @@ export function AppSidebar() {
       await createWorkspace({
         name: "New Workspace",
         slug,
-        companyId,
+        organizationId,
       });
       navigate({
-        to: ROUTE_PATTERNS.workspaces.detail,
-        params: { companySlug, workspaceSlug: slug },
+        to: ROUTES.workspaces.detail.path,
+        params: { orgSlug, workspaceSlug: slug },
       });
       showSuccess("Workspace created");
       closeMobile();
@@ -156,12 +156,12 @@ export function AppSidebar() {
         )}
       >
         <Flex direction="column" className="h-full">
-          {/* Header with company name and collapse toggle */}
+          {/* Header with organization name and collapse toggle */}
           <Flex align="center" justify="between" className="p-4 border-b border-ui-border-primary">
             {!isCollapsed && (
-              <Link to={ROUTE_PATTERNS.dashboard} params={{ companySlug }} onClick={handleNavClick}>
+              <Link to={ROUTES.dashboard.path} params={{ orgSlug }} onClick={handleNavClick}>
                 <Typography variant="h3" className="text-lg font-bold truncate max-w-[160px]">
-                  {companyName}
+                  {organizationName}
                 </Typography>
               </Link>
             )}
@@ -184,8 +184,8 @@ export function AppSidebar() {
           <Flex as="nav" direction="column" gap="xs" className="flex-1 overflow-y-auto p-2">
             {/* Dashboard */}
             <NavItem
-              to={ROUTE_PATTERNS.dashboard}
-              params={{ companySlug }}
+              to={ROUTES.dashboard.path}
+              params={{ orgSlug }}
               icon={Home}
               label="Dashboard"
               isActive={isActive("/dashboard")}
@@ -196,8 +196,8 @@ export function AppSidebar() {
             {/* Calendar - Links to first project's calendar */}
             {defaultProject && (
               <NavItem
-                to={ROUTE_PATTERNS.projects.calendar}
-                params={{ companySlug, key: defaultProject.key }}
+                to={ROUTES.projects.calendar.path}
+                params={{ orgSlug, key: defaultProject.key }}
                 icon={Calendar}
                 label="Calendar"
                 isActive={isActive("/calendar")}
@@ -215,14 +215,14 @@ export function AppSidebar() {
               isActive={isActive("/documents")}
               isCollapsed={isCollapsed}
               onAdd={handleCreateDocument}
-              to={ROUTE_PATTERNS.documents.list}
-              params={{ companySlug }}
+              to={ROUTES.documents.list.path}
+              params={{ orgSlug }}
               onClick={handleNavClick}
               data-tour="nav-documents"
             >
               <NavSubItem
-                to={ROUTE_PATTERNS.documents.templates}
-                params={{ companySlug }}
+                to={ROUTES.documents.templates.path}
+                params={{ orgSlug }}
                 label="Templates"
                 isActive={location.pathname.includes("/documents/templates")}
                 onClick={handleNavClick}
@@ -232,8 +232,8 @@ export function AppSidebar() {
               {(documents?.documents ?? []).slice(0, 10).map((doc: Doc<"documents">) => (
                 <NavSubItem
                   key={doc._id}
-                  to={ROUTE_PATTERNS.documents.detail}
-                  params={{ companySlug, id: doc._id }}
+                  to={ROUTES.documents.detail.path}
+                  params={{ orgSlug, id: doc._id }}
                   label={doc.title}
                   isActive={location.pathname.includes(`/documents/${doc._id}`)}
                   onClick={handleNavClick}
@@ -254,8 +254,8 @@ export function AppSidebar() {
               isActive={isActive("/workspaces")}
               isCollapsed={isCollapsed}
               onAdd={handleCreateWorkspace}
-              to={ROUTE_PATTERNS.workspaces.list}
-              params={{ companySlug }}
+              to={ROUTES.workspaces.list.path}
+              params={{ orgSlug }}
               onClick={handleNavClick}
               data-tour="nav-projects"
             >
@@ -281,8 +281,8 @@ export function AppSidebar() {
                         )}
                       </Button>
                       <NavSubItem
-                        to={ROUTE_PATTERNS.workspaces.detail}
-                        params={{ companySlug, workspaceSlug: workspace.slug }}
+                        to={ROUTES.workspaces.detail.path}
+                        params={{ orgSlug, workspaceSlug: workspace.slug }}
                         label={workspace.name}
                         isActive={location.pathname.includes(`/workspaces/${workspace.slug}`)}
                         onClick={handleNavClick}
@@ -308,7 +308,7 @@ export function AppSidebar() {
                           key={team._id}
                           team={team}
                           workspaceSlug={workspace.slug}
-                          companySlug={companySlug}
+                          orgSlug={orgSlug}
                           isExpanded={expandedTeams.has(team.slug)}
                           onToggle={toggleTeam}
                           onNavClick={handleNavClick}
@@ -321,8 +321,8 @@ export function AppSidebar() {
             {/* Time Tracking (admin only) */}
             {showTimeTracking && (
               <NavItem
-                to={ROUTE_PATTERNS.timeTracking}
-                params={{ companySlug }}
+                to={ROUTES.timeTracking.path}
+                params={{ orgSlug }}
                 icon={Clock}
                 label="Time Tracking"
                 isActive={isActive("/time-tracking")}
@@ -336,8 +336,8 @@ export function AppSidebar() {
           {/* Bottom section - Settings */}
           <div className="p-2 border-t border-ui-border-primary">
             <NavItem
-              to={ROUTE_PATTERNS.settings.profile}
-              params={{ companySlug }}
+              to={ROUTES.settings.profile.path}
+              params={{ orgSlug }}
               icon={Settings}
               label="Settings"
               isActive={isActive("/settings")}

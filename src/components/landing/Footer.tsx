@@ -40,7 +40,7 @@ export function Footer() {
 
           <div>
             <Typography variant="h4" className="font-semibold mb-4 text-ui-text-primary">
-              Company
+              organization
             </Typography>
             <ul className="space-y-2">
               {["About", "Blog", "Careers", "Contact"].map((item) => (

@@ -2,15 +2,15 @@ import { api } from "@convex/_generated/api";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useEffect } from "react";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { AppSplashScreen } from "./AppSplashScreen";
 
 const PUBLIC_PATHS = [
-  ROUTE_PATTERNS.home as string,
-  ROUTE_PATTERNS.signin as string,
-  ROUTE_PATTERNS.signup as string,
-  ROUTE_PATTERNS.forgotPassword as string,
-  ROUTE_PATTERNS.invite as string,
+  ROUTES.home.path as string,
+  ROUTES.signin.path as string,
+  ROUTES.signup.path as string,
+  ROUTES.forgotPassword.path as string,
+  ROUTES.invite.path as string,
 ];
 
 /**
@@ -32,7 +32,7 @@ function isPathPublic(pathname: string): boolean {
 
 /**
  * SmartAuthGuard - Centralized "bouncer" for authenticated routes.
- * It ensures the user is on the correct page based on their onboarding and company status.
+ * It ensures the user is on the correct page based on their onboarding and organization status.
  */
 export function SmartAuthGuard({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate();
@@ -40,9 +40,9 @@ export function SmartAuthGuard({ children }: { children?: React.ReactNode }) {
   const redirectPath = useQuery(api.auth.getRedirectDestination);
 
   const isPublicPath = isPathPublic(location.pathname);
-  const isAppGate = location.pathname === ROUTE_PATTERNS.app;
-  const isOnboarding = location.pathname === ROUTE_PATTERNS.onboarding;
-  const shouldBeOnboarding = redirectPath === ROUTE_PATTERNS.onboarding;
+  const isAppGate = location.pathname === ROUTES.app.path;
+  const isOnboarding = location.pathname === ROUTES.onboarding.path;
+  const shouldBeOnboarding = redirectPath === ROUTES.onboarding.path;
   const isCorrectPath = location.pathname === (redirectPath as string);
 
   // Check for any sign of a Convex auth token in local storage
@@ -66,7 +66,7 @@ export function SmartAuthGuard({ children }: { children?: React.ReactNode }) {
 
     // Case 2: User is NOT logged in but trying to access a protected route
     if (redirectPath === null && !isPublicPath && !hasToken) {
-      navigate({ to: ROUTE_PATTERNS.home, replace: true });
+      navigate({ to: ROUTES.home.path, replace: true });
     }
   }, [
     redirectPath,

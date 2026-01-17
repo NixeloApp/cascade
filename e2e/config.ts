@@ -137,17 +137,17 @@ export const TEST_USERS = {
 export const DEFAULT_TEST_USER = TEST_USERS.teamLead;
 
 /**
- * Test company configuration
- * All test users (teamLead, teamMember, viewer) share this single company.
+ * Test organization configuration
+ * All test users (teamLead, teamMember, viewer) share this single organization.
  */
-export const TEST_COMPANY_NAME = "Nixelo E2E";
-export const TEST_COMPANY_SLUG = "nixelo-e2e";
+export const TEST_ORG_NAME = "Nixelo E2E";
+export const TEST_ORG_SLUG = "nixelo-e2e";
 
 /**
- * Company Settings Type
+ * Organization Settings Type
  * Matches the schema in convex/schema.ts
  */
-export interface CompanySettings {
+export interface OrganizationSettings {
   defaultMaxHoursPerWeek: number;
   defaultMaxHoursPerDay: number;
   requiresTimeApproval: boolean;
@@ -161,7 +161,7 @@ export interface CompanySettings {
  * Most tests should use 'default'. Only use specific profiles
  * when testing features affected by that setting.
  */
-export const SETTINGS_PROFILES: Record<string, CompanySettings> = {
+export const SETTINGS_PROFILES: Record<string, OrganizationSettings> = {
   // Default profile - used by most tests
   default: {
     defaultMaxHoursPerWeek: 40,
@@ -226,8 +226,8 @@ export const E2E_ENDPOINTS = {
   cleanupRbacProject: `${CONVEX_SITE_URL}/e2e/cleanup-rbac-project`,
   // Debug: Verify password against stored hash (POST)
   debugVerifyPassword: `${CONVEX_SITE_URL}/e2e/debug-verify-password`,
-  // Update company settings (POST) - for testing different settings profiles
-  updateCompanySettings: `${CONVEX_SITE_URL}/e2e/update-company-settings`,
+  // Update organization settings (POST) - for testing different settings profiles
+  updateOrganizationSettings: `${CONVEX_SITE_URL}/e2e/update-organization-settings`,
   // Seed project templates (POST)
   seedTemplates: `${CONVEX_SITE_URL}/e2e/seed-templates`,
   // Force delete ALL test users (POST)
@@ -241,11 +241,11 @@ export const RBAC_TEST_CONFIG = {
   projectKey: "RBAC",
   projectName: "RBAC Test Project",
   /**
-   * Company slug for URL paths.
-   * Uses "dashboard" because that's the auto-created company when test users first log in.
-   * The RBAC setup will use this existing company instead of creating a new one.
+   * Organization slug for URL paths.
+   * Uses "dashboard" because that's the auto-created organization when test users first log in.
+   * The RBAC setup will use this existing organization instead of creating a new one.
    */
-  companySlug: TEST_COMPANY_SLUG,
+  orgSlug: TEST_ORG_SLUG,
 };
 
 /**

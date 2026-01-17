@@ -7,7 +7,7 @@ import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
   asAuthenticatedUser,
-  createCompanyAdmin,
+  createOrganizationAdmin,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -225,36 +225,36 @@ describe("Sprints", () => {
       expect(sprints).toEqual([]);
     });
 
-    it("should return sprints for company-visible projects to company members", async () => {
+    it("should return sprints for organization-visible projects to organization members", async () => {
       const t = convexTest(schema, modules);
       const owner = await createTestUser(t, { name: "Owner" });
-      const companyMember = await createTestUser(t, { name: "Company Member" });
-      const { companyId, workspaceId, teamId } = await createCompanyAdmin(t, owner);
+      const organizationMember = await createTestUser(t, { name: "organization Member" });
+      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, owner);
 
-      // Add company member (not project member)
+      // Add organization member (not project member)
       const now = Date.now();
       await t.run(async (ctx) => {
-        await ctx.db.insert("companyMembers", {
-          companyId,
-          userId: companyMember,
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: organizationMember,
           role: "member",
           addedBy: owner,
           addedAt: now,
         });
       });
 
-      // Create company-visible project
+      // Create organization-visible project
       const projectId = await t.run(async (ctx) => {
         return ctx.db.insert("projects", {
-          name: "Company Visible Project",
+          name: "organization Visible Project",
           key: "COMPVIS",
-          companyId,
+          organizationId,
           workspaceId,
           ownerId: owner,
           createdBy: owner,
           createdAt: now,
           updatedAt: now,
-          isPublic: true, // company-visible
+          isPublic: true, // organization-visible
           boardType: "kanban",
           workflowStates: [],
         });
@@ -263,15 +263,15 @@ describe("Sprints", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       await asOwner.mutation(api.sprints.create, {
         projectId,
-        name: "Company Sprint",
+        name: "organization Sprint",
       });
 
-      // Company member can see company-visible project sprints
-      const asCompanyMember = asAuthenticatedUser(t, companyMember);
-      const sprints = await asCompanyMember.query(api.sprints.listByProject, { projectId });
+      // organization member can see organization-visible project sprints
+      const asOrganizationMember = asAuthenticatedUser(t, organizationMember);
+      const sprints = await asOrganizationMember.query(api.sprints.listByProject, { projectId });
 
       expect(sprints).toHaveLength(1);
-      expect(sprints[0]?.name).toBe("Company Sprint");
+      expect(sprints[0]?.name).toBe("organization Sprint");
     });
 
     it("should return empty array for unauthenticated users", async () => {

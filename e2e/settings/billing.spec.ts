@@ -1,4 +1,4 @@
-import { SETTINGS_PROFILES, TEST_COMPANY_SLUG } from "../config";
+import { SETTINGS_PROFILES, TEST_ORG_SLUG } from "../config";
 import { authenticatedTest, expect } from "../fixtures";
 import { testUserService } from "../utils";
 
@@ -23,20 +23,20 @@ authenticatedTest.describe("Billing Settings", () => {
 
   // Reset to default settings after each test
   authenticatedTest.afterEach(async () => {
-    await testUserService.updateCompanySettings(TEST_COMPANY_SLUG, SETTINGS_PROFILES.default);
+    await testUserService.updateOrganizationSettings(TEST_ORG_SLUG, SETTINGS_PROFILES.default);
   });
 
   authenticatedTest(
     "billing enabled shows billable checkbox on time entries",
-    async ({ dashboardPage, companySlug }) => {
+    async ({ dashboardPage, orgSlug }) => {
       // Ensure billing is enabled
-      const result = await testUserService.updateCompanySettings(companySlug, {
+      const result = await testUserService.updateOrganizationSettings(orgSlug, {
         billingEnabled: true,
       });
       expect(result.success).toBe(true);
 
       // Navigate to time tracking
-      await dashboardPage.goto(companySlug);
+      await dashboardPage.goto(orgSlug);
 
       // TODO: Navigate to time entry form and verify billable checkbox is visible
       // This is a placeholder - implement actual UI checks when time entry form exists
@@ -45,15 +45,15 @@ authenticatedTest.describe("Billing Settings", () => {
 
   authenticatedTest(
     "billing disabled hides billable checkbox on time entries",
-    async ({ dashboardPage, companySlug }) => {
+    async ({ dashboardPage, orgSlug }) => {
       // Disable billing
-      const result = await testUserService.updateCompanySettings(companySlug, {
+      const result = await testUserService.updateOrganizationSettings(orgSlug, {
         billingEnabled: false,
       });
       expect(result.success).toBe(true);
 
       // Navigate to time tracking
-      await dashboardPage.goto(companySlug);
+      await dashboardPage.goto(orgSlug);
 
       // TODO: Navigate to time entry form and verify billable checkbox is NOT visible
       // This is a placeholder - implement actual UI checks when time entry form exists

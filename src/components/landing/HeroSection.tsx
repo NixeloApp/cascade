@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 import { PlayIcon } from "./icons";
@@ -39,7 +39,7 @@ export function HeroSection() {
         {/* CTAs */}
         <Flex direction="column" gap="md" align="center" justify="center" className="sm:flex-row">
           <Link
-            to={ROUTE_PATTERNS.signup}
+            to={ROUTES.signup.path}
             className="px-8 py-3.5 bg-linear-to-r from-cyan-500 to-teal-400 rounded-full text-base font-bold text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95"
           >
             Get Started Free

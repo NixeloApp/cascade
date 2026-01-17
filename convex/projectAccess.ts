@@ -1,7 +1,7 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { isCompanyAdmin } from "./companies";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { isOrganizationAdmin } from "./organizations";
 import { getTeamRole } from "./teams";
 
 // ============================================================================
@@ -9,28 +9,30 @@ import { getTeamRole } from "./teams";
 // ============================================================================
 
 /**
- * Check company-level access permissions
+ * Check organization-level access permissions
  */
-async function checkCompanyAccess(
+async function checkOrganizationAccess(
   ctx: QueryCtx | MutationCtx,
   project: Doc<"projects">,
   userId: Id<"users">,
 ): Promise<boolean> {
-  const companyId = project.companyId;
-  if (!companyId) return false;
+  const organizationId = project.organizationId;
+  if (!organizationId) return false;
 
-  // 1. Company admin has full access
-  const isAdmin = await isCompanyAdmin(ctx, companyId, userId);
+  // 1. organization admin has full access
+  const isAdmin = await isOrganizationAdmin(ctx, organizationId, userId);
   if (isAdmin) return true;
 
-  // 2. Company-visible project (isPublic=true) + user is company member
+  // 2. organization-visible project (isPublic=true) + user is organization member
   if (project.isPublic) {
-    const companyMembership = await ctx.db
-      .query("companyMembers")
-      .withIndex("by_company_user", (q) => q.eq("companyId", companyId).eq("userId", userId))
+    const organizationMembership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", organizationId).eq("userId", userId),
+      )
       .first();
 
-    if (companyMembership) return true;
+    if (organizationMembership) return true;
   }
 
   return false;
@@ -93,8 +95,8 @@ async function checkDirectAccess(
  * Check if user can access a project (read access)
  *
  * Access is granted if ANY of the following are true:
- * 1. User is company admin
- * 2. Project is company-visible (isPublic=true) AND user is company member
+ * 1. User is organization admin
+ * 2. Project is organization-visible (isPublic=true) AND user is organization member
  * 3. User owns the project (ownerId)
  * 4. User is member of team that owns the project (teamId)
  * 5. User is in projectMembers (individual collaborator)
@@ -113,7 +115,7 @@ export async function canAccessProject(
   const result = await (async () => {
     if (await checkDirectAccess(ctx, project, userId)) return true;
     if (await checkTeamAccess(ctx, project, userId)) return true;
-    if (await checkCompanyAccess(ctx, project, userId)) return true;
+    if (await checkOrganizationAccess(ctx, project, userId)) return true;
     return false;
   })();
 
@@ -124,7 +126,7 @@ export async function canAccessProject(
  * Check if user can edit a project (write access)
  *
  * Edit access is granted if ANY of the following are true:
- * 1. User is company admin
+ * 1. User is organization admin
  * 2. User owns the project (ownerId)
  * 3. User is member of team that owns the project (teamId)
  * 4. User is admin or editor in projectMembers
@@ -137,9 +139,9 @@ export async function canEditProject(
   const project = await ctx.db.get(projectId);
   if (!project) return false;
 
-  // 1. Company admin has full access (if project belongs to company)
-  if (project.companyId) {
-    const isAdmin = await isCompanyAdmin(ctx, project.companyId, userId);
+  // 1. organization admin has full access (if project belongs to organization)
+  if (project.organizationId) {
+    const isAdmin = await isOrganizationAdmin(ctx, project.organizationId, userId);
     if (isAdmin) return true;
   }
 
@@ -176,7 +178,7 @@ export async function canEditProject(
  * Check if user is project admin (can manage settings, members, delete)
  *
  * Admin access is granted if ANY of the following are true:
- * 1. User is company admin
+ * 1. User is organization admin
  * 2. User owns the project (ownerId)
  * 3. User is team lead of owning team (teamId)
  * 4. User is admin in projectMembers
@@ -189,9 +191,9 @@ export async function isProjectAdmin(
   const project = await ctx.db.get(projectId);
   if (!project) return false;
 
-  // 1. Company admin has full access (if project belongs to company)
-  if (project.companyId) {
-    const isAdmin = await isCompanyAdmin(ctx, project.companyId, userId);
+  // 1. organization admin has full access (if project belongs to organization)
+  if (project.organizationId) {
+    const isAdmin = await isOrganizationAdmin(ctx, project.organizationId, userId);
     if (isAdmin) return true;
   }
 

@@ -7,16 +7,16 @@ import { batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
 import { getSiteUrl } from "./lib/env";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
-// Helper: Check if user is a company admin
-async function isCompanyAdmin(ctx: QueryCtx | MutationCtx, userId: Id<"users">) {
-  // Primary: Check if user is admin or owner in any company
-  const companyMembership = await ctx.db
-    .query("companyMembers")
+// Helper: Check if user is a organization admin
+async function isOrganizationAdmin(ctx: QueryCtx | MutationCtx, userId: Id<"users">) {
+  // Primary: Check if user is admin or owner in any organization
+  const organizationMembership = await ctx.db
+    .query("organizationMembers")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .filter((q) => q.or(q.eq(q.field("role"), "admin"), q.eq(q.field("role"), "owner")))
     .first();
 
-  if (companyMembership) return true;
+  if (organizationMembership) return true;
 
   // Fallback: Check if user has created a project (backward compatibility)
   const createdProjects = await ctx.db
@@ -177,11 +177,22 @@ export const sendInvite = mutation({
   args: {
     email: v.string(),
     role: v.union(v.literal("user"), v.literal("superAdmin")),
-    companyId: v.id("companies"),
+    organizationId: v.id("organizations"),
     // Optional project-level invite fields
     projectId: v.optional(v.id("projects")),
     projectRole: v.optional(v.union(v.literal("admin"), v.literal("editor"), v.literal("viewer"))),
   },
+  returns: v.union(
+    v.object({
+      inviteId: v.id("invites"),
+      token: v.string(),
+    }),
+    v.object({
+      success: v.boolean(),
+      addedDirectly: v.boolean(), // or v.literal(true)
+      userId: v.id("users"),
+    }),
+  ),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
@@ -192,7 +203,7 @@ export const sendInvite = mutation({
     }
 
     // Check permissions and get project info
-    const isPlatAdmin = await isCompanyAdmin(ctx, userId);
+    const isPlatAdmin = await isOrganizationAdmin(ctx, userId);
     let projectName: string | undefined;
     const effectiveProjectRole = args.projectRole || "editor";
 
@@ -240,7 +251,7 @@ export const sendInvite = mutation({
     const inviteId = await ctx.db.insert("invites", {
       email: args.email,
       role: args.role,
-      companyId: args.companyId,
+      organizationId: args.organizationId,
       projectId: args.projectId,
       projectRole: args.projectId ? effectiveProjectRole : undefined,
       invitedBy: userId,
@@ -280,12 +291,13 @@ export const revokeInvite = mutation({
   args: {
     inviteId: v.id("invites"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Check if user is admin
-    const isAdmin = await isCompanyAdmin(ctx, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, userId);
     if (!isAdmin) {
       throw new Error("Only admins can revoke invites");
     }
@@ -318,12 +330,13 @@ export const resendInvite = mutation({
   args: {
     inviteId: v.id("invites"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Check if user is admin
-    const isAdmin = await isCompanyAdmin(ctx, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, userId);
     if (!isAdmin) {
       throw new Error("Only admins can resend invites");
     }
@@ -380,6 +393,38 @@ export const getInviteByToken = query({
   args: {
     token: v.string(),
   },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id("invites"),
+      _creationTime: v.number(),
+      email: v.string(),
+      role: v.union(v.literal("user"), v.literal("superAdmin")),
+      organizationId: v.id("organizations"),
+      projectId: v.optional(v.id("projects")),
+      projectRole: v.optional(
+        v.union(v.literal("admin"), v.literal("editor"), v.literal("viewer")),
+      ),
+      invitedBy: v.id("users"),
+      token: v.string(),
+      expiresAt: v.number(),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("accepted"),
+        v.literal("revoked"),
+        v.literal("expired"),
+      ),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+      acceptedBy: v.optional(v.id("users")),
+      acceptedAt: v.optional(v.number()),
+      revokedBy: v.optional(v.id("users")),
+      revokedAt: v.optional(v.number()),
+      isExpired: v.boolean(),
+      inviterName: v.string(),
+      projectName: v.optional(v.string()),
+    }),
+  ),
   handler: async (ctx, args) => {
     const invite = await ctx.db
       .query("invites")
@@ -420,6 +465,12 @@ export const acceptInvite = mutation({
   args: {
     token: v.string(),
   },
+  returns: v.object({
+    success: v.boolean(),
+    role: v.union(v.literal("user"), v.literal("superAdmin")),
+    projectId: v.optional(v.id("projects")),
+    projectRole: v.optional(v.union(v.literal("admin"), v.literal("editor"), v.literal("viewer"))),
+  }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
@@ -508,12 +559,43 @@ export const listInvites = query({
       ),
     ),
   },
+  returns: v.array(
+    v.object({
+      _id: v.id("invites"),
+      _creationTime: v.number(),
+      email: v.string(),
+      role: v.union(v.literal("user"), v.literal("superAdmin")),
+      organizationId: v.id("organizations"),
+      projectId: v.optional(v.id("projects")),
+      projectRole: v.optional(
+        v.union(v.literal("admin"), v.literal("editor"), v.literal("viewer")),
+      ),
+      invitedBy: v.id("users"),
+      token: v.string(),
+      expiresAt: v.number(),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("accepted"),
+        v.literal("revoked"),
+        v.literal("expired"),
+      ),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+      acceptedBy: v.optional(v.id("users")),
+      acceptedAt: v.optional(v.number()),
+      revokedBy: v.optional(v.id("users")),
+      revokedAt: v.optional(v.number()),
+      inviterName: v.string(),
+      acceptedByName: v.optional(v.string()),
+      projectName: v.optional(v.string()),
+    }),
+  ),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Check if user is admin - return empty array for non-admins (UI-driven visibility)
-    const isAdmin = await isCompanyAdmin(ctx, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, userId);
     if (!isAdmin) {
       return [];
     }
@@ -570,12 +652,24 @@ export const listInvites = query({
  */
 export const listUsers = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      email: v.optional(v.string()),
+      image: v.optional(v.string()),
+      emailVerificationTime: v.optional(v.number()),
+      isAnonymous: v.optional(v.boolean()),
+      projectsCreated: v.number(),
+      projectMemberships: v.number(),
+    }),
+  ),
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Check if user is admin - return empty array for non-admins (UI-driven visibility)
-    const isAdmin = await isCompanyAdmin(ctx, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, userId);
     if (!isAdmin) {
       return [];
     }

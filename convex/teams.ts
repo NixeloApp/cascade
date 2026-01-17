@@ -4,11 +4,11 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
-import { isCompanyAdmin } from "./companies";
 import { batchFetchTeams, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { isOrganizationAdmin } from "./organizations";
 import { isTest } from "./testConfig";
 // ============================================================================
 // Helper Functions
@@ -44,7 +44,7 @@ export async function isTeamLead(
 }
 
 /**
- * Check if user can manage team (team lead or company admin)
+ * Check if user can manage team (team lead or organization admin)
  */
 async function canManageTeam(
   ctx: QueryCtx | MutationCtx,
@@ -58,8 +58,8 @@ async function canManageTeam(
   const isLead = await isTeamLead(ctx, teamId, userId);
   if (isLead) return true;
 
-  // Company admin can manage
-  return await isCompanyAdmin(ctx, team.companyId, userId);
+  // organization admin can manage
+  return await isOrganizationAdmin(ctx, team.organizationId, userId);
 }
 
 /**
@@ -72,7 +72,7 @@ async function assertCanManageTeam(
 ): Promise<void> {
   const canManage = await canManageTeam(ctx, teamId, userId);
   if (!canManage) {
-    throw new Error("Only team leads or company admins can perform this action");
+    throw new Error("Only team leads or organization admins can perform this action");
   }
 }
 
@@ -92,11 +92,11 @@ function generateSlug(name: string): string {
 
 /**
  * Create a new team
- * Company admin or member can create
+ * organization admin or member can create
  */
 export const createTeam = mutation({
   args: {
-    companyId: v.id("companies"),
+    organizationId: v.id("organizations"),
     workspaceId: v.id("workspaces"),
     name: v.string(),
     description: v.optional(v.string()),
@@ -107,14 +107,16 @@ export const createTeam = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    // Must be company member to create team
-    const companyMembership = await ctx.db
-      .query("companyMembers")
-      .withIndex("by_company_user", (q) => q.eq("companyId", args.companyId).eq("userId", userId))
+    // Must be organization member to create team
+    const organizationMembership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", args.organizationId).eq("userId", userId),
+      )
       .first();
 
-    if (!companyMembership) {
-      throw new Error("You must be a company member to create a team");
+    if (!organizationMembership) {
+      throw new Error("You must be an organization member to create a team");
     }
 
     // Generate unique slug
@@ -125,7 +127,9 @@ export const createTeam = mutation({
     while (true) {
       const existing = await ctx.db
         .query("teams")
-        .withIndex("by_company_slug", (q) => q.eq("companyId", args.companyId).eq("slug", slug))
+        .withIndex("by_organization_slug", (q) =>
+          q.eq("organizationId", args.organizationId).eq("slug", slug),
+        )
         .first();
 
       if (!existing) break;
@@ -138,7 +142,7 @@ export const createTeam = mutation({
 
     // Create team
     const teamId = await ctx.db.insert("teams", {
-      companyId: args.companyId,
+      organizationId: args.organizationId,
       workspaceId: args.workspaceId,
       name: args.name,
       slug,
@@ -165,7 +169,7 @@ export const createTeam = mutation({
         actorId: userId,
         targetId: teamId,
         targetType: "team",
-        metadata: { name: args.name, companyId: args.companyId },
+        metadata: { name: args.name, organizationId: args.organizationId },
       });
     }
 
@@ -175,7 +179,7 @@ export const createTeam = mutation({
 
 /**
  * Update team details
- * Team lead or company admin only
+ * Team lead or organization admin only
  */
 export const updateTeam = mutation({
   args: {
@@ -213,7 +217,9 @@ export const updateTeam = mutation({
       while (true) {
         const existing = await ctx.db
           .query("teams")
-          .withIndex("by_company_slug", (q) => q.eq("companyId", team.companyId).eq("slug", slug))
+          .withIndex("by_organization_slug", (q) =>
+            q.eq("organizationId", team.organizationId).eq("slug", slug),
+          )
           .first();
 
         if (!existing || existing._id === args.teamId) break;
@@ -246,7 +252,7 @@ export const updateTeam = mutation({
 
 /**
  * Delete team
- * Team lead or company admin only
+ * Team lead or organization admin only
  * Will also delete all team members
  */
 export const softDeleteTeam = mutation({
@@ -281,7 +287,7 @@ export const softDeleteTeam = mutation({
 
 /**
  * Restore a soft-deleted team
- * Team lead or company admin only
+ * Team lead or organization admin only
  */
 export const restoreTeam = mutation({
   args: {
@@ -302,10 +308,10 @@ export const restoreTeam = mutation({
       throw new Error("Team is not deleted");
     }
 
-    // Must be company admin or the deletedBy user
-    const isAdmin = await isCompanyAdmin(ctx, team.companyId, userId);
+    // Must be organization admin or the deletedBy user
+    const isAdmin = await isOrganizationAdmin(ctx, team.organizationId, userId);
     if (!isAdmin && team.deletedBy !== userId) {
-      throw new Error("Only company admins or the user who deleted the team can restore it");
+      throw new Error("Only organization admins or the user who deleted the team can restore it");
     }
 
     // Restore with automatic cascading
@@ -339,7 +345,7 @@ export const restoreTeam = mutation({
 
 /**
  * Add member to team
- * Team lead or company admin only
+ * Team lead or organization admin only
  */
 export const addTeamMember = mutation({
   args: {
@@ -363,19 +369,19 @@ export const addTeamMember = mutation({
       throw new Error("User is already a member of this team");
     }
 
-    // Verify user is company member
+    // Verify user is organization member
     const team = await ctx.db.get(args.teamId);
     if (!team) throw new Error("Team not found");
 
-    const companyMembership = await ctx.db
-      .query("companyMembers")
-      .withIndex("by_company_user", (q) =>
-        q.eq("companyId", team.companyId).eq("userId", args.userId),
+    const organizationMembership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", team.organizationId).eq("userId", args.userId),
       )
       .first();
 
-    if (!companyMembership) {
-      throw new Error("User must be a company member to join this team");
+    if (!organizationMembership) {
+      throw new Error("User must be an organization member to join this team");
     }
 
     const now = Date.now();
@@ -405,7 +411,7 @@ export const addTeamMember = mutation({
 
 /**
  * Update team member role
- * Team lead or company admin only
+ * Team lead or organization admin only
  */
 export const updateTeamMemberRole = mutation({
   args: {
@@ -449,7 +455,7 @@ export const updateTeamMemberRole = mutation({
 
 /**
  * Remove member from team
- * Team lead or company admin only
+ * Team lead or organization admin only
  */
 export const removeTeamMember = mutation({
   args: {
@@ -506,9 +512,9 @@ export const getTeam = query({
     const team = await ctx.db.get(args.teamId);
     if (!team || team.isDeleted) return null;
 
-    // Check if user has access (team member or company admin)
+    // Check if user has access (team member or organization admin)
     const role = await getTeamRole(ctx, args.teamId, userId);
-    const isAdmin = await isCompanyAdmin(ctx, team.companyId, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, team.organizationId, userId);
 
     if (!(role || isAdmin)) return null;
 
@@ -541,9 +547,9 @@ export const getBySlug = query({
 
     if (!team) return null;
 
-    // Check if user has access (team member or company admin)
+    // Check if user has access (team member or organization admin)
     const role = await getTeamRole(ctx, team._id, userId);
-    const isAdmin = await isCompanyAdmin(ctx, team.companyId, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, team.organizationId, userId);
 
     if (!(role || isAdmin)) return null;
 
@@ -560,7 +566,7 @@ export const getBySlug = query({
  */
 export const getTeams = query({
   args: {
-    companyId: v.id("companies"),
+    organizationId: v.id("organizations"),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
@@ -569,16 +575,18 @@ export const getTeams = query({
       return { page: [], isDone: true, continueCursor: "" };
     }
 
-    // Check if user is company admin
-    const isAdmin = await isCompanyAdmin(ctx, args.companyId, userId);
+    // Check if user is organization admin
+    const isAdmin = await isOrganizationAdmin(ctx, args.organizationId, userId);
 
     let results: PaginationResult<Doc<"teams">> | PaginationResult<Doc<"teamMembers">>;
     if (isAdmin) {
-      // Admins see all teams in the company
+      // Admins see all teams in the organization
       results = await fetchPaginatedQuery<Doc<"teams">>(ctx, {
         paginationOpts: args.paginationOpts,
         query: (db) =>
-          db.query("teams").withIndex("by_company", (q) => q.eq("companyId", args.companyId)),
+          db
+            .query("teams")
+            .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId)),
       });
     } else {
       // Non-admins see only teams they are a member of
@@ -594,7 +602,7 @@ export const getTeams = query({
       // Filter out teams from other companies
       const filteredPage = membershipResults.page.filter((m) => {
         const t = teams.get(m.teamId);
-        return t && t.companyId === args.companyId;
+        return t && t.organizationId === args.organizationId;
       });
 
       results = {
@@ -645,7 +653,7 @@ export const getTeams = query({
       teamIds.map(async (teamId, index) => {
         const team = teamMap.get(teamId);
         if (!team) return null;
-        if (team.companyId !== args.companyId) return null;
+        if (team.organizationId !== args.organizationId) return null;
 
         const memberCount = memberCounts[index];
         const projectCount = projectCounts[index];
@@ -670,32 +678,34 @@ export const getTeams = query({
 });
 
 /**
- * Get all teams in a company
+ * Get all teams in an organization
  */
-export const getCompanyTeams = query({
+export const getOrganizationTeams = query({
   args: {
-    companyId: v.id("companies"),
+    organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
-    // Must be company member
-    const companyMembership = await ctx.db
-      .query("companyMembers")
-      .withIndex("by_company_user", (q) => q.eq("companyId", args.companyId).eq("userId", userId))
+    // Must be organization member
+    const organizationMembership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", args.organizationId).eq("userId", userId),
+      )
       .filter(notDeleted)
       .first();
 
-    if (!companyMembership) return [];
+    if (!organizationMembership) return [];
 
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
       .filter(notDeleted)
       .collect();
 
-    const isAdmin = await isCompanyAdmin(ctx, args.companyId, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, args.organizationId, userId);
 
     // Fetch team members and projects per team using indexes (NOT loading all!)
     const teamIds = teams.map((t) => t._id);
@@ -833,7 +843,7 @@ export const getUserTeams = query({
 
 /**
  * Get all members of a team
- * Team member or company admin only
+ * Team member or organization admin only
  */
 export const getTeamMembers = query({
   args: {
@@ -848,10 +858,10 @@ export const getTeamMembers = query({
 
     // Check access
     const role = await getTeamRole(ctx, args.teamId, userId);
-    const isAdmin = await isCompanyAdmin(ctx, team.companyId, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, team.organizationId, userId);
 
     if (!(role || isAdmin)) {
-      throw new Error("Only team members or company admins can view team members");
+      throw new Error("Only team members or organization admins can view team members");
     }
 
     const memberships = await ctx.db

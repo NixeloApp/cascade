@@ -40,7 +40,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async goto() {
-    // Use hardcoded slug for E2E tests since getCompanySlug() fails on fresh pages
+    // Use hardcoded slug for E2E tests since getOrganizationSlug() fails on fresh pages
     const workspacesUrl = `/nixelo-e2e/workspaces`;
 
     await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });

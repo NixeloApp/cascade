@@ -15,7 +15,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { useOrganization } from "@/hooks/useOrgContext";
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ interface CreateWorkspaceModalProps {
 }
 
 export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorkspaceModalProps) {
-  const { companyId } = useCompany();
+  const { organizationId } = useOrganization();
   const createWorkspace = useMutation(api.workspaces.create);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -46,7 +46,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
         name,
         slug,
         description: description.trim() || undefined,
-        companyId: companyId as Id<"companies">,
+        organizationId: organizationId as Id<"organizations">,
       });
 
       toast.success("Workspace created successfully");

@@ -18,13 +18,13 @@ export const createProject = mutation({
     description: v.optional(v.string()),
     boardType: v.union(v.literal("kanban"), v.literal("scrum")),
     // Ownership (required)
-    companyId: v.id("companies"), // Company this project belongs to
+    organizationId: v.id("organizations"), // organization this project belongs to
     workspaceId: v.id("workspaces"), // Workspace this project belongs to
     // Optional ownership overrides
     teamId: v.optional(v.id("teams")), // Team owner (optional - null for workspace projects)
     ownerId: v.optional(v.id("users")), // User owner (defaults to creator)
     // Sharing settings
-    isPublic: v.optional(v.boolean()), // Visible to all company members
+    isPublic: v.optional(v.boolean()), // Visible to all organization members
     sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Share with specific teams
   },
   handler: async (ctx, args) => {
@@ -76,7 +76,7 @@ export const createProject = mutation({
       boardType: args.boardType,
       workflowStates: defaultWorkflowStates,
       // Ownership (required)
-      companyId: args.companyId,
+      organizationId: args.organizationId,
       workspaceId: args.workspaceId,
       ownerId,
       // Optional
@@ -103,7 +103,7 @@ export const createProject = mutation({
         metadata: {
           name: args.name,
           key: args.key,
-          companyId: args.companyId,
+          organizationId: args.organizationId,
         },
       });
     }
@@ -114,7 +114,7 @@ export const createProject = mutation({
 
 export const getCurrentUserProjects = query({
   args: {
-    companyId: v.optional(v.id("companies")),
+    organizationId: v.optional(v.id("organizations")),
     paginationOpts: v.optional(paginationOptsValidator),
   },
   handler: async (ctx, args) => {
@@ -169,8 +169,8 @@ export const getCurrentUserProjects = query({
         const project = projectMap.get(membership.projectId);
         if (!project) return null;
 
-        // Filter by companyId if provided
-        if (args.companyId && project.companyId !== args.companyId) {
+        // Filter by organizationId if provided
+        if (args.organizationId && project.organizationId !== args.organizationId) {
           return null;
         }
 
@@ -212,10 +212,10 @@ export const getTeamProjects = query({
     }
 
     const { getTeamRole } = await import("./teams");
-    const { isCompanyAdmin } = await import("./companies");
+    const { isOrganizationAdmin } = await import("./organizations");
 
     const role = await getTeamRole(ctx, args.teamId, userId);
-    const isAdmin = await isCompanyAdmin(ctx, team.companyId, userId);
+    const isAdmin = await isOrganizationAdmin(ctx, team.organizationId, userId);
 
     if (!(role || isAdmin)) {
       return { page: [], isDone: true, continueCursor: "" };
@@ -245,7 +245,7 @@ export const getWorkspaceProjects = query({
     if (!workspace) {
       return { page: [], isDone: true, continueCursor: "" };
     }
-    // Ideally check if user is in company, but for now existence + auth is better than crashing on type mismatch against projectAccess
+    // Ideally check if user is in organization, but for now existence + auth is better than crashing on type mismatch against projectAccess
 
     // Fetch projects directly attached to workspace but NO teamId
     // We use by_workspace index. Since we can't complex filter efficiently in pagination
@@ -395,7 +395,7 @@ export const updateProject = mutation({
     projectId: v.id("projects"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
-    isPublic: v.optional(v.boolean()), // Company-visible
+    isPublic: v.optional(v.boolean()), // organization-visible
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);

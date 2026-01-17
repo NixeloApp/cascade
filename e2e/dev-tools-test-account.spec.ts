@@ -2,7 +2,7 @@ import { authenticatedTest, expect } from "./fixtures";
 
 /**
  * Test that mailtrap account (@inbox.mailtrap.io) shows Dev Tools tab
- * Uses authenticated dashboard user fixture with company slug
+ * Uses authenticated dashboard user fixture with organization slug
  * Uses SettingsPage page object for consistent locators.
  */
 authenticatedTest(

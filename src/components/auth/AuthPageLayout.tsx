@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { NixeloLogo } from "@/components/landing";
 import { Flex } from "@/components/ui/Flex";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { Typography } from "../ui/Typography";
 
 interface AuthPageLayoutProps {
@@ -17,7 +17,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
       <div className="w-full max-w-md">
         <div className="mb-4">
           <Link
-            to={ROUTE_PATTERNS.home}
+            to={ROUTES.home.path}
             className="inline-flex items-center gap-2 text-ui-text-tertiary hover:text-ui-text-primary transition-colors text-sm"
           >
             <svg
@@ -39,7 +39,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
         </div>
         <div className="bg-ui-bg-primary border border-ui-border-primary rounded-2xl p-8 backdrop-blur-sm">
           <Flex direction="column" align="center" className="mb-6">
-            <Link to={ROUTE_PATTERNS.home} className="hover:opacity-80 transition-opacity">
+            <Link to={ROUTES.home.path} className="hover:opacity-80 transition-opacity">
               <NixeloLogo size={48} />
             </Link>
             <Typography variant="h2" className="text-2xl font-bold mt-4 mb-2">

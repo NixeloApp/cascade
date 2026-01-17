@@ -10,18 +10,18 @@ const __dirname = path.dirname(__filename);
 const AUTH_DIR = path.join(__dirname, "../.auth");
 const RBAC_CONFIG_DIR = AUTH_DIR;
 
-function getRbacConfig(workerIndex = 0): { projectKey: string; companySlug: string } {
+function getRbacConfig(workerIndex = 0): { projectKey: string; orgSlug: string } {
   try {
     const configPath = path.join(RBAC_CONFIG_DIR, `rbac-config-${workerIndex}.json`);
     if (fs.existsSync(configPath)) {
       const content = fs.readFileSync(configPath, "utf-8");
       const config: SavedRbacConfig = JSON.parse(content);
-      if (config.projectKey && config.companySlug) {
-        return { projectKey: config.projectKey, companySlug: config.companySlug };
+      if (config.projectKey && config.orgSlug) {
+        return { projectKey: config.projectKey, orgSlug: config.orgSlug };
       }
     }
   } catch {}
-  return { projectKey: RBAC_TEST_CONFIG.projectKey, companySlug: RBAC_TEST_CONFIG.companySlug };
+  return { projectKey: RBAC_TEST_CONFIG.projectKey, orgSlug: RBAC_TEST_CONFIG.orgSlug };
 }
 
 function getAuthPath(role: UserRole, workerIndex = 0): string {
@@ -80,7 +80,7 @@ export type RbacFixtures = {
 
   rbacProjectKey: string;
   rbacProjectUrl: string;
-  rbacCompanySlug: string;
+  rbacOrgSlug: string;
   gotoRbacProject: (page: Page) => Promise<void>;
 };
 
@@ -202,16 +202,16 @@ export const rbacTest = base.extend<RbacFixtures>({
     await use(getRbacConfig(testInfo.parallelIndex).projectKey);
   },
 
-  rbacCompanySlug: async ({}, use, testInfo) => {
-    await use(getRbacConfig(testInfo.parallelIndex).companySlug);
+  rbacOrgSlug: async ({}, use, testInfo) => {
+    await use(getRbacConfig(testInfo.parallelIndex).orgSlug);
   },
-  rbacProjectUrl: async ({ rbacCompanySlug, rbacProjectKey }, use) => {
-    await use(`/${rbacCompanySlug}/projects/${rbacProjectKey}/board`);
+  rbacProjectUrl: async ({ rbacOrgSlug, rbacProjectKey }, use) => {
+    await use(`/${rbacOrgSlug}/projects/${rbacProjectKey}/board`);
   },
 
-  gotoRbacProject: async ({ rbacCompanySlug, rbacProjectKey }, use) => {
+  gotoRbacProject: async ({ rbacOrgSlug, rbacProjectKey }, use) => {
     const goto = async (page: Page) => {
-      const targetUrl = `/${rbacCompanySlug}/projects/${rbacProjectKey}/board`;
+      const targetUrl = `/${rbacOrgSlug}/projects/${rbacProjectKey}/board`;
 
       // 1. Identify role and prepare JWT
       const role = (page.context() as BrowserContext & { _role?: string })._role as UserRole;

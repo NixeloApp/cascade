@@ -39,11 +39,11 @@ export class DocumentsPage extends BasePage {
   readonly confirmDeleteButton: Locator;
   readonly cancelDeleteButton: Locator;
 
-  private companySlug: string;
+  private orgSlug: string;
 
-  constructor(page: Page, companySlug = "nixelo-e2e") {
+  constructor(page: Page, orgSlug = "nixelo-e2e") {
     super(page);
-    this.companySlug = companySlug;
+    this.orgSlug = orgSlug;
 
     // Sidebar
     this.sidebar = page.locator("[data-tour='sidebar']").or(page.locator("aside").first());
@@ -86,7 +86,7 @@ export class DocumentsPage extends BasePage {
   // ===================
 
   async goto() {
-    await this.page.goto(`/${this.companySlug}/documents`);
+    await this.page.goto(`/${this.orgSlug}/documents`);
     await this.waitForLoad();
   }
 

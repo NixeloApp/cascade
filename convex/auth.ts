@@ -29,7 +29,7 @@ export const loggedInUser = query({
       emailVerificationTime: v.optional(v.number()),
       image: v.optional(v.string()),
       isAnonymous: v.optional(v.boolean()),
-      defaultCompanyId: v.optional(v.id("companies")),
+      defaultOrganizationId: v.optional(v.id("organizations")),
     }),
     v.null(),
   ),
@@ -46,7 +46,7 @@ export const loggedInUser = query({
   },
 });
 
-import { ROUTE_PATTERNS } from "./shared/routes";
+import { ROUTES } from "./shared/routes";
 
 /**
  * Get the recommended destination for a user after they authenticate.
@@ -54,6 +54,7 @@ import { ROUTE_PATTERNS } from "./shared/routes";
  */
 export const getRedirectDestination = query({
   args: {},
+  returns: v.union(v.string(), v.null()),
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
@@ -67,24 +68,24 @@ export const getRedirectDestination = query({
     const onboardingIncomplete = !onboarding?.onboardingCompleted;
 
     if (onboardingIncomplete) {
-      return ROUTE_PATTERNS.onboarding;
+      return ROUTES.onboarding.path;
     }
 
-    // 2. Check for companies
+    // 2. Check for organizations
     const membership = await ctx.db
-      .query("companyMembers")
+      .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
     if (membership) {
-      const company = await ctx.db.get(membership.companyId);
-      if (company?.slug) {
-        return `/${company.slug}/dashboard`;
+      const organization = await ctx.db.get(membership.organizationId);
+      if (organization?.slug) {
+        return ROUTES.dashboard.build(organization.slug);
       }
     }
 
-    // If they finished onboarding but have no company,
-    // we should send them to /app gateway where InitializeCompany will handle them.
-    return ROUTE_PATTERNS.app;
+    // If they finished onboarding but have no organization,
+    // we should send them to /app gateway where initializeDefaultOrganization will handle them.
+    return ROUTES.app.path;
   },
 });

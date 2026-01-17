@@ -1,7 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { render, screen } from "@/test/custom-render";
 import { WorkspacesList } from "./ProjectsList";
 
@@ -11,10 +11,10 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock company context
-const TEST_COMPANY_SLUG = "test-company";
-vi.mock("@/hooks/useCompanyContext", () => ({
-  useCompany: () => ({ companySlug: TEST_COMPANY_SLUG }),
+// Mock organization context
+const TEST_ORG_SLUG = "test-organization";
+vi.mock("@/hooks/useOrgContext", () => ({
+  useOrganization: () => ({ orgSlug: TEST_ORG_SLUG }),
 }));
 
 // Mock navigation hook
@@ -66,8 +66,8 @@ describe("WorkspacesList", () => {
   it("should render card header with project count", () => {
     render(<WorkspacesList {...defaultProps} />);
 
-    expect(screen.getByText("My Workspaces")).toBeInTheDocument();
-    expect(screen.getByText(`${mockWorkspaces.length} projects`)).toBeInTheDocument();
+    expect(screen.getByText("Workspaces")).toBeInTheDocument();
+    expect(screen.getByText(`${mockWorkspaces.length} active projects`)).toBeInTheDocument();
   });
 
   it("should render loading skeleton when data is undefined", () => {
@@ -100,8 +100,8 @@ describe("WorkspacesList", () => {
     await user.click(button);
 
     expect(mockNavigate).toHaveBeenCalledWith({
-      to: ROUTE_PATTERNS.workspaces.list,
-      params: { companySlug: TEST_COMPANY_SLUG },
+      to: ROUTES.workspaces.list.path,
+      params: { orgSlug: TEST_ORG_SLUG },
     });
   });
 
@@ -124,14 +124,14 @@ describe("WorkspacesList", () => {
   it("should display issue counts for each project", () => {
     render(<WorkspacesList {...defaultProps} />);
 
-    // Project Alpha: 5 my issues • 12 total
-    expect(screen.getByText("5 my issues • 12 total")).toBeInTheDocument();
+    // Project Alpha: 5 assigned issues
+    expect(screen.getByText("5 assigned issues")).toBeInTheDocument();
 
-    // Project Beta: 2 my issues • 8 total
-    expect(screen.getByText("2 my issues • 8 total")).toBeInTheDocument();
+    // Project Beta: 2 assigned issues
+    expect(screen.getByText("2 assigned issues")).toBeInTheDocument();
 
-    // Project Gamma: 0 my issues • 3 total
-    expect(screen.getByText("0 my issues • 3 total")).toBeInTheDocument();
+    // Project Gamma: 0 assigned issues
+    expect(screen.getByText("0 assigned issues")).toBeInTheDocument();
   });
 
   it("should navigate to project board when clicking a project", async () => {
@@ -143,8 +143,8 @@ describe("WorkspacesList", () => {
     await user.click(firstWorkspace);
 
     expect(mockNavigate).toHaveBeenCalledWith({
-      to: ROUTE_PATTERNS.projects.board,
-      params: { companySlug: TEST_COMPANY_SLUG, key: "ALPHA" },
+      to: ROUTES.projects.board.path,
+      params: { orgSlug: TEST_ORG_SLUG, key: "ALPHA" },
     });
   });
 
@@ -224,7 +224,7 @@ describe("WorkspacesList", () => {
 
     render(<WorkspacesList {...defaultProps} projects={zeroIssuesWorkspace} />);
 
-    expect(screen.getByText("0 my issues")).toBeInTheDocument();
+    expect(screen.getByText("0 assigned issues")).toBeInTheDocument();
   });
 
   it("should render with capitalized role badges", () => {
@@ -248,19 +248,19 @@ describe("WorkspacesList", () => {
 
     render(<WorkspacesList {...defaultProps} projects={singleWorkspace} />);
 
-    expect(screen.getByText("1 project")).toBeInTheDocument();
+    expect(screen.getByText("1 active project")).toBeInTheDocument();
     expect(screen.getByText("Project Alpha")).toBeInTheDocument();
   });
 
-  it("should show 0 projects in header when array is empty", () => {
+  it("should show 0 active projects in header when array is empty", () => {
     render(<WorkspacesList {...defaultProps} projects={[]} />);
 
-    expect(screen.getByText("0 projects")).toBeInTheDocument();
+    expect(screen.getByText("0 active projects")).toBeInTheDocument();
   });
 
-  it("should show 0 projects in header when undefined", () => {
+  it("should show 0 active projects in header when undefined", () => {
     render(<WorkspacesList {...defaultProps} projects={undefined} />);
 
-    expect(screen.getByText("0 projects")).toBeInTheDocument();
+    expect(screen.getByText("0 active projects")).toBeInTheDocument();
   });
 });

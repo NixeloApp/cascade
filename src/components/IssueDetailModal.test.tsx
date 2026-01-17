@@ -17,11 +17,11 @@ vi.mock("@/lib/toast", () => ({
   showError: vi.fn(),
 }));
 
-// Mock company context
-vi.mock("@/hooks/useCompanyContext", () => ({
-  useCompany: vi.fn(() => ({
-    companySlug: "test-company",
-    companyName: "Test Company",
+// Mock organization context
+vi.mock("@/hooks/useOrgContext", () => ({
+  useOrganization: vi.fn(() => ({
+    orgSlug: "test-organization",
+    organizationName: "Test organization",
     billingEnabled: false,
   })),
 }));

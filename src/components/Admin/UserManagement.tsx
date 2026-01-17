@@ -2,9 +2,9 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { useCompany } from "../../hooks/useCompanyContext";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
@@ -73,7 +73,7 @@ function UserRow({
 }
 
 export function UserManagement() {
-  const { companyId } = useCompany();
+  const { organizationId } = useOrganization();
   const [activeTab, setActiveTab] = useState<"invites" | "users">("invites");
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [email, setEmail] = useState("");
@@ -95,7 +95,7 @@ export function UserManagement() {
 
     setIsSubmitting(true);
     try {
-      await sendInvite({ email: email.trim(), role, companyId });
+      await sendInvite({ email: email.trim(), role, organizationId });
       showSuccess(`Invitation sent to ${email}`);
       setEmail("");
       setRole("user");

@@ -11,8 +11,10 @@ vi.mock("@tanstack/react-router", () => ({
 
 // Mock routes config
 vi.mock("@/config/routes", () => ({
-  ROUTE_PATTERNS: {
-    home: "/",
+  ROUTES: {
+    home: {
+      path: "/",
+    },
   },
 }));
 

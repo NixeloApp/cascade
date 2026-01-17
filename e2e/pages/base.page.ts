@@ -119,11 +119,11 @@ export abstract class BasePage {
   }
 
   /**
-   * Get current company slug from URL robustly.
+   * Get current organization slug from URL robustly.
    * Extracts slug from paths like /slug/dashboard or /slug/projects/...
    * Defaults to 'nixelo-e2e' if no valid slug is found or if on signin/landing.
    */
-  getCompanySlug(): string {
+  getOrganizationSlug(): string {
     const url = this.page.url();
     // Match the first path segment if it's not a known system route
     const match = url.match(/^https?:\/\/[^/]+\/([^/]+)/);

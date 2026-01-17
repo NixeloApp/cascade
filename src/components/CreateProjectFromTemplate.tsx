@@ -4,8 +4,8 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
-import { useCompany } from "../hooks/useCompanyContext";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { Input, Select, Textarea } from "./ui/form";
@@ -23,7 +23,7 @@ export function CreateProjectFromTemplate({
   onOpenChange,
   onProjectCreated,
 }: CreateProjectFromTemplateProps) {
-  const { companyId } = useCompany();
+  const { organizationId } = useOrganization();
   const [step, setStep] = useState<"select" | "configure">("select");
   const [selectedTemplateId, setSelectedTemplateId] = useState<Id<"projectTemplates"> | null>(null);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<Id<"workspaces"> | null>(null);
@@ -33,7 +33,7 @@ export function CreateProjectFromTemplate({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const workspaces = useQuery(api.workspaces.list, { companyId });
+  const workspaces = useQuery(api.workspaces.list, { organizationId });
 
   const templates = useQuery(api.projectTemplates.list);
   const selectedTemplate = useQuery(
@@ -73,7 +73,7 @@ export function CreateProjectFromTemplate({
         projectName: projectName.trim(),
         projectKey: projectKey.trim().toUpperCase(),
         description: description.trim() || undefined,
-        companyId,
+        organizationId,
         workspaceId: selectedWorkspaceId,
       });
 

@@ -1,8 +1,8 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { Typography } from "@/components/ui/Typography";
-import { ROUTE_PATTERNS } from "@/config/routes";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { ROUTES } from "@/config/routes";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Card, CardBody, CardHeader } from "../ui/Card";
@@ -36,24 +36,24 @@ interface WorkspacesListProps {
  */
 export function WorkspacesList({ projects, projectNavigation }: WorkspacesListProps) {
   const navigate = useNavigate();
-  const { companySlug } = useCompany();
+  const { orgSlug } = useOrganization();
 
   const navigateToWorkspace = (projectKey: string) => {
     navigate({
-      to: ROUTE_PATTERNS.projects.board,
-      params: { companySlug, key: projectKey },
+      to: ROUTES.projects.board.path,
+      params: { orgSlug, key: projectKey },
     });
   };
 
   const navigateToWorkspaces = () => {
-    navigate({ to: ROUTE_PATTERNS.workspaces.list, params: { companySlug } });
+    navigate({ to: ROUTES.workspaces.list.path, params: { orgSlug } });
   };
   const count = projects?.length || 0;
   const workspacesLabel = count === 1 ? "project" : "projects";
 
   return (
-    <Card>
-      <CardHeader title="My Workspaces" description={`${count} ${workspacesLabel}`} />
+    <Card className="bg-ui-bg-primary/40 backdrop-blur-md border-ui-border-primary/50">
+      <CardHeader title="Workspaces" description={`${count} active ${workspacesLabel}`} />
       <CardBody>
         {!projects ? (
           /* Loading skeleton */
@@ -73,7 +73,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
             }}
           />
         ) : (
-          <Flex direction="column" gap="sm" ref={projectNavigation.listRef}>
+          <Flex direction="column" gap="xs" ref={projectNavigation.listRef}>
             {projects.map((project, index) => (
               <button
                 key={project._id}
@@ -81,22 +81,27 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                 onClick={() => navigateToWorkspace(project.key)}
                 {...projectNavigation.getItemProps(index)}
                 className={cn(
-                  "w-full text-left p-3 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary cursor-pointer transition-all hover:shadow-md animate-slide-up",
+                  "w-full text-left p-3 bg-ui-bg-secondary/20 hover:bg-ui-bg-secondary/40 rounded-lg group cursor-pointer transition-all hover:shadow-sm animate-in fade-in slide-in-from-right-2 duration-500",
                   projectNavigation.getItemProps(index).className,
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <Flex justify="between" align="center" gap="sm" className="mb-1">
-                  <Typography variant="h4" className="font-medium text-ui-text-primary truncate">
+                <Flex justify="between" align="center" gap="sm" className="mb-0.5">
+                  <Typography
+                    variant="small"
+                    className="font-bold text-ui-text-primary truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors"
+                  >
                     {project.name}
                   </Typography>
-                  <Badge variant="primary" className="capitalize shrink-0">
+                  <Badge
+                    variant="neutral"
+                    className="text-[10px] uppercase tracking-tighter bg-ui-bg-tertiary/50"
+                  >
                     {project.role}
                   </Badge>
                 </Flex>
-                <div className="text-xs text-ui-text-secondary">
-                  {project.myIssues} my issues
-                  {project.totalIssues > 0 && ` • ${project.totalIssues} total`}
+                <div className="text-[10px] text-ui-text-tertiary uppercase tracking-wider font-bold">
+                  {project.myIssues} assigned issues
                 </div>
               </button>
             ))}

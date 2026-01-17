@@ -68,7 +68,7 @@ const applicationTables = {
     slug: v.string(), // "engineering", "marketing", "product"
     description: v.optional(v.string()),
     icon: v.optional(v.string()), // Emoji like 🏗️, 📱, 🎨
-    companyId: v.id("companies"),
+    organizationId: v.id("organizations"),
     createdBy: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -80,12 +80,34 @@ const applicationTables = {
       }),
     ),
   })
-    .index("by_company", ["companyId"])
-    .index("by_company_slug", ["companyId", "slug"])
+    .index("by_organization", ["organizationId"])
+    .index("by_organization_slug", ["organizationId", "slug"])
     .searchIndex("search_name", {
       searchField: "name",
-      filterFields: ["companyId"],
+      filterFields: ["organizationId"],
     }),
+
+  // Workspace Members (User-Workspace relationships - department-level access)
+  workspaceMembers: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    role: v.union(
+      v.literal("admin"), // Can manage workspace settings, teams, and members
+      v.literal("member"), // Can access workspace resources
+    ),
+    addedBy: v.id("users"),
+    addedAt: v.number(),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_user", ["userId"])
+    .index("by_workspace_user", ["workspaceId", "userId"])
+    .index("by_role", ["role"])
+    .index("by_workspace_role", ["workspaceId", "role"])
+    .index("by_deleted", ["isDeleted"]),
 
   projects: defineTable({
     name: v.string(),
@@ -95,11 +117,11 @@ const applicationTables = {
     workspaceId: v.id("workspaces"), // Project belongs to workspace (department)
     teamId: v.optional(v.id("teams")), // Project belongs to team (optional - null for workspace projects)
     // Ownership
-    companyId: v.id("companies"), // Company this project belongs to
+    organizationId: v.id("organizations"), // organization this project belongs to
     ownerId: v.id("users"), // User that owns this project
     // Sharing settings
-    isPublic: v.optional(v.boolean()), // Visible to all company members (company-public)
-    // isCompanyPublic removed (legacy)
+    isPublic: v.optional(v.boolean()), // Visible to all organization members (organization-public)
+    // isOrganizationPublic removed (legacy)
     sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Specific teams with access
     // Audit
     createdBy: v.id("users"), // Who created it (for audit trail)
@@ -127,15 +149,15 @@ const applicationTables = {
     .index("by_creator", ["createdBy"])
     .index("by_key", ["key"])
     .index("by_public", ["isPublic"])
-    .index("by_company", ["companyId"])
+    .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"]) // NEW
     .index("by_team", ["teamId"])
     .index("by_owner", ["ownerId"])
-    .index("by_company_public", ["companyId", "isPublic"])
+    .index("by_organization_public", ["organizationId", "isPublic"])
     .index("by_deleted", ["isDeleted"])
     .searchIndex("search_name", {
       searchField: "name",
-      filterFields: ["isPublic", "createdBy", "companyId", "workspaceId"], // Added workspaceId
+      filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId"], // Added workspaceId
     }),
 
   projectMembers: defineTable({
@@ -1184,7 +1206,7 @@ const applicationTables = {
   invites: defineTable({
     email: v.string(), // Email address to invite
     role: v.union(v.literal("user"), v.literal("superAdmin")), // Platform role: superAdmin = full system access
-    companyId: v.id("companies"), // Company to invite user to
+    organizationId: v.id("organizations"), // organization to invite user to
     projectId: v.optional(v.id("projects")), // Project to add user to (optional, for project-level invites)
     projectRole: v.optional(v.union(v.literal("admin"), v.literal("editor"), v.literal("viewer"))), // Role in project if projectId is set
     invitedBy: v.id("users"), // Admin who sent the invite
@@ -1208,23 +1230,23 @@ const applicationTables = {
     .index("by_status", ["status"])
     .index("by_invited_by", ["invitedBy"])
     .index("by_email_status", ["email", "status"])
-    .index("by_company", ["companyId"])
+    .index("by_organization", ["organizationId"])
     .index("by_project", ["projectId"]),
 
   // Companies/Organizations (Multi-tenant support)
-  companies: defineTable({
-    name: v.string(), // Company name
+  organizations: defineTable({
+    name: v.string(), // organization name
     slug: v.string(), // URL-friendly slug: "acme-corp", "example-agency"
-    timezone: v.string(), // Company default timezone (IANA): "America/New_York", "Europe/London"
-    // Company settings (required)
+    timezone: v.string(), // organization default timezone (IANA): "America/New_York", "Europe/London"
+    // organization settings (required)
     settings: v.object({
-      defaultMaxHoursPerWeek: v.number(), // Company-wide default max hours per week
-      defaultMaxHoursPerDay: v.number(), // Company-wide default max hours per day
+      defaultMaxHoursPerWeek: v.number(), // organization-wide default max hours per week
+      defaultMaxHoursPerDay: v.number(), // organization-wide default max hours per day
       requiresTimeApproval: v.boolean(), // Require time entry approval by default
       billingEnabled: v.boolean(), // Enable billing features
     }),
     // Metadata
-    createdBy: v.id("users"), // Company creator (becomes owner)
+    createdBy: v.id("users"), // organization creator (becomes owner)
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -1234,28 +1256,29 @@ const applicationTables = {
       searchField: "name",
     }),
 
-  // Company Members (User-Company relationships with roles)
-  companyMembers: defineTable({
-    companyId: v.id("companies"),
+  // organization Members (User-organization relationships with roles)
+  organizationMembers: defineTable({
+    organizationId: v.id("organizations"),
     userId: v.id("users"),
     role: v.union(
-      v.literal("owner"), // Company owner (creator, can't be removed, full control)
-      v.literal("admin"), // Company admin (can manage members, settings, billing)
-      v.literal("member"), // Regular member (can use company resources)
+      v.literal("owner"), // organization owner (creator, can't be removed, full control)
+      v.literal("admin"), // organization admin (can manage members, settings, billing)
+      v.literal("member"), // Regular member (can use organization resources)
     ),
     addedBy: v.id("users"), // Who added this member
     addedAt: v.number(), // When the membership was created/invited
     joinedAt: v.optional(v.number()), // When the user actually joined (accepted invite)
   })
-    .index("by_company", ["companyId"])
+    .index("by_organization", ["organizationId"])
     .index("by_user", ["userId"])
-    .index("by_company_user", ["companyId", "userId"])
+    .index("by_organization_user", ["organizationId", "userId"])
     .index("by_role", ["role"])
-    .index("by_company_role", ["companyId", "role"]),
+    .index("by_user_role", ["userId", "role"])
+    .index("by_organization_role", ["organizationId", "role"]),
 
-  // Teams (within a company - for data isolation and grouping)
+  // Teams (within a organization - for data isolation and grouping)
   teams: defineTable({
-    companyId: v.id("companies"), // Company this team belongs to
+    organizationId: v.id("organizations"), // organization this team belongs to
     workspaceId: v.id("workspaces"), // Team belongs to workspace
     name: v.string(), // Team name: "Product Team", "Dev Team", "Design Team"
     slug: v.string(), // URL-friendly slug: "product-team", "dev-team"
@@ -1282,16 +1305,16 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_company", ["companyId"])
+    .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"]) // NEW
     .index("by_workspace_slug", ["workspaceId", "slug"]) // NEW - for looking up teams by workspace and slug
-    .index("by_company_slug", ["companyId", "slug"])
+    .index("by_organization_slug", ["organizationId", "slug"])
     .index("by_creator", ["createdBy"])
     .index("by_lead", ["leadId"]) // NEW
     .index("by_deleted", ["isDeleted"]) // Soft delete index
     .searchIndex("search_name", {
       searchField: "name",
-      filterFields: ["companyId", "workspaceId"], // Added workspaceId
+      filterFields: ["organizationId", "workspaceId"], // Added workspaceId
     }),
 
   // Team Members (User-Team relationships)
@@ -1622,7 +1645,7 @@ export default defineSchema({
     image: v.optional(v.string()),
     isAnonymous: v.optional(v.boolean()),
     // Custom fields for Nixelo
-    defaultCompanyId: v.optional(v.id("companies")), // User's primary/default company
+    defaultOrganizationId: v.optional(v.id("organizations")), // User's primary/default organization
     bio: v.optional(v.string()), // User bio/description
     timezone: v.optional(v.string()), // User timezone
     emailNotifications: v.optional(v.boolean()),
@@ -1638,5 +1661,5 @@ export default defineSchema({
     .index("emailVerificationTime", ["emailVerificationTime"])
     .index("phone", ["phone"])
     .index("phoneVerificationTime", ["phoneVerificationTime"])
-    .index("defaultCompany", ["defaultCompanyId"]),
+    .index("defaultOrganization", ["defaultOrganizationId"]),
 });

@@ -18,7 +18,7 @@ interface TimeEntriesListProps {
   userId?: Id<"users">;
   startDate?: number;
   endDate?: number;
-  /** Whether billing is enabled for the company */
+  /** Whether billing is enabled for the organization */
   billingEnabled?: boolean;
 }
 

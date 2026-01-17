@@ -3,19 +3,19 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createCompanyAdmin, createTestUser } from "./testUtils";
+import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "./testUtils";
 
 describe("Teams", () => {
   describe("createTeam", () => {
-    it("should create a team for company members", async () => {
+    it("should create a team for organization members", async () => {
       const t = convexTest(schema, modules);
       const ownerId = await createTestUser(t);
       const asOwner = asAuthenticatedUser(t, ownerId);
 
-      const { companyId, workspaceId } = await createCompanyAdmin(t, ownerId);
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, ownerId);
 
       const { teamId, slug } = await asOwner.mutation(api.teams.createTeam, {
-        companyId,
+        organizationId,
         workspaceId,
         name: "Engineering",
         isPrivate: false,
@@ -26,28 +26,28 @@ describe("Teams", () => {
 
       const team = await t.run(async (ctx) => ctx.db.get(teamId));
       expect(team?.name).toBe("Engineering");
-      expect(team?.companyId).toBe(companyId);
+      expect(team?.organizationId).toBe(organizationId);
 
       await t.finishInProgressScheduledFunctions();
     });
 
-    it("should deny non-company members", async () => {
+    it("should deny non-organization members", async () => {
       const t = convexTest(schema, modules);
       const ownerId = await createTestUser(t);
       const outsiderId = await createTestUser(t);
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const { companyId, workspaceId } = await createCompanyAdmin(t, ownerId);
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, ownerId);
 
       const asOutsider = asAuthenticatedUser(t, outsiderId);
       await expect(async () => {
         await asOutsider.mutation(api.teams.createTeam, {
-          companyId,
+          organizationId,
           workspaceId,
           name: "Hacker Team",
           isPrivate: false,
         });
-      }).rejects.toThrow("You must be a company member to create a team");
+      }).rejects.toThrow("You must be an organization member to create a team");
 
       await t.finishInProgressScheduledFunctions();
     });
@@ -59,10 +59,10 @@ describe("Teams", () => {
       const ownerId = await createTestUser(t);
       const asOwner = asAuthenticatedUser(t, ownerId);
 
-      const { companyId, workspaceId } = await createCompanyAdmin(t, ownerId);
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, ownerId);
 
       const { teamId } = await asOwner.mutation(api.teams.createTeam, {
-        companyId,
+        organizationId,
         workspaceId,
         name: "Restore Me",
         isPrivate: false,
@@ -93,17 +93,17 @@ describe("Teams", () => {
       const memberId = await createTestUser(t);
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const { companyId, workspaceId } = await createCompanyAdmin(t, ownerId);
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, ownerId);
 
-      // Add user to company first
-      await asOwner.mutation(api.companies.addMember, {
-        companyId,
+      // Add user to organization first
+      await asOwner.mutation(api.organizations.addMember, {
+        organizationId,
         userId: memberId,
         role: "member",
       });
 
       const { teamId } = await asOwner.mutation(api.teams.createTeam, {
-        companyId,
+        organizationId,
         workspaceId,
         name: "Team A",
         isPrivate: false,
@@ -131,16 +131,16 @@ describe("Teams", () => {
       await t.finishInProgressScheduledFunctions();
     });
 
-    it("should enforce company membership constraint", async () => {
+    it("should enforce organization membership constraint", async () => {
       const t = convexTest(schema, modules);
       const ownerId = await createTestUser(t);
       const outsiderId = await createTestUser(t);
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const { companyId, workspaceId } = await createCompanyAdmin(t, ownerId);
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, ownerId);
 
       const { teamId } = await asOwner.mutation(api.teams.createTeam, {
-        companyId,
+        organizationId,
         workspaceId,
         name: "Team A",
         isPrivate: false,
@@ -152,35 +152,35 @@ describe("Teams", () => {
           userId: outsiderId,
           role: "member",
         });
-      }).rejects.toThrow("User must be a company member to join this team");
+      }).rejects.toThrow("User must be an organization member to join this team");
 
       await t.finishInProgressScheduledFunctions();
     });
   });
 
   describe("queries", () => {
-    it("should list company teams", async () => {
+    it("should list organization teams", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const { companyId, workspaceId } = await createCompanyAdmin(t, userId);
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, userId);
 
       await asUser.mutation(api.teams.createTeam, {
-        companyId,
+        organizationId,
         workspaceId,
         name: "Team 1",
         isPrivate: false,
       });
 
       await asUser.mutation(api.teams.createTeam, {
-        companyId,
+        organizationId,
         workspaceId,
         name: "Team 2",
         isPrivate: false,
       });
 
-      const teams = await asUser.query(api.teams.getCompanyTeams, { companyId });
+      const teams = await asUser.query(api.teams.getOrganizationTeams, { organizationId });
       expect(teams).toHaveLength(3); // Engineering (default) + Team 1 + Team 2
 
       await t.finishInProgressScheduledFunctions();
@@ -191,10 +191,10 @@ describe("Teams", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const { companyId, workspaceId } = await createCompanyAdmin(t, userId);
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, userId);
 
       await asUser.mutation(api.teams.createTeam, {
-        companyId,
+        organizationId,
         workspaceId,
         name: "Team 1",
         isPrivate: false,

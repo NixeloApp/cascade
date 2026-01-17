@@ -4,10 +4,10 @@ import { render as customRender } from "../test/custom-render";
 import { ProjectsList } from "./ProjectsList";
 
 // Mock hooks and components
-vi.mock("@/hooks/useCompanyContext", () => ({
-  useCompany: () => ({
-    companyId: "company-123",
-    companySlug: "test-company",
+vi.mock("@/hooks/useOrgContext", () => ({
+  useOrganization: () => ({
+    organizationId: "organization-123",
+    orgSlug: "test-organization",
   }),
 }));
 

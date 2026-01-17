@@ -31,13 +31,13 @@ const AUTH_DIR = path.join(__dirname, ".auth");
  */
 interface SetupResult {
   success: boolean;
-  companySlug?: string;
+  orgSlug?: string;
 }
 
 /**
- * Extract company slug from URL (e.g., /e2e-dashboard-xxxxx/dashboard -> e2e-dashboard-xxxxx)
+ * Extract organization slug from URL (e.g., /e2e-dashboard-xxxxx/dashboard -> e2e-dashboard-xxxxx)
  */
-function extractCompanySlug(url: string): string | undefined {
+function extractOrganizationSlug(url: string): string | undefined {
   const match = url.match(/\/([^/]+)\/(dashboard|settings|projects|documents|issues)/);
   return match?.[1];
 }
@@ -70,7 +70,7 @@ async function setupTestUser(
   // Clear context storage
   await context.clearCookies();
 
-  // Always delete and recreate user to ensure deterministic company slug
+  // Always delete and recreate user to ensure deterministic organization slug
   // This ensures the slug is derived from email prefix without random suffix
   console.log(`  🗑️ ${userKey}: Deleting existing user to ensure fresh state...`);
   await testUserService.deleteTestUser(user.email);
@@ -103,9 +103,9 @@ async function setupTestUser(
 
   if (success) {
     await context.storageState({ path: authStatePath });
-    const companySlug = extractCompanySlug(page.url());
+    const orgSlug = extractOrganizationSlug(page.url());
     console.log(`  ✓ ${userKey}: Auth state saved`);
-    return { success: true, companySlug };
+    return { success: true, orgSlug };
   } else {
     console.warn(`  ⚠️ ${userKey}: Failed to create auth state`);
     await page.screenshot({ path: path.join(AUTH_DIR, `setup-error-${userKey}.png`) });
@@ -211,7 +211,7 @@ async function globalSetup(config: FullConfig): Promise<void> {
       { key: "onboarding", user: users.onboarding, authPath: AUTH_PATHS.onboarding(i) },
     ];
 
-    const userConfigs: Record<string, { companySlug?: string }> = {};
+    const userConfigs: Record<string, { orgSlug?: string }> = {};
 
     for (const { key, user, authPath } of usersToSetup) {
       const context = await browser.newContext();
@@ -235,7 +235,7 @@ async function globalSetup(config: FullConfig): Promise<void> {
           completeOnboarding,
         );
         if (result.success) {
-          userConfigs[key] = { companySlug: result.companySlug };
+          userConfigs[key] = { orgSlug: result.orgSlug };
         }
       } catch (error) {
         console.error(`  ❌ Worker ${i} ${key}: Setup error:`, error);
@@ -259,9 +259,9 @@ async function globalSetup(config: FullConfig): Promise<void> {
       // Save worker-specific config
       const rbacConfig = {
         projectKey: rbacResult.projectKey,
-        companySlug: rbacResult.companySlug,
+        orgSlug: rbacResult.orgSlug,
         projectId: rbacResult.projectId,
-        companyId: rbacResult.companyId,
+        organizationId: rbacResult.organizationId,
       };
       fs.writeFileSync(
         path.join(AUTH_DIR, `rbac-config-${i}.json`),
@@ -272,9 +272,9 @@ async function globalSetup(config: FullConfig): Promise<void> {
     }
 
     // 4. Save Dashboard Config for this worker
-    if (userConfigs.teamLead?.companySlug) {
+    if (userConfigs.teamLead?.orgSlug) {
       const dashboardConfig = {
-        companySlug: userConfigs.teamLead.companySlug,
+        orgSlug: userConfigs.teamLead.orgSlug,
         email: users.teamLead.email,
       };
       fs.writeFileSync(

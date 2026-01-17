@@ -9,7 +9,7 @@ import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
   addProjectMember,
-  createCompanyAdmin,
+  createOrganizationAdmin,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -124,37 +124,37 @@ describe("RBAC Utilities", () => {
   });
 
   describe("canAccessProject (projectAccess)", () => {
-    it("should allow access to company-visible projects for company members", async () => {
+    it("should allow access to organization-visible projects for organization members", async () => {
       const t = convexTest(schema, modules);
 
       const creatorId = await createTestUser(t, { name: "Creator" });
-      const companyMemberId = await createTestUser(t, { name: "Company Member" });
-      const { companyId, workspaceId, teamId } = await createCompanyAdmin(t, creatorId);
+      const organizationMemberId = await createTestUser(t, { name: "organization Member" });
+      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, creatorId);
 
-      // Add company member (not project member)
+      // Add organization member (not project member)
       const now = Date.now();
       await t.run(async (ctx) => {
-        await ctx.db.insert("companyMembers", {
-          companyId,
-          userId: companyMemberId,
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: organizationMemberId,
           role: "member",
           addedBy: creatorId,
           addedAt: now,
         });
       });
 
-      // Create company-visible project
+      // Create organization-visible project
       const projectId = await t.run(async (ctx) => {
         return ctx.db.insert("projects", {
-          name: "Company Visible Project",
+          name: "organization Visible Project",
           key: "COMPVIS",
-          companyId,
+          organizationId,
           workspaceId,
           ownerId: creatorId,
           createdBy: creatorId,
           createdAt: now,
           updatedAt: now,
-          isPublic: true, // company-visible
+          isPublic: true, // organization-visible
           boardType: "kanban",
           workflowStates: [],
         });
@@ -162,7 +162,7 @@ describe("RBAC Utilities", () => {
 
       const canAccess = await t.run(async (ctx) => {
         const { canAccessProject } = await import("./projectAccess");
-        return await canAccessProject(ctx, projectId, companyMemberId);
+        return await canAccessProject(ctx, projectId, organizationMemberId);
       });
 
       expect(canAccess).toBe(true);

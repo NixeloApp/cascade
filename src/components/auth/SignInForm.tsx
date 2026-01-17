@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
@@ -33,7 +33,7 @@ export function SignInForm() {
     void signIn("password", formData)
       .then(() => {
         // Redirect to /app gateway to trigger SmartAuthGuard logic
-        navigate({ to: ROUTE_PATTERNS.app });
+        navigate({ to: ROUTES.app.path });
       })
       .catch((error) => {
         const message = error.message.includes("Invalid password")
@@ -46,7 +46,7 @@ export function SignInForm() {
 
   return (
     <div className="w-full">
-      <GoogleAuthButton redirectTo={ROUTE_PATTERNS.app} text="Sign in with Google" />
+      <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign in with Google" />
       <Flex align="center" justify="center" className="my-4">
         <hr className="grow border-ui-border-primary" />
         <span className="mx-4 text-ui-text-secondary text-sm">or</span>
@@ -66,7 +66,7 @@ export function SignInForm() {
         </div>
         {showEmailForm && (
           <div className="text-right mb-3">
-            <AuthLinkButton onClick={() => navigate({ to: ROUTE_PATTERNS.forgotPassword })}>
+            <AuthLinkButton onClick={() => navigate({ to: ROUTES.forgotPassword.path })}>
               Forgot password?
             </AuthLinkButton>
           </div>

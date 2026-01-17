@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
 import { NixeloLogo } from "./icons";
 
@@ -20,7 +20,7 @@ export function NavHeader() {
     <header className="px-6 py-5 sticky top-0 z-50 transition-all duration-300 backdrop-blur-md bg-ui-bg-primary/10 border-b border-ui-border-primary/20">
       <nav className="max-w-6xl mx-auto flex items-center justify-between relative">
         <Link
-          to={ROUTE_PATTERNS.home}
+          to={ROUTES.home.path}
           className="flex items-center gap-2 hover:opacity-90 transition-opacity"
         >
           <NixeloLogo />
@@ -66,13 +66,13 @@ export function NavHeader() {
 
           <Unauthenticated>
             <Link
-              to={ROUTE_PATTERNS.signin}
+              to={ROUTES.signin.path}
               className="text-sm font-medium text-ui-text-secondary hover:text-ui-text-primary transition-colors"
             >
               Sign in
             </Link>
             <Link
-              to={ROUTE_PATTERNS.signup}
+              to={ROUTES.signup.path}
               className="px-5 py-2.5 bg-linear-to-r from-cyan-500 to-teal-400 rounded-full text-sm font-medium text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all shadow-sm"
             >
               Get Started
@@ -80,7 +80,7 @@ export function NavHeader() {
           </Unauthenticated>
           <Authenticated>
             <Link
-              to={ROUTE_PATTERNS.app}
+              to={ROUTES.app.path}
               className="px-5 py-2.5 bg-linear-to-r from-cyan-500 to-teal-400 rounded-full text-sm font-medium text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all shadow-sm"
             >
               Go to App

@@ -1,7 +1,7 @@
 # Nixelo - Product Roadmap
 
 > **Last Updated:** 2026-01-01
-> **Current Architecture:** Company → Workspaces → Teams → Projects → Issues
+> **Current Architecture:** Organization → Workspaces → Teams → Projects → Issues
 
 ---
 
@@ -11,31 +11,21 @@
 
 ### Board Views (All Levels)
 
-- [ ] **Workspace Board** - Department-wide view
-  - [ ] All teams in workspace (cross-team dependencies)
-  - [ ] Workspace backlog (unassigned issues)
-  - [ ] Workspace sprint view (all active sprints)
-  - [ ] Kanban, List, Timeline, Calendar views
-- [ ] **Team Board** - Remaining items
-  - [ ] Team backlog (unassigned to projects)
-  - [ ] Team sprint/cycle view
-  - [ ] Team velocity tracking
-  - [ ] List, Timeline, Calendar views (Kanban done)
-- [ ] **Custom Boards** - Filter anything
-  - [ ] Saved filters (backend exists - needs UI)
-  - [ ] Cross-team boards
-  - [ ] Personal boards (@me)
-  - [ ] Multiple view types
+- [ ] **Cross-Team Dependencies** - Visual view of dependencies across teams
+- [ ] **Workspace Backlog** (unassigned issues)
+- [ ] **Workspace Sprint View** (all active sprints)
+- [ ] **Saved Filters UI** - Backend exists, needs full UI integration
+- [ ] **Personal boards (@me)**
 
 ### Documents/Wikis (All Levels)
 
-- [ ] **Company Wiki** - Organization-wide knowledge
+- [ ] **Organization Wiki** - Organization-wide knowledge
 - [ ] **Workspace Wiki** - Department documentation
 - [ ] **Team Wiki** - Team knowledge base
 
 ### Calendar/Events (All Levels)
 
-- [ ] **Company Calendar** - All-hands, holidays
+- [ ] **Organization Calendar** - All-hands, holidays
 - [ ] **Workspace Calendar** - Department events
 - [ ] **Team Calendar** - Team meetings, standups
 
@@ -48,13 +38,9 @@
 
 ## 🔥 NEXT: Public Launch
 
-### Day 1-2: Landing Page
+### Day 1-2: Polish
 
-- [ ] Create landing page with hero, features, screenshots
 - [ ] Create demo video (2-3 min walkthrough)
-
-### Day 3: GitHub Polish
-
 - [ ] Add issue/PR templates
 - [ ] Add "good first issue" labels
 
@@ -81,18 +67,15 @@
 
 ### P1 - Quick Wins (Low Effort, High Impact)
 
-- [ ] **Search descriptions** - Currently only searches titles, not issue descriptions
 - [ ] **Comment reactions** - 👍 👎 ❤️ 🎉 (simple `commentReactions` table)
-- [ ] **Verify rich text comments** - Document editor supports it, do comments?
+- [ ] **Verify rich text comments** - Improve Markdown support in comments
 
 ### P2 - Medium Priority (Worth Doing)
 
 - [ ] **Label groups** - Like Linear: organize labels into groups (Priority, Component, Area)
 - [ ] **User picker custom field** - For "Reviewer", "QA", "Designer" fields
 - [ ] **Velocity charts** - Track story points per sprint, show average velocity
-- [ ] **Timer widget** - Start/stop timer from issue detail page
 - [ ] **Slack integration** - Extend existing `pumbleWebhooks` to Slack
-- [ ] **Description search** - Add description to search index
 
 ### P3 - Nice to Have (Later)
 
@@ -104,25 +87,24 @@
 
 ---
 
+## 🏢 Agency MVP (Phase 1)
+
+**Pivot Goal:** Target agencies & consultants ("Replace 4 tools" value prop)
+**See:** [NICHE_STRATEGY.md](./research/NICHE_STRATEGY.md)
+
+- [ ] **Invoicing System** - Turn tracked hours into professional invoices (Backend partial)
+- [ ] **Client Portal** - Secure view for clients to track project progress/spend
+
+---
+
 ## Phase 2: Growth (Post-Launch)
 
-### Calendar Sync
+### Calendar & Slack Sync
 
-- [ ] Two-way sync (calendar ↔ Nixelo)
-- [ ] Sync issue due dates to calendar
 - [ ] Outlook Calendar integration
-
-### Slack Integration
-
-- [ ] Post issue updates to channels
+- [ ] Post issue updates to Slack channels
 - [ ] Create issues from Slack (`/nixelo create`)
 - [ ] Unfurl issue links
-
-### GitHub Integration
-
-- [ ] Link commits to issues (`Fixes PROJ-123`)
-- [ ] Link PRs to issues
-- [ ] Auto-update status on merge
 
 ### Enhanced Search
 
@@ -132,9 +114,8 @@
 
 ### Document Version History
 
-- [ ] Version history sidebar
+- [ ] Restore previous version (UI)
 - [ ] Diff view
-- [ ] Restore previous version
 
 ---
 

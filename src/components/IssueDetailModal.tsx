@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
 import { getPriorityColor, getTypeIcon } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
@@ -41,8 +41,8 @@ export function IssueDetailModal({
   const [description, setDescription] = useState("");
   const [hasCopied, setHasCopied] = useState(false);
 
-  // Get billing setting from company context
-  const { billingEnabled } = useCompany();
+  // Get billing setting from organization context
+  const { billingEnabled } = useOrganization();
 
   const issue = useQuery(api.issues.get, { id: issueId });
   const subtasks = useQuery(api.issues.listSubtasks, { parentId: issueId });

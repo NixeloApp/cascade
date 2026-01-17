@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useState } from "react";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
@@ -27,8 +27,8 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   );
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("week");
 
-  // Get billing setting from company context
-  const { billingEnabled } = useCompany();
+  // Get billing setting from organization context
+  const { billingEnabled } = useOrganization();
 
   // Only fetch projects list if no projectId is locked
   const projects = useQuery(api.projects.getCurrentUserProjects, projectId ? "skip" : undefined);

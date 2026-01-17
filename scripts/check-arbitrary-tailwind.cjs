@@ -56,7 +56,7 @@ for (const { regex, desc } of patterns) {
     const cmd = `git grep -n -e "${regex}" -- "${targetDir}"`;
     const output = execSync(cmd, { encoding: "utf-8", cwd: path.resolve(__dirname, "..") });
     const lines = output.trim().split("\n").filter(Boolean);
-    
+
     if (lines.length > 0) {
       results.push({ desc, regex, matches: lines });
       totalFound += lines.length;
@@ -70,7 +70,7 @@ if (results.length === 0) {
   console.log("✅ No arbitrary Tailwind values found!\n");
 } else {
   console.log(`⚠️  Found ${totalFound} arbitrary value(s):\n`);
-  
+
   for (const { desc, regex, matches } of results) {
     console.log(`--- ${desc} (${regex}) ---`);
     for (const match of matches) {
@@ -78,7 +78,7 @@ if (results.length === 0) {
     }
     console.log();
   }
-  
+
   console.log("=== SUMMARY ===");
   console.log(`Total arbitrary values: ${totalFound}`);
   console.log("Consider replacing these with standard Tailwind tokens.\n");

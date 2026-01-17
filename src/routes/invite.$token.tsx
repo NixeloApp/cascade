@@ -7,7 +7,7 @@ import { SignInForm, SmartAuthGuard } from "@/components/auth";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { showError, showSuccess } from "@/lib/toast";
 
 export const Route = createFileRoute("/invite/$token")({
@@ -27,7 +27,7 @@ function InviteRoute() {
   const acceptInvite = useMutation(api.invites.acceptInvite);
 
   const goToHome = () => {
-    navigate({ to: ROUTE_PATTERNS.home });
+    navigate({ to: ROUTES.home.path });
   };
 
   const handleAcceptInvite = async () => {
@@ -39,7 +39,7 @@ function InviteRoute() {
         ? "Welcome! You've joined the project."
         : "Welcome! You've joined the team.";
       showSuccess(successMessage);
-      // Trigger redirect to user's company dashboard
+      // Trigger redirect to user's organization dashboard
       setInviteAccepted(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to accept invite";
@@ -50,7 +50,7 @@ function InviteRoute() {
     }
   };
 
-  // After accepting invite, redirect to user's company dashboard
+  // After accepting invite, redirect to user's organization dashboard
   if (inviteAccepted) {
     return <SmartAuthGuard />;
   }

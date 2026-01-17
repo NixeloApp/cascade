@@ -4,10 +4,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
-import { ROUTE_PATTERNS } from "@/config/routes";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { ROUTES } from "@/config/routes";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { useListNavigation } from "../hooks/useListNavigation";
 import { DashboardCustomizeModal } from "./Dashboard/DashboardCustomizeModal";
+import { FocusZone } from "./Dashboard/FocusZone";
+import { Greeting } from "./Dashboard/Greeting";
 import { MyIssuesList } from "./Dashboard/MyIssuesList";
 import { WorkspacesList } from "./Dashboard/ProjectsList";
 import { QuickStats } from "./Dashboard/QuickStats";
@@ -18,10 +20,11 @@ type IssueFilter = "assigned" | "created" | "all";
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { companySlug } = useCompany();
+  const { orgSlug } = useOrganization();
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("assigned");
 
-  // User Settings
+  // User and Settings
+  const user = useQuery(api.users.getCurrent);
   const userSettings = useQuery(api.userSettings.get);
   const layout = userSettings?.dashboardLayout;
   const showStats = layout?.showStats ?? true;
@@ -40,14 +43,15 @@ export function Dashboard() {
   const myProjects = useQuery(api.dashboard.getMyProjects);
   const recentActivity = useQuery(api.dashboard.getMyRecentActivity, { limit: 10 });
   const stats = useQuery(api.dashboard.getMyStats);
+  const focusTask = useQuery(api.dashboard.getFocusTask);
 
   const displayIssues = getDisplayIssues(issueFilter, myIssues, myCreatedIssues);
 
   // Navigation helper for keyboard navigation callbacks
   const navigateToWorkspace = (projectKey: string) => {
     navigate({
-      to: ROUTE_PATTERNS.projects.board,
-      params: { companySlug, key: projectKey },
+      to: ROUTES.projects.board.path,
+      params: { orgSlug, key: projectKey },
     });
   };
 
@@ -66,46 +70,66 @@ export function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-ui-bg-secondary">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        {/* Header */}
-        <Flex
-          direction="column"
-          gap="lg"
-          className="mb-6 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div>
-            <Typography variant="h1" className="text-2xl sm:text-3xl font-bold">
-              My Work
-            </Typography>
-            <Typography variant="muted" className="mt-1 sm:text-base">
-              Your personal dashboard and activity center
-            </Typography>
+    <div className="min-h-screen bg-ui-bg-secondary relative overflow-hidden">
+      {/* Premium Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-linear-to-b from-brand-600/5 to-transparent pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-accent-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="relative z-10 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        {/* Header Section */}
+        <Flex justify="between" align="start" className="mb-8">
+          <Greeting userName={user?.name} completedCount={stats?.completedThisWeek} />
+          <div className="mt-2">
+            <DashboardCustomizeModal />
           </div>
-          <DashboardCustomizeModal />
         </Flex>
 
-        {/* Stats Cards */}
-        {showStats && <QuickStats stats={stats} />}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* My Issues */}
-          <div className={sidebarVisible ? "lg:col-span-2" : "lg:col-span-3"}>
-            <MyIssuesList
-              myIssues={myIssues}
-              myCreatedIssues={myCreatedIssues}
-              displayIssues={displayIssues}
-              issueFilter={issueFilter}
-              onFilterChange={setIssueFilter}
-              issueNavigation={issueNavigation}
-              loadMore={loadMoreMyIssues}
-              status={myIssuesStatus}
-            />
+        {/* Top Actionable Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+          {/* Focus Zone - Span 5 */}
+          <div className="lg:col-span-5">
+            <FocusZone task={focusTask} />
           </div>
 
-          {/* Sidebar */}
+          {/* Quick Stats - Span 7 */}
+          <div className="lg:col-span-7">
+            {showStats && (
+              <div className="h-full flex flex-col justify-end">
+                <Typography
+                  variant="small"
+                  color="tertiary"
+                  className="uppercase tracking-widest mb-2 font-bold"
+                >
+                  Overview
+                </Typography>
+                <QuickStats stats={stats} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Workspace Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Feed/Issues */}
+          <Flex className={sidebarVisible ? "lg:col-span-2" : "lg:col-span-3"}>
+            <div className="bg-ui-bg-primary/40 backdrop-blur-md rounded-xl border border-ui-border-primary/50 overflow-hidden shadow-sm">
+              <MyIssuesList
+                myIssues={myIssues}
+                myCreatedIssues={myCreatedIssues}
+                displayIssues={displayIssues}
+                issueFilter={issueFilter}
+                onFilterChange={setIssueFilter}
+                issueNavigation={issueNavigation}
+                loadMore={loadMoreMyIssues}
+                status={myIssuesStatus}
+              />
+            </div>
+          </Flex>
+
+          {/* Sidebars */}
           {sidebarVisible && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* My Workspaces */}
               {showWorkspaces && (
                 <WorkspacesList projects={myProjects} projectNavigation={projectNavigation} />

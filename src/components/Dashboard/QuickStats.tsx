@@ -1,6 +1,9 @@
 import { cn } from "@/lib/utils";
 import { Card, CardBody } from "../ui/Card";
+import { Flex } from "../ui/Flex";
+import { Progress } from "../ui/progress";
 import { SkeletonStatCard } from "../ui/Skeleton";
+import { Typography } from "../ui/Typography";
 
 interface Stats {
   assignedToMe: number;
@@ -17,103 +20,126 @@ interface StatCardProps {
   title: string;
   value: number;
   subtitle: string;
-  gradientFrom: string;
-  gradientTo: string;
-  borderColor: string;
-  textColor: string;
+  variant: "brand" | "success" | "accent";
+  progressValue?: number;
 }
 
+const variantStyles = {
+  brand: {
+    text: "text-brand-600 dark:text-brand-400",
+    bg: "bg-brand-600 dark:bg-brand-400",
+  },
+  success: {
+    text: "text-status-success",
+    bg: "bg-status-success",
+  },
+  accent: {
+    text: "text-accent-600 dark:text-accent-400",
+    bg: "bg-accent-600 dark:bg-accent-400",
+  },
+} as const;
+
 /**
- * Individual stat card component
+ * Individual stat card component with glassmorphism
  */
-function StatCard({
-  title,
-  value,
-  subtitle,
-  gradientFrom,
-  gradientTo,
-  borderColor,
-  textColor,
-}: StatCardProps) {
+function StatCard({ title, value, subtitle, variant, progressValue }: StatCardProps) {
+  const styles = variantStyles[variant];
+
   return (
     <Card
       className={cn(
-        "bg-linear-to-br border-l-4 animate-fade-in",
-        gradientFrom,
-        gradientTo,
-        borderColor,
+        "bg-ui-bg-primary/40 backdrop-blur-md border-ui-border-primary/50 group hover:bg-ui-bg-primary/60 transition-all duration-300 shadow-sm hover:shadow-lg animate-in fade-in zoom-in",
       )}
     >
-      <CardBody className="text-center">
-        <div className={cn("text-sm font-medium mb-2", textColor)}>{title}</div>
-        <div className={cn("text-4xl font-bold", textColor)}>{value || 0}</div>
-        <div className={cn("text-xs mt-2", textColor)}>{subtitle}</div>
+      <CardBody className="p-5">
+        <Typography
+          variant="small"
+          color="tertiary"
+          className="text-[10px] uppercase tracking-wider mb-2 font-bold"
+        >
+          {title}
+        </Typography>
+        <Flex align="baseline" gap="xs" className="mb-3">
+          <Typography variant="h2" className={cn("text-3xl font-extrabold", styles.text)}>
+            {value || 0}
+          </Typography>
+          <Typography variant="small" color="secondary" className="text-xs">
+            {subtitle}
+          </Typography>
+        </Flex>
+        {progressValue !== undefined && (
+          <div className="mt-4">
+            <Progress
+              value={progressValue}
+              className="h-1.5"
+              id="stat-progress"
+              indicatorClassName={styles.bg}
+            />
+          </div>
+        )}
       </CardBody>
     </Card>
   );
 }
 
 /**
- * High priority stat card with conditional styling
+ * High priority stat card with high-impact styling
  */
 function HighPriorityCard({ count }: { count: number }) {
   const hasHighPriority = count > 0;
   return (
     <Card
       className={cn(
-        "border-l-4 animate-fade-in",
+        "relative overflow-hidden transition-all duration-500 shadow-sm hover:shadow-xl animate-in fade-in zoom-in",
         hasHighPriority
-          ? "bg-linear-to-br from-status-warning-bg to-ui-bg-primary dark:from-status-warning-bg-dark dark:to-ui-bg-primary-dark border-status-warning dark:border-status-warning"
-          : "bg-linear-to-br from-ui-bg-secondary to-ui-bg-primary dark:from-ui-bg-secondary-dark dark:to-ui-bg-primary-dark border-ui-border-primary dark:border-ui-border-primary-dark",
+          ? "bg-gradient-to-br from-status-warning-bg/40 to-status-warning-bg/10 backdrop-blur-md border-status-warning/30"
+          : "bg-ui-bg-primary/40 backdrop-blur-md border-ui-border-primary/50",
       )}
     >
-      <CardBody className="text-center">
-        <div
+      <CardBody className="p-5 relative z-10">
+        <Typography
+          variant="small"
           className={cn(
-            "text-sm font-medium mb-2",
-            hasHighPriority
-              ? "text-status-warning-text dark:text-status-warning-text-dark"
-              : "text-ui-text-secondary dark:text-ui-text-secondary-dark",
+            "text-[10px] uppercase tracking-wider mb-2 font-bold",
+            hasHighPriority ? "text-status-warning" : "text-ui-text-tertiary",
           )}
         >
-          HIGH PRIORITY
-        </div>
-        <div
-          className={cn(
-            "text-4xl font-bold",
-            hasHighPriority
-              ? "text-status-warning dark:text-status-warning"
-              : "text-ui-text-tertiary dark:text-ui-text-tertiary-dark",
-          )}
-        >
-          {count || 0}
-        </div>
-        <div
-          className={cn(
-            "text-xs mt-2",
-            hasHighPriority
-              ? "text-status-warning dark:text-status-warning"
-              : "text-ui-text-secondary dark:text-ui-text-secondary-dark",
-          )}
-        >
-          {hasHighPriority ? "Needs attention" : "All clear"}
-        </div>
+          Attention Needed
+        </Typography>
+        <Flex align="baseline" gap="xs">
+          <Typography
+            variant="h2"
+            className={cn(
+              "text-3xl font-extrabold",
+              hasHighPriority ? "text-status-warning" : "text-ui-text-primary",
+            )}
+          >
+            {count || 0}
+          </Typography>
+          <Typography variant="small" color="secondary" className="text-xs">
+            High Priority
+          </Typography>
+        </Flex>
+
+        {hasHighPriority && (
+          <div className="absolute right-0 top-0 h-full w-1.5 bg-status-warning" />
+        )}
       </CardBody>
+
+      {hasHighPriority && (
+        <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-status-warning/10 rounded-full blur-xl" />
+      )}
     </Card>
   );
 }
 
 /**
- * Dashboard quick stats cards showing:
- * - Assigned issues
- * - Completed this week
- * - High priority issues
- * - Created issues
+ * Dashboard quick stats cards showing high-density metrics
  */
 export function QuickStats({ stats }: QuickStatsProps) {
   if (!stats) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <SkeletonStatCard />
         <SkeletonStatCard />
         <SkeletonStatCard />
@@ -122,35 +148,32 @@ export function QuickStats({ stats }: QuickStatsProps) {
     );
   }
 
+  // Calculate completion percentage for the progress bar
+  const totalAssigned = stats.assignedToMe + stats.completedThisWeek;
+  const completionPercentage =
+    totalAssigned > 0 ? (stats.completedThisWeek / totalAssigned) * 100 : 0;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <StatCard
-        title="ASSIGNED TO ME"
+        title="Active Load"
         value={stats.assignedToMe}
-        subtitle="Active tasks"
-        gradientFrom="from-brand-50"
-        gradientTo="to-ui-bg-primary dark:from-brand-900/20 dark:to-ui-bg-primary-dark"
-        borderColor="border-brand-600 dark:border-brand-500"
-        textColor="text-brand-700 dark:text-brand-400"
+        subtitle="Assigned tasks"
+        variant="brand"
       />
       <StatCard
-        title="COMPLETED"
+        title="Velocity"
         value={stats.completedThisWeek}
-        subtitle="This week"
-        gradientFrom="from-status-success-bg"
-        gradientTo="to-ui-bg-primary dark:from-status-success-bg-dark dark:to-ui-bg-primary-dark"
-        borderColor="border-status-success dark:border-status-success"
-        textColor="text-status-success-text dark:text-status-success-text-dark"
+        subtitle="Done this week"
+        variant="success"
+        progressValue={completionPercentage}
       />
       <HighPriorityCard count={stats.highPriority} />
       <StatCard
-        title="CREATED"
+        title="Contribution"
         value={stats.createdByMe}
-        subtitle="Total issues"
-        gradientFrom="from-accent-50"
-        gradientTo="to-ui-bg-primary dark:from-accent-900/20 dark:to-ui-bg-primary-dark"
-        borderColor="border-accent-600 dark:border-accent-500"
-        textColor="text-accent-700 dark:text-accent-400"
+        subtitle="Reported issues"
+        variant="accent"
       />
     </div>
   );

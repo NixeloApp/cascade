@@ -1,76 +1,196 @@
 /**
- * Route path patterns for TanStack Router
- * Use these when defining routes with createFileRoute
+ * Centralized Route Definitions
+ * path: The pattern used for route definition (TanStack Router)
+ * build: Function to generate the actual URL string
  */
-export const ROUTE_PATTERNS = {
-  home: "/" as const,
-  signin: "/signin" as const,
-  signup: "/signup" as const,
-  forgotPassword: "/forgot-password" as const,
-  invite: "/invite/$token" as const,
-  terms: "/terms" as const,
-  privacy: "/privacy" as const,
-  onboarding: "/onboarding" as const,
-  app: "/app" as const,
-  companySlug: "/$companySlug" as const,
-  dashboard: "/$companySlug/dashboard" as const,
+export const ROUTES = {
+  home: {
+    path: "/" as const,
+    build: () => "/",
+  },
+  signin: {
+    path: "/signin" as const,
+    build: () => "/signin",
+  },
+  signup: {
+    path: "/signup" as const,
+    build: () => "/signup",
+  },
+  forgotPassword: {
+    path: "/forgot-password" as const,
+    build: () => "/forgot-password",
+  },
+  invite: {
+    path: "/invite/$token" as const,
+    build: (token: string) => `/invite/${token}`,
+  },
+  terms: {
+    path: "/terms" as const,
+    build: () => "/terms",
+  },
+  privacy: {
+    path: "/privacy" as const,
+    build: () => "/privacy",
+  },
+  onboarding: {
+    path: "/onboarding" as const,
+    build: () => "/onboarding",
+  },
+  app: {
+    path: "/app" as const,
+    build: () => "/app",
+  },
+  dashboard: {
+    path: "/$orgSlug/dashboard" as const,
+    build: (orgSlug: string) => `/${orgSlug}/dashboard`,
+  },
 
   documents: {
-    list: "/$companySlug/documents" as const,
-    detail: "/$companySlug/documents/$id" as const,
-    templates: "/$companySlug/documents/templates" as const,
+    list: {
+      path: "/$orgSlug/documents" as const,
+      build: (orgSlug: string) => `/${orgSlug}/documents`,
+    },
+    detail: {
+      path: "/$orgSlug/documents/$id" as const,
+      build: (orgSlug: string, id: string) => `/${orgSlug}/documents/${id}`,
+    },
+    templates: {
+      path: "/$orgSlug/documents/templates" as const,
+      build: (orgSlug: string) => `/${orgSlug}/documents/templates`,
+    },
   },
 
   workspaces: {
-    list: "/$companySlug/workspaces" as const,
-    detail: "/$companySlug/workspaces/$workspaceSlug" as const,
-    layout: "/$companySlug/workspaces/$workspaceSlug" as const,
-    board: "/$companySlug/workspaces/$workspaceSlug/board" as const,
-    wiki: "/$companySlug/workspaces/$workspaceSlug/wiki" as const,
-    settings: "/$companySlug/workspaces/$workspaceSlug/settings" as const,
+    list: {
+      path: "/$orgSlug/workspaces" as const,
+      build: (orgSlug: string) => `/${orgSlug}/workspaces`,
+    },
+    detail: {
+      path: "/$orgSlug/workspaces/$workspaceSlug" as const,
+      build: (orgSlug: string, workspaceSlug: string) => `/${orgSlug}/workspaces/${workspaceSlug}`,
+    },
+    board: {
+      path: "/$orgSlug/workspaces/$workspaceSlug/board" as const,
+      build: (orgSlug: string, workspaceSlug: string) =>
+        `/${orgSlug}/workspaces/${workspaceSlug}/board`,
+    },
+    wiki: {
+      path: "/$orgSlug/workspaces/$workspaceSlug/wiki" as const,
+      build: (orgSlug: string, workspaceSlug: string) =>
+        `/${orgSlug}/workspaces/${workspaceSlug}/wiki`,
+    },
+    settings: {
+      path: "/$orgSlug/workspaces/$workspaceSlug/settings" as const,
+      build: (orgSlug: string, workspaceSlug: string) =>
+        `/${orgSlug}/workspaces/${workspaceSlug}/settings`,
+    },
 
     teams: {
-      list: "/$companySlug/workspaces/$workspaceSlug/teams" as const,
-      detail: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug" as const,
-      layout: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug" as const,
-      board: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/board" as const,
-      backlog: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/backlog" as const,
-      wiki: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki" as const,
-      calendar: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar" as const,
-      settings: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/settings" as const,
+      list: {
+        path: "/$orgSlug/workspaces/$workspaceSlug/teams" as const,
+        build: (orgSlug: string, workspaceSlug: string) =>
+          `/${orgSlug}/workspaces/${workspaceSlug}/teams`,
+      },
+      detail: {
+        path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug" as const,
+        build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
+          `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}`,
+      },
+      board: {
+        path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board" as const,
+        build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
+          `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/board`,
+      },
+      backlog: {
+        path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/backlog" as const,
+        build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
+          `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/backlog`,
+      },
+      calendar: {
+        path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar" as const,
+        build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
+          `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/calendar`,
+      },
+      settings: {
+        path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings" as const,
+        build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
+          `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/settings`,
+      },
 
       projects: {
-        list: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/projects" as const,
-        layout: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key" as const,
-        board:
-          "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/board" as const,
-        calendar:
-          "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/calendar" as const,
-        timesheet:
-          "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/timesheet" as const,
-        wiki: "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/wiki" as const,
-        settings:
-          "/$companySlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/settings" as const,
+        list: {
+          path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/projects" as const,
+          build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
+            `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/projects`,
+        },
+        board: {
+          path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/board" as const,
+          build: (orgSlug: string, workspaceSlug: string, teamSlug: string, key: string) =>
+            `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/projects/${key}/board`,
+        },
+        calendar: {
+          path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/calendar" as const,
+          build: (orgSlug: string, workspaceSlug: string, teamSlug: string, key: string) =>
+            `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/projects/${key}/calendar`,
+        },
+        timesheet: {
+          path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/timesheet" as const,
+          build: (orgSlug: string, workspaceSlug: string, teamSlug: string, key: string) =>
+            `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/projects/${key}/timesheet`,
+        },
+        wiki: {
+          path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/wiki" as const,
+          build: (orgSlug: string, workspaceSlug: string, teamSlug: string, key: string) =>
+            `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/projects/${key}/wiki`,
+        },
+        settings: {
+          path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/projects/$key/settings" as const,
+          build: (orgSlug: string, workspaceSlug: string, teamSlug: string, key: string) =>
+            `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/projects/${key}/settings`,
+        },
       },
     },
   },
 
   projects: {
-    list: "/$companySlug/projects" as const,
-    layout: "/$companySlug/projects/$key" as const,
-    board: "/$companySlug/projects/$key/board" as const,
-    calendar: "/$companySlug/projects/$key/calendar" as const,
-    timesheet: "/$companySlug/projects/$key/timesheet" as const,
-    settings: "/$companySlug/projects/$key/settings" as const,
+    list: {
+      path: "/$orgSlug/projects" as const,
+      build: (orgSlug: string) => `/${orgSlug}/projects`,
+    },
+    board: {
+      path: "/$orgSlug/projects/$key/board" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/board`,
+    },
+    calendar: {
+      path: "/$orgSlug/projects/$key/calendar" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/calendar`,
+    },
+    timesheet: {
+      path: "/$orgSlug/projects/$key/timesheet" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/timesheet`,
+    },
+    settings: {
+      path: "/$orgSlug/projects/$key/settings" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/settings`,
+    },
   },
 
   issues: {
-    detail: "/$companySlug/issues/$key" as const,
+    detail: {
+      path: "/$orgSlug/issues/$key" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/issues/${key}`,
+    },
   },
 
   settings: {
-    profile: "/$companySlug/settings/profile" as const,
+    profile: {
+      path: "/$orgSlug/settings/profile" as const,
+      build: (orgSlug: string) => `/${orgSlug}/settings/profile`,
+    },
   },
 
-  timeTracking: "/$companySlug/time-tracking" as const,
+  timeTracking: {
+    path: "/$orgSlug/time-tracking" as const,
+    build: (orgSlug: string) => `/${orgSlug}/time-tracking`,
+  },
 } as const;

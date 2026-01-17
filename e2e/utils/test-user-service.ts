@@ -26,8 +26,8 @@ export interface RbacProjectResult {
   success: boolean;
   projectKey?: string;
   projectId?: string;
-  companySlug?: string;
-  companyId?: string;
+  orgSlug?: string;
+  organizationId?: string;
   error?: string;
 }
 
@@ -187,12 +187,12 @@ export class TestUserService {
   }
 
   /**
-   * Update company settings for testing different profiles
-   * @param companySlug - The company slug to update
+   * Update organization settings for testing different profiles
+   * @param orgSlug - The organization slug to update
    * @param settings - Partial settings to update (only provided fields are changed)
    */
-  async updateCompanySettings(
-    companySlug: string,
+  async updateOrganizationSettings(
+    orgSlug: string,
     settings: {
       defaultMaxHoursPerWeek?: number;
       defaultMaxHoursPerDay?: number;
@@ -201,7 +201,7 @@ export class TestUserService {
     },
   ): Promise<{
     success: boolean;
-    companyId?: string;
+    organizationId?: string;
     updatedSettings?: {
       defaultMaxHoursPerWeek: number;
       defaultMaxHoursPerDay: number;
@@ -211,14 +211,14 @@ export class TestUserService {
     error?: string;
   }> {
     try {
-      const response = await fetch(E2E_ENDPOINTS.updateCompanySettings, {
+      const response = await fetch(E2E_ENDPOINTS.updateOrganizationSettings, {
         method: "POST",
         headers: getE2EHeaders(),
-        body: JSON.stringify({ companySlug, settings }),
+        body: JSON.stringify({ orgSlug, settings }),
       });
       return await response.json();
     } catch (error) {
-      console.warn(`  ⚠️ Failed to update company settings for ${companySlug}:`, error);
+      console.warn(`  ⚠️ Failed to update organization settings for ${orgSlug}:`, error);
       return { success: false, error: String(error) };
     }
   }

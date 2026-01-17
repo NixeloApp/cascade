@@ -15,7 +15,7 @@ interface TimeTrackerProps {
   issueId: Id<"issues">;
   projectId?: Id<"projects">;
   estimatedHours?: number;
-  /** Whether billing is enabled for the company */
+  /** Whether billing is enabled for the organization */
   billingEnabled?: boolean;
 }
 

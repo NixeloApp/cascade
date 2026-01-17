@@ -4,8 +4,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
-import { ROUTE_PATTERNS } from "@/config/routes";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { ROUTES } from "@/config/routes";
+import { useOrganization } from "@/hooks/useOrgContext";
 import {
   Command,
   CommandDialog,
@@ -148,7 +148,7 @@ export function useCommands({
   onCreateProject?: () => void;
 } = {}) {
   const navigate = useNavigate();
-  const { companySlug } = useCompany();
+  const { orgSlug } = useOrganization();
   const projects = useQuery(api.dashboard.getMyProjects);
   const myIssues = useQuery(api.dashboard.getMyIssues);
 
@@ -160,7 +160,7 @@ export function useCommands({
       icon: "🏠",
       description: "View your personal dashboard",
       keywords: ["home", "my work"],
-      action: () => navigate({ to: ROUTE_PATTERNS.dashboard, params: { companySlug } }),
+      action: () => navigate({ to: ROUTES.dashboard.path, params: { orgSlug } }),
       group: "Navigation",
     },
     {
@@ -169,7 +169,7 @@ export function useCommands({
       icon: "📄",
       description: "View all documents",
       keywords: ["docs", "files"],
-      action: () => navigate({ to: ROUTE_PATTERNS.documents.list, params: { companySlug } }),
+      action: () => navigate({ to: ROUTES.documents.list.path, params: { orgSlug } }),
       group: "Navigation",
     },
     {
@@ -178,7 +178,7 @@ export function useCommands({
       icon: "📋",
       description: "View all workspaces",
       keywords: ["boards", "kanban", "projects", "workspaces"],
-      action: () => navigate({ to: ROUTE_PATTERNS.workspaces.list, params: { companySlug } }),
+      action: () => navigate({ to: ROUTES.workspaces.list.path, params: { orgSlug } }),
       group: "Navigation",
     },
 
@@ -191,8 +191,8 @@ export function useCommands({
       keywords: [project.key, "board", "project"],
       action: () =>
         navigate({
-          to: ROUTE_PATTERNS.projects.board,
-          params: { companySlug, key: project.key },
+          to: ROUTES.projects.board.path,
+          params: { orgSlug, key: project.key },
         }),
       group: "Projects",
     })) || []),
@@ -249,8 +249,8 @@ export function useCommands({
         keywords: [issue.projectKey, issue.projectName || ""],
         action: () => {
           navigate({
-            to: ROUTE_PATTERNS.projects.board,
-            params: { companySlug, key: issue.projectKey },
+            to: ROUTES.projects.board.path,
+            params: { orgSlug, key: issue.projectKey },
           });
         },
         group: "Recent Issues",

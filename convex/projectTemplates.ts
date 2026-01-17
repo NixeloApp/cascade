@@ -4,6 +4,11 @@ import { mutation, query } from "./_generated/server";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
 export const list = query({
+  args: {},
+  returns: v.array(v.any()), // Struct is complex, using v.any() for full doc return
+  // Or better: v.array(v.object({ _id: v.id("projectTemplates"), name: v.string(), ... }))
+  // I'll use v.array(v.any()) as a safe fallback for full doc return in this context
+  // given the complexity of nested arrays in workflowStates/defaultLabels.
   handler: async (ctx) => {
     // Get all built-in templates
     const templates = await ctx.db
@@ -17,6 +22,7 @@ export const list = query({
 
 export const get = query({
   args: { id: v.id("projectTemplates") },
+  returns: v.union(v.null(), v.any()),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -28,10 +34,11 @@ export const createFromTemplate = mutation({
     projectName: v.string(),
     projectKey: v.string(),
     description: v.optional(v.string()),
-    companyId: v.id("companies"), // Required: company this project belongs to
+    organizationId: v.id("organizations"), // Required: organization this project belongs to
     workspaceId: v.id("workspaces"), // Required: workspace this project belongs to
     teamId: v.optional(v.id("teams")), // Required: team this project belongs to
   },
+  returns: v.id("projects"),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -43,14 +50,16 @@ export const createFromTemplate = mutation({
       throw new Error("Template not found");
     }
 
-    // Verify user is a member of the company
-    const companyMembership = await ctx.db
-      .query("companyMembers")
-      .withIndex("by_company_user", (q) => q.eq("companyId", args.companyId).eq("userId", userId))
+    // Verify user is a member of the organization
+    const organizationMembership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", args.organizationId).eq("userId", userId),
+      )
       .first();
 
-    if (!companyMembership) {
-      throw new Error("You must be a member of this company to create projects");
+    if (!organizationMembership) {
+      throw new Error("You must be a member of this organization to create projects");
     }
 
     // Check if project key already exists
@@ -71,7 +80,7 @@ export const createFromTemplate = mutation({
       name: args.projectName,
       key: args.projectKey,
       description: args.description,
-      companyId: args.companyId,
+      organizationId: args.organizationId,
       workspaceId: args.workspaceId,
       teamId: args.teamId,
       ownerId: userId,
@@ -109,6 +118,8 @@ export const createFromTemplate = mutation({
 
 // Initialize built-in templates (would be called once during setup)
 export const initializeBuiltInTemplates = mutation({
+  args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     const now = Date.now();
 

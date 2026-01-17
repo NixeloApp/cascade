@@ -1,8 +1,8 @@
 import type { KeySequence } from "../hooks/useKeyboardShortcuts";
-// Routes removed
+import { ROUTES } from "./routes";
 
 export interface ShortcutHandlers {
-  companySlug: string;
+  orgSlug: string;
   navigate: (to: string) => void;
   setShowCommandPalette: (show: boolean) => void;
   setShowShortcutsHelp: (show: boolean) => void;
@@ -10,7 +10,7 @@ export interface ShortcutHandlers {
 }
 
 export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
-  const { companySlug } = handlers;
+  const { orgSlug } = handlers;
   const shortcuts = [
     // Command palette (Cmd/Ctrl+K)
     {
@@ -56,19 +56,19 @@ export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
     {
       key: "1",
       meta: true,
-      handler: () => handlers.navigate(`/${companySlug}/dashboard`),
+      handler: () => handlers.navigate(ROUTES.dashboard.build(orgSlug)),
       description: "Go to dashboard",
     },
     {
       key: "2",
       meta: true,
-      handler: () => handlers.navigate(`/${companySlug}/documents`),
+      handler: () => handlers.navigate(ROUTES.documents.list.build(orgSlug)),
       description: "Go to documents",
     },
     {
       key: "3",
       meta: true,
-      handler: () => handlers.navigate(`/${companySlug}/workspaces`),
+      handler: () => handlers.navigate(ROUTES.workspaces.list.build(orgSlug)),
       description: "Go to workspaces",
     },
     // Single-key actions (only when not typing)
@@ -99,21 +99,21 @@ export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
 }
 
 export function createKeySequences(handlers: ShortcutHandlers): KeySequence[] {
-  const { companySlug } = handlers;
+  const { orgSlug } = handlers;
   return [
     {
       keys: ["g", "h"],
-      handler: () => handlers.navigate(`/${companySlug}/dashboard`),
+      handler: () => handlers.navigate(ROUTES.dashboard.build(orgSlug)),
       description: "Go to home",
     },
     {
       keys: ["g", "w"],
-      handler: () => handlers.navigate(`/${companySlug}/workspaces`),
+      handler: () => handlers.navigate(ROUTES.workspaces.list.build(orgSlug)),
       description: "Go to workspaces",
     },
     {
       keys: ["g", "d"],
-      handler: () => handlers.navigate(`/${companySlug}/documents`),
+      handler: () => handlers.navigate(ROUTES.documents.list.build(orgSlug)),
       description: "Go to documents",
     },
   ];

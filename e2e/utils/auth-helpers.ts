@@ -26,7 +26,7 @@ declare global {
 
 /**
  * Check if we're on the dashboard
- * Handles both old (/dashboard) and new (/:companySlug/dashboard) URL patterns
+ * Handles both old (/dashboard) and new (/:orgSlug/dashboard) URL patterns
  *
  * This only checks URL pattern. For content verification, use waitForDashboardContent().
  */
@@ -374,7 +374,7 @@ export async function trySignInUser(
     );
 
     try {
-      // Wait for redirect - handles both old (/dashboard) and new (/:companySlug/dashboard) patterns
+      // Wait for redirect - handles both old (/dashboard) and new (/:orgSlug/dashboard) patterns
       // Timeout: 90s for cold starts (increased from 60s)
       await page.waitForURL(urlPatterns.dashboardOrOnboarding, {
         timeout: 90000,
@@ -461,7 +461,7 @@ export async function completeEmailVerification(page: Page, email: string): Prom
     await locators.verifyCodeInput.fill(otp);
 
     await locators.verifyEmailButton.click();
-    // Wait for redirect to onboarding or company dashboard
+    // Wait for redirect to onboarding or organization dashboard
     await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 });
     return true;
   } catch (verifyError) {

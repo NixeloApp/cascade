@@ -49,7 +49,7 @@ export class LandingPage extends BasePage {
   // ===================
   readonly footer: Locator;
   readonly footerProductHeading: Locator;
-  readonly footerCompanyHeading: Locator;
+  readonly footerOrganizationHeading: Locator;
   readonly footerResourcesHeading: Locator;
   readonly footerPrivacyLink: Locator;
   readonly footerTermsLink: Locator;
@@ -102,7 +102,7 @@ export class LandingPage extends BasePage {
     // Footer
     this.footer = page.locator("footer");
     this.footerProductHeading = this.footer.getByRole("heading", { name: /product/i });
-    this.footerCompanyHeading = this.footer.getByRole("heading", { name: /company/i });
+    this.footerOrganizationHeading = this.footer.getByRole("heading", { name: /organization/i });
     this.footerResourcesHeading = this.footer.getByRole("heading", { name: /resources/i });
     this.footerPrivacyLink = this.footer.getByRole("link", { name: /privacy/i });
     this.footerTermsLink = this.footer.getByRole("link", { name: /terms/i });
@@ -253,7 +253,7 @@ export class LandingPage extends BasePage {
    */
   async expectFooter() {
     await expect(this.footerProductHeading).toBeVisible();
-    await expect(this.footerCompanyHeading).toBeVisible();
+    await expect(this.footerOrganizationHeading).toBeVisible();
     await expect(this.footerResourcesHeading).toBeVisible();
     await expect(this.footerPrivacyLink).toBeVisible();
     await expect(this.footerTermsLink).toBeVisible();

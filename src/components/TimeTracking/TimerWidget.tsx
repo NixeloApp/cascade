@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDuration, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -12,8 +12,8 @@ export function TimerWidget() {
   const runningTimer = useQuery(api.timeTracking.getRunningTimer);
   const stopTimer = useMutation(api.timeTracking.stopTimer);
 
-  // Get billing setting from company context
-  const { billingEnabled } = useCompany();
+  // Get billing setting from organization context
+  const { billingEnabled } = useOrganization();
 
   const [currentDuration, setCurrentDuration] = useState(0);
   const [showTimeEntryModal, setShowTimeEntryModal] = useState(false);

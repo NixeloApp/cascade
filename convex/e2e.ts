@@ -156,7 +156,7 @@ export const createTestUserInternal = internalMutation({
         });
       }
 
-      // Ensure existing user has company and onboarding set up when skipOnboarding is true
+      // Ensure existing user has organization and onboarding set up when skipOnboarding is true
       if (args.skipOnboarding) {
         const now = Date.now();
 
@@ -186,31 +186,31 @@ export const createTestUserInternal = internalMutation({
           });
         }
 
-        // Check if user has company membership
+        // Check if user has organization membership
         const existingMembership = await ctx.db
-          .query("companyMembers")
+          .query("organizationMembers")
           .withIndex("by_user", (q) => q.eq("userId", existingUser._id))
           .first();
 
         if (!existingMembership) {
-          // Check if shared E2E test company already exists
-          const companyName = "Nixelo E2E";
+          // Check if shared E2E test organization already exists
+          const organizationName = "Nixelo E2E";
           const slug = "nixelo-e2e";
 
-          const existingCompany = await ctx.db
-            .query("companies")
+          const existingOrganization = await ctx.db
+            .query("organizations")
             .withIndex("by_slug", (q) => q.eq("slug", slug))
             .first();
 
-          let companyId: Id<"companies">;
+          let organizationId: Id<"organizations">;
 
-          if (existingCompany) {
-            // Company exists - just add this user as a member
-            companyId = existingCompany._id;
+          if (existingOrganization) {
+            // organization exists - just add this user as a member
+            organizationId = existingOrganization._id;
           } else {
-            // Create the company
-            companyId = await ctx.db.insert("companies", {
-              name: companyName,
+            // Create the organization
+            organizationId = await ctx.db.insert("organizations", {
+              name: organizationName,
               slug,
               timezone: "UTC",
               settings: {
@@ -225,15 +225,15 @@ export const createTestUserInternal = internalMutation({
             });
           }
 
-          await ctx.db.insert("companyMembers", {
-            companyId,
+          await ctx.db.insert("organizationMembers", {
+            organizationId,
             userId: existingUser._id,
             role: "admin",
             addedBy: existingUser._id,
             addedAt: now,
           });
 
-          await ctx.db.patch(existingUser._id, { defaultCompanyId: companyId });
+          await ctx.db.patch(existingUser._id, { defaultOrganizationId: organizationId });
         }
       }
 
@@ -257,7 +257,7 @@ export const createTestUserInternal = internalMutation({
       emailVerified: new Date().toISOString(), // Password provider checks this field
     });
 
-    // If skipOnboarding is true, create completed onboarding record AND add to shared company
+    // If skipOnboarding is true, create completed onboarding record AND add to shared organization
     if (args.skipOnboarding) {
       const now = Date.now();
 
@@ -274,24 +274,24 @@ export const createTestUserInternal = internalMutation({
         updatedAt: now,
       });
 
-      // Check if shared E2E test company already exists
-      const companyName = "Nixelo E2E";
+      // Check if shared E2E test organization already exists
+      const organizationName = "Nixelo E2E";
       const slug = "nixelo-e2e";
 
-      const existingCompany = await ctx.db
-        .query("companies")
+      const existingOrganization = await ctx.db
+        .query("organizations")
         .withIndex("by_slug", (q) => q.eq("slug", slug))
         .first();
 
-      let companyId: Id<"companies">;
+      let organizationId: Id<"organizations">;
 
-      if (existingCompany) {
-        // Company exists - just add this user as a member
-        companyId = existingCompany._id;
+      if (existingOrganization) {
+        // organization exists - just add this user as a member
+        organizationId = existingOrganization._id;
       } else {
-        // Create the company (first user creates it)
-        companyId = await ctx.db.insert("companies", {
-          name: companyName,
+        // Create the organization (first user creates it)
+        organizationId = await ctx.db.insert("organizations", {
+          name: organizationName,
           slug,
           timezone: "UTC",
           settings: {
@@ -306,17 +306,17 @@ export const createTestUserInternal = internalMutation({
         });
       }
 
-      // Add user as admin of the company
-      await ctx.db.insert("companyMembers", {
-        companyId,
+      // Add user as admin of the organization
+      await ctx.db.insert("organizationMembers", {
+        organizationId,
         userId,
         role: "admin",
         addedBy: userId,
         addedAt: now,
       });
 
-      // Set as user's default company
-      await ctx.db.patch(userId, { defaultCompanyId: companyId });
+      // Set as user's default organization
+      await ctx.db.patch(userId, { defaultOrganizationId: organizationId });
     }
 
     return { success: true, userId, existing: false };
@@ -436,25 +436,30 @@ export const deleteTestUserInternal = internalMutation({
       // Note: authRefreshTokens are tied to sessions, which we've already deleted
       // The auth system will clean up orphaned refresh tokens
 
-      // Delete user's company memberships and any companies they created
+      // Delete user's organization memberships and any organizations they created
       const memberships = await ctx.db
-        .query("companyMembers")
+        .query("organizationMembers")
         .withIndex("by_user", (q) => q.eq("userId", user._id))
         .collect();
       for (const membership of memberships) {
-        // Check if user is the company creator - if so, delete the company
-        const company = await ctx.db.get(membership.companyId);
-        if (company?.createdBy === user._id) {
-          // Delete all members of this company first
-          const companyMembers = await ctx.db
-            .query("companyMembers")
-            .withIndex("by_company", (q) => q.eq("companyId", company._id))
+        // Check if user is the organization creator - if so, delete the organization
+        const organization = await ctx.db.get(membership.organizationId);
+        if (organization?.createdBy === user._id) {
+          // Delete all members of this organization first
+          const organizationMembers = await ctx.db
+            .query("organizationMembers")
+            .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
             .collect();
-          for (const member of companyMembers) {
+          for (const member of organizationMembers) {
+            // Check if this organization is the user's default
+            const memberUser = await ctx.db.get(member.userId);
+            if (memberUser?.defaultOrganizationId === organization._id) {
+              await ctx.db.patch(member.userId, { defaultOrganizationId: undefined });
+            }
             await ctx.db.delete(member._id);
           }
-          // Delete the company
-          await ctx.db.delete(company._id);
+          // Delete the organization
+          await ctx.db.delete(organization._id);
         } else {
           // Just delete the membership
           await ctx.db.delete(membership._id);
@@ -764,7 +769,7 @@ export const seedTemplatesEndpoint = httpAction(async (ctx, request) => {
 
 /**
  * Internal mutation to set up RBAC test project
- * Uses the admin user's existing company instead of creating a new one
+ * Uses the admin user's existing organization instead of creating a new one
  */
 export const setupRbacProjectInternal = internalMutation({
   args: {
@@ -778,8 +783,8 @@ export const setupRbacProjectInternal = internalMutation({
     success: v.boolean(),
     projectId: v.optional(v.id("projects")),
     projectKey: v.optional(v.string()),
-    companyId: v.optional(v.id("companies")),
-    companySlug: v.optional(v.string()),
+    organizationId: v.optional(v.id("organizations")),
+    orgSlug: v.optional(v.string()),
     // New hierarchy fields
     workspaceId: v.optional(v.id("workspaces")),
     teamId: v.optional(v.id("teams")),
@@ -829,41 +834,43 @@ export const setupRbacProjectInternal = internalMutation({
     const now = Date.now();
 
     // =========================================================================
-    // Step 1: Find the admin user's existing company (created during login)
+    // Step 1: Find the admin user's existing organization (created during login)
     // =========================================================================
     const adminMembership = await ctx.db
-      .query("companyMembers")
+      .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("userId", adminUser._id))
       .first();
 
     if (!adminMembership) {
-      return { success: false, error: "Admin user has no company membership" };
+      return { success: false, error: "Admin user has no organization membership" };
     }
 
-    const company = await ctx.db.get(adminMembership.companyId);
-    if (!company) {
-      return { success: false, error: "Admin's company not found" };
+    const organization = (await ctx.db.get(
+      adminMembership.organizationId,
+    )) as Doc<"organizations"> | null;
+    if (!organization) {
+      return { success: false, error: "Admin's organization not found" };
     }
 
     // =========================================================================
-    // Step 2: Add editor and viewer as company members (if not already)
+    // Step 2: Add editor and viewer as organization members (if not already)
     // =========================================================================
-    const usersToAddToCompany = [
+    const usersToAddToOrganization = [
       { userId: editorUser._id, role: "member" as const },
       { userId: viewerUser._id, role: "member" as const },
     ];
 
-    for (const config of usersToAddToCompany) {
+    for (const config of usersToAddToOrganization) {
       const existingMember = await ctx.db
-        .query("companyMembers")
-        .withIndex("by_company_user", (q) =>
-          q.eq("companyId", company._id).eq("userId", config.userId),
+        .query("organizationMembers")
+        .withIndex("by_organization_user", (q) =>
+          q.eq("organizationId", organization._id).eq("userId", config.userId),
         )
         .first();
 
       if (!existingMember) {
-        await ctx.db.insert("companyMembers", {
-          companyId: company._id,
+        await ctx.db.insert("organizationMembers", {
+          organizationId: organization._id,
           userId: config.userId,
           role: config.role,
           addedBy: adminUser._id,
@@ -874,21 +881,21 @@ export const setupRbacProjectInternal = internalMutation({
         await ctx.db.patch(existingMember._id, { role: config.role });
       }
 
-      // Set as user's default company
-      await ctx.db.patch(config.userId, { defaultCompanyId: company._id });
+      // Set as user's default organization
+      await ctx.db.patch(config.userId, { defaultOrganizationId: organization._id });
     }
 
     // =========================================================================
     // Step 3: Create workspace and team for hierarchical testing
     // =========================================================================
 
-    // Create a workspace (department) for the company
+    // Create a workspace (department) for the organization
     const workspaceId = await ctx.db.insert("workspaces", {
       name: "E2E Testing Workspace",
       slug: "e2e-testing",
       description: "Workspace for E2E RBAC testing",
       icon: "🧪",
-      companyId: company._id,
+      organizationId: organization._id,
       createdBy: adminUser._id,
       createdAt: now,
       updatedAt: now,
@@ -900,7 +907,7 @@ export const setupRbacProjectInternal = internalMutation({
       slug: "e2e-test-team",
       description: "Team for E2E RBAC testing",
       workspaceId,
-      companyId: company._id,
+      organizationId: organization._id,
       createdBy: adminUser._id,
       createdAt: now,
       updatedAt: now,
@@ -934,18 +941,18 @@ export const setupRbacProjectInternal = internalMutation({
     // Step 4: Create RBAC test projects at different hierarchy levels
     // =========================================================================
 
-    // 4a. Company-level project (legacy style - no workspace/team)
-    const companyProjectKey = `${args.projectKey}-COMP`;
+    // 4a. organization-level project (legacy style - no workspace/team)
+    const organizationProjectKey = `${args.projectKey}-ORG`;
     let project = await ctx.db
       .query("projects")
-      .withIndex("by_key", (q) => q.eq("key", companyProjectKey))
+      .withIndex("by_key", (q) => q.eq("key", organizationProjectKey))
       .filter(notDeleted)
       .first();
 
     if (!project) {
-      // Create a default workspace for the company-level project
+      // Create a default workspace for the organization-level project
       const workspaceId = await ctx.db.insert("workspaces", {
-        companyId: company._id,
+        organizationId: organization._id,
         name: "Organization Workspace",
         slug: "org-workspace",
         createdBy: adminUser._id,
@@ -955,9 +962,9 @@ export const setupRbacProjectInternal = internalMutation({
 
       const projectId = await ctx.db.insert("projects", {
         name: args.projectName,
-        key: companyProjectKey,
-        description: "E2E test project for RBAC permission testing - Company level",
-        companyId: company._id,
+        key: organizationProjectKey,
+        description: "E2E test project for RBAC permission testing - organization level",
+        organizationId: organization._id,
         workspaceId,
         ownerId: adminUser._id,
         createdBy: adminUser._id,
@@ -979,13 +986,13 @@ export const setupRbacProjectInternal = internalMutation({
       // Always update project metadata to match current test config
       await ctx.db.patch(project._id, {
         name: args.projectName,
-        companyId: company._id,
-        description: "E2E test project for RBAC permission testing - Company level",
+        organizationId: organization._id,
+        description: "E2E test project for RBAC permission testing - organization level",
       });
     }
 
     if (!project) {
-      return { success: false, error: "Failed to create company-level project" };
+      return { success: false, error: "Failed to create organization-level project" };
     }
 
     // 4b. Workspace-level project
@@ -1001,7 +1008,7 @@ export const setupRbacProjectInternal = internalMutation({
         name: `RBAC Workspace Project (${workspaceProjectKey})`,
         key: workspaceProjectKey,
         description: "E2E test project for RBAC - Workspace level",
-        companyId: company._id,
+        organizationId: organization._id,
         workspaceId,
         teamId, // Workspace level
         ownerId: adminUser._id,
@@ -1040,7 +1047,7 @@ export const setupRbacProjectInternal = internalMutation({
         name: `RBAC Team Project (${teamProjectKey})`,
         key: teamProjectKey,
         description: "E2E test project for RBAC - Team level",
-        companyId: company._id,
+        organizationId: organization._id,
         workspaceId,
         teamId,
         ownerId: adminUser._id,
@@ -1113,8 +1120,8 @@ export const setupRbacProjectInternal = internalMutation({
       success: true,
       projectId: project._id,
       projectKey: project.key,
-      companyId: company._id,
-      companySlug: company.slug,
+      organizationId: organization._id,
+      orgSlug: organization.slug,
       // Return all project info for comprehensive testing
       workspaceId,
       teamId,
@@ -1288,10 +1295,10 @@ export const cleanupRbacProjectInternal = internalMutation({
 });
 
 /**
- * Update company settings for E2E testing
- * POST /e2e/update-company-settings
+ * Update organization settings for E2E testing
+ * POST /e2e/update-organization-settings
  * Body: {
- *   companySlug: string,
+ *   orgSlug: string,
  *   settings: {
  *     defaultMaxHoursPerWeek?: number,
  *     defaultMaxHoursPerDay?: number,
@@ -1302,17 +1309,17 @@ export const cleanupRbacProjectInternal = internalMutation({
  *
  * Allows tests to change settings profiles (e.g., enable/disable billing).
  */
-export const updateCompanySettingsEndpoint = httpAction(async (ctx, request) => {
+export const updateOrganizationSettingsEndpoint = httpAction(async (ctx, request) => {
   // Validate API key
   const authError = validateE2EApiKey(request);
   if (authError) return authError;
 
   try {
     const body = await request.json();
-    const { companySlug, settings } = body;
+    const { orgSlug, settings } = body;
 
-    if (!companySlug) {
-      return new Response(JSON.stringify({ error: "Missing companySlug" }), {
+    if (!orgSlug) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
@@ -1325,8 +1332,8 @@ export const updateCompanySettingsEndpoint = httpAction(async (ctx, request) => 
       });
     }
 
-    const result = await ctx.runMutation(internal.e2e.updateCompanySettingsInternal, {
-      companySlug,
+    const result = await ctx.runMutation(internal.e2e.updateOrganizationSettingsInternal, {
+      orgSlug,
       settings,
     });
 
@@ -1343,11 +1350,11 @@ export const updateCompanySettingsEndpoint = httpAction(async (ctx, request) => 
 });
 
 /**
- * Internal mutation to update company settings
+ * Internal mutation to update organization settings
  */
-export const updateCompanySettingsInternal = internalMutation({
+export const updateOrganizationSettingsInternal = internalMutation({
   args: {
-    companySlug: v.string(),
+    orgSlug: v.string(),
     settings: v.object({
       defaultMaxHoursPerWeek: v.optional(v.number()),
       defaultMaxHoursPerDay: v.optional(v.number()),
@@ -1358,7 +1365,7 @@ export const updateCompanySettingsInternal = internalMutation({
   returns: v.object({
     success: v.boolean(),
     error: v.optional(v.string()),
-    companyId: v.optional(v.id("companies")),
+    organizationId: v.optional(v.id("organizations")),
     updatedSettings: v.optional(
       v.object({
         defaultMaxHoursPerWeek: v.number(),
@@ -1369,19 +1376,19 @@ export const updateCompanySettingsInternal = internalMutation({
     ),
   }),
   handler: async (ctx, args) => {
-    // Find company by slug
-    const company = await ctx.db
-      .query("companies")
-      .withIndex("by_slug", (q) => q.eq("slug", args.companySlug))
+    // Find organization by slug
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
       .filter(notDeleted)
       .first();
 
-    if (!company) {
-      return { success: false, error: `Company not found: ${args.companySlug}` };
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
     }
 
     // Get current settings or use defaults
-    const currentSettings = company.settings ?? {
+    const currentSettings = organization.settings ?? {
       defaultMaxHoursPerWeek: 40,
       defaultMaxHoursPerDay: 8,
       requiresTimeApproval: false,
@@ -1399,15 +1406,15 @@ export const updateCompanySettingsInternal = internalMutation({
       billingEnabled: args.settings.billingEnabled ?? currentSettings.billingEnabled,
     };
 
-    // Update company settings
-    await ctx.db.patch(company._id, {
+    // Update organization settings
+    await ctx.db.patch(organization._id, {
       settings: newSettings,
       updatedAt: Date.now(),
     });
 
     return {
       success: true,
-      companyId: company._id,
+      organizationId: organization._id,
       updatedSettings: newSettings,
     };
   },
@@ -1723,18 +1730,18 @@ export const nukeAllE2EWorkspacesInternal = internalMutation({
   args: {},
   returns: v.object({ deleted: v.number() }),
   handler: async (ctx) => {
-    // 1. Find the shared E2E company
-    const company = await ctx.db
-      .query("companies")
+    // 1. Find the shared E2E organization
+    const organization = await ctx.db
+      .query("organizations")
       .withIndex("by_slug", (q) => q.eq("slug", "nixelo-e2e"))
       .first();
 
-    if (!company) return { deleted: 0 };
+    if (!organization) return { deleted: 0 };
 
-    // 2. Find all workspaces in this company
+    // 2. Find all workspaces in this organization
     const workspaces = await ctx.db
       .query("workspaces")
-      .withIndex("by_company", (q) => q.eq("companyId", company._id))
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
       .collect();
 
     let deleted = 0;
@@ -1905,15 +1912,15 @@ export const nukeWorkspacesInternal = internalMutation({
 
     // Delete orphan companies by slug/name pattern
     const orphanCompanies = await ctx.db
-      .query("companies")
+      .query("organizations")
       .withIndex("by_slug")
       .filter((q) => q.or(q.eq(q.field("slug"), "nixelo-e2e"), q.eq(q.field("name"), "Nixelo E2E")))
       .collect();
 
     // Also check for companies wrapping E2E workspaces if possible?
-    // Usually workspaces are children of companies.
-    // In the schema, `workspaces` have `companyId`.
-    // We should look for `workspaces` named "E2E Testing Workspace" and delete them + their parent company if it's test-only?
+    // Usually workspaces are children of organizations.
+    // In the schema, `workspaces` have `organizationId`.
+    // We should look for `workspaces` named "E2E Testing Workspace" and delete them + their parent organization if it's test-only?
     // Actually, just deleting the workspaces might be enough for the test selector?
     // The test selector looks for "E2E Testing Workspace".
 
@@ -1943,15 +1950,15 @@ export const nukeWorkspacesInternal = internalMutation({
     // Continue with standard cleanup...
     for (const user of testUsers) {
       const companies = await ctx.db
-        .query("companies")
+        .query("organizations")
         .withIndex("by_creator", (q) => q.eq("createdBy", user._id))
         .collect();
 
-      for (const company of companies) {
-        // Delete company members
+      for (const organization of companies) {
+        // Delete organization members
         const members = await ctx.db
-          .query("companyMembers")
-          .withIndex("by_company", (q) => q.eq("companyId", company._id))
+          .query("organizationMembers")
+          .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
           .collect();
         for (const member of members) {
           await ctx.db.delete(member._id);
@@ -1960,7 +1967,7 @@ export const nukeWorkspacesInternal = internalMutation({
         // Delete teams
         const teams = await ctx.db
           .query("teams")
-          .withIndex("by_company", (q) => q.eq("companyId", company._id))
+          .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
           .collect();
         for (const team of teams) {
           await ctx.db.delete(team._id);
@@ -1969,7 +1976,7 @@ export const nukeWorkspacesInternal = internalMutation({
         // Delete projects
         const projects = await ctx.db
           .query("projects")
-          .withIndex("by_company", (q) => q.eq("companyId", company._id))
+          .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
           .filter(notDeleted)
           .collect();
         for (const project of projects) {
@@ -1979,14 +1986,14 @@ export const nukeWorkspacesInternal = internalMutation({
         // Delete workspaces (departments)
         const workspaces = await ctx.db
           .query("workspaces")
-          .withIndex("by_company", (q) => q.eq("companyId", company._id))
+          .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
           .collect();
         for (const workspace of workspaces) {
           await ctx.db.delete(workspace._id);
         }
 
-        // Delete the company (workspace container)
-        await ctx.db.delete(company._id);
+        // Delete the organization (workspace container)
+        await ctx.db.delete(organization._id);
         deletedCount++;
       }
     }
@@ -2075,37 +2082,37 @@ export const resetTestWorkspaceInternal = internalMutation({
     // "E2E Testing Workspace" is used for the workspace list item, which comes from companies/workspaces.
     // Let's also check companies just in case
     const companies = await ctx.db
-      .query("companies")
+      .query("organizations")
       .filter((q) => q.eq(q.field("name"), args.name))
       .collect();
 
-    for (const company of companies) {
+    for (const organization of companies) {
       // Delete children logic similar to nuke
       // ... abbreviated for safety, assume nuke handles big cleanup, this handles targeted test iterations
       // If we are strictly creating a workspace (department), the above workspace deletion is sufficient.
-      // If we are creating a company, we need company deletion.
-      // The test "User can create a workspace" likely creates a COMPANY (multi-tenant root) or a WORKSPACE (project group)?
+      // If we are creating a organization, we need organization deletion.
+      // The test "User can create a workspace" likely creates a organization (multi-tenant root) or a WORKSPACE (project group)?
       // Based on UI text "Add new workspace", it usually maps to the top-level entity.
-      // Let's delete the company too.
+      // Let's delete the organization too.
 
-      // Delete company members
+      // Delete organization members
       const members = await ctx.db
-        .query("companyMembers")
-        .withIndex("by_company", (q) => q.eq("companyId", company._id))
+        .query("organizationMembers")
+        .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
         .collect();
       for (const member of members) await ctx.db.delete(member._id);
 
       // Delete teams
       const teams = await ctx.db
         .query("teams")
-        .withIndex("by_company", (q) => q.eq("companyId", company._id))
+        .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
         .collect();
       for (const team of teams) await ctx.db.delete(team._id);
 
       // Delete projects
       const projects = await ctx.db
         .query("projects")
-        .withIndex("by_company", (q) => q.eq("companyId", company._id))
+        .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
         .filter(notDeleted)
         .collect();
       for (const project of projects) await ctx.db.delete(project._id);
@@ -2113,11 +2120,11 @@ export const resetTestWorkspaceInternal = internalMutation({
       // Delete workspaces (departments)
       const workspaces = await ctx.db
         .query("workspaces")
-        .withIndex("by_company", (q) => q.eq("companyId", company._id))
+        .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
         .collect();
       for (const workspace of workspaces) await ctx.db.delete(workspace._id);
 
-      await ctx.db.delete(company._id);
+      await ctx.db.delete(organization._id);
       deletedCount++;
     }
 
@@ -2127,11 +2134,15 @@ export const resetTestWorkspaceInternal = internalMutation({
 
 export const listDuplicateTestUsersInternal = internalMutation({
   args: {},
+  returns: v.object({
+    testUsers: v.number(),
+    duplicates: v.array(v.object({ email: v.string(), ids: v.array(v.id("users")) })),
+  }),
   handler: async (ctx) => {
     const allUsers = await ctx.db.query("users").collect();
     const testUsers = allUsers.filter((u) => u.email?.includes("@inbox.mailtrap.io"));
 
-    const emailMap = new Map<string, string[]>();
+    const emailMap = new Map<string, Id<"users">[]>();
     for (const user of testUsers) {
       const email = user.email;
       if (!email) continue;
@@ -2156,6 +2167,7 @@ export const listDuplicateTestUsersInternal = internalMutation({
 
 export const nukeAllTestUsersInternal = internalMutation({
   args: {},
+  returns: v.object({ success: v.boolean(), deleted: v.number() }),
   handler: async (ctx) => {
     const allUsers = await ctx.db.query("users").collect();
     const testUsers = allUsers.filter((u) => u.email?.includes("@inbox.mailtrap.io"));
@@ -2169,9 +2181,9 @@ export const nukeAllTestUsersInternal = internalMutation({
         .collect();
       for (const acc of accounts) await ctx.db.delete(acc._id);
 
-      // Delete company memberships
+      // Delete organization memberships
       const memberships = await ctx.db
-        .query("companyMembers")
+        .query("organizationMembers")
         .withIndex("by_user", (q) => q.eq("userId", user._id))
         .collect();
       for (const m of memberships) await ctx.db.delete(m._id);

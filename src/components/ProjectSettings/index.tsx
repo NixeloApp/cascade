@@ -26,7 +26,7 @@ interface ProjectSettingsProps {
   createdBy: Id<"users">;
   ownerId: Id<"users"> | undefined;
   isOwner: boolean;
-  companySlug: string;
+  orgSlug: string;
 }
 
 export function ProjectSettings({
@@ -39,7 +39,7 @@ export function ProjectSettings({
   createdBy,
   ownerId,
   isOwner,
-  companySlug,
+  orgSlug,
 }: ProjectSettingsProps) {
   return (
     <div className="max-w-3xl mx-auto">
@@ -74,7 +74,7 @@ export function ProjectSettings({
           projectName={name}
           projectKey={projectKey}
           isOwner={isOwner}
-          companySlug={companySlug}
+          orgSlug={orgSlug}
         />
       </Flex>
     </div>

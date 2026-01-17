@@ -1,13 +1,11 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { Typography } from "@/components/ui/Typography";
-import { ROUTE_PATTERNS } from "@/config/routes";
-import { useCompany } from "@/hooks/useCompanyContext";
+import { ROUTES } from "@/config/routes";
 import type { useListNavigation } from "@/hooks/useListNavigation";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
-import { getPriorityColor, getTypeIcon } from "../../lib/issue-utils";
 import { Badge } from "../ui/Badge";
-import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
@@ -53,19 +51,19 @@ export function MyIssuesList({
   status,
 }: MyIssuesListProps) {
   const navigate = useNavigate();
-  const { companySlug } = useCompany();
+  const { orgSlug } = useOrganization();
 
   const navigateToWorkspace = (projectKey: string) => {
     navigate({
-      to: ROUTE_PATTERNS.projects.board,
-      params: { companySlug, key: projectKey },
+      to: ROUTES.projects.board.path,
+      params: { orgSlug, key: projectKey },
     });
   };
 
   const navigateToWorkspaces = () => {
     navigate({
-      to: ROUTE_PATTERNS.workspaces.list,
-      params: { companySlug },
+      to: ROUTES.workspaces.list.path,
+      params: { orgSlug },
     });
   };
 
@@ -73,61 +71,71 @@ export function MyIssuesList({
   const isLoadingMore = status === "LoadingMore";
 
   return (
-    <Card>
-      <CardHeader title="My Issues" description="Track your assigned and created issues" />
-      <div className="border-b border-ui-border-primary px-4">
-        <Flex gap="lg">
-          <button
-            type="button"
-            onClick={() => onFilterChange("assigned")}
-            className={cn(
-              "pb-2 px-2 border-b-2 transition-colors",
-              issueFilter === "assigned"
-                ? "border-brand-indigo-border text-brand-indigo-text"
-                : "border-transparent text-ui-text-secondary hover:text-ui-text-primary",
-            )}
-            aria-label="Show assigned issues"
-          >
-            Assigned ({myIssues?.length || 0})
-          </button>
-          <button
-            type="button"
-            onClick={() => onFilterChange("created")}
-            className={cn(
-              "pb-2 px-2 border-b-2 transition-colors",
-              issueFilter === "created"
-                ? "border-brand-indigo-border text-brand-indigo-text"
-                : "border-transparent text-ui-text-secondary hover:text-ui-text-primary",
-            )}
-            aria-label="Show created issues"
-          >
-            Created ({myCreatedIssues?.length || 0})
-          </button>
-        </Flex>
+    <div className="flex flex-col h-full animate-in fade-in duration-700">
+      <div className="p-6 pb-2">
+        <Typography
+          variant="h3"
+          className="text-xl font-bold bg-gradient-to-r from-brand-600 to-accent-600 bg-clip-text text-transparent"
+        >
+          Feed
+        </Typography>
+        <Typography variant="small" color="tertiary" className="text-sm mt-1">
+          Track your active contributions
+        </Typography>
       </div>
-      <CardBody>
+      <Flex
+        justify="between"
+        align="stretch"
+        className="border-b border-ui-border-primary/50 px-4 bg-ui-bg-primary/20"
+      >
+        <button
+          type="button"
+          onClick={() => onFilterChange("assigned")}
+          className={cn(
+            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider",
+            issueFilter === "assigned"
+              ? "border-brand-600 text-brand-600 dark:text-brand-400"
+              : "border-transparent text-ui-text-tertiary hover:text-ui-text-primary",
+          )}
+          aria-label="Filter Assigned"
+        >
+          Assigned
+          <span className="ml-1.5 opacity-60 font-medium">({myIssues?.length || 0})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onFilterChange("created")}
+          className={cn(
+            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider",
+            issueFilter === "created"
+              ? "border-brand-600 text-brand-600 dark:text-brand-400"
+              : "border-transparent text-ui-text-tertiary hover:text-ui-text-primary",
+          )}
+          aria-label="Filter Created"
+        >
+          Created
+          <span className="ml-1.5 opacity-60 font-medium">({myCreatedIssues?.length || 0})</span>
+        </button>
+      </Flex>
+      <Flex direction="column" className="p-4 flex-1 overflow-hidden">
         {!displayIssues ? (
           /* Loading skeleton */
           <SkeletonList items={5} />
         ) : displayIssues.length === 0 ? (
           <EmptyState
             icon="📭"
-            title="No issues found"
-            description={
-              issueFilter === "assigned"
-                ? "You don't have any assigned issues. Visit a project to get started."
-                : "You haven't created any issues yet. Visit a project to create one."
-            }
+            title="Inbox Clear"
+            description="No pending items in your feed."
             action={{
-              label: "View My Workspaces",
+              label: "Explore Projects",
               onClick: navigateToWorkspaces,
             }}
           />
         ) : (
           <Flex
             direction="column"
-            gap="sm"
-            className="max-h-[600px] overflow-y-auto"
+            gap="xs"
+            className="flex-1 overflow-y-auto pr-2 custom-scrollbar"
             ref={issueNavigation.listRef}
           >
             {displayIssues.map((issue, index) => (
@@ -137,26 +145,38 @@ export function MyIssuesList({
                 onClick={() => navigateToWorkspace(issue.projectKey)}
                 {...issueNavigation.getItemProps(index)}
                 className={cn(
-                  "w-full text-left p-3 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary cursor-pointer transition-all hover:shadow-md animate-slide-up",
+                  "w-full text-left p-3 bg-ui-bg-secondary/20 hover:bg-ui-bg-secondary/40 rounded-lg group cursor-pointer transition-all hover:shadow-sm animate-in fade-in slide-in-from-left-2 duration-500",
                   issueNavigation.getItemProps(index).className,
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <Flex justify="between" align="start">
                   <div className="flex-1">
-                    <Flex gap="sm" align="center" className="mb-1">
-                      <span className="text-sm font-mono text-ui-text-secondary">{issue.key}</span>
-                      <span className="text-lg" aria-hidden="true">
-                        {getTypeIcon(issue.type)}
-                      </span>
-                      <Badge shape="pill" className={getPriorityColor(issue.priority, "bg")}>
+                    <Flex gap="sm" align="center" className="mb-1.5">
+                      <Typography
+                        variant="small"
+                        className="font-mono text-xs text-ui-text-tertiary group-hover:text-brand-600 transition-colors"
+                      >
+                        {issue.key}
+                      </Typography>
+                      <Badge
+                        variant="neutral"
+                        className="text-[10px] uppercase font-bold bg-ui-bg-tertiary/50"
+                      >
                         {issue.priority}
                       </Badge>
                     </Flex>
-                    <Typography variant="h4" className="font-medium text-ui-text-primary mb-1">
+                    <Typography
+                      variant="h4"
+                      className="font-bold text-ui-text-primary mb-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors"
+                    >
                       {issue.title}
                     </Typography>
-                    <Flex gap="sm" align="center" className="text-xs text-ui-text-secondary">
+                    <Flex
+                      gap="xs"
+                      align="center"
+                      className="text-[10px] text-ui-text-tertiary uppercase tracking-wider font-bold"
+                    >
                       <span>{issue.projectName}</span>
                       <span>•</span>
                       <span>{issue.status}</span>
@@ -167,7 +187,7 @@ export function MyIssuesList({
             ))}
 
             {showLoadMore && loadMore && (
-              <div className="pt-2 pb-2">
+              <div className="pt-4">
                 <LoadMoreButton
                   onClick={() => loadMore(20)}
                   isLoading={isLoadingMore}
@@ -177,7 +197,7 @@ export function MyIssuesList({
             )}
           </Flex>
         )}
-      </CardBody>
-    </Card>
+      </Flex>
+    </div>
   );
 }

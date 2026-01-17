@@ -5,13 +5,13 @@ import { usePaginatedQuery } from "convex/react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
 interface SidebarTeamItemProps {
   team: Doc<"teams">;
   workspaceSlug: string;
-  companySlug: string;
+  orgSlug: string;
   isExpanded: boolean;
   onToggle: (slug: string) => void;
   onNavClick: () => void;
@@ -20,7 +20,7 @@ interface SidebarTeamItemProps {
 export function SidebarTeamItem({
   team,
   workspaceSlug,
-  companySlug,
+  orgSlug,
   isExpanded,
   onToggle,
   onNavClick,
@@ -45,8 +45,8 @@ export function SidebarTeamItem({
           {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </Button>
         <Link
-          to={ROUTE_PATTERNS.workspaces.teams.detail}
-          params={{ companySlug, workspaceSlug, teamSlug: team.slug }}
+          to={ROUTES.workspaces.teams.detail.path}
+          params={{ orgSlug, workspaceSlug, teamSlug: team.slug }}
           onClick={onNavClick}
           className={cn(
             "block px-3 py-1.5 rounded-md text-sm truncate transition-colors flex-1",
@@ -65,7 +65,7 @@ export function SidebarTeamItem({
           teamId={team._id}
           teamSlug={team.slug}
           workspaceSlug={workspaceSlug}
-          companySlug={companySlug}
+          orgSlug={orgSlug}
           onNavClick={onNavClick}
         />
       )}
@@ -77,13 +77,13 @@ function SidebarTeamProjects({
   teamId,
   teamSlug,
   workspaceSlug,
-  companySlug,
+  orgSlug,
   onNavClick,
 }: {
   teamId: Id<"teams">;
   teamSlug: string;
   workspaceSlug: string;
-  companySlug: string;
+  orgSlug: string;
   onNavClick: () => void;
 }) {
   const location = useLocation();
@@ -106,9 +106,9 @@ function SidebarTeamProjects({
       {projects.map((project) => (
         <div key={project._id}>
           <Link
-            to={ROUTE_PATTERNS.workspaces.teams.projects.board}
+            to={ROUTES.workspaces.teams.projects.board.path}
             params={{
-              companySlug,
+              orgSlug,
               workspaceSlug,
               teamSlug,
               key: project.key,

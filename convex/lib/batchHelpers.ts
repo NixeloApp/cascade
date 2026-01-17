@@ -102,15 +102,17 @@ export async function batchFetchTeams(
 /**
  * Batch fetch companies by ID
  */
-export async function batchFetchCompanies(
+export async function batchFetchOrganizations(
   ctx: QueryCtx,
-  companyIds: (Id<"companies"> | undefined)[],
-): Promise<Map<Id<"companies">, Doc<"companies">>> {
-  const uniqueIds = [...new Set(companyIds.filter((id): id is Id<"companies"> => !!id))];
+  organizationIds: (Id<"organizations"> | undefined)[],
+): Promise<Map<Id<"organizations">, Doc<"organizations">>> {
+  const uniqueIds = [...new Set(organizationIds.filter((id): id is Id<"organizations"> => !!id))];
   if (uniqueIds.length === 0) return new Map();
 
   const companies = await Promise.all(uniqueIds.map((id) => ctx.db.get(id)));
-  return new Map(companies.filter((c): c is Doc<"companies"> => c !== null).map((c) => [c._id, c]));
+  return new Map(
+    companies.filter((c): c is Doc<"organizations"> => c !== null).map((c) => [c._id, c]),
+  );
 }
 
 /**

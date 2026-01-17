@@ -166,9 +166,9 @@ export class SettingsPage extends BasePage {
   /**
    * Navigate directly to settings page
    */
-  async goto(companySlug?: string) {
-    // Use provided slug or default to TEST_COMPANY_SLUG
-    const slug = companySlug || "nixelo-e2e";
+  async goto(orgSlug?: string) {
+    // Use provided slug or default to TEST_ORG_SLUG
+    const slug = orgSlug || "nixelo-e2e";
 
     // Navigate directly to settings URL
     await this.page.goto(`/${slug}/settings/profile`);

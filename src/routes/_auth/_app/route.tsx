@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 
 export const Route = createFileRoute("/_auth/_app")({
   component: AppLayout,
@@ -14,14 +14,13 @@ export const Route = createFileRoute("/_auth/_app")({
 function AppLayout() {
   const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
 
-  // Get user's companies to check if we need initialization
-  const userCompanies = useQuery(
-    api.companies.getUserCompanies,
+  // Get user's organizations to check if we need initialization
+  const userOrganizations = useQuery(
+    api.organizations.getUserOrganizations,
     isAuthenticated ? undefined : "skip",
   );
 
-  // Loading state
-  if (isAuthLoading || userCompanies === undefined) {
+  if (isAuthLoading || userOrganizations === undefined) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <LoadingSpinner size="lg" />
@@ -29,18 +28,22 @@ function AppLayout() {
     );
   }
 
-  // User has no companies - initialize default company
-  if (userCompanies.length === 0) {
-    return <InitializeCompany />;
+  // User has no organizations - initialize default organization
+  if (userOrganizations.length === 0) {
+    // Check if we already have a default organization being created?
+    // The InitializeOrganization component handles concurrent creation via ref.
+    return <InitializeOrganization />;
   }
 
   return <Outlet />;
 }
 
-// Component to initialize default company for users without one
-function InitializeCompany() {
+// Component to initialize default organization for users without one
+function InitializeOrganization() {
   const navigate = useNavigate();
-  const initializeDefaultCompany = useMutation(api.companies.initializeDefaultCompany);
+  const initializeDefaultOrganization = useMutation(
+    api.organizations.initializeDefaultOrganization,
+  );
   const initRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,25 +53,25 @@ function InitializeCompany() {
       if (initRef.current) return;
       initRef.current = true;
       try {
-        const result = await initializeDefaultCompany({});
-        // Navigate to the new company's dashboard
+        const result = await initializeDefaultOrganization({});
+        // Navigate to the new organization's dashboard
         if (result.slug) {
           navigate({
-            to: ROUTE_PATTERNS.dashboard,
-            params: { companySlug: result.slug },
+            to: ROUTES.dashboard.path,
+            params: { orgSlug: result.slug },
             replace: true,
           });
         } else {
-          // Fallback: reload to trigger company query refresh
+          // Fallback: reload to trigger organization query refresh
           window.location.reload();
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to create company");
+        setError(err instanceof Error ? err.message : "Failed to create organization");
         initRef.current = false; // Allow retry on error
       }
     };
     init();
-  }, [initializeDefaultCompany, navigate]);
+  }, [initializeDefaultOrganization, navigate]);
 
   if (error) {
     return (

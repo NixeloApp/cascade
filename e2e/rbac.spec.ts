@@ -33,7 +33,7 @@ rbacTest.setTimeout(90000);
 rbacTest(
   "admin has full project access",
   async (
-    { adminPage, adminProjectsPage, gotoRbacProject, rbacProjectKey, rbacCompanySlug },
+    { adminPage, adminProjectsPage, gotoRbacProject, rbacProjectKey, rbacOrgSlug },
     _testInfo,
   ) => {
     // Verify admin auth is available (will throw from assertAuthStateValid in fixture if missing)
@@ -83,7 +83,7 @@ rbacTest(
     }
 
     // 6. Navigate back to board and check sprints
-    await clientSideNavigate(adminPage, `/${rbacCompanySlug}/projects/${rbacProjectKey}/board`);
+    await clientSideNavigate(adminPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/board`);
     await adminPage.waitForLoadState("domcontentloaded");
 
     const sprintsTab = adminPage
@@ -125,7 +125,7 @@ rbacTest(
  */
 rbacTest(
   "editor has limited project access",
-  async ({ editorPage, editorProjectsPage, gotoRbacProject, rbacProjectKey, rbacCompanySlug }) => {
+  async ({ editorPage, editorProjectsPage, gotoRbacProject, rbacProjectKey, rbacOrgSlug }) => {
     // 1. Navigate to project board
     editorPage.on("console", (msg) => console.log(`[Browser Console] ${msg.text()}`));
     await gotoRbacProject(editorPage);
@@ -161,7 +161,7 @@ rbacTest(
       console.log("[DEBUG] Debug element NOT found via locator");
     }
 
-    await clientSideNavigate(editorPage, `/${rbacCompanySlug}/projects/${rbacProjectKey}/settings`);
+    await clientSideNavigate(editorPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/settings`);
     await editorPage.waitForLoadState("domcontentloaded");
     await editorPage.waitForTimeout(1000);
 
@@ -172,7 +172,7 @@ rbacTest(
     console.log("✓ Editor is redirected from settings to board");
 
     // 6. Check sprints access
-    await clientSideNavigate(editorPage, `/${rbacCompanySlug}/projects/${rbacProjectKey}/board`);
+    await clientSideNavigate(editorPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/board`);
     await editorPage.waitForLoadState("domcontentloaded");
 
     const sprintsTab = editorPage
@@ -214,7 +214,7 @@ rbacTest(
  */
 rbacTest(
   "viewer has read-only project access",
-  async ({ viewerPage, viewerProjectsPage, gotoRbacProject, rbacProjectKey, rbacCompanySlug }) => {
+  async ({ viewerPage, viewerProjectsPage, gotoRbacProject, rbacProjectKey, rbacOrgSlug }) => {
     // 1. Navigate to project board
     viewerPage.on("console", (msg) => console.log(`[Browser Console] ${msg.text()}`));
     await gotoRbacProject(viewerPage);
@@ -243,7 +243,7 @@ rbacTest(
     console.log("✓ Viewer cannot see settings tab");
 
     // 5. Try to access settings directly - should redirect to board
-    await clientSideNavigate(viewerPage, `/${rbacCompanySlug}/projects/${rbacProjectKey}/settings`);
+    await clientSideNavigate(viewerPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/settings`);
     await viewerPage.waitForLoadState("domcontentloaded");
     await viewerPage.waitForTimeout(1000);
 
@@ -254,7 +254,7 @@ rbacTest(
     console.log("✓ Viewer is redirected from settings to board");
 
     // 6. Check analytics access (viewers can view analytics)
-    await clientSideNavigate(viewerPage, `/${rbacCompanySlug}/projects/${rbacProjectKey}/board`);
+    await clientSideNavigate(viewerPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/board`);
     await viewerPage.waitForLoadState("domcontentloaded");
 
     const analyticsTab = viewerPage

@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
-import { ROUTE_PATTERNS } from "@/config/routes";
+import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
@@ -51,7 +51,7 @@ export function SignUpForm() {
         email={email}
         onVerified={() => {
           // Redirect to /app gateway to trigger SmartAuthGuard logic
-          navigate({ to: ROUTE_PATTERNS.app });
+          navigate({ to: ROUTES.app.path });
         }}
         onResend={() => {
           // Stay on verification view
@@ -62,7 +62,7 @@ export function SignUpForm() {
 
   return (
     <div className="w-full">
-      <GoogleAuthButton redirectTo={ROUTE_PATTERNS.app} text="Sign up with Google" />
+      <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign up with Google" />
       <Flex align="center" justify="center" className="my-4">
         <hr className="grow border-ui-border-primary" />
         <span className="mx-4 text-ui-text-secondary text-sm">or</span>

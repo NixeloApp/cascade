@@ -71,7 +71,7 @@ export class ProjectsPage extends BasePage {
   readonly workspaceDescriptionInput: Locator;
   readonly submitWorkspaceButton: Locator;
 
-  constructor(page: Page, _companySlug = "nixelo-e2e") {
+  constructor(page: Page, _orgSlug = "nixelo-e2e") {
     super(page);
 
     // Sidebar
@@ -171,10 +171,10 @@ export class ProjectsPage extends BasePage {
   async goto() {
     // Navigate directly to the legacy projects route to ensure we hit ProjectsList
     // which has the "Create Project" button wired up correctly.
-    // Assumes we are already logged in and on a page with company slug in URL.
+    // Assumes we are already logged in and on a page with organization slug in URL.
     // Fallback to nixelo-e2e if not found (dashboard test default).
-    const slug = this.getCompanySlug();
-    if (!slug) throw new Error("Company slug not found in URL");
+    const slug = this.getOrganizationSlug();
+    if (!slug) throw new Error("Organization slug not found in URL");
     await this.page.goto(`/${slug}/projects`);
     await this.page.waitForLoadState("networkidle");
     await this.waitForLoad();

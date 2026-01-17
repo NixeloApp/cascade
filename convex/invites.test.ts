@@ -5,7 +5,7 @@ import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
   asAuthenticatedUser,
-  createCompanyAdmin,
+  createOrganizationAdmin,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -38,15 +38,15 @@ describe("Invites", () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t);
 
-      // Create company admin status (proper way, not relying on fallback)
-      const { companyId, workspaceId, teamId } = await createCompanyAdmin(t, adminId);
+      // Create organization admin status (proper way, not relying on fallback)
+      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
       const asAdmin = asAuthenticatedUser(t, adminId);
 
       const { inviteId, token } = await asAdmin.mutation(api.invites.sendInvite, {
         email: "newuser@example.com",
         role: "user",
-        companyId,
+        organizationId,
       });
 
       expect(inviteId).toBeDefined();
@@ -63,14 +63,14 @@ describe("Invites", () => {
       const projectId = await createTestProject(t, adminId);
       const asAdmin = asAuthenticatedUser(t, adminId);
 
-      // Creator is project admin automatically - need companyId from project
+      // Creator is project admin automatically - need organizationId from project
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       if (!project) throw new Error("Project not found");
 
       const { inviteId } = await asAdmin.mutation(api.invites.sendInvite, {
         email: "collab@example.com",
         role: "user",
-        companyId: project.companyId,
+        organizationId: project.organizationId,
         projectId,
         projectRole: "editor",
       });
@@ -83,23 +83,23 @@ describe("Invites", () => {
     it("should prevent duplicate pending invites", async () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t);
-      // Setup admin rights via company
+      // Setup admin rights via organization
       // Setup admin rights
-      const { companyId, workspaceId, teamId } = await createCompanyAdmin(t, adminId);
+      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
       const asAdmin = asAuthenticatedUser(t, adminId);
 
       await asAdmin.mutation(api.invites.sendInvite, {
         email: "dupe@example.com",
         role: "user",
-        companyId,
+        organizationId,
       });
 
       await expect(async () => {
         await asAdmin.mutation(api.invites.sendInvite, {
           email: "dupe@example.com",
           role: "user",
-          companyId,
+          organizationId,
         });
       }).rejects.toThrow("An invitation has already been sent");
     });
@@ -111,13 +111,13 @@ describe("Invites", () => {
       const adminId = await createTestUser(t);
       // Setup admin
       // Setup admin
-      const { companyId, workspaceId, teamId } = await createCompanyAdmin(t, adminId);
+      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
       const asAdmin = asAuthenticatedUser(t, adminId);
 
       const { token } = await asAdmin.mutation(api.invites.sendInvite, {
         email: "new@example.com",
         role: "user",
-        companyId,
+        organizationId,
       });
 
       // Create the new user who will accept
@@ -147,14 +147,14 @@ describe("Invites", () => {
       const projectId = await createTestProject(t, adminId);
       const asAdmin = asAuthenticatedUser(t, adminId);
 
-      // Get companyId from project
+      // Get organizationId from project
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       if (!project) throw new Error("Project not found");
 
       const { token } = await asAdmin.mutation(api.invites.sendInvite, {
         email: "project@example.com",
         role: "user",
-        companyId: project.companyId,
+        organizationId: project.organizationId,
         projectId,
         projectRole: "viewer",
       });
@@ -184,13 +184,13 @@ describe("Invites", () => {
       const adminId = await createTestUser(t);
       // Setup admin
       // Setup admin
-      const { companyId, workspaceId, teamId } = await createCompanyAdmin(t, adminId);
+      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
       const asAdmin = asAuthenticatedUser(t, adminId);
 
       const { inviteId } = await asAdmin.mutation(api.invites.sendInvite, {
         email: "revoke@example.com",
         role: "user",
-        companyId,
+        organizationId,
       });
 
       await asAdmin.mutation(api.invites.revokeInvite, { inviteId });

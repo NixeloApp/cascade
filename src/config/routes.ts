@@ -4,4 +4,4 @@
  * making them accessible to both frontend and backend.
  */
 
-export { ROUTE_PATTERNS } from "@convex/shared/routes";
+export { ROUTES } from "@convex/shared/routes";
