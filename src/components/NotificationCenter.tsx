@@ -99,6 +99,11 @@ export function NotificationCenter() {
         {/* Notification Bell Button */}
         <button
           type="button"
+          aria-label={
+            unreadCount && unreadCount > 0
+              ? `Notifications, ${unreadCount} unread`
+              : "Notifications"
+          }
           className="relative p-2 text-ui-text-secondary hover:text-ui-text-primary hover:bg-ui-bg-secondary rounded-lg transition-colors"
         >
           <svg

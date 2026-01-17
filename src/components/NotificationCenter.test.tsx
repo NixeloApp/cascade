@@ -58,7 +58,15 @@ describe("NotificationCenter", () => {
 
     render(<NotificationCenter />);
 
-    expect(screen.getByRole("button")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+  });
+
+  it("should have accessible label including unread count", () => {
+    vi.mocked(useQuery).mockReturnValue(5); // Unread count
+
+    render(<NotificationCenter />);
+
+    expect(screen.getByRole("button", { name: "Notifications, 5 unread" })).toBeInTheDocument();
   });
 
   it("should show unread count badge when there are unread notifications", () => {
