@@ -943,6 +943,9 @@ export const listIssuesByDateRange = query({
       ? issues.filter((i) => i.sprintId === args.sprintId)
       : issues;
 
-    return await enrichIssues(ctx, filteredIssues);
+    // Optimization: Return raw issues instead of enriching them.
+    // CalendarView only uses basic fields (title, status, priority) and does not display
+    // assignee, reporter, or labels, so we skip the expensive enrichment (N+1 lookups).
+    return filteredIssues;
   },
 });
