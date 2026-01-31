@@ -61,7 +61,6 @@ export class WorkspacesPage extends BasePage {
       const convexClientState = await this.page
         .evaluate(() => {
           // biome-ignore lint/suspicious/noExplicitAny: Accessing internal test client
-
           const client = (window as any).__convex_test_client;
           return client
             ? `Found client. Auth token set: ${!!client.authenticationToken}`

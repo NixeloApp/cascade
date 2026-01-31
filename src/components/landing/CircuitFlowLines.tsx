@@ -1,6 +1,5 @@
 export function CircuitFlowLines() {
   return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: Decorative background
     <svg
       aria-hidden="true"
       className="absolute inset-0 w-full h-full pointer-events-none opacity-60"
