@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
+import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
 import { NixeloLogo } from "./icons";
@@ -24,7 +25,9 @@ export function NavHeader() {
           className="flex items-center gap-2.5 hover:opacity-80 transition-opacity duration-default"
         >
           <NixeloLogo />
-          <span className="text-xl font-semibold text-ui-text tracking-tight">Nixelo</span>
+          <Typography variant="h3" className="tracking-tight">
+            Nixelo
+          </Typography>
         </Link>
 
         <div className="hidden md:flex items-center justify-center gap-8 absolute left-1/2 -translate-x-1/2">

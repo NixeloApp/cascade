@@ -141,9 +141,9 @@ export function VersionHistory({
                               Current
                             </Badge>
                           )}
-                          <span className="text-sm font-medium text-ui-text tracking-tight">
+                          <Typography variant="small" className="font-medium tracking-tight">
                             {version.title}
-                          </span>
+                          </Typography>
                         </Flex>
                         <Metadata>
                           <MetadataItem icon={<Clock className="w-3.5 h-3.5" />}>
