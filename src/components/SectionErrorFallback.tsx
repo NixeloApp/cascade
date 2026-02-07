@@ -1,4 +1,6 @@
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { AlertTriangle } from "@/lib/icons";
 import { Typography } from "./ui/Typography";
 
 interface Props {
@@ -11,7 +13,7 @@ export function SectionErrorFallback({ title, message, onRetry }: Props) {
   return (
     <Flex align="center" justify="center" className="h-full p-8">
       <div className="max-w-md w-full text-center">
-        <div className="text-status-error text-4xl mb-3">⚠️</div>
+        <Icon icon={AlertTriangle} size="xl" className="mx-auto text-status-error mb-3" />
         <Typography variant="h2" className="text-xl font-semibold text-ui-text mb-2">
           {title}
         </Typography>

@@ -4,7 +4,8 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
+import { AlertTriangle, Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
+import { Icon } from "../ui/Icon";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -435,7 +436,7 @@ function GenerateKeyModal({
                   API Key Generated!
                 </Typography>
                 <Typography className="text-sm text-ui-text-secondary mb-6">
-                  ⚠️ <strong>Save this key now!</strong> You won't be able to see it again.
+                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> <strong>Save this key now!</strong> You won't be able to see it again.
                 </Typography>
 
                 {/* Generated Key Display */}

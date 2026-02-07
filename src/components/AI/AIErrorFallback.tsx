@@ -2,8 +2,10 @@
  * AIErrorFallback - Error boundary fallback for AI components
  */
 
+import { AlertTriangle } from "@/lib/icons";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 export interface AIErrorFallbackProps {
@@ -22,7 +24,7 @@ export function AIErrorFallback({
   return (
     <Flex align="center" justify="center" className="h-full p-6 bg-ui-bg">
       <div className="text-center max-w-md">
-        <div className="text-6xl mb-4">⚠️</div>
+        <Icon icon={AlertTriangle} size="xl" className="mx-auto mb-4 text-status-warning" />
         <Typography variant="large" className="mb-2">
           {title}
         </Typography>

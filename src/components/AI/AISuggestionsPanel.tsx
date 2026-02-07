@@ -4,7 +4,7 @@
 
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import React from "react";
-import { Lightbulb, Sparkles } from "@/lib/icons";
+import { AlertTriangle, Calendar, Lightbulb, Sparkles } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
@@ -86,13 +86,13 @@ export const AISuggestionsPanel = React.memo(function AISuggestionsPanel({
             All
           </ToggleGroupItem>
           <ToggleGroupItem value="risk_detection" variant="error">
-            ⚠️ Risks
+            <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Risks
           </ToggleGroupItem>
           <ToggleGroupItem value="insight" variant="accent">
-            💡 Insights
+            <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Insights
           </ToggleGroupItem>
           <ToggleGroupItem value="sprint_planning" variant="success">
-            📅 Planning
+            <Icon icon={Calendar} size="sm" className="inline mr-1" /> Planning
           </ToggleGroupItem>
         </ToggleGroup>
       </div>

@@ -158,7 +158,7 @@ export function HourComplianceDashboard() {
                 <Typography variant="h3" className="text-2xl" color="success">
                   {summary.compliant}
                 </Typography>
-                <Typography variant="caption">✅ Compliant</Typography>
+                <Typography variant="caption"><Icon icon={CheckCircle} size="sm" className="inline mr-1" /> Compliant</Typography>
               </div>
             </CardBody>
           </Card>
@@ -169,7 +169,7 @@ export function HourComplianceDashboard() {
                 <Typography variant="h3" className="text-2xl" color="warning">
                   {summary.underHours}
                 </Typography>
-                <Typography variant="caption">⚠️ Under Hours</Typography>
+                <Typography variant="caption"><Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Under Hours</Typography>
               </div>
             </CardBody>
           </Card>
