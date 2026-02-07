@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
+import { LinkIcon } from "@/lib/icons";
 import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
@@ -68,7 +69,7 @@ export function WebhooksManager({ projectId }: WebhooksManagerProps) {
         <CardBody>
           {!webhooks || webhooks.length === 0 ? (
             <EmptyState
-              icon="🔗"
+              icon={LinkIcon}
               title="No webhooks configured"
               description="Add webhooks to integrate with external services"
             />

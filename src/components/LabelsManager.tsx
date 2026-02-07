@@ -7,6 +7,7 @@ import { useAsyncMutation } from "@/hooks/useAsyncMutation";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { useEntityForm } from "@/hooks/useEntityForm";
 import { useModal } from "@/hooks/useModal";
+import { Tag } from "@/lib/icons";
 import { showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
@@ -246,7 +247,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         <CardBody>
           {!labelGroups || totalLabels === 0 ? (
             <EmptyState
-              icon="🏷️"
+              icon={Tag}
               title="No labels yet"
               description="Create labels and organize them into groups"
               action={{

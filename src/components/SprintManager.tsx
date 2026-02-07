@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { formatDate } from "@/lib/dates";
+import { Trophy } from "@/lib/icons";
 import { getStatusColor } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "./ui/Badge";
@@ -240,7 +241,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
       <div className="space-y-4">
         {sprints.length === 0 ? (
           <EmptyState
-            icon="🏃"
+            icon={Trophy}
             title="No sprints yet"
             description="Create a sprint to start planning work"
             action={
