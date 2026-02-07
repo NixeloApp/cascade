@@ -84,7 +84,7 @@ describe("IssuesCalendarView", () => {
     render(<IssuesCalendarView projectId={projectId} />);
 
     // Issue should be visible (by title text or truncated text)
-    // The component renders: <IssueTypeIcon /> {issue.title}
+    // The component renders: <Icon /> {issue.title}
     expect(screen.getByText(/Test Issue with Tooltip/)).toBeInTheDocument();
 
     const issueButton = screen.getByText(/Test Issue with Tooltip/).closest("button");

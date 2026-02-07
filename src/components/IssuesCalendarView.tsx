@@ -4,8 +4,8 @@ import { useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { getPriorityColor } from "@/lib/issue-utils";
-import { IssueTypeIcon } from "./ui/IssueTypeIcon";
+import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { Icon } from "./ui/Icon";
 import { cn } from "@/lib/utils";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { Badge } from "./ui/Badge";
@@ -159,7 +159,7 @@ export function IssuesCalendarView({
                 <Flex align="center" gap="xs">
                   <div className={cn("w-2 h-2 rounded-full", getPriorityColor(issue.priority))} />
                   <Flex align="center" gap="xs" className="flex-1 min-w-0">
-                    <IssueTypeIcon type={issue.type} size="xs" className="shrink-0" />
+                    <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
                     <Typography variant="muted" className="text-xs truncate">
                       {issue.title}
                     </Typography>

@@ -3,9 +3,19 @@
  */
 
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
+import { BookOpen, Bug, CheckSquare, CircleDot, Zap } from "./icons";
 
 export type IssueType = IssueTypeWithSubtask;
 export type { IssuePriority };
+
+/** Icon mapping for issue types - use with <Icon icon={ISSUE_TYPE_ICONS[type]} /> */
+export const ISSUE_TYPE_ICONS = {
+  bug: Bug,
+  story: BookOpen,
+  epic: Zap,
+  subtask: CircleDot,
+  task: CheckSquare,
+} as const;
 
 /**
  * Get the color classes for an issue priority

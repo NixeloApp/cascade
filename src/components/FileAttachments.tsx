@@ -2,7 +2,9 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useRef, useState } from "react";
+import { Archive, File, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { Icon } from "./ui/Icon";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
@@ -111,23 +113,22 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
     const ext = filename.split(".").pop()?.toLowerCase();
     switch (ext) {
       case "pdf":
-        return "📄";
       case "doc":
       case "docx":
-        return "📝";
+        return FileText;
       case "xls":
       case "xlsx":
-        return "📊";
+        return FileSpreadsheet;
       case "jpg":
       case "jpeg":
       case "png":
       case "gif":
-        return "🖼️";
+        return FileImage;
       case "zip":
       case "rar":
-        return "📦";
+        return Archive;
       default:
-        return "📎";
+        return Paperclip;
     }
   };
 
@@ -185,7 +186,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
               className="p-3 bg-ui-bg-soft rounded-lg border border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default group"
             >
               <Flex align="center" gap="md" className="flex-1 min-w-0">
-                <span className="text-2xl shrink-0">{getFileIcon(attachment.filename)}</span>
+                <Icon icon={getFileIcon(attachment.filename)} size="lg" className="shrink-0" />
                 <div className="flex-1 min-w-0">
                   <a
                     href={attachment.url || "#"}
