@@ -59,6 +59,7 @@ export {
   Inbox,
   Info,
   Key,
+  LayoutGrid,
   Lightbulb,
   Link,
   Link as LinkIcon,

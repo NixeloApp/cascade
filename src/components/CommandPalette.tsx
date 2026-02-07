@@ -8,7 +8,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { FileText, FolderKanban, Plus } from "@/lib/icons";
+import { FileText, FolderKanban, Home, LayoutGrid, Plus } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import {
@@ -26,7 +26,7 @@ import { Typography } from "./ui/Typography";
 export interface CommandAction {
   id: string;
   label: string;
-  icon?: string | LucideIcon;
+  icon?: LucideIcon;
   description?: string;
   keywords?: string[];
   action: () => void;
@@ -103,13 +103,7 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
                   className="cursor-pointer data-[selected=true]:bg-brand-subtle"
                 >
                   {cmd.icon && (
-                    <span className="mr-2">
-                      {typeof cmd.icon === "string" ? (
-                        <span className="text-xl">{cmd.icon}</span>
-                      ) : (
-                        <Icon icon={cmd.icon} size="md" />
-                      )}
-                    </span>
+                    <Icon icon={cmd.icon} size="md" className="mr-2" />
                   )}
                   <div className="flex-1">
                     <Typography variant="label" as="p">
@@ -160,7 +154,7 @@ export function useCommands({
     {
       id: "nav-dashboard",
       label: "Go to Dashboard",
-      icon: "🏠",
+      icon: Home,
       description: "View your personal dashboard",
       keywords: ["home", "my work"],
       action: () => navigate({ to: ROUTES.dashboard.path, params: { orgSlug } }),
@@ -169,7 +163,7 @@ export function useCommands({
     {
       id: "nav-documents",
       label: "Go to Documents",
-      icon: "📄",
+      icon: FileText,
       description: "View all documents",
       keywords: ["docs", "files"],
       action: () => navigate({ to: ROUTES.documents.list.path, params: { orgSlug } }),
@@ -178,7 +172,7 @@ export function useCommands({
     {
       id: "nav-projects",
       label: "Go to Workspaces",
-      icon: "📋",
+      icon: FolderKanban,
       description: "View all workspaces",
       keywords: ["boards", "kanban", "projects", "workspaces"],
       action: () => navigate({ to: ROUTES.workspaces.list.path, params: { orgSlug } }),
@@ -189,7 +183,7 @@ export function useCommands({
     ...(projects?.map((project: Doc<"projects">) => ({
       id: `project-${project._id}`,
       label: project.name,
-      icon: "⬜",
+      icon: LayoutGrid,
       description: `Go to ${project.name} board`,
       keywords: [project.key, "board", "project"],
       action: () =>

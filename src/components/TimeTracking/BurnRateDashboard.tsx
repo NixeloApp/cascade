@@ -1,9 +1,12 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/progress";
 import { Typography } from "../ui/Typography";
@@ -109,25 +112,25 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
         <MetricCard
           label="Total Cost"
           value={formatCurrency(burnRate.totalCost)}
-          icon="💰"
+          icon={DollarSign}
           color="info"
         />
         <MetricCard
           label="Per Day"
           value={formatCurrency(burnRate.burnRatePerDay)}
-          icon="📅"
+          icon={Calendar}
           color="success"
         />
         <MetricCard
           label="Per Week"
           value={formatCurrency(burnRate.burnRatePerWeek)}
-          icon="📊"
+          icon={TrendingUp}
           color="accent"
         />
         <MetricCard
           label="Per Month"
           value={formatCurrency(burnRate.burnRatePerMonth)}
-          icon="🗓️"
+          icon={Calendar}
           color="warning"
         />
       </div>
@@ -241,7 +244,7 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
 interface MetricCardProps {
   label: string;
   value: string;
-  icon: string;
+  icon: LucideIcon;
   color: "info" | "success" | "accent" | "warning";
 }
 
@@ -256,7 +259,7 @@ function MetricCard({ label, value, icon, color }: MetricCardProps) {
   return (
     <div className={cn("p-4 border rounded-lg", colorClasses[color])}>
       <Flex align="center" gap="sm" className="mb-2">
-        <span className="text-2xl">{icon}</span>
+        <Icon icon={icon} size="lg" />
         <Typography variant="caption" className="font-medium">
           {label}
         </Typography>

@@ -49,7 +49,7 @@ function DocumentsListPage() {
         </Flex>
       ) : isEmpty ? (
         <EmptyState
-          icon="📄"
+          icon={FileText}
           title="No documents yet"
           description="Create your first document to start collaborating with your team"
           action={<Button variant="primary">+ New Document</Button>}
