@@ -4,6 +4,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import type { useListNavigation } from "@/hooks/useListNavigation";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -126,7 +127,7 @@ export function MyIssuesList({
           <SkeletonList items={5} />
         ) : displayIssues.length === 0 ? (
           <EmptyState
-            icon="📭"
+            icon={Inbox}
             title="Inbox Clear"
             description="No pending items in your feed."
             action={{
