@@ -170,11 +170,13 @@ const SuggestionCard = React.memo(function SuggestionCard({
           {suggestion.confidence !== undefined && (
             <div className="mt-2">
               <Flex align="center" gap="sm">
-                <span className="text-xs text-ui-text-tertiary">Confidence:</span>
+                <Typography variant="caption" color="tertiary">
+                  Confidence:
+                </Typography>
                 <Progress value={suggestion.confidence * 100} className="flex-1 max-w-25" />
-                <span className="text-xs text-ui-text-tertiary">
+                <Typography variant="caption" color="tertiary">
                   {Math.round(suggestion.confidence * 100)}%
-                </span>
+                </Typography>
               </Flex>
             </div>
           )}
