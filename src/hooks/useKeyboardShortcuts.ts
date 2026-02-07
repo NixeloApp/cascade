@@ -197,5 +197,5 @@ export function getShortcutDisplay(shortcut: KeyboardShortcut): string {
 }
 
 export function getSequenceDisplay(sequence: KeySequence): string {
-  return sequence.keys.map((k) => k.toUpperCase()).join(" → ");
+  return sequence.keys.map((k) => k.toUpperCase()).join(" > ");
 }

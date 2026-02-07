@@ -389,14 +389,14 @@ describe("getShortcutDisplay", () => {
 });
 
 describe("getSequenceDisplay", () => {
-  it("should display sequence with arrows", () => {
+  it("should display sequence with separators", () => {
     const sequence: KeySequence = {
       keys: ["g", "h"],
       handler: vi.fn(),
       description: "Go home",
     };
 
-    expect(getSequenceDisplay(sequence)).toBe("G → H");
+    expect(getSequenceDisplay(sequence)).toBe("G > H");
   });
 
   it("should display single key sequence", () => {
@@ -416,6 +416,6 @@ describe("getSequenceDisplay", () => {
       description: "Git",
     };
 
-    expect(getSequenceDisplay(sequence)).toBe("G → I → T");
+    expect(getSequenceDisplay(sequence)).toBe("G > I > T");
   });
 });

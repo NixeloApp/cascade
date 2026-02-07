@@ -228,7 +228,7 @@ export function GoogleCalendarIntegration() {
                           Import Only
                         </Typography>
                         <Typography className="text-xs text-ui-text-tertiary">
-                          Only import from Google → Nixelo
+                          Only import from Google to Nixelo
                         </Typography>
                       </div>
                     </Flex>
@@ -249,7 +249,7 @@ export function GoogleCalendarIntegration() {
                           Export Only
                         </Typography>
                         <Typography className="text-xs text-ui-text-tertiary">
-                          Only export from Nixelo → Google
+                          Only export from Nixelo to Google
                         </Typography>
                       </div>
                     </Flex>

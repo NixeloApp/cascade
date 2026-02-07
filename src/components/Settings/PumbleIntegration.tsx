@@ -403,7 +403,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
                 type="url"
                 placeholder="https://api.pumble.com/projects/.../..."
                 className="font-mono text-sm"
-                helperText="Get this from Pumble: Channel Settings → Integrations → Incoming Webhooks"
+                helperText="Get this from Pumble: Channel Settings > Integrations > Incoming Webhooks"
                 required
               />
             )}

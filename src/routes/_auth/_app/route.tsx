@@ -16,9 +16,9 @@ export const Route = createFileRoute("/_auth/_app")({
  * AppLayout - The /app gateway route.
  *
  * This is the SOLE redirect resolver for authenticated users:
- * 1. If onboarding incomplete → redirect to /onboarding
- * 2. If user has org → redirect to /$orgSlug/dashboard
- * 3. If user has no org → Initialize one, then redirect
+ * 1. If onboarding incomplete -> redirect to /onboarding
+ * 2. If user has org -> redirect to /$orgSlug/dashboard
+ * 3. If user has no org -> Initialize one, then redirect
  *
  * Google OAuth and other auth flows land here, and this gateway
  * ensures users end up in the right place.
