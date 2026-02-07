@@ -4,7 +4,7 @@
 
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import React from "react";
-import { Lightbulb } from "@/lib/icons";
+import { Lightbulb, Sparkles } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
@@ -64,7 +64,7 @@ export const AISuggestionsPanel = React.memo(function AISuggestionsPanel({
               </>
             ) : (
               <>
-                <span>✨</span>
+                <Icon icon={Sparkles} size="md" />
                 <span className="hidden sm:inline">Generate AI Insights</span>
                 <span className="sm:hidden">Generate Insights</span>
               </>

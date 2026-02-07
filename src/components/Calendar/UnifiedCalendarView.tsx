@@ -1,6 +1,8 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { Calendar, Map } from "@/lib/icons";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";
 import { CalendarView } from "./CalendarView";
@@ -26,16 +28,18 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
           variant="brand"
         >
           <ToggleGroupItem value="calendar">
-            <span className="sm:hidden">📅 Calendar</span>
-            <span className="hidden sm:inline">📅 Calendar (Events)</span>
+            <Icon icon={Calendar} size="sm" className="mr-1" />
+            <span className="sm:hidden">Calendar</span>
+            <span className="hidden sm:inline">Calendar (Events)</span>
           </ToggleGroupItem>
           <ToggleGroupItem
             value="roadmap"
             disabled={!projectId}
             title={!projectId ? "Select a project to view roadmap" : ""}
           >
-            <span className="sm:hidden">🗺️ Roadmap</span>
-            <span className="hidden sm:inline">🗺️ Roadmap (Issues)</span>
+            <Icon icon={Map} size="sm" className="mr-1" />
+            <span className="sm:hidden">Roadmap</span>
+            <span className="hidden sm:inline">Roadmap (Issues)</span>
           </ToggleGroupItem>
         </ToggleGroup>
         {!projectId && viewType === "roadmap" && (

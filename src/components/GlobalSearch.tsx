@@ -2,7 +2,9 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
+import { Search } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -155,7 +157,7 @@ function SearchListContent({
     <>
       <CommandEmpty className="p-8" data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}>
         <div className="text-center">
-          <span className="text-4xl mb-4 block">🔍</span>
+          <Icon icon={Search} size="xl" className="mx-auto mb-4" />
           <Typography variant="p" className="font-medium text-ui-text">
             No results found
           </Typography>

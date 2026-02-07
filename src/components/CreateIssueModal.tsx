@@ -9,7 +9,9 @@ import { z } from "zod";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
+import { Check, Sparkles } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { Icon } from "./ui/Icon";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import {
@@ -288,7 +290,7 @@ export function CreateIssueModal({
               onClick={handleGenerateAISuggestions}
               isLoading={isGeneratingAI}
               className="bg-linear-to-r from-brand to-accent hover:from-brand-hover hover:to-accent-hover text-brand-foreground border-0"
-              leftIcon={<span>✨</span>}
+              leftIcon={<Icon icon={Sparkles} size="sm" />}
             >
               Get AI Suggestions
             </Button>
@@ -299,7 +301,7 @@ export function CreateIssueModal({
                 className="text-sm text-status-success"
                 aria-live="polite"
               >
-                <span>✓</span>
+                <Icon icon={Check} size="sm" />
                 <span>AI suggestions applied</span>
               </Flex>
             )}

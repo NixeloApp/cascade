@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { AlertTriangle, FileText } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 import {
@@ -12,6 +13,7 @@ import {
   DialogTitle,
 } from "./Dialog";
 import { Flex } from "./Flex";
+import { Icon } from "./Icon";
 import { Typography } from "./Typography";
 
 interface MarkdownPreviewModalProps {
@@ -53,7 +55,10 @@ export function MarkdownPreviewModal({
         {/* File Info */}
         <div className="mb-4 p-3 bg-ui-bg-secondary rounded-lg">
           <Flex align="center" justify="between" className="text-sm">
-            <span className="font-medium text-ui-text">📄 {filename}</span>
+            <Flex align="center" gap="xs" className="font-medium text-ui-text">
+              <Icon icon={FileText} size="sm" />
+              {filename}
+            </Flex>
             <span className="text-ui-text-tertiary">
               {lines.length} lines • {headings} headings • {lists} lists • {codeBlocks} code blocks
             </span>
@@ -64,7 +69,7 @@ export function MarkdownPreviewModal({
         {/* Warning */}
         <div className="mb-4 p-3 bg-status-warning-bg border border-status-warning/30 rounded-lg">
           <Flex align="start" gap="sm">
-            <span className="text-status-warning text-lg">⚠️</span>
+            <Icon icon={AlertTriangle} size="md" className="text-status-warning" />
             <div className="flex-1">
               <Typography variant="small" className="font-medium text-status-warning">
                 This will replace all current document content

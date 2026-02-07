@@ -2,8 +2,10 @@
  * AIAssistantButton - Reusable floating button for AI assistant
  */
 
+import { Bot } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { AI_CONFIG } from "./config";
 
 export interface AIAssistantButtonProps {
@@ -70,7 +72,7 @@ export function AIAssistantButton({
       title={tooltipText}
       aria-label={ariaLabel}
     >
-      <span>🤖</span>
+      <Icon icon={Bot} size="lg" />
       {unreadCount > 0 && (
         <Flex
           align="center"

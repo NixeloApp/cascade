@@ -3,7 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { Users } from "@/lib/icons";
+import { Mail, Users } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
@@ -269,7 +269,7 @@ export function UserManagement() {
               </Flex>
             ) : invites.length === 0 ? (
               <EmptyState
-                icon="✉️"
+                icon={Mail}
                 title="No invitations"
                 description="Send your first invitation to get started"
                 action={{
