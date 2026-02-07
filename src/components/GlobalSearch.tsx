@@ -317,7 +317,7 @@ export function GlobalSearch() {
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
-        <span className="text-sm text-ui-text-secondary">Search...</span>
+        <Typography variant="small" color="secondary">Search...</Typography>
         <KeyboardShortcut shortcut="⌘+K" className="hidden sm:inline-flex" />
       </Button>
 

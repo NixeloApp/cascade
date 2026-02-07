@@ -198,7 +198,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
         );
 
       default:
-        return <span className="text-ui-text">{value}</span>;
+        return <Typography variant="small">{value}</Typography>;
     }
   };
 

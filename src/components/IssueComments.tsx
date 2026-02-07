@@ -106,7 +106,9 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                       {formatRelativeTime(comment._creationTime)}
                     </time>
                     {comment.updatedAt > comment._creationTime && (
-                      <span className="text-ui-text-tertiary text-xs italic">(edited)</span>
+                      <Typography variant="caption" color="tertiary" className="italic">
+                        (edited)
+                      </Typography>
                     )}
                   </Flex>
 
