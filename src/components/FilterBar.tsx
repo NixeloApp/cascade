@@ -7,7 +7,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, X } from "@/lib/icons";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
-import { getTypeIcon } from "@/lib/issue-utils";
+import { IssueTypeIcon } from "./ui/IssueTypeIcon";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import {
@@ -312,7 +312,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           getKey={(type) => type}
           renderItem={(type) => (
             <Flex align="center" gap="sm">
-              {getTypeIcon(type)}
+              <IssueTypeIcon type={type} size="sm" />
               <Typography variant="small" className="capitalize">
                 {type}
               </Typography>

@@ -8,7 +8,8 @@ import { PageLayout } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
-import { getPriorityColor, getTypeIcon } from "@/lib/issue-utils";
+import { getPriorityColor } from "@/lib/issue-utils";
+import { IssueTypeIcon } from "./ui/IssueTypeIcon";
 import { cn } from "@/lib/utils";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
@@ -122,9 +123,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           {/* Issue Info */}
           <div className="w-64 shrink-0 pr-4">
             <Flex align="center" gap="sm" className="mb-1">
-              <Typography variant="label" className="text-sm">
-                {getTypeIcon(issue.type)}
-              </Typography>
+              <IssueTypeIcon type={issue.type} size="sm" />
               <button
                 type="button"
                 onClick={() => setSelectedIssue(issue._id)}

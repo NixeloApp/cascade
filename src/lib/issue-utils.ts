@@ -8,24 +8,6 @@ export type IssueType = IssueTypeWithSubtask;
 export type { IssuePriority };
 
 /**
- * Get the icon for an issue type
- */
-export function getTypeIcon(type: string): string {
-  switch (type) {
-    case "bug":
-      return "🐛";
-    case "story":
-      return "📖";
-    case "epic":
-      return "⚡";
-    case "subtask":
-      return "🔸";
-    default:
-      return "✓";
-  }
-}
-
-/**
  * Get the color classes for an issue priority
  * Uses semantic theme tokens with full dark mode support
  * @param variant - The style variant: 'text', 'bg', or 'badge'
@@ -106,20 +88,20 @@ export function getPriorityEmoji(priority: string): string {
 }
 
 /**
- * Get the label for an issue type with emoji
+ * Get the label for an issue type (without icon)
  */
 export function getTypeLabel(type: string): string {
   switch (type) {
     case "bug":
-      return "🐛 Bug";
+      return "Bug";
     case "story":
-      return "📖 Story";
+      return "Story";
     case "epic":
-      return "🎯 Epic";
+      return "Epic";
     case "subtask":
-      return "🔸 Sub-task";
+      return "Sub-task";
     default:
-      return "📋 Task";
+      return "Task";
   }
 }
 

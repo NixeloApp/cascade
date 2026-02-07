@@ -3,6 +3,7 @@ import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
+import { IssueTypeIcon } from "../ui/IssueTypeIcon";
 import { Typography } from "../ui/Typography";
 
 interface TemplateCardProps {
@@ -24,25 +25,12 @@ interface TemplateCardProps {
  * Extracted from TemplatesManager for better reusability
  */
 export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
-  const getTypeIcon = (type: IssueType) => {
-    switch (type) {
-      case "bug":
-        return "🐛";
-      case "story":
-        return "📖";
-      case "epic":
-        return "⚡";
-      default:
-        return "✓";
-    }
-  };
-
   return (
     <div className="p-4 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary transition-colors">
       <Flex justify="between" align="start">
         <div className="flex-1">
           <Flex gap="sm" align="center" className="mb-2">
-            <span className="text-lg">{getTypeIcon(template.type)}</span>
+            <IssueTypeIcon type={template.type} size="md" />
             <Typography variant="h4" className="font-medium text-ui-text">
               {template.name}
             </Typography>

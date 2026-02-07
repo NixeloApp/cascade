@@ -1,5 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
-import { getPriorityColor, getTypeIcon } from "@/lib/issue-utils";
+import { getPriorityColor } from "@/lib/issue-utils";
+import { IssueTypeIcon } from "../ui/IssueTypeIcon";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
@@ -71,9 +72,7 @@ export function SearchResultsList({
             className="w-full p-4 hover:bg-ui-bg-secondary transition-colors text-left"
           >
             <Flex gap="md" align="start">
-              <Typography variant="label" className="text-xl shrink-0">
-                {getTypeIcon(issue.type)}
-              </Typography>
+              <IssueTypeIcon type={issue.type} size="md" className="shrink-0" />
               <div className="flex-1 min-w-0">
                 <Flex gap="sm" align="center" className="mb-1">
                   <Typography variant="muted" className="text-sm font-mono">

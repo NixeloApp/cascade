@@ -6,18 +6,14 @@ import { IssueCard } from "./IssueCard";
 
 // Mock issue utilities
 vi.mock("@/lib/issue-utils", () => ({
-  getTypeIcon: vi.fn((type: string) => {
-    const icons = { bug: "🐛", task: "✓", story: "📖", epic: "🎯" };
-    return icons[type as keyof typeof icons] || "📄";
-  }),
   getTypeLabel: vi.fn((type: string) => {
     const labels = {
-      bug: "🐛 Bug",
-      task: "✓ Task",
-      story: "📖 Story",
-      epic: "🎯 Epic",
+      bug: "Bug",
+      task: "Task",
+      story: "Story",
+      epic: "Epic",
     };
-    return labels[type as keyof typeof labels] || "📋 Task";
+    return labels[type as keyof typeof labels] || "Task";
   }),
   getPriorityIcon: vi.fn((priority: string) => {
     const icons = {

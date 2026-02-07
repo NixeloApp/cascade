@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
-import { getPriorityColor, getTypeIcon } from "@/lib/issue-utils";
+import { getPriorityColor } from "@/lib/issue-utils";
+import { IssueTypeIcon } from "./ui/IssueTypeIcon";
 import { TEST_IDS } from "@/lib/test-ids";
 import { IssueDetailLayout, useIssueDetail } from "./IssueDetailView";
 import { Badge } from "./ui/Badge";
@@ -60,9 +61,7 @@ export function IssueDetailModal({
         <DialogHeader className="px-6 pt-6 pb-0">
           <Flex align="center" justify="between">
             <Flex align="center" className="space-x-3">
-              <Typography variant="label" className="text-2xl">
-                {getTypeIcon(issue.type)}
-              </Typography>
+              <IssueTypeIcon type={issue.type} size="lg" />
               <div>
                 <DialogTitle className="flex items-center space-x-2">
                   <Flex align="center" className="gap-1.5">

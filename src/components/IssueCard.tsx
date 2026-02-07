@@ -3,7 +3,8 @@ import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
-import { getPriorityColor, getPriorityIcon, getTypeIcon, getTypeLabel } from "@/lib/issue-utils";
+import { getPriorityColor, getPriorityIcon, getTypeLabel } from "@/lib/issue-utils";
+import { IssueTypeIcon } from "./ui/IssueTypeIcon";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -122,9 +123,7 @@ export const IssueCard = memo(function IssueCard({
             />
           )}
           <Tooltip content={getTypeLabel(issue.type)}>
-            <span role="img" aria-label={getTypeLabel(issue.type)} className="text-sm cursor-help">
-              {getTypeIcon(issue.type)}
-            </span>
+            <IssueTypeIcon type={issue.type} size="sm" className="cursor-help" />
           </Tooltip>
           <code data-testid={TEST_IDS.ISSUE.KEY} className="font-mono text-xs">
             {issue.key}

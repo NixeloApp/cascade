@@ -4,7 +4,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { Check, Copy } from "@/lib/icons";
-import { getTypeIcon } from "@/lib/issue-utils";
+import { IssueTypeIcon } from "../ui/IssueTypeIcon";
 
 interface IssueDetailHeaderProps {
   issueKey: string;
@@ -30,9 +30,7 @@ export function IssueDetailHeader({
           {breadcrumb}
           {breadcrumb && <span className="text-ui-text-tertiary">/</span>}
           <Flex align="center" gap="sm">
-            <Typography variant="label" className="text-lg">
-              {getTypeIcon(issueType)}
-            </Typography>
+            <IssueTypeIcon type={issueType} size="md" />
             <Typography variant="muted" className="font-mono text-sm tracking-tight">
               {issueKey}
             </Typography>

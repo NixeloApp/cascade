@@ -3,6 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
+import { Briefcase, GraduationCap, Wrench } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -298,14 +299,14 @@ export function UserTypeManager() {
     }
   };
 
-  const getTypeIcon = (type: EmploymentType) => {
+  const getTypeIcon = (type: EmploymentType, size = "w-5 h-5") => {
     switch (type) {
       case "employee":
-        return "👔";
+        return <Briefcase className={size} />;
       case "contractor":
-        return "🔧";
+        return <Wrench className={size} />;
       case "intern":
-        return "🎓";
+        return <GraduationCap className={size} />;
     }
   };
 
@@ -355,7 +356,7 @@ export function UserTypeManager() {
                 >
                   <Flex justify="between" align="start" className="mb-3">
                     <Flex align="center" gap="sm">
-                      <span className="text-2xl">{getTypeIcon(config.type)}</span>
+                      {getTypeIcon(config.type, "w-7 h-7")}
                       <div>
                         <Typography variant="h3" className="font-semibold text-ui-text">
                           {config.name}
@@ -480,7 +481,7 @@ export function UserTypeManager() {
                   <Flex justify="between" align="start">
                     <div className="flex-1">
                       <Flex gap="md" align="center" className="mb-2">
-                        <span className="text-xl">{getTypeIcon(profile.employmentType)}</span>
+                        {getTypeIcon(profile.employmentType, "w-5 h-5")}
                         <div>
                           <Typography variant="h4" className="font-medium text-ui-text">
                             {profile.user?.name || profile.user?.email || "Unknown User"}
