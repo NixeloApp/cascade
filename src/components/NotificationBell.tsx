@@ -1,11 +1,13 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import { Bell, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Bell, Flag, MessageCircle, MessageSquare, RefreshCw, Rocket, User, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
+import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Metadata, MetadataItem, MetadataTimestamp } from "./ui/Metadata";
 import { Typography } from "./ui/Typography";
@@ -51,22 +53,22 @@ export function NotificationBell() {
     }
   };
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: string): LucideIcon => {
     switch (type) {
       case "issue_assigned":
-        return "👤";
+        return User;
       case "issue_mentioned":
-        return "💬";
+        return MessageSquare;
       case "issue_commented":
-        return "💭";
+        return MessageCircle;
       case "issue_status_changed":
-        return "🔄";
+        return RefreshCw;
       case "sprint_started":
-        return "🚀";
+        return Rocket;
       case "sprint_ended":
-        return "🏁";
+        return Flag;
       default:
-        return "🔔";
+        return Bell;
     }
   };
 
@@ -143,9 +145,11 @@ export function NotificationBell() {
                       }
                     >
                       <Flex align="start" gap="md">
-                        <div className="text-2xl shrink-0">
-                          {getNotificationIcon(notification.type)}
-                        </div>
+                        <Icon
+                          icon={getNotificationIcon(notification.type)}
+                          size="lg"
+                          className="shrink-0"
+                        />
                         <div className="flex-1 min-w-0">
                           <Typography variant="label" as="p">
                             {notification.title}

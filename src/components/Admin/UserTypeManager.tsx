@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
-import { Briefcase, GraduationCap, Wrench } from "@/lib/icons";
+import { Briefcase, GraduationCap, Settings, Users, Wrench } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -339,7 +339,7 @@ export function UserTypeManager() {
             <div className="text-center py-8 text-ui-text-tertiary">Loading...</div>
           ) : configs.length === 0 ? (
             <EmptyState
-              icon="⚙️"
+              icon={Settings}
               title="No configurations"
               description="Initialize default employment type configurations"
               action={{
@@ -467,7 +467,7 @@ export function UserTypeManager() {
             <div className="text-center py-8 text-ui-text-tertiary">Loading...</div>
           ) : profiles.length === 0 ? (
             <EmptyState
-              icon="👥"
+              icon={Users}
               title="No user assignments"
               description="Assign employment types to users to get started"
             />

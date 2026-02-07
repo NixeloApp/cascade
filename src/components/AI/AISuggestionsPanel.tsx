@@ -4,9 +4,11 @@
 
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import React from "react";
+import { Lightbulb } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { MetadataTimestamp } from "../ui/Metadata";
 import { Progress } from "../ui/progress";
 import { Skeleton } from "../ui/Skeleton";
@@ -151,7 +153,7 @@ const SuggestionCard = React.memo(function SuggestionCard({
   return (
     <div className="bg-ui-bg border border-ui-border rounded-lg p-3 sm:p-4 shadow-card hover:shadow-card-hover transition-shadow">
       <Flex align="start" gap="md">
-        <div className="text-2xl shrink-0">{metadata?.icon || "💡"}</div>
+        <Icon icon={metadata?.icon || Lightbulb} size="lg" className="shrink-0" />
         <div className="flex-1 min-w-0">
           <Flex align="center" gap="sm" className="mb-2">
             <Badge variant="brand" shape="pill">

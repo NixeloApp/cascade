@@ -3,7 +3,7 @@ import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
-import { getPriorityColor, getPriorityIcon, getTypeLabel, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { getPriorityColor, getTypeLabel, ISSUE_TYPE_ICONS, PRIORITY_ICONS } from "@/lib/issue-utils";
 import { Icon } from "./ui/Icon";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
@@ -132,14 +132,13 @@ export const IssueCard = memo(function IssueCard({
         <Tooltip
           content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
         >
-          <div
-            role="img"
+          <Icon
+            icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
+            size="sm"
             data-testid={TEST_IDS.ISSUE.PRIORITY}
             aria-label={`Priority: ${issue.priority}`}
-            className={cn("text-xs cursor-help", getPriorityColor(issue.priority))}
-          >
-            {getPriorityIcon(issue.priority)}
-          </div>
+            className={cn("cursor-help", getPriorityColor(issue.priority))}
+          />
         </Tooltip>
       </Flex>
 

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Flex } from "@/components/ui/Flex";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
+import { FileText } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -205,7 +206,7 @@ export function DocumentTemplatesManager({
 
         {!templates || templates.length === 0 ? (
           <EmptyState
-            icon="📄"
+            icon={FileText}
             title="No templates yet"
             description="Create templates to speed up document creation"
             action={{

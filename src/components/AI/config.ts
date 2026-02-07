@@ -3,6 +3,17 @@
  * Centralized constants, types, and configuration for AI features
  */
 
+import type { LucideIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  Calendar,
+  FileText,
+  Lightbulb,
+  Tag,
+  User,
+  Zap,
+} from "@/lib/icons";
+
 /**
  * Suggestion types as defined in schema
  */
@@ -79,47 +90,47 @@ export const AI_CONFIG = {
 export const SUGGESTION_METADATA: Record<
   SuggestionType,
   {
-    icon: string;
+    icon: LucideIcon;
     label: string;
     color: string;
   }
 > = {
   issue_description: {
-    icon: "📝",
+    icon: FileText,
     label: "Issue Description",
     color: "info",
   },
   issue_priority: {
-    icon: "⚡",
+    icon: Zap,
     label: "Priority Suggestion",
     color: "warning",
   },
   issue_labels: {
-    icon: "🏷️",
+    icon: Tag,
     label: "Label Suggestion",
     color: "accent",
   },
   issue_assignee: {
-    icon: "👤",
+    icon: User,
     label: "Assignee Suggestion",
     color: "success",
   },
   sprint_planning: {
-    icon: "📅",
+    icon: Calendar,
     label: "Sprint Planning",
     color: "brand",
   },
   risk_detection: {
-    icon: "⚠️",
+    icon: AlertTriangle,
     label: "Risk Detected",
     color: "error",
   },
   insight: {
-    icon: "💡",
+    icon: Lightbulb,
     label: "Project Insight",
     color: "warning",
   },
-} as const;
+};
 
 /**
  * Keyboard shortcuts

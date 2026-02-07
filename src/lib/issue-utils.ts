@@ -3,7 +3,18 @@
  */
 
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
-import { BookOpen, Bug, CheckSquare, CircleDot, Zap } from "./icons";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  BookOpen,
+  Bug,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  CircleDot,
+  Zap,
+} from "./icons";
 
 export type IssueType = IssueTypeWithSubtask;
 export type { IssuePriority };
@@ -15,6 +26,15 @@ export const ISSUE_TYPE_ICONS = {
   epic: Zap,
   subtask: CircleDot,
   task: CheckSquare,
+} as const;
+
+/** Icon mapping for priorities - use with <Icon icon={PRIORITY_ICONS[priority]} /> */
+export const PRIORITY_ICONS = {
+  highest: ChevronUp,
+  high: ArrowUp,
+  medium: ArrowRight,
+  low: ArrowDown,
+  lowest: ChevronDown,
 } as const;
 
 /**
@@ -58,47 +78,7 @@ export function getPriorityColor(
 }
 
 /**
- * Get the icon for an issue priority
- */
-export function getPriorityIcon(priority: string): string {
-  switch (priority) {
-    case "highest":
-      return "↑↑";
-    case "high":
-      return "↑";
-    case "medium":
-      return "→";
-    case "low":
-      return "↓";
-    case "lowest":
-      return "↓↓";
-    default:
-      return "→";
-  }
-}
-
-/**
- * Get the emoji for a priority with text
- */
-export function getPriorityEmoji(priority: string): string {
-  switch (priority) {
-    case "highest":
-      return "⬆️";
-    case "high":
-      return "↗️";
-    case "medium":
-      return "➡️";
-    case "low":
-      return "↘️";
-    case "lowest":
-      return "⬇️";
-    default:
-      return "➡️";
-  }
-}
-
-/**
- * Get the label for an issue type (without icon)
+ * Get the label for an issue type
  */
 export function getTypeLabel(type: string): string {
   switch (type) {

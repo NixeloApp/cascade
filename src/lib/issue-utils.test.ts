@@ -1,34 +1,30 @@
 import { describe, expect, it } from "vitest";
 import {
   getPriorityColor,
-  getPriorityEmoji,
-  getPriorityIcon,
   getStatusColor,
-  getTypeIcon,
   getTypeLabel,
+  ISSUE_TYPE_ICONS,
+  PRIORITY_ICONS,
 } from "./issue-utils";
 
 describe("issue-utils", () => {
-  describe("getTypeIcon", () => {
-    it("should return correct icon for bug type", () => {
-      expect(getTypeIcon("bug")).toBe("🐛");
+  describe("ISSUE_TYPE_ICONS", () => {
+    it("should have icon for all issue types", () => {
+      expect(ISSUE_TYPE_ICONS.bug).toBeDefined();
+      expect(ISSUE_TYPE_ICONS.story).toBeDefined();
+      expect(ISSUE_TYPE_ICONS.epic).toBeDefined();
+      expect(ISSUE_TYPE_ICONS.subtask).toBeDefined();
+      expect(ISSUE_TYPE_ICONS.task).toBeDefined();
     });
+  });
 
-    it("should return correct icon for story type", () => {
-      expect(getTypeIcon("story")).toBe("📖");
-    });
-
-    it("should return correct icon for epic type", () => {
-      expect(getTypeIcon("epic")).toBe("⚡");
-    });
-
-    it("should return default icon for task type", () => {
-      expect(getTypeIcon("task")).toBe("✓");
-    });
-
-    it("should return default icon for unknown type", () => {
-      expect(getTypeIcon("unknown")).toBe("✓");
-      expect(getTypeIcon("")).toBe("✓");
+  describe("PRIORITY_ICONS", () => {
+    it("should have icon for all priorities", () => {
+      expect(PRIORITY_ICONS.highest).toBeDefined();
+      expect(PRIORITY_ICONS.high).toBeDefined();
+      expect(PRIORITY_ICONS.medium).toBeDefined();
+      expect(PRIORITY_ICONS.low).toBeDefined();
+      expect(PRIORITY_ICONS.lowest).toBeDefined();
     });
   });
 
@@ -120,80 +116,30 @@ describe("issue-utils", () => {
     });
   });
 
-  describe("getPriorityIcon", () => {
-    it("should return correct icon for highest priority", () => {
-      expect(getPriorityIcon("highest")).toBe("↑↑");
-    });
-
-    it("should return correct icon for high priority", () => {
-      expect(getPriorityIcon("high")).toBe("↑");
-    });
-
-    it("should return correct icon for medium priority", () => {
-      expect(getPriorityIcon("medium")).toBe("→");
-    });
-
-    it("should return correct icon for low priority", () => {
-      expect(getPriorityIcon("low")).toBe("↓");
-    });
-
-    it("should return correct icon for lowest priority", () => {
-      expect(getPriorityIcon("lowest")).toBe("↓↓");
-    });
-
-    it("should return default icon for unknown priority", () => {
-      expect(getPriorityIcon("unknown")).toBe("→");
-      expect(getPriorityIcon("")).toBe("→");
-    });
-  });
-
-  describe("getPriorityEmoji", () => {
-    it("should return correct emoji for highest priority", () => {
-      expect(getPriorityEmoji("highest")).toBe("⬆️");
-    });
-
-    it("should return correct emoji for high priority", () => {
-      expect(getPriorityEmoji("high")).toBe("↗️");
-    });
-
-    it("should return correct emoji for medium priority", () => {
-      expect(getPriorityEmoji("medium")).toBe("➡️");
-    });
-
-    it("should return correct emoji for low priority", () => {
-      expect(getPriorityEmoji("low")).toBe("↘️");
-    });
-
-    it("should return correct emoji for lowest priority", () => {
-      expect(getPriorityEmoji("lowest")).toBe("⬇️");
-    });
-
-    it("should return default emoji for unknown priority", () => {
-      expect(getPriorityEmoji("unknown")).toBe("➡️");
-      expect(getPriorityEmoji("")).toBe("➡️");
-    });
-  });
-
   describe("getTypeLabel", () => {
     it("should return correct label for bug type", () => {
-      expect(getTypeLabel("bug")).toBe("🐛 Bug");
+      expect(getTypeLabel("bug")).toBe("Bug");
     });
 
     it("should return correct label for story type", () => {
-      expect(getTypeLabel("story")).toBe("📖 Story");
+      expect(getTypeLabel("story")).toBe("Story");
     });
 
     it("should return correct label for epic type", () => {
-      expect(getTypeLabel("epic")).toBe("🎯 Epic");
+      expect(getTypeLabel("epic")).toBe("Epic");
+    });
+
+    it("should return correct label for subtask type", () => {
+      expect(getTypeLabel("subtask")).toBe("Sub-task");
     });
 
     it("should return correct label for task type", () => {
-      expect(getTypeLabel("task")).toBe("📋 Task");
+      expect(getTypeLabel("task")).toBe("Task");
     });
 
     it("should return default label for unknown type", () => {
-      expect(getTypeLabel("unknown")).toBe("📋 Task");
-      expect(getTypeLabel("")).toBe("📋 Task");
+      expect(getTypeLabel("unknown")).toBe("Task");
+      expect(getTypeLabel("")).toBe("Task");
     });
   });
 

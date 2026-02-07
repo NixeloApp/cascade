@@ -2,11 +2,13 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
+import { AlertTriangle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
 
@@ -141,7 +143,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
 
       <div className="bg-status-warning/10 border border-status-warning/30 rounded-lg p-4">
         <Flex gap="md" align="start">
-          <div className="text-status-warning text-xl">⚠️</div>
+          <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
           <div className="text-sm text-status-warning">
             <Typography variant="p" className="font-semibold mb-1">
               Import Requirements
