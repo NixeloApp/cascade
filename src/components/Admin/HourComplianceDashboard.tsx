@@ -1,9 +1,12 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
+import { Icon } from "@/components/ui/Icon";
 import { Typography } from "@/components/ui/Typography";
+import { AlertTriangle, CheckCircle, TrendingUp, XCircle, Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
@@ -86,16 +89,16 @@ export function HourComplianceDashboard() {
     }
   };
 
-  const getStatusIcon = (status: ComplianceStatus) => {
+  const getStatusIcon = (status: ComplianceStatus): LucideIcon => {
     switch (status) {
       case "compliant":
-        return "✅";
+        return CheckCircle;
       case "under_hours":
-        return "⚠️";
+        return AlertTriangle;
       case "over_hours":
-        return "🔴";
+        return XCircle;
       case "equity_under":
-        return "💎";
+        return Zap;
     }
   };
 
@@ -244,7 +247,7 @@ export function HourComplianceDashboard() {
             </Typography>
           ) : records.length === 0 ? (
             <EmptyState
-              icon="📊"
+              icon={TrendingUp}
               title="No compliance records"
               description="Check compliance to start tracking"
               action={{
@@ -262,7 +265,7 @@ export function HourComplianceDashboard() {
                   <Flex justify="between" align="start">
                     <div className="flex-1">
                       <Flex gap="md" align="center" className="mb-2">
-                        <span className="text-xl">{getStatusIcon(record.status)}</span>
+                        <Icon icon={getStatusIcon(record.status)} size="md" />
                         <div>
                           <Typography variant="label">
                             {record.user?.name || record.user?.email || "Unknown User"}

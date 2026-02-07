@@ -1,3 +1,4 @@
+import { TrendingUp } from "@/lib/icons";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Card, CardBody, CardHeader } from "../ui/Card";
@@ -53,7 +54,11 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             <SkeletonText lines={2} />
           </Flex>
         ) : activities.length === 0 ? (
-          <EmptyState icon="📊" title="No activity" description="No recent activity to show" />
+          <EmptyState
+            icon={TrendingUp}
+            title="No activity"
+            description="No recent activity to show"
+          />
         ) : (
           <div className="relative h-96 overflow-y-auto pr-2 custom-scrollbar">
             {/* Timeline line */}

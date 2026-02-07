@@ -3,6 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Users } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
@@ -412,7 +413,7 @@ export function UserManagement() {
                 <LoadingSpinner />
               </Flex>
             ) : users.length === 0 ? (
-              <EmptyState icon="👥" title="No users" description="No users have joined yet" />
+              <EmptyState icon={Users} title="No users" description="No users have joined yet" />
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-ui-border" aria-label="Platform users">

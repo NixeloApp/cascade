@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { useMemo } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
+import { CheckCircle, MapPin, TrendingUp, Zap } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { BarChart } from "./Analytics/BarChart";
 import { ChartCard } from "./Analytics/ChartCard";
@@ -165,13 +166,13 @@ export function AnalyticsDashboard({ projectId }: Props) {
           <MetricCard
             title="Total Issues"
             value={analytics.totalIssues}
-            icon="📊"
+            icon={TrendingUp}
             testId={TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES}
           />
           <MetricCard
             title="Unassigned"
             value={analytics.unassignedCount}
-            icon="📌"
+            icon={MapPin}
             highlight={analytics.unassignedCount > 0}
             testId={TEST_IDS.ANALYTICS.METRIC_UNASSIGNED}
           />
@@ -179,13 +180,13 @@ export function AnalyticsDashboard({ projectId }: Props) {
             title="Avg Velocity"
             value={velocity.averageVelocity}
             subtitle="points/sprint"
-            icon="⚡"
+            icon={Zap}
             testId={TEST_IDS.ANALYTICS.METRIC_AVG_VELOCITY}
           />
           <MetricCard
             title="Completed Sprints"
             value={velocity.velocityData.length}
-            icon="✅"
+            icon={CheckCircle}
             testId={TEST_IDS.ANALYTICS.METRIC_COMPLETED_SPRINTS}
           />
         </div>
