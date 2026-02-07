@@ -327,11 +327,9 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
           <Typography variant="label" className="mb-2">
             Key Points
           </Typography>
-          <ul className="list-disc list-inside space-y-1 marker:text-brand">
+          <ul className="list-disc list-inside space-y-1 text-xs text-ui-text-secondary marker:text-brand">
             {summary.keyPoints.map((point: string) => (
-              <li key={point} className="text-xs text-ui-text-secondary">
-                {point}
-              </li>
+              <li key={point}>{point}</li>
             ))}
           </ul>
         </div>
@@ -351,10 +349,10 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
               ) => (
                 <li
                   key={`action-${index}-${item.description.slice(0, 20)}`}
-                  className="text-sm bg-status-warning-bg rounded p-2"
+                  className="bg-status-warning-bg rounded p-2"
                 >
                   <Flex justify="between" align="start">
-                    <span className="text-ui-text">{item.description}</span>
+                    <Typography variant="small">{item.description}</Typography>
                     {item.assignee && (
                       <Badge size="sm" className="ml-2 shrink-0">
                         {item.assignee}
@@ -381,10 +379,12 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
           </Typography>
           <ul className="space-y-1">
             {summary.decisions.map((decision: string) => (
-              <li key={decision} className="flex items-start gap-2 text-xs text-ui-text-secondary">
+              <Flex as="li" key={decision} align="start" gap="sm">
                 <CheckCircle className="w-4 h-4 text-status-success shrink-0 mt-0.5" />
-                {decision}
-              </li>
+                <Typography variant="caption" color="secondary">
+                  {decision}
+                </Typography>
+              </Flex>
             ))}
           </ul>
         </div>

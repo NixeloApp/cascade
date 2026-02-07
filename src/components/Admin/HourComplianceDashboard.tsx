@@ -332,10 +332,11 @@ export function HourComplianceDashboard() {
                       </div>
 
                       {record.reviewNotes && (
-                        <div className="mt-3 p-2 bg-accent-subtle rounded text-sm">
-                          <strong className="text-accent-active">Review Notes:</strong>{" "}
-                          <span className="text-accent-hover">{record.reviewNotes}</span>
-                        </div>
+                        <Flex className="mt-3 p-2 bg-accent-subtle rounded">
+                          <Typography variant="small">
+                            <strong>Review Notes:</strong> {record.reviewNotes}
+                          </Typography>
+                        </Flex>
                       )}
                     </div>
 
