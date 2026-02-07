@@ -3,7 +3,9 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { useCallback, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
+import { Inbox } from "@/lib/icons";
 import { showError } from "@/lib/toast";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
 import { Badge } from "./ui/Badge";
@@ -133,7 +135,7 @@ export function NotificationCenter() {
         <div className="flex-1 overflow-y-auto">
           {!notifications || notifications.length === 0 ? (
             <div className="p-8 text-center text-ui-text-secondary">
-              <div className="text-4xl mb-2">📭</div>
+              <Icon icon={Inbox} size="xl" className="mx-auto mb-2 text-ui-text-tertiary" />
               <Typography>No notifications</Typography>
             </div>
           ) : (

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { Typography } from "@/components/ui/Typography";
-import { AlertTriangle, CheckCircle, TrendingUp, XCircle, Zap } from "@/lib/icons";
+import { AlertTriangle, CheckCircle, Gem, TrendingUp, XCircle, Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
@@ -158,7 +158,9 @@ export function HourComplianceDashboard() {
                 <Typography variant="h3" className="text-2xl" color="success">
                   {summary.compliant}
                 </Typography>
-                <Typography variant="caption"><Icon icon={CheckCircle} size="sm" className="inline mr-1" /> Compliant</Typography>
+                <Typography variant="caption">
+                  <Icon icon={CheckCircle} size="sm" className="inline mr-1" /> Compliant
+                </Typography>
               </div>
             </CardBody>
           </Card>
@@ -169,7 +171,9 @@ export function HourComplianceDashboard() {
                 <Typography variant="h3" className="text-2xl" color="warning">
                   {summary.underHours}
                 </Typography>
-                <Typography variant="caption"><Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Under Hours</Typography>
+                <Typography variant="caption">
+                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Under Hours
+                </Typography>
               </div>
             </CardBody>
           </Card>
@@ -180,7 +184,9 @@ export function HourComplianceDashboard() {
                 <Typography variant="h3" className="text-2xl" color="error">
                   {summary.overHours}
                 </Typography>
-                <Typography variant="caption">🔴 Over Hours</Typography>
+                <Typography variant="caption">
+                  <Icon icon={XCircle} size="sm" className="inline mr-1" /> Over Hours
+                </Typography>
               </div>
             </CardBody>
           </Card>
@@ -191,7 +197,9 @@ export function HourComplianceDashboard() {
                 <Typography variant="h3" className="text-2xl" color="brand">
                   {summary.equityUnder}
                 </Typography>
-                <Typography variant="caption">💎 Equity Short</Typography>
+                <Typography variant="caption">
+                  <Icon icon={Gem} size="sm" className="inline mr-1" /> Equity Short
+                </Typography>
               </div>
             </CardBody>
           </Card>

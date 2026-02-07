@@ -1,11 +1,12 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
-import { Github } from "@/lib/icons";
+import { Check, Github } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 import { LinkedRepositories } from "./LinkedRepositories";
 
@@ -110,9 +111,10 @@ export function GitHubIntegration() {
                 Link repositories and track PRs and commits
               </Typography>
               {githubConnection && (
-                <Typography className="text-sm text-status-success mt-2">
-                  ✓ Connected as @{githubConnection.githubUsername}
-                </Typography>
+                <Flex align="center" gap="xs" className="text-sm text-status-success mt-2">
+                  <Icon icon={Check} size="sm" />
+                  Connected as @{githubConnection.githubUsername}
+                </Flex>
               )}
             </div>
           </Flex>

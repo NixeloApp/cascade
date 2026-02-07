@@ -4,6 +4,8 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Check, X } from "@/lib/icons";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Checkbox } from "./ui/form/Checkbox";
@@ -165,10 +167,12 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
       case "checkbox":
         return value === "true" ? (
           <Badge variant="success" size="sm">
-            ✓ Yes
+            <Icon icon={Check} size="xs" className="inline mr-1" /> Yes
           </Badge>
         ) : (
-          <Typography variant="muted">✗ No</Typography>
+          <Typography variant="muted">
+            <Icon icon={X} size="xs" className="inline mr-1" /> No
+          </Typography>
         );
 
       case "url":

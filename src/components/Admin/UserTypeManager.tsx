@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
-import { Briefcase, GraduationCap, Settings, Users, Wrench } from "@/lib/icons";
+import { Briefcase, Gem, GraduationCap, Lightbulb, Settings, Users, Wrench } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 type EmploymentType = "employee" | "contractor" | "intern";
@@ -777,9 +778,12 @@ export function UserTypeManager() {
               {profileType === "employee" && (
                 <div className="p-4 bg-brand-subtle border border-brand-border rounded-lg">
                   <Flex justify="between" align="center" className="mb-3">
-                    <Typography variant="h4" className="font-medium text-sm text-brand-active">
-                      💎 Equity Compensation
-                    </Typography>
+                    <Flex align="center" gap="xs">
+                      <Icon icon={Gem} size="sm" className="text-brand-active" />
+                      <Typography variant="h4" className="font-medium text-sm text-brand-active">
+                        Equity Compensation
+                      </Typography>
+                    </Flex>
                     <label>
                       <Flex align="center" gap="sm">
                         <input
@@ -858,11 +862,17 @@ export function UserTypeManager() {
                         rows={2}
                       />
 
-                      <div className="text-xs text-brand-hover bg-brand-subtle p-2 rounded">
-                        💡 Tip: Equity hours are non-paid hours compensated with equity. Set
-                        required hours/week OR hours/month (not both). Max hours/week prevents
-                        overwork.
-                      </div>
+                      <Flex
+                        align="start"
+                        gap="sm"
+                        className="text-xs text-brand-hover bg-brand-subtle p-2 rounded"
+                      >
+                        <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
+                        <span>
+                          Tip: Equity hours are non-paid hours compensated with equity. Set required
+                          hours/week OR hours/month (not both). Max hours/week prevents overwork.
+                        </span>
+                      </Flex>
                     </Flex>
                   )}
                 </div>

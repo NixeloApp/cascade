@@ -5,10 +5,10 @@ import { useMemo, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
-import { Icon } from "./ui/Icon";
 import { cn } from "@/lib/utils";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { Badge } from "./ui/Badge";
+import { Icon } from "./ui/Icon";
 import { Typography } from "./ui/Typography";
 
 interface IssuesCalendarViewProps {

@@ -5,12 +5,14 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { ArrowLeft } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { Input, Select, Textarea } from "./ui/form";
+import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
@@ -303,8 +305,9 @@ export function CreateProjectFromTemplate({
                 variant="secondary"
                 className="w-full sm:w-auto"
                 disabled={isSubmitting}
+                leftIcon={<Icon icon={ArrowLeft} size="sm" />}
               >
-                ← Back to Templates
+                Back to Templates
               </Button>
               <Flex gap="md" className="w-full sm:w-auto">
                 <Button

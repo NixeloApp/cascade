@@ -147,7 +147,7 @@ function showInstallPrompt(onInstall: () => void) {
     "fixed top-5 left-1/2 -translate-x-1/2 bg-ui-bg-elevated text-ui-text px-6 py-4 rounded-container shadow-xl z-toast-critical flex items-center gap-4 font-sans max-w-toast border-2 border-brand";
 
   banner.innerHTML = `
-    <span>📱 Install Nixelo for quick access!</span>
+    <span>Install Nixelo for quick access!</span>
     <button id="pwa-install-button" class="bg-brand text-ui-text-inverse border-none px-4 py-2 rounded font-semibold cursor-pointer">Install</button>
     <button id="pwa-dismiss-button" class="bg-transparent text-brand border border-brand px-4 py-2 rounded font-semibold cursor-pointer">Not now</button>
   `;

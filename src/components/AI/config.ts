@@ -4,15 +4,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import {
-  AlertTriangle,
-  Calendar,
-  FileText,
-  Lightbulb,
-  Tag,
-  User,
-  Zap,
-} from "@/lib/icons";
+import { AlertTriangle, Calendar, FileText, Lightbulb, Tag, User, Zap } from "@/lib/icons";
 
 /**
  * Suggestion types as defined in schema

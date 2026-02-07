@@ -319,7 +319,9 @@ export function GlobalSearch() {
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
-        <Typography variant="small" color="secondary">Search...</Typography>
+        <Typography variant="small" color="secondary">
+          Search...
+        </Typography>
         <KeyboardShortcut shortcut="⌘+K" className="hidden sm:inline-flex" />
       </Button>
 
@@ -377,7 +379,7 @@ export function GlobalSearch() {
             className="p-3 border-t border-ui-border text-xs text-ui-text-secondary"
           >
             <Flex align="center" gap="lg">
-              <ShortcutHint keys="↑↓">Navigate</ShortcutHint>
+              <ShortcutHint keys="up+down">Navigate</ShortcutHint>
               <ShortcutHint keys="Enter">Open</ShortcutHint>
             </Flex>
             <ShortcutHint keys="Esc">Close</ShortcutHint>

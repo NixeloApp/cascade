@@ -4,7 +4,7 @@
 
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import React from "react";
-import { AlertTriangle, Calendar, Lightbulb, Sparkles } from "@/lib/icons";
+import { AlertTriangle, Calendar, Check, Lightbulb, Sparkles, Target, X } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
@@ -108,7 +108,7 @@ export const AISuggestionsPanel = React.memo(function AISuggestionsPanel({
         ) : suggestions.length === 0 ? (
           <Flex align="center" justify="center" className="h-full text-center px-4">
             <div>
-              <div className="text-4xl mb-4">🎯</div>
+              <Icon icon={Target} size="xl" className="mx-auto mb-4 text-ui-text-tertiary" />
               <Typography variant="h5" className="mb-2">
                 No Suggestions Yet
               </Typography>
@@ -189,30 +189,32 @@ const SuggestionCard = React.memo(function SuggestionCard({
                 size="sm"
                 onClick={() => onAccept(suggestion._id)}
                 className="flex-1 sm:flex-none"
+                leftIcon={<Icon icon={Check} size="sm" />}
               >
-                ✓ Accept
+                Accept
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => onDismiss(suggestion._id)}
                 className="flex-1 sm:flex-none"
+                leftIcon={<Icon icon={X} size="sm" />}
               >
-                ✗ Dismiss
+                Dismiss
               </Button>
             </Flex>
           )}
           {suggestion.accepted && (
             <div className="mt-3">
               <Badge variant="success" size="sm">
-                ✓ Accepted
+                <Icon icon={Check} size="xs" className="inline mr-1" /> Accepted
               </Badge>
             </div>
           )}
           {suggestion.dismissed && (
             <div className="mt-3">
               <Badge variant="neutral" size="sm">
-                ✗ Dismissed
+                <Icon icon={X} size="xs" className="inline mr-1" /> Dismissed
               </Badge>
             </div>
           )}

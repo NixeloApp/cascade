@@ -10,7 +10,7 @@ import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { Filter, Plus, Search } from "@/lib/icons";
+import { Filter, Plus, Search, SearchX } from "@/lib/icons";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/")({
   component: AllIssuesPage,
@@ -98,7 +98,7 @@ function AllIssuesPage() {
         isLoading={isLoading}
         isEmpty={filteredIssues.length === 0}
         emptyState={{
-          icon: "🔍",
+          icon: SearchX,
           title: "No issues found",
           description: "Try adjusting your filters or create a new issue.",
         }}

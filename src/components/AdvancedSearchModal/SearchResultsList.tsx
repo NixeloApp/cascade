@@ -1,9 +1,9 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
-import { Icon } from "../ui/Icon";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 interface SearchResult {

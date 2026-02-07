@@ -2,6 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
+import { Check, KanbanSquare, ListTodo } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -9,6 +10,7 @@ import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Textarea } from "../ui/form";
+import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
 import { Typography } from "../ui/Typography";
 
@@ -87,7 +89,7 @@ export function ProjectWizard({
       });
 
       // Confetti effect (optional - would need react-confetti package)
-      showSuccess("🎉 Project created successfully!");
+      showSuccess("Project created successfully!");
 
       onComplete(projectId);
     } catch (error) {
@@ -237,17 +239,26 @@ export function ProjectWizard({
                       : "border-ui-border hover:border-brand-muted",
                   )}
                 >
-                  <Typography variant="h3" className="font-bold text-lg mb-2 text-ui-text">
-                    📊 Kanban
-                  </Typography>
+                  <Flex align="center" gap="sm" className="mb-2">
+                    <Icon icon={KanbanSquare} size="md" />
+                    <Typography variant="h3" className="font-bold text-lg text-ui-text">
+                      Kanban
+                    </Typography>
+                  </Flex>
                   <Typography className="text-sm text-ui-text-secondary">
                     Continuous flow of work through columns. Great for ongoing projects and support
                     teams.
                   </Typography>
                   <ul className="mt-3 text-xs text-ui-text-tertiary space-y-1">
-                    <li>✓ No time constraints</li>
-                    <li>✓ Visualize workflow</li>
-                    <li>✓ Limit work in progress</li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> No time constraints
+                    </li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Visualize workflow
+                    </li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Limit work in progress
+                    </li>
                   </ul>
                 </button>
 
@@ -261,17 +272,26 @@ export function ProjectWizard({
                       : "border-ui-border hover:border-brand-muted",
                   )}
                 >
-                  <Typography variant="h3" className="font-bold text-lg mb-2 text-ui-text">
-                    🏃 Scrum
-                  </Typography>
+                  <Flex align="center" gap="sm" className="mb-2">
+                    <Icon icon={ListTodo} size="md" />
+                    <Typography variant="h3" className="font-bold text-lg text-ui-text">
+                      Scrum
+                    </Typography>
+                  </Flex>
                   <Typography className="text-sm text-ui-text-secondary">
                     Work in sprints with defined goals. Great for product development and fixed
                     deadlines.
                   </Typography>
                   <ul className="mt-3 text-xs text-ui-text-tertiary space-y-1">
-                    <li>✓ Sprint planning</li>
-                    <li>✓ Velocity tracking</li>
-                    <li>✓ Burndown charts</li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Sprint planning
+                    </li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Velocity tracking
+                    </li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Burndown charts
+                    </li>
                   </ul>
                 </button>
               </div>
@@ -352,7 +372,7 @@ export function ProjectWizard({
           {step === 4 && (
             <div className="space-y-4">
               <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-                Ready to Create! 🎉
+                Ready to Create!
               </Typography>
               <Typography className="text-ui-text-secondary">
                 Here's a summary of your new project:

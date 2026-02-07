@@ -3,11 +3,16 @@ import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
-import { getPriorityColor, getTypeLabel, ISSUE_TYPE_ICONS, PRIORITY_ICONS } from "@/lib/issue-utils";
-import { Icon } from "./ui/Icon";
+import {
+  getPriorityColor,
+  getTypeLabel,
+  ISSUE_TYPE_ICONS,
+  PRIORITY_ICONS,
+} from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
+import { Icon } from "./ui/Icon";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 

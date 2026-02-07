@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
-import { Info } from "@/lib/icons";
+import { FileCode, FileSpreadsheet, Info } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
@@ -119,7 +119,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
             )}
           >
             <Flex gap="md" align="center">
-              <div className="text-3xl">📊</div>
+              <Icon icon={FileSpreadsheet} size="lg" />
               <div>
                 <div className="font-semibold text-ui-text">CSV</div>
                 <div className="text-xs text-ui-text-tertiary">Spreadsheet format</div>
@@ -135,7 +135,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
             )}
           >
             <Flex gap="md" align="center">
-              <div className="text-3xl">📄</div>
+              <Icon icon={FileCode} size="lg" />
               <div>
                 <div className="font-semibold text-ui-text">JSON</div>
                 <div className="text-xs text-ui-text-tertiary">Data interchange format</div>

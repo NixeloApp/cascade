@@ -7,7 +7,6 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
-import { Icon } from "./ui/Icon";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import {
@@ -26,6 +25,7 @@ import {
 } from "./ui/DropdownMenu";
 import { Flex } from "./ui/Flex";
 import { Checkbox, Input } from "./ui/form";
+import { Icon } from "./ui/Icon";
 import { Typography } from "./ui/Typography";
 
 export interface BoardFilters {

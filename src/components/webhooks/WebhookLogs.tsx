@@ -3,11 +3,13 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { useState } from "react";
+import { BarChart3, Check, RefreshCw, X } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Typography } from "../ui/Typography";
 
@@ -44,19 +46,19 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       case "success":
         return (
           <Badge variant="success" shape="pill">
-            ✓ Success
+            <Icon icon={Check} size="xs" className="inline mr-1" /> Success
           </Badge>
         );
       case "failed":
         return (
           <Badge variant="error" shape="pill">
-            ✗ Failed
+            <Icon icon={X} size="xs" className="inline mr-1" /> Failed
           </Badge>
         );
       case "retrying":
         return (
           <Badge variant="warning" shape="pill">
-            ⟳ Retrying
+            <Icon icon={RefreshCw} size="xs" className="inline mr-1" /> Retrying
           </Badge>
         );
       default:
@@ -83,7 +85,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
         </DialogHeader>
         {!executions || executions.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-3">📊</div>
+            <Icon icon={BarChart3} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
             <Typography variant="h5" className="mb-1">
               No delivery logs yet
             </Typography>

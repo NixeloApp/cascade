@@ -284,9 +284,9 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Not marked</SelectItem>
-                          <SelectItem value="present">✓ Present</SelectItem>
-                          <SelectItem value="tardy">⏰ Tardy</SelectItem>
-                          <SelectItem value="absent">✗ Absent</SelectItem>
+                          <SelectItem value="present">Present</SelectItem>
+                          <SelectItem value="tardy">Tardy</SelectItem>
+                          <SelectItem value="absent">Absent</SelectItem>
                         </SelectContent>
                       </Select>
                     </Flex>

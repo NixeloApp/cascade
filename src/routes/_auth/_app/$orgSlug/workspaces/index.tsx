@@ -11,6 +11,7 @@ import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Building2 } from "@/lib/icons";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/")({
   component: WorkspacesList,
@@ -53,7 +54,7 @@ function WorkspacesList() {
         isLoading={workspaces === undefined}
         isEmpty={workspaces !== undefined && workspaces.length === 0}
         emptyState={{
-          icon: "🏢",
+          icon: Building2,
           title: "No workspaces yet",
           description: "Create your first workspace to organize teams and projects",
           action: (

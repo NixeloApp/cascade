@@ -4,13 +4,13 @@ import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
-import { Icon } from "./ui/Icon";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
+import { Icon } from "./ui/Icon";
 
 interface AdvancedSearchModalProps {
   open: boolean;

@@ -1,11 +1,12 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
-import { Calendar } from "@/lib/icons";
+import { Calendar, Check } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
 
@@ -134,9 +135,10 @@ export function GoogleCalendarIntegration() {
               </Typography>
               {calendarConnection && (
                 <Flex direction="column" gap="xs" className="mt-2">
-                  <Typography className="text-sm text-status-success">
-                    ✓ Connected to {calendarConnection.providerAccountId}
-                  </Typography>
+                  <Flex align="center" gap="xs" className="text-sm text-status-success">
+                    <Icon icon={Check} size="sm" />
+                    Connected to {calendarConnection.providerAccountId}
+                  </Flex>
                   {calendarConnection.lastSyncAt && (
                     <Typography className="text-xs text-ui-text-tertiary">
                       Last synced: {new Date(calendarConnection.lastSyncAt).toLocaleString()}

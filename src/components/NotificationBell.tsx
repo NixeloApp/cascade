@@ -121,7 +121,7 @@ export function NotificationBell() {
               </Flex>
             ) : notifications.length === 0 ? (
               <Flex direction="column" align="center" justify="center" className="py-12 px-4">
-                <div className="text-6xl mb-4">🔔</div>
+                <Icon icon={Bell} size="xl" className="mb-4 text-ui-text-tertiary" />
                 <Typography variant="small" color="secondary" className="text-center">
                   No notifications yet
                 </Typography>

@@ -4,11 +4,11 @@ import { useMutation, useQuery } from "convex/react";
 import { useRef, useState } from "react";
 import { Archive, File, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { Icon } from "./ui/Icon";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
 import { Metadata, MetadataTimestamp } from "./ui/Metadata";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
@@ -156,7 +156,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
           id="file-upload"
         />
         <label htmlFor="file-upload" className="cursor-pointer">
-          <div className="text-4xl mb-2">📎</div>
+          <Icon icon={Paperclip} size="xl" className="mx-auto mb-2 text-ui-text-tertiary" />
           <Typography variant="muted" className="mb-2">
             Drag and drop files here, or click to browse
           </Typography>

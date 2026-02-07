@@ -102,9 +102,7 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
                   onSelect={() => handleSelect(cmd)}
                   className="cursor-pointer data-[selected=true]:bg-brand-subtle"
                 >
-                  {cmd.icon && (
-                    <Icon icon={cmd.icon} size="md" className="mr-2" />
-                  )}
+                  {cmd.icon && <Icon icon={cmd.icon} size="md" className="mr-2" />}
                   <div className="flex-1">
                     <Typography variant="label" as="p">
                       {cmd.label}
@@ -123,7 +121,7 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
           gap="md"
           className="px-4 py-2 border-t border-ui-border bg-ui-bg-secondary text-xs text-ui-text-tertiary sm:gap-4"
         >
-          <ShortcutHint keys="↑↓">Navigate</ShortcutHint>
+          <ShortcutHint keys="up+down">Navigate</ShortcutHint>
           <ShortcutHint keys="Enter">Select</ShortcutHint>
           <ShortcutHint keys="Esc">Close</ShortcutHint>
         </Flex>

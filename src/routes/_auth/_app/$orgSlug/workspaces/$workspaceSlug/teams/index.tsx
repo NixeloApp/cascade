@@ -9,6 +9,7 @@ import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Users } from "@/lib/icons";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/")({
   component: TeamsList,
@@ -42,7 +43,7 @@ function TeamsList() {
         isLoading={!(workspace && teams)}
         isEmpty={teams !== undefined && teams.length === 0}
         emptyState={{
-          icon: "👥",
+          icon: Users,
           title: "No teams yet",
           description: "Create your first team to start organizing work",
           action: <Button variant="primary">+ Create Team</Button>,

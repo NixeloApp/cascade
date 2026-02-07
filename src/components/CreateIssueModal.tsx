@@ -9,9 +9,21 @@ import { z } from "zod";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
-import { Check, Sparkles } from "@/lib/icons";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  BookOpen,
+  Bug,
+  Check,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  CircleDot,
+  Sparkles,
+  Zap,
+} from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { Icon } from "./ui/Icon";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import {
@@ -24,6 +36,7 @@ import {
 } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Select } from "./ui/form";
+import { Icon } from "./ui/Icon";
 
 // =============================================================================
 // Schema
@@ -324,11 +337,11 @@ export function CreateIssueModal({
             <form.Field name="type">
               {(field) => (
                 <FormSelect field={field} label="Type">
-                  <option value="task">📋 Task</option>
-                  <option value="bug">🐛 Bug</option>
-                  <option value="story">📖 Story</option>
-                  <option value="epic">🎯 Epic</option>
-                  <option value="subtask">🔸 Sub-task</option>
+                  <option value="task">Task</option>
+                  <option value="bug">Bug</option>
+                  <option value="story">Story</option>
+                  <option value="epic">Epic</option>
+                  <option value="subtask">Sub-task</option>
                 </FormSelect>
               )}
             </form.Field>
@@ -336,11 +349,11 @@ export function CreateIssueModal({
             <form.Field name="priority">
               {(field) => (
                 <FormSelect field={field} label="Priority">
-                  <option value="lowest">⬇️ Lowest</option>
-                  <option value="low">↘️ Low</option>
-                  <option value="medium">➡️ Medium</option>
-                  <option value="high">↗️ High</option>
-                  <option value="highest">⬆️ Highest</option>
+                  <option value="lowest">Lowest</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="highest">Highest</option>
                 </FormSelect>
               )}
             </form.Field>
@@ -393,7 +406,9 @@ export function CreateIssueModal({
                     )}
                     style={{ backgroundColor: label.color }}
                   >
-                    {selectedLabels.includes(label._id) && <span className="mr-1">✓</span>}
+                    {selectedLabels.includes(label._id) && (
+                      <Icon icon={Check} size="sm" className="mr-1" />
+                    )}
                     {label.name}
                   </button>
                 ))}

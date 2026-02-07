@@ -4,8 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
-import { Icon } from "../ui/Icon";
+import { AlertTriangle, BookOpen, Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -15,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Flex } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
+import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
@@ -97,18 +97,21 @@ export function ApiKeysManager() {
 
         {/* Documentation Link */}
         <div className="mt-6 p-4 bg-brand-subtle rounded-lg border border-brand-border">
-          <Typography className="text-sm text-brand-active">
-            📚 <strong>Need help?</strong> Check out the{" "}
-            <a
-              href="/docs/API.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-brand-hover"
-            >
-              API Documentation
-            </a>{" "}
-            for usage examples and integration guides.
-          </Typography>
+          <Flex align="center" gap="sm" className="text-sm text-brand-active">
+            <Icon icon={BookOpen} size="sm" />
+            <span>
+              <strong>Need help?</strong> Check out the{" "}
+              <a
+                href="/docs/API.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-brand-hover"
+              >
+                API Documentation
+              </a>{" "}
+              for usage examples and integration guides.
+            </span>
+          </Flex>
         </div>
       </div>
 
@@ -436,7 +439,8 @@ function GenerateKeyModal({
                   API Key Generated!
                 </Typography>
                 <Typography className="text-sm text-ui-text-secondary mb-6">
-                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> <strong>Save this key now!</strong> You won't be able to see it again.
+                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" />{" "}
+                  <strong>Save this key now!</strong> You won't be able to see it again.
                 </Typography>
 
                 {/* Generated Key Display */}

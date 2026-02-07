@@ -4,12 +4,12 @@ import { Flex } from "@/components/ui/Flex";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
-import { Icon } from "./ui/Icon";
 import { TEST_IDS } from "@/lib/test-ids";
 import { IssueDetailLayout, useIssueDetail } from "./IssueDetailView";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/Dialog";
+import { Icon } from "./ui/Icon";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 

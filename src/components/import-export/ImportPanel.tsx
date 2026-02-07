@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { AlertTriangle } from "@/lib/icons";
+import { AlertTriangle, FileCode, FileSpreadsheet } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
@@ -100,7 +100,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
             )}
           >
             <Flex gap="md" align="center">
-              <div className="text-3xl">📊</div>
+              <Icon icon={FileSpreadsheet} size="lg" />
               <div>
                 <div className="font-semibold text-ui-text">CSV</div>
                 <div className="text-xs text-ui-text-secondary">Spreadsheet format</div>
@@ -116,7 +116,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
             )}
           >
             <Flex gap="md" align="center">
-              <div className="text-3xl">📄</div>
+              <Icon icon={FileCode} size="lg" />
               <div>
                 <div className="font-semibold text-ui-text">JSON</div>
                 <div className="text-xs text-ui-text-secondary">Data interchange format</div>

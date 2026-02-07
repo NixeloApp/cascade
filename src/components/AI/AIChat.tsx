@@ -184,9 +184,18 @@ export const AIChat = React.memo(function AIChat({
                 Ask me anything about your project, or use natural language commands.
               </Typography>
               <Flex direction="column" gap="xs">
-                <Typography variant="meta"><Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "What's our team velocity?"</Typography>
-                <Typography variant="meta"><Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Which issues are blocking the sprint?"</Typography>
-                <Typography variant="meta"><Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Summarize this week's progress"</Typography>
+                <Typography variant="meta">
+                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "What's our team
+                  velocity?"
+                </Typography>
+                <Typography variant="meta">
+                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Which issues are
+                  blocking the sprint?"
+                </Typography>
+                <Typography variant="meta">
+                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Summarize this week's
+                  progress"
+                </Typography>
               </Flex>
             </div>
           </Flex>
