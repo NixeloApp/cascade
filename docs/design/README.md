@@ -2,10 +2,10 @@
 
 ## Docs
 
-| Doc | Purpose | Updates |
-|-----|---------|---------|
-| [STANDARDS.md](./STANDARDS.md) | Timeless principles, checklists | Rarely |
-| [REFERENCE.md](./REFERENCE.md) | Current tokens, components | When code changes |
+| Doc | Purpose |
+|-----|---------|
+| [SLOP.md](./SLOP.md) | Do this, not that |
+| [REFERENCE.md](./REFERENCE.md) | Tokens & components |
 
 ## Specs
 
