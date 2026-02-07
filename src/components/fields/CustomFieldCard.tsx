@@ -1,8 +1,20 @@
 import type { Id } from "@convex/_generated/dataModel";
+import type { LucideIcon } from "lucide-react";
+import {
+  Calendar,
+  Check,
+  ClipboardList,
+  FileText,
+  Hash,
+  LinkIcon,
+  ListChecks,
+  Type,
+} from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Typography } from "../ui/Typography";
 
@@ -27,24 +39,24 @@ interface CustomFieldCardProps {
  * Extracted from CustomFieldsManager for better reusability
  */
 export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProps) {
-  const getFieldTypeIcon = (type: string) => {
+  const getFieldTypeIcon = (type: string): LucideIcon => {
     switch (type as FieldType) {
       case "text":
-        return "📝";
+        return Type;
       case "number":
-        return "🔢";
+        return Hash;
       case "select":
-        return "📋";
+        return ClipboardList;
       case "multiselect":
-        return "☑️";
+        return ListChecks;
       case "date":
-        return "📅";
+        return Calendar;
       case "checkbox":
-        return "✅";
+        return Check;
       case "url":
-        return "🔗";
+        return LinkIcon;
       default:
-        return "📄";
+        return FileText;
     }
   };
 
@@ -52,7 +64,7 @@ export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProp
     <Card className="p-4">
       <Flex justify="between" align="start">
         <Flex gap="md" align="start" className="flex-1">
-          <div className="text-2xl">{getFieldTypeIcon(field.fieldType)}</div>
+          <Icon icon={getFieldTypeIcon(field.fieldType)} size="lg" />
           <div className="flex-1">
             <Flex gap="sm" align="center">
               <Typography variant="h3" className="font-semibold text-ui-text">

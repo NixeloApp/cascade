@@ -5,7 +5,9 @@ import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -26,14 +28,13 @@ function IssueDisplay({
   issueKey,
   title,
 }: {
-  type: string;
+  type: IssueType;
   issueKey: string;
   title: string;
 }) {
-  const icon = type === "bug" ? "🐛" : type === "story" ? "📖" : type === "epic" ? "⚡" : "✓";
   return (
     <Flex as="span" align="center" gap="sm" className="min-w-0">
-      <span className="shrink-0">{icon}</span>
+      <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" className="shrink-0" />
       <code className="shrink-0 font-mono text-xs text-ui-text-secondary">{issueKey}</code>
       <span className="truncate text-sm text-ui-text">{title}</span>
     </Flex>

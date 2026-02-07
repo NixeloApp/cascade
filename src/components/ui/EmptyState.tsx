@@ -1,12 +1,14 @@
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
+import { Icon } from "./Icon";
 import { Typography } from "./Typography";
 
 type EmptyStateVariant = "default" | "info" | "warning" | "error";
 
 interface EmptyStateProps {
-  icon: string;
+  icon: string | LucideIcon;
   title: string;
   description?: string;
   action?:
@@ -55,7 +57,9 @@ export function EmptyState({
       role="status"
       aria-label={title}
     >
-      <div className={cn("text-6xl mb-4", iconColorClass)}>{icon}</div>
+      <div className={cn("text-6xl mb-4", iconColorClass)}>
+        {typeof icon === "string" ? icon : <Icon icon={icon} size="xl" className="mx-auto" />}
+      </div>
       <Typography variant="large" className="mb-1">
         {title}
       </Typography>

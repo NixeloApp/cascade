@@ -2,10 +2,14 @@ import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { FileText, FolderKanban, Plus } from "@/lib/icons";
+import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import {
   Command,
@@ -22,7 +26,7 @@ import { Typography } from "./ui/Typography";
 export interface CommandAction {
   id: string;
   label: string;
-  icon?: string;
+  icon?: string | LucideIcon;
   description?: string;
   keywords?: string[];
   action: () => void;
@@ -98,7 +102,15 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
                   onSelect={() => handleSelect(cmd)}
                   className="cursor-pointer data-[selected=true]:bg-brand-subtle"
                 >
-                  {cmd.icon && <span className="text-xl mr-2">{cmd.icon}</span>}
+                  {cmd.icon && (
+                    <span className="mr-2">
+                      {typeof cmd.icon === "string" ? (
+                        <span className="text-xl">{cmd.icon}</span>
+                      ) : (
+                        <Icon icon={cmd.icon} size="md" />
+                      )}
+                    </span>
+                  )}
                   <div className="flex-1">
                     <Typography variant="label" as="p">
                       {cmd.label}
@@ -194,7 +206,7 @@ export function useCommands({
           {
             id: "create-issue",
             label: "Create Issue",
-            icon: "➕",
+            icon: Plus,
             description: "Create a new issue",
             keywords: ["new", "task", "bug"],
             action: onCreateIssue,
@@ -207,7 +219,7 @@ export function useCommands({
           {
             id: "create-document",
             label: "Create Document",
-            icon: "📝",
+            icon: FileText,
             description: "Create a new document",
             keywords: ["new", "doc", "page"],
             action: onCreateDocument,
@@ -220,7 +232,7 @@ export function useCommands({
           {
             id: "create-project",
             label: "Create Project",
-            icon: "🗂️",
+            icon: FolderKanban,
             description: "Create a new project",
             keywords: ["new", "board", "project"],
             action: onCreateProject,
@@ -235,7 +247,7 @@ export function useCommands({
       ?.map((issue: Doc<"issues"> & { projectName?: string; projectKey: string }) => ({
         id: `issue-${issue._id}`,
         label: issue.title,
-        icon: issue.type === "bug" ? "🐛" : issue.type === "story" ? "📖" : "📋",
+        icon: ISSUE_TYPE_ICONS[issue.type as IssueType],
         description: `${issue.key} • ${issue.projectName}`,
         keywords: [issue.projectKey, issue.projectName || ""],
         action: () => {

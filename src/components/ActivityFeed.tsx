@@ -1,11 +1,24 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { formatRelativeTime } from "@/lib/dates";
+import {
+  AlertTriangle,
+  Ban,
+  Clock,
+  Eye,
+  LinkIcon,
+  MessageSquare,
+  Pencil,
+  Sparkles,
+  User,
+} from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
 import { SkeletonList } from "./ui/Skeleton";
 import { Typography } from "./ui/Typography";
 
@@ -29,26 +42,26 @@ interface ActivityFeedProps {
 export function ActivityFeed({ projectId, limit = 50, compact = false }: ActivityFeedProps) {
   const activities = useQuery(api.analytics.getRecentActivity, { projectId, limit });
 
-  const getActionIcon = (action: string) => {
+  const getActionIcon = (action: string): LucideIcon => {
     switch (action) {
       case "created":
-        return "✨";
+        return Sparkles;
       case "updated":
-        return "✏️";
+        return Pencil;
       case "commented":
-        return "💬";
+        return MessageSquare;
       case "assigned":
-        return "👤";
+        return User;
       case "linked":
-        return "🔗";
+        return LinkIcon;
       case "unlinked":
-        return "⚠️";
+        return AlertTriangle;
       case "started_watching":
-        return "👀";
+        return Eye;
       case "stopped_watching":
-        return "🚫";
+        return Ban;
       default:
-        return "📝";
+        return Clock;
     }
   };
 
@@ -139,7 +152,7 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
     return (
       <div data-testid={TEST_IDS.ACTIVITY.EMPTY_STATE}>
         <EmptyState
-          icon="🕐"
+          icon={Clock}
           title="No activity yet"
           description="Activity will appear here as work progresses"
         />
@@ -172,11 +185,11 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
             justify="center"
             className={cn(
               "shrink-0 relative z-10 bg-ui-bg rounded-full",
-              compact ? "w-5 h-5 text-sm" : "w-6 h-6 text-base",
+              compact ? "w-5 h-5" : "w-6 h-6",
               "text-ui-text-secondary",
             )}
           >
-            {getActionIcon(activity.action)}
+            <Icon icon={getActionIcon(activity.action)} size={compact ? "xs" : "sm"} />
           </Flex>
 
           {/* Activity content */}
