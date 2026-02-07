@@ -8,6 +8,7 @@ import { SidebarTeamItem } from "@/components/sidebar/SidebarTeamItem";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
+import {
   Bot,
   Calendar,
   ChevronDown,
@@ -18,7 +19,7 @@ import { useSidebarState } from "@/hooks/useSidebarState";
   FolderKanban,
   Home,
   ListIcon,
-  BarChart2,
+  BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -267,7 +268,7 @@ export function AppSidebar() {
             <NavItem
               to={ROUTES.analytics.path}
               params={{ orgSlug }}
-              icon={BarChart2}
+              icon={BarChart3}
               label="Analytics"
               isActive={isActive("/analytics")}
               isCollapsed={isCollapsed}
