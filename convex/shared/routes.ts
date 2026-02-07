@@ -200,4 +200,22 @@ export const ROUTES = {
     path: "/$orgSlug/time-tracking" as const,
     build: (orgSlug: string) => `/${orgSlug}/time-tracking`,
   },
+
+  // Products
+  assistant: {
+    path: "/$orgSlug/assistant" as const,
+    build: (orgSlug: string) => `/${orgSlug}/assistant`,
+  },
+  mcp: {
+    path: "/$orgSlug/mcp-server" as const,
+    build: (orgSlug: string) => `/${orgSlug}/mcp-server`,
+  },
+  addOns: {
+    path: "/$orgSlug/add-ons" as const,
+    build: (orgSlug: string) => `/${orgSlug}/add-ons`,
+  },
+  authentication: {
+    path: "/$orgSlug/authentication" as const,
+    build: (orgSlug: string) => `/${orgSlug}/authentication`,
+  },
 } as const;

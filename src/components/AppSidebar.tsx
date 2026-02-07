@@ -8,7 +8,7 @@ import { SidebarTeamItem } from "@/components/sidebar/SidebarTeamItem";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
-import {
+  Bot,
   Calendar,
   ChevronDown,
   ChevronRight,
@@ -18,10 +18,14 @@ import {
   FolderKanban,
   Home,
   ListIcon,
+  BarChart2,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Puzzle,
+  Server,
   Settings,
+  ShieldCheck,
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -232,13 +236,70 @@ export function AppSidebar() {
                 to={ROUTES.projects.calendar.path}
                 params={{ orgSlug, key: defaultProject.key }}
                 icon={Calendar}
-                label="Calendar"
+                label="General"
                 isActive={isActive("/calendar")}
                 isCollapsed={isCollapsed}
                 onClick={handleNavClick}
                 data-tour="nav-calendar"
               />
             )}
+
+            {/* Products Section */}
+            {!isCollapsed && (
+              <Typography
+                variant="small"
+                color="tertiary"
+                className="px-3 mt-4 mb-2 text-[10px] font-bold uppercase tracking-wider"
+              >
+                Products
+              </Typography>
+            )}
+
+            <NavItem
+              to={ROUTES.assistant.path}
+              params={{ orgSlug }}
+              icon={Bot}
+              label="Assistant"
+              isActive={isActive("/assistant")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
+            <NavItem
+              to={ROUTES.analytics.path}
+              params={{ orgSlug }}
+              icon={BarChart2}
+              label="Analytics"
+              isActive={isActive("/analytics")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
+            <NavItem
+              to={ROUTES.authentication.path}
+              params={{ orgSlug }}
+              icon={ShieldCheck}
+              label="Authentication"
+              isActive={isActive("/authentication")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
+            <NavItem
+              to={ROUTES.mcp.path}
+              params={{ orgSlug }}
+              icon={Server}
+              label="MCP Server"
+              isActive={isActive("/mcp-server")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
+            <NavItem
+              to={ROUTES.addOns.path}
+              params={{ orgSlug }}
+              icon={Puzzle}
+              label="Add-ons"
+              isActive={isActive("/add-ons")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
             {/* Documents Section */}
             <CollapsibleSection
               icon={FileText}

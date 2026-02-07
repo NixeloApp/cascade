@@ -1,594 +1,234 @@
 {
   "cookies": [
     {
-      "name": "_gcl_au",
-      "value": "1.1.1929449512.1770270268",
-      "domain": ".mintlify.com",
-      "path": "/",
-      "expires": 1778046268,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
       "name": "li_sugr",
-      "value": "fc6821f6-1f32-4924-9ad9-cf21114d5011",
+      "value": "5d733b9a-3054-47cd-86fa-94936aea3a21",
       "domain": ".linkedin.com",
       "path": "/",
-      "expires": 1778046334.816685,
+      "expires": 1778281918.262311,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "bcookie",
-      "value": "\"v=2&750c0233-18d6-41d2-8e85-5088f402365c\"",
+      "value": "\"v=2&855a8009-e5f4-4f0e-80b3-0c574c21f742\"",
       "domain": ".linkedin.com",
       "path": "/",
-      "expires": 1801806334.816789,
+      "expires": 1802041919.2624,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "lidc",
-      "value": "\"b=TGST06:s=T:r=T:a=T:p=T:g=3326:u=1:x=1:i=1770270267:t=1770356667:v=2:sig=AQEagl1g6bvAyrab_oCZq8bn6zJ6dFZS\"",
+      "value": "\"b=TGST06:s=T:r=T:a=T:p=T:g=3326:u=1:x=1:i=1770504500:t=1770590900:v=2:sig=AQGVWtOOA3Z6snPYKPYP-icNTn8WCoLr\"",
       "domain": ".linkedin.com",
       "path": "/",
-      "expires": 1770356667.849976,
+      "expires": 1770590900.189998,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
-      "name": "_ga",
-      "value": "GA1.1.1383781015.1770270268",
-      "domain": ".mintlify.com",
-      "path": "/",
-      "expires": 1804830334.886847,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
       "name": "UserMatchHistory",
-      "value": "AQLDdW2EdPGVdQAAAZwsVJoufOpjUkvzrySkuxrIE844KDoACW6SE30r5Cl5jyhaviYYE945LkcMLg",
+      "value": "AQI1QAWWgneoBwAAAZw6SrROR1P_d9E_CTWDdK1SmcHUg8JpHCVqg9TEM-Zhoo3IuhKwY0_aHuQmsw",
       "domain": ".linkedin.com",
       "path": "/",
-      "expires": 1772862267.957462,
+      "expires": 1773096500.320617,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "AnalyticsSyncHistory",
-      "value": "AQK_qFABqwk7ZQAAAZwsVJouWCDzU9jQr4AvMRSi7nPoaEK8tw8dhMryQTQuBKgLklUGmjUWw5XmEYEJG8IlpA",
+      "value": "AQKdeq4eTXUjNAAAAZw6SrROM2ThfdI2CF4QbetbrbhLxKDHQABFh6RITvK9SNvjdw2EYvz66nirO4rTbz-1CA",
       "domain": ".linkedin.com",
       "path": "/",
-      "expires": 1772862267.957494,
+      "expires": 1773096500.320642,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
+      "name": "_ga",
+      "value": "GA1.1.814935208.1770504500",
+      "domain": ".mintlify.com",
+      "path": "/",
+      "expires": 1805065918.401501,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
       "name": "bscookie",
-      "value": "\"v=1&20260205054428cf75d99c-9f2a-458f-86ce-a478e6361150AQHL94yWgjNSHyVxButIxc3x6PpN_cEN\"",
+      "value": "\"v=1&2026020722482071fb4625-1fb7-4d49-8fa3-37301c000d28AQHTtqMyzXim1SRxLa6IB0UJWYNfxcvT\"",
       "domain": ".www.linkedin.com",
       "path": "/",
-      "expires": 1801806268.131521,
+      "expires": 1802040500.510179,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "__cf_bm",
-      "value": "ktrvVQwcu6SpqBeU0oYLIlUCOyurzMuuXlh56cbcw2E-1770270268-1.0.1.1-D_Kb6Um2JxUa6NCVrZePuMGLEbVUW1Ffmyknf5anc3bfKZTxhmLOBszNMQTKPsi2tgdpQrtyj5WOmHHWHJ8MY4xECUkBDuoKtlYG5AqRfvw",
+      "value": "ZVYy3kjCPwDs4P3qCXoY3_j3qaV8_Flv0aQat.37zIk-1770504500-1.0.1.1-b_YTorNAEgS2D.6vCKyWN8zlGNOhFSVFbz1LV9kLMbMnN.wrzfQNg5Ps0OdAznpS0quKeeOOZWnUTZspwQsnNNKgAIwNJrkh7ish8kdV8V0",
       "domain": ".linkedin.com",
       "path": "/",
-      "expires": 1770272068.131605,
+      "expires": 1770506300.51026,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
-      "name": "muc_ads",
-      "value": "eaeaaa1e-02ed-470e-a920-ff261472f386",
-      "domain": ".t.co",
-      "path": "/",
-      "expires": 1804830268.259274,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
       "name": "guest_id_marketing",
-      "value": "v1%3A177027026818520352",
+      "value": "v1%3A177050450052811656",
       "domain": ".twitter.com",
       "path": "/",
-      "expires": 1804830268.270257,
+      "expires": 1805064500.553591,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "guest_id_ads",
-      "value": "v1%3A177027026818520352",
+      "value": "v1%3A177050450052811656",
       "domain": ".twitter.com",
       "path": "/",
-      "expires": 1804830268.270353,
+      "expires": 1805064500.553668,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "personalization_id",
-      "value": "\"v1_3ZNvdigxjrIY4JfU3KQOXQ==\"",
+      "value": "\"v1_zktM5TchWqXrClLn2KxE3g==\"",
       "domain": ".twitter.com",
       "path": "/",
-      "expires": 1804830268.270441,
+      "expires": 1805064500.5537,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "guest_id",
-      "value": "v1%3A177027026818520352",
+      "value": "v1%3A177050450052811656",
       "domain": ".twitter.com",
       "path": "/",
-      "expires": 1804830268.270484,
+      "expires": 1805064500.553731,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
-      "name": "oauth_state",
-      "value": "NEHqOkO97fUsrFuVwoAssqwIht_8JLaKns7x_IyTHvMU",
-      "domain": "api.stytch.mintlify.com",
+      "name": "muc_ads",
+      "value": "035b86f7-b0ed-476a-adf9-9261c684e5dc",
+      "domain": ".t.co",
       "path": "/",
-      "expires": 1770270893.72567,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "OTZ",
-      "value": "8466105_80_80_104160_76_446820",
-      "domain": "accounts.google.com",
-      "path": "/",
-      "expires": 1772862294,
+      "expires": 1805064500.626882,
       "httpOnly": false,
       "secure": true,
-      "sameSite": "Lax"
+      "sameSite": "None"
     },
     {
-      "name": "NID",
-      "value": "528=JVCbQdBUOdLBER1kZRezaWuu5mdoSFUwDm2ameEHZp7gJCOFcM0ut_GrbJ6o3Ocug-ChK0DTUO64vOWV3j0YWXNDkZlPFllpHKuq1eIc_0F-31qeE1ZKYisQsXzDR1HxUBBfH8hGwhb-Mt1A_djm03mv9PR6NBkIE9IN-EKvyNMpPackVMJM-r4AiNA4ft2HH1vlonhKZKss47jDf3yaBK1ykFATNtlZvQhl4HWRXeNv7m-YqSnrfcfkBN9Zdy1tZ59BHDktz7wbl92g3_-oLuh2041cxD00AIbHRzouX-B1ouAUAJdiCiChVRrFMDzm1Mqn1O34mVdNvP_xZW8hT1PsLx5y8cfCnTSTi3azgNwBpuYeWCOU3lRV5hlo0kuzoZ1e8BDEu2arRJ7Evn0T1gDkzVytfJ3EfUpcmnZuXBbgkSToe4LPwd26jVhTlzfV_KuWEu9O4FVZZb8pEkv4pGoa2FOI9TwDEMlILJRrHNElrLRuZc3r-pZ00V9EBEZOu0cn1sadRcymrmCAutsYhrEIfGLxQ8E7oQGWezLS5KxtcnqbvDbV_X6I18v8sbsR4IRkS5EQoewYW5Gr6_OK5GWi_3HsrK3JiYMeI3w5KR9hGb0LNXNKhSqzVI_xpwjfbjru-kz5H7h5oLfQJL96bro",
-      "domain": ".google.com",
+      "name": "IDE",
+      "value": "AHWqTUma46Np9hDpsdYpBZP7jfjcJVJhKZEjlj1wYbwVRJyLRRyxk_cH_2RhaceA",
+      "domain": ".doubleclick.net",
       "path": "/",
-      "expires": 1786081494.321408,
+      "expires": 1805065893.22399,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
-      "name": "HSID",
-      "value": "ASdSjuL6CgR2ecZa_",
-      "domain": ".google.com",
+      "name": "_gcl_au",
+      "value": "1.1.1847878793.1770504500.1862423514.1770505892.1770505913",
+      "domain": ".mintlify.com",
       "path": "/",
-      "expires": 1804830332.321896,
-      "httpOnly": true,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "SSID",
-      "value": "AO-8Fcgm3v8L9NlN8",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1804830332.321933,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "APISID",
-      "value": "I2ZiRZE7xvSxhFhr/A-SGdlj_8prOP_tn7",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1804830332.32196,
+      "expires": 1778280500,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
-      "name": "SAPISID",
-      "value": "bx6KklORBF4xdC0G/AmdlJr570Wamj8rC1",
-      "domain": ".google.com",
+      "name": "isMintie",
+      "value": "1",
+      "domain": ".mintlify.com",
       "path": "/",
-      "expires": 1804830332.321994,
+      "expires": 1771715517.638955,
       "httpOnly": false,
       "secure": true,
       "sameSite": "Lax"
     },
     {
-      "name": "__Secure-1PAPISID",
-      "value": "bx6KklORBF4xdC0G/AmdlJr570Wamj8rC1",
-      "domain": ".google.com",
+      "name": "_rdt_uuid",
+      "value": "1770504500080.8b7fe65d-17d2-4ca9-8b0f-349763b4dd1a",
+      "domain": ".mintlify.com",
       "path": "/",
-      "expires": 1804830332.322024,
+      "expires": 1778281918,
       "httpOnly": false,
       "secure": true,
-      "sameSite": "Lax"
+      "sameSite": "Strict"
     },
     {
-      "name": "__Secure-3PAPISID",
-      "value": "bx6KklORBF4xdC0G/AmdlJr570Wamj8rC1",
-      "domain": ".google.com",
+      "name": "_ga_NZ6RFCB9LN",
+      "value": "GS2.1.s1770504500$o1$g1$t1770505918$j33$l0$h0",
+      "domain": ".mintlify.com",
       "path": "/",
-      "expires": 1804830332.322051,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "LSID",
-      "value": "s.youtube:g.a0006QhDgOT2cq2UFK2FFU6snrs4DisjS_vIIHjg5dLFskeRAQpZyZ9K90CPhJ0K2Rg8WYN0iAACgYKAVESARASFQHGX2MiJ9B1E_1u9PKfqgQUMAkbURoVAUF8yKogd4vzcEx8czpyYS-Mu9gz0076",
-      "domain": "accounts.google.com",
-      "path": "/",
-      "expires": 1804830332.467273,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Host-1PLSID",
-      "value": "s.youtube:g.a0006QhDgOT2cq2UFK2FFU6snrs4DisjS_vIIHjg5dLFskeRAQpZ3v0j_mH9BZUZ70KxO3k6mgACgYKAc8SARASFQHGX2Mi7Qm8LCS1_ENczcLaMs6lYRoVAUF8yKqrkOVWR9p120tE0k6p3r590076",
-      "domain": "accounts.google.com",
-      "path": "/",
-      "expires": 1804830332.467643,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Host-3PLSID",
-      "value": "s.youtube:g.a0006QhDgOT2cq2UFK2FFU6snrs4DisjS_vIIHjg5dLFskeRAQpZ4OXnAdUUcaeuZDTuduMokAACgYKATgSARASFQHGX2Mi-EXF5mKrXz6sRIV9AmdsWRoVAUF8yKoZ23OKwyRQMuLm834C72I-0076",
-      "domain": "accounts.google.com",
-      "path": "/",
-      "expires": 1804830332.467763,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "ACCOUNT_CHOOSER",
-      "value": "AFx_qI6zbQuDjgisXU0Ee5-pVUVYjTb2a3rnySed97DHQMwxsi0B5ytx43buxXSAX_xce5xeCLFT1tyn4GJUWYqIcqDZ4v3CUdHj_Yc1az908aRKo_CAdfi9mN2tjxq4qRDp_S2PC3fsyJZogEZO4JknjijmOUjNOQ",
-      "domain": "accounts.google.com",
-      "path": "/",
-      "expires": 1804830332.467835,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-1PSIDTS",
-      "value": "sidts-CjUB7I_69EOu4RbeIOx5Zr7wza3nF4hI0_8eLgMAKieN9Z8H2q8JDDrkqkB0ckra3I-wuzlESRAA",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1801806332.583035,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-3PSIDTS",
-      "value": "sidts-CjUB7I_69EOu4RbeIOx5Zr7wza3nF4hI0_8eLgMAKieN9Z8H2q8JDDrkqkB0ckra3I-wuzlESRAA",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1801806332.58347,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "HSID",
-      "value": "A0X8yxq6MT61Jdw73",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1804830332.583579,
-      "httpOnly": true,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "SSID",
-      "value": "Adzx7Ib0IyYAo1d8H",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1804830332.583659,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "APISID",
-      "value": "I2ZiRZE7xvSxhFhr/A-SGdlj_8prOP_tn7",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1804830332.583728,
+      "expires": 1805065918.363275,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
-      "name": "SAPISID",
-      "value": "bx6KklORBF4xdC0G/AmdlJr570Wamj8rC1",
-      "domain": ".youtube.com",
+      "name": "_ga_8TPDXZJ45F",
+      "value": "GS2.1.s1770504500$o1$g1$t1770505918$j33$l0$h0",
+      "domain": ".mintlify.com",
       "path": "/",
-      "expires": 1804830332.583804,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-1PAPISID",
-      "value": "bx6KklORBF4xdC0G/AmdlJr570Wamj8rC1",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1804830332.583872,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-3PAPISID",
-      "value": "bx6KklORBF4xdC0G/AmdlJr570Wamj8rC1",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1804830332.583944,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "SID",
-      "value": "g.a0006QhDgJ5jcKBpZ2mhhgqYo24AhNVuj5gUS-psVb4qg72DUnOABJ73x11AXhKg8v6m4km1BQACgYKATISARASFQHGX2MiWaWdhI_RalTqxsLBjESgpxoVAUF8yKr2tFBtSQoCyN_bqtRJ4Gv-0076",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1804830332.584012,
+      "expires": 1805065918.411467,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
-      "name": "__Secure-1PSID",
-      "value": "g.a0006QhDgJ5jcKBpZ2mhhgqYo24AhNVuj5gUS-psVb4qg72DUnOAg35NG_K3zAJK5l6S2KJdywACgYKAYcSARASFQHGX2MiZxuxJmnr3Ui8jUzLJuhSKhoVAUF8yKpw_QmWo1R8ygAEcRgasZUY0076",
-      "domain": ".youtube.com",
+      "name": "session",
+      "value": "eyJhbGciOiJSUzI1NiIsImtpZCI6Imp3ay1saXZlLTJiMzE3YzMxLTI1YjctNGQyOC1hODkyLWM5OTFkNWFjNzIyYyIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsicHJvamVjdC1saXZlLTczMWI3YTA0LTlhYzMtNDkyMy05MGI4LTA4MDZkNGFhMjlkNCJdLCJleHAiOjE3NzA1MDYyMTUsImh0dHBzOi8vc3R5dGNoLmNvbS9vcmdhbml6YXRpb24iOnsib3JnYW5pemF0aW9uX2lkIjoib3JnYW5pemF0aW9uLWxpdmUtN2IzZWIxZWMtMzVhYy00NmJiLTg3OTUtMTViMTY3ODk2MzQ3Iiwic2x1ZyI6ImFnZW50MSJ9LCJodHRwczovL3N0eXRjaC5jb20vc2Vzc2lvbiI6eyJpZCI6Im1lbWJlci1zZXNzaW9uLWxpdmUtY2NiMzA2YjAtZTkyYi00ODY1LThmODctN2ZhNTJhMWYzMmExIiwic3RhcnRlZF9hdCI6IjIwMjYtMDItMDdUMjM6MTE6NTRaIiwibGFzdF9hY2Nlc3NlZF9hdCI6IjIwMjYtMDItMDdUMjM6MTE6NTVaIiwiZXhwaXJlc19hdCI6IjIwMjYtMDItMjFUMjM6MTE6NTRaIiwiYXR0cmlidXRlcyI6eyJ1c2VyX2FnZW50IjoiIiwiaXBfYWRkcmVzcyI6IiJ9LCJhdXRoZW50aWNhdGlvbl9mYWN0b3JzIjpbeyJ0eXBlIjoicGFzc3dvcmQiLCJkZWxpdmVyeV9tZXRob2QiOiJrbm93bGVkZ2UiLCJsYXN0X2F1dGhlbnRpY2F0ZWRfYXQiOiIyMDI2LTAyLTA3VDIzOjExOjUzWiJ9XSwicm9sZXMiOlsic3R5dGNoX21lbWJlciIsImFkbWluIiwiZWRpdG9yIiwidmlld2VyIl19LCJpYXQiOjE3NzA1MDU5MTUsImlzcyI6InN0eXRjaC5jb20vcHJvamVjdC1saXZlLTczMWI3YTA0LTlhYzMtNDkyMy05MGI4LTA4MDZkNGFhMjlkNCIsIm5iZiI6MTc3MDUwNTkxNSwib3JnU2x1ZyI6ImFnZW50MSIsInN1YiI6Im1lbWJlci1saXZlLWEzNzc2ODVhLTljNDItNDIxMy1hYTIyLTczMjA4N2YxZWI3NiIsInN1YmRvbWFpbnMiOlsiYWdlbnQxIl19.ZiD6uOIOgxnalgH3IegpA7LlInJy8V1PVRF_AHw1InIYXoJJvX63HZyOJTdNP9z_634wrZETQpoa2ZkbFBxuYZwmUZK6rEjNgtYBfIw9LUpobpz9llKa2JP6YbxTfz5Q4-KFhSI2Yf3zON9Xj0vrMc_9KEPBREBgyc7PxMWjX0z9MsZz9KAlK90zzov0wWHGM9dPySnMWKmaDV0nnV53CZ2b9wJc67scL8VLJtWMefUhip3z9ZUnqISSUdXzbXBWUm9DvAd6oTbOCHkJYzBatPGaLmjOItagJ_8FN1Gr_0MdckLk11r7HHgj4tcJyFKsC4JdO94jJuIiR3qIF3IdhA",
+      "domain": "dashboard.mintlify.com",
       "path": "/",
-      "expires": 1804830332.584213,
+      "expires": -1,
       "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-3PSID",
-      "value": "g.a0006QhDgJ5jcKBpZ2mhhgqYo24AhNVuj5gUS-psVb4qg72DUnOAMuhclii5YVud1KsykPNc0gACgYKAZ0SARASFQHGX2MiUHnmZbFI2HvrudAMR_Zc7hoVAUF8yKp6FIiKtaRonor9yUlxAhsD0076",
-      "domain": ".youtube.com",
-      "path": "/",
-      "expires": 1804830332.584384,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "SID",
-      "value": "g.a0006QhDgP1lv-rxhlC9VfVzSZTmKywdt2lDRqzgZlolkRhwb8wPVlMGuStgvBRwkRPsb59XdwACgYKAWgSARASFQHGX2Mimb8jjjfYPe7pZK8J2pjHkhoVAUF8yKpTWBfREO9ozXgkRlGTIIFt0076",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1804830333.18811,
-      "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
-      "name": "__Secure-1PSID",
-      "value": "g.a0006QhDgP1lv-rxhlC9VfVzSZTmKywdt2lDRqzgZlolkRhwb8wPzIwKGt88gh0zfc4eF2VQggACgYKAUsSARASFQHGX2Mij5RN4MzXJE2iuN2N0aL31BoVAUF8yKoHh726xiDznzaP_choI4g70076",
-      "domain": ".google.com",
+      "name": "ph_phc_eNuN6Ojnk9O7uWfC17z12AK85fNR0BY6IiGVy0Gfwzw_posthog",
+      "value": "%7B%22distinct_id%22%3A%226984c9ae5b6df1d13c10a5cd%22%2C%22%24sesid%22%3A%5B1770505923165%2C%22019c3a4a-b1ea-74a7-ae8a-86d648ee5974%22%2C1770504499675%5D%2C%22%24epp%22%3Atrue%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fdashboard.mintlify.com%2Flogin%22%7D%7D",
+      "domain": ".mintlify.com",
       "path": "/",
-      "expires": 1804830333.18815,
-      "httpOnly": true,
+      "expires": 1802041923,
+      "httpOnly": false,
       "secure": true,
       "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-3PSID",
-      "value": "g.a0006QhDgP1lv-rxhlC9VfVzSZTmKywdt2lDRqzgZlolkRhwb8wPLGejo2j1HXK_L_uUZZC8RAACgYKAZUSARASFQHGX2Mip-uzqG7oq4uWPFT7cjihvRoVAUF8yKqAHrCU7iifuIvk9x_bmmhf0076",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1804830333.188233,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
     },
     {
       "name": "AWSALB",
-      "value": "a/nxw7/Bp2r+6gEJBDgz/OojSCDFnqd6azx2LYBhZFhNZisM1/STzSK3usggg+Dmw7m4Rw1ymvGmsoX63irlFdKDzEVzxwFgvnhNagxcm1iix1BfWH7Ach5D2mCr",
+      "value": "GzfV51c+zxejP/Fj/3oy+ue6VzMPpNGTl9/IDST1fgBE+BWBAW2VgnsKeYVTocdgu8Vh+7hpGUGLjb1jRN5i2Ui5uc7tyKb/uavj6/ewoXSu2TFuc9rHU7tumSEIYHwGwkSdq+7IUD1y6mHl0QEWuo2VdOf7QbObMPklw4Fp5dr9U3YZht5kHEwQjpJ+1A==",
       "domain": "dashboard.mintlify.com",
       "path": "/",
-      "expires": 1770875133.768467,
+      "expires": 1771110741.521245,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "AWSALBCORS",
-      "value": "a/nxw7/Bp2r+6gEJBDgz/OojSCDFnqd6azx2LYBhZFhNZisM1/STzSK3usggg+Dmw7m4Rw1ymvGmsoX63irlFdKDzEVzxwFgvnhNagxcm1iix1BfWH7Ach5D2mCr",
+      "value": "GzfV51c+zxejP/Fj/3oy+ue6VzMPpNGTl9/IDST1fgBE+BWBAW2VgnsKeYVTocdgu8Vh+7hpGUGLjb1jRN5i2Ui5uc7tyKb/uavj6/ewoXSu2TFuc9rHU7tumSEIYHwGwkSdq+7IUD1y6mHl0QEWuo2VdOf7QbObMPklw4Fp5dr9U3YZht5kHEwQjpJ+1A==",
       "domain": "dashboard.mintlify.com",
       "path": "/",
-      "expires": 1770875133.768679,
+      "expires": 1771110741.521496,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
-    },
-    {
-      "name": "intermediate_session",
-      "value": "uX6RKDIWYO71MsBSqc7oLhJ_UtYan8mgUbRuukWii-Hp",
-      "domain": "dashboard.mintlify.com",
-      "path": "/",
-      "expires": 1770270933.768773,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-1PSIDTS",
-      "value": "sidts-CjcB7I_69DI21dM4z7rLh3mlQTsyQCudw4jjpSKfZettolf7sfo6pwtbxFbKVE6W19sUiinWuELxEAA",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1801806333.944656,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-1PSIDRTS",
-      "value": "sidts-CjcB7I_69DI21dM4z7rLh3mlQTsyQCudw4jjpSKfZettolf7sfo6pwtbxFbKVE6W19sUiinWuELxEAA",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1770270933.944827,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-3PSIDTS",
-      "value": "sidts-CjcB7I_69DI21dM4z7rLh3mlQTsyQCudw4jjpSKfZettolf7sfo6pwtbxFbKVE6W19sUiinWuELxEAA",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1801806333.944914,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "__Secure-3PSIDRTS",
-      "value": "sidts-CjcB7I_69DI21dM4z7rLh3mlQTsyQCudw4jjpSKfZettolf7sfo6pwtbxFbKVE6W19sUiinWuELxEAA",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1770270933.944993,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "SIDCC",
-      "value": "AKEyXzWoWSzXxk3IAPlXW_5z7trnu6JIfslzoov9QM8qj7MacbFQo8AvrzxTBmf8suaY37I7",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1801806333.945074,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Secure-1PSIDCC",
-      "value": "AKEyXzU1Ey3atxx72O5o09bhKexdlNqTs6MbDpjmECHB2U60giQeHCQGpeXE3anmSoLxHmnJ",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1801806333.945137,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Host-GAPS",
-      "value": "1:sdBqTIEdO4PGy6EMXb4675rI5vf31t38zcNZmAPebH6DY17ujQGzyTK0NPwhiXrVsZzLq-3d6zsY1rpjSorZLXEWMQHOnlS5cXOL27SVmsRMnLyCGhy_7v8jnth4DUvP5p2Yqr2AhaKY37TPQuPyPkNOg7vK96VaPs2che203hLA4dfVLhNzUA:xDBaUX6vB3-FYI78",
-      "domain": "accounts.google.com",
-      "path": "/",
-      "expires": 1804830333.977838,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "__Host-GAPSTS",
-      "value": "gapsts-CiwB7mT83Vvc4sPv1Y_MMp1p7iLhKYNWX1De9PZgrRksjo9L4460HZNK8GUZBRAB",
-      "domain": "accounts.google.com",
-      "path": "/",
-      "expires": 1804830334.162566,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "IDE",
-      "value": "AHWqTUltZQW8uiLkM4WZ2Y47hqgG7u-KeOld-yGJ4BcXeezarp6JebTio2vDojm5",
-      "domain": ".doubleclick.net",
-      "path": "/",
-      "expires": 1804830334.787344,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "_ga_NZ6RFCB9LN",
-      "value": "GS2.1.s1770270267$o1$g1$t1770270334$j60$l0$h0",
-      "domain": ".mintlify.com",
-      "path": "/",
-      "expires": 1804830334.835799,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "_rdt_uuid",
-      "value": "1770270267732.51c95a86-8e91-4ec1-8861-c5cb9b4ba27e",
-      "domain": ".mintlify.com",
-      "path": "/",
-      "expires": 1778046334,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "Strict"
-    },
-    {
-      "name": "_ga_8TPDXZJ45F",
-      "value": "GS2.1.s1770270268$o1$g1$t1770270334$j60$l0$h0",
-      "domain": ".mintlify.com",
-      "path": "/",
-      "expires": 1804830334.893477,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "ar_debug",
-      "value": "1",
-      "domain": ".www.google-analytics.com",
-      "path": "/",
-      "expires": 1778046334.919269,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "__Secure-3PSIDCC",
-      "value": "AKEyXzV6aXRdGrb1fggw0Wjzh9WKBSC5kyOoQ6nAgX9eFjSQ1vA2PfEywSxRRcjq2oRSF1Va8A",
-      "domain": ".google.com",
-      "path": "/",
-      "expires": 1801806334.959451,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "ph_phc_eNuN6Ojnk9O7uWfC17z12AK85fNR0BY6IiGVy0Gfwzw_posthog",
-      "value": "%7B%22distinct_id%22%3A%22019c2c54-981c-7f89-9e18-fb12af04d4e0%22%2C%22%24sesid%22%3A%5B1770270379251%2C%22019c2c54-983c-78e2-9a30-177efd450000%22%2C1770270267435%5D%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fdashboard.mintlify.com%2Flogin%22%7D%7D",
-      "domain": ".mintlify.com",
-      "path": "/",
-      "expires": 1801806379,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "Lax"
     }
   ],
   "origins": [
@@ -600,16 +240,28 @@
           "value": "system"
         },
         {
-          "name": "_gcl_ls",
-          "value": "{\"schema\":\"gcl\",\"version\":1,\"gcl_ctr\":{\"value\":{\"value\":0,\"timeouts\":0,\"errors\":0,\"creationTimeMs\":1770270267688},\"expires\":1778046267688}}"
+          "name": "_cache",
+          "value": "1Tw/fsTWxuLcmsP72C+D/AAhBl5ftn8ANJ17Q684kkY="
         },
         {
-          "name": "li_adsId",
-          "value": "a4b982a6-d5b8-476f-ba01-fae363b82d2f"
+          "name": "agent-panel-open",
+          "value": "false"
         },
         {
           "name": "ph_phc_eNuN6Ojnk9O7uWfC17z12AK85fNR0BY6IiGVy0Gfwzw_posthog",
-          "value": "{\"distinct_id\":\"019c2c54-981c-7f89-9e18-fb12af04d4e0\",\"$sesid\":[1770270379251,\"019c2c54-983c-78e2-9a30-177efd450000\",1770270267435],\"$initial_person_info\":{\"r\":\"$direct\",\"u\":\"https://dashboard.mintlify.com/login\"},\"$initialization_time\":\"2026-02-05T05:45:34.236Z\",\"$configured_session_timeout_ms\":1800000,\"$device_id\":\"019c2c54-981c-7f89-9e18-fb12af04d4e0\",\"$user_state\":\"anonymous\",\"$capture_rate_limit\":{\"tokens\":99,\"last\":1770270379250},\"$client_session_props\":{\"sessionId\":\"019c2c54-983c-78e2-9a30-177efd450000\",\"props\":{\"r\":\"$direct\",\"u\":\"https://dashboard.mintlify.com/login\"}},\"$session_recording_remote_config\":{\"enabled\":true,\"consoleLogRecordingEnabled\":true,\"endpoint\":\"/s/\",\"eventTriggers\":[],\"linkedFlag\":null,\"masking\":null,\"minimumDurationMilliseconds\":10000,\"networkPayloadCapture\":{\"capturePerformance\":{\"network_timing\":true,\"web_vitals\":true,\"web_vitals_allowed_metrics\":null}},\"recorderVersion\":\"v2\",\"sampleRate\":null,\"scriptConfig\":{\"script\":\"posthog-recorder\"},\"triggerMatchType\":null,\"urlBlocklist\":[{\"matching\":\"regex\",\"url\":\"^https://dashboard\\\\.mintlify\\\\.com/(?!.*?/editor/[^/]+$).*$\"}],\"urlTriggers\":[{\"matching\":\"regex\",\"url\":\"^https://dashboard\\\\.mintlify\\\\.com/[^/]+/[^/]+/editor/[^/]+$\"}],\"canvasRecording\":{}},\"$autocapture_disabled_server_side\":false,\"$heatmaps_enabled_server_side\":true,\"$web_vitals_enabled_server_side\":true,\"$web_vitals_allowed_metrics\":null,\"$exception_capture_enabled_server_side\":false,\"$error_tracking_suppression_rules\":[],\"$dead_clicks_enabled_server_side\":false,\"$active_feature_flags\":[\"homepage-hero-copy-2\",\"homepage-hero-copy\",\"homepage-subheader-agent-experiment\",\"survey-targeting-b536a1f98e-custom\",\"survey-targeting-b4a630e570-custom\",\"homepage-subheader-agent-messaging-experiment\"],\"$enabled_feature_flags\":{\"homepage-hero-copy-2\":\"control\",\"homepage-hero-copy\":\"c\",\"homepage-subheader-agent-experiment\":\"control\",\"survey-targeting-b536a1f98e-custom\":true,\"omitSearchResults\":false,\"survey-targeting-b4a630e570-custom\":true,\"assistantInsights\":false,\"homepage-subheader-agent-messaging-experiment\":\"control\"},\"$feature_flag_payloads\":{\"homepage-hero-copy-2\":\"{\\\"text\\\":\\\"The Intelligent Knowledge Platform\\\"}\",\"homepage-hero-copy\":\"{\\\"text\\\":\\\"Helping teams create and maintain world-class documentation built for both humans and AI\\\"}\",\"homepage-subheader-agent-experiment\":\"{\\\"text\\\": \\\"Turn your company`s knowledge into accurate, agent-ready context\\\"}\",\"homepage-subheader-agent-messaging-experiment\":\"{\\\"text\\\": \\\"Helping teams create and maintain world-class documentation built for both humans and AI\\\"}\"},\"$feature_flag_details\":{\"homepage-hero-copy-2\":{\"key\":\"homepage-hero-copy-2\",\"enabled\":true,\"variant\":\"control\",\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":443208,\"version\":4,\"description\":null,\"payload\":\"{\\\"text\\\":\\\"The Intelligent Knowledge Platform\\\"}\"}},\"homepage-hero-copy\":{\"key\":\"homepage-hero-copy\",\"enabled\":true,\"variant\":\"c\",\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":377174,\"version\":3,\"description\":null,\"payload\":\"{\\\"text\\\":\\\"Helping teams create and maintain world-class documentation built for both humans and AI\\\"}\"}},\"homepage-subheader-agent-experiment\":{\"key\":\"homepage-subheader-agent-experiment\",\"enabled\":true,\"variant\":\"control\",\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":499663,\"version\":2,\"description\":null,\"payload\":\"{\\\"text\\\": \\\"Turn your company`s knowledge into accurate, agent-ready context\\\"}\"}},\"survey-targeting-b536a1f98e-custom\":{\"key\":\"survey-targeting-b536a1f98e-custom\",\"enabled\":true,\"variant\":null,\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":473797,\"version\":4,\"description\":null,\"payload\":null}},\"omitSearchResults\":{\"key\":\"omitSearchResults\",\"enabled\":false,\"variant\":null,\"reason\":{\"code\":\"no_group_type\",\"condition_index\":null,\"description\":\"No group type\"},\"metadata\":{\"id\":162631,\"version\":5,\"description\":null,\"payload\":null}},\"survey-targeting-b4a630e570-custom\":{\"key\":\"survey-targeting-b4a630e570-custom\",\"enabled\":true,\"variant\":null,\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":79705,\"version\":13,\"description\":null,\"payload\":null}},\"assistantInsights\":{\"key\":\"assistantInsights\",\"enabled\":false,\"variant\":null,\"reason\":{\"code\":\"no_group_type\",\"condition_index\":null,\"description\":\"No group type\"},\"metadata\":{\"id\":156650,\"version\":6,\"description\":null,\"payload\":null}},\"homepage-subheader-agent-messaging-experiment\":{\"key\":\"homepage-subheader-agent-messaging-experiment\",\"enabled\":true,\"variant\":\"control\",\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":505738,\"version\":3,\"description\":null,\"payload\":\"{\\\"text\\\": \\\"Helping teams create and maintain world-class documentation built for both humans and AI\\\"}\"}}},\"$feature_flag_request_id\":\"12a3f82a-7028-49ef-a56e-0741a8490214\",\"$feature_flag_evaluated_at\":1770270334280,\"$surveys\":[{\"appearance\":{\"backgroundColor\":\"#eeeded\",\"borderColor\":\"#c9c6c6\",\"borderRadius\":\"10px\",\"boxPadding\":\"20px 24px\",\"boxShadow\":\"0 4px 12px rgba(0, 0, 0, 0.15)\",\"disabledButtonOpacity\":\"0.6\",\"displayThankYouMessage\":true,\"fontFamily\":\"inherit\",\"inputBackground\":\"white\",\"maxWidth\":\"300px\",\"placeholder\":\"Start typing...\",\"position\":\"right\",\"ratingButtonActiveColor\":\"black\",\"ratingButtonColor\":\"white\",\"shuffleQuestions\":false,\"submitButtonColor\":\"black\",\"submitButtonTextColor\":\"white\",\"tabPosition\":\"right\",\"textSubtleColor\":\"#939393\",\"thankYouMessageDescription\":\"\",\"thankYouMessageHeader\":\"Thank you for your feedback!\",\"whiteLabel\":true,\"zIndex\":\"2147482647\"},\"conditions\":null,\"current_iteration\":null,\"current_iteration_start_date\":null,\"enable_partial_responses\":true,\"end_date\":null,\"id\":\"019beda8-8b3a-0000-fd8f-3bdf3cfc168c\",\"internal_targeting_flag_key\":\"survey-targeting-b536a1f98e-custom\",\"name\":\"Editor v5 feedback\",\"questions\":[{\"description\":\"\",\"descriptionContentType\":\"text\",\"display\":\"emoji\",\"id\":\"0b468561-c2a6-4a66-899e-2601826224a1\",\"lowerBoundLabel\":\"Very dissatisfied\",\"optional\":true,\"question\":\"How satisfied are you with new Mintlify web editor?\",\"scale\":5,\"skipSubmitButton\":true,\"type\":\"rating\",\"upperBoundLabel\":\"Very satisfied\"},{\"description\":\"\",\"descriptionContentType\":\"text\",\"id\":\"d53f6dac-c058-4ad0-a6b2-0f37ace81a4a\",\"question\":\"What could we improve?\",\"type\":\"open\"}],\"schedule\":\"always\",\"start_date\":\"2026-01-24T01:43:08.803000Z\",\"type\":\"api\"},{\"appearance\":{\"backgroundColor\":\"#eeeded\",\"borderColor\":\"#c9c6c6\",\"displayThankYouMessage\":true,\"placeholder\":\"Start typing...\",\"position\":\"right\",\"ratingButtonActiveColor\":\"black\",\"ratingButtonColor\":\"white\",\"submitButtonColor\":\"black\",\"submitButtonTextColor\":\"white\",\"thankYouMessageDescription\":\"\",\"thankYouMessageHeader\":\"Thank you for your help!\",\"whiteLabel\":true},\"conditions\":{\"url\":\"dashboard.mintlify.com/onboarding\",\"urlMatchType\":\"icontains\"},\"current_iteration\":null,\"current_iteration_start_date\":null,\"enable_partial_responses\":false,\"end_date\":null,\"id\":\"0192d54b-e493-0000-d426-296874eba573\",\"internal_targeting_flag_key\":\"survey-targeting-b4a630e570-custom\",\"name\":\"How'd you hear of Mintlify\",\"questions\":[{\"buttonText\":\"Submit\",\"choices\":[\"Friend/colleague\",\"Online search (e.g. Google)\",\"X (Twitter)\",\"From another company's docs\",\"LinkedIn\",\"Newsletter\",\"Event\",\"YouTube\",\"LLM (e.g. ChatGPT)\",\"Other\"],\"description\":\"How did you first hear about Mintlify?\",\"descriptionContentType\":\"text\",\"hasOpenChoice\":true,\"id\":\"dc5b5f91-ea92-4de4-8170-00a75c7a5e25\",\"originalQuestionIndex\":0,\"question\":\"We're curious!\",\"shuffleOptions\":true,\"type\":\"single_choice\"}],\"schedule\":\"once\",\"start_date\":\"2024-10-28T22:44:23.449000Z\",\"type\":\"popover\"}]}"
+          "value": "{\"distinct_id\":\"6984c9ae5b6df1d13c10a5cd\",\"$sesid\":[1770505923165,\"019c3a4a-b1ea-74a7-ae8a-86d648ee5974\",1770504499675],\"$initial_person_info\":{\"r\":\"$direct\",\"u\":\"https://dashboard.mintlify.com/login\"},\"$initialization_time\":\"2026-02-07T23:11:56.209Z\",\"$configured_session_timeout_ms\":1800000,\"$device_id\":\"019c3a4a-b1c9-7fff-a689-a46dfec6ea1e\",\"$user_state\":\"identified\",\"$capture_rate_limit\":{\"tokens\":99,\"last\":1770505923164},\"$client_session_props\":{\"sessionId\":\"019c3a4a-b1ea-74a7-ae8a-86d648ee5974\",\"props\":{\"r\":\"$direct\",\"u\":\"https://dashboard.mintlify.com/login\"}},\"$session_recording_remote_config\":{\"enabled\":true,\"consoleLogRecordingEnabled\":true,\"endpoint\":\"/s/\",\"eventTriggers\":[],\"linkedFlag\":null,\"masking\":null,\"minimumDurationMilliseconds\":10000,\"networkPayloadCapture\":{\"capturePerformance\":{\"network_timing\":true,\"web_vitals\":true,\"web_vitals_allowed_metrics\":null}},\"recorderVersion\":\"v2\",\"sampleRate\":null,\"scriptConfig\":{\"script\":\"posthog-recorder\"},\"triggerMatchType\":null,\"urlBlocklist\":[{\"matching\":\"regex\",\"url\":\"^https://dashboard\\\\.mintlify\\\\.com/(?!.*?/editor/[^/]+$).*$\"}],\"urlTriggers\":[{\"matching\":\"regex\",\"url\":\"^https://dashboard\\\\.mintlify\\\\.com/[^/]+/[^/]+/editor/[^/]+$\"}],\"canvasRecording\":{}},\"$autocapture_disabled_server_side\":false,\"$heatmaps_enabled_server_side\":true,\"$web_vitals_enabled_server_side\":true,\"$web_vitals_allowed_metrics\":null,\"$exception_capture_enabled_server_side\":false,\"$error_tracking_suppression_rules\":[],\"$dead_clicks_enabled_server_side\":false,\"$active_feature_flags\":[\"homepage-hero-copy\",\"homepage-hero-copy-2\",\"survey-targeting-b536a1f98e-custom\",\"homepage-subheader-agent-messaging-experiment\",\"omitSearchResults\",\"homepage-subheader-agent-experiment\",\"survey-targeting-b4a630e570-custom\"],\"$enabled_feature_flags\":{\"homepage-hero-copy\":\"c\",\"homepage-hero-copy-2\":\"control\",\"survey-targeting-b536a1f98e-custom\":true,\"assistantInsights\":false,\"homepage-subheader-agent-messaging-experiment\":\"control\",\"omitSearchResults\":true,\"homepage-subheader-agent-experiment\":\"control\",\"survey-targeting-b4a630e570-custom\":true},\"$feature_flag_payloads\":{\"homepage-hero-copy\":\"{\\\"text\\\":\\\"Helping teams create and maintain world-class documentation built for both humans and AI\\\"}\",\"homepage-hero-copy-2\":\"{\\\"text\\\":\\\"The Intelligent Knowledge Platform\\\"}\",\"homepage-subheader-agent-messaging-experiment\":\"{\\\"text\\\": \\\"Helping teams create and maintain world-class documentation built for both humans and AI\\\"}\",\"homepage-subheader-agent-experiment\":\"{\\\"text\\\": \\\"Turn your company`s knowledge into accurate, agent-ready context\\\"}\"},\"$feature_flag_details\":{\"homepage-hero-copy\":{\"key\":\"homepage-hero-copy\",\"enabled\":true,\"variant\":\"c\",\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":377174,\"version\":3,\"description\":null,\"payload\":\"{\\\"text\\\":\\\"Helping teams create and maintain world-class documentation built for both humans and AI\\\"}\"}},\"homepage-hero-copy-2\":{\"key\":\"homepage-hero-copy-2\",\"enabled\":true,\"variant\":\"control\",\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":443208,\"version\":4,\"description\":null,\"payload\":\"{\\\"text\\\":\\\"The Intelligent Knowledge Platform\\\"}\"}},\"survey-targeting-b536a1f98e-custom\":{\"key\":\"survey-targeting-b536a1f98e-custom\",\"enabled\":true,\"variant\":null,\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":473797,\"version\":4,\"description\":null,\"payload\":null}},\"assistantInsights\":{\"key\":\"assistantInsights\",\"enabled\":false,\"variant\":null,\"reason\":{\"code\":\"no_condition_match\",\"condition_index\":0,\"description\":\"No matching condition set\"},\"metadata\":{\"id\":156650,\"version\":6,\"description\":null,\"payload\":null}},\"homepage-subheader-agent-messaging-experiment\":{\"key\":\"homepage-subheader-agent-messaging-experiment\",\"enabled\":true,\"variant\":\"control\",\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":505738,\"version\":3,\"description\":null,\"payload\":\"{\\\"text\\\": \\\"Helping teams create and maintain world-class documentation built for both humans and AI\\\"}\"}},\"omitSearchResults\":{\"key\":\"omitSearchResults\",\"enabled\":true,\"variant\":null,\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":162631,\"version\":5,\"description\":null,\"payload\":null}},\"homepage-subheader-agent-experiment\":{\"key\":\"homepage-subheader-agent-experiment\",\"enabled\":true,\"variant\":\"control\",\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":499663,\"version\":2,\"description\":null,\"payload\":\"{\\\"text\\\": \\\"Turn your company`s knowledge into accurate, agent-ready context\\\"}\"}},\"survey-targeting-b4a630e570-custom\":{\"key\":\"survey-targeting-b4a630e570-custom\",\"enabled\":true,\"variant\":null,\"reason\":{\"code\":\"condition_match\",\"condition_index\":0,\"description\":\"Matched condition set 1\"},\"metadata\":{\"id\":79705,\"version\":13,\"description\":null,\"payload\":null}}},\"$feature_flag_request_id\":\"cfecca17-9a4f-420a-9e30-7cb778522636\",\"$feature_flag_evaluated_at\":1770505917442,\"$surveys\":[{\"appearance\":{\"backgroundColor\":\"#eeeded\",\"borderColor\":\"#c9c6c6\",\"borderRadius\":\"10px\",\"boxPadding\":\"20px 24px\",\"boxShadow\":\"0 4px 12px rgba(0, 0, 0, 0.15)\",\"disabledButtonOpacity\":\"0.6\",\"displayThankYouMessage\":true,\"fontFamily\":\"inherit\",\"inputBackground\":\"white\",\"maxWidth\":\"300px\",\"placeholder\":\"Start typing...\",\"position\":\"right\",\"ratingButtonActiveColor\":\"black\",\"ratingButtonColor\":\"white\",\"shuffleQuestions\":false,\"submitButtonColor\":\"black\",\"submitButtonTextColor\":\"white\",\"tabPosition\":\"right\",\"textSubtleColor\":\"#939393\",\"thankYouMessageDescription\":\"\",\"thankYouMessageHeader\":\"Thank you for your feedback!\",\"whiteLabel\":true,\"zIndex\":\"2147482647\"},\"conditions\":null,\"current_iteration\":null,\"current_iteration_start_date\":null,\"enable_partial_responses\":true,\"end_date\":null,\"id\":\"019beda8-8b3a-0000-fd8f-3bdf3cfc168c\",\"internal_targeting_flag_key\":\"survey-targeting-b536a1f98e-custom\",\"name\":\"Editor v5 feedback\",\"questions\":[{\"description\":\"\",\"descriptionContentType\":\"text\",\"display\":\"emoji\",\"id\":\"0b468561-c2a6-4a66-899e-2601826224a1\",\"lowerBoundLabel\":\"Very dissatisfied\",\"optional\":true,\"question\":\"How satisfied are you with new Mintlify web editor?\",\"scale\":5,\"skipSubmitButton\":true,\"type\":\"rating\",\"upperBoundLabel\":\"Very satisfied\"},{\"description\":\"\",\"descriptionContentType\":\"text\",\"id\":\"d53f6dac-c058-4ad0-a6b2-0f37ace81a4a\",\"question\":\"What could we improve?\",\"type\":\"open\"}],\"schedule\":\"always\",\"start_date\":\"2026-01-24T01:43:08.803000Z\",\"type\":\"api\"},{\"appearance\":{\"backgroundColor\":\"#eeeded\",\"borderColor\":\"#c9c6c6\",\"displayThankYouMessage\":true,\"placeholder\":\"Start typing...\",\"position\":\"right\",\"ratingButtonActiveColor\":\"black\",\"ratingButtonColor\":\"white\",\"submitButtonColor\":\"black\",\"submitButtonTextColor\":\"white\",\"thankYouMessageDescription\":\"\",\"thankYouMessageHeader\":\"Thank you for your help!\",\"whiteLabel\":true},\"conditions\":{\"url\":\"dashboard.mintlify.com/onboarding\",\"urlMatchType\":\"icontains\"},\"current_iteration\":null,\"current_iteration_start_date\":null,\"enable_partial_responses\":false,\"end_date\":null,\"id\":\"0192d54b-e493-0000-d426-296874eba573\",\"internal_targeting_flag_key\":\"survey-targeting-b4a630e570-custom\",\"name\":\"How'd you hear of Mintlify\",\"questions\":[{\"buttonText\":\"Submit\",\"choices\":[\"Friend/colleague\",\"Online search (e.g. Google)\",\"X (Twitter)\",\"From another company's docs\",\"LinkedIn\",\"Newsletter\",\"Event\",\"YouTube\",\"LLM (e.g. ChatGPT)\",\"Other\"],\"description\":\"How did you first hear about Mintlify?\",\"descriptionContentType\":\"text\",\"hasOpenChoice\":true,\"id\":\"dc5b5f91-ea92-4de4-8170-00a75c7a5e25\",\"originalQuestionIndex\":0,\"question\":\"We're curious!\",\"shuffleOptions\":true,\"type\":\"single_choice\"}],\"schedule\":\"once\",\"start_date\":\"2024-10-28T22:44:23.449000Z\",\"type\":\"popover\"}],\"$epp\":true,\"$stored_group_properties\":{\"org\":{\"name\":\"Agent1\",\"slug\":\"agent1\",\"plan\":\"proJul25\"}},\"$groups\":{\"org\":\"6984c9ad5b6df1d13c10a5cb\"},\"$user_id\":\"6984c9ae5b6df1d13c10a5cd\",\"$stored_person_properties\":{\"email\":\"agent.smith.starthub@gmail.com\",\"org\":\"agent1\",\"orgId\":\"6984c9ad5b6df1d13c10a5cb\",\"plan\":\"proJul25\",\"isOnTrial\":true,\"isPaid\":false}}"
+        },
+        {
+          "name": "_gcl_ls",
+          "value": "{\"schema\":\"gcl\",\"version\":1,\"gcl_ctr\":{\"value\":{\"value\":0,\"timeouts\":0,\"errors\":0,\"creationTimeMs\":1770504499999},\"expires\":1778280499999}}"
+        },
+        {
+          "name": "li_adsId",
+          "value": "23a3b317-6b55-469a-8bd1-283f6cb563e5"
+        },
+        {
+          "name": "plain:session",
+          "value": "{\"state\":{\"liveChatApp_01JN1T5KHQ0KR2KN2SAEX614JG\":{\"sessionToken\":\"chatCustomerSession_v4WoGv_JtXuzt_wlXAazWAN71BZr0hg6Dcb_uMKHo2Q\",\"customerDetails\":{\"fullName\":\"agent.smith.starthub@gmail.com\",\"shortName\":\"agent.smith.starthub@gmail.com\",\"email\":\"agent.smith.starthub@gmail.com\",\"emailHash\":\"5d0ff03d11d2974ce9891873acfbb869bb9fd9f2b23d2d8bff206da152b4d882\"}}},\"version\":2}"
         }
       ]
     }
