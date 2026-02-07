@@ -62,7 +62,8 @@ Before creating new components, check these exist:
 13. [Inline style={{}} Props](#13-inline-style-props)
 14. [Raw HTML Elements with Styling](#14-raw-html-elements-with-styling)
 15. [Required Field Indicators](#15-required-field-indicators)
-16. [Decision Matrix](#16-decision-matrix)
+16. [Icon and Emoji Patterns](#16-icon-and-emoji-patterns)
+17. [Decision Matrix](#17-decision-matrix)
 
 ---
 
@@ -1220,7 +1221,219 @@ The Label component handles:
 
 ---
 
-## 16. Decision Matrix
+## 16. Icon and Emoji Patterns
+
+### The Problem
+
+Emoji strings returned by helper functions require span wrappers for sizing:
+
+```tsx
+// SLOP - emoji string with span wrapper for sizing
+function getTypeIcon(type: string): string {
+  switch (type) {
+    case "bug": return "🐛";
+    case "story": return "📖";
+    // ...
+  }
+}
+
+// Usage requires span wrapper
+<span className="text-xl">{getTypeIcon(type)}</span>
+```
+
+Problems:
+1. **Emoji strings are inconsistent** - Different OS/browsers render differently
+2. **Sizing requires wrappers** - Can't pass className to a string
+3. **No semantic meaning** - Emojis aren't accessible icons
+4. **Wrapper slop** - Creates `<span className="text-...">` patterns
+
+### Solution A: Dedicated Icon Component (RECOMMENDED)
+
+Create a proper React component that encapsulates the icon logic:
+
+```tsx
+// components/ui/IssueTypeIcon.tsx
+import { BookOpen, Bug, CheckSquare, CircleDot, Zap } from "@/lib/icons";
+import { cn } from "@/lib/utils";
+
+type IssueType = "bug" | "story" | "epic" | "subtask" | "task";
+type IconSize = "xs" | "sm" | "md" | "lg" | "xl";
+
+const SIZE_CLASSES: Record<IconSize, string> = {
+  xs: "w-3 h-3",
+  sm: "w-4 h-4",
+  md: "w-5 h-5",
+  lg: "w-6 h-6",
+  xl: "w-8 h-8",
+};
+
+const TYPE_ICONS = {
+  bug: Bug,
+  story: BookOpen,
+  epic: Zap,
+  subtask: CircleDot,
+  task: CheckSquare,
+} as const;
+
+interface IssueTypeIconProps {
+  type: IssueType;
+  size?: IconSize;
+  className?: string;
+}
+
+export function IssueTypeIcon({ type, size = "md", className }: IssueTypeIconProps) {
+  const Icon = TYPE_ICONS[type] ?? TYPE_ICONS.task;
+  return <Icon className={cn(SIZE_CLASSES[size], className)} />;
+}
+```
+
+Usage:
+```tsx
+// Clean - no wrappers needed
+<IssueTypeIcon type={issue.type} size="lg" />
+<IssueTypeIcon type="bug" size="sm" className="text-status-error" />
+<IssueTypeIcon type={type} className="shrink-0" />
+```
+
+| Pros | Cons |
+|------|------|
+| Type-safe size prop | New component to maintain |
+| className for extras | Must import component |
+| No wrapper spans | |
+| Consistent Lucide icons | |
+| Accessible SVGs | |
+
+**When to use:** Any icon that appears in 3+ places with varying sizes.
+
+---
+
+### Solution B: Icon Helper with Size Presets
+
+If you need a function (not component), use size presets:
+
+```tsx
+// lib/issue-utils.ts
+import type { ReactNode } from "react";
+import { Bug, BookOpen, Zap, CircleDot, CheckSquare } from "@/lib/icons";
+import { cn } from "@/lib/utils";
+
+type IconSize = "xs" | "sm" | "md" | "lg" | "xl";
+
+const SIZE_CLASSES: Record<IconSize, string> = {
+  xs: "w-3 h-3",
+  sm: "w-4 h-4",
+  md: "w-5 h-5",
+  lg: "w-6 h-6",
+  xl: "w-8 h-8",
+};
+
+export function getTypeIcon(
+  type: string,
+  size: IconSize = "md",
+  className?: string
+): ReactNode {
+  const sizeClass = SIZE_CLASSES[size];
+  const combinedClass = cn(sizeClass, className);
+
+  switch (type) {
+    case "bug": return <Bug className={combinedClass} />;
+    case "story": return <BookOpen className={combinedClass} />;
+    case "epic": return <Zap className={combinedClass} />;
+    case "subtask": return <CircleDot className={combinedClass} />;
+    default: return <CheckSquare className={combinedClass} />;
+  }
+}
+```
+
+Usage:
+```tsx
+// Size preset + optional className
+{getTypeIcon(type, "lg")}
+{getTypeIcon(type, "sm", "shrink-0 text-status-error")}
+```
+
+| Pros | Cons |
+|------|------|
+| Simpler migration | Not a proper component |
+| Familiar function API | Less discoverable |
+| Size presets prevent slop | |
+
+**When to use:** Quick migration from emoji functions.
+
+---
+
+### Solution C: Generic Icon Wrapper
+
+For wrapping any Lucide icon with consistent sizing:
+
+```tsx
+// components/ui/Icon.tsx
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type IconSize = "xs" | "sm" | "md" | "lg" | "xl";
+
+const SIZE_CLASSES: Record<IconSize, string> = {
+  xs: "w-3 h-3",
+  sm: "w-4 h-4",
+  md: "w-5 h-5",
+  lg: "w-6 h-6",
+  xl: "w-8 h-8",
+};
+
+interface IconProps {
+  icon: LucideIcon;
+  size?: IconSize;
+  className?: string;
+}
+
+export function Icon({ icon: IconComponent, size = "md", className }: IconProps) {
+  return <IconComponent className={cn(SIZE_CLASSES[size], className)} />;
+}
+```
+
+Usage:
+```tsx
+import { Bug, Calendar } from "@/lib/icons";
+
+<Icon icon={Bug} size="lg" />
+<Icon icon={Calendar} size="sm" className="text-brand" />
+```
+
+| Pros | Cons |
+|------|------|
+| Works with any Lucide icon | Extra wrapper |
+| Consistent size API | May be overkill |
+
+**When to use:** When you want consistent sizing across all icons.
+
+---
+
+### Anti-Patterns
+
+```tsx
+// ❌ WRONG - Emoji strings
+return "🐛";
+
+// ❌ WRONG - Span wrapper for sizing
+<span className="text-xl">{getTypeIcon(type)}</span>
+
+// ❌ WRONG - Typography wrapper for sizing
+<Typography variant="label" className="text-2xl">{getTypeIcon(type)}</Typography>
+
+// ❌ WRONG - Raw className string parameter
+getTypeIcon(type, "w-5 h-5 shrink-0 text-red-500")
+
+// ✅ CORRECT - Component with typed props
+<IssueTypeIcon type={type} size="lg" className="shrink-0" />
+
+// ✅ CORRECT - Function with size preset
+{getTypeIcon(type, "lg", "shrink-0")}
+```
+
+---
+
+## 17. Decision Matrix
 
 ### Quick Reference: What Solution to Use
 
@@ -1290,13 +1503,34 @@ The Label component handles:
 | `UserDisplay` | `ui/UserDisplay.tsx` | Avatar + name + subtitle |
 | `Label` | `ui/Label.tsx` | Form labels with `required` prop |
 
-### Consider Creating (Low Priority)
+### Icons (Use Lucide)
+
+All icons should use Lucide React via `@/lib/icons` barrel file:
+
+```tsx
+// ✅ CORRECT - Import from barrel
+import { Bug, Calendar, Check } from "@/lib/icons";
+
+// Use className for sizing
+<Bug className="w-5 h-5" />
+<Calendar className="w-4 h-4 text-brand" />
+```
+
+**Never use:**
+- Emoji strings ("🐛", "📖")
+- Span wrappers for icon sizing
+- Typography wrappers for icon sizing
+
+### Consider Creating
 
 | Component | Use For | Instances | Priority |
 |-----------|---------|-----------|----------|
+| `IssueTypeIcon` | Issue type icons (bug/story/epic/subtask) | 16+ | HIGH - replaces emoji slop |
+| `EmploymentTypeIcon` | Employment icons (employee/contractor/intern) | 2+ | MEDIUM - local to UserTypeManager |
+| `FileTypeIcon` | File type icons | 3+ | MEDIUM - replaces emoji in attachments |
 | `ResponsiveText` | Mobile/desktop variants | 6 | ✅ DONE - created |
-| `Tag` | Removable tags | 2+ | MEDIUM - if Badge doesn't fit |
-| `LabelBadge` | Dynamic color labels | 4+ | MEDIUM - for label.color patterns |
+| `Tag` | Removable tags | 2+ | LOW - if Badge doesn't fit |
+| `LabelBadge` | Dynamic color labels | 4+ | LOW - for label.color patterns |
 
 ---
 
