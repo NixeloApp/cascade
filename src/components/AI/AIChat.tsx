@@ -6,9 +6,11 @@ import type { Id } from "@convex/_generated/dataModel";
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Bot, Lightbulb } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Skeleton } from "../ui/Skeleton";
 import { Tooltip } from "../ui/Tooltip";
@@ -174,7 +176,7 @@ export const AIChat = React.memo(function AIChat({
         ) : messages.length === 0 ? (
           <Flex align="center" justify="center" className="h-full text-center">
             <div>
-              <div className="text-4xl mb-4">🤖</div>
+              <Icon icon={Bot} size="xl" className="mx-auto mb-4" />
               <Typography variant="h5" className="mb-2">
                 AI Assistant
               </Typography>
@@ -182,9 +184,9 @@ export const AIChat = React.memo(function AIChat({
                 Ask me anything about your project, or use natural language commands.
               </Typography>
               <Flex direction="column" gap="xs">
-                <Typography variant="meta">💡 "What's our team velocity?"</Typography>
-                <Typography variant="meta">💡 "Which issues are blocking the sprint?"</Typography>
-                <Typography variant="meta">💡 "Summarize this week's progress"</Typography>
+                <Typography variant="meta"><Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "What's our team velocity?"</Typography>
+                <Typography variant="meta"><Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Which issues are blocking the sprint?"</Typography>
+                <Typography variant="meta"><Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Summarize this week's progress"</Typography>
               </Flex>
             </div>
           </Flex>

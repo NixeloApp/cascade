@@ -6,9 +6,11 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useState } from "react";
+import { Bot, Lightbulb, MessageSquare } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
 import { AIChat } from "./AIChat";
 import { AIErrorFallback } from "./AIErrorFallback";
@@ -59,7 +61,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
         <div className="p-4 border-b border-ui-border bg-linear-to-r from-brand to-accent">
           <SheetHeader className="text-left">
             <Flex align="center" gap="md">
-              <div className="text-2xl">🤖</div>
+              <Icon icon={Bot} size="lg" />
               <div>
                 <SheetTitle className="text-lg font-semibold text-brand-foreground">
                   AI Assistant
@@ -84,7 +86,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
                 : "text-ui-text-tertiary hover:text-ui-text",
             )}
           >
-            💬 Chat
+            <Icon icon={MessageSquare} size="sm" className="inline mr-1" /> Chat
             {chats && chats.length > 0 && (
               <span className="ml-2 text-xs bg-ui-bg-tertiary px-2 py-0.5 rounded-full">
                 {chats.length}
@@ -101,7 +103,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
                 : "text-ui-text-tertiary hover:text-ui-text",
             )}
           >
-            💡 Suggestions
+            <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Suggestions
             {unreadSuggestions > 0 && (
               <span className="ml-2 text-xs bg-status-error text-brand-foreground px-2 py-0.5 rounded-full">
                 {unreadSuggestions}
