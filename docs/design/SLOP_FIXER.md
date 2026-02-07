@@ -1247,127 +1247,12 @@ Problems:
 3. **No semantic meaning** - Emojis aren't accessible icons
 4. **Wrapper slop** - Creates `<span className="text-...">` patterns
 
-### Solution A: Dedicated Icon Component (RECOMMENDED)
+### Solution: Use the Icon Component (RECOMMENDED)
 
-Create a proper React component that encapsulates the icon logic:
-
-```tsx
-// components/ui/IssueTypeIcon.tsx
-import { BookOpen, Bug, CheckSquare, CircleDot, Zap } from "@/lib/icons";
-import { cn } from "@/lib/utils";
-
-type IssueType = "bug" | "story" | "epic" | "subtask" | "task";
-type IconSize = "xs" | "sm" | "md" | "lg" | "xl";
-
-const SIZE_CLASSES: Record<IconSize, string> = {
-  xs: "w-3 h-3",
-  sm: "w-4 h-4",
-  md: "w-5 h-5",
-  lg: "w-6 h-6",
-  xl: "w-8 h-8",
-};
-
-const TYPE_ICONS = {
-  bug: Bug,
-  story: BookOpen,
-  epic: Zap,
-  subtask: CircleDot,
-  task: CheckSquare,
-} as const;
-
-interface IssueTypeIconProps {
-  type: IssueType;
-  size?: IconSize;
-  className?: string;
-}
-
-export function IssueTypeIcon({ type, size = "md", className }: IssueTypeIconProps) {
-  const Icon = TYPE_ICONS[type] ?? TYPE_ICONS.task;
-  return <Icon className={cn(SIZE_CLASSES[size], className)} />;
-}
-```
-
-Usage:
-```tsx
-// Clean - no wrappers needed
-<IssueTypeIcon type={issue.type} size="lg" />
-<IssueTypeIcon type="bug" size="sm" className="text-status-error" />
-<IssueTypeIcon type={type} className="shrink-0" />
-```
-
-| Pros | Cons |
-|------|------|
-| Type-safe size prop | New component to maintain |
-| className for extras | Must import component |
-| No wrapper spans | |
-| Consistent Lucide icons | |
-| Accessible SVGs | |
-
-**When to use:** Any icon that appears in 3+ places with varying sizes.
-
----
-
-### Solution B: Icon Helper with Size Presets
-
-If you need a function (not component), use size presets:
+Use the generic `Icon` component from `@/components/ui/Icon` with icon mappings:
 
 ```tsx
-// lib/issue-utils.ts
-import type { ReactNode } from "react";
-import { Bug, BookOpen, Zap, CircleDot, CheckSquare } from "@/lib/icons";
-import { cn } from "@/lib/utils";
-
-type IconSize = "xs" | "sm" | "md" | "lg" | "xl";
-
-const SIZE_CLASSES: Record<IconSize, string> = {
-  xs: "w-3 h-3",
-  sm: "w-4 h-4",
-  md: "w-5 h-5",
-  lg: "w-6 h-6",
-  xl: "w-8 h-8",
-};
-
-export function getTypeIcon(
-  type: string,
-  size: IconSize = "md",
-  className?: string
-): ReactNode {
-  const sizeClass = SIZE_CLASSES[size];
-  const combinedClass = cn(sizeClass, className);
-
-  switch (type) {
-    case "bug": return <Bug className={combinedClass} />;
-    case "story": return <BookOpen className={combinedClass} />;
-    case "epic": return <Zap className={combinedClass} />;
-    case "subtask": return <CircleDot className={combinedClass} />;
-    default: return <CheckSquare className={combinedClass} />;
-  }
-}
-```
-
-Usage:
-```tsx
-// Size preset + optional className
-{getTypeIcon(type, "lg")}
-{getTypeIcon(type, "sm", "shrink-0 text-status-error")}
-```
-
-| Pros | Cons |
-|------|------|
-| Simpler migration | Not a proper component |
-| Familiar function API | Less discoverable |
-| Size presets prevent slop | |
-
-**When to use:** Quick migration from emoji functions.
-
----
-
-### Solution C: Generic Icon Wrapper
-
-For wrapping any Lucide icon with consistent sizing:
-
-```tsx
-// components/ui/Icon.tsx
+// components/ui/Icon.tsx - already exists
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -1392,20 +1277,46 @@ export function Icon({ icon: IconComponent, size = "md", className }: IconProps)
 }
 ```
 
+For domain-specific icons (issue types, file types, etc.), create a mapping object:
+
+```tsx
+// lib/issue-utils.ts
+import { BookOpen, Bug, CheckSquare, CircleDot, Zap } from "@/lib/icons";
+
+export const ISSUE_TYPE_ICONS = {
+  bug: Bug,
+  story: BookOpen,
+  epic: Zap,
+  subtask: CircleDot,
+  task: CheckSquare,
+} as const;
+```
+
 Usage:
 ```tsx
+import { Icon } from "@/components/ui/Icon";
+import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { Bug, Calendar } from "@/lib/icons";
 
-<Icon icon={Bug} size="lg" />
+// Domain-specific with mapping
+<Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />
+<Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" className="shrink-0" />
+
+// Direct Lucide icon
+<Icon icon={Bug} size="md" />
 <Icon icon={Calendar} size="sm" className="text-brand" />
 ```
 
 | Pros | Cons |
 |------|------|
-| Works with any Lucide icon | Extra wrapper |
-| Consistent size API | May be overkill |
+| Single component for all icons | Must import Icon + mapping |
+| Type-safe size prop | |
+| className for extras | |
+| No wrapper spans | |
+| Consistent Lucide icons | |
+| Accessible SVGs | |
 
-**When to use:** When you want consistent sizing across all icons.
+**When to use:** Always. One `Icon` component, use it everywhere.
 
 ---
 
@@ -1421,14 +1332,14 @@ return "🐛";
 // ❌ WRONG - Typography wrapper for sizing
 <Typography variant="label" className="text-2xl">{getTypeIcon(type)}</Typography>
 
-// ❌ WRONG - Raw className string parameter
-getTypeIcon(type, "w-5 h-5 shrink-0 text-red-500")
+// ❌ WRONG - Raw className on Lucide icon
+<Bug className="w-5 h-5 shrink-0" />
 
-// ✅ CORRECT - Component with typed props
-<IssueTypeIcon type={type} size="lg" className="shrink-0" />
+// ✅ CORRECT - Icon component with typed size
+<Icon icon={Bug} size="md" className="shrink-0" />
 
-// ✅ CORRECT - Function with size preset
-{getTypeIcon(type, "lg", "shrink-0")}
+// ✅ CORRECT - With domain mapping
+<Icon icon={ISSUE_TYPE_ICONS[type]} size="lg" />
 ```
 
 ---
@@ -1503,34 +1414,42 @@ getTypeIcon(type, "w-5 h-5 shrink-0 text-red-500")
 | `UserDisplay` | `ui/UserDisplay.tsx` | Avatar + name + subtitle |
 | `Label` | `ui/Label.tsx` | Form labels with `required` prop |
 
-### Icons (Use Lucide)
+### Icons (Use Icon Component)
 
-All icons should use Lucide React via `@/lib/icons` barrel file:
+All icons should use the `Icon` component with Lucide icons from `@/lib/icons`:
 
 ```tsx
-// ✅ CORRECT - Import from barrel
+// ✅ CORRECT - Use Icon component with typed size
+import { Icon } from "@/components/ui/Icon";
 import { Bug, Calendar, Check } from "@/lib/icons";
+import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 
-// Use className for sizing
-<Bug className="w-5 h-5" />
-<Calendar className="w-4 h-4 text-brand" />
+<Icon icon={Bug} size="md" />
+<Icon icon={Calendar} size="sm" className="text-brand" />
+<Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />
 ```
 
 **Never use:**
 - Emoji strings ("🐛", "📖")
 - Span wrappers for icon sizing
 - Typography wrappers for icon sizing
+- Raw className on Lucide icons (`<Bug className="w-5 h-5" />`)
 
 ### Consider Creating
 
 | Component | Use For | Instances | Priority |
 |-----------|---------|-----------|----------|
-| `IssueTypeIcon` | Issue type icons (bug/story/epic/subtask) | 16+ | HIGH - replaces emoji slop |
-| `EmploymentTypeIcon` | Employment icons (employee/contractor/intern) | 2+ | MEDIUM - local to UserTypeManager |
-| `FileTypeIcon` | File type icons | 3+ | MEDIUM - replaces emoji in attachments |
 | `ResponsiveText` | Mobile/desktop variants | 6 | ✅ DONE - created |
 | `Tag` | Removable tags | 2+ | LOW - if Badge doesn't fit |
 | `LabelBadge` | Dynamic color labels | 4+ | LOW - for label.color patterns |
+
+### Icon Mappings (Use with Icon component)
+
+| Mapping | Location | Use For |
+|---------|----------|---------|
+| `ISSUE_TYPE_ICONS` | `lib/issue-utils.ts` | bug/story/epic/subtask/task icons |
+
+All icons use the single `Icon` component from `@/components/ui/Icon`. For domain-specific icons, create a mapping object (like `ISSUE_TYPE_ICONS`) and use it with Icon.
 
 ---
 
