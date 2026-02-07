@@ -561,19 +561,16 @@ function UsageStatsModal({
                     >
                       <Flex justify="between" align="center" className="mb-1">
                         <Flex gap="sm" align="center">
-                          <span className="font-mono font-medium text-ui-text">{log.method}</span>
-                          <span className="text-ui-text-secondary">{log.endpoint}</span>
+                          <Typography variant="small" className="font-mono font-medium">
+                            {log.method}
+                          </Typography>
+                          <Typography variant="small" color="secondary">
+                            {log.endpoint}
+                          </Typography>
                         </Flex>
-                        <span
-                          className={cn(
-                            "px-2 py-0.5 text-xs font-medium rounded",
-                            log.statusCode < 400
-                              ? "bg-status-success/10 text-status-success"
-                              : "bg-status-error/10 text-status-error",
-                          )}
-                        >
+                        <Badge size="sm" variant={log.statusCode < 400 ? "success" : "error"}>
                           {log.statusCode}
-                        </span>
+                        </Badge>
                       </Flex>
                       <Metadata size="xs" gap="md">
                         <MetadataItem>{log.responseTime}ms</MetadataItem>

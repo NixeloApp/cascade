@@ -8,6 +8,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
+import { Typography } from "../ui/Typography";
 import { EmailVerificationForm } from "./EmailVerificationForm";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 
@@ -146,9 +147,9 @@ export function SignUpForm() {
               data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
             />
             {/* Password hint */}
-            <span className="text-xs text-ui-text-tertiary -mt-2">
+            <Typography variant="caption" color="tertiary" className="-mt-2">
               Must be at least 8 characters
-            </span>
+            </Typography>
           </Flex>
         </div>
         <Button

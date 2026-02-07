@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { Input, Select } from "./ui/form";
+import { Typography } from "./ui/Typography";
 
 interface LabelsManagerProps {
   projectId: Id<"projects">;
@@ -279,13 +280,17 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           <ChevronDown className="w-4 h-4 text-ui-text-secondary" />
                         )}
                         <strong>{group.name}</strong>
-                        <span className="text-xs text-ui-text-tertiary">
+                        <Typography variant="caption" color="tertiary">
                           ({group.labels.length})
-                        </span>
+                        </Typography>
                         {group.description && (
-                          <span className="hidden sm:inline text-xs text-ui-text-tertiary">
+                          <Typography
+                            variant="caption"
+                            color="tertiary"
+                            className="hidden sm:inline"
+                          >
                             — {group.description}
-                          </span>
+                          </Typography>
                         )}
                       </Flex>
 
