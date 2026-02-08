@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Avatar, AvatarFallback } from "./avatar";
-import { Badge } from "./badge";
-import { Card, CardBody, CardHeader } from "./card";
+import { Avatar, AvatarFallback } from "./Avatar";
+import { Badge } from "./Badge";
+import { Card, CardBody, CardHeader } from "./Card";
 import { Flex } from "./Flex";
 import { ScrollArea, ScrollBar } from "./ScrollArea";
 

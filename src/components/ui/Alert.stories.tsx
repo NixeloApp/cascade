@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { RocketIcon, ShieldCheckIcon, TerminalIcon } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "./alert";
+import { Alert, AlertDescription, AlertTitle } from "./Alert";
 
 const meta: Meta<typeof Alert> = {
   title: "UI/Alert",

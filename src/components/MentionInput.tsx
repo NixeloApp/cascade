@@ -202,7 +202,7 @@ export function MentionInput({
                 <Typography variant="p" className="font-medium truncate">
                   {member.userName}
                 </Typography>
-                <Typography variant="muted" size="xs" className="capitalize">
+                <Typography variant="caption" className="capitalize">
                   User
                 </Typography>
               </FlexItem>
@@ -212,7 +212,7 @@ export function MentionInput({
       )}
 
       {/* Helper text */}
-      <Typography variant="muted" size="xs" className="mt-1">
+      <Typography variant="caption" className="mt-1">
         Type @ to mention team members
       </Typography>
     </div>

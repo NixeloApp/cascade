@@ -159,7 +159,7 @@ export function AssigneeSearchDropdown({
       />
 
       {/* Helper text */}
-      <Typography variant="muted" size="xs" className="mt-1">
+      <Typography variant="caption" className="mt-1">
         Search by name or email • Supports typos
       </Typography>
     </div>

@@ -1,7 +1,7 @@
 import type * as LabelPrimitive from "@radix-ui/react-label";
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Label } from "./label";
+import { Label } from "./Label";
 
 /**
  * Form primitive components for building custom form layouts

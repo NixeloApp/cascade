@@ -85,7 +85,7 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
                     {watcher.userName}
                   </Typography>
                   {watcher.userEmail && (
-                    <Typography variant="muted" size="xs" className="truncate">
+                    <Typography variant="caption" className="truncate">
                       {watcher.userEmail}
                     </Typography>
                   )}

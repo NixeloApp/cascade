@@ -10,9 +10,9 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "./button";
+import { Button } from "./Button";
 import { Input } from "./Input";
-import { Popover, PopoverContent, PopoverTrigger } from "./popover";
+import { Popover, PopoverContent, PopoverTrigger } from "./Popover";
 
 const meta: Meta<typeof Popover> = {
   title: "UI/Popover",

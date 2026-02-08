@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Star } from "lucide-react";
 import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
-import { Badge } from "./badge";
-import { Button } from "./button";
-import { Checkbox } from "./checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
+import { Badge } from "./Badge";
+import { Button } from "./Button";
+import { Checkbox } from "./Checkbox";
 import { Flex } from "./Flex";
 import {
   Table,

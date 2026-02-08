@@ -165,7 +165,7 @@ export function Timesheet() {
                   >
                     <Flex justify="between" align="start" className="mb-1">
                       <FlexItem flex="1" className="min-w-0">
-                        <Typography variant="code" className="text-ui-text truncate block">
+                        <Typography variant="mono" className="text-ui-text truncate block">
                           {entry.projectKey}
                         </Typography>
                         <Typography variant="caption" color="secondary" className="truncate block">
