@@ -99,7 +99,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
       >
         <Flex direction="column" gap="xs">
           {title && (
-            <Typography variant="h4" className="text-lg font-semibold">
+            <Typography variant="h4" as="h3" className="text-lg font-semibold">
               {title}
             </Typography>
           )}

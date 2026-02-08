@@ -26,7 +26,7 @@ describe("Badge", () => {
     it("applies default variant (neutral)", () => {
       render(<Badge data-testid="badge">Default</Badge>);
       const badge = screen.getByTestId("badge");
-      expect(badge.className).toContain("bg-ui-bg-tertiary");
+      expect(badge.className).toContain("bg-ui-bg-soft");
     });
 
     it("applies primary variant", () => {
@@ -76,7 +76,7 @@ describe("Badge", () => {
         </Badge>,
       );
       const badge = screen.getByTestId("badge");
-      expect(badge.className).toContain("bg-ui-bg-secondary");
+      expect(badge.className).toContain("bg-ui-bg-soft");
     });
   });
 
@@ -154,7 +154,7 @@ describe("Badge", () => {
 
     it("returns default classes when no options provided", () => {
       const classes = badgeVariants();
-      expect(classes).toContain("bg-ui-bg-tertiary");
+      expect(classes).toContain("bg-ui-bg-soft");
       expect(classes).toContain("rounded");
     });
   });

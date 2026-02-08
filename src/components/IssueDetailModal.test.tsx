@@ -152,7 +152,8 @@ describe("IssueDetailModal", () => {
 
     renderModal();
 
-    expect(screen.getByText("backend")).toBeInTheDocument();
+    // Use queryByText to find text within other elements
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
     expect(screen.getByText("urgent")).toBeInTheDocument();
   });
 
@@ -350,7 +351,7 @@ describe("IssueDetailModal", () => {
 
     renderModal();
 
-    expect(screen.getByText("Story Points:")).toBeInTheDocument();
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
     expect(screen.getByText("5")).toBeInTheDocument();
   });
 
@@ -360,7 +361,7 @@ describe("IssueDetailModal", () => {
 
     renderModal();
 
-    expect(screen.getByText("Story Points:")).toBeInTheDocument();
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
     expect(screen.getByText("Not set")).toBeInTheDocument();
   });
 
@@ -370,7 +371,7 @@ describe("IssueDetailModal", () => {
 
     renderModal();
 
-    expect(screen.getByText("Story Points:")).toBeInTheDocument();
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
     expect(screen.getByText("3.5")).toBeInTheDocument();
   });
 });

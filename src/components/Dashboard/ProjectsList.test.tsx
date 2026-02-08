@@ -74,7 +74,7 @@ describe("WorkspacesList", () => {
     render(<WorkspacesList {...defaultProps} projects={undefined} />);
 
     // Should render 3 skeleton project cards
-    const skeletons = document.querySelectorAll(".animate-pulse");
+    const skeletons = document.querySelectorAll(".animate-shimmer");
     expect(skeletons.length).toBeGreaterThan(0);
   });
 

@@ -17,7 +17,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "./ui/command";
+} from "./ui/Command";
 import { KeyboardShortcut, ShortcutHint } from "./ui/KeyboardShortcut";
 import { Typography } from "./ui/Typography";
 

@@ -137,21 +137,21 @@ describe("FuzzySearchInput", () => {
 
     // Wait for dropdown to open and first result to be selected
     await waitFor(() => {
-      expect(screen.getAllByRole("option")[0]).toHaveClass("bg-ui-bg-tertiary");
+      expect(screen.getAllByRole("option")[0]).toHaveClass("bg-ui-bg-hover");
     });
 
     // Arrow down should select second result
     await user.keyboard("{ArrowDown}");
     await waitFor(() => {
       // Re-query elements after state update
-      expect(screen.getAllByRole("option")[1]).toHaveClass("bg-ui-bg-tertiary");
+      expect(screen.getAllByRole("option")[1]).toHaveClass("bg-ui-bg-hover");
     });
 
     // Arrow up should select first result again
     await user.keyboard("{ArrowUp}");
     await waitFor(() => {
       // Re-query elements after state update
-      expect(screen.getAllByRole("option")[0]).toHaveClass("bg-ui-bg-tertiary");
+      expect(screen.getAllByRole("option")[0]).toHaveClass("bg-ui-bg-hover");
     });
   });
 

@@ -395,7 +395,9 @@ export const listOrganizationIssues = organizationQuery({
         }
         return db
           .query("issues")
-          .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
+          .withIndex("by_organization_deleted", (q) =>
+            q.eq("organizationId", ctx.organizationId).lt("isDeleted", true),
+          )
           .order("desc");
       },
     });
@@ -435,7 +437,7 @@ export const listTeamIssues = authenticatedQuery({
         }
         return db
           .query("issues")
-          .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+          .withIndex("by_team_deleted", (q) => q.eq("teamId", args.teamId).lt("isDeleted", true))
           .order("desc");
       },
     });

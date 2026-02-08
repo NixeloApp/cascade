@@ -7,7 +7,7 @@ import { Flex } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Metadata, MetadataItem } from "../ui/Metadata";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
 
 interface Subtask {

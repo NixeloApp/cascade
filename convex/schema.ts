@@ -202,8 +202,10 @@ const applicationTables = {
   issues: defineTable(issuesFields)
     .index("by_project", ["projectId"])
     .index("by_organization", ["organizationId"]) // NEW
+    .index("by_organization_deleted", ["organizationId", "isDeleted"])
     .index("by_workspace", ["workspaceId"]) // Standardized
     .index("by_team", ["teamId"]) // NEW
+    .index("by_team_deleted", ["teamId", "isDeleted"])
     .index("by_key", ["key"])
     .index("by_assignee", ["assigneeId", "isDeleted"])
     .index("by_reporter", ["reporterId", "isDeleted"])

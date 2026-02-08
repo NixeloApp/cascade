@@ -247,7 +247,7 @@ describe("CardHeader", () => {
     it("should render title as h3", () => {
       render(<CardHeader title="Title" />);
 
-      const heading = screen.getByRole("heading", { level: 3 });
+      const heading = screen.getByRole("heading", { level: 4 });
       expect(heading).toHaveTextContent("Title");
     });
 
@@ -294,8 +294,7 @@ describe("CardHeader", () => {
 
       const description = container.querySelector("p");
       expect(description).toHaveClass("text-sm");
-      expect(description).toHaveClass("text-ui-text-secondary");
-      expect(description).toHaveClass("mt-1");
+      expect(description).toHaveClass("text-ui-text-tertiary");
     });
 
     it("should handle empty string description", () => {

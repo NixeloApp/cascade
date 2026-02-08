@@ -16,7 +16,7 @@ import { logger } from "../lib/logger";
  * REST API for Issues
  */
 
-export const handler = httpAction(async (ctx, request) => {
+export const issuesApiHandler = async (ctx: ActionCtx, request: Request) => {
   const startTime = Date.now();
   const url = new URL(request.url);
   const method = request.method;
@@ -61,7 +61,9 @@ export const handler = httpAction(async (ctx, request) => {
   }
 
   return response;
-});
+};
+
+export const handler = httpAction(issuesApiHandler);
 
 /**
  * Convert a thrown value into an HTTP error response and a normalized error message.
@@ -155,7 +157,7 @@ async function authenticateAndRateLimit(
 
   // 2. Enforce Rate Limit (Mutation)
   try {
-    await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+    const rateLimitResult = await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
       name: `api-key-${auth.keyId}`,
       config: {
         kind: "token bucket",
@@ -164,6 +166,14 @@ async function authenticateAndRateLimit(
         capacity: auth.rateLimit,
       },
     });
+
+    if (!rateLimitResult.ok) {
+      return {
+        auth: null,
+        response: createErrorResponse(429, "Rate limit exceeded"),
+        error: "Rate limit exceeded",
+      };
+    }
   } catch (e: unknown) {
     // Handle rate limit error from component
     if (e instanceof Error && e.message.includes("Rate limit")) {

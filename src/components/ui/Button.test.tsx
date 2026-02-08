@@ -57,7 +57,7 @@ describe("Button", () => {
         </Button>,
       );
       const btn = screen.getByTestId("btn");
-      expect(btn.className).toContain("hover:bg-ui-bg-secondary");
+      expect(btn.className).toContain("hover:bg-ui-bg-hover");
     });
 
     it("applies danger variant", () => {

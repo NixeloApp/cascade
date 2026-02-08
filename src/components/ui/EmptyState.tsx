@@ -60,7 +60,7 @@ export function EmptyState({
       <div className={cn("text-6xl mb-4", iconColorClass)}>
         {typeof icon === "string" ? icon : <Icon icon={icon} size="xl" className="mx-auto" />}
       </div>
-      <Typography variant="large" className="mb-1">
+      <Typography variant="large" as="h3" className="mb-1">
         {title}
       </Typography>
       {description && (

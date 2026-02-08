@@ -135,7 +135,7 @@ describe("NotificationCenter", () => {
     const button = screen.getByRole("button");
     await user.click(button);
 
-    expect(screen.getByRole("heading", { name: /Notifications/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Notifications" })).toBeInTheDocument();
   });
 
   it("should show empty state when no notifications", async () => {
@@ -462,14 +462,14 @@ describe("NotificationCenter", () => {
     const button = screen.getByRole("button");
     await user.click(button);
 
-    const heading = screen.getByRole("heading", { name: /Notifications/i });
+    const heading = screen.getByRole("heading", { name: "Notifications" });
     expect(heading).toBeInTheDocument();
 
     // Close popover by pressing Escape (Radix popovers close on Escape)
     await user.keyboard("{Escape}");
 
     await waitFor(() => {
-      expect(screen.queryByRole("heading", { name: /Notifications/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "Notifications" })).not.toBeInTheDocument();
     });
   });
 });

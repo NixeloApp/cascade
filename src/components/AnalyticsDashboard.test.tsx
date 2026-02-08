@@ -97,8 +97,8 @@ describe("AnalyticsDashboard", () => {
 
     render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
 
-    // Check for skeleton loading states (uses animate-pulse class)
-    const skeletons = document.querySelectorAll(".animate-pulse");
+    // Check for skeleton loading states (uses animate-shimmer class)
+    const skeletons = document.querySelectorAll(".animate-shimmer");
     expect(skeletons.length).toBeGreaterThan(0);
   });
 

@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "./alert-dialog";
+} from "./AlertDialog";
 import { Flex } from "./Flex";
 
 interface ConfirmDialogProps {

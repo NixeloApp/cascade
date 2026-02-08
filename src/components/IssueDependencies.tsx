@@ -14,7 +14,7 @@ import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Input, Select } from "./ui/form";
-import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "./ui/sheet";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "./ui/Sheet";
 import { Typography } from "./ui/Typography";
 
 type IssueLinkWithDetails = FunctionReturnType<

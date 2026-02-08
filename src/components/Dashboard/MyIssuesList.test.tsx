@@ -100,7 +100,7 @@ describe("MyIssuesList", () => {
     );
 
     // SkeletonList should be present (check for skeleton structure)
-    const skeletons = document.querySelectorAll(".animate-pulse");
+    const skeletons = document.querySelectorAll(".animate-shimmer");
     expect(skeletons.length).toBeGreaterThan(0);
   });
 

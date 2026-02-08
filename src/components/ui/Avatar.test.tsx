@@ -99,8 +99,16 @@ describe("Avatar", () => {
   });
 
   describe("variants", () => {
-    it("applies brand variant by default", async () => {
+    it("applies soft variant by default", async () => {
       render(<Avatar name="JD" />);
+      await waitFor(() => {
+        const fallback = document.querySelector('[class*="bg-ui-bg-soft"]');
+        expect(fallback).toBeInTheDocument();
+      });
+    });
+
+    it("applies brand variant", async () => {
+      render(<Avatar name="JD" variant="brand" />);
       await waitFor(() => {
         const fallback = document.querySelector('[class*="bg-brand"]');
         expect(fallback).toBeInTheDocument();
