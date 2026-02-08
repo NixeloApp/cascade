@@ -845,10 +845,7 @@ export const seedTemplatesEndpoint = httpAction(async (ctx, request) => {
   if (authError) return authError;
 
   try {
-    const result = await ctx.runMutation(
-      (internal as any).projectTemplates.initializeBuiltInTemplates,
-      {},
-    );
+    const result = await ctx.runMutation(api.projectTemplates.initializeBuiltInTemplates, {});
     return new Response(JSON.stringify({ success: true, result }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
