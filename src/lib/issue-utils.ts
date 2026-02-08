@@ -20,22 +20,22 @@ export type IssueType = IssueTypeWithSubtask;
 export type { IssuePriority };
 
 /** Icon mapping for issue types - use with <Icon icon={ISSUE_TYPE_ICONS[type]} /> */
-export const ISSUE_TYPE_ICONS = {
+export const ISSUE_TYPE_ICONS: Record<IssueType, typeof Bug> = {
   bug: Bug,
   story: BookOpen,
   epic: Zap,
   subtask: CircleDot,
   task: CheckSquare,
-} as const;
+};
 
 /** Icon mapping for priorities - use with <Icon icon={PRIORITY_ICONS[priority]} /> */
-export const PRIORITY_ICONS = {
+export const PRIORITY_ICONS: Record<IssuePriority, typeof ChevronUp> = {
   highest: ChevronUp,
   high: ArrowUp,
   medium: ArrowRight,
   low: ArrowDown,
   lowest: ChevronDown,
-} as const;
+};
 
 /**
  * Get the color classes for an issue priority

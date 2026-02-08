@@ -1,6 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
+import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { IssueDetailModal } from "./IssueDetailModal";
@@ -109,18 +110,27 @@ describe("IssueDetailModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useMutation).mockReturnValue(mockUpdateIssue as any);
+    vi.mocked(useMutation).mockReturnValue(mockUpdateIssue);
   });
 
-  const setupMockQuery = (issueData: any = mockIssue, subtasksData: any = []) => {
-    vi.mocked(useQuery).mockImplementation((_query: any, args: any) => {
-      // Identify query by arguments
-      if (args && args.id === mockIssueId) return issueData;
-      if (args && args.parentId === mockIssueId) return subtasksData;
+  const setupMockQuery = (
+    issueData: typeof mockIssue | undefined = mockIssue,
+    subtasksData: (typeof mockIssue)[] = [],
+  ) => {
+    vi.mocked(useQuery).mockImplementation(
+      <T,>(
+        _query: FunctionReference<"query">,
+        args?: Record<string, unknown> | "skip",
+      ): T | undefined => {
+        if (args === "skip") return undefined;
+        // Identify query by arguments
+        if (args && "id" in args && args.id === mockIssueId) return issueData as T;
+        if (args && "parentId" in args && args.parentId === mockIssueId) return subtasksData as T;
 
-      // Fallback to undefined (loading)
-      return undefined;
-    });
+        // Fallback to undefined (loading)
+        return undefined;
+      },
+    );
   };
 
   it("should show loading state when issue is undefined", () => {
