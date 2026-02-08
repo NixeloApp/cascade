@@ -49,21 +49,43 @@ export interface InputProps
  * <Input inputSize="lg" placeholder="Large input" />
  */
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, variant, inputSize, error, ...props }, ref) => {
+  (
+    {
+      className,
+      type,
+      variant,
+      inputSize,
+      error,
+      id,
+      "aria-describedby": ariaDescribedBy,
+      ...props
+    },
+    ref,
+  ) => {
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
+    const errorId = `${inputId}-error`;
+
+    const combinedDescribedBy = [ariaDescribedBy, error ? errorId : undefined]
+      .filter(Boolean)
+      .join(" ");
+
     return (
       <div className="w-full">
         <input
           type={type}
+          id={inputId}
           className={cn(
             inputVariants({ variant: error ? "error" : variant, inputSize }),
             className,
           )}
           ref={ref}
           aria-invalid={!!error}
+          aria-describedby={combinedDescribedBy || undefined}
           {...props}
         />
         {error && (
-          <Typography variant="muted" className="mt-1 text-sm text-status-error">
+          <Typography id={errorId} variant="muted" color="error" className="mt-1 text-sm">
             {error}
           </Typography>
         )}
