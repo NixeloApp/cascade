@@ -84,23 +84,23 @@ async function main() {
 
     // Discover all nav links
     console.log("🔍 Discovering internal routes...");
-    
+
     const navLinks = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll("a[href]"));
       const routes = [];
       const seen = new Set();
-      
+
       for (const el of links) {
         const href = el.getAttribute("href") || "";
         const text = el.innerText.trim().slice(0, 40);
-        
-        if ((href.startsWith("/") || href.includes("dashboard.mintlify.com")) && 
-            !href.includes("logout") && 
-            !href.includes("login")) {
-          const fullUrl = href.startsWith("/") 
-            ? `https://dashboard.mintlify.com${href}` 
-            : href;
-            
+
+        if (
+          (href.startsWith("/") || href.includes("dashboard.mintlify.com")) &&
+          !href.includes("logout") &&
+          !href.includes("login")
+        ) {
+          const fullUrl = href.startsWith("/") ? `https://dashboard.mintlify.com${href}` : href;
+
           if (!seen.has(fullUrl)) {
             routes.push({ url: fullUrl, text: text || href.split("/").pop() });
             seen.add(fullUrl);
@@ -114,20 +114,24 @@ async function main() {
 
     // Capture each page
     const capturedUrls = new Set([page.url()]);
-    
+
     for (const link of navLinks.slice(0, 40)) {
       if (capturedUrls.has(link.url)) continue;
       capturedUrls.add(link.url);
-      
-      const safeName = link.text.replace(/[^a-z0-9]/gi, "-").toLowerCase().slice(0, 30) || "page";
+
+      const safeName =
+        link.text
+          .replace(/[^a-z0-9]/gi, "-")
+          .toLowerCase()
+          .slice(0, 30) || "page";
       console.log(`   → ${safeName}`);
-      
+
       try {
         await page.goto(link.url, { waitUntil: "load", timeout: 20000 });
         await page.waitForTimeout(2000);
         await screenshot(page, safeName);
         await saveHtml(page, safeName);
-      } catch (err) {
+      } catch (_err) {
         console.log(`     ⚠️ Skipped`);
       }
     }
@@ -135,7 +139,7 @@ async function main() {
     // Also try explicit common routes
     const explicitRoutes = [
       "/settings",
-      "/settings/general", 
+      "/settings/general",
       "/settings/team",
       "/settings/billing",
       "/settings/domains",
@@ -157,7 +161,7 @@ async function main() {
       const url = `https://dashboard.mintlify.com${route}`;
       if (capturedUrls.has(url)) continue;
       capturedUrls.add(url);
-      
+
       try {
         await page.goto(url, { waitUntil: "load", timeout: 15000 });
         await page.waitForTimeout(2000);
@@ -165,13 +169,12 @@ async function main() {
         await screenshot(page, name);
         await saveHtml(page, name);
         console.log(`   ✓ ${name}`);
-      } catch (err) {
+      } catch (_err) {
         console.log(`   ✗ ${route.slice(1)}`);
       }
     }
 
     console.log(`\n✨ Captured ${capturedUrls.size} unique pages`);
-
   } catch (err) {
     console.error("\n❌ Error:", err.message);
     await screenshot(page, "error");
@@ -184,7 +187,9 @@ async function main() {
 
   // Rename video
   const files = fs.readdirSync(OUTPUT_DIR);
-  const videoFile = files.find((f) => f.endsWith(".webm") && !f.includes("exploration") && !f.includes("dashboard"));
+  const videoFile = files.find(
+    (f) => f.endsWith(".webm") && !f.includes("exploration") && !f.includes("dashboard"),
+  );
   if (videoFile) {
     const oldPath = path.join(OUTPUT_DIR, videoFile);
     const newPath = path.join(OUTPUT_DIR, "dashboard-manual.webm");

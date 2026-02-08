@@ -62,7 +62,9 @@ async function main() {
 
     // Step 2: Click "Continue with Google"
     console.log(`\n[${step}] Clicking 'Continue with Google'...`);
-    const googleButton = page.locator('button:has-text("Continue with Google"), a:has-text("Continue with Google")').first();
+    const googleButton = page
+      .locator('button:has-text("Continue with Google"), a:has-text("Continue with Google")')
+      .first();
     if (await googleButton.isVisible()) {
       await googleButton.click();
       await page.waitForTimeout(3000);
@@ -73,7 +75,7 @@ async function main() {
     // Step 3: Handle Google login if needed
     if (page.url().includes("accounts.google.com")) {
       console.log(`\n[${step}] Google login - entering email...`);
-      
+
       // Enter email
       const emailInput = page.locator('input[type="email"]');
       if (await emailInput.isVisible()) {
@@ -103,7 +105,7 @@ async function main() {
 
     // Step 5: Capture any onboarding modals/flows
     console.log(`\n[${step}] Looking for onboarding elements...`);
-    
+
     // Wait for page to settle
     await page.waitForTimeout(5000);
     await screenshot(page, `${String(step).padStart(2, "0")}-onboarding-start`);
@@ -118,9 +120,10 @@ async function main() {
       'button:has-text("Start")',
     ];
 
-    for (let i = 0; i < 10; i++) { // Max 10 onboarding steps
+    for (let i = 0; i < 10; i++) {
+      // Max 10 onboarding steps
       let clicked = false;
-      
+
       for (const selector of onboardingButtons) {
         const btn = page.locator(selector).first();
         if (await btn.isVisible().catch(() => false)) {
@@ -149,7 +152,6 @@ async function main() {
     // Save session for future use
     await context.storageState({ path: path.join(OUTPUT_DIR, "mintlify_session.json") });
     console.log("\n💾 Session saved to onboarding/mintlify_session.json");
-
   } catch (err) {
     console.error("\n❌ Error:", err.message);
     await screenshot(page, "error-state");

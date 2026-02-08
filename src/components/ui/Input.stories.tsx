@@ -77,7 +77,7 @@ export const DisabledWithValue: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     placeholder: "Enter email",
     error: "This field is required",

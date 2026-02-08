@@ -6,7 +6,6 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
-import { Icon } from "@/components/ui/Icon";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { showError } from "@/lib/toast";

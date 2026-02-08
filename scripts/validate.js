@@ -28,8 +28,8 @@ import { run as runEmojiCheck } from "./validate/check-emoji.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
 import { run as runStandardsCheck } from "./validate/check-standards.js";
 import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
-import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
 import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
+import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
 import { c } from "./validate/utils.js";
 
 const checks = [

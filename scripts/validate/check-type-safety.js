@@ -57,7 +57,9 @@ export function run() {
       for (const { regex, message, level } of PATTERNS) {
         if (regex.test(line)) {
           const color = level === "error" ? c.red : c.yellow;
-          errors.push(`  ${color}${level.toUpperCase()}${c.reset} ${rel}:${index + 1} - ${message}`);
+          errors.push(
+            `  ${color}${level.toUpperCase()}${c.reset} ${rel}:${index + 1} - ${message}`,
+          );
           if (level === "error") {
             errorCount++;
           } else {

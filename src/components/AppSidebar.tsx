@@ -9,6 +9,7 @@ import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import {
+  BarChart3,
   Bot,
   Calendar,
   ChevronDown,
@@ -19,7 +20,6 @@ import {
   FolderKanban,
   Home,
   ListIcon,
-  BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,

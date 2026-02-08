@@ -30,13 +30,13 @@ async function main() {
     headless: false,
     args: ["--disable-blink-features=AutomationControlled"],
   });
-  
+
   const context = await browser.newContext({
     userAgent:
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     storageState: GOOGLE_AUTH_PATH, // Use existing Google session
   });
-  
+
   const page = await context.newPage();
 
   try {
@@ -52,8 +52,10 @@ async function main() {
     } else {
       // Need to login - click Google
       console.log("🔐 Clicking 'Continue with Google'...");
-      
-      const googleButton = page.locator('button:has-text("Continue with Google"), a:has-text("Continue with Google")');
+
+      const googleButton = page.locator(
+        'button:has-text("Continue with Google"), a:has-text("Continue with Google")',
+      );
       if (await googleButton.isVisible()) {
         await googleButton.click();
         await page.waitForTimeout(5000);
@@ -62,7 +64,7 @@ async function main() {
       // Wait for OAuth redirect back
       console.log("⏳ Waiting for Google OAuth (up to 2 minutes)...");
       console.log("   If prompted, select your Google account.");
-      
+
       await page.waitForURL("https://dashboard.mintlify.com/**", { timeout: 120000 });
       console.log("✅ Logged in to Mintlify!");
     }
@@ -75,7 +77,6 @@ async function main() {
     // Wait a bit so user can see the dashboard
     console.log("\n📸 Keeping browser open for 10 seconds...");
     await page.waitForTimeout(10000);
-
   } catch (err) {
     console.error("\n❌ Error:", err.message);
     await page.screenshot({ path: path.join(AUTH_DIR, "mintlify_auth_debug.png") });

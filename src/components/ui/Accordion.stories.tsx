@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Bell, CreditCard, CircleHelp, Lock, Mail, Settings, User } from "@/lib/icons";
+import { Bell, CircleHelp, CreditCard, Lock, Mail, Settings, User } from "@/lib/icons";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./Accordion";
 
 const meta: Meta<typeof Accordion> = {

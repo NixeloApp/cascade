@@ -71,7 +71,7 @@ export const DisabledWithValue: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     placeholder: "Enter description",
     error: "Description is required",

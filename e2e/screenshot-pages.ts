@@ -21,7 +21,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { chromium, type Browser, type Page } from "@playwright/test";
+import { type Browser, chromium, type Page } from "@playwright/test";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
@@ -167,10 +167,9 @@ async function autoLogin(page: Page): Promise<string | null> {
   await page.goto(`${BASE_URL}/app`, { waitUntil: "domcontentloaded" });
 
   try {
-    await page.waitForURL(
-      (u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname),
-      { timeout: 20000 },
-    );
+    await page.waitForURL((u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname), {
+      timeout: 20000,
+    });
   } catch {
     console.error("    Login redirect timed out. Current URL:", page.url());
     return null;
@@ -308,7 +307,12 @@ async function screenshotFilledStates(
   // Issue detail
   const firstIssue = seed.issueKeys?.[0];
   if (firstIssue) {
-    await takeScreenshot(page, p, `issue-${firstIssue.toLowerCase()}`, `/${orgSlug}/issues/${firstIssue}`);
+    await takeScreenshot(
+      page,
+      p,
+      `issue-${firstIssue.toLowerCase()}`,
+      `/${orgSlug}/issues/${firstIssue}`,
+    );
   }
 
   // Workspace & team pages
@@ -331,7 +335,9 @@ async function screenshotFilledStates(
   }
 
   // Document editor
-  await page.goto(`${BASE_URL}/${orgSlug}/documents`, { waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {});
+  await page
+    .goto(`${BASE_URL}/${orgSlug}/documents`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
   await page.waitForTimeout(SETTLE_MS);
   const docId = await discoverFirstHref(page, /\/documents\/([a-z0-9]+)/);
   if (docId) {
@@ -355,7 +361,9 @@ async function captureForConfig(
   fs.mkdirSync(currentOutputDir, { recursive: true });
   resetCounters();
 
-  console.log(`\n  📸 ${dirName.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height})`);
+  console.log(
+    `\n  📸 ${dirName.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height})`,
+  );
 
   const context = await browser.newContext({
     viewport: VIEWPORTS[viewport],
@@ -384,12 +392,19 @@ async function captureForConfig(
           if (refreshToken) localStorage.setItem(`__convexAuthRefreshToken_${ns}`, refreshToken);
         }
       },
-      { token: loginResult.token, refreshToken: loginResult.refreshToken ?? null, convexUrl: CONVEX_URL },
+      {
+        token: loginResult.token,
+        refreshToken: loginResult.refreshToken ?? null,
+        convexUrl: CONVEX_URL,
+      },
     );
 
     await page.goto(`${BASE_URL}/app`, { waitUntil: "domcontentloaded" });
     try {
-      await page.waitForURL((u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname), { timeout: 15000 });
+      await page.waitForURL(
+        (u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname),
+        { timeout: 15000 },
+      );
       await page.waitForTimeout(1500);
 
       // Empty states (before seed data is visible in this context)
@@ -441,7 +456,10 @@ async function run(): Promise<void> {
   console.log(`  ✓ User: ${SCREENSHOT_USER.email}`);
 
   // Get org slug via initial login
-  const setupContext = await browser.newContext({ viewport: VIEWPORTS.desktop, colorScheme: "dark" });
+  const setupContext = await browser.newContext({
+    viewport: VIEWPORTS.desktop,
+    colorScheme: "dark",
+  });
   const setupPage = await setupContext.newPage();
   const orgSlug = await autoLogin(setupPage);
   await setupContext.close();
@@ -456,7 +474,9 @@ async function run(): Promise<void> {
   console.log("  Seeding screenshot data...");
   const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email);
   if (seedResult.success) {
-    console.log(`  ✓ Seeded: project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`);
+    console.log(
+      `  ✓ Seeded: project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
+    );
   } else {
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);
   }

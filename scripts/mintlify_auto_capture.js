@@ -13,7 +13,7 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 }
 
 // Clear old numbered screenshots
-const oldFiles = fs.readdirSync(OUTPUT_DIR).filter(f => f.match(/^\d+-.*\.png$/));
+const oldFiles = fs.readdirSync(OUTPUT_DIR).filter((f) => f.match(/^\d+-.*\.png$/));
 for (const f of oldFiles) {
   fs.unlinkSync(path.join(OUTPUT_DIR, f));
 }
@@ -76,14 +76,18 @@ async function main() {
     try {
       const url = page.url();
       const content = await page.content();
-      
+
       // Check if we're on dashboard (not login, not onboarding)
-      const isOnDashboard = 
-        url.includes("dashboard.mintlify.com") && 
-        !url.includes("/login") && 
+      const isOnDashboard =
+        url.includes("dashboard.mintlify.com") &&
+        !url.includes("/login") &&
         !content.includes("Get Started with Mintlify") &&
         !content.includes("First name") &&
-        (content.includes("Overview") || content.includes("Settings") || content.includes("Documentation") || content.includes("Analytics") || content.includes("Deployments"));
+        (content.includes("Overview") ||
+          content.includes("Settings") ||
+          content.includes("Documentation") ||
+          content.includes("Analytics") ||
+          content.includes("Deployments"));
 
       if (isOnDashboard) {
         console.log("✅ Dashboard detected! Starting capture...\n");
@@ -92,13 +96,15 @@ async function main() {
 
       await page.waitForTimeout(1000);
       attempts++;
-      
+
       if (attempts % 10 === 0) {
-        console.log(`   Still waiting... (${attempts}s) - Current: ${url.split("/").slice(3).join("/") || "/"}`);
+        console.log(
+          `   Still waiting... (${attempts}s) - Current: ${url.split("/").slice(3).join("/") || "/"}`,
+        );
       }
-    } catch (err) {
+    } catch (_err) {
       console.log("   Browser closed or navigating...");
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
       attempts++;
     }
   }
@@ -118,7 +124,7 @@ async function main() {
 
     // Find and click navigation items
     console.log("🔍 Exploring navigation...\n");
-    
+
     const navSelectors = [
       { text: "Settings", name: "settings" },
       { text: "Editor", name: "editor" },
@@ -129,7 +135,9 @@ async function main() {
 
     for (const nav of navSelectors) {
       try {
-        const link = page.locator(`a:has-text("${nav.text}"), button:has-text("${nav.text}")`).first();
+        const link = page
+          .locator(`a:has-text("${nav.text}"), button:has-text("${nav.text}")`)
+          .first();
         if (await link.isVisible({ timeout: 2000 })) {
           await link.click();
           await page.waitForTimeout(2000);
@@ -137,7 +145,7 @@ async function main() {
           await saveHtml(page, nav.name);
           console.log(`   ✓ Captured ${nav.name}`);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log(`   ✗ Could not find ${nav.name}`);
       }
     }
@@ -145,9 +153,12 @@ async function main() {
     // Look for settings sub-nav
     console.log("\n📋 Checking settings tabs...");
     try {
-      await page.goto("https://dashboard.mintlify.com/settings", { waitUntil: "load", timeout: 15000 });
+      await page.goto("https://dashboard.mintlify.com/settings", {
+        waitUntil: "load",
+        timeout: 15000,
+      });
       await page.waitForTimeout(2000);
-      
+
       const settingsTabs = ["General", "Team", "Billing", "Domains", "Integrations"];
       for (const tab of settingsTabs) {
         try {
@@ -158,17 +169,16 @@ async function main() {
             await screenshot(page, `settings-${tab.toLowerCase()}`);
             console.log(`   ✓ settings/${tab.toLowerCase()}`);
           }
-        } catch (err) {
+        } catch (_err) {
           // skip
         }
       }
-    } catch (err) {
+    } catch (_err) {
       console.log("   Could not navigate to settings");
     }
 
     console.log(`\n✅ Capture complete!`);
     console.log(`📁 Files saved to: ${OUTPUT_DIR}\n`);
-
   } catch (err) {
     console.error("❌ Error:", err.message);
     await screenshot(page, "error");

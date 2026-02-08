@@ -9,20 +9,7 @@ import { z } from "zod";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
-import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUp,
-  BookOpen,
-  Bug,
-  Check,
-  CheckSquare,
-  ChevronDown,
-  ChevronUp,
-  CircleDot,
-  Sparkles,
-  Zap,
-} from "@/lib/icons";
+import { Check, Sparkles } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";

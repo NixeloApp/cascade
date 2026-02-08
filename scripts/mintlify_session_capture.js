@@ -67,7 +67,7 @@ async function main() {
     // Check if we're logged in
     const url = page.url();
     console.log(`   Current URL: ${url}`);
-    
+
     if (url.includes("login")) {
       console.log("❌ Session expired - not logged in!");
       await browser.close();
@@ -82,7 +82,10 @@ async function main() {
       { selector: 'a[href*="customize"], button:has-text("Customize")', name: "customize" },
       { selector: 'a[href*="pages"], button:has-text("Pages")', name: "pages" },
       { selector: 'a[href*="openapi"], button:has-text("OpenAPI")', name: "openapi" },
-      { selector: 'a[href*="integrations"], button:has-text("Integrations")', name: "integrations" },
+      {
+        selector: 'a[href*="integrations"], button:has-text("Integrations")',
+        name: "integrations",
+      },
     ];
 
     for (const item of navItems) {
@@ -94,19 +97,22 @@ async function main() {
           await page.waitForTimeout(3000);
           await screenshot(page, item.name);
           await saveHtml(page, item.name);
-          
+
           // Go back to main for next click
           await page.goto("https://dashboard.mintlify.com", { waitUntil: "load", timeout: 30000 });
           await page.waitForTimeout(2000);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log(`   ⚠️ Could not capture ${item.name}`);
       }
     }
 
     // Capture settings sub-pages
     console.log("\n[2] Capturing settings...");
-    await page.goto("https://dashboard.mintlify.com/settings", { waitUntil: "load", timeout: 30000 });
+    await page.goto("https://dashboard.mintlify.com/settings", {
+      waitUntil: "load",
+      timeout: 30000,
+    });
     await page.waitForTimeout(2000);
     await screenshot(page, "settings-main");
 
@@ -120,13 +126,12 @@ async function main() {
           await screenshot(page, `settings-${tab}`);
           await saveHtml(page, `settings-${tab}`);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log(`   ⚠️ Could not capture settings/${tab}`);
       }
     }
 
     console.log(`\n✨ Done! Screenshots saved to: ${OUTPUT_DIR}`);
-
   } catch (err) {
     console.error("\n❌ Error:", err.message);
     await screenshot(page, "error");

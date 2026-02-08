@@ -14,7 +14,7 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 }
 
 // Clear old screenshots
-const oldFiles = fs.readdirSync(OUTPUT_DIR).filter(f => f.match(/^\d+-.*\.png$/));
+const oldFiles = fs.readdirSync(OUTPUT_DIR).filter((f) => f.match(/^\d+-.*\.png$/));
 for (const f of oldFiles) {
   fs.unlinkSync(path.join(OUTPUT_DIR, f));
 }
@@ -87,19 +87,26 @@ async function main() {
   try {
     // ============ STEP 1: MINTLIFY LOGIN PAGE ============
     console.log("[1] Opening Mintlify login...");
-    await page.goto("https://dashboard.mintlify.com/login", { waitUntil: "networkidle", timeout: 60000 });
+    await page.goto("https://dashboard.mintlify.com/login", {
+      waitUntil: "networkidle",
+      timeout: 60000,
+    });
     await page.waitForTimeout(3000);
     await screenshot(page, "mintlify-login");
 
     // ============ STEP 2: CLICK GOOGLE LOGIN ============
     console.log("\n[2] Clicking Google login...");
-    await waitAndClick(page, 'button:has-text("Continue with Google"), button:has-text("Sign in with Google")', "Google login button");
+    await waitAndClick(
+      page,
+      'button:has-text("Continue with Google"), button:has-text("Sign in with Google")',
+      "Google login button",
+    );
     await page.waitForTimeout(3000);
     await screenshot(page, "google-redirect");
 
     // ============ STEP 3: GOOGLE OAUTH FLOW ============
     console.log("\n[3] Handling Google OAuth...");
-    
+
     // Wait for Google page
     await page.waitForURL(/accounts\.google\.com/, { timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(3000);
@@ -123,7 +130,7 @@ async function main() {
       await emailInput.fill(email);
       await page.waitForTimeout(1000);
       await screenshot(page, "google-email-filled");
-      
+
       // Click Next
       await page.locator('#identifierNext, button:has-text("Next")').first().click();
       await page.waitForTimeout(5000);
@@ -133,13 +140,13 @@ async function main() {
     // Enter password if needed
     const passInput = page.locator('input[type="password"]:visible');
     await passInput.waitFor({ state: "visible", timeout: 15000 }).catch(() => {});
-    
+
     if (await passInput.isVisible().catch(() => false)) {
       console.log("   Entering password...");
       await passInput.fill(password);
       await page.waitForTimeout(1000);
       await screenshot(page, "google-password-filled");
-      
+
       // Click Next
       await page.locator('#passwordNext, button:has-text("Next")').first().click();
       await page.waitForTimeout(5000);
@@ -165,12 +172,18 @@ async function main() {
     // ============ STEP 5: COMPLETE ONBOARDING IF PRESENT ============
     console.log("\n[5] Checking for onboarding...");
     const pageContent = await page.content();
-    
-    if (pageContent.includes("Get Started") || pageContent.includes("First name") || pageContent.includes("Company name")) {
+
+    if (
+      pageContent.includes("Get Started") ||
+      pageContent.includes("First name") ||
+      pageContent.includes("Company name")
+    ) {
       console.log("   Found onboarding form!");
-      
+
       // Fill company name (first/last name should be pre-filled from Google)
-      const companyInput = page.locator('#company-name, input[placeholder*="Company"], input[name*="company"]').first();
+      const companyInput = page
+        .locator('#company-name, input[placeholder*="Company"], input[name*="company"]')
+        .first();
       if (await companyInput.isVisible({ timeout: 3000 }).catch(() => false)) {
         await companyInput.fill("Nixelo Research Lab");
         console.log("   ✓ Filled company name");
@@ -191,7 +204,11 @@ async function main() {
 
       // Handle additional onboarding steps
       for (let i = 0; i < 5; i++) {
-        const nextBtn = page.locator('button:has-text("Continue"), button:has-text("Next"), button:has-text("Get Started"), button:has-text("Skip")').first();
+        const nextBtn = page
+          .locator(
+            'button:has-text("Continue"), button:has-text("Next"), button:has-text("Get Started"), button:has-text("Skip")',
+          )
+          .first();
         if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
           console.log(`   Onboarding step ${i + 1}...`);
           await screenshot(page, `onboarding-step-${i}`);
@@ -214,17 +231,18 @@ async function main() {
       const links = Array.from(document.querySelectorAll("a[href]"));
       const routes = [];
       const seen = new Set();
-      
+
       for (const el of links) {
         const href = el.getAttribute("href") || "";
         const text = el.innerText.trim().slice(0, 40);
-        
-        if ((href.startsWith("/") || href.includes("dashboard.mintlify.com")) && 
-            !href.includes("logout") && !href.includes("login")) {
-          const fullUrl = href.startsWith("/") 
-            ? `https://dashboard.mintlify.com${href}` 
-            : href;
-            
+
+        if (
+          (href.startsWith("/") || href.includes("dashboard.mintlify.com")) &&
+          !href.includes("logout") &&
+          !href.includes("login")
+        ) {
+          const fullUrl = href.startsWith("/") ? `https://dashboard.mintlify.com${href}` : href;
+
           if (!seen.has(fullUrl)) {
             routes.push({ url: fullUrl, text: text || href.split("/").pop() });
             seen.add(fullUrl);
@@ -238,20 +256,24 @@ async function main() {
 
     // Capture each page
     const capturedUrls = new Set([page.url()]);
-    
+
     for (const link of navLinks.slice(0, 30)) {
       if (capturedUrls.has(link.url)) continue;
       capturedUrls.add(link.url);
-      
-      const safeName = link.text.replace(/[^a-z0-9]/gi, "-").toLowerCase().slice(0, 25) || "page";
+
+      const safeName =
+        link.text
+          .replace(/[^a-z0-9]/gi, "-")
+          .toLowerCase()
+          .slice(0, 25) || "page";
       console.log(`   → ${safeName}`);
-      
+
       try {
         await page.goto(link.url, { waitUntil: "load", timeout: 20000 });
         await page.waitForTimeout(2000);
         await screenshot(page, safeName);
         await saveHtml(page, safeName);
-      } catch (err) {
+      } catch (_err) {
         console.log(`     ⚠️ Skipped`);
       }
     }
@@ -261,7 +283,6 @@ async function main() {
     console.log("\n💾 Session saved");
 
     console.log(`\n✨ Captured ${capturedUrls.size} unique pages`);
-
   } catch (err) {
     console.error("\n❌ Error:", err.message);
     await screenshot(page, "error-state");
@@ -274,7 +295,9 @@ async function main() {
 
   // Rename video
   const files = fs.readdirSync(OUTPUT_DIR);
-  const videoFile = files.find((f) => f.endsWith(".webm") && !f.includes("dashboard") && !f.includes("exploration"));
+  const videoFile = files.find(
+    (f) => f.endsWith(".webm") && !f.includes("dashboard") && !f.includes("exploration"),
+  );
   if (videoFile) {
     const oldPath = path.join(OUTPUT_DIR, videoFile);
     const newPath = path.join(OUTPUT_DIR, "dashboard-capture.webm");
