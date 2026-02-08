@@ -1052,9 +1052,7 @@
     "https://www.gstatic.com/_/mss/boq-identity/_/js/k=boq-identity.AccountsSignInUi.en_US.7qI6BiqICHs.es5.O/am=Kf___78wAADQKeKXLMD_NwCAAQJgCTQBZAAAAAAAAAAAwAIAAG0E/d=1/excm=_b,_tp,accountchooserview/ed=1/dg=0/wt=2/ujg=1/rs=AOaEmlFG0RgPCMV3uyMqwG2T1KmHDYGxhw/dti=1/m=_b,_tp"
   ],
   "fingerprint": {
-    "frameworks": [
-      "Next.js"
-    ],
+    "frameworks": ["Next.js"],
     "libraries": [],
     "ui": [],
     "analytics": []

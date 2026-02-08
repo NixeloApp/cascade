@@ -336,9 +336,7 @@
     "https://www.dubcdn.com/analytics/script.js"
   ],
   "fingerprint": {
-    "frameworks": [
-      "Next.js"
-    ],
+    "frameworks": ["Next.js"],
     "libraries": [],
     "ui": [],
     "analytics": []

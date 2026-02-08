@@ -194,9 +194,7 @@
     "https://assets.revenuehero.io/scheduler.min.js"
   ],
   "fingerprint": {
-    "frameworks": [
-      "Next.js"
-    ],
+    "frameworks": ["Next.js"],
     "libraries": [],
     "ui": [],
     "analytics": []
