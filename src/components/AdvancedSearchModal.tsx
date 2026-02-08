@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
@@ -106,7 +107,7 @@ export function AdvancedSearchModal({
           <Grid cols={1} colsMd={3} gap="lg">
             <FilterCheckboxGroup
               label="Type"
-              options={["task", "bug", "story", "epic"]}
+              options={ISSUE_TYPES}
               selectedValues={selectedType}
               onToggle={(type) => toggleFilter(type, selectedType, setSelectedType)}
               renderLabel={(type) => (
@@ -119,7 +120,7 @@ export function AdvancedSearchModal({
 
             <FilterCheckboxGroup
               label="Priority"
-              options={["highest", "high", "medium", "low", "lowest"]}
+              options={ISSUE_PRIORITIES}
               selectedValues={selectedPriority}
               onToggle={(priority) => toggleFilter(priority, selectedPriority, setSelectedPriority)}
             />

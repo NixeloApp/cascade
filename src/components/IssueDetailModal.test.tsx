@@ -1,15 +1,22 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { IssueDetailModal } from "./IssueDetailModal";
+
+// Create a mock mutation function that matches ReactMutation shape
+const mockMutationFn = vi.fn();
+Object.assign(mockMutationFn, {
+  withOptimisticUpdate: vi.fn().mockReturnValue(mockMutationFn),
+});
 
 // Mock Convex hooks
 vi.mock("convex/react", () => ({
   useQuery: vi.fn(),
-  useMutation: vi.fn(),
+  useMutation: vi.fn(() => mockMutationFn),
 }));
 
 // Mock toast utilities
@@ -80,21 +87,36 @@ vi.mock("./IssueWatchers", () => ({
 }));
 
 describe("IssueDetailModal", () => {
-  const mockUpdateIssue = vi.fn();
-  const _mockCreateIssue = vi.fn();
   const mockOnOpenChange = vi.fn();
   const mockIssueId = "issue-123" as Id<"issues">;
 
   const renderModal = () =>
     render(<IssueDetailModal issueId={mockIssueId} open={true} onOpenChange={mockOnOpenChange} />);
 
-  const mockIssue = {
+  interface MockIssue {
+    _id: Id<"issues">;
+    key: string;
+    title: string;
+    description: string;
+    type: IssueType;
+    priority: IssuePriority;
+    status: string;
+    assignee: { name: string } | null;
+    reporter: { name: string } | null;
+    labels: { name: string; color: string }[];
+    estimatedHours: number;
+    loggedHours: number;
+    storyPoints?: number;
+    projectId: Id<"projects">;
+  }
+
+  const mockIssue: MockIssue = {
     _id: mockIssueId,
     key: "TEST-123",
     title: "Fix authentication bug",
     description: "Users cannot login with valid credentials",
-    type: "bug" as const,
-    priority: "high" as const,
+    type: "bug",
+    priority: "high",
     status: "in-progress",
     assignee: { name: "John Doe" },
     reporter: { name: "Jane Smith" },
@@ -110,12 +132,11 @@ describe("IssueDetailModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useMutation).mockReturnValue(mockUpdateIssue);
   });
 
   const setupMockQuery = (
-    issueData: typeof mockIssue | undefined = mockIssue,
-    subtasksData: (typeof mockIssue)[] = [],
+    issueData: MockIssue | undefined = mockIssue,
+    subtasksData: MockIssue[] = [],
   ) => {
     vi.mocked(useQuery).mockImplementation(
       <T,>(
@@ -269,7 +290,7 @@ describe("IssueDetailModal", () => {
   it("should call update mutation when Save is clicked", async () => {
     const user = userEvent.setup();
     setupMockQuery();
-    mockUpdateIssue.mockResolvedValue(undefined);
+    mockMutationFn.mockResolvedValue(undefined);
 
     renderModal();
 
@@ -284,7 +305,7 @@ describe("IssueDetailModal", () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(mockUpdateIssue as any).toHaveBeenCalledWith({
+      expect(mockMutationFn).toHaveBeenCalledWith({
         issueId: mockIssueId,
         title: "Updated title",
         description: "Users cannot login with valid credentials",
@@ -342,7 +363,7 @@ describe("IssueDetailModal", () => {
   it("should handle save error gracefully", async () => {
     const user = userEvent.setup();
     setupMockQuery();
-    mockUpdateIssue.mockRejectedValue(new Error("Network error"));
+    mockMutationFn.mockRejectedValue(new Error("Network error"));
 
     const { showError } = await import("@/lib/toast");
 

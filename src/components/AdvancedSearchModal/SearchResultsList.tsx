@@ -1,4 +1,5 @@
 import type { Id } from "@convex/_generated/dataModel";
+import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -10,8 +11,8 @@ interface SearchResult {
   _id: Id<"issues">;
   key: string;
   title: string;
-  type: string;
-  priority: string;
+  type: IssueTypeWithSubtask;
+  priority: IssuePriority;
 }
 
 interface SearchResultsListProps {
