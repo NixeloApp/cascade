@@ -2,6 +2,7 @@ import { httpRouter } from "convex/server";
 import { handler as issuesHandler } from "./api/issues";
 import { securePasswordReset } from "./authWrapper";
 import {
+  batchCleanupEndpoint,
   cleanupE2EWorkspacesEndpoint,
   cleanupRbacProjectEndpoint,
   cleanupTestUsersEndpoint,
@@ -207,6 +208,13 @@ http.route({
   path: "/e2e/seed-screenshot-data",
   method: "POST",
   handler: seedScreenshotDataEndpoint,
+});
+
+// Batch cleanup - call repeatedly until done=true (avoids 32k read limit)
+http.route({
+  path: "/e2e/batch-cleanup",
+  method: "POST",
+  handler: batchCleanupEndpoint,
 });
 
 export default http;

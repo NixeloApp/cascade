@@ -3272,3 +3272,154 @@ export const cleanupExpiredOtpsInternal = internalMutation({
     return { success: true, deleted: deletedCount };
   },
 });
+
+/**
+ * Batch cleanup endpoint - deletes test data in small batches to avoid 32k read limit.
+ * Call this repeatedly until it returns { done: true }.
+ * POST /e2e/batch-cleanup
+ */
+export const batchCleanupEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const result = await ctx.runMutation(internal.e2e.batchCleanupInternal, {});
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+/** Batch cleanup - processes up to 500 items per call to stay under limits. */
+export const batchCleanupInternal = internalMutation({
+  args: {},
+  returns: v.object({
+    done: v.boolean(),
+    deleted: v.number(),
+    remaining: v.optional(v.string()),
+  }),
+  handler: async (ctx) => {
+    const BATCH_SIZE = 500;
+    let deletedCount = 0;
+
+    // 1. Clean up spam workspaces first (these cause UI issues)
+    const spamWorkspaces = await ctx.db.query("workspaces").take(BATCH_SIZE * 2); // Take more to filter
+
+    const toDelete = spamWorkspaces.filter(
+      (ws) =>
+        ws.name === "E2E Testing Workspace" ||
+        ws.name === "🧪 E2E Testing Workspace" ||
+        ws.name === "New Workspace" ||
+        ws.name === "Organization Workspace" ||
+        ws.name.startsWith("Engineering ") ||
+        ws.name.startsWith("Project-"),
+    );
+
+    if (toDelete.length > 0) {
+      for (const ws of toDelete.slice(0, BATCH_SIZE)) {
+        await ctx.db.delete(ws._id);
+        deletedCount++;
+      }
+      if (toDelete.length > BATCH_SIZE) {
+        return {
+          done: false,
+          deleted: deletedCount,
+          remaining: `${toDelete.length - BATCH_SIZE} workspaces`,
+        };
+      }
+    }
+
+    // 2. Clean up test users and their data
+    const testUsers = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("isTestUser"), true))
+      .take(50);
+
+    for (const user of testUsers) {
+      // Delete auth accounts
+      const accounts = await ctx.db
+        .query("authAccounts")
+        .filter((q) => q.eq(q.field("userId"), user._id))
+        .take(100);
+      for (const acc of accounts) {
+        await ctx.db.delete(acc._id);
+        deletedCount++;
+      }
+
+      // Delete auth sessions
+      const sessions = await ctx.db
+        .query("authSessions")
+        .withIndex("userId", (q) => q.eq("userId", user._id))
+        .take(100);
+      for (const s of sessions) {
+        await ctx.db.delete(s._id);
+        deletedCount++;
+      }
+
+      // Delete organization memberships
+      const memberships = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .take(100);
+      for (const m of memberships) {
+        await ctx.db.delete(m._id);
+        deletedCount++;
+      }
+
+      // Delete the user
+      await ctx.db.delete(user._id);
+      deletedCount++;
+    }
+
+    if (testUsers.length > 0) {
+      return { done: false, deleted: deletedCount, remaining: "more test users" };
+    }
+
+    // 3. Clean up orphan organizations with E2E patterns
+    const orgs = await ctx.db.query("organizations").take(BATCH_SIZE);
+
+    const e2eOrgs = orgs.filter(
+      (o) =>
+        o.slug?.startsWith("nixelo-e2e") ||
+        o.name?.includes("E2E") ||
+        o.name?.startsWith("E2E Org"),
+    );
+
+    for (const org of e2eOrgs.slice(0, 50)) {
+      // Delete org members
+      const members = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_organization", (q) => q.eq("organizationId", org._id))
+        .take(100);
+      for (const m of members) {
+        await ctx.db.delete(m._id);
+        deletedCount++;
+      }
+
+      // Delete workspaces in org
+      const workspaces = await ctx.db
+        .query("workspaces")
+        .withIndex("by_organization", (q) => q.eq("organizationId", org._id))
+        .take(100);
+      for (const w of workspaces) {
+        await ctx.db.delete(w._id);
+        deletedCount++;
+      }
+
+      await ctx.db.delete(org._id);
+      deletedCount++;
+    }
+
+    if (e2eOrgs.length > 0) {
+      return { done: false, deleted: deletedCount, remaining: "more orgs" };
+    }
+
+    return { done: true, deleted: deletedCount };
+  },
+});
