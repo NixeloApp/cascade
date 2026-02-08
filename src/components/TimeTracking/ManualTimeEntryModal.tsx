@@ -360,9 +360,9 @@ export function ManualTimeEntryModal({
                   {/* Duration Display */}
                   {durationSeconds > 0 && (
                     <div className="mt-3 p-3 bg-brand-subtle border border-brand-border rounded-lg">
-                      <span className="text-sm font-medium text-brand-active">
+                      <Typography variant="mono" className="text-sm font-medium text-brand-active">
                         Duration: {formatDurationHuman(durationSeconds)}
-                      </span>
+                      </Typography>
                     </div>
                   )}
                 </div>
@@ -419,9 +419,9 @@ export function ManualTimeEntryModal({
               {/* Duration Display */}
               {timeRangeDuration > 0 && (
                 <div className="p-3 bg-brand-subtle border border-brand-border rounded-lg">
-                  <span className="text-sm font-medium text-brand-active">
+                  <Typography variant="mono" className="text-sm font-medium text-brand-active">
                     Duration: {formatDurationHuman(timeRangeDuration)}
-                  </span>
+                  </Typography>
                 </div>
               )}
             </>
@@ -597,7 +597,7 @@ export function ManualTimeEntryModal({
                       onChange={(e) => field.handleChange(e.target.checked)}
                       className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
                     />
-                    <span className="text-sm font-medium text-ui-text">Billable time</span>
+                    <Typography variant="label">Billable time</Typography>
                   </Flex>
                 </label>
                 <Typography className="text-xs text-ui-text-tertiary mt-1 ml-6">

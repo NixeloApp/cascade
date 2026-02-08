@@ -166,9 +166,9 @@ export function Timesheet() {
                       )}
                     </Flex>
                     <Flex justify="between" align="center">
-                      <span className="text-sm font-medium text-ui-text">
+                      <Typography variant="mono" className="text-sm font-medium">
                         {formatHours(entry.hours)}h
-                      </span>
+                      </Typography>
                       <button
                         type="button"
                         onClick={() => handleDelete(entry._id)}

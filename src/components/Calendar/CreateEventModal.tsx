@@ -148,7 +148,12 @@ export function CreateEventModal({
 
                 {/* Event Type */}
                 <div>
-                  <div className="block text-sm font-medium text-ui-text mb-1">Event Type</div>
+                  <Typography
+                    variant="small"
+                    className="block text-sm font-medium text-ui-text mb-1"
+                  >
+                    Event Type
+                  </Typography>
                   <div className="grid grid-cols-4 gap-2">
                     {eventTypes.map((type) => (
                       <button
@@ -163,7 +168,7 @@ export function CreateEventModal({
                         className={cn(
                           "px-3 py-2 rounded-md text-sm font-medium capitalize",
                           eventType === type
-                            ? "bg-brand text-white"
+                            ? "bg-brand text-brand-foreground"
                             : "bg-ui-bg-secondary text-ui-text hover:bg-ui-bg-tertiary",
                         )}
                       >
@@ -175,7 +180,12 @@ export function CreateEventModal({
 
                 {/* Color */}
                 <div>
-                  <div className="block text-sm font-medium text-ui-text mb-1">Color</div>
+                  <Typography
+                    variant="small"
+                    className="block text-sm font-medium text-ui-text mb-1"
+                  >
+                    Color
+                  </Typography>
                   <Flex gap="sm" className="flex-wrap">
                     {PALETTE_COLORS.map((color) => {
                       const isActive =
@@ -278,19 +288,21 @@ export function CreateEventModal({
                 {/* All Day Toggle */}
                 <form.Field name="allDay">
                   {(field) => (
-                    <div>
-                      <label>
-                        <Flex gap="sm" align="center" className="cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={field.state.value as boolean}
-                            onChange={(e) => field.handleChange(e.target.checked)}
-                            className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
-                          />
-                          <span className="text-sm text-ui-text">All day event</span>
-                        </Flex>
+                    <Flex gap="sm" align="center" className="cursor-pointer">
+                      <input
+                        id="event-all-day"
+                        type="checkbox"
+                        checked={field.state.value as boolean}
+                        onChange={(e) => field.handleChange(e.target.checked)}
+                        className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
+                      />
+                      <label
+                        htmlFor="event-all-day"
+                        className="text-sm text-ui-text cursor-pointer"
+                      >
+                        All day event
                       </label>
-                    </div>
+                    </Flex>
                   )}
                 </form.Field>
 
@@ -299,19 +311,21 @@ export function CreateEventModal({
                   <form.Field name="isRequired">
                     {(field) => (
                       <div>
-                        <label>
-                          <Flex gap="sm" align="center" className="cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={field.state.value as boolean}
-                              onChange={(e) => field.handleChange(e.target.checked)}
-                              className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
-                            />
-                            <span className="text-sm text-ui-text">
-                              Required attendance (track who attends)
-                            </span>
-                          </Flex>
-                        </label>
+                        <Flex gap="sm" align="center" className="cursor-pointer">
+                          <input
+                            id="event-is-required"
+                            type="checkbox"
+                            checked={field.state.value as boolean}
+                            onChange={(e) => field.handleChange(e.target.checked)}
+                            className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
+                          />
+                          <label
+                            htmlFor="event-is-required"
+                            className="text-sm text-ui-text cursor-pointer"
+                          >
+                            Required attendance (track who attends)
+                          </label>
+                        </Flex>
                         {isRequired && (
                           <Typography variant="muted" className="text-xs mt-1 ml-6">
                             Admins can mark who attended, was tardy, or missed this meeting

@@ -1,5 +1,6 @@
 import { addDays, addMonths, addWeeks, format, subDays, subMonths, subWeeks } from "date-fns";
 import { Button } from "@/components/ui/Button";
+import { Flex } from "@/components/ui/Flex";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
 import { useCalendarContext } from "../../calendar-context";
 
@@ -35,7 +36,7 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <Flex align="center" gap="sm">
       <Button
         variant="outline"
         className="h-7 px-3 text-xs font-medium border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default"
@@ -51,9 +52,12 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
       >
         <ChevronLeft className="min-w-5 min-h-5" />
       </Button>
-      <span className="min-w-35 text-center font-medium text-ui-text">
+      <time
+        dateTime={date.toISOString().split("T")[0]}
+        className="min-w-35 text-center font-medium text-ui-text"
+      >
         {format(date, "MMMM d, yyyy")}
-      </span>
+      </time>
       <Button
         variant="outline"
         className="h-7 w-7 p-1 border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default"
@@ -62,6 +66,6 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
       >
         <ChevronRight className="min-w-5 min-h-5" />
       </Button>
-    </div>
+    </Flex>
   );
 }

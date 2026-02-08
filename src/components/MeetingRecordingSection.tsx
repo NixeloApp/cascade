@@ -5,22 +5,14 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
-import {
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  FileText,
-  Mic,
-  MicOff,
-  Play,
-  XCircle,
-} from "@/lib/icons";
+import { CheckCircle, Clock, FileText, Mic, MicOff, Play, XCircle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Collapsible, CollapsibleContent, CollapsibleHeader } from "./ui/Collapsible";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
+import { Metadata, MetadataItem } from "./ui/Metadata";
 import { Typography } from "./ui/Typography";
 
 // Status badge configuration - extracted to reduce component complexity
@@ -130,10 +122,8 @@ function ScheduledState({ onCancel }: { onCancel: () => void }) {
     <div className="bg-brand-subtle rounded-lg p-4">
       <Flex justify="between" align="center">
         <div>
-          <Typography variant="p" className="font-medium text-ui-text">
-            Bot scheduled to join
-          </Typography>
-          <Typography variant="muted" size="xs">
+          <Typography variant="label">Bot scheduled to join</Typography>
+          <Typography variant="meta">
             "Nixelo Notetaker" will join when the meeting starts
           </Typography>
         </div>
@@ -149,10 +139,10 @@ function ScheduledState({ onCancel }: { onCancel: () => void }) {
 function FailedState({ errorMessage, onRetry }: { errorMessage?: string; onRetry: () => void }) {
   return (
     <div className="bg-status-error-bg rounded-lg p-4">
-      <Typography variant="p" className="font-medium text-status-error">
+      <Typography variant="label" color="error">
         Recording failed
       </Typography>
-      <Typography variant="muted" size="xs" className="mt-1">
+      <Typography variant="meta" className="mt-1">
         {errorMessage || "An error occurred during recording"}
       </Typography>
       <Button onClick={onRetry} variant="secondary" size="sm" className="mt-3">
@@ -169,12 +159,8 @@ function InProgressState({ status }: { status: string }) {
       <Flex gap="md" align="center">
         <LoadingSpinner size="sm" />
         <div>
-          <Typography variant="p" className="font-medium text-ui-text">
-            {message}
-          </Typography>
-          <Typography variant="muted" size="xs">
-            This may take a few minutes
-          </Typography>
+          <Typography variant="label">{message}</Typography>
+          <Typography variant="meta">This may take a few minutes</Typography>
         </div>
       </Flex>
     </div>
@@ -280,33 +266,23 @@ export function MeetingRecordingSection({
 
   return (
     <div className="border-t border-ui-border pt-4">
-      <button
-        type="button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between text-left"
-      >
-        <Flex gap="sm" align="center">
-          <Mic className="w-5 h-5 text-ui-text-tertiary" />
-          <span className="text-sm font-semibold text-ui-text">AI Meeting Notes</span>
-          {recording && <StatusBadge status={recording.status} />}
-        </Flex>
-        {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-ui-text-tertiary" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-ui-text-tertiary" />
-        )}
-      </button>
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <CollapsibleHeader
+          icon={<Mic className="w-5 h-5" />}
+          badge={recording && <StatusBadge status={recording.status} />}
+        >
+          AI Meeting Notes
+        </CollapsibleHeader>
 
-      {isExpanded && (
-        <div className="mt-4 space-y-4">
+        <CollapsibleContent className="space-y-4">
           <RecordingStatusContent
             recording={recording}
             isScheduling={isScheduling}
             onSchedule={handleScheduleRecording}
             onCancel={handleCancelRecording}
           />
-        </div>
-      )}
+        </CollapsibleContent>
+      </Collapsible>
 
       <ConfirmDialog
         isOpen={dialogState.isOpen}
@@ -338,7 +314,7 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {/* Executive Summary */}
       {summary && (
         <div className="bg-ui-bg-secondary rounded-lg p-4">
-          <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-2">
+          <Typography variant="label" className="mb-2">
             Summary
           </Typography>
           <Typography variant="muted">{summary.executiveSummary}</Typography>
@@ -348,15 +324,12 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {/* Key Points */}
       {summary && summary.keyPoints.length > 0 && (
         <div>
-          <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-2">
+          <Typography variant="label" className="mb-2">
             Key Points
           </Typography>
-          <ul className="space-y-1">
+          <ul className="list-disc list-inside space-y-1 text-xs text-ui-text-secondary marker:text-brand">
             {summary.keyPoints.map((point: string) => (
-              <li key={point} className="text-sm text-ui-text-secondary flex items-start gap-2">
-                <span className="text-brand">•</span>
-                {point}
-              </li>
+              <li key={point}>{point}</li>
             ))}
           </ul>
         </div>
@@ -365,7 +338,7 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {/* Action Items */}
       {summary && summary.actionItems.length > 0 && (
         <div>
-          <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-2">
+          <Typography variant="label" className="mb-2">
             Action Items
           </Typography>
           <ul className="space-y-2">
@@ -376,10 +349,10 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
               ) => (
                 <li
                   key={`action-${index}-${item.description.slice(0, 20)}`}
-                  className="text-sm bg-status-warning-bg rounded p-2"
+                  className="bg-status-warning-bg rounded p-2"
                 >
                   <Flex justify="between" align="start">
-                    <span className="text-ui-text">{item.description}</span>
+                    <Typography variant="small">{item.description}</Typography>
                     {item.assignee && (
                       <Badge size="sm" className="ml-2 shrink-0">
                         {item.assignee}
@@ -387,9 +360,9 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
                     )}
                   </Flex>
                   {item.dueDate && (
-                    <span className="text-xs text-ui-text-tertiary mt-1 block">
+                    <Typography variant="meta" className="mt-1 block">
                       Due: {item.dueDate}
-                    </span>
+                    </Typography>
                   )}
                 </li>
               ),
@@ -401,15 +374,17 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {/* Decisions */}
       {summary && summary.decisions.length > 0 && (
         <div>
-          <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-2">
+          <Typography variant="label" className="mb-2">
             Decisions Made
           </Typography>
           <ul className="space-y-1">
             {summary.decisions.map((decision: string) => (
-              <li key={decision} className="text-sm text-ui-text-secondary flex items-start gap-2">
+              <Flex as="li" key={decision} align="start" gap="sm">
                 <CheckCircle className="w-4 h-4 text-status-success shrink-0 mt-0.5" />
-                {decision}
-              </li>
+                <Typography variant="caption" color="secondary">
+                  {decision}
+                </Typography>
+              </Flex>
             ))}
           </ul>
         </div>
@@ -417,44 +392,31 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
 
       {/* Transcript Toggle */}
       {transcript && (
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowTranscript(!showTranscript)}
-            className="flex items-center gap-2 text-sm text-brand hover:text-brand-hover"
-          >
-            <FileText className="w-4 h-4" />
+        <Collapsible open={showTranscript} onOpenChange={setShowTranscript}>
+          <CollapsibleHeader icon={<FileText className="w-4 h-4" />}>
             {showTranscript ? "Hide Transcript" : "Show Full Transcript"}
-            {showTranscript ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </button>
-
-          {showTranscript && (
-            <div className="mt-2 bg-ui-bg-secondary rounded-lg p-4 max-h-96 overflow-y-auto">
+          </CollapsibleHeader>
+          <CollapsibleContent>
+            <div className="bg-ui-bg-secondary rounded-lg p-4 max-h-96 overflow-y-auto">
               <pre className="text-xs text-ui-text-secondary whitespace-pre-wrap font-sans">
                 {transcript.fullText}
               </pre>
             </div>
-          )}
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {/* Stats */}
       {transcript && (
-        <Flex gap="md" className="text-xs text-ui-text-tertiary">
-          <span>{transcript.wordCount.toLocaleString()} words</span>
-          <span>•</span>
-          <span>{recording.duration ? Math.round(recording.duration / 60) : "?"} min</span>
+        <Metadata>
+          <MetadataItem>{transcript.wordCount.toLocaleString()} words</MetadataItem>
+          <MetadataItem>
+            {recording.duration ? Math.round(recording.duration / 60) : "?"} min
+          </MetadataItem>
           {transcript.speakerCount && (
-            <>
-              <span>•</span>
-              <span>{transcript.speakerCount} speakers</span>
-            </>
+            <MetadataItem>{transcript.speakerCount} speakers</MetadataItem>
           )}
-        </Flex>
+        </Metadata>
       )}
     </div>
   );

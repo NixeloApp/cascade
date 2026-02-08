@@ -205,9 +205,9 @@ function DurationModeFields({
         </Flex>
         {durationSeconds > 0 && (
           <div className="mt-3 p-3 bg-brand-indigo-track border border-brand-indigo-border rounded-lg">
-            <span className="text-sm font-medium text-brand-indigo-text">
+            <Typography variant="mono" className="text-sm font-medium text-brand-indigo-text">
               Duration: {formatDurationHuman(durationSeconds)}
-            </span>
+            </Typography>
           </div>
         )}
       </div>
@@ -282,9 +282,9 @@ function TimeRangeModeFields({
       </div>
       {timeRangeDuration > 0 && (
         <div className="p-3 bg-brand-indigo-track border border-brand-indigo-border rounded-lg">
-          <span className="text-sm font-medium text-brand-indigo-text">
+          <Typography variant="mono" className="text-sm font-medium text-brand-indigo-text">
             Duration: {formatDurationHuman(timeRangeDuration)}
-          </span>
+          </Typography>
         </div>
       )}
     </>
@@ -534,7 +534,7 @@ export function TimeEntryModal({
                     onChange={(e) => actions.setBillable(e.target.checked)}
                     className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
                   />
-                  <span className="text-sm font-medium text-ui-text">Billable time</span>
+                  <Typography variant="label">Billable time</Typography>
                 </Flex>
               </label>
             </div>

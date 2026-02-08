@@ -1,6 +1,7 @@
 import type { Doc } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { Download, History, Upload } from "@/lib/icons";
@@ -181,15 +182,12 @@ export function DocumentHeader({
         </Flex>
       </Flex>
 
-      <Flex
-        wrap
-        align="center"
-        className="gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-ui-text-tertiary"
-      >
-        <span>Created by {document.creatorName}</span>
-        <span className="hidden sm:inline text-ui-text-tertiary/50">•</span>
-        <span>Last updated {new Date(document.updatedAt).toLocaleDateString()}</span>
-      </Flex>
+      <Metadata size="sm">
+        <MetadataItem>Created by {document.creatorName}</MetadataItem>
+        <MetadataItem hideBelow="sm">
+          Last updated <MetadataTimestamp date={document.updatedAt} format="absolute" />
+        </MetadataItem>
+      </Metadata>
     </div>
   );
 }

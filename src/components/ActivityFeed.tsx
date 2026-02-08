@@ -1,13 +1,26 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { formatRelativeTime } from "@/lib/dates";
+import {
+  AlertTriangle,
+  Ban,
+  Clock,
+  Eye,
+  LinkIcon,
+  MessageSquare,
+  Pencil,
+  Sparkles,
+  User,
+} from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
 import { SkeletonList } from "./ui/Skeleton";
-import { Typography, type TypographyProps } from "./ui/Typography";
+import { Typography } from "./ui/Typography";
 
 interface Activity {
   _id: string;
@@ -29,44 +42,44 @@ interface ActivityFeedProps {
 export function ActivityFeed({ projectId, limit = 50, compact = false }: ActivityFeedProps) {
   const activities = useQuery(api.analytics.getRecentActivity, { projectId, limit });
 
-  const getActionIcon = (action: string) => {
+  const getActionIcon = (action: string): LucideIcon => {
     switch (action) {
       case "created":
-        return "✨";
+        return Sparkles;
       case "updated":
-        return "✏️";
+        return Pencil;
       case "commented":
-        return "💬";
+        return MessageSquare;
       case "assigned":
-        return "👤";
+        return User;
       case "linked":
-        return "🔗";
+        return LinkIcon;
       case "unlinked":
-        return "⚠️";
+        return AlertTriangle;
       case "started_watching":
-        return "👀";
+        return Eye;
       case "stopped_watching":
-        return "🚫";
+        return Ban;
       default:
-        return "📝";
+        return Clock;
     }
   };
 
-  const getActionColor = (action: string): TypographyProps["color"] => {
+  const getActionColorClass = (action: string): string => {
     switch (action) {
       case "created":
-        return "success";
+        return "text-status-success";
       case "updated":
-        return "primary";
+        return "text-ui-text";
       case "commented":
-        return "accent";
+        return "text-accent";
       case "assigned":
-        return "warning";
+        return "text-status-warning";
       case "linked":
       case "unlinked":
-        return "primary";
+        return "text-ui-text";
       default:
-        return "secondary";
+        return "text-ui-text-secondary";
     }
   };
 
@@ -139,7 +152,7 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
     return (
       <div data-testid={TEST_IDS.ACTIVITY.EMPTY_STATE}>
         <EmptyState
-          icon="🕐"
+          icon={Clock}
           title="No activity yet"
           description="Activity will appear here as work progresses"
         />
@@ -172,33 +185,24 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
             justify="center"
             className={cn(
               "shrink-0 relative z-10 bg-ui-bg rounded-full",
-              compact ? "w-5 h-5 text-sm" : "w-6 h-6 text-base",
+              compact ? "w-5 h-5" : "w-6 h-6",
               "text-ui-text-secondary",
             )}
           >
-            {getActionIcon(activity.action)}
+            <Icon icon={getActionIcon(activity.action)} size={compact ? "xs" : "sm"} />
           </Flex>
 
           {/* Activity content */}
           <div className="flex-1 min-w-0">
             <Flex align="start" justify="between" gap="sm">
               <div className="flex-1 min-w-0">
-                <Typography
-                  variant="p"
-                  className={cn(compact ? "text-sm" : "text-base", "mb-0 mt-0")}
-                >
-                  <Typography as="span" className="font-medium tracking-tight text-ui-text">
-                    {activity.userName}
-                  </Typography>{" "}
-                  <Typography as="span" color={getActionColor(activity.action)}>
+                <Typography variant="p" className={cn(compact ? "text-sm" : "text-base", "m-0")}>
+                  <strong>{activity.userName}</strong>{" "}
+                  <span className={getActionColorClass(activity.action)}>
                     {formatActivityMessage(activity)}
-                  </Typography>
+                  </span>
                   {activity.issueKey && (
-                    <Typography as="span" className="ml-1">
-                      <Typography as="span" className="font-mono text-sm text-ui-text-secondary">
-                        {activity.issueKey}
-                      </Typography>
-                    </Typography>
+                    <code className="ml-1 font-mono text-sm">{activity.issueKey}</code>
                   )}
                 </Typography>
                 {!compact && activity.field && activity.newValue && (

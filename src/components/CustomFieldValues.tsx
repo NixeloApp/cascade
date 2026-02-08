@@ -4,10 +4,14 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Check, X } from "@/lib/icons";
+import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Checkbox } from "./ui/form/Checkbox";
 import { Input } from "./ui/form/Input";
 import { Select } from "./ui/form/Select";
+import { Label } from "./ui/Label";
 import { Typography } from "./ui/Typography";
 
 interface CustomFieldValuesProps {
@@ -152,15 +156,23 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
 
   const renderFieldValue = (field: CustomField, value?: string) => {
     if (!value) {
-      return <span className="text-ui-text-tertiary italic text-sm">Not set</span>;
+      return (
+        <Typography variant="muted" className="italic">
+          Not set
+        </Typography>
+      );
     }
 
     switch (field.fieldType) {
       case "checkbox":
         return value === "true" ? (
-          <span className="text-status-success">✓ Yes</span>
+          <Badge variant="success" size="sm">
+            <Icon icon={Check} size="xs" className="inline mr-1" /> Yes
+          </Badge>
         ) : (
-          <span className="text-ui-text-secondary">✗ No</span>
+          <Typography variant="muted">
+            <Icon icon={X} size="xs" className="inline mr-1" /> No
+          </Typography>
         );
 
       case "url":
@@ -182,18 +194,15 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
         return (
           <Flex wrap gap="xs">
             {value.split(",").map((option) => (
-              <span
-                key={option.trim()}
-                className="text-xs px-2 py-1 bg-brand-subtle text-brand-active rounded"
-              >
+              <Badge key={option.trim()} variant="brand" size="md">
                 {option.trim()}
-              </span>
+              </Badge>
             ))}
           </Flex>
         );
 
       default:
-        return <span className="text-ui-text">{value}</span>;
+        return <Typography variant="small">{value}</Typography>;
     }
   };
 
@@ -215,8 +224,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
             <Flex align="start" justify="between" className="mb-2">
               <div className="flex-1">
                 <Flex align="center" gap="sm">
-                  <div className="text-sm font-medium text-ui-text">{field.name}</div>
-                  {field.isRequired && <span className="text-status-error text-xs">*</span>}
+                  <Label required={field.isRequired}>{field.name}</Label>
                 </Flex>
                 {field.description && (
                   <Typography variant="muted" className="text-xs text-ui-text-tertiary mt-0.5">

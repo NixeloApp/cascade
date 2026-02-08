@@ -2,6 +2,7 @@ import { api } from "@convex/_generated/api";
 import FacePile from "@convex-dev/presence/facepile";
 import usePresence from "@convex-dev/presence/react";
 import { Flex } from "@/components/ui/Flex";
+import { MetadataItem } from "@/components/ui/Metadata";
 
 // Type cast for presence API which has complex generated type incompatibilities
 type PresenceApi = Parameters<typeof usePresence>[0];
@@ -20,9 +21,9 @@ export function PresenceIndicator({ roomId, userId }: PresenceIndicatorProps) {
 
   return (
     <Flex align="center" className="space-x-2">
-      <span className="text-sm text-ui-text-secondary">
+      <MetadataItem>
         {presenceState.length} {presenceState.length === 1 ? "person" : "people"} editing
-      </span>
+      </MetadataItem>
       <FacePile presenceState={presenceState} />
     </Flex>
   );

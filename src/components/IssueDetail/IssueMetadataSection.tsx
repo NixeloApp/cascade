@@ -79,7 +79,7 @@ export function IssueMetadataSection({
             {labels.map((label) => (
               <span
                 key={label.name}
-                className="px-2 py-0.5 text-xs font-medium rounded-md text-white transition-transform duration-default hover:scale-105"
+                className="px-2 py-0.5 text-xs font-medium rounded-md text-brand-foreground transition-transform duration-default hover:scale-105"
                 style={{ backgroundColor: label.color }}
               >
                 {label.name}

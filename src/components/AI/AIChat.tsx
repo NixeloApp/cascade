@@ -6,9 +6,11 @@ import type { Id } from "@convex/_generated/dataModel";
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Bot, Lightbulb } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Skeleton } from "../ui/Skeleton";
 import { Tooltip } from "../ui/Tooltip";
@@ -53,7 +55,9 @@ function MessageItem({
       <div
         className={cn(
           "relative max-w-chat-bubble md:max-w-chat-bubble-md rounded-lg px-4 py-3",
-          message.role === "user" ? "bg-brand text-white" : "bg-ui-bg-secondary text-ui-text",
+          message.role === "user"
+            ? "bg-brand text-brand-foreground"
+            : "bg-ui-bg-secondary text-ui-text",
         )}
       >
         {/* Copy button for assistant messages */}
@@ -172,17 +176,26 @@ export const AIChat = React.memo(function AIChat({
         ) : messages.length === 0 ? (
           <Flex align="center" justify="center" className="h-full text-center">
             <div>
-              <div className="text-4xl mb-4">🤖</div>
-              <Typography variant="h3" className="text-lg font-semibold text-ui-text mb-2">
+              <Icon icon={Bot} size="xl" className="mx-auto mb-4" />
+              <Typography variant="h5" className="mb-2">
                 AI Assistant
               </Typography>
-              <Typography variant="p" className="text-ui-text-secondary mb-4">
+              <Typography variant="muted" className="mb-4">
                 Ask me anything about your project, or use natural language commands.
               </Typography>
-              <Flex direction="column" gap="xs" className="text-sm text-ui-text-tertiary">
-                <Typography variant="muted">💡 "What's our team velocity?"</Typography>
-                <Typography variant="muted">💡 "Which issues are blocking the sprint?"</Typography>
-                <Typography variant="muted">💡 "Summarize this week's progress"</Typography>
+              <Flex direction="column" gap="xs">
+                <Typography variant="meta">
+                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "What's our team
+                  velocity?"
+                </Typography>
+                <Typography variant="meta">
+                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Which issues are
+                  blocking the sprint?"
+                </Typography>
+                <Typography variant="meta">
+                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Summarize this week's
+                  progress"
+                </Typography>
               </Flex>
             </div>
           </Flex>
@@ -218,7 +231,7 @@ export const AIChat = React.memo(function AIChat({
                         style={{ animationDelay: "300ms" }}
                       />
                     </Flex>
-                    <span className="text-sm text-ui-text-secondary">AI is thinking...</span>
+                    <Typography variant="caption">AI is thinking...</Typography>
                   </Flex>
                 </div>
               </Flex>
@@ -265,7 +278,7 @@ export const AIChat = React.memo(function AIChat({
             </svg>
           </Button>
         </Flex>
-        <Typography variant="muted" className="text-xs mt-2 hidden sm:block">
+        <Typography variant="meta" className="mt-2 hidden sm:block">
           Press Enter to send, Shift+Enter for new line
         </Typography>
       </div>

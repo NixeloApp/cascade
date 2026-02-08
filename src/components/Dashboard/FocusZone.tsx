@@ -1,9 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { ArrowRight } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 interface FocusTask {
@@ -67,12 +69,15 @@ export function FocusZone({ task }: FocusZoneProps) {
                 {task.title}
               </Typography>
               <Typography variant="muted" className="mt-1">
-                In project: <span className="font-semibold text-ui-text">{task.projectName}</span>
+                In project: <strong>{task.projectName}</strong>
               </Typography>
             </div>
 
-            <Flex justify="end">
-              <span className="text-sm font-medium text-brand">View Task →</span>
+            <Flex justify="end" align="center" gap="xs">
+              <Typography variant="small" className="font-medium text-brand">
+                View Task
+              </Typography>
+              <Icon icon={ArrowRight} size="sm" className="text-brand" />
             </Flex>
           </Flex>
         </CardBody>

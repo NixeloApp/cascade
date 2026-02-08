@@ -3,6 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Mail, Users } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
@@ -149,10 +150,8 @@ export function UserManagement() {
       {/* Header */}
       <Flex justify="between" align="center">
         <div>
-          <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-            User Management
-          </Typography>
-          <Typography variant="p" className="text-ui-text-secondary mt-1">
+          <Typography variant="h3">User Management</Typography>
+          <Typography variant="p" color="secondary" className="mt-1">
             Manage user invitations and platform access
           </Typography>
         </div>
@@ -232,7 +231,7 @@ export function UserManagement() {
                       <SelectItem value="superAdmin">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Typography variant="p" className="mt-1 text-sm text-ui-text-secondary">
+                  <Typography variant="muted" className="mt-1">
                     Super Admins have full system access and can manage all users
                   </Typography>
                 </div>
@@ -270,7 +269,7 @@ export function UserManagement() {
               </Flex>
             ) : invites.length === 0 ? (
               <EmptyState
-                icon="✉️"
+                icon={Mail}
                 title="No invitations"
                 description="Send your first invitation to get started"
                 action={{
@@ -340,19 +339,20 @@ export function UserManagement() {
                             {invite.email}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <span className="px-2 py-1 rounded text-xs font-medium bg-brand-subtle text-brand-active capitalize">
+                            <Badge
+                              size="sm"
+                              className="capitalize bg-brand-subtle text-brand-active"
+                            >
                               {invite.role}
-                            </span>
+                            </Badge>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <span
-                              className={cn(
-                                "px-2 py-1 rounded text-xs font-medium capitalize",
-                                getStatusBadge(invite.status),
-                              )}
+                            <Badge
+                              size="sm"
+                              className={cn("capitalize", getStatusBadge(invite.status))}
                             >
                               {invite.status}
-                            </span>
+                            </Badge>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-ui-text-secondary">
                             {invite.inviterName}
@@ -388,9 +388,9 @@ export function UserManagement() {
                                 </>
                               )}
                               {invite.status === "accepted" && invite.acceptedByName && (
-                                <span className="text-ui-text-secondary text-xs">
+                                <Typography variant="caption" color="secondary">
                                   Accepted by {invite.acceptedByName}
-                                </span>
+                                </Typography>
                               )}
                             </Flex>
                           </td>
@@ -413,7 +413,7 @@ export function UserManagement() {
                 <LoadingSpinner />
               </Flex>
             ) : users.length === 0 ? (
-              <EmptyState icon="👥" title="No users" description="No users have joined yet" />
+              <EmptyState icon={Users} title="No users" description="No users have joined yet" />
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-ui-border" aria-label="Platform users">

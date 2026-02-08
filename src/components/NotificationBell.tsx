@@ -1,12 +1,15 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import { Bell, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Bell, Flag, MessageCircle, MessageSquare, RefreshCw, Rocket, User, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
+import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { Metadata, MetadataItem, MetadataTimestamp } from "./ui/Metadata";
 import { Typography } from "./ui/Typography";
 
 export function NotificationBell() {
@@ -50,37 +53,23 @@ export function NotificationBell() {
     }
   };
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: string): LucideIcon => {
     switch (type) {
       case "issue_assigned":
-        return "👤";
+        return User;
       case "issue_mentioned":
-        return "💬";
+        return MessageSquare;
       case "issue_commented":
-        return "💭";
+        return MessageCircle;
       case "issue_status_changed":
-        return "🔄";
+        return RefreshCw;
       case "sprint_started":
-        return "🚀";
+        return Rocket;
       case "sprint_ended":
-        return "🏁";
+        return Flag;
       default:
-        return "🔔";
+        return Bell;
     }
-  };
-
-  const formatTime = (timestamp: number) => {
-    const now = Date.now();
-    const diff = now - timestamp;
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return "Just now";
   };
 
   return (
@@ -97,7 +86,7 @@ export function NotificationBell() {
 
         {/* Unread Badge */}
         {unreadCount !== undefined && unreadCount > 0 && (
-          <span className="absolute top-0 right-0 grid place-items-center w-5 h-5 text-xs font-bold text-white bg-status-error rounded-full">
+          <span className="absolute top-0 right-0 grid place-items-center w-5 h-5 text-xs font-bold text-brand-foreground bg-status-error rounded-full">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -111,15 +100,13 @@ export function NotificationBell() {
         >
           {/* Header */}
           <Flex align="center" justify="between" className="px-4 py-3 border-b border-ui-border">
-            <Typography variant="h3" className="text-lg font-semibold text-ui-text">
-              Notifications
-            </Typography>
+            <Typography variant="h4">Notifications</Typography>
             {notifications && notifications.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => markAllAsRead()}
-                className="text-brand hover:text-brand-hover:text-brand min-h-0 p-0"
+                className="text-brand hover:text-brand min-h-0 p-0"
               >
                 Mark all read
               </Button>
@@ -134,11 +121,11 @@ export function NotificationBell() {
               </Flex>
             ) : notifications.length === 0 ? (
               <Flex direction="column" align="center" justify="center" className="py-12 px-4">
-                <div className="text-6xl mb-4">🔔</div>
-                <Typography className="text-ui-text-secondary text-center">
+                <Icon icon={Bell} size="xl" className="mb-4 text-ui-text-tertiary" />
+                <Typography variant="small" color="secondary" className="text-center">
                   No notifications yet
                 </Typography>
-                <Typography className="text-sm text-ui-text-tertiary text-center mt-1">
+                <Typography variant="meta" className="text-center mt-1">
                   We'll notify you when something happens
                 </Typography>
               </Flex>
@@ -158,29 +145,24 @@ export function NotificationBell() {
                       }
                     >
                       <Flex align="start" gap="md">
-                        <div className="text-2xl shrink-0">
-                          {getNotificationIcon(notification.type)}
-                        </div>
+                        <Icon
+                          icon={getNotificationIcon(notification.type)}
+                          size="lg"
+                          className="shrink-0"
+                        />
                         <div className="flex-1 min-w-0">
-                          <Typography className="text-sm font-medium text-ui-text">
+                          <Typography variant="label" as="p">
                             {notification.title}
                           </Typography>
-                          <Typography className="text-sm text-ui-text-secondary mt-1">
+                          <Typography variant="small" color="secondary" className="mt-1">
                             {notification.message}
                           </Typography>
-                          <Flex align="center" gap="sm" className="mt-2">
-                            <span className="text-xs text-ui-text-tertiary">
-                              {formatTime(notification._creationTime)}
-                            </span>
+                          <Metadata className="mt-2">
+                            <MetadataTimestamp date={notification._creationTime} />
                             {notification.actorName && (
-                              <>
-                                <span className="text-xs text-ui-text-tertiary">•</span>
-                                <span className="text-xs text-ui-text-tertiary">
-                                  by {notification.actorName}
-                                </span>
-                              </>
+                              <MetadataItem>by {notification.actorName}</MetadataItem>
                             )}
-                          </Flex>
+                          </Metadata>
                         </div>
                         <button
                           type="button"

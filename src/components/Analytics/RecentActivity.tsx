@@ -1,4 +1,6 @@
+import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
+import { Metadata, MetadataTimestamp } from "../ui/Metadata";
 import { Typography } from "../ui/Typography";
 
 /**
@@ -21,7 +23,7 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
 
   return (
     <div className="bg-ui-bg rounded-lg shadow-card border border-ui-border p-6">
-      <Typography variant="h3" className="text-lg font-semibold text-ui-text mb-4">
+      <Typography variant="large" className="mb-4">
         Recent Activity
       </Typography>
       <div className="relative">
@@ -47,21 +49,22 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
               </Flex>
               <div className="flex-1 min-w-0">
                 <Typography variant="p" className="mb-0">
-                  <span className="font-semibold text-ui-text">{activity.userName}</span>{" "}
-                  <span className="text-ui-text-secondary">{activity.action}</span>{" "}
+                  <strong>{activity.userName}</strong> {activity.action}{" "}
                   {activity.field && (
                     <>
-                      <span className="font-medium text-ui-text">{activity.field}</span>{" "}
-                      <span className="text-ui-text-secondary">on</span>{" "}
+                      <strong>{activity.field}</strong> on{" "}
                     </>
                   )}
-                  <span className="font-mono text-xs bg-ui-bg-tertiary text-ui-text-secondary px-1.5 py-0.5 rounded border border-ui-border">
+                  <Badge
+                    variant="neutral"
+                    className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border"
+                  >
                     {activity.issueKey}
-                  </span>
+                  </Badge>
                 </Typography>
-                <Typography variant="muted" className="text-xs mt-1.5 text-ui-text-tertiary">
-                  {new Date(activity._creationTime).toLocaleString()}
-                </Typography>
+                <Metadata className="mt-1.5">
+                  <MetadataTimestamp date={activity._creationTime} format="absolute" />
+                </Metadata>
               </div>
             </Flex>
           ))}

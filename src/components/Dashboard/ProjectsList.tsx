@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Folder } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Card, CardBody, CardHeader } from "../ui/Card";
@@ -64,7 +65,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
           </Flex>
         ) : projects.length === 0 ? (
           <EmptyState
-            icon="📂"
+            icon={Folder}
             title="No projects"
             description="You're not a member of any projects yet"
             action={{

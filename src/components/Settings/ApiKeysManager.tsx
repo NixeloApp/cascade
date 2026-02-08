@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
+import { AlertTriangle, BookOpen, Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -14,7 +14,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Flex } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
+import { Icon } from "../ui/Icon";
+import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 
@@ -94,18 +97,21 @@ export function ApiKeysManager() {
 
         {/* Documentation Link */}
         <div className="mt-6 p-4 bg-brand-subtle rounded-lg border border-brand-border">
-          <Typography className="text-sm text-brand-active">
-            📚 <strong>Need help?</strong> Check out the{" "}
-            <a
-              href="/docs/API.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-brand-hover"
-            >
-              API Documentation
-            </a>{" "}
-            for usage examples and integration guides.
-          </Typography>
+          <Flex align="center" gap="sm" className="text-sm text-brand-active">
+            <Icon icon={BookOpen} size="sm" />
+            <span>
+              <strong>Need help?</strong> Check out the{" "}
+              <a
+                href="/docs/API.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-brand-hover"
+              >
+                API Documentation
+              </a>{" "}
+              for usage examples and integration guides.
+            </span>
+          </Flex>
         </div>
       </div>
 
@@ -205,39 +211,33 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
           {/* Scopes */}
           <Flex className="flex-wrap gap-1 mb-3">
             {apiKey.scopes.map((scope: string) => (
-              <span
-                key={scope}
-                className="px-2 py-0.5 text-xs bg-brand-subtle text-brand-active rounded"
-              >
+              <Badge key={scope} variant="brand" size="sm">
                 {scope}
-              </span>
+              </Badge>
             ))}
           </Flex>
 
           {/* Stats */}
-          <Flex gap="lg" align="center" className="text-xs text-ui-text-secondary">
-            <span>
+          <Metadata size="xs" gap="md">
+            <MetadataItem>
               <strong>{apiKey.usageCount}</strong> API calls
-            </span>
-            <span>•</span>
-            <span>
+            </MetadataItem>
+            <MetadataItem>
               <strong>{apiKey.rateLimit}</strong> req/min
-            </span>
+            </MetadataItem>
             {apiKey.lastUsedAt && (
-              <>
-                <span>•</span>
-                <span>Last used: {new Date(apiKey.lastUsedAt).toLocaleDateString()}</span>
-              </>
+              <MetadataItem>
+                Last used: <MetadataTimestamp date={apiKey.lastUsedAt} format="absolute" />
+              </MetadataItem>
             )}
             {apiKey.expiresAt && (
-              <>
-                <span>•</span>
-                <span className={apiKey.expiresAt < Date.now() ? "text-status-error" : ""}>
-                  Expires: {new Date(apiKey.expiresAt).toLocaleDateString()}
-                </span>
-              </>
+              <MetadataItem
+                className={apiKey.expiresAt < Date.now() ? "text-status-error" : undefined}
+              >
+                Expires: <MetadataTimestamp date={apiKey.expiresAt} format="absolute" />
+              </MetadataItem>
             )}
-          </Flex>
+          </Metadata>
         </div>
 
         {/* Actions */}
@@ -374,9 +374,9 @@ function GenerateKeyModal({
 
               {/* Scopes */}
               <div>
-                <div className="block text-sm font-medium text-ui-text mb-2">
-                  Permissions (Scopes) <span className="text-status-error">*</span>
-                </div>
+                <Label required className="block mb-2">
+                  Permissions (Scopes)
+                </Label>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {availableScopes.map((scope) => (
                     <label
@@ -439,7 +439,8 @@ function GenerateKeyModal({
                   API Key Generated!
                 </Typography>
                 <Typography className="text-sm text-ui-text-secondary mb-6">
-                  ⚠️ <strong>Save this key now!</strong> You won't be able to see it again.
+                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" />{" "}
+                  <strong>Save this key now!</strong> You won't be able to see it again.
                 </Typography>
 
                 {/* Generated Key Display */}
@@ -565,31 +566,24 @@ function UsageStatsModal({
                     >
                       <Flex justify="between" align="center" className="mb-1">
                         <Flex gap="sm" align="center">
-                          <span className="font-mono font-medium text-ui-text">{log.method}</span>
-                          <span className="text-ui-text-secondary">{log.endpoint}</span>
+                          <Typography variant="small" className="font-mono font-medium">
+                            {log.method}
+                          </Typography>
+                          <Typography variant="small" color="secondary">
+                            {log.endpoint}
+                          </Typography>
                         </Flex>
-                        <span
-                          className={cn(
-                            "px-2 py-0.5 text-xs font-medium rounded",
-                            log.statusCode < 400
-                              ? "bg-status-success/10 text-status-success"
-                              : "bg-status-error/10 text-status-error",
-                          )}
-                        >
+                        <Badge size="sm" variant={log.statusCode < 400 ? "success" : "error"}>
                           {log.statusCode}
-                        </span>
+                        </Badge>
                       </Flex>
-                      <Flex gap="lg" align="center" className="text-xs text-ui-text-tertiary">
-                        <span>{log.responseTime}ms</span>
-                        <span>•</span>
-                        <span>{new Date(log.createdAt).toLocaleString()}</span>
+                      <Metadata size="xs" gap="md">
+                        <MetadataItem>{log.responseTime}ms</MetadataItem>
+                        <MetadataTimestamp date={log.createdAt} format="absolute" />
                         {log.error && (
-                          <>
-                            <span>•</span>
-                            <span className="text-status-error">{log.error}</span>
-                          </>
+                          <MetadataItem className="text-status-error">{log.error}</MetadataItem>
                         )}
-                      </Flex>
+                      </Metadata>
                     </div>
                   ))}
                 </Flex>

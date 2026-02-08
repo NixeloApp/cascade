@@ -5,6 +5,7 @@ import { ArrowLeft, Building2, FolderPlus, Sparkles, UserPlus } from "lucide-rea
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { showError, showSuccess } from "@/lib/toast";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Typography } from "../ui/Typography";
@@ -99,7 +100,9 @@ export function LeadOnboarding({
           className="flex items-center gap-2 text-ui-text-secondary hover:text-ui-text transition-colors duration-fast group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-sm font-medium">Back</span>
+          <Typography variant="caption" className="font-medium">
+            Back
+          </Typography>
         </button>
 
         {/* Header */}
@@ -156,7 +159,9 @@ export function LeadOnboarding({
           className="flex items-center gap-2 text-ui-text-secondary hover:text-ui-text transition-colors duration-fast group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-sm font-medium">Back</span>
+          <Typography variant="caption" className="font-medium">
+            Back
+          </Typography>
         </button>
 
         {/* Header */}
@@ -227,7 +232,9 @@ export function LeadOnboarding({
           className="flex items-center gap-2 text-ui-text-secondary hover:text-ui-text transition-colors duration-fast group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-sm font-medium">Back</span>
+          <Typography variant="caption" className="font-medium">
+            Back
+          </Typography>
         </button>
 
         {/* Header */}
@@ -254,9 +261,9 @@ export function LeadOnboarding({
                 <div className="p-3 rounded-lg bg-brand-subtle group-hover:bg-brand/10 transition-colors">
                   <Sparkles className="w-6 h-6 text-brand" />
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand text-brand-foreground">
+                <Badge variant="brand" shape="pill" size="md">
                   Recommended
-                </span>
+                </Badge>
               </Flex>
               <div>
                 <Typography variant="h3" className="font-semibold mb-1 text-ui-text">
@@ -288,7 +295,7 @@ export function LeadOnboarding({
                   Create your own project with a blank canvas
                 </Typography>
               </div>
-              <span className="text-xs text-ui-text-tertiary">For experienced users</span>
+              <Typography variant="caption">For experienced users</Typography>
             </Flex>
           </button>
         </div>

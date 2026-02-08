@@ -54,7 +54,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
         {
           element: "#root",
           popover: {
-            title: "Welcome to Nixelo! 🎉",
+            title: "Welcome to Nixelo!",
             description:
               "Nixelo is your all-in-one platform for project management and team collaboration. Let's take a quick tour to get you started!",
             side: "top",
@@ -124,7 +124,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
         {
           element: "#root",
           popover: {
-            title: "Ready to Get Started? 🚀",
+            title: "Ready to Get Started?",
             description:
               "You're all set! We've created a sample project with demo issues to help you explore. Feel free to edit, delete, or create your own project from scratch.",
             side: "top",

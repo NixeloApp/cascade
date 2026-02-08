@@ -3,6 +3,8 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Monitor, Moon, Sun } from "@/lib/icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Card } from "../ui/Card";
 import { Label } from "../ui/Label";
@@ -107,13 +109,13 @@ export function PreferencesTab() {
                 size="md"
               >
                 <ToggleGroupItem value="light" aria-label="Light theme">
-                  <span className="mr-2">☀️</span> Light
+                  <Icon icon={Sun} size="sm" className="mr-2" /> Light
                 </ToggleGroupItem>
                 <ToggleGroupItem value="dark" aria-label="Dark theme">
-                  <span className="mr-2">🌙</span> Dark
+                  <Icon icon={Moon} size="sm" className="mr-2" /> Dark
                 </ToggleGroupItem>
                 <ToggleGroupItem value="system" aria-label="System theme">
-                  <span className="mr-2">💻</span> System
+                  <Icon icon={Monitor} size="sm" className="mr-2" /> System
                 </ToggleGroupItem>
               </ToggleGroup>
             </Flex>

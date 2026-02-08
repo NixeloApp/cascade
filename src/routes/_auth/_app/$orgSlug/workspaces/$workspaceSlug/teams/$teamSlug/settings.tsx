@@ -26,7 +26,12 @@ function TeamSettings() {
         {/* Coming soon placeholder */}
         <Card variant="soft">
           <div className="p-8 text-center">
-            <Flex inline align="center" justify="center" className="w-12 h-12 rounded-full bg-brand-subtle mb-4">
+            <Flex
+              inline
+              align="center"
+              justify="center"
+              className="w-12 h-12 rounded-full bg-brand-subtle mb-4"
+            >
               <svg
                 className="w-6 h-6 text-brand"
                 fill="none"

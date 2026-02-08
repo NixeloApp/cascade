@@ -7,9 +7,11 @@ import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Building2 } from "@/lib/icons";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/")({
   component: WorkspacesList,
@@ -52,7 +54,7 @@ function WorkspacesList() {
         isLoading={workspaces === undefined}
         isEmpty={workspaces !== undefined && workspaces.length === 0}
         emptyState={{
-          icon: "🏢",
+          icon: Building2,
           title: "No workspaces yet",
           description: "Create your first workspace to organize teams and projects",
           action: (
@@ -82,16 +84,15 @@ function WorkspacesList() {
                     </Typography>
                   )}
 
-                  <Flex gap="md" className="text-sm text-ui-text-secondary">
-                    <span>
+                  <Metadata size="sm">
+                    <MetadataItem>
                       {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
-                    </span>
-                    <span>•</span>
-                    <span>
+                    </MetadataItem>
+                    <MetadataItem>
                       {workspace.projectCount}{" "}
                       {workspace.projectCount === 1 ? "project" : "projects"}
-                    </span>
-                  </Flex>
+                    </MetadataItem>
+                  </Metadata>
                 </Flex>
               </Card>
             </Link>

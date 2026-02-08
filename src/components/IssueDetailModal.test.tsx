@@ -33,10 +33,6 @@ vi.mock("@/lib/accessibility", () => ({
 
 // Mock issue utilities
 vi.mock("@/lib/issue-utils", () => ({
-  getTypeIcon: vi.fn((type: string) => {
-    const icons = { bug: "🐛", task: "✓", story: "📖", epic: "🎯" };
-    return icons[type as keyof typeof icons] || "📄";
-  }),
   getPriorityColor: vi.fn((priority: string, type: string) => {
     if (type === "badge") {
       const colors = {

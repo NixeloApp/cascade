@@ -1,5 +1,6 @@
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { Menu } from "@/lib/icons";
 import { GlobalSearch } from "./GlobalSearch";
@@ -53,10 +54,13 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
                 d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <span className="hidden sm:inline">Commands</span>
-            <kbd className="hidden lg:inline px-1.5 py-0.5 text-xs text-ui-text-tertiary bg-ui-bg border border-ui-border/50 rounded font-mono">
+            <span className="hidden sm:inline text-current">Commands</span>
+            <Typography
+              as="kbd"
+              className="hidden lg:inline px-1.5 py-0.5 text-xs text-ui-text-tertiary bg-ui-bg border border-ui-border/50 rounded font-mono"
+            >
               ⌘K
-            </kbd>
+            </Typography>
           </button>
         )}
 

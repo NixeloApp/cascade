@@ -123,11 +123,7 @@ export function BulkOperationsBar({
 
             {/* Actions */}
             <Flex align="center" gap="sm" className="flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowActions(!showActions)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowActions(!showActions)}>
                 {showActions ? "Hide" : "Actions"}
               </Button>
 
@@ -143,7 +139,10 @@ export function BulkOperationsBar({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Status */}
                 <div>
-                  <Typography variant="small" className="block font-medium text-ui-text-secondary mb-1.5">
+                  <Typography
+                    variant="small"
+                    className="block font-medium text-ui-text-secondary mb-1.5"
+                  >
                     Status
                   </Typography>
                   <Select onValueChange={handleUpdateStatus}>
@@ -162,7 +161,10 @@ export function BulkOperationsBar({
 
                 {/* Priority */}
                 <div>
-                  <Typography variant="small" className="block font-medium text-ui-text-secondary mb-1.5">
+                  <Typography
+                    variant="small"
+                    className="block font-medium text-ui-text-secondary mb-1.5"
+                  >
                     Priority
                   </Typography>
                   <Select onValueChange={handleUpdatePriority}>
@@ -181,7 +183,10 @@ export function BulkOperationsBar({
 
                 {/* Assignee */}
                 <div>
-                  <Typography variant="small" className="block font-medium text-ui-text-secondary mb-1.5">
+                  <Typography
+                    variant="small"
+                    className="block font-medium text-ui-text-secondary mb-1.5"
+                  >
                     Assignee
                   </Typography>
                   <Select onValueChange={handleAssign}>
@@ -201,7 +206,10 @@ export function BulkOperationsBar({
 
                 {/* Sprint */}
                 <div>
-                  <Typography variant="small" className="block font-medium text-ui-text-secondary mb-1.5">
+                  <Typography
+                    variant="small"
+                    className="block font-medium text-ui-text-secondary mb-1.5"
+                  >
                     Sprint
                   </Typography>
                   <Select onValueChange={handleMoveToSprint}>

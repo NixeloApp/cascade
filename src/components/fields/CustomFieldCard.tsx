@@ -1,8 +1,21 @@
 import type { Id } from "@convex/_generated/dataModel";
+import type { LucideIcon } from "lucide-react";
+import {
+  Calendar,
+  Check,
+  ClipboardList,
+  FileText,
+  Hash,
+  LinkIcon,
+  ListChecks,
+  Type,
+} from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
+import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Typography } from "../ui/Typography";
 
 type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "checkbox" | "url";
@@ -26,24 +39,24 @@ interface CustomFieldCardProps {
  * Extracted from CustomFieldsManager for better reusability
  */
 export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProps) {
-  const getFieldTypeIcon = (type: string) => {
+  const getFieldTypeIcon = (type: string): LucideIcon => {
     switch (type as FieldType) {
       case "text":
-        return "📝";
+        return Type;
       case "number":
-        return "🔢";
+        return Hash;
       case "select":
-        return "📋";
+        return ClipboardList;
       case "multiselect":
-        return "☑️";
+        return ListChecks;
       case "date":
-        return "📅";
+        return Calendar;
       case "checkbox":
-        return "✅";
+        return Check;
       case "url":
-        return "🔗";
+        return LinkIcon;
       default:
-        return "📄";
+        return FileText;
     }
   };
 
@@ -51,7 +64,7 @@ export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProp
     <Card className="p-4">
       <Flex justify="between" align="start">
         <Flex gap="md" align="start" className="flex-1">
-          <div className="text-2xl">{getFieldTypeIcon(field.fieldType)}</div>
+          <Icon icon={getFieldTypeIcon(field.fieldType)} size="lg" />
           <div className="flex-1">
             <Flex gap="sm" align="center">
               <Typography variant="h3" className="font-semibold text-ui-text">
@@ -59,13 +72,14 @@ export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProp
               </Typography>
               {field.isRequired && <Badge variant="error">Required</Badge>}
             </Flex>
-            <Flex gap="sm" align="center" className="text-sm text-ui-text-secondary mt-1">
-              <code className="px-2 py-0.5 bg-ui-bg-secondary rounded font-mono text-xs">
-                {field.fieldKey}
-              </code>
-              <span>•</span>
-              <span className="capitalize">{field.fieldType}</span>
-            </Flex>
+            <Metadata size="sm" className="mt-1">
+              <MetadataItem>
+                <code className="px-2 py-0.5 bg-ui-bg-secondary rounded font-mono text-xs">
+                  {field.fieldKey}
+                </code>
+              </MetadataItem>
+              <MetadataItem className="capitalize">{field.fieldType}</MetadataItem>
+            </Metadata>
             {field.description && (
               <Typography variant="muted" className="mt-2">
                 {field.description}

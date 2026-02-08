@@ -2,12 +2,14 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { ClipboardList } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { CustomFieldCard } from "./fields/CustomFieldCard";
 import { CustomFieldForm } from "./fields/CustomFieldForm";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Flex } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
@@ -87,7 +89,7 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
         </Flex>
       ) : customFields.length === 0 ? (
         <Card className="p-8 text-center">
-          <div className="text-4xl mb-3">📋</div>
+          <Icon icon={ClipboardList} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
           <Typography variant="p" color="secondary">
             No custom fields yet. Add your first field to get started.
           </Typography>

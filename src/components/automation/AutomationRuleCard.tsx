@@ -1,10 +1,12 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
+import { ArrowRight, Pause, Pencil, Play, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 interface AutomationRuleCardProps {
@@ -85,21 +87,26 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
 
           <Flex gap="lg" align="center" className="text-sm">
             <Flex gap="sm" align="center">
-              <span className="text-ui-text-tertiary">When:</span>
+              <Typography variant="muted">When:</Typography>
               <Badge variant="brand" size="md">
                 {getTriggerLabel(rule.trigger)}
-                {rule.triggerValue && ` → ${rule.triggerValue}`}
+                {rule.triggerValue && (
+                  <>
+                    <Icon icon={ArrowRight} size="xs" className="inline mx-1" />
+                    {rule.triggerValue}
+                  </>
+                )}
               </Badge>
             </Flex>
 
             <Flex gap="sm" align="center">
-              <span className="text-ui-text-tertiary">Then:</span>
+              <Typography variant="muted">Then:</Typography>
               <Badge variant="accent" size="md">
                 {getActionLabel(rule.actionType)}
               </Badge>
             </Flex>
 
-            <div className="text-ui-text-tertiary">Executed: {rule.executionCount} times</div>
+            <Typography variant="muted">Executed: {rule.executionCount} times</Typography>
           </Flex>
         </div>
 
@@ -111,7 +118,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
             title={rule.isActive ? "Disable rule" : "Enable rule"}
             aria-label={rule.isActive ? "Disable rule" : "Enable rule"}
           >
-            {rule.isActive ? "⏸️" : "▶️"}
+            <Icon icon={rule.isActive ? Pause : Play} size="sm" />
           </button>
           <button
             type="button"
@@ -120,7 +127,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
             title="Edit rule"
             aria-label="Edit rule"
           >
-            ✏️
+            <Icon icon={Pencil} size="sm" />
           </button>
           <button
             type="button"
@@ -129,7 +136,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
             title="Delete rule"
             aria-label="Delete rule"
           >
-            🗑️
+            <Icon icon={Trash2} size="sm" />
           </button>
         </Flex>
       </Flex>

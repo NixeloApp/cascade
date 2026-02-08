@@ -11,7 +11,9 @@ export function Footer() {
           <div className="md:col-span-2">
             <Flex align="center" gap="sm" className="mb-4">
               <NixeloLogo />
-              <span className="text-xl font-semibold text-ui-text">nixelo</span>
+              <Typography variant="h3" className="text-xl font-semibold">
+                nixelo
+              </Typography>
             </Flex>
             <Typography variant="muted" className="max-w-xs text-ui-text-secondary">
               Revolutionizing project management with intelligent automation and seamless

@@ -203,6 +203,11 @@
   --max-height-panel-sm: 50vh;
   --max-height-panel-md: 60vh;
 
+  /* Modal/Dialog Max Widths (mobile-friendly with gutters) */
+  --max-width-dialog-mobile: calc(100% - 2rem);
+  --max-width-notification: calc(100vw - 2rem);
+  --max-width-toast: 90%;
+
   /* Decorative Blur */
   --blur-glow: 120px;
 

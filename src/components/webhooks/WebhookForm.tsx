@@ -10,6 +10,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Checkbox } from "../ui/form/Checkbox";
+import { Label } from "../ui/Label";
 import { Typography } from "../ui/Typography";
 
 // =============================================================================
@@ -157,9 +158,9 @@ export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookF
           </form.Field>
 
           <div>
-            <div className="block text-sm font-medium text-ui-text mb-2">
-              Events to Subscribe <span className="text-status-error">*</span>
-            </div>
+            <Label required className="block mb-2">
+              Events to Subscribe
+            </Label>
             <div className="space-y-2 p-3 bg-ui-bg-secondary rounded-lg">
               {AVAILABLE_EVENTS.map((event) => (
                 <Checkbox

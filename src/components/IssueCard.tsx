@@ -3,9 +3,16 @@ import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
-import { getPriorityColor, getPriorityIcon, getTypeIcon, getTypeLabel } from "@/lib/issue-utils";
+import {
+  getPriorityColor,
+  getTypeLabel,
+  ISSUE_TYPE_ICONS,
+  PRIORITY_ICONS,
+} from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
+import { Badge } from "./ui/Badge";
+import { Icon } from "./ui/Icon";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
@@ -121,36 +128,27 @@ export const IssueCard = memo(function IssueCard({
             />
           )}
           <Tooltip content={getTypeLabel(issue.type)}>
-            <span role="img" aria-label={getTypeLabel(issue.type)} className="text-sm cursor-help">
-              {getTypeIcon(issue.type)}
-            </span>
+            <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" className="cursor-help" />
           </Tooltip>
-          <span
-            data-testid={TEST_IDS.ISSUE.KEY}
-            className="text-xs text-ui-text-secondary font-mono"
-          >
+          <code data-testid={TEST_IDS.ISSUE.KEY} className="font-mono text-xs">
             {issue.key}
-          </span>
+          </code>
         </Flex>
         <Tooltip
           content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
         >
-          <div
-            role="img"
+          <Icon
+            icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
+            size="sm"
             data-testid={TEST_IDS.ISSUE.PRIORITY}
             aria-label={`Priority: ${issue.priority}`}
-            className={cn("text-xs cursor-help", getPriorityColor(issue.priority))}
-          >
-            {getPriorityIcon(issue.priority)}
-          </div>
+            className={cn("cursor-help", getPriorityColor(issue.priority))}
+          />
         </Tooltip>
       </Flex>
 
       {/* Title */}
-      <Typography
-        variant="h4"
-        className="text-xs sm:text-sm font-medium mb-2 line-clamp-2 border-none"
-      >
+      <Typography variant="label" as="p" className="text-xs sm:text-sm mb-2 line-clamp-2">
         {issue.title}
       </Typography>
 
@@ -158,14 +156,13 @@ export const IssueCard = memo(function IssueCard({
       {issue.labels.length > 0 && (
         <Flex wrap gap="xs" className="mb-2">
           {issue.labels.slice(0, 3).map((label) => (
-            <Typography
+            <span
               key={label.name}
-              variant="small"
-              className="px-1.5 py-0.5 font-medium rounded-md text-white border-none"
+              className="px-1.5 py-0.5 text-xs font-medium rounded-md text-brand-foreground"
               style={{ backgroundColor: label.color }}
             >
               {label.name}
-            </Typography>
+            </span>
           ))}
           {issue.labels.length > 3 && (
             <Tooltip
@@ -180,11 +177,7 @@ export const IssueCard = memo(function IssueCard({
                 role="button"
                 className="rounded-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-ring"
               >
-                <Typography
-                  variant="small"
-                  color="secondary"
-                  className="px-1.5 py-0.5 border-none cursor-help"
-                >
+                <Typography variant="caption" className="px-1.5 py-0.5 cursor-help">
                   +{issue.labels.length - 3}
                 </Typography>
               </span>
@@ -225,10 +218,9 @@ export const IssueCard = memo(function IssueCard({
           )}
         </Flex>
         {issue.storyPoints !== undefined && (
-          <Flex align="center" className="space-x-1 text-xs text-ui-text-secondary">
-            <span className="font-medium">{issue.storyPoints}</span>
-            <span>pts</span>
-          </Flex>
+          <Badge variant="neutral" size="sm">
+            {issue.storyPoints} pts
+          </Badge>
         )}
       </Flex>
     </button>

@@ -3,13 +3,15 @@ import type { ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
-import { getPriorityColor, getTypeIcon } from "@/lib/issue-utils";
+import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { IssueDetailLayout, useIssueDetail } from "./IssueDetailView";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/Dialog";
+import { Icon } from "./ui/Icon";
 import { Tooltip } from "./ui/Tooltip";
+import { Typography } from "./ui/Typography";
 
 interface IssueDetailModalProps {
   issueId: Id<"issues">;
@@ -59,13 +61,13 @@ export function IssueDetailModal({
         <DialogHeader className="px-6 pt-6 pb-0">
           <Flex align="center" justify="between">
             <Flex align="center" className="space-x-3">
-              <span className="text-2xl">{getTypeIcon(issue.type)}</span>
+              <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />
               <div>
                 <DialogTitle className="flex items-center space-x-2">
                   <Flex align="center" className="gap-1.5">
-                    <span className="text-sm text-ui-text-secondary font-mono tracking-tight">
+                    <Typography variant="muted" className="text-sm font-mono tracking-tight">
                       {issue.key}
-                    </span>
+                    </Typography>
                     <Tooltip content={detail.hasCopied ? "Copied!" : "Copy issue key"}>
                       <Button
                         variant="ghost"

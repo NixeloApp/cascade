@@ -3,6 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
+import { ClipboardList } from "@/lib/icons";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { TemplateCard } from "./templates/TemplateCard";
 import { TemplateForm } from "./templates/TemplateForm";
@@ -92,7 +93,7 @@ export function TemplatesManager({ projectId }: TemplatesManagerProps) {
         <CardBody>
           {!templates || templates.length === 0 ? (
             <EmptyState
-              icon="📋"
+              icon={ClipboardList}
               title="No templates yet"
               description="Create templates to speed up issue creation"
             />

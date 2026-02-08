@@ -7,10 +7,12 @@ import { z } from "zod";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
+import { Label } from "../ui/Label";
 import { Typography } from "../ui/Typography";
 
 type PumbleWebhook = Doc<"pumbleWebhooks">;
@@ -58,7 +60,7 @@ export function PumbleIntegration() {
                 className="w-12 h-12 bg-linear-to-br from-accent-ring to-palette-pink rounded-lg"
               >
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-6 h-6 text-brand-foreground"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -244,13 +246,13 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
               {webhook.name}
             </Typography>
             {webhook.isActive ? (
-              <span className="px-2 py-0.5 text-xs font-medium bg-status-success-bg text-status-success-text rounded">
+              <Badge variant="success" size="sm">
                 Active
-              </span>
+              </Badge>
             ) : (
-              <span className="px-2 py-0.5 text-xs font-medium bg-ui-bg-tertiary text-ui-text rounded">
+              <Badge variant="neutral" size="sm">
                 Inactive
-              </span>
+              </Badge>
             )}
           </Flex>
           <Typography className="text-sm text-ui-text-secondary font-mono">{maskedUrl}</Typography>
@@ -265,12 +267,9 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
       {/* Events */}
       <Flex className="flex-wrap gap-1.5 mb-3">
         {webhook.events.map((event: string) => (
-          <span
-            key={event}
-            className="px-2 py-0.5 text-xs font-medium bg-accent-subtle text-accent-active rounded"
-          >
+          <Badge key={event} variant="accent" size="sm">
             {event.replace("issue.", "")}
-          </span>
+          </Badge>
         ))}
       </Flex>
 
@@ -404,7 +403,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
                 type="url"
                 placeholder="https://api.pumble.com/projects/.../..."
                 className="font-mono text-sm"
-                helperText="Get this from Pumble: Channel Settings → Integrations → Incoming Webhooks"
+                helperText="Get this from Pumble: Channel Settings > Integrations > Incoming Webhooks"
                 required
               />
             )}
@@ -437,9 +436,9 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
 
           {/* Events */}
           <div>
-            <div className="block text-sm font-medium text-ui-text mb-3">
-              Events to Send <span className="text-status-error">*</span>
-            </div>
+            <Label required className="block mb-3">
+              Events to Send
+            </Label>
             <div className="grid grid-cols-2 gap-3">
               {AVAILABLE_EVENTS.map((event) => (
                 <Checkbox
@@ -579,9 +578,9 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
 
           {/* Events */}
           <div>
-            <div className="block text-sm font-medium text-ui-text mb-3">
-              Events to Send <span className="text-status-error">*</span>
-            </div>
+            <Label required className="block mb-3">
+              Events to Send
+            </Label>
             <div className="grid grid-cols-2 gap-3">
               {AVAILABLE_EVENTS.map((event) => (
                 <Checkbox

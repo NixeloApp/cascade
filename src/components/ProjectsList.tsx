@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Folder } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 // Type helper for paginated queries with custom return types
@@ -45,7 +47,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
       {/* Projects Grid */}
       {projects.length === 0 ? (
         <EmptyState
-          icon="📁"
+          icon={Folder}
           title="No projects yet"
           description="Create your first project to organize work"
           action={
@@ -105,11 +107,12 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
                   )}
 
                   {/* Metadata */}
-                  <Flex align="center" gap="sm" className="text-ui-text-secondary text-sm">
-                    <span>{project.issueCount || 0} issues</span>
-                    <span className="text-ui-text-tertiary">•</span>
-                    <span>{project.boardType === "kanban" ? "Kanban" : "Scrum"}</span>
-                  </Flex>
+                  <Metadata size="sm">
+                    <MetadataItem>{project.issueCount || 0} issues</MetadataItem>
+                    <MetadataItem>
+                      {project.boardType === "kanban" ? "Kanban" : "Scrum"}
+                    </MetadataItem>
+                  </Metadata>
                 </Flex>
               </div>
             </Link>

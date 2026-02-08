@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/Command";
 import { Flex } from "@/components/ui/Flex";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
+import { Typography } from "@/components/ui/Typography";
 import { NODE_TYPES } from "@/lib/plate/plugins";
 
 interface SlashMenuItem {
@@ -336,7 +337,10 @@ export function SlashMenu() {
             <CommandEmpty className="py-6 text-center text-sm text-ui-text-tertiary">
               No results found
             </CommandEmpty>
-            <CommandGroup heading="Basic blocks" className="px-1 py-1.5 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ui-text-tertiary">
+            <CommandGroup
+              heading="Basic blocks"
+              className="px-1 py-1.5 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ui-text-tertiary"
+            >
               {filteredItems.map((item) => (
                 <CommandItem
                   key={item.id}
@@ -346,8 +350,12 @@ export function SlashMenu() {
                 >
                   <item.icon className="mr-3 h-4 w-4 text-ui-text-secondary" />
                   <Flex direction="column" className="gap-0.5">
-                    <span className="text-sm font-medium text-ui-text">{item.label}</span>
-                    <span className="text-xs text-ui-text-tertiary">{item.description}</span>
+                    <Typography variant="label" className="text-sm font-medium text-ui-text">
+                      {item.label}
+                    </Typography>
+                    <Typography variant="muted" className="text-xs">
+                      {item.description}
+                    </Typography>
                   </Flex>
                 </CommandItem>
               ))}

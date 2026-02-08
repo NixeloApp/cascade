@@ -44,7 +44,7 @@ function RoleCard({ icon, title, description, selected, disabled, onClick }: Rol
       >
         <Check
           className={cn(
-            "w-3.5 h-3.5 text-white transition-all duration-default",
+            "w-3.5 h-3.5 text-brand-foreground transition-all duration-default",
             selected ? "opacity-100 scale-100" : "opacity-0 scale-50",
           )}
         />
@@ -55,7 +55,7 @@ function RoleCard({ icon, title, description, selected, disabled, onClick }: Rol
           className={cn(
             "p-5 rounded-xl transition-all duration-default",
             selected
-              ? "bg-brand text-white scale-105"
+              ? "bg-brand text-brand-foreground scale-105"
               : "bg-ui-bg-tertiary text-ui-text-secondary group-hover:scale-105 group-hover:bg-brand-subtle group-hover:text-brand",
           )}
         >

@@ -3,6 +3,8 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { AtSign, Info, MessageSquare, RefreshCw, User } from "@/lib/icons";
 import { Card } from "../ui/Card";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
@@ -61,8 +63,8 @@ export function NotificationsTab() {
         <div className="p-6">
           <Flex align="start" justify="between">
             <div className="flex-1">
-              <Typography variant="h3">Email Notifications</Typography>
-              <Typography variant="p" color="secondary" className="mt-1 text-sm">
+              <Typography variant="h5">Email Notifications</Typography>
+              <Typography variant="caption" className="mt-1">
                 Master switch for all email notifications. Turn this off to stop receiving all
                 emails.
               </Typography>
@@ -80,7 +82,7 @@ export function NotificationsTab() {
       {/* Individual Notification Types */}
       <Card>
         <div className="p-6">
-          <Typography variant="h3" className="mb-4">
+          <Typography variant="h5" className="mb-4">
             Notification Types
           </Typography>
 
@@ -93,12 +95,10 @@ export function NotificationsTab() {
             >
               <div className="flex-1">
                 <Flex align="center" gap="sm">
-                  <span className="text-xl">@</span>
-                  <Typography variant="h4" className="font-medium text-base">
-                    Mentions
-                  </Typography>
+                  <Icon icon={AtSign} size="md" />
+                  <Typography variant="label">Mentions</Typography>
                 </Flex>
-                <Typography variant="p" color="secondary" className="mt-1 text-sm">
+                <Typography variant="caption" className="mt-1">
                   When someone @mentions you in a comment or description
                 </Typography>
               </div>
@@ -118,12 +118,10 @@ export function NotificationsTab() {
             >
               <div className="flex-1">
                 <Flex align="center" gap="sm">
-                  <span className="text-xl">👤</span>
-                  <Typography variant="h4" className="font-medium text-base">
-                    Assignments
-                  </Typography>
+                  <Icon icon={User} size="md" />
+                  <Typography variant="label">Assignments</Typography>
                 </Flex>
-                <Typography variant="p" color="secondary" className="mt-1 text-sm">
+                <Typography variant="caption" className="mt-1">
                   When you are assigned to an issue
                 </Typography>
               </div>
@@ -143,12 +141,10 @@ export function NotificationsTab() {
             >
               <div className="flex-1">
                 <Flex align="center" gap="sm">
-                  <span className="text-xl">💬</span>
-                  <Typography variant="h4" className="font-medium text-base">
-                    Comments
-                  </Typography>
+                  <Icon icon={MessageSquare} size="md" />
+                  <Typography variant="label">Comments</Typography>
                 </Flex>
-                <Typography variant="p" color="secondary" className="mt-1 text-sm">
+                <Typography variant="caption" className="mt-1">
                   When someone comments on your issues
                 </Typography>
               </div>
@@ -164,12 +160,10 @@ export function NotificationsTab() {
             <Flex align="start" justify="between" className="py-3">
               <div className="flex-1">
                 <Flex align="center" gap="sm">
-                  <span className="text-xl">🔄</span>
-                  <Typography variant="h4" className="font-medium text-base">
-                    Status Changes
-                  </Typography>
+                  <Icon icon={RefreshCw} size="md" />
+                  <Typography variant="label">Status Changes</Typography>
                 </Flex>
-                <Typography variant="p" color="secondary" className="mt-1 text-sm">
+                <Typography variant="caption" className="mt-1">
                   When issue status changes on issues you're watching
                 </Typography>
               </div>
@@ -187,10 +181,10 @@ export function NotificationsTab() {
       {/* Digest Emails */}
       <Card>
         <div className="p-6">
-          <Typography variant="h3" className="mb-2">
+          <Typography variant="h5" className="mb-2">
             Email Digests
           </Typography>
-          <Typography variant="p" color="secondary" className="mb-4 text-sm">
+          <Typography variant="caption" className="mb-4">
             Receive a summary of activity instead of individual emails
           </Typography>
 
@@ -206,10 +200,8 @@ export function NotificationsTab() {
                 className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
               />
               <div>
-                <div className="font-medium text-ui-text">No digest</div>
-                <div className="text-sm text-ui-text-secondary">
-                  Receive emails as events happen
-                </div>
+                <Typography variant="label">No digest</Typography>
+                <Typography variant="caption">Receive emails as events happen</Typography>
               </div>
             </label>
 
@@ -224,10 +216,10 @@ export function NotificationsTab() {
                 className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
               />
               <div>
-                <div className="font-medium text-ui-text">Daily digest</div>
-                <div className="text-sm text-ui-text-secondary">
+                <Typography variant="label">Daily digest</Typography>
+                <Typography variant="caption">
                   One email per day with all activity (coming soon)
-                </div>
+                </Typography>
               </div>
             </label>
 
@@ -242,10 +234,10 @@ export function NotificationsTab() {
                 className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
               />
               <div>
-                <div className="font-medium text-ui-text">Weekly digest</div>
-                <div className="text-sm text-ui-text-secondary">
+                <Typography variant="label">Weekly digest</Typography>
+                <Typography variant="caption">
                   One email per week with all activity (coming soon)
-                </div>
+                </Typography>
               </div>
             </label>
           </div>
@@ -255,12 +247,12 @@ export function NotificationsTab() {
       {/* Help Text */}
       <div className="mt-6 p-4 bg-brand-subtle rounded-lg border border-brand-border">
         <Flex gap="md">
-          <span className="text-brand text-xl">ℹ️</span>
+          <Icon icon={Info} size="md" className="text-brand" />
           <div className="flex-1">
-            <Typography variant="h4" className="font-medium text-brand-active mb-1">
+            <Typography variant="label" className="text-brand-active mb-1">
               Email Configuration
             </Typography>
-            <Typography variant="p" className="text-sm text-brand-active">
+            <Typography variant="caption" className="text-brand-active">
               Email notifications require Resend API configuration. If you're not receiving emails,
               contact your administrator to set up email notifications.
             </Typography>

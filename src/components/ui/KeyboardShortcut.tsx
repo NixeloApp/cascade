@@ -1,5 +1,15 @@
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Command,
+  CornerDownLeft,
+  Delete,
+} from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
+import { Icon } from "./Icon";
 
 interface KeyboardShortcutProps {
   /**
@@ -73,7 +83,7 @@ export function KeyboardShortcut({
               variantClasses[variant],
             )}
           >
-            {formatKey(key)}
+            {formatKey(key, size)}
           </kbd>
           {index < keysWithIds.length - 1 && (
             <span className="text-ui-text-tertiary mx-0.5">+</span>
@@ -86,32 +96,44 @@ export function KeyboardShortcut({
 
 /**
  * Format key for display (handle common abbreviations)
+ * Returns either a string or a React element (icon)
  */
-function formatKey(key: string): string {
-  const keyMap: Record<string, string> = {
+function formatKey(key: string, size: "sm" | "md"): React.ReactNode {
+  const lowerKey = key.toLowerCase();
+  const iconSize = size === "sm" ? "xs" : "sm";
+
+  // Keys that use icons
+  const iconKeys: Record<string, React.ReactNode> = {
+    cmd: <Icon icon={Command} size={iconSize} />,
+    command: <Icon icon={Command} size={iconSize} />,
+    enter: <Icon icon={CornerDownLeft} size={iconSize} />,
+    return: <Icon icon={CornerDownLeft} size={iconSize} />,
+    backspace: <Icon icon={Delete} size={iconSize} />,
+    up: <Icon icon={ArrowUp} size={iconSize} />,
+    down: <Icon icon={ArrowDown} size={iconSize} />,
+    left: <Icon icon={ArrowLeft} size={iconSize} />,
+    right: <Icon icon={ArrowRight} size={iconSize} />,
+  };
+
+  if (iconKeys[lowerKey]) {
+    return iconKeys[lowerKey];
+  }
+
+  // Keys that use text labels
+  const textKeys: Record<string, string> = {
     ctrl: "Ctrl",
     control: "Ctrl",
-    cmd: "⌘",
-    command: "⌘",
     alt: "Alt",
-    option: "⌥",
-    shift: "⇧",
-    enter: "↵",
-    return: "↵",
+    option: "Opt",
+    shift: "Shift",
     esc: "Esc",
     escape: "Esc",
     tab: "Tab",
     space: "Space",
-    backspace: "⌫",
     delete: "Del",
-    up: "↑",
-    down: "↓",
-    left: "←",
-    right: "→",
   };
 
-  const lowerKey = key.toLowerCase();
-  return keyMap[lowerKey] || key;
+  return textKeys[lowerKey] || key;
 }
 
 /**
@@ -134,6 +156,48 @@ export function ShortcutList({ shortcuts, className = "" }: ShortcutListProps) {
           <KeyboardShortcut shortcut={shortcut.keys} />
         </Flex>
       ))}
+    </Flex>
+  );
+}
+
+/**
+ * ShortcutHint - Keyboard shortcut with inline description.
+ *
+ * Replaces the pattern:
+ * ```tsx
+ * // Before (bad)
+ * <span>
+ *   <kbd className="...">Navigate</kbd>
+ * </span>
+ *
+ * // After (good)
+ * <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+ * ```
+ */
+interface ShortcutHintProps {
+  /** The keyboard keys to display */
+  keys: string;
+  /** Description text */
+  children: React.ReactNode;
+  /** Size variant */
+  size?: "sm" | "md";
+  /** Visual variant */
+  variant?: "default" | "subtle";
+  /** Additional CSS classes */
+  className?: string;
+}
+
+export function ShortcutHint({
+  keys,
+  children,
+  size = "sm",
+  variant = "subtle",
+  className = "",
+}: ShortcutHintProps) {
+  return (
+    <Flex as="span" inline align="center" gap="xs" className={className}>
+      <KeyboardShortcut shortcut={keys} size={size} variant={variant} />
+      <span>{children}</span>
     </Flex>
   );
 }

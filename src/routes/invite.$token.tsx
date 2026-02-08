@@ -76,7 +76,7 @@ function InviteRoute() {
           <div className="p-4 rounded-full bg-status-error-bg w-fit mx-auto mb-6">
             <AlertCircle className="w-12 h-12 text-status-error" />
           </div>
-          <Typography variant="h1" className="text-2xl font-bold mb-3">
+          <Typography variant="h3" className="mb-3">
             Invalid Invitation
           </Typography>
           <Typography variant="p" color="secondary" className="mb-6">
@@ -99,12 +99,12 @@ function InviteRoute() {
           <div className="p-4 rounded-full bg-status-warning-bg w-fit mx-auto mb-6">
             <Clock className="w-12 h-12 text-status-warning-text" />
           </div>
-          <Typography variant="h1" className="text-2xl font-bold mb-3">
+          <Typography variant="h3" className="mb-3">
             Invitation Expired
           </Typography>
           <Typography variant="p" color="secondary" className="mb-6">
             This invitation has expired. Please contact{" "}
-            <span className="font-medium">{invite.inviterName}</span> to send a new invitation.
+            <strong className="font-medium">{invite.inviterName}</strong> to send a new invitation.
           </Typography>
           <Button variant="primary" onClick={goToHome}>
             Go to Home
@@ -122,7 +122,7 @@ function InviteRoute() {
           <div className="p-4 rounded-full bg-status-success-bg w-fit mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-status-success" />
           </div>
-          <Typography variant="h1" className="text-2xl font-bold mb-3">
+          <Typography variant="h3" className="mb-3">
             Already Accepted
           </Typography>
           <Typography variant="p" color="secondary" className="mb-6">
@@ -144,7 +144,7 @@ function InviteRoute() {
           <div className="p-4 rounded-full bg-status-error-bg w-fit mx-auto mb-6">
             <AlertCircle className="w-12 h-12 text-status-error" />
           </div>
-          <Typography variant="h1" className="text-2xl font-bold mb-3">
+          <Typography variant="h3" className="mb-3">
             Invitation Revoked
           </Typography>
           <Typography variant="p" color="secondary" className="mb-6">
@@ -183,19 +183,15 @@ function InviteRoute() {
           {/* Invitation Card */}
           <div className="bg-ui-bg rounded-2xl shadow-lg p-8 mb-6">
             <div className="text-center mb-6">
-              <Typography variant="h1" className="text-2xl font-bold mb-2">
+              <Typography variant="h3" className="mb-2">
                 You're Invited!
               </Typography>
               <Typography variant="p" color="secondary">
-                <Typography as="span" variant="small">
-                  {invite.inviterName}
-                </Typography>{" "}
+                <strong className="font-semibold text-ui-text">{invite.inviterName}</strong>{" "}
                 {isProjectInvite ? (
                   <>
                     has invited you to join the project{" "}
-                    <Typography as="span" variant="small">
-                      {invite.projectName}
-                    </Typography>
+                    <strong className="font-semibold text-ui-text">{invite.projectName}</strong>
                   </>
                 ) : (
                   "has invited you to join Nixelo"
@@ -271,10 +267,8 @@ function InviteRoute() {
                 <div className="space-y-4">
                   <Typography className="text-sm text-center text-ui-text-secondary mb-4">
                     Sign in or create an account with{" "}
-                    <Typography as="span" variant="small">
-                      {invite.email}
-                    </Typography>{" "}
-                    to accept this invitation
+                    <strong className="font-semibold text-ui-text">{invite.email}</strong> to accept
+                    this invitation
                   </Typography>
                   <SignInForm />
                 </div>

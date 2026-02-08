@@ -2,11 +2,13 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
+import { FileCode, FileSpreadsheet, Info } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
 
@@ -117,7 +119,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
             )}
           >
             <Flex gap="md" align="center">
-              <div className="text-3xl">📊</div>
+              <Icon icon={FileSpreadsheet} size="lg" />
               <div>
                 <div className="font-semibold text-ui-text">CSV</div>
                 <div className="text-xs text-ui-text-tertiary">Spreadsheet format</div>
@@ -133,7 +135,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
             )}
           >
             <Flex gap="md" align="center">
-              <div className="text-3xl">📄</div>
+              <Icon icon={FileCode} size="lg" />
               <div>
                 <div className="font-semibold text-ui-text">JSON</div>
                 <div className="text-xs text-ui-text-tertiary">Data interchange format</div>
@@ -145,7 +147,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
 
       <div className="bg-brand-subtle border border-brand-border rounded-lg p-4">
         <Flex gap="md" align="start">
-          <div className="text-brand text-xl">ℹ️</div>
+          <Icon icon={Info} size="lg" className="text-brand" />
           <div className="text-sm text-brand-active">
             <Typography variant="p" className="font-semibold mb-1">
               Export Information

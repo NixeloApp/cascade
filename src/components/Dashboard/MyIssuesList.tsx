@@ -4,12 +4,14 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import type { useListNavigation } from "@/hooks/useListNavigation";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
+import { Metadata, MetadataItem } from "../ui/Metadata";
 import { SkeletonList } from "../ui/Skeleton";
 
 type IssueFilter = "assigned" | "created" | "all";
@@ -125,7 +127,7 @@ export function MyIssuesList({
           <SkeletonList items={5} />
         ) : displayIssues.length === 0 ? (
           <EmptyState
-            icon="📭"
+            icon={Inbox}
             title="Inbox Clear"
             description="No pending items in your feed."
             action={{
@@ -173,15 +175,10 @@ export function MyIssuesList({
                     >
                       {issue.title}
                     </Typography>
-                    <Flex
-                      gap="xs"
-                      align="center"
-                      className="text-xs text-ui-text-tertiary uppercase tracking-wider font-bold"
-                    >
-                      <span>{issue.projectName}</span>
-                      <span>•</span>
-                      <span>{issue.status}</span>
-                    </Flex>
+                    <Metadata size="xs" gap="xs" className="uppercase tracking-wider font-bold">
+                      <MetadataItem>{issue.projectName}</MetadataItem>
+                      <MetadataItem>{issue.status}</MetadataItem>
+                    </Metadata>
                   </div>
                 </Flex>
               </button>

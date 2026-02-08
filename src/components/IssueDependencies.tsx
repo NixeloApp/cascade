@@ -5,7 +5,9 @@ import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -19,6 +21,25 @@ type IssueLinkWithDetails = FunctionReturnType<
   typeof api.issueLinks.getForIssue
 >["outgoing"][number];
 type Issue = FunctionReturnType<typeof api.issues.search>["page"][number];
+
+/** Reusable issue display: icon + key + title */
+function IssueDisplay({
+  type,
+  issueKey,
+  title,
+}: {
+  type: IssueType;
+  issueKey: string;
+  title: string;
+}) {
+  return (
+    <Flex as="span" align="center" gap="sm" className="min-w-0">
+      <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" className="shrink-0" />
+      <code className="shrink-0 font-mono text-xs text-ui-text-secondary">{issueKey}</code>
+      <span className="truncate text-sm text-ui-text">{title}</span>
+    </Flex>
+  );
+}
 
 interface IssueDependenciesProps {
   issueId: Id<"issues">;
@@ -101,19 +122,6 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "bug":
-        return "🐛";
-      case "story":
-        return "📖";
-      case "epic":
-        return "⚡";
-      default:
-        return "✓";
-    }
-  };
-
   return (
     <div className="space-y-4">
       {/* Add Dependency Button */}
@@ -126,7 +134,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
       {/* Outgoing Links */}
       {links && links.outgoing.length > 0 && (
         <div>
-          <Typography variant="h4" className="text-sm font-medium text-ui-text mb-2">
+          <Typography variant="label" className="mb-2">
             Dependencies
           </Typography>
           <div className="space-y-2">
@@ -142,17 +150,11 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
                     {getLinkTypeLabel(link.linkType, "outgoing")}
                   </Badge>
                   {link.issue && (
-                    <Flex align="center" gap="sm" className="flex-1 min-w-0">
-                      <Typography as="span" className="text-sm">
-                        {getTypeIcon(link.issue.type)}
-                      </Typography>
-                      <Typography as="span" color="tertiary" className="text-sm font-mono">
-                        {link.issue.key}
-                      </Typography>
-                      <Typography as="span" className="text-sm truncate">
-                        {link.issue.title}
-                      </Typography>
-                    </Flex>
+                    <IssueDisplay
+                      type={link.issue.type}
+                      issueKey={link.issue.key}
+                      title={link.issue.title}
+                    />
                   )}
                 </Flex>
                 <Tooltip content="Remove dependency">
@@ -175,7 +177,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
       {/* Incoming Links */}
       {links && links.incoming.length > 0 && (
         <div>
-          <Typography variant="h4" className="text-sm font-medium text-ui-text mb-2">
+          <Typography variant="label" className="mb-2">
             Referenced By
           </Typography>
           <div className="space-y-2">
@@ -191,17 +193,11 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
                     {getLinkTypeLabel(link.linkType, "incoming")}
                   </Badge>
                   {link.issue && (
-                    <Flex align="center" gap="sm" className="flex-1 min-w-0">
-                      <Typography as="span" className="text-sm">
-                        {getTypeIcon(link.issue.type)}
-                      </Typography>
-                      <Typography as="span" color="tertiary" className="text-sm font-mono">
-                        {link.issue.key}
-                      </Typography>
-                      <Typography as="span" className="text-sm truncate">
-                        {link.issue.title}
-                      </Typography>
-                    </Flex>
+                    <IssueDisplay
+                      type={link.issue.type}
+                      issueKey={link.issue.key}
+                      title={link.issue.title}
+                    />
                   )}
                 </Flex>
                 <Tooltip content="Remove dependency">
@@ -224,9 +220,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
       {/* Empty State */}
       {links && links.outgoing.length === 0 && links.incoming.length === 0 && (
         <div className="text-center py-6">
-          <Typography variant="p" color="secondary" className="text-sm">
-            No dependencies yet
-          </Typography>
+          <Typography variant="caption">No dependencies yet</Typography>
         </div>
       )}
 
@@ -282,17 +276,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
                       selectedIssueKey === issue._id && "bg-brand-subtle",
                     )}
                   >
-                    <Flex align="center" gap="sm">
-                      <Typography as="span" className="text-sm">
-                        {getTypeIcon(issue.type)}
-                      </Typography>
-                      <Typography as="span" color="tertiary" className="text-sm font-mono">
-                        {issue.key}
-                      </Typography>
-                      <Typography as="span" className="text-sm truncate">
-                        {issue.title}
-                      </Typography>
-                    </Flex>
+                    <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
                   </button>
                 ))}
               </div>
@@ -300,9 +284,9 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
 
             {/* Selected Issue */}
             {selectedIssueKey && (
-              <div className="text-sm text-ui-text-secondary">
+              <Typography variant="caption">
                 Selected: <span className="font-medium">{selectedIssueKey}</span>
-              </div>
+              </Typography>
             )}
 
             {/* Actions */}

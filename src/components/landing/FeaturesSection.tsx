@@ -85,8 +85,8 @@ function FeatureCard({
     <div
       className={cn(
         "group relative p-6 rounded-2xl",
-        "bg-linear-to-b from-gray-100/80 to-gray-200/50",
-        "border border-gray-300/40",
+        "bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/50",
+        "border border-ui-border/40",
         "backdrop-blur-md",
         "transition-all duration-300",
         "hover:shadow-xl hover:-translate-y-1",

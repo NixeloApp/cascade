@@ -1,9 +1,10 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { Check, ChevronDown, ChevronUp, X } from "@/lib/icons";
+import { Check, ChevronDown, ChevronUp, Rocket, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Progress } from "../ui/progress";
 import { Typography } from "../ui/Typography";
 
@@ -81,7 +82,7 @@ export function OnboardingChecklist() {
       >
         <Flex gap="md" align="center">
           <Flex align="center" justify="center" className="w-9 h-9 rounded-lg bg-brand-subtle">
-            <span className="text-lg">🚀</span>
+            <Icon icon={Rocket} size="md" />
           </Flex>
           <div>
             <Typography variant="h3" className="font-semibold text-ui-text tracking-tight">
@@ -147,7 +148,7 @@ export function OnboardingChecklist() {
                 className={cn(
                   "flex-shrink-0 w-6 h-6 rounded-full transition-all duration-default",
                   item.completed
-                    ? "bg-status-success text-white"
+                    ? "bg-status-success text-brand-foreground"
                     : "border-2 border-ui-border-secondary text-ui-text-tertiary",
                 )}
               >

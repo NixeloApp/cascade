@@ -7,6 +7,7 @@ import { useAsyncMutation } from "@/hooks/useAsyncMutation";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { useEntityForm } from "@/hooks/useEntityForm";
 import { useModal } from "@/hooks/useModal";
+import { Tag } from "@/lib/icons";
 import { showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
@@ -246,7 +247,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         <CardBody>
           {!labelGroups || totalLabels === 0 ? (
             <EmptyState
-              icon="🏷️"
+              icon={Tag}
               title="No labels yet"
               description="Create labels and organize them into groups"
               action={{
@@ -279,16 +280,18 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                         ) : (
                           <ChevronDown className="w-4 h-4 text-ui-text-secondary" />
                         )}
-                        <Typography variant="h4" className="text-sm font-medium">
-                          {group.name}
-                        </Typography>
-                        <span className="text-xs text-ui-text-tertiary">
+                        <strong>{group.name}</strong>
+                        <Typography variant="caption" color="tertiary">
                           ({group.labels.length})
-                        </span>
+                        </Typography>
                         {group.description && (
-                          <span className="text-xs text-ui-text-tertiary hidden sm:inline">
+                          <Typography
+                            variant="caption"
+                            color="tertiary"
+                            className="hidden sm:inline"
+                          >
                             — {group.description}
-                          </span>
+                          </Typography>
                         )}
                       </Flex>
 
@@ -336,12 +339,12 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           >
                             <Flex gap="md" align="center">
                               <span
-                                className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                                className="px-3 py-1 rounded-full text-sm font-medium text-brand-foreground"
                                 style={{ backgroundColor: label.color }}
                               >
                                 {label.name}
                               </span>
-                              <span className="text-xs text-ui-text-tertiary">{label.color}</span>
+                              <code className="text-xs text-ui-text-tertiary">{label.color}</code>
                             </Flex>
 
                             <Flex gap="sm">
@@ -435,7 +438,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
               <div>
                 <div className="block text-sm font-medium text-ui-text mb-2">Preview</div>
                 <span
-                  className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                  className="px-3 py-1 rounded-full text-sm font-medium text-brand-foreground"
                   style={{ backgroundColor: labelForm.formData.color }}
                 >
                   {labelForm.formData.name || "Label name"}

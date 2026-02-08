@@ -18,12 +18,34 @@ const labelVariants = cva(
   },
 );
 
-const Label = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants>
->(({ className, variant, ...props }, ref) => (
-  <LabelPrimitive.Root ref={ref} className={cn(labelVariants({ variant }), className)} {...props} />
-));
+interface LabelProps
+  extends React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>,
+    VariantProps<typeof labelVariants> {
+  /** Show required indicator (*) after the label text */
+  required?: boolean;
+}
+
+/**
+ * Label component with optional required indicator.
+ *
+ * @example
+ * ```tsx
+ * <Label htmlFor="email">Email</Label>
+ * <Label htmlFor="name" required>Name</Label>
+ * ```
+ */
+const Label = React.forwardRef<React.ElementRef<typeof LabelPrimitive.Root>, LabelProps>(
+  ({ className, variant, required, children, ...props }, ref) => (
+    <LabelPrimitive.Root ref={ref} className={cn(labelVariants({ variant }), className)} {...props}>
+      {children}
+      {required && (
+        <span aria-hidden="true" className="text-status-error ml-0.5">
+          *
+        </span>
+      )}
+    </LabelPrimitive.Root>
+  ),
+);
 Label.displayName = LabelPrimitive.Root.displayName;
 
 export { Label };

@@ -3,9 +3,12 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { useCallback, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
+import { Inbox } from "@/lib/icons";
 import { showError } from "@/lib/toast";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
+import { Badge } from "./ui/Badge";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
@@ -90,9 +93,14 @@ export function NotificationCenter() {
             </svg>
             {/* Unread Badge */}
             {unreadCount != null && unreadCount > 0 && (
-              <span className="absolute top-0 right-0 px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-status-error rounded-full">
+              <Badge
+                variant="error"
+                size="sm"
+                shape="pill"
+                className="absolute top-0 right-0 font-bold leading-none transform translate-x-1/2 -translate-y-1/2 border-0"
+              >
                 {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
+              </Badge>
             )}
           </button>
         </PopoverTrigger>
@@ -100,7 +108,7 @@ export function NotificationCenter() {
 
       <PopoverContent
         align="end"
-        className="w-full sm:w-96 max-w-[calc(100vw-2rem)] p-0 bg-ui-bg border-ui-border max-h-panel flex flex-col"
+        className="w-full sm:w-96 max-w-notification p-0 bg-ui-bg border-ui-border max-h-panel flex flex-col"
       >
         {/* Header */}
         <Flex
@@ -127,7 +135,7 @@ export function NotificationCenter() {
         <div className="flex-1 overflow-y-auto">
           {!notifications || notifications.length === 0 ? (
             <div className="p-8 text-center text-ui-text-secondary">
-              <div className="text-4xl mb-2">📭</div>
+              <Icon icon={Inbox} size="xl" className="mx-auto mb-2 text-ui-text-tertiary" />
               <Typography>No notifications</Typography>
             </div>
           ) : (

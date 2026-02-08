@@ -118,14 +118,9 @@ function OnboardingPage() {
             justify="center"
             className="h-10 w-10 rounded-xl bg-brand-indigo-bg shadow-lg shadow-brand-indigo-bg/20 transition-transform group-hover:scale-110 active:scale-95"
           >
-            <span className="text-white font-bold text-lg">N</span>
+            <span className="text-brand-foreground font-bold text-lg">N</span>
           </Flex>
-          <Typography
-            variant="h3"
-            className="text-xl font-bold tracking-tight bg-clip-text text-ui-text"
-          >
-            Nixelo
-          </Typography>
+          <Typography variant="h4">Nixelo</Typography>
         </Flex>
         {step !== "invited" && (
           <Button
@@ -155,7 +150,7 @@ function OnboardingPage() {
           {step === "role-select" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="text-center">
-                <Typography variant="h1" className="text-3xl font-bold mb-3 tracking-tight">
+                <Typography variant="h2" className="mb-3">
                   Welcome to Nixelo
                 </Typography>
                 <Typography variant="lead" className="text-ui-text-secondary">

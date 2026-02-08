@@ -2,8 +2,10 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
 import { Check, Copy } from "@/lib/icons";
-import { getTypeIcon } from "@/lib/issue-utils";
+import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { Icon } from "../ui/Icon";
 
 interface IssueDetailHeaderProps {
   issueKey: string;
@@ -29,10 +31,10 @@ export function IssueDetailHeader({
           {breadcrumb}
           {breadcrumb && <span className="text-ui-text-tertiary">/</span>}
           <Flex align="center" gap="sm">
-            <span className="text-lg">{getTypeIcon(issueType)}</span>
-            <span className="font-mono text-sm tracking-tight text-ui-text-secondary">
+            <Icon icon={ISSUE_TYPE_ICONS[issueType]} size="md" />
+            <Typography variant="muted" className="font-mono text-sm tracking-tight">
               {issueKey}
-            </span>
+            </Typography>
             <Tooltip content={hasCopied ? "Copied!" : "Copy issue key"}>
               <Button
                 variant="ghost"

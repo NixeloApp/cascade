@@ -1,4 +1,5 @@
 import { isSameDay } from "date-fns";
+import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
 import { DOT_COLOR_CLASSES, type EventColor } from "../../../calendar-colors";
 
@@ -27,17 +28,24 @@ export function CalendarBodyDayEvents(): React.ReactElement {
             />
           </svg>
         </div>
-        <p className="text-sm font-medium text-ui-text-secondary">No events today</p>
-        <p className="text-xs text-ui-text-tertiary mt-1">Your schedule is clear</p>
+        <Typography variant="p" className="text-sm font-medium text-ui-text-secondary">
+          No events today
+        </Typography>
+        <Typography variant="small" className="text-xs text-ui-text-tertiary mt-1">
+          Your schedule is clear
+        </Typography>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-1 p-2">
-      <p className="text-xs font-medium uppercase tracking-wide text-ui-text-tertiary px-2 py-1">
+      <Typography
+        variant="small"
+        className="text-xs font-medium uppercase tracking-wide text-ui-text-tertiary px-2 py-1"
+      >
         Events
-      </p>
+      </Typography>
       <div className="flex flex-col gap-0.5">
         {dayEvents.map((event) => (
           <button
@@ -52,9 +60,12 @@ export function CalendarBodyDayEvents(): React.ReactElement {
                 DOT_COLOR_CLASSES[event.color as EventColor] || DOT_COLOR_CLASSES.blue,
               )}
             />
-            <p className="text-sm font-medium text-ui-text-secondary group-hover:text-ui-text truncate transition-colors duration-default">
+            <Typography
+              variant="p"
+              className="text-sm font-medium text-ui-text-secondary group-hover:text-ui-text truncate transition-colors duration-default"
+            >
               {event.title}
-            </p>
+            </Typography>
           </button>
         ))}
       </div>

@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
+import { Typography } from "../ui/Typography";
 
 /**
  * Horizontal bar chart visualization
@@ -33,7 +34,9 @@ export const BarChart = memo(function BarChart({
                 minWidth: item.value > 0 ? "2rem" : "0",
               }}
             >
-              <span className="text-xs font-semibold text-white">{item.value}</span>
+              <Typography variant="small" className="font-semibold text-brand-foreground">
+                {item.value}
+              </Typography>
             </div>
           </div>
         </Flex>

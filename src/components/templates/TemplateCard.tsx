@@ -1,7 +1,9 @@
 import type { Id } from "@convex/_generated/dataModel";
-import type { IssuePriority, IssueType } from "@/lib/issue-utils";
+import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 interface TemplateCardProps {
@@ -23,34 +25,21 @@ interface TemplateCardProps {
  * Extracted from TemplatesManager for better reusability
  */
 export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
-  const getTypeIcon = (type: IssueType) => {
-    switch (type) {
-      case "bug":
-        return "🐛";
-      case "story":
-        return "📖";
-      case "epic":
-        return "⚡";
-      default:
-        return "✓";
-    }
-  };
-
   return (
     <div className="p-4 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary transition-colors">
       <Flex justify="between" align="start">
         <div className="flex-1">
           <Flex gap="sm" align="center" className="mb-2">
-            <span className="text-lg">{getTypeIcon(template.type)}</span>
+            <Icon icon={ISSUE_TYPE_ICONS[template.type]} size="md" />
             <Typography variant="h4" className="font-medium text-ui-text">
               {template.name}
             </Typography>
-            <span className="text-xs px-2 py-0.5 bg-ui-bg-tertiary text-ui-text rounded capitalize">
+            <Badge variant="neutral" size="sm" className="capitalize">
               {template.type}
-            </span>
-            <span className="text-xs px-2 py-0.5 bg-brand-subtle text-brand-hover rounded capitalize">
+            </Badge>
+            <Badge variant="brand" size="sm" className="capitalize">
               {template.defaultPriority}
-            </span>
+            </Badge>
           </Flex>
           <Typography className="text-sm text-ui-text-secondary mb-1">
             <span className="font-medium">Title:</span> {template.titleTemplate}
@@ -63,12 +52,9 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
           {template.defaultLabels && template.defaultLabels.length > 0 && (
             <Flex gap="xs" className="mt-2">
               {template.defaultLabels.map((label) => (
-                <span
-                  key={label}
-                  className="text-xs px-2 py-0.5 bg-ui-bg border border-ui-border rounded"
-                >
+                <Badge key={label} variant="outline" size="sm">
                   {label}
-                </span>
+                </Badge>
               ))}
             </Flex>
           )}

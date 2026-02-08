@@ -94,8 +94,8 @@ export function ConfirmDialog({
             className={cn(
               "transition-all duration-default focus:ring-2 focus:ring-offset-2",
               variant === "info"
-                ? "bg-brand text-white hover:bg-brand-hover focus:ring-brand-ring"
-                : "bg-status-error text-white hover:bg-status-error/90 focus:ring-status-error/50",
+                ? "bg-brand text-brand-foreground hover:bg-brand-hover focus:ring-brand-ring"
+                : "bg-status-error text-brand-foreground hover:bg-status-error/90 focus:ring-status-error/50",
             )}
           >
             {isLoading ? (

@@ -1,6 +1,8 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Download, Upload } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ExportPanel } from "./import-export/ExportPanel";
 import { ImportPanel } from "./import-export/ImportPanel";
@@ -59,7 +61,10 @@ export function ImportExportModal({
                   : "text-ui-text-secondary hover:text-ui-text",
               )}
             >
-              📤 Export
+              <Flex align="center" justify="center" gap="xs">
+                <Icon icon={Download} size="sm" />
+                Export
+              </Flex>
             </button>
             <button
               type="button"
@@ -71,7 +76,10 @@ export function ImportExportModal({
                   : "text-ui-text-secondary hover:text-ui-text",
               )}
             >
-              📥 Import
+              <Flex align="center" justify="center" gap="xs">
+                <Icon icon={Upload} size="sm" />
+                Import
+              </Flex>
             </button>
           </Flex>
 

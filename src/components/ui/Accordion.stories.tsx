@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Bell, CreditCard, HelpCircle, Lock, Mail, Settings, User } from "lucide-react";
+import { Bell, CreditCard, CircleHelp, Lock, Mail, Settings, User } from "@/lib/icons";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./Accordion";
 
 const meta: Meta<typeof Accordion> = {
@@ -149,7 +149,7 @@ export const FAQ: Story = {
         <AccordionItem value="faq-1">
           <AccordionTrigger>
             <span className="flex items-center gap-2">
-              <HelpCircle className="size-4 text-brand" />
+              <CircleHelp className="size-4 text-brand" />
               What makes Nixelo different from other project management tools?
             </span>
           </AccordionTrigger>

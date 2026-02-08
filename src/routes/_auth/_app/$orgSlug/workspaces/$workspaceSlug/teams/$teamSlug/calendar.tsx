@@ -11,7 +11,11 @@ export const Route = createFileRoute(
 function TeamCalendar() {
   return (
     <Flex direction="column" align="center" justify="center" className="h-full p-8">
-      <Flex align="center" justify="center" className="w-16 h-16 rounded-full bg-ui-bg-tertiary mb-4">
+      <Flex
+        align="center"
+        justify="center"
+        className="w-16 h-16 rounded-full bg-ui-bg-tertiary mb-4"
+      >
         <svg
           className="w-8 h-8 text-ui-text-tertiary"
           fill="none"

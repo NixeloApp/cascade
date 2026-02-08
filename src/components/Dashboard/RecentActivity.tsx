@@ -1,8 +1,10 @@
+import { TrendingUp } from "@/lib/icons";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
+import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
 import { SkeletonText } from "../ui/Skeleton";
 import { Typography } from "../ui/Typography";
 
@@ -19,7 +21,7 @@ interface RecentActivityProps {
   activities: Activity[] | undefined;
 }
 
-const getActionBadgeVariant = (action: string): "success" | "info" | "warning" | "neutral" => {
+const _getActionBadgeVariant = (action: string): "success" | "info" | "warning" | "neutral" => {
   switch (action) {
     case "created":
       return "success";
@@ -52,7 +54,11 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             <SkeletonText lines={2} />
           </Flex>
         ) : activities.length === 0 ? (
-          <EmptyState icon="📊" title="No activity" description="No recent activity to show" />
+          <EmptyState
+            icon={TrendingUp}
+            title="No activity"
+            description="No recent activity to show"
+          />
         ) : (
           <div className="relative h-96 overflow-y-auto pr-2 custom-scrollbar">
             {/* Timeline line */}
@@ -73,18 +79,9 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm">
-                        <Typography
-                          variant="small"
-                          as="span"
-                          className="font-semibold text-ui-text"
-                        >
-                          {activity.userName}
-                        </Typography>{" "}
-                        <Typography variant="small" as="span" className="text-ui-text-secondary">
-                          {activity.action}
-                        </Typography>
-                      </div>
+                      <Typography variant="p" className="text-sm m-0">
+                        <strong>{activity.userName}</strong> {activity.action}
+                      </Typography>
                       <div className="mt-1.5">
                         <Badge
                           variant="neutral"
@@ -93,15 +90,10 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                           {activity.issueKey}
                         </Badge>
                       </div>
-                      <Flex
-                        gap="xs"
-                        align="center"
-                        className="mt-2 text-caption text-ui-text-tertiary"
-                      >
-                        <span className="font-medium">{activity.projectName}</span>
-                        <span className="text-ui-border-secondary">|</span>
-                        <span>{new Date(activity._creationTime).toLocaleDateString()}</span>
-                      </Flex>
+                      <Metadata separator="|" className="mt-2">
+                        <MetadataItem className="font-medium">{activity.projectName}</MetadataItem>
+                        <MetadataTimestamp date={activity._creationTime} format="absolute" />
+                      </Metadata>
                     </div>
                   </Flex>
                 </div>

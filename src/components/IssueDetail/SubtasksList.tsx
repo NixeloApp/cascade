@@ -6,6 +6,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Flex } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
+import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Progress } from "../ui/progress";
 import { Typography } from "../ui/Typography";
 
@@ -144,14 +145,14 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
                 className="mt-1"
               />
               <div className="flex-1">
-                <Flex gap="sm" align="center">
-                  <span className="text-xs font-mono text-ui-text-tertiary">{subtask.key}</span>
-                  <span className="text-sm text-ui-text">{subtask.title}</span>
-                </Flex>
+                <Metadata separator="-">
+                  <MetadataItem className="font-mono text-ui-text">{subtask.key}</MetadataItem>
+                  <MetadataItem className="text-ui-text">{subtask.title}</MetadataItem>
+                </Metadata>
                 {subtask.assignee && (
-                  <span className="text-xs text-ui-text-tertiary">
+                  <Typography variant="meta">
                     Assigned to {subtask.assignee.name || subtask.assignee.email || "Unknown"}
-                  </span>
+                  </Typography>
                 )}
               </div>
             </Flex>

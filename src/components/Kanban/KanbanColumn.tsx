@@ -112,7 +112,10 @@ export const KanbanColumn = memo(function KanbanColumn({
       >
         <Flex align="center" justify="between" gap="sm">
           <Flex align="center" className="space-x-2 min-w-0">
-            <Typography variant="h3" className="font-medium text-ui-text-secondary truncate tracking-tight text-sm">
+            <Typography
+              variant="h3"
+              className="font-medium text-ui-text-secondary truncate tracking-tight text-sm"
+            >
               {state.name}
             </Typography>
             <Badge

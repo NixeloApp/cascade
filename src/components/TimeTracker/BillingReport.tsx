@@ -120,7 +120,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
           </Select>
           <button
             type="button"
-            className="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-hover"
+            className="px-4 py-2 bg-brand text-brand-foreground rounded-md hover:bg-brand-hover"
           >
             <Flex align="center" gap="sm">
               <Download className="w-4 h-4" />

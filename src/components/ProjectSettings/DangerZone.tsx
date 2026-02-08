@@ -89,7 +89,11 @@ export function DangerZone({
           {showConfirm && (
             <div className="mt-5 pt-5 border-t border-status-error/15">
               <Typography variant="small" className="mb-3 text-status-error-text">
-                To confirm, type <strong className="font-mono bg-status-error/10 px-1.5 py-0.5 rounded">{projectKey}</strong> below:
+                To confirm, type{" "}
+                <code className="font-semibold bg-status-error/10 px-1.5 py-0.5 rounded">
+                  {projectKey}
+                </code>{" "}
+                below:
               </Typography>
               <Input
                 value={confirmText}

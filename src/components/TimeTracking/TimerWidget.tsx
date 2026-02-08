@@ -7,6 +7,7 @@ import { formatDuration, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
+import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
 
 export function TimerWidget() {
@@ -66,15 +67,15 @@ export function TimerWidget() {
           </div>
 
           {/* Timer display */}
-          <span className="text-sm font-mono font-semibold text-brand-indigo-text">
+          <Typography variant="mono" className="text-sm font-semibold text-brand-indigo-text">
             {formatDuration(currentDuration)}
-          </span>
+          </Typography>
 
           {/* Description or Issue */}
           {(runningTimer.description || runningTimer.issue) && (
-            <span className="text-xs text-brand-indigo-text max-w-37.5 truncate">
+            <Typography variant="caption" className="text-brand-indigo-text max-w-37.5 truncate">
               {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
-            </span>
+            </Typography>
           )}
         </Flex>
 

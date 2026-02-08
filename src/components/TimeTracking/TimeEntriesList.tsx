@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { FileText, Folder, Lock, Plus, Trash } from "lucide-react";
+import { Clock, FileText, Folder, Lock, Plus, Trash } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -105,7 +105,7 @@ export function TimeEntriesList({
   if (entries.length === 0) {
     return (
       <EmptyState
-        icon="⏱️"
+        icon={Clock}
         title="No time entries"
         description="Start tracking time to see entries here."
       />

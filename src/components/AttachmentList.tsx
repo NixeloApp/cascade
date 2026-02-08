@@ -1,10 +1,13 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
+import { Archive, File, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Flex } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
 
 interface AttachmentListProps {
   attachmentIds: Id<"_storage">[];
@@ -82,7 +85,7 @@ function AttachmentItem({
       gap="sm"
       className="p-2.5 bg-ui-bg-soft rounded-lg border border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default group"
     >
-      <div className="text-2xl">{fileIcon}</div>
+      <Icon icon={fileIcon} size="lg" />
       <div className="flex-1 min-w-0">
         <a
           href={url}
@@ -161,23 +164,23 @@ function getFilenameFromUrl(url: string): string {
   }
 }
 
-function getFileIcon(filename: string): string {
+function getFileIcon(filename: string): LucideIcon {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
 
   if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
-    return "🖼️";
+    return FileImage;
   }
   if (ext === "pdf") {
-    return "📄";
+    return FileText;
   }
   if (["txt", "md"].includes(ext)) {
-    return "📝";
+    return File;
   }
   if (ext === "zip") {
-    return "📦";
+    return Archive;
   }
   if (["json", "csv"].includes(ext)) {
-    return "📊";
+    return FileSpreadsheet;
   }
-  return "📎";
+  return Paperclip;
 }

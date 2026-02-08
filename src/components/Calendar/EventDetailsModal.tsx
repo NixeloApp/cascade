@@ -12,6 +12,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { MetadataItem } from "../ui/Metadata";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Typography } from "../ui/Typography";
 import { getEventBadgeClass } from "./calendar-colors";
@@ -121,15 +122,15 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
             <Flex gap="md" align="start">
               <Calendar className="w-5 h-5 text-ui-text-tertiary mt-0.5" />
               <div>
-                <div className="font-medium text-ui-text">
+                <Typography variant="label">
                   {formatDate(event.startTime, {
                     weekday: "long",
                     month: "long",
                     day: "numeric",
                     year: "numeric",
                   })}
-                </div>
-                <div className="text-sm text-ui-text-secondary">
+                </Typography>
+                <Typography variant="caption">
                   {event.allDay ? (
                     "All day"
                   ) : (
@@ -138,7 +139,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                       {formatTime(event.endTime, { hour: "numeric", minute: "2-digit" })}
                     </>
                   )}
-                </div>
+                </Typography>
               </div>
             </Flex>
 
@@ -147,15 +148,15 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
               <Flex
                 align="center"
                 justify="center"
-                className="w-5 h-5 bg-brand rounded-full text-white text-xs font-bold mt-0.5"
+                className="w-5 h-5 bg-brand rounded-full text-brand-foreground text-xs font-bold mt-0.5"
               >
                 {event.organizerName?.[0]?.toUpperCase()}
               </Flex>
               <div>
-                <div className="text-sm text-ui-text-secondary">Organizer</div>
-                <div className="font-medium text-ui-text">{event.organizerName}</div>
+                <Typography variant="caption">Organizer</Typography>
+                <Typography variant="label">{event.organizerName}</Typography>
                 {event.organizerEmail && (
-                  <div className="text-sm text-ui-text-secondary">{event.organizerEmail}</div>
+                  <Typography variant="caption">{event.organizerEmail}</Typography>
                 )}
               </div>
             </Flex>
@@ -163,10 +164,12 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
             {/* Description */}
             {event.description && (
               <div className="border-t border-ui-border pt-4">
-                <div className="text-sm font-medium text-ui-text mb-2">Description</div>
-                <div className="text-ui-text-secondary whitespace-pre-wrap">
+                <Typography variant="label" className="mb-2">
+                  Description
+                </Typography>
+                <Typography variant="muted" className="whitespace-pre-wrap">
                   {event.description}
-                </div>
+                </Typography>
               </div>
             )}
 
@@ -175,8 +178,8 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
               <Flex gap="md" align="start" className="border-t border-ui-border pt-4">
                 <MapPin className="w-5 h-5 text-ui-text-tertiary mt-0.5" />
                 <div>
-                  <div className="text-sm text-ui-text-secondary">Location</div>
-                  <div className="font-medium text-ui-text">{event.location}</div>
+                  <Typography variant="caption">Location</Typography>
+                  <Typography variant="label">{event.location}</Typography>
                 </div>
               </Flex>
             )}
@@ -186,7 +189,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
               <Flex gap="md" align="start" className="border-t border-ui-border pt-4">
                 <LinkIcon className="w-5 h-5 text-ui-text-tertiary mt-0.5" />
                 <div>
-                  <div className="text-sm text-ui-text-secondary">Meeting Link</div>
+                  <Typography variant="caption">Meeting Link</Typography>
                   <a
                     href={event.meetingUrl}
                     target="_blank"
@@ -202,18 +205,19 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
             {/* Notes */}
             {event.notes && (
               <div className="border-t border-ui-border pt-4">
-                <div className="text-sm font-medium text-ui-text mb-2">Notes</div>
-                <div className="text-ui-text-secondary whitespace-pre-wrap">{event.notes}</div>
+                <Typography variant="label" className="mb-2">
+                  Notes
+                </Typography>
+                <Typography variant="muted" className="whitespace-pre-wrap">
+                  {event.notes}
+                </Typography>
               </div>
             )}
 
             {/* Recurring */}
             {event.isRecurring && (
               <div className="border-t border-ui-border pt-4">
-                <Flex gap="sm" align="center">
-                  <Clock className="w-4 h-4 text-ui-text-tertiary" />
-                  <span className="text-sm text-ui-text-secondary">Recurring event</span>
-                </Flex>
+                <MetadataItem icon={<Clock className="w-4 h-4" />}>Recurring event</MetadataItem>
               </div>
             )}
 
@@ -231,7 +235,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
             {event.isRequired && attendance && (
               <div className="border-t border-ui-border pt-4">
                 <Flex justify="between" align="center" className="mb-3">
-                  <Typography variant="h4" className="text-sm font-semibold text-ui-text">
+                  <Typography variant="label">
                     Attendance ({attendance.markedCount}/{attendance.totalAttendees} marked)
                   </Typography>
                 </Flex>
@@ -258,9 +262,9 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                         {!attendee.status && <div className="w-4 h-4" />}
 
                         {/* Attendee Name */}
-                        <span className="text-sm font-medium text-ui-text">
+                        <MetadataItem className="text-ui-text font-medium">
                           {attendee.userName}
-                        </span>
+                        </MetadataItem>
                       </Flex>
 
                       {/* Status Dropdown */}
@@ -280,9 +284,9 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Not marked</SelectItem>
-                          <SelectItem value="present">✓ Present</SelectItem>
-                          <SelectItem value="tardy">⏰ Tardy</SelectItem>
-                          <SelectItem value="absent">✗ Absent</SelectItem>
+                          <SelectItem value="present">Present</SelectItem>
+                          <SelectItem value="tardy">Tardy</SelectItem>
+                          <SelectItem value="absent">Absent</SelectItem>
                         </SelectContent>
                       </Select>
                     </Flex>

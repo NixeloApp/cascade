@@ -2,12 +2,16 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
+import { Check, KanbanSquare, ListTodo } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Textarea } from "../ui/form";
+import { Icon } from "../ui/Icon";
+import { Label } from "../ui/Label";
 import { Typography } from "../ui/Typography";
 
 interface ProjectWizardProps {
@@ -85,7 +89,7 @@ export function ProjectWizard({
       });
 
       // Confetti effect (optional - would need react-confetti package)
-      showSuccess("🎉 Project created successfully!");
+      showSuccess("Project created successfully!");
 
       onComplete(projectId);
     } catch (error) {
@@ -116,7 +120,7 @@ export function ProjectWizard({
                     className={cn(
                       "w-8 h-8 rounded-full text-sm font-medium transition-all duration-default shrink-0",
                       stepNum < step
-                        ? "bg-status-success text-white"
+                        ? "bg-status-success text-brand-foreground"
                         : stepNum === step
                           ? "bg-brand text-brand-foreground ring-4 ring-brand/20"
                           : "bg-ui-bg-tertiary text-ui-text-tertiary",
@@ -167,12 +171,9 @@ export function ProjectWizard({
               </Typography>
 
               <div>
-                <label
-                  htmlFor="project-name"
-                  className="block text-sm font-medium text-ui-text mb-1"
-                >
-                  Project Name <span className="text-status-error">*</span>
-                </label>
+                <Label htmlFor="project-name" required className="block mb-1">
+                  Project Name
+                </Label>
                 <input
                   id="project-name"
                   type="text"
@@ -189,12 +190,9 @@ export function ProjectWizard({
               </div>
 
               <div>
-                <label
-                  htmlFor="project-key"
-                  className="block text-sm font-medium text-ui-text mb-1"
-                >
-                  Project Key <span className="text-status-error">*</span>
-                </label>
+                <Label htmlFor="project-key" required className="block mb-1">
+                  Project Key
+                </Label>
                 <input
                   id="project-key"
                   type="text"
@@ -241,17 +239,26 @@ export function ProjectWizard({
                       : "border-ui-border hover:border-brand-muted",
                   )}
                 >
-                  <Typography variant="h3" className="font-bold text-lg mb-2 text-ui-text">
-                    📊 Kanban
-                  </Typography>
+                  <Flex align="center" gap="sm" className="mb-2">
+                    <Icon icon={KanbanSquare} size="md" />
+                    <Typography variant="h3" className="font-bold text-lg text-ui-text">
+                      Kanban
+                    </Typography>
+                  </Flex>
                   <Typography className="text-sm text-ui-text-secondary">
                     Continuous flow of work through columns. Great for ongoing projects and support
                     teams.
                   </Typography>
                   <ul className="mt-3 text-xs text-ui-text-tertiary space-y-1">
-                    <li>✓ No time constraints</li>
-                    <li>✓ Visualize workflow</li>
-                    <li>✓ Limit work in progress</li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> No time constraints
+                    </li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Visualize workflow
+                    </li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Limit work in progress
+                    </li>
                   </ul>
                 </button>
 
@@ -265,17 +272,26 @@ export function ProjectWizard({
                       : "border-ui-border hover:border-brand-muted",
                   )}
                 >
-                  <Typography variant="h3" className="font-bold text-lg mb-2 text-ui-text">
-                    🏃 Scrum
-                  </Typography>
+                  <Flex align="center" gap="sm" className="mb-2">
+                    <Icon icon={ListTodo} size="md" />
+                    <Typography variant="h3" className="font-bold text-lg text-ui-text">
+                      Scrum
+                    </Typography>
+                  </Flex>
                   <Typography className="text-sm text-ui-text-secondary">
                     Work in sprints with defined goals. Great for product development and fixed
                     deadlines.
                   </Typography>
                   <ul className="mt-3 text-xs text-ui-text-tertiary space-y-1">
-                    <li>✓ Sprint planning</li>
-                    <li>✓ Velocity tracking</li>
-                    <li>✓ Burndown charts</li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Sprint planning
+                    </li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Velocity tracking
+                    </li>
+                    <li>
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Burndown charts
+                    </li>
                   </ul>
                 </button>
               </div>
@@ -296,9 +312,9 @@ export function ProjectWizard({
               <Flex direction="column" gap="md">
                 {workflowStates.map((state, index) => (
                   <Flex key={state.id} gap="md" align="center">
-                    <span className="text-ui-text-tertiary font-mono text-sm w-6">
+                    <Typography variant="caption" className="font-mono w-6">
                       {index + 1}.
-                    </span>
+                    </Typography>
                     <input
                       type="text"
                       value={state.name}
@@ -309,22 +325,23 @@ export function ProjectWizard({
                       }}
                       className="flex-1 px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text"
                     />
-                    <span
-                      className={cn(
-                        "px-3 py-1 rounded-full text-sm font-medium",
+                    <Badge
+                      variant={
                         state.category === "todo"
-                          ? "bg-ui-bg-tertiary text-ui-text"
+                          ? "secondary"
                           : state.category === "inprogress"
-                            ? "bg-brand-indigo-track text-brand-indigo-text"
-                            : "bg-status-success/10 text-status-success",
-                      )}
+                            ? "primary"
+                            : "success"
+                      }
+                      shape="pill"
+                      size="md"
                     >
                       {state.category === "todo"
                         ? "To Do"
                         : state.category === "inprogress"
                           ? "In Progress"
                           : "Done"}
-                    </span>
+                    </Badge>
                   </Flex>
                 ))}
               </Flex>
@@ -355,7 +372,7 @@ export function ProjectWizard({
           {step === 4 && (
             <div className="space-y-4">
               <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-                Ready to Create! 🎉
+                Ready to Create!
               </Typography>
               <Typography className="text-ui-text-secondary">
                 Here's a summary of your new project:
@@ -363,31 +380,28 @@ export function ProjectWizard({
 
               <div className="bg-ui-bg-secondary rounded-lg p-4 space-y-3">
                 <div>
-                  <span className="text-sm text-ui-text-tertiary">Project Name:</span>
+                  <Typography variant="caption">Project Name:</Typography>
                   <Typography className="font-medium text-ui-text">{projectName}</Typography>
                 </div>
                 <div>
-                  <span className="text-sm text-ui-text-tertiary">Project Key:</span>
+                  <Typography variant="caption">Project Key:</Typography>
                   <Typography className="font-mono font-medium text-ui-text">
                     {projectKey}
                   </Typography>
                 </div>
                 <div>
-                  <span className="text-sm text-ui-text-tertiary">Board Type:</span>
+                  <Typography variant="caption">Board Type:</Typography>
                   <Typography className="font-medium text-ui-text capitalize">
                     {boardType}
                   </Typography>
                 </div>
                 <div>
-                  <span className="text-sm text-ui-text-tertiary">Workflow States:</span>
+                  <Typography variant="caption">Workflow States:</Typography>
                   <Flex wrap gap="sm" className="mt-1">
                     {workflowStates.map((state) => (
-                      <span
-                        key={state.id}
-                        className="px-2 py-1 bg-ui-bg-tertiary rounded text-sm text-ui-text"
-                      >
+                      <Badge key={state.id} variant="secondary">
                         {state.name}
-                      </span>
+                      </Badge>
                     ))}
                   </Flex>
                 </div>

@@ -2,10 +2,14 @@ import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { FileText, FolderKanban, Home, LayoutGrid, Plus } from "@/lib/icons";
+import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import {
   Command,
@@ -15,13 +19,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandShortcut,
 } from "./ui/command";
+import { ShortcutHint } from "./ui/KeyboardShortcut";
+import { Typography } from "./ui/Typography";
 
 export interface CommandAction {
   id: string;
   label: string;
-  icon?: string;
+  icon?: LucideIcon;
   description?: string;
   keywords?: string[];
   action: () => void;
@@ -97,11 +102,13 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
                   onSelect={() => handleSelect(cmd)}
                   className="cursor-pointer data-[selected=true]:bg-brand-subtle"
                 >
-                  {cmd.icon && <span className="text-xl mr-2">{cmd.icon}</span>}
+                  {cmd.icon && <Icon icon={cmd.icon} size="md" className="mr-2" />}
                   <div className="flex-1">
-                    <div className="font-medium text-ui-text">{cmd.label}</div>
+                    <Typography variant="label" as="p">
+                      {cmd.label}
+                    </Typography>
                     {cmd.description && (
-                      <div className="text-xs text-ui-text-secondary">{cmd.description}</div>
+                      <Typography variant="caption">{cmd.description}</Typography>
                     )}
                   </div>
                 </CommandItem>
@@ -112,26 +119,11 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
         <Flex
           wrap
           gap="md"
-          className="px-4 py-2 border-t border-ui-border bg-ui-bg-secondary text-xs text-ui-text-secondary sm:gap-4"
+          className="px-4 py-2 border-t border-ui-border bg-ui-bg-secondary text-xs text-ui-text-tertiary sm:gap-4"
         >
-          <span>
-            <CommandShortcut className="bg-ui-bg border border-ui-border px-2 py-1 rounded text-ui-text">
-              ↑↓
-            </CommandShortcut>{" "}
-            Navigate
-          </span>
-          <span>
-            <CommandShortcut className="bg-ui-bg border border-ui-border px-2 py-1 rounded text-ui-text">
-              Enter
-            </CommandShortcut>{" "}
-            Select
-          </span>
-          <span>
-            <CommandShortcut className="bg-ui-bg border border-ui-border px-2 py-1 rounded text-ui-text">
-              Esc
-            </CommandShortcut>{" "}
-            Close
-          </span>
+          <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+          <ShortcutHint keys="Enter">Select</ShortcutHint>
+          <ShortcutHint keys="Esc">Close</ShortcutHint>
         </Flex>
       </Command>
     </CommandDialog>
@@ -160,7 +152,7 @@ export function useCommands({
     {
       id: "nav-dashboard",
       label: "Go to Dashboard",
-      icon: "🏠",
+      icon: Home,
       description: "View your personal dashboard",
       keywords: ["home", "my work"],
       action: () => navigate({ to: ROUTES.dashboard.path, params: { orgSlug } }),
@@ -169,7 +161,7 @@ export function useCommands({
     {
       id: "nav-documents",
       label: "Go to Documents",
-      icon: "📄",
+      icon: FileText,
       description: "View all documents",
       keywords: ["docs", "files"],
       action: () => navigate({ to: ROUTES.documents.list.path, params: { orgSlug } }),
@@ -178,7 +170,7 @@ export function useCommands({
     {
       id: "nav-projects",
       label: "Go to Workspaces",
-      icon: "📋",
+      icon: FolderKanban,
       description: "View all workspaces",
       keywords: ["boards", "kanban", "projects", "workspaces"],
       action: () => navigate({ to: ROUTES.workspaces.list.path, params: { orgSlug } }),
@@ -189,7 +181,7 @@ export function useCommands({
     ...(projects?.map((project: Doc<"projects">) => ({
       id: `project-${project._id}`,
       label: project.name,
-      icon: "⬜",
+      icon: LayoutGrid,
       description: `Go to ${project.name} board`,
       keywords: [project.key, "board", "project"],
       action: () =>
@@ -206,7 +198,7 @@ export function useCommands({
           {
             id: "create-issue",
             label: "Create Issue",
-            icon: "➕",
+            icon: Plus,
             description: "Create a new issue",
             keywords: ["new", "task", "bug"],
             action: onCreateIssue,
@@ -219,7 +211,7 @@ export function useCommands({
           {
             id: "create-document",
             label: "Create Document",
-            icon: "📝",
+            icon: FileText,
             description: "Create a new document",
             keywords: ["new", "doc", "page"],
             action: onCreateDocument,
@@ -232,7 +224,7 @@ export function useCommands({
           {
             id: "create-project",
             label: "Create Project",
-            icon: "🗂️",
+            icon: FolderKanban,
             description: "Create a new project",
             keywords: ["new", "board", "project"],
             action: onCreateProject,
@@ -247,7 +239,7 @@ export function useCommands({
       ?.map((issue: Doc<"issues"> & { projectName?: string; projectKey: string }) => ({
         id: `issue-${issue._id}`,
         label: issue.title,
-        icon: issue.type === "bug" ? "🐛" : issue.type === "story" ? "📖" : "📋",
+        icon: ISSUE_TYPE_ICONS[issue.type as IssueType],
         description: `${issue.key} • ${issue.projectName}`,
         keywords: [issue.projectKey, issue.projectName || ""],
         action: () => {

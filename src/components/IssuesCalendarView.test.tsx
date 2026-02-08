@@ -21,7 +21,6 @@ vi.mock("convex/react", () => ({
 
 // Mock Utils
 vi.mock("@/lib/issue-utils", () => ({
-  getTypeIcon: vi.fn(() => "🐛"),
   getPriorityColor: vi.fn(() => "bg-red-500"),
 }));
 
@@ -85,8 +84,7 @@ describe("IssuesCalendarView", () => {
     render(<IssuesCalendarView projectId={projectId} />);
 
     // Issue should be visible (by title text or truncated text)
-    // The component renders: {getTypeIcon(issue.type)} {issue.title}
-    // We mocked getTypeIcon to return "🐛"
+    // The component renders: <Icon /> {issue.title}
     expect(screen.getByText(/Test Issue with Tooltip/)).toBeInTheDocument();
 
     const issueButton = screen.getByText(/Test Issue with Tooltip/).closest("button");

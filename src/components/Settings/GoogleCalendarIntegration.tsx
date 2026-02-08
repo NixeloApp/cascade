@@ -1,11 +1,12 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
-import { Calendar } from "@/lib/icons";
+import { Calendar, Check } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
 
@@ -123,7 +124,7 @@ export function GoogleCalendarIntegration() {
         <Flex justify="between" align="start">
           <Flex gap="lg" align="center">
             <div className="p-3 bg-brand-ring rounded-lg">
-              <Calendar className="h-6 w-6 text-white" />
+              <Calendar className="h-6 w-6 text-brand-foreground" />
             </div>
             <div>
               <Typography variant="h3" className="text-lg font-semibold text-ui-text">
@@ -134,9 +135,10 @@ export function GoogleCalendarIntegration() {
               </Typography>
               {calendarConnection && (
                 <Flex direction="column" gap="xs" className="mt-2">
-                  <Typography className="text-sm text-status-success">
-                    ✓ Connected to {calendarConnection.providerAccountId}
-                  </Typography>
+                  <Flex align="center" gap="xs" className="text-sm text-status-success">
+                    <Icon icon={Check} size="sm" />
+                    Connected to {calendarConnection.providerAccountId}
+                  </Flex>
                   {calendarConnection.lastSyncAt && (
                     <Typography className="text-xs text-ui-text-tertiary">
                       Last synced: {new Date(calendarConnection.lastSyncAt).toLocaleString()}
@@ -219,7 +221,7 @@ export function GoogleCalendarIntegration() {
                           Import Only
                         </Typography>
                         <Typography className="text-xs text-ui-text-tertiary">
-                          Only import from Google → Nixelo
+                          Only import from Google to Nixelo
                         </Typography>
                       </div>
                     </Flex>
@@ -240,7 +242,7 @@ export function GoogleCalendarIntegration() {
                           Export Only
                         </Typography>
                         <Typography className="text-xs text-ui-text-tertiary">
-                          Only export from Nixelo → Google
+                          Only export from Nixelo to Google
                         </Typography>
                       </div>
                     </Flex>

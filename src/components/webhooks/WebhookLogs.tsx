@@ -3,10 +3,14 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { useState } from "react";
+import { BarChart3, Check, RefreshCw, X } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
+import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Typography } from "../ui/Typography";
 
 type WebhookExecution = Doc<"webhookExecutions">;
@@ -41,21 +45,21 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
     switch (status) {
       case "success":
         return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-status-success/10 text-status-success">
-            ✓ Success
-          </span>
+          <Badge variant="success" shape="pill">
+            <Icon icon={Check} size="xs" className="inline mr-1" /> Success
+          </Badge>
         );
       case "failed":
         return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-status-error/10 text-status-error">
-            ✗ Failed
-          </span>
+          <Badge variant="error" shape="pill">
+            <Icon icon={X} size="xs" className="inline mr-1" /> Failed
+          </Badge>
         );
       case "retrying":
         return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-status-warning/10 text-status-warning">
-            ⟳ Retrying
-          </span>
+          <Badge variant="warning" shape="pill">
+            <Icon icon={RefreshCw} size="xs" className="inline mr-1" /> Retrying
+          </Badge>
         );
       default:
         return null;
@@ -81,19 +85,19 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
         </DialogHeader>
         {!executions || executions.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-3">📊</div>
-            <Typography variant="h3" className="text-lg font-medium text-ui-text mb-1">
+            <Icon icon={BarChart3} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
+            <Typography variant="h5" className="mb-1">
               No delivery logs yet
             </Typography>
-            <Typography className="text-sm text-ui-text-secondary">
+            <Typography variant="caption">
               Webhook deliveries will appear here once triggered
             </Typography>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="text-sm text-ui-text-secondary mb-4">
+            <Typography variant="caption" className="mb-4">
               Showing {executions.length} most recent deliveries
-            </div>
+            </Typography>
 
             <div className="space-y-3">
               {executions.map((execution) => (
@@ -103,19 +107,15 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                 >
                   {/* Header */}
                   <Flex justify="between" align="center" className="mb-3">
-                    <Flex gap="md" align="center">
+                    <Metadata gap="md">
                       {getStatusBadge(execution.status)}
-                      <Typography variant="small">{execution.event}</Typography>
+                      <MetadataItem className="text-ui-text">{execution.event}</MetadataItem>
                       {execution.responseStatus && (
-                        <Typography variant="muted" size="xs" color="secondary">
-                          HTTP {String(execution.responseStatus)}
-                        </Typography>
+                        <MetadataItem>HTTP {String(execution.responseStatus)}</MetadataItem>
                       )}
-                    </Flex>
-                    <Flex gap="md" align="center">
-                      <Typography variant="muted" size="xs">
-                        {formatDate(execution._creationTime)}
-                      </Typography>
+                    </Metadata>
+                    <Metadata gap="md">
+                      <MetadataItem>{formatDate(execution._creationTime)}</MetadataItem>
                       {execution.status === "failed" && (
                         <Button
                           variant="ghost"
@@ -136,20 +136,20 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                       >
                         {selectedExecution === execution._id ? "Hide Details" : "Show Details"}
                       </Button>
-                    </Flex>
+                    </Metadata>
                   </Flex>
 
                   {/* Metadata */}
                   <div className="grid grid-cols-3 gap-4 mb-2">
-                    <Typography variant="muted" size="xs">
+                    <Typography variant="meta">
                       <span className="font-medium text-ui-text">Attempts:</span>{" "}
                       {execution.attempts}
                     </Typography>
-                    <Typography variant="muted" size="xs">
+                    <Typography variant="meta">
                       <span className="font-medium text-ui-text">Duration:</span>{" "}
                       {formatDuration(execution._creationTime, execution.completedAt)}
                     </Typography>
-                    <Typography variant="muted" size="xs">
+                    <Typography variant="meta">
                       <span className="font-medium text-ui-text">Status:</span>{" "}
                       {String(execution.status)}
                     </Typography>
@@ -170,7 +170,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                     <div className="mt-3 pt-3 border-t border-ui-border space-y-3">
                       {/* Request Payload */}
                       <div>
-                        <Typography variant="small" className="mb-1">
+                        <Typography variant="label" className="mb-1">
                           Request Payload:
                         </Typography>
                         <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto">
@@ -181,7 +181,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                       {/* Response Body */}
                       {execution.responseBody && (
                         <div>
-                          <Typography variant="small" className="mb-1">
+                          <Typography variant="label" className="mb-1">
                             Response Body:
                           </Typography>
                           <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto max-h-48">

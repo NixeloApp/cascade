@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
+import { ResponsiveText } from "../ui/ResponsiveText";
 
 interface RoadmapViewProps {
   projectId: Id<"projects">;
@@ -152,12 +153,11 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               className={cn(
                 "px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-l-md",
                 timeScale === "week"
-                  ? "bg-brand text-white"
+                  ? "bg-brand text-brand-foreground"
                   : "bg-ui-bg text-ui-text hover:bg-ui-bg-tertiary",
               )}
             >
-              <span className="sm:hidden">W</span>
-              <span className="hidden sm:inline">Week</span>
+              <ResponsiveText short="W" long="Week" />
             </button>
             <button
               type="button"
@@ -165,12 +165,11 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               className={cn(
                 "px-2 sm:px-3 py-1.5 text-xs sm:text-sm border-l border-ui-border",
                 timeScale === "month"
-                  ? "bg-brand text-white"
+                  ? "bg-brand text-brand-foreground"
                   : "bg-ui-bg text-ui-text hover:bg-ui-bg-tertiary",
               )}
             >
-              <span className="sm:hidden">M</span>
-              <span className="hidden sm:inline">Month</span>
+              <ResponsiveText short="M" long="Month" />
             </button>
             <button
               type="button"
@@ -178,12 +177,11 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               className={cn(
                 "px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-r-md border-l border-ui-border",
                 timeScale === "quarter"
-                  ? "bg-brand text-white"
+                  ? "bg-brand text-brand-foreground"
                   : "bg-ui-bg text-ui-text hover:bg-ui-bg-tertiary",
               )}
             >
-              <span className="sm:hidden">Q</span>
-              <span className="hidden sm:inline">Quarter</span>
+              <ResponsiveText short="Q" long="Quarter" />
             </button>
           </Flex>
         </Flex>
@@ -302,7 +300,7 @@ function renderDateBar(
     <div
       className={cn(
         color,
-        "rounded-full h-6 flex items-center justify-center text-white text-xs font-medium overflow-hidden whitespace-nowrap px-2",
+        "rounded-full h-6 flex items-center justify-center text-brand-foreground text-xs font-medium overflow-hidden whitespace-nowrap px-2",
       )}
       style={{
         marginLeft: `${leftPercent}%`,

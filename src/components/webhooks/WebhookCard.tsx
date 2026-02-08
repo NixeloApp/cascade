@@ -1,6 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { Pencil, Trash } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
@@ -31,28 +31,18 @@ export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
             <Typography variant="h4" className="font-medium text-ui-text">
               {webhook.name}
             </Typography>
-            <span
-              className={cn(
-                "text-xs px-2 py-0.5 rounded",
-                webhook.isActive
-                  ? "bg-status-success/10 text-status-success"
-                  : "bg-ui-bg-tertiary text-ui-text",
-              )}
-            >
+            <Badge variant={webhook.isActive ? "success" : "neutral"} size="sm">
               {webhook.isActive ? "Active" : "Inactive"}
-            </span>
+            </Badge>
           </Flex>
           <Typography className="text-sm text-ui-text-secondary mb-2 font-mono break-all">
             {webhook.url}
           </Typography>
           <Flex wrap gap="xs">
             {webhook.events.map((event) => (
-              <span
-                key={event}
-                className="text-xs px-2 py-0.5 bg-brand-subtle text-brand-hover rounded"
-              >
+              <Badge key={event} variant="brand" size="sm">
                 {event}
-              </span>
+              </Badge>
             ))}
           </Flex>
           {webhook.lastTriggered && (

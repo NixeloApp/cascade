@@ -1,7 +1,9 @@
+import type { LucideIcon } from "lucide-react";
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 /**
@@ -19,7 +21,7 @@ export const MetricCard = memo(function MetricCard({
   title: string;
   value: number;
   subtitle?: string;
-  icon: string;
+  icon: string | LucideIcon;
   highlight?: boolean;
   testId?: string;
 }) {
@@ -38,7 +40,9 @@ export const MetricCard = memo(function MetricCard({
               </Typography>
             )}
           </div>
-          <div className="text-4xl">{icon}</div>
+          <div className="text-4xl">
+            {typeof icon === "string" ? icon : <Icon icon={icon} size="xl" />}
+          </div>
         </Flex>
       </CardBody>
     </Card>

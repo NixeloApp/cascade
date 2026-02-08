@@ -36,19 +36,18 @@ function TimeProgress({
   if (estimatedHours > 0) {
     return (
       <div className="space-y-2">
-        <Flex align="center" justify="between" className="text-xs">
-          <span className="text-ui-text-secondary">
+        <Flex align="center" justify="between">
+          <Typography variant="caption">
             {totalLoggedHours.toFixed(1)}h / {estimatedHours}h estimated
-          </span>
+          </Typography>
           {remainingHours !== null && (
-            <span
-              className={
-                isOverEstimate ? "text-status-error font-medium" : "text-ui-text-secondary"
-              }
+            <Typography
+              variant="caption"
+              className={isOverEstimate ? "text-status-error font-medium" : undefined}
             >
               {isOverEstimate ? "+" : ""}
               {Math.abs(remainingHours).toFixed(1)}h {isOverEstimate ? "over" : "remaining"}
-            </span>
+            </Typography>
           )}
         </Flex>
         <div className="w-full bg-ui-bg-tertiary rounded-full h-2">
@@ -68,14 +67,14 @@ function TimeProgress({
 
   if (totalLoggedHours > 0) {
     return (
-      <div className="text-sm text-ui-text-secondary">
+      <Typography variant="caption">
         <span className="font-semibold">{totalLoggedHours.toFixed(1)}h</span> logged (no estimate
         set)
-      </div>
+      </Typography>
     );
   }
 
-  return <Typography className="text-sm text-ui-text-secondary">No time logged yet</Typography>;
+  return <Typography variant="caption">No time logged yet</Typography>;
 }
 
 /**
@@ -96,22 +95,29 @@ function TimeEntriesList({
           <div key={entry._id} className="bg-ui-bg border border-ui-border rounded-lg p-3">
             <Flex align="start" justify="between">
               <div>
-                <div className="font-semibold text-ui-text">{hours}h</div>
+                <Typography variant="large" as="div">
+                  {hours}h
+                </Typography>
                 {entry.description && (
-                  <Typography className="text-sm text-ui-text-secondary mt-1">
+                  <Typography variant="caption" className="mt-1">
                     {entry.description}
                   </Typography>
                 )}
                 <Flex align="center" gap="sm" className="mt-1">
-                  <span className="text-xs text-ui-text-tertiary">{entryDate}</span>
+                  <time
+                    className="text-xs text-ui-text-tertiary"
+                    dateTime={new Date(entry.date).toISOString()}
+                  >
+                    {entryDate}
+                  </time>
                   {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
                   {entry.billable && <Badge variant="success">Billable</Badge>}
                 </Flex>
               </div>
               {entry.totalCost && (
-                <div className="text-sm font-medium text-ui-text">
+                <Typography variant="small" as="div" className="font-medium">
                   {formatCurrency(entry.totalCost)}
-                </div>
+                </Typography>
               )}
             </Flex>
           </div>
@@ -177,9 +183,7 @@ export function TimeTracker({
       {/* Header */}
       <div className="p-4 border-b border-ui-border">
         <Flex align="center" justify="between" className="mb-3">
-          <Typography variant="h3" className="text-sm font-semibold">
-            Time Tracking
-          </Typography>
+          <Typography variant="label">Time Tracking</Typography>
           <Flex align="center" gap="sm">
             {/* Timer Button */}
             {isTimerRunningForThisIssue ? (

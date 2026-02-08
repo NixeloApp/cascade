@@ -3,12 +3,14 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
 import { useMutation } from "convex/react";
 import { useState } from "react";
+import { ChevronDown, ChevronUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Input, Select } from "../ui/form";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 interface WorkflowSettingsProps {
@@ -175,7 +177,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                       disabled={index === 0}
                       className="p-1 h-6 hover:bg-ui-bg-hover"
                     >
-                      ↑
+                      <Icon icon={ChevronUp} size="sm" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -184,7 +186,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                       disabled={index === states.length - 1}
                       className="p-1 h-6 hover:bg-ui-bg-hover"
                     >
-                      ↓
+                      <Icon icon={ChevronDown} size="sm" />
                     </Button>
                   </Flex>
                   <Input

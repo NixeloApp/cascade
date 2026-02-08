@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Typography } from "../ui/Typography";
 
 interface FilterCheckboxGroupProps {
   label: string;
@@ -19,7 +20,9 @@ export function FilterCheckboxGroup({
 }: FilterCheckboxGroupProps) {
   return (
     <div>
-      <div className="block text-sm font-medium text-ui-text mb-2">{label}</div>
+      <Typography variant="label" className="block text-sm font-medium mb-2">
+        {label}
+      </Typography>
       <div className={cn("space-y-2", maxHeight)}>
         {options.map((option) => (
           <label key={option} className="flex items-center gap-2 cursor-pointer">
@@ -29,7 +32,9 @@ export function FilterCheckboxGroup({
               onChange={() => onToggle(option)}
               className="rounded"
             />
-            <span className="text-sm capitalize">{renderLabel ? renderLabel(option) : option}</span>
+            <Typography variant="p" className="text-sm capitalize">
+              {renderLabel ? renderLabel(option) : option}
+            </Typography>
           </label>
         ))}
       </div>

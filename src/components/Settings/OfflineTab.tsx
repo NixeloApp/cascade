@@ -1,10 +1,12 @@
 import { toast } from "sonner";
-import { RefreshCw, Wifi, WifiOff } from "@/lib/icons";
+import { Check, RefreshCw, Wifi, WifiOff, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { useOfflineSyncStatus, useOnlineStatus } from "../../hooks/useOffline";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
 /**
@@ -25,9 +27,9 @@ export function OfflineTab() {
               className={cn("p-3 rounded-lg", isOnline ? "bg-status-success" : "bg-status-error")}
             >
               {isOnline ? (
-                <Wifi className="h-6 w-6 text-white" />
+                <Wifi className="h-6 w-6 text-brand-foreground" />
               ) : (
-                <WifiOff className="h-6 w-6 text-white" />
+                <WifiOff className="h-6 w-6 text-brand-foreground" />
               )}
             </div>
             <div>
@@ -40,7 +42,10 @@ export function OfflineTab() {
                   isOnline ? "text-status-success" : "text-status-error",
                 )}
               >
-                {isOnline ? "✓ You are online" : "✗ You are offline"}
+                <Flex align="center" gap="xs">
+                  {isOnline ? <Icon icon={Check} size="sm" /> : <Icon icon={X} size="sm" />}
+                  {isOnline ? "You are online" : "You are offline"}
+                </Flex>
               </Typography>
             </div>
           </Flex>
@@ -76,7 +81,7 @@ export function OfflineTab() {
           </Typography>
           <Flex direction="column" gap="lg">
             <Flex gap="md" align="start">
-              <div className="mt-0.5">✓</div>
+              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <div>
                 <Typography className="text-sm font-medium text-ui-text">
                   View Cached Content
@@ -87,7 +92,7 @@ export function OfflineTab() {
               </div>
             </Flex>
             <Flex gap="md" align="start">
-              <div className="mt-0.5">✓</div>
+              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <div>
                 <Typography className="text-sm font-medium text-ui-text">Offline Edits</Typography>
                 <Typography className="text-sm text-ui-text-secondary">
@@ -96,7 +101,7 @@ export function OfflineTab() {
               </div>
             </Flex>
             <Flex gap="md" align="start">
-              <div className="mt-0.5">✓</div>
+              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <div>
                 <Typography className="text-sm font-medium text-ui-text">
                   Background Sync
@@ -107,7 +112,7 @@ export function OfflineTab() {
               </div>
             </Flex>
             <Flex gap="md" align="start">
-              <div className="mt-0.5">✓</div>
+              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <div>
                 <Typography className="text-sm font-medium text-ui-text">Install as App</Typography>
                 <Typography className="text-sm text-ui-text-secondary">
@@ -152,9 +157,9 @@ export function OfflineTab() {
                       {new Date(item.timestamp).toLocaleString()}
                     </Typography>
                   </div>
-                  <span className="text-xs px-2 py-1 bg-status-warning-bg text-status-warning-text rounded">
+                  <Badge variant="warning" size="md">
                     Pending
-                  </span>
+                  </Badge>
                 </Flex>
               ))}
               {pending.length > 5 && (

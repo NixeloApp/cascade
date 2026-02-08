@@ -3,27 +3,39 @@
  */
 
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  BookOpen,
+  Bug,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  CircleDot,
+  Zap,
+} from "./icons";
 
 export type IssueType = IssueTypeWithSubtask;
 export type { IssuePriority };
 
-/**
- * Get the icon for an issue type
- */
-export function getTypeIcon(type: string): string {
-  switch (type) {
-    case "bug":
-      return "🐛";
-    case "story":
-      return "📖";
-    case "epic":
-      return "⚡";
-    case "subtask":
-      return "🔸";
-    default:
-      return "✓";
-  }
-}
+/** Icon mapping for issue types - use with <Icon icon={ISSUE_TYPE_ICONS[type]} /> */
+export const ISSUE_TYPE_ICONS = {
+  bug: Bug,
+  story: BookOpen,
+  epic: Zap,
+  subtask: CircleDot,
+  task: CheckSquare,
+} as const;
+
+/** Icon mapping for priorities - use with <Icon icon={PRIORITY_ICONS[priority]} /> */
+export const PRIORITY_ICONS = {
+  highest: ChevronUp,
+  high: ArrowUp,
+  medium: ArrowRight,
+  low: ArrowDown,
+  lowest: ChevronDown,
+} as const;
 
 /**
  * Get the color classes for an issue priority
@@ -66,60 +78,20 @@ export function getPriorityColor(
 }
 
 /**
- * Get the icon for an issue priority
- */
-export function getPriorityIcon(priority: string): string {
-  switch (priority) {
-    case "highest":
-      return "↑↑";
-    case "high":
-      return "↑";
-    case "medium":
-      return "→";
-    case "low":
-      return "↓";
-    case "lowest":
-      return "↓↓";
-    default:
-      return "→";
-  }
-}
-
-/**
- * Get the emoji for a priority with text
- */
-export function getPriorityEmoji(priority: string): string {
-  switch (priority) {
-    case "highest":
-      return "⬆️";
-    case "high":
-      return "↗️";
-    case "medium":
-      return "➡️";
-    case "low":
-      return "↘️";
-    case "lowest":
-      return "⬇️";
-    default:
-      return "➡️";
-  }
-}
-
-/**
- * Get the label for an issue type with emoji
+ * Get the label for an issue type
  */
 export function getTypeLabel(type: string): string {
   switch (type) {
     case "bug":
-      return "🐛 Bug";
+      return "Bug";
     case "story":
-      return "📖 Story";
+      return "Story";
     case "epic":
-      return "🎯 Epic";
+      return "Epic";
     case "subtask":
-      return "🔸 Sub-task";
+      return "Sub-task";
     default:
-      return "📋 Task";
+      return "Task";
   }
 }
 

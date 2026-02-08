@@ -2,6 +2,8 @@ import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Wrench } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Typography } from "../ui/Typography";
@@ -34,7 +36,7 @@ export function DevToolsTab() {
       {/* Info Banner */}
       <div className="bg-status-info-bg border border-status-info rounded-lg p-4">
         <Flex align="start" gap="md">
-          <span className="text-status-info-text text-xl">&#128736;</span>
+          <Icon icon={Wrench} size="lg" className="text-status-info-text" />
           <div>
             <Typography variant="h3" className="font-medium text-status-info-text">
               Test Account Tools
@@ -64,7 +66,7 @@ export function DevToolsTab() {
             {isResettingOnboarding ? "Resetting..." : "Reset Onboarding"}
           </Button>
           {currentUser?.email && (
-            <span className="text-sm text-ui-text-tertiary">Current user: {currentUser.email}</span>
+            <Typography variant="caption">Current user: {currentUser.email}</Typography>
           )}
         </Flex>
       </div>
@@ -83,11 +85,15 @@ export function DevToolsTab() {
               <code className="text-ui-text font-mono">{currentUser._id}</code>
             </Flex>
             <Flex gap="sm">
-              <span className="text-ui-text-secondary">Email:</span>
+              <Typography variant="small" color="secondary">
+                Email:
+              </Typography>
               <code className="text-ui-text font-mono">{currentUser.email}</code>
             </Flex>
             <Flex gap="sm">
-              <span className="text-ui-text-secondary">Test User:</span>
+              <Typography variant="small" color="secondary">
+                Test User:
+              </Typography>
               <code className="text-ui-text font-mono">
                 {currentUser.isTestUser ? "Yes" : "No"}
               </code>

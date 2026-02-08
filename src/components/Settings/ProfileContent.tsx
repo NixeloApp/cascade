@@ -35,24 +35,34 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
       <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
-        <div className="text-2xl font-bold text-brand">{stats.projects}</div>
-        <div className="text-sm text-ui-text-secondary">Workspaces</div>
+        <Typography variant="h3" color="brand" className="text-2xl">
+          {stats.projects}
+        </Typography>
+        <Typography variant="caption">Workspaces</Typography>
       </div>
       <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
-        <div className="text-2xl font-bold text-brand">{stats.issuesCreated}</div>
-        <div className="text-sm text-ui-text-secondary">Created</div>
+        <Typography variant="h3" color="brand" className="text-2xl">
+          {stats.issuesCreated}
+        </Typography>
+        <Typography variant="caption">Created</Typography>
       </div>
       <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
-        <div className="text-2xl font-bold text-brand">{stats.issuesAssigned}</div>
-        <div className="text-sm text-ui-text-secondary">Assigned</div>
+        <Typography variant="h3" color="brand" className="text-2xl">
+          {stats.issuesAssigned}
+        </Typography>
+        <Typography variant="caption">Assigned</Typography>
       </div>
       <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
-        <div className="text-2xl font-bold text-brand">{stats.issuesCompleted}</div>
-        <div className="text-sm text-ui-text-secondary">Completed</div>
+        <Typography variant="h3" color="brand" className="text-2xl">
+          {stats.issuesCompleted}
+        </Typography>
+        <Typography variant="caption">Completed</Typography>
       </div>
       <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
-        <div className="text-2xl font-bold text-brand">{stats.comments}</div>
-        <div className="text-sm text-ui-text-secondary">Comments</div>
+        <Typography variant="h3" color="brand" className="text-2xl">
+          {stats.comments}
+        </Typography>
+        <Typography variant="caption">Comments</Typography>
       </div>
     </div>
   );
@@ -64,17 +74,17 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
 export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: number } }) {
   return (
     <div className="border-t border-ui-border pt-6">
-      <Typography variant="h3" className="text-lg font-semibold mb-4 text-ui-text">
+      <Typography variant="h5" className="mb-4">
         Account Information
       </Typography>
-      <div className="space-y-3 text-sm">
+      <div className="space-y-3">
         <Flex justify="between">
-          <span className="text-ui-text-secondary">User ID:</span>
-          <span className="font-mono text-ui-text">{user._id}</span>
+          <Typography variant="caption">User ID:</Typography>
+          <code className="font-mono text-sm">{user._id}</code>
         </Flex>
         <Flex justify="between">
-          <span className="text-ui-text-secondary">Email Verified:</span>
-          <span className="text-ui-text">{user.emailVerificationTime ? "Yes" : "No"}</span>
+          <Typography variant="caption">Email Verified:</Typography>
+          <Typography variant="small">{user.emailVerificationTime ? "Yes" : "No"}</Typography>
         </Flex>
       </div>
     </div>
@@ -117,7 +127,7 @@ export function ProfileHeader({
           <Flex
             align="center"
             justify="center"
-            className="w-24 h-24 rounded-full bg-brand text-white text-3xl font-bold"
+            className="w-24 h-24 rounded-full bg-brand text-brand-foreground text-3xl font-bold"
           >
             {(user.name || user.email || "?").charAt(0).toUpperCase()}
           </Flex>
@@ -152,10 +162,8 @@ export function ProfileHeader({
           </div>
         ) : (
           <>
-            <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-              {user.name || "Anonymous User"}
-            </Typography>
-            <Typography className="text-ui-text-secondary">{user.email}</Typography>
+            <Typography variant="h3">{user.name || "Anonymous User"}</Typography>
+            <Typography variant="caption">{user.email}</Typography>
             {isOwnProfile && (
               <Button onClick={onEditClick} variant="secondary" size="sm" className="mt-3">
                 Edit Profile

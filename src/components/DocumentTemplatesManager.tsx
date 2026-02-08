@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Flex } from "@/components/ui/Flex";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
+import { FileText } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -193,7 +194,7 @@ export function DocumentTemplatesManager({
                 className={cn(
                   "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
                   selectedCategory === cat.value
-                    ? "bg-brand text-white"
+                    ? "bg-brand text-brand-foreground"
                     : "bg-ui-bg-tertiary text-ui-text hover:bg-ui-bg-secondary",
                 )}
               >
@@ -205,7 +206,7 @@ export function DocumentTemplatesManager({
 
         {!templates || templates.length === 0 ? (
           <EmptyState
-            icon="📄"
+            icon={FileText}
             title="No templates yet"
             description="Create templates to speed up document creation"
             action={{
@@ -230,7 +231,9 @@ export function DocumentTemplatesManager({
                       className="p-4 bg-linear-to-br from-brand-subtle to-brand-subtle rounded-lg hover:shadow-card-hover transition-all text-left border-2 border-transparent hover:border-brand-muted"
                     >
                       <Flex align="start" gap="md">
-                        <span className="text-3xl">{template.icon}</span>
+                        <Typography variant="label" className="text-3xl">
+                          {template.icon}
+                        </Typography>
                         <div className="flex-1">
                           <Typography variant="h4" className="font-semibold text-ui-text mb-1">
                             {template.name}
@@ -273,7 +276,9 @@ export function DocumentTemplatesManager({
                           onClick={() => onSelectTemplate?.(template._id)}
                           className="flex items-start gap-3 flex-1 text-left"
                         >
-                          <span className="text-2xl">{template.icon}</span>
+                          <Typography variant="label" className="text-2xl">
+                            {template.icon}
+                          </Typography>
                           <div className="flex-1">
                             <Typography variant="h4" className="font-medium text-ui-text mb-1">
                               {template.name}

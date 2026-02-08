@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { HelpCircle, Info, Settings, Trash2 } from "lucide-react";
+import { CircleHelp, Info, Settings, Trash2 } from "@/lib/icons";
 import { Button } from "./button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from "./tooltip";
 
@@ -239,7 +239,7 @@ export const OnInlineIcon: Story = {
       <span>Required field</span>
       <Tooltip content="This field is required for form submission">
         <span className="cursor-help">
-          <HelpCircle className="h-4 w-4 text-ui-text-secondary" />
+          <CircleHelp className="h-4 w-4 text-ui-text-secondary" />
         </span>
       </Tooltip>
     </div>

@@ -4,30 +4,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { IssueCard } from "./IssueCard";
 
+// Mock Lucide icons
+const MockIcon = () => null;
+
 // Mock issue utilities
 vi.mock("@/lib/issue-utils", () => ({
-  getTypeIcon: vi.fn((type: string) => {
-    const icons = { bug: "🐛", task: "✓", story: "📖", epic: "🎯" };
-    return icons[type as keyof typeof icons] || "📄";
-  }),
   getTypeLabel: vi.fn((type: string) => {
     const labels = {
-      bug: "🐛 Bug",
-      task: "✓ Task",
-      story: "📖 Story",
-      epic: "🎯 Epic",
+      bug: "Bug",
+      task: "Task",
+      story: "Story",
+      epic: "Epic",
     };
-    return labels[type as keyof typeof labels] || "📋 Task";
-  }),
-  getPriorityIcon: vi.fn((priority: string) => {
-    const icons = {
-      lowest: "⬇️",
-      low: "↘️",
-      medium: "➡️",
-      high: "↗️",
-      highest: "⬆️",
-    };
-    return icons[priority as keyof typeof icons] || "➡️";
+    return labels[type as keyof typeof labels] || "Task";
   }),
   getPriorityColor: vi.fn((priority: string) => {
     const colors = {
@@ -39,6 +28,20 @@ vi.mock("@/lib/issue-utils", () => ({
     };
     return colors[priority as keyof typeof colors] || "text-ui-text-tertiary";
   }),
+  ISSUE_TYPE_ICONS: {
+    bug: MockIcon,
+    story: MockIcon,
+    epic: MockIcon,
+    subtask: MockIcon,
+    task: MockIcon,
+  },
+  PRIORITY_ICONS: {
+    highest: MockIcon,
+    high: MockIcon,
+    medium: MockIcon,
+    low: MockIcon,
+    lowest: MockIcon,
+  },
 }));
 
 describe("IssueCard", () => {

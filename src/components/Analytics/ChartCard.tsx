@@ -8,7 +8,7 @@ export function ChartCard({ title, children }: { title: string; children: React.
   return (
     <Card>
       <CardBody className="p-6">
-        <Typography variant="h3" className="text-lg font-semibold text-ui-text mb-4">
+        <Typography variant="large" className="mb-4">
           {title}
         </Typography>
         <div className="h-64">{children}</div>

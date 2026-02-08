@@ -9,6 +9,7 @@ import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import {
+  Bot,
   Calendar,
   ChevronDown,
   ChevronRight,
@@ -18,10 +19,14 @@ import {
   FolderKanban,
   Home,
   ListIcon,
+  BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Puzzle,
+  Server,
   Settings,
+  ShieldCheck,
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -177,7 +182,7 @@ export function AppSidebar() {
           <Flex align="center" justify="between" className="p-4 border-b border-ui-border">
             {!isCollapsed && (
               <Link to={ROUTES.dashboard.path} params={{ orgSlug }} onClick={handleNavClick}>
-                <Typography variant="h3" className="text-lg font-bold truncate max-w-40">
+                <Typography variant="large" className="truncate max-w-40">
                   {organizationName}
                 </Typography>
               </Link>
@@ -232,13 +237,70 @@ export function AppSidebar() {
                 to={ROUTES.projects.calendar.path}
                 params={{ orgSlug, key: defaultProject.key }}
                 icon={Calendar}
-                label="Calendar"
+                label="General"
                 isActive={isActive("/calendar")}
                 isCollapsed={isCollapsed}
                 onClick={handleNavClick}
                 data-tour="nav-calendar"
               />
             )}
+
+            {/* Products Section */}
+            {!isCollapsed && (
+              <Typography
+                variant="small"
+                color="tertiary"
+                className="px-3 mt-4 mb-2 text-[10px] font-bold uppercase tracking-wider"
+              >
+                Products
+              </Typography>
+            )}
+
+            <NavItem
+              to={ROUTES.assistant.path}
+              params={{ orgSlug }}
+              icon={Bot}
+              label="Assistant"
+              isActive={isActive("/assistant")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
+            <NavItem
+              to={ROUTES.analytics.path}
+              params={{ orgSlug }}
+              icon={BarChart3}
+              label="Analytics"
+              isActive={isActive("/analytics")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
+            <NavItem
+              to={ROUTES.authentication.path}
+              params={{ orgSlug }}
+              icon={ShieldCheck}
+              label="Authentication"
+              isActive={isActive("/authentication")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
+            <NavItem
+              to={ROUTES.mcp.path}
+              params={{ orgSlug }}
+              icon={Server}
+              label="MCP Server"
+              isActive={isActive("/mcp-server")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
+            <NavItem
+              to={ROUTES.addOns.path}
+              params={{ orgSlug }}
+              icon={Puzzle}
+              label="Add-ons"
+              isActive={isActive("/add-ons")}
+              isCollapsed={isCollapsed}
+              onClick={handleNavClick}
+            />
             {/* Documents Section */}
             <CollapsibleSection
               icon={FileText}
@@ -439,7 +501,7 @@ function NavItem({
       )}
     >
       <Icon className="w-5 h-5 shrink-0" />
-      {!isCollapsed && <span>{label}</span>}
+      {!isCollapsed && label}
     </Link>
   );
 
@@ -555,7 +617,7 @@ function CollapsibleSection({
             )}
           >
             <Icon className="w-5 h-5" />
-            <span>{label}</span>
+            {label}
           </Link>
         ) : (
           <Flex
@@ -564,7 +626,7 @@ function CollapsibleSection({
             className="flex-1 text-sm font-medium text-ui-text-secondary transition-default"
           >
             <Icon className="w-5 h-5" />
-            <span>{label}</span>
+            {label}
           </Flex>
         )}
         <Button

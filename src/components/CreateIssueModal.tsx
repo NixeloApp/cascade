@@ -9,6 +9,20 @@ import { z } from "zod";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  BookOpen,
+  Bug,
+  Check,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  CircleDot,
+  Sparkles,
+  Zap,
+} from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
@@ -22,6 +36,7 @@ import {
 } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Select } from "./ui/form";
+import { Icon } from "./ui/Icon";
 
 // =============================================================================
 // Schema
@@ -287,8 +302,8 @@ export function CreateIssueModal({
               type="button"
               onClick={handleGenerateAISuggestions}
               isLoading={isGeneratingAI}
-              className="bg-linear-to-r from-brand to-accent hover:from-brand-hover hover:to-accent-hover text-white border-0"
-              leftIcon={<span>✨</span>}
+              className="bg-linear-to-r from-brand to-accent hover:from-brand-hover hover:to-accent-hover text-brand-foreground border-0"
+              leftIcon={<Icon icon={Sparkles} size="sm" />}
             >
               Get AI Suggestions
             </Button>
@@ -299,7 +314,7 @@ export function CreateIssueModal({
                 className="text-sm text-status-success"
                 aria-live="polite"
               >
-                <span>✓</span>
+                <Icon icon={Check} size="sm" />
                 <span>AI suggestions applied</span>
               </Flex>
             )}
@@ -322,11 +337,11 @@ export function CreateIssueModal({
             <form.Field name="type">
               {(field) => (
                 <FormSelect field={field} label="Type">
-                  <option value="task">📋 Task</option>
-                  <option value="bug">🐛 Bug</option>
-                  <option value="story">📖 Story</option>
-                  <option value="epic">🎯 Epic</option>
-                  <option value="subtask">🔸 Sub-task</option>
+                  <option value="task">Task</option>
+                  <option value="bug">Bug</option>
+                  <option value="story">Story</option>
+                  <option value="epic">Epic</option>
+                  <option value="subtask">Sub-task</option>
                 </FormSelect>
               )}
             </form.Field>
@@ -334,11 +349,11 @@ export function CreateIssueModal({
             <form.Field name="priority">
               {(field) => (
                 <FormSelect field={field} label="Priority">
-                  <option value="lowest">⬇️ Lowest</option>
-                  <option value="low">↘️ Low</option>
-                  <option value="medium">➡️ Medium</option>
-                  <option value="high">↗️ High</option>
-                  <option value="highest">⬆️ Highest</option>
+                  <option value="lowest">Lowest</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="highest">Highest</option>
                 </FormSelect>
               )}
             </form.Field>
@@ -384,14 +399,16 @@ export function CreateIssueModal({
                     onClick={() => toggleLabel(label._id)}
                     aria-pressed={selectedLabels.includes(label._id)}
                     className={cn(
-                      "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring",
+                      "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-brand-foreground transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring",
                       selectedLabels.includes(label._id)
                         ? "opacity-100 ring-2 ring-offset-2 ring-brand"
                         : "opacity-60 hover:opacity-80",
                     )}
                     style={{ backgroundColor: label.color }}
                   >
-                    {selectedLabels.includes(label._id) && <span className="mr-1">✓</span>}
+                    {selectedLabels.includes(label._id) && (
+                      <Icon icon={Check} size="sm" className="mr-1" />
+                    )}
                     {label.name}
                   </button>
                 ))}

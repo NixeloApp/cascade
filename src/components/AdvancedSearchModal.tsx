@@ -3,13 +3,14 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
-import { getTypeIcon } from "@/lib/issue-utils";
+import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
+import { Icon } from "./ui/Icon";
 
 interface AdvancedSearchModalProps {
   open: boolean;
@@ -108,9 +109,10 @@ export function AdvancedSearchModal({
               selectedValues={selectedType}
               onToggle={(type) => toggleFilter(type, selectedType, setSelectedType)}
               renderLabel={(type) => (
-                <>
-                  {getTypeIcon(type)} {type}
-                </>
+                <Flex align="center" gap="xs">
+                  <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
+                  <span>{type}</span>
+                </Flex>
               )}
             />
 

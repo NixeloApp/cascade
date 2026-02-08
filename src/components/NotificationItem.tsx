@@ -17,6 +17,7 @@ import {
 import { memo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -59,23 +60,6 @@ function getNotificationIcon(type: string) {
 }
 
 /**
- * Formats a timestamp into a relative time string.
- */
-function formatTime(timestamp: number): string {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return new Date(timestamp).toLocaleDateString();
-}
-
-/**
  * A memoized component that renders a single notification item.
  * Supports navigation to issue/document, and actions (Mark as read, Delete).
  */
@@ -97,13 +81,9 @@ export const NotificationItem = memo(function NotificationItem({
 
   if (orgSlug) {
     if (issue) {
-      // Navigate to issue detail
-      // Using manual path construction or route builder if strict types allowed
-      // ROUTES.issues.detail.path is "/$orgSlug/issues/$key"
       linkTo = ROUTES.issues.detail.path;
       linkParams = { orgSlug, key: issue.key };
     } else if (notification.documentId) {
-      // Navigate to document
       linkTo = ROUTES.documents.detail.path;
       linkParams = { orgSlug, id: notification.documentId };
     }
@@ -141,26 +121,17 @@ export const NotificationItem = memo(function NotificationItem({
 
       {/* Main Content (Clickable if linked) */}
       <ContentWrapper>
-        <Typography className="text-sm font-medium text-ui-text group-hover:text-ui-text-primary">
+        <Typography variant="label" as="p" className="group-hover:text-ui-text-primary">
           {notification.title}
         </Typography>
-        <Typography className="text-sm text-ui-text-secondary mt-0.5 line-clamp-2">
+        <Typography variant="small" color="secondary" className="mt-0.5 line-clamp-2">
           {notification.message}
         </Typography>
 
-        <Flex align="center" gap="xs" className="mt-1.5">
-          <Typography className="text-xs text-ui-text-tertiary">
-            {formatTime(notification._creationTime)}
-          </Typography>
-          {notification.actorName && (
-            <>
-              <span className="text-xs text-ui-text-tertiary">•</span>
-              <Typography className="text-xs text-ui-text-tertiary">
-                {notification.actorName}
-              </Typography>
-            </>
-          )}
-        </Flex>
+        <Metadata className="mt-1.5">
+          <MetadataTimestamp date={notification._creationTime} />
+          {notification.actorName && <MetadataItem>{notification.actorName}</MetadataItem>}
+        </Metadata>
       </ContentWrapper>
 
       {/* Actions (Separate from link) */}

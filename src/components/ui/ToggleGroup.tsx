@@ -29,9 +29,9 @@ const toggleGroupItemVariants = cva(
         brand:
           "bg-transparent text-ui-text-secondary hover:bg-brand-subtle hover:text-brand-hover data-[state=on]:bg-brand data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
         error:
-          "bg-transparent text-ui-text-secondary hover:bg-status-error-bg hover:text-status-error-text data-[state=on]:bg-status-error data-[state=on]:text-white data-[state=on]:shadow-soft",
+          "bg-transparent text-ui-text-secondary hover:bg-status-error-bg hover:text-status-error-text data-[state=on]:bg-status-error data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
         success:
-          "bg-transparent text-ui-text-secondary hover:bg-status-success-bg hover:text-status-success-text data-[state=on]:bg-status-success data-[state=on]:text-white data-[state=on]:shadow-soft",
+          "bg-transparent text-ui-text-secondary hover:bg-status-success-bg hover:text-status-success-text data-[state=on]:bg-status-success data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
         accent:
           "bg-transparent text-ui-text-secondary hover:bg-accent-subtle hover:text-accent-hover data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:shadow-soft",
         outline:

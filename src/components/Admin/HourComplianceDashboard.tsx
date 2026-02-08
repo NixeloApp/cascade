@@ -1,8 +1,12 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/Badge";
+import { Icon } from "@/components/ui/Icon";
 import { Typography } from "@/components/ui/Typography";
+import { AlertTriangle, CheckCircle, Gem, TrendingUp, XCircle, Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
@@ -85,16 +89,16 @@ export function HourComplianceDashboard() {
     }
   };
 
-  const getStatusIcon = (status: ComplianceStatus) => {
+  const getStatusIcon = (status: ComplianceStatus): LucideIcon => {
     switch (status) {
       case "compliant":
-        return "✅";
+        return CheckCircle;
       case "under_hours":
-        return "⚠️";
+        return AlertTriangle;
       case "over_hours":
-        return "🔴";
+        return XCircle;
       case "equity_under":
-        return "💎";
+        return Zap;
     }
   };
 
@@ -140,10 +144,10 @@ export function HourComplianceDashboard() {
           <Card>
             <CardBody>
               <div className="text-center">
-                <div className="text-2xl font-bold text-ui-text">
+                <Typography variant="h3" className="text-2xl">
                   {summary.complianceRate.toFixed(1)}%
-                </div>
-                <div className="text-sm text-ui-text-secondary">Compliance Rate</div>
+                </Typography>
+                <Typography variant="caption">Compliance Rate</Typography>
               </div>
             </CardBody>
           </Card>
@@ -151,8 +155,12 @@ export function HourComplianceDashboard() {
           <Card>
             <CardBody>
               <div className="text-center">
-                <div className="text-2xl font-bold text-status-success">{summary.compliant}</div>
-                <div className="text-sm text-ui-text-secondary">✅ Compliant</div>
+                <Typography variant="h3" className="text-2xl" color="success">
+                  {summary.compliant}
+                </Typography>
+                <Typography variant="caption">
+                  <Icon icon={CheckCircle} size="sm" className="inline mr-1" /> Compliant
+                </Typography>
               </div>
             </CardBody>
           </Card>
@@ -160,8 +168,12 @@ export function HourComplianceDashboard() {
           <Card>
             <CardBody>
               <div className="text-center">
-                <div className="text-2xl font-bold text-status-warning">{summary.underHours}</div>
-                <div className="text-sm text-ui-text-secondary">⚠️ Under Hours</div>
+                <Typography variant="h3" className="text-2xl" color="warning">
+                  {summary.underHours}
+                </Typography>
+                <Typography variant="caption">
+                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Under Hours
+                </Typography>
               </div>
             </CardBody>
           </Card>
@@ -169,8 +181,12 @@ export function HourComplianceDashboard() {
           <Card>
             <CardBody>
               <div className="text-center">
-                <div className="text-2xl font-bold text-status-error">{summary.overHours}</div>
-                <div className="text-sm text-ui-text-secondary">🔴 Over Hours</div>
+                <Typography variant="h3" className="text-2xl" color="error">
+                  {summary.overHours}
+                </Typography>
+                <Typography variant="caption">
+                  <Icon icon={XCircle} size="sm" className="inline mr-1" /> Over Hours
+                </Typography>
               </div>
             </CardBody>
           </Card>
@@ -178,8 +194,12 @@ export function HourComplianceDashboard() {
           <Card>
             <CardBody>
               <div className="text-center">
-                <div className="text-2xl font-bold text-brand">{summary.equityUnder}</div>
-                <div className="text-sm text-ui-text-secondary">💎 Equity Short</div>
+                <Typography variant="h3" className="text-2xl" color="brand">
+                  {summary.equityUnder}
+                </Typography>
+                <Typography variant="caption">
+                  <Icon icon={Gem} size="sm" className="inline mr-1" /> Equity Short
+                </Typography>
               </div>
             </CardBody>
           </Card>
@@ -230,10 +250,12 @@ export function HourComplianceDashboard() {
 
           {/* Records List */}
           {!records ? (
-            <div className="text-center py-8 text-ui-text-tertiary">Loading...</div>
+            <Typography variant="muted" className="text-center py-8">
+              Loading...
+            </Typography>
           ) : records.length === 0 ? (
             <EmptyState
-              icon="📊"
+              icon={TrendingUp}
               title="No compliance records"
               description="Check compliance to start tracking"
               action={{
@@ -251,89 +273,81 @@ export function HourComplianceDashboard() {
                   <Flex justify="between" align="start">
                     <div className="flex-1">
                       <Flex gap="md" align="center" className="mb-2">
-                        <span className="text-xl">{getStatusIcon(record.status)}</span>
+                        <Icon icon={getStatusIcon(record.status)} size="md" />
                         <div>
-                          <Typography variant="h4" className="font-medium text-ui-text">
+                          <Typography variant="label">
                             {record.user?.name || record.user?.email || "Unknown User"}
                           </Typography>
                           <Flex gap="sm" className="mt-1">
-                            <span
-                              className={cn(
-                                "text-xs px-2 py-0.5 rounded",
-                                getStatusColor(record.status),
-                              )}
-                            >
+                            <Badge size="sm" className={cn(getStatusColor(record.status))}>
                               {getStatusLabel(record.status)}
-                            </span>
-                            <span className="text-xs px-2 py-0.5 bg-ui-bg-tertiary text-ui-text rounded capitalize">
+                            </Badge>
+                            <Badge variant="neutral" className="capitalize">
                               {record.periodType}ly
-                            </span>
-                            {record.reviewedBy && (
-                              <span className="text-xs px-2 py-0.5 bg-accent-subtle text-accent-hover rounded">
-                                Reviewed
-                              </span>
-                            )}
+                            </Badge>
+                            {record.reviewedBy && <Badge variant="accent">Reviewed</Badge>}
                           </Flex>
                         </div>
                       </Flex>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
                         <div>
-                          <span className="text-ui-text-tertiary text-xs">Period:</span>
-                          <div className="font-medium text-ui-text">
+                          <Typography variant="meta">Period:</Typography>
+                          <Typography variant="small" className="font-medium">
                             {formatDate(record.periodStart)} - {formatDate(record.periodEnd)}
-                          </div>
+                          </Typography>
                         </div>
 
                         <div>
-                          <span className="text-ui-text-tertiary text-xs">Hours Worked:</span>
-                          <div className="font-medium text-ui-text">
+                          <Typography variant="meta">Hours Worked:</Typography>
+                          <Typography variant="small" className="font-medium">
                             {record.totalHoursWorked.toFixed(1)}h
-                          </div>
+                          </Typography>
                         </div>
 
                         {record.hoursDeficit && (
                           <div>
-                            <span className="text-ui-text-tertiary text-xs">Deficit:</span>
-                            <div className="font-medium text-status-warning">
+                            <Typography variant="meta">Deficit:</Typography>
+                            <Typography variant="small" color="warning" className="font-medium">
                               -{record.hoursDeficit.toFixed(1)}h
-                            </div>
+                            </Typography>
                           </div>
                         )}
 
                         {record.hoursExcess && (
                           <div>
-                            <span className="text-ui-text-tertiary text-xs">Excess:</span>
-                            <div className="font-medium text-status-error">
+                            <Typography variant="meta">Excess:</Typography>
+                            <Typography variant="small" color="error" className="font-medium">
                               +{record.hoursExcess.toFixed(1)}h
-                            </div>
+                            </Typography>
                           </div>
                         )}
 
                         {record.equityHoursDeficit && (
                           <div>
-                            <span className="text-ui-text-tertiary text-xs">Equity Short:</span>
-                            <div className="font-medium text-brand">
+                            <Typography variant="meta">Equity Short:</Typography>
+                            <Typography variant="small" color="brand" className="font-medium">
                               -{record.equityHoursDeficit.toFixed(1)}h
-                            </div>
+                            </Typography>
                           </div>
                         )}
 
                         {record.totalEquityHours && (
                           <div>
-                            <span className="text-ui-text-tertiary text-xs">Equity Hours:</span>
-                            <div className="font-medium text-ui-text">
+                            <Typography variant="meta">Equity Hours:</Typography>
+                            <Typography variant="small" className="font-medium">
                               {record.totalEquityHours.toFixed(1)}h
-                            </div>
+                            </Typography>
                           </div>
                         )}
                       </div>
 
                       {record.reviewNotes && (
-                        <div className="mt-3 p-2 bg-accent-subtle rounded text-sm">
-                          <span className="font-medium text-accent-active">Review Notes:</span>{" "}
-                          <span className="text-accent-hover">{record.reviewNotes}</span>
-                        </div>
+                        <Flex className="mt-3 p-2 bg-accent-subtle rounded">
+                          <Typography variant="small">
+                            <strong>Review Notes:</strong> {record.reviewNotes}
+                          </Typography>
+                        </Flex>
                       )}
                     </div>
 

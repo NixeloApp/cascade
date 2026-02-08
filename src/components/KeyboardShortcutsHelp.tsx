@@ -80,7 +80,9 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                     className="py-2"
                     key={shortcut.description}
                   >
-                    <span className="text-sm text-ui-text">{shortcut.description}</span>
+                    <Typography variant="p" className="text-sm">
+                      {shortcut.description}
+                    </Typography>
                     <Flex gap="sm">
                       {shortcut.keys.map((key) => (
                         <KeyboardShortcut key={key} shortcut={key} />
