@@ -125,7 +125,7 @@ export function NotificationCenter() {
         {/* Notifications List */}
         <div className="flex-1 overflow-y-auto">
           {!notifications || notifications.length === 0 ? (
-            <EmptyState icon="📭" title="No notifications" />
+            <EmptyState icon={Inbox} title="No notifications" />
           ) : (
             <div className="divide-y divide-ui-border">
               {notifications.map((notification) => (

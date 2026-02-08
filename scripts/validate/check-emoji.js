@@ -14,6 +14,7 @@ export function run() {
     /\.test\.tsx?$/,
     /\.stories\.tsx?$/,
     /CommentReactions\.tsx$/, // Intentional emoji for reactions
+    /DocumentTemplatesManager\.tsx$/, // User input field for template icons
   ];
 
   // Emoji regex - matches most common emoji ranges
