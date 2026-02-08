@@ -568,16 +568,22 @@ export const FormLayout: Story = {
   render: () => (
     <Flex direction="column" gap="lg" className="w-80">
       <Flex direction="column" gap="xs">
-        <label className="text-sm font-medium">Name</label>
+        <label htmlFor="name-input" className="text-sm font-medium">
+          Name
+        </label>
         <input
+          id="name-input"
           type="text"
           className="px-3 py-2 rounded border border-ui-border bg-ui-bg"
           placeholder="Enter your name"
         />
       </Flex>
       <Flex direction="column" gap="xs">
-        <label className="text-sm font-medium">Email</label>
+        <label htmlFor="email-input" className="text-sm font-medium">
+          Email
+        </label>
         <input
+          id="email-input"
           type="email"
           className="px-3 py-2 rounded border border-ui-border bg-ui-bg"
           placeholder="Enter your email"

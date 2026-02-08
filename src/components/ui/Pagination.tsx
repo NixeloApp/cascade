@@ -92,6 +92,7 @@ export function Pagination({
       <PaginationContent>
         {pages.map((page, index) => {
           if (page === "dots-left" || page === "dots-right") {
+            // biome-ignore lint/suspicious/noArrayIndexKey: needed for duplicate dot items
             return <PaginationEllipsis key={`${page}-${index}`} />;
           }
 

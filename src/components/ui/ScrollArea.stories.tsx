@@ -91,6 +91,7 @@ export const Default: Story = {
         <h4 className="mb-4 text-sm font-medium text-ui-text">Scrollable Content</h4>
         <div className="space-y-4">
           {loremParagraphs.map((paragraph, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
             <p key={index} className="text-sm text-ui-text-secondary">
               {paragraph}
             </p>
@@ -184,11 +185,13 @@ export const BothDirections: Story = {
         <h4 className="mb-4 text-sm font-medium text-ui-text">Wide Content</h4>
         <div className="space-y-4">
           {loremParagraphs.map((paragraph, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
             <p key={index} className="text-sm text-ui-text-secondary whitespace-nowrap">
               {paragraph}
             </p>
           ))}
           {loremParagraphs.map((paragraph, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
             <p key={`repeat-${index}`} className="text-sm text-ui-text-secondary whitespace-nowrap">
               {paragraph}
             </p>
@@ -304,6 +307,7 @@ export const DropdownMenu: Story = {
         <div className="p-2">
           {Array.from({ length: 15 }, (_, i) => (
             <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
               key={i}
               className="rounded-md px-3 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg-hover cursor-pointer"
             >
@@ -438,6 +442,7 @@ export const ImageGallery: Story = {
         <Flex gap="md">
           {Array.from({ length: 8 }, (_, i) => (
             <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
               key={i}
               className="h-32 w-40 shrink-0 rounded-lg bg-ui-bg-soft flex items-center justify-center"
             >
@@ -481,6 +486,7 @@ export const LargeHeight: Story = {
         <h4 className="mb-4 text-sm font-medium text-ui-text">Activity Log</h4>
         <Flex direction="column" gap="md">
           {Array.from({ length: 20 }, (_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
             <div key={i} className="border-l-2 border-ui-border pl-4">
               <p className="text-sm text-ui-text">Activity item {i + 1}</p>
               <p className="text-xs text-ui-text-tertiary">
@@ -507,6 +513,7 @@ export const NestedScrollAreas: Story = {
           <div className="p-2">
             {Array.from({ length: 10 }, (_, i) => (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
                 key={i}
                 className="rounded-md px-3 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg-hover cursor-pointer"
               >
@@ -522,6 +529,7 @@ export const NestedScrollAreas: Story = {
           <div className="p-2">
             {Array.from({ length: 10 }, (_, i) => (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
                 key={i}
                 className="rounded-md px-3 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg-hover cursor-pointer"
               >
@@ -576,6 +584,7 @@ export const AllFeatures: Story = {
         <ScrollArea className="h-40 w-80 rounded-lg border border-ui-border">
           <div className="w-[500px] p-4 space-y-2">
             {loremParagraphs.slice(0, 4).map((p, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Storybook sample data
               <p key={i} className="text-sm text-ui-text-secondary whitespace-nowrap">
                 {p}
               </p>
