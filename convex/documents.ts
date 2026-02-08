@@ -16,6 +16,7 @@ import {
 } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { assertCanAccessProject } from "./projectAccess";
 
 export const create = authenticatedMutation({
   args: {
@@ -73,6 +74,8 @@ export const create = authenticatedMutation({
       if (project.organizationId !== args.organizationId) {
         throw validation("projectId", "Project does not belong to the specified organization");
       }
+
+      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
     }
 
     // Validate integrity: Workspace must belong to the specified organization

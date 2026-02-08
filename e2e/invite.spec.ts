@@ -37,14 +37,14 @@ test.describe("Invite Page", () => {
     // Wait for Convex query to resolve and show invalid state
     // The page shows loading first, then the Convex query returns null for invalid token
     const invalidHeading = page.getByRole("heading", { name: /invalid invitation/i });
-    await expect(invalidHeading).toBeVisible({ timeout: 15000 });
+    await expect(invalidHeading).toBeVisible();
 
     // Click the "Go to Home" button - may be a link or button
     const homeButton = page
       .getByRole("button", { name: /go to home/i })
       .or(page.getByRole("link", { name: /go to home/i }));
     await expect(homeButton).toBeVisible();
-    await homeButton.evaluate((el: HTMLElement) => el.click());
+    await homeButton.click();
 
     // Should navigate to home page (could be / or /signin for unauthenticated)
     // The full URL includes the host, so match the path portion
@@ -80,9 +80,7 @@ test.describe("Invite Page", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Wait for the invalid state to fully render
-    await expect(page.getByRole("heading", { name: /invalid invitation/i })).toBeVisible({
-      timeout: 15000,
-    });
+    await expect(page.getByRole("heading", { name: /invalid invitation/i })).toBeVisible();
 
     // Invalid invite page shows an AlertCircle error icon (SVG) and the heading
     // Verify the error icon is present (rendered as an SVG with specific classes)

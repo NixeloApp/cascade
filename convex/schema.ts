@@ -222,7 +222,8 @@ const applicationTables = {
     .index("by_team_status", ["teamId", "status", "isDeleted"]) // NEW
     .index("by_team_status_updated", ["teamId", "status", "updatedAt"]) // NEW OPTIMIZATION
     .index("by_deleted", ["isDeleted"]) // Soft delete index
-    .index("by_project_deleted", ["projectId", "isDeleted"]) // Project trash view
+    // Project trash view & optimized active listing
+    .index("by_project_deleted", ["projectId", "isDeleted"])
     .searchIndex("search_title", {
       searchField: "searchContent",
       filterFields: [

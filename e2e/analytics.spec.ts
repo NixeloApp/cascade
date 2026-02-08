@@ -43,9 +43,7 @@ test.describe("Analytics Dashboard", () => {
     console.log("✓ Navigated to analytics page");
 
     // Wait for loading to complete — target the analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
 
     // Verify key metric cards are visible
     const totalIssuesCard = page.getByText("Total Issues");
@@ -85,9 +83,7 @@ test.describe("Analytics Dashboard", () => {
     await expect(page).toHaveURL(/\/analytics/);
 
     // Wait for loading to complete — target analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
 
     // Verify chart cards are visible
     const statusChart = page.getByText("Issues by Status");
@@ -138,9 +134,7 @@ test.describe("Analytics Dashboard", () => {
     await expect(page).toHaveURL(/\/analytics/);
 
     // Wait for loading to complete — target analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
 
     // Find the Total Issues metric card and verify count is at least 3
     // The card shows a number value next to "Total Issues"
@@ -176,9 +170,7 @@ test.describe("Analytics Dashboard", () => {
     await expect(page).toHaveURL(/\/analytics/);
 
     // Wait for loading to complete — target analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
 
     // Verify "No completed sprints yet" message in velocity chart
     const noSprintsMessage = page.getByText("No completed sprints yet");
@@ -204,9 +196,7 @@ test.describe("Analytics Dashboard", () => {
     await expect(page).toHaveURL(/\/analytics/);
 
     // Wait for loading to complete — target analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
 
     // Verify page header
     const pageHeader = page.getByRole("heading", { name: /analytics dashboard/i });

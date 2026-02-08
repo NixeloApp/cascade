@@ -52,7 +52,6 @@ test.describe("Onboarding Wizard", () => {
     // Use a longer timeout and explicit URL wait to handle slow hydration/Convex updates
     await page.waitForURL("**/onboarding");
     await onboarding.waitForSplashScreen();
-    await page.waitForLoadState("domcontentloaded");
 
     // Should show role selection
     await onboarding.expectRoleSelection();
@@ -61,7 +60,6 @@ test.describe("Onboarding Wizard", () => {
   test("can select team lead role", async ({ page }) => {
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
-    await page.waitForLoadState("domcontentloaded");
 
     await onboarding.waitForWizard();
     await onboarding.selectTeamLead();
@@ -70,7 +68,7 @@ test.describe("Onboarding Wizard", () => {
   test("can select team member role", async ({ page }) => {
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
-    await page.waitForLoadState("domcontentloaded");
+
     await onboarding.waitForWizard();
     await onboarding.selectTeamMember();
   });
@@ -79,7 +77,6 @@ test.describe("Onboarding Wizard", () => {
   test("can skip onboarding", async ({ page }) => {
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
-    await page.waitForLoadState("domcontentloaded");
 
     // Wait for welcome heading to confirm we're on onboarding
     await onboarding.waitForWizard();
@@ -93,7 +90,7 @@ test.describe("Onboarding Wizard", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Wait for dashboard to finish loading — use test ID to avoid matching multiple headings
-    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
 
     // Should navigate to dashboard
     await onboarding.expectDashboard();
@@ -102,7 +99,6 @@ test.describe("Onboarding Wizard", () => {
   test("shows feature highlights", async ({ page }) => {
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
-    await page.waitForLoadState("domcontentloaded");
 
     // Wait for welcome heading to confirm we're on onboarding
     await onboarding.waitForWizard();
@@ -129,7 +125,6 @@ test.describe("Onboarding - Team Lead Flow", () => {
 
     // Navigate to onboarding
     await onboarding.goto();
-    await page.waitForLoadState("domcontentloaded");
 
     // Wait for role selection to appear and be interactive
     await onboarding.waitForWizard();
@@ -161,7 +156,6 @@ test.describe("Onboarding - Team Member Flow", () => {
 
     // Navigate to onboarding and wait for initial load
     await onboarding.goto();
-    await page.waitForLoadState("domcontentloaded");
 
     // Wait for role selection to appear and be interactive
     await onboarding.waitForWizard();
@@ -188,7 +182,7 @@ test.describe("Onboarding - Team Member Flow", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Wait for dashboard to finish loading — use test ID to avoid matching multiple headings
-    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
 
     // Should navigate to dashboard
     await onboarding.expectDashboard();

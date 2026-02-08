@@ -259,15 +259,15 @@ export class SettingsPage extends BasePage {
   // ===================
 
   async connectGithub() {
-    await this.connectGithubButton.evaluate((el: HTMLElement) => el.click());
+    await this.connectGithubButton.click();
   }
 
   async connectGoogleCalendar() {
-    await this.connectGoogleButton.evaluate((el: HTMLElement) => el.click());
+    await this.connectGoogleButton.click();
   }
 
   async connectPumble() {
-    await this.connectPumbleButton.evaluate((el: HTMLElement) => el.click());
+    await this.connectPumbleButton.click();
   }
 
   // ===================
@@ -275,17 +275,17 @@ export class SettingsPage extends BasePage {
   // ===================
 
   async generateApiKey(name: string) {
-    await this.generateApiKeyButton.evaluate((el: HTMLElement) => el.click());
+    await this.generateApiKeyButton.click();
     await this.apiKeyNameInput.fill(name);
-    await this.createApiKeyButton.evaluate((el: HTMLElement) => el.click());
+    await this.createApiKeyButton.click();
   }
 
   async copyApiKey() {
-    await this.copyApiKeyButton.evaluate((el: HTMLElement) => el.click());
+    await this.copyApiKeyButton.click();
   }
 
   async revokeApiKey() {
-    await this.revokeApiKeyButton.first().evaluate((el: HTMLElement) => el.click());
+    await this.revokeApiKeyButton.first().click();
   }
 
   // ===================
@@ -293,11 +293,11 @@ export class SettingsPage extends BasePage {
   // ===================
 
   async toggleOfflineMode() {
-    await this.offlineToggle.evaluate((el: HTMLElement) => el.click());
+    await this.offlineToggle.click();
   }
 
   async forceSync() {
-    await this.forceSyncButton.evaluate((el: HTMLElement) => el.click());
+    await this.forceSyncButton.click();
   }
 
   // ===================
@@ -316,13 +316,13 @@ export class SettingsPage extends BasePage {
 
     // Scroll into view and wait for it to be stable
     await inviteBtn.scrollIntoViewIfNeeded();
-    // Wait for button to be enabled (stable)
-    await expect(inviteBtn).toBeEnabled();
 
-    // Click using evaluate for reliable React event handling
     // Retry pattern handles potential element detachment during re-renders
+    // Press Escape first to ensure any open modals are closed
     await expect(async () => {
-      await inviteBtn.evaluate((el: HTMLElement) => el.click());
+      await this.page.keyboard.press("Escape");
+      await expect(inviteBtn).toBeEnabled();
+      await inviteBtn.click();
       await expect(this.inviteUserModal).toBeVisible();
     }).toPass();
   }
@@ -341,7 +341,7 @@ export class SettingsPage extends BasePage {
           .getByRole("combobox")
           .filter({ hasText: /^User$|^Super Admin$|Select role/i });
         await expect(selectTrigger).toBeVisible();
-        await selectTrigger.evaluate((el: HTMLElement) => el.click());
+        await selectTrigger.click();
         await expect(this.page.getByRole("option", { name: displayRole })).toBeVisible();
       }).toPass();
       await this.page.getByRole("option", { name: displayRole }).click();
@@ -352,7 +352,7 @@ export class SettingsPage extends BasePage {
     await expect(async () => {
       await expect(this.sendInviteButton).toBeVisible();
       await expect(this.sendInviteButton).toBeEnabled();
-      await this.sendInviteButton.evaluate((el: HTMLElement) => el.click());
+      await this.sendInviteButton.click();
     }).toPass();
   }
 

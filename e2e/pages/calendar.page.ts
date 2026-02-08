@@ -127,27 +127,27 @@ export class CalendarPage extends BasePage {
   // ===================
 
   async goToToday() {
-    await this.todayButton.evaluate((el: HTMLElement) => el.click());
+    await this.todayButton.click();
   }
 
   async goToPrevious() {
-    await this.prevButton.evaluate((el: HTMLElement) => el.click());
+    await this.prevButton.click();
   }
 
   async goToNext() {
-    await this.nextButton.evaluate((el: HTMLElement) => el.click());
+    await this.nextButton.click();
   }
 
   async switchToMonthView() {
-    await this.monthViewButton.evaluate((el: HTMLElement) => el.click());
+    await this.monthViewButton.click();
   }
 
   async switchToWeekView() {
-    await this.weekViewButton.evaluate((el: HTMLElement) => el.click());
+    await this.weekViewButton.click();
   }
 
   async switchToDayView() {
-    await this.dayViewButton.evaluate((el: HTMLElement) => el.click());
+    await this.dayViewButton.click();
   }
 
   // ===================
@@ -155,7 +155,7 @@ export class CalendarPage extends BasePage {
   // ===================
 
   async openCreateEventModal() {
-    await this.createEventButton.evaluate((el: HTMLElement) => el.click());
+    await this.createEventButton.click();
     await expect(this.createEventModal).toBeVisible();
   }
 
@@ -178,17 +178,17 @@ export class CalendarPage extends BasePage {
     if (options?.isRequired) {
       await this.isRequiredCheckbox.check();
     }
-    await this.saveEventButton.evaluate((el: HTMLElement) => el.click());
+    await this.saveEventButton.click();
   }
 
   async cancelCreateEvent() {
-    await this.cancelEventButton.evaluate((el: HTMLElement) => el.click());
+    await this.cancelEventButton.click();
     await expect(this.createEventModal).not.toBeVisible();
   }
 
   async selectEvent(index: number) {
     const event = this.eventItems.nth(index);
-    await event.evaluate((el: HTMLElement) => el.click());
+    await event.click();
   }
 
   // ===================
@@ -196,8 +196,8 @@ export class CalendarPage extends BasePage {
   // ===================
 
   async expectCalendarView() {
-    // Wait for calendar to be visible with extended timeout for CI/hydration
-    await expect(this.calendar).toBeVisible({ timeout: 30000 });
+    // Wait for calendar to be visible (uses Playwright's default timeout)
+    await expect(this.calendar).toBeVisible();
     // Ensure navigation controls are present
     await expect(this.todayButton).toBeVisible();
   }

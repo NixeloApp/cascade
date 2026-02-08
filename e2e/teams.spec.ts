@@ -50,7 +50,7 @@ test.describe("Teams", () => {
         .filter({ hasText: workspaceName })
         .first();
       await expect(workspaceCard).toBeVisible();
-      await workspaceCard.evaluate((el: HTMLElement) => el.click());
+      await workspaceCard.click();
     }
 
     // Should be in the workspace now - either on detail page or already on teams
@@ -61,7 +61,7 @@ test.describe("Teams", () => {
     if (!currentUrl.includes("/teams")) {
       const teamsLink = page.getByRole("link", { name: /^teams$/i });
       await expect(teamsLink).toBeVisible();
-      await teamsLink.evaluate((el: HTMLElement) => el.click());
+      await teamsLink.click();
     }
     await expect(page).toHaveURL(/\/workspaces\/.*\/teams/);
 
@@ -90,13 +90,13 @@ test.describe("Teams", () => {
         .locator(`a[href*="/workspaces/"]`)
         .filter({ hasText: workspaceName });
       await expect(workspaceCard).toBeVisible();
-      await workspaceCard.evaluate((el: HTMLElement) => el.click());
+      await workspaceCard.click();
     }
 
     // Navigate to teams
     const teamsLink = page.getByRole("link", { name: /^teams$/i });
     await expect(teamsLink).toBeVisible();
-    await teamsLink.evaluate((el: HTMLElement) => el.click());
+    await teamsLink.click();
 
     // Should show "Create Team" button (may be multiple on page, use first)
     const createTeamButton = page.getByRole("button", { name: /create team/i }).first();
@@ -123,7 +123,7 @@ test.describe("Teams", () => {
         .locator(`a[href*="/workspaces/"]`)
         .filter({ hasText: workspaceName });
       await expect(workspaceCard).toBeVisible();
-      await workspaceCard.evaluate((el: HTMLElement) => el.click());
+      await workspaceCard.click();
     }
 
     // Navigate to teams

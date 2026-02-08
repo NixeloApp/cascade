@@ -173,7 +173,6 @@ export class ProjectsPage extends BasePage {
   async goto() {
     // Navigate directly to the projects route
     await this.page.goto(`/${this.orgSlug}/projects`);
-    await this.page.waitForLoadState("domcontentloaded");
     await this.waitForLoad();
   }
 
@@ -278,13 +277,13 @@ export class ProjectsPage extends BasePage {
   }
 
   async cancelCreateProject() {
-    await this.cancelButton.evaluate((el: HTMLElement) => el.click());
+    await this.cancelButton.click();
     await expect(this.createProjectForm).not.toBeVisible();
   }
 
   async selectProject(index: number) {
     const item = this.projectItems.nth(index);
-    await item.evaluate((el: HTMLElement) => el.click());
+    await item.click();
   }
 
   async openCreateIssueModal() {
@@ -301,7 +300,7 @@ export class ProjectsPage extends BasePage {
     if (priority) {
       await this.issuePrioritySelect.selectOption(priority);
     }
-    await this.submitIssueButton.evaluate((el: HTMLElement) => el.click());
+    await this.submitIssueButton.click();
   }
 
   async switchToTab(tab: "board" | "backlog" | "sprints" | "analytics" | "settings") {
@@ -316,8 +315,7 @@ export class ProjectsPage extends BasePage {
     const tabLocator = tabs[tab];
 
     // Wait for tab to be available - handle potential loading states or animations
-    // Using a more lenient timeout for CI environments where hydration can be slow
-    await expect(tabLocator).toBeVisible({ timeout: 30000 });
+    await expect(tabLocator).toBeVisible();
 
     // Ensure the tab is actually clickable before attempting to click
     // Add a check for navigation container to ensure hydration is complete

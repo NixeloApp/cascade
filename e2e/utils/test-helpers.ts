@@ -5,10 +5,12 @@ import type { Page } from "@playwright/test";
  */
 
 /**
- * Wait for network to be idle (no pending requests)
+ * Wait for page to be ready for interaction.
+ * Prefer using specific element assertions instead.
+ * @deprecated Use explicit element waits (e.g., expect(element).toBeVisible()) instead
  */
-export async function waitForNetworkIdle(page: Page, timeout = 5000): Promise<void> {
-  await page.waitForLoadState("networkidle", { timeout });
+export async function waitForNetworkIdle(page: Page, _timeout = 5000): Promise<void> {
+  await page.waitForLoadState("domcontentloaded");
 }
 
 /**

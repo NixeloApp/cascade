@@ -1,4 +1,3 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, authenticatedTest as test } from "./fixtures";
 import { testUserService } from "./utils/test-user-service";
 
@@ -49,7 +48,7 @@ test.describe("Global Search", () => {
 
     // Wait for search to complete (loading spinner disappears and results appear)
     const searchResults = page.locator("[cmdk-group]");
-    await expect(searchResults).toBeVisible({ timeout: 10000 });
+    await expect(searchResults).toBeVisible();
 
     // Verify the issue appears in results
     const issueResult = page.getByText(uniqueSearchTerm);
@@ -67,10 +66,7 @@ test.describe("Global Search", () => {
     await dashboardPage.closeGlobalSearch();
   });
 
-  test("search shows 'No results found' for non-matching query", async ({
-    dashboardPage,
-    page,
-  }) => {
+  test("search shows 'No results found' for non-matching query", async ({ dashboardPage }) => {
     await dashboardPage.goto();
     await dashboardPage.expectLoaded();
 
@@ -85,8 +81,12 @@ test.describe("Global Search", () => {
     const nonExistentTerm = `NonExistent${Date.now()}XYZ`;
     await dashboardPage.globalSearchInput.fill(nonExistentTerm);
 
-    // Wait for search to complete - use test ID for reliable selection
-    const noResultsMessage = page.getByTestId(TEST_IDS.GLOBAL_SEARCH.NO_RESULTS);
+    // Wait for loading spinner to disappear (search complete)
+    const loadingSpinner = dashboardPage.globalSearchModal.locator(".animate-spin");
+    await expect(loadingSpinner).not.toBeVisible();
+
+    // Wait for "No results found" message - use text content since CommandEmpty may not render with test ID
+    const noResultsMessage = dashboardPage.globalSearchModal.getByText(/no results found/i);
     await expect(noResultsMessage).toBeVisible();
     console.log("✓ 'No results found' message displayed");
 
@@ -111,7 +111,7 @@ test.describe("Global Search", () => {
     await dashboardPage.globalSearchInput.fill("ab");
 
     // Either results, no results, or loading should appear (not the min char message)
-    await expect(minCharMessage).not.toBeVisible({ timeout: 5000 });
+    await expect(minCharMessage).not.toBeVisible();
     console.log("✓ Minimum character message hidden after 2+ chars");
 
     // Close search
@@ -140,26 +140,26 @@ test.describe("Global Search", () => {
 
     // Wait for results
     const searchResults = page.locator("[cmdk-group]");
-    await expect(searchResults).toBeVisible({ timeout: 10000 });
+    await expect(searchResults).toBeVisible();
 
     // Verify "All" tab is active by default and shows count
     const allTab = page.getByRole("button", { name: /^all/i });
     await expect(allTab).toBeVisible();
     console.log("✓ All tab visible");
 
-    // Click on "Issues" tab - use evaluate for React event handling
+    // Click on "Issues" tab
     const issuesTab = page.getByRole("button", { name: /^issues/i });
     await expect(issuesTab).toBeVisible();
-    await issuesTab.evaluate((el: HTMLElement) => el.click());
+    await issuesTab.click();
 
     // Issue should still be visible (it's an issue)
     await expect(page.getByText(uniqueSearchTerm)).toBeVisible();
     console.log("✓ Issue visible in Issues tab");
 
-    // Click on "Documents" tab - use evaluate for React event handling
+    // Click on "Documents" tab
     const documentsTab = page.getByRole("button", { name: /^documents/i });
     await expect(documentsTab).toBeVisible();
-    await documentsTab.evaluate((el: HTMLElement) => el.click());
+    await documentsTab.click();
 
     // Wait for tab to switch - check if either no results or no issue visible
     // Since we created an issue but no document, either "no results" shows or our issue is filtered out
@@ -196,7 +196,7 @@ test.describe("Global Search", () => {
 
     // Wait for results
     const searchResults = page.locator("[cmdk-group]");
-    await expect(searchResults).toBeVisible({ timeout: 10000 });
+    await expect(searchResults).toBeVisible();
 
     // Check that tabs show counts (e.g., "Issues (1)")
     // The count appears as "(N)" after the tab label

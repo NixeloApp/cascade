@@ -1,12 +1,14 @@
 {
   "$schema": "https://mintlify.com/schema.json",
   "name": "Nixelo Docs",
+  "favicon": "public/icon-192.png",
   "colors": {
     "primary": "#0F53FF",
     "light": "#4D8AFF",
     "dark": "#0A3BBF",
     "anchors": "#0F53FF"
   },
+  "favicon": "public/icon-192.png",
   "navigation": [
     {
       "group": "Introduction",

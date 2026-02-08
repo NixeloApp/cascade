@@ -52,9 +52,9 @@ test.describe("Activity Feed", () => {
     const emptyState = page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE);
     const activityFeed = page.getByTestId(TEST_IDS.ACTIVITY.FEED);
 
-    // Wait for either the empty state OR activity feed to appear (max 10s)
+    // Wait for either the empty state OR activity feed to appear
     // This assertion is sufficient - if it passes, one of them is visible
-    await expect(emptyState.or(activityFeed)).toBeVisible({ timeout: 10000 });
+    await expect(emptyState.or(activityFeed)).toBeVisible();
 
     // Determine which one appeared for logging purposes
     const hasEmptyState = await emptyState.isVisible().catch(() => false);
@@ -91,7 +91,7 @@ test.describe("Activity Feed", () => {
 
     // Wait for the activity feed container to appear (replaces generic skeleton check)
     const activityFeed = page.getByTestId(TEST_IDS.ACTIVITY.FEED);
-    await expect(activityFeed).toBeVisible({ timeout: 10000 });
+    await expect(activityFeed).toBeVisible();
 
     // Verify activity entries are visible — scoped to the feed container
     const activityEntries = activityFeed.getByTestId(TEST_IDS.ACTIVITY.ENTRY);
@@ -133,7 +133,7 @@ test.describe("Activity Feed", () => {
 
     // Wait for the activity feed container to appear
     const activityFeed = page.getByTestId(TEST_IDS.ACTIVITY.FEED);
-    await expect(activityFeed).toBeVisible({ timeout: 10000 });
+    await expect(activityFeed).toBeVisible();
 
     // Activity entries should show a user name with an action — scoped to feed
     const activityEntry = activityFeed.getByTestId(TEST_IDS.ACTIVITY.ENTRY).first();
@@ -166,7 +166,7 @@ test.describe("Activity Feed", () => {
 
     // Wait for the activity feed container to appear
     const activityFeed = page.getByTestId(TEST_IDS.ACTIVITY.FEED);
-    await expect(activityFeed).toBeVisible({ timeout: 10000 });
+    await expect(activityFeed).toBeVisible();
 
     // Verify relative timestamps are shown — scoped to the feed container
     const relativeTime = activityFeed.getByText(

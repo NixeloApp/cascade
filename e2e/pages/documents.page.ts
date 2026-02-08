@@ -92,11 +92,11 @@ export class DocumentsPage extends BasePage {
   // ===================
 
   async createNewDocument() {
-    await this.newDocumentButton.evaluate((el: HTMLElement) => el.click());
+    await this.newDocumentButton.click();
   }
 
   async openTemplateModal() {
-    await this.templateButton.evaluate((el: HTMLElement) => el.click());
+    await this.templateButton.click();
     await expect(this.templateModal).toBeVisible();
   }
 
@@ -107,7 +107,7 @@ export class DocumentsPage extends BasePage {
       meeting: this.meetingNotesTemplate,
       project: this.projectBriefTemplate,
     };
-    await buttons[template].evaluate((el: HTMLElement) => el.click());
+    await buttons[template].click();
   }
 
   async searchDocuments(query: string) {
@@ -121,7 +121,7 @@ export class DocumentsPage extends BasePage {
   async selectDocument(index: number) {
     const items = this.documentItems;
     const item = items.nth(index);
-    await item.evaluate((el: HTMLElement) => el.click());
+    await item.click();
   }
 
   async deleteDocument(index: number) {
@@ -129,16 +129,16 @@ export class DocumentsPage extends BasePage {
     const item = this.documentItems.nth(index);
     await item.hover();
     const deleteButton = item.getByRole("button", { name: /delete|remove|trash/i });
-    await deleteButton.evaluate((el: HTMLElement) => el.click());
+    await deleteButton.click();
   }
 
   async confirmDelete() {
     await expect(this.deleteConfirmDialog).toBeVisible();
-    await this.confirmDeleteButton.evaluate((el: HTMLElement) => el.click());
+    await this.confirmDeleteButton.click();
   }
 
   async cancelDelete() {
-    await this.cancelDeleteButton.evaluate((el: HTMLElement) => el.click());
+    await this.cancelDeleteButton.click();
     await expect(this.deleteConfirmDialog).not.toBeVisible();
   }
 

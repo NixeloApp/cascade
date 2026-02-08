@@ -169,21 +169,14 @@ export function GoogleCalendarIntegration() {
         {calendarConnection && (
           <Flex direction="column" gap="xl" className="mt-6 pt-6 border-t border-ui-border">
             {/* Sync Toggle */}
-            <Flex justify="between" align="center">
-              <div>
-                <Typography variant="h4" className="text-sm font-semibold text-ui-text">
-                  Enable Sync
-                </Typography>
-                <Typography className="text-sm text-ui-text-secondary mt-1">
-                  Automatically sync events between Nixelo and Google Calendar
-                </Typography>
-              </div>
-              <Switch
-                checked={calendarConnection.syncEnabled}
-                onCheckedChange={handleToggleSync}
-                disabled={isSaving}
-              />
-            </Flex>
+            <Switch
+              label="Enable Sync"
+              description="Automatically sync events between Nixelo and Google Calendar"
+              labelSide="left"
+              checked={calendarConnection.syncEnabled}
+              onCheckedChange={handleToggleSync}
+              disabled={isSaving}
+            />
 
             {/* Sync Direction */}
             {calendarConnection.syncEnabled && (

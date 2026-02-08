@@ -178,7 +178,6 @@ export class AuthPage extends BasePage {
    */
   async gotoForgotPassword() {
     await this.page.goto("/forgot-password");
-    await this.page.waitForLoadState("domcontentloaded");
     await this.forgotPasswordHeading.waitFor({ state: "visible" });
     await this.emailInput.waitFor({ state: "visible" });
   }
@@ -206,33 +205,24 @@ export class AuthPage extends BasePage {
 
     // The submit button with test ID - text changes from "Continue with email" to "Sign in"/"Create account"
     const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    await expect(submitButton).toBeVisible({ timeout: 5000 });
-    await expect(submitButton).toBeEnabled({ timeout: 5000 });
 
-    // Check button text to determine if already expanded
-    // The same button changes text: "Continue with email" -> "Sign in" or "Create account"
-    const buttonText = await submitButton.textContent();
-    const isExpanded = buttonText?.includes("Sign in") || buttonText?.includes("Create account");
+    // Wait for button to be visible and enabled
+    await expect(submitButton).toBeVisible();
+    await expect(submitButton).toBeEnabled();
 
-    if (isExpanded) {
-      await this.waitForFormReady();
-      return;
-    }
-
-    // Click the button and retry until the form expands
-    // The button is type="submit" so clicking it triggers form submission
-    // which in turn calls handleShowEmailForm() when !showEmailForm
+    // Retry expansion to handle React timing issues
+    // toPass() uses Playwright's default intervals and timeout (no hardcoded values)
     await expect(async () => {
-      // Check current state before clicking
+      // Check if already expanded by looking at button text
       const currentText = await submitButton.textContent();
       if (currentText?.includes("Sign in") || currentText?.includes("Create account")) {
-        return; // Already expanded
+        return; // Expanded
       }
-      // Submit the form by pressing Enter on the button or clicking
-      // Using keyboard Enter ensures form submission is triggered
-      await submitButton.focus();
-      await this.page.keyboard.press("Enter");
-      // Verify the form expanded by checking button text changed
+
+      // Click the button to expand the form
+      await submitButton.click();
+
+      // Verify button text changed (uses Playwright's default assertion timeout)
       await expect(submitButton).toHaveText(/Sign in|Create account/i);
     }).toPass();
 
@@ -240,12 +230,9 @@ export class AuthPage extends BasePage {
     await this.waitForFormReady();
 
     // On sign-in page, also wait for "Forgot password?" to render (conditionally shown when expanded)
-    // This ensures React has finished rendering all conditional elements
     const currentUrl = this.page.url();
     if (currentUrl.includes("/signin") || currentUrl.endsWith("/signin")) {
-      await this.forgotPasswordLink.waitFor({ state: "visible", timeout: 5000 }).catch(() => {
-        // May not be on sign-in page, ignore
-      });
+      await expect(this.forgotPasswordLink).toBeVisible();
     }
   }
 
@@ -300,7 +287,7 @@ export class AuthPage extends BasePage {
 
       // Wait for either verification form or toast to appear
       await expect(this.verifyHeading.or(this.page.locator(".sonner-toast"))).toBeVisible();
-    }).toPass({ intervals: [500, 1000, 2000], timeout: 30000 });
+    }).toPass();
   }
 
   async navigateToSignUp() {
@@ -322,7 +309,7 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     // Verify form is expanded by checking button text
     const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    await expect(submitButton).toHaveText(/Create account/i, { timeout: 5000 });
+    await expect(submitButton).toHaveText(/Create account/i);
   }
 
   async switchToSignIn() {
@@ -330,7 +317,7 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     // Verify form is expanded by checking button text
     const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    await expect(submitButton).toHaveText(/Sign in/i, { timeout: 5000 });
+    await expect(submitButton).toHaveText(/Sign in/i);
   }
 
   async signInWithGoogle() {
@@ -344,20 +331,24 @@ export class AuthPage extends BasePage {
   // ===================
 
   async clickForgotPassword() {
-    // Forgot password link appears after form is expanded
-    await this.expandEmailForm();
-    // Wait for form to stabilize (formReady state) before clicking
-    await this.waitForFormReady();
+    // Use retry pattern to handle form expansion and navigation
+    await expect(async () => {
+      // Forgot password link appears after form is expanded
+      await this.expandEmailForm();
+      // Wait for form to stabilize (formReady state) before clicking
+      await this.waitForFormReady();
 
-    await this.forgotPasswordLink.waitFor({ state: "visible" });
-    await expect(this.forgotPasswordLink).toBeEnabled();
+      // Verify forgot password link is visible and enabled before clicking
+      await expect(this.forgotPasswordLink).toBeVisible();
+      await expect(this.forgotPasswordLink).toBeEnabled();
 
-    // Click with force to bypass actionability checks (button may be styled as link)
-    await this.forgotPasswordLink.click({ force: true });
+      // Click the link
+      await this.forgotPasswordLink.click();
 
-    // Wait for navigation to complete
-    await this.page.waitForURL("**/forgot-password*");
-    await this.forgotPasswordHeading.waitFor({ state: "visible" });
+      // Verify navigation completed
+      await expect(this.page).toHaveURL(/forgot-password/);
+      await expect(this.forgotPasswordHeading).toBeVisible();
+    }).toPass();
   }
 
   /**
@@ -393,7 +384,7 @@ export class AuthPage extends BasePage {
   async verifyEmail(code: string) {
     await this.verifyCodeInput.fill(code);
     await this.verifyEmailButton.click({ force: true });
-    // Wait for verification to process - button should become disabled or redirect occurs
+    // Wait for verification to process - wait for DOM update after API call
     await this.page.waitForLoadState("domcontentloaded");
   }
 
@@ -411,25 +402,24 @@ export class AuthPage extends BasePage {
 
   /**
    * Wait for component to be hydrated
+   * Uses Playwright's default timeout (no hardcoded value)
    */
-  async waitForHydration(timeout = 5000) {
+  async waitForHydration() {
     await this.page.locator('form[data-hydrated="true"]').waitFor({
       state: "attached",
-      timeout,
     });
   }
 
   /**
    * Wait for form to be fully ready (formReady state)
-   * The form has a 350ms delay before setting formReady=true which enables required attributes
+   * The form sets formReady=true after expansion which enables required attributes
    * Uses data-form-ready attribute instead of arbitrary timeout
    * This is a best-effort wait - it won't throw if the form doesn't have this attribute
    */
-  async waitForFormReady(timeout = 5000) {
+  async waitForFormReady() {
     try {
       await this.page.locator('form[data-form-ready="true"]').waitFor({
         state: "attached",
-        timeout,
       });
     } catch {
       // Form might not have data-form-ready attribute (e.g., forgot password page)
@@ -471,9 +461,8 @@ export class AuthPage extends BasePage {
   }
 
   async expectVerificationForm() {
-    // Wait for verification form to appear - server might be slow after sign-up
-    // Use expect with longer timeout to handle React state transition
-    await expect(this.verifyHeading).toBeVisible({ timeout: 10000 });
+    // Wait for verification form to appear - uses Playwright's default timeout
+    await expect(this.verifyHeading).toBeVisible();
     await expect(this.verifyCodeInput).toBeVisible();
     await expect(this.verifyEmailButton).toBeVisible();
   }

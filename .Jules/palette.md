@@ -26,6 +26,6 @@
 **Learning:** Native `title` attributes are problematic for accessibility (inconsistent screen reader support, no mobile support) and UX (delayed appearance, default styling).
 **Action:** Replace `title` attributes on interactive elements with the `Tooltip` component. When doing so on icon-only buttons, ensure an explicit `aria-label` is added if the button relies on the `title` for its accessible name. Update tests to query by accessible name (`getByRole('button', { name: '...' })`) instead of `getByTitle`.
 
-## 2026-03-01 - Fixing Nested Interactive Controls
+## 2026-02-05 - Fixing Nested Interactive Controls
 **Learning:** Found a pattern where interactive elements (e.g., delete buttons) were nested inside a clickable container implemented as a `<button>`. This is invalid HTML and breaks screen reader navigation.
 **Action:** When creating complex list items with multiple actions, use a `div` or `li` container. Wrap the main content area in a `Link` or `button`, and keep secondary actions as siblings, using absolute positioning or flexbox to maintain the visual layout.

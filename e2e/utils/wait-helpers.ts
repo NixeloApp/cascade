@@ -68,8 +68,6 @@ export async function waitForAnimation(page: Page): Promise<void> {
 export async function waitForReactHydration(page: Page): Promise<void> {
   // Wait for DOM to be ready
   await page.waitForLoadState("domcontentloaded");
-  // Wait for React to hydrate by checking for an interactive element
-  await page.waitForLoadState("load");
 }
 
 /**

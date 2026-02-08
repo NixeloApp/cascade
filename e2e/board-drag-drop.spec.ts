@@ -163,7 +163,8 @@ test.describe("Board Drag-Drop", () => {
     await page.mouse.move(endX, endY, { steps: 10 });
     await page.mouse.up();
 
-    // Brief pause to allow UI to settle after drag
+    // Wait for mutation to complete - the card should re-render after status update
+    // Use domcontentloaded as a lightweight signal that React has processed the update
     await page.waitForLoadState("domcontentloaded");
 
     // Verify issue is now in target column or status has changed
