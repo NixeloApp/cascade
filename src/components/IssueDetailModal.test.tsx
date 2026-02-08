@@ -107,7 +107,6 @@ describe("IssueDetailModal", () => {
   });
 
   const setupMockQuery = (issueData: any = mockIssue, subtasksData: any = []) => {
-    // @ts-expect-error Mock implementation
     vi.mocked(useQuery).mockImplementation((_query: any, args: any) => {
       // Identify query by arguments
       if (args && args.id === mockIssueId) return issueData;

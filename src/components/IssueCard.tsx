@@ -171,7 +171,6 @@ export const IssueCard = memo(function IssueCard({
                 .map((l) => l.name)
                 .join(", ")}
             >
-              {/* biome-ignore lint/a11y/useSemanticElements: Nested buttons are invalid, using span with role="button" */}
               <span
                 tabIndex={0}
                 role="button"
