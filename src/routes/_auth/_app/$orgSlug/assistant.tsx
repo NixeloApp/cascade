@@ -17,7 +17,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/Select";
-import { Bot, Sparkles, MessageSquare, Zap, CheckCircle, HelpCircle } from "@/lib/icons";
+import { Bot, Sparkles, MessageSquare, Zap, CheckCircle, CircleHelp } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/assistant")({
