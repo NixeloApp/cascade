@@ -72,7 +72,6 @@ export {
   Key,
   LayoutGrid,
   Lightbulb,
-  Link,
   Link as LinkIcon,
   List as ListIcon,
   ListChecks,
