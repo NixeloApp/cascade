@@ -9,8 +9,9 @@
  *   5. Arbitrary Tailwind   — arbitrary values like h-[50px] (warning only)
  *   6. Type consistency     — ensures types imported from canonical sources, not duplicated
  *   7. Type safety          — flags unsafe type assertions and lint suppressions
- *   8. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
- *   9. E2E quality          — catches broad selectors, networkidle, waitForSelector
+ *   8. Emoji usage          — finds emoji that should be replaced with Lucide icons
+ *   9. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
+ *  10. E2E quality          — catches broad selectors, networkidle, waitForSelector
  *
  * Exit code 1 if any error-level check fails.
  * Arbitrary Tailwind + MEDIUM/LOW query issues + networkidle are warnings only.
@@ -23,6 +24,7 @@ import { run as runApiCallsCheck } from "./validate/check-api-calls.js";
 import { run as runArbitraryTailwindCheck } from "./validate/check-arbitrary-tw.js";
 import { run as runColorAudit } from "./validate/check-colors.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
+import { run as runEmojiCheck } from "./validate/check-emoji.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
 import { run as runStandardsCheck } from "./validate/check-standards.js";
 import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
@@ -38,6 +40,7 @@ const checks = [
   { name: "Arbitrary Tailwind", fn: runArbitraryTailwindCheck },
   { name: "Type consistency", fn: runTypeConsistencyCheck },
   { name: "Type safety", fn: runTypeSafetyCheck },
+  { name: "Emoji usage", fn: runEmojiCheck },
   { name: "Test ID constants", fn: runTestIdsCheck },
   { name: "E2E quality", fn: runE2EQualityCheck },
 ];
