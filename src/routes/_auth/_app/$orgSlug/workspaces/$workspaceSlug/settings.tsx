@@ -31,12 +31,15 @@ function WorkspaceSettings() {
               className="w-12 h-12 rounded-full bg-brand-subtle mb-4"
             >
               <svg
+                role="img"
+                aria-label="Workspace settings icon"
                 className="w-6 h-6 text-brand"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 aria-hidden="true"
               >
+                <title>Workspace settings icon</title>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

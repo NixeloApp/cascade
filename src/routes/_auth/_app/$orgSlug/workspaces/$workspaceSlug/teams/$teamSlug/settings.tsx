@@ -33,12 +33,15 @@ function TeamSettings() {
               className="w-12 h-12 rounded-full bg-brand-subtle mb-4"
             >
               <svg
+                role="img"
+                aria-label="Team settings icon"
                 className="w-6 h-6 text-brand"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 aria-hidden="true"
               >
+                <title>Team settings icon</title>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
