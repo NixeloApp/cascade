@@ -382,8 +382,8 @@ export const HeadingsWithColors: Story = {
       <Typography variant="h2" color="default">
         Default Heading
       </Typography>
-      <Typography variant="h2" color="primary">
-        Primary Heading
+      <Typography variant="h2" color="brand">
+        Brand Heading
       </Typography>
       <Typography variant="h2" color="secondary">
         Secondary Heading
