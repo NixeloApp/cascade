@@ -1,6 +1,6 @@
 /**
  * CHECK 1: Standards (AST)
- * Typography, className concat, dark mode, raw TW colors, shorthands
+ * Typography, className concat, dark mode, raw TW colors, shorthands, font styles
  */
 
 import fs from "node:fs";
@@ -50,6 +50,13 @@ export function run() {
     "flex-grow": "grow",
   };
 
+  // Font-related classes that should only be used in UI components
+  const FONT_STYLE_PATTERN =
+    /^(font-(mono|sans|serif|thin|extralight|light|normal|medium|semibold|bold|extrabold|black)|text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl|caption)|leading-|tracking-)$/;
+
+  // Elements that should NOT have font styles (use Typography, Badge, etc. instead)
+  const RAW_ELEMENTS = new Set(["div", "span", "section", "article", "aside", "header", "footer", "main", "nav", "li", "ul", "ol"]);
+
   function getClassText(node) {
     let classText = "";
     if (node.initializer && ts.isStringLiteral(node.initializer)) {
@@ -93,6 +100,22 @@ export function run() {
               node,
               `Use <Flex> component instead of <${tagName} className="flex"> for one-dimensional layouts.`,
             );
+          }
+        }
+
+        // Font styles on raw elements — use Typography, Badge, etc. instead
+        if (RAW_ELEMENTS.has(tagName)) {
+          const classText = getClassNameText(node);
+          const classes = classText.split(/\s+/);
+          for (const cls of classes) {
+            if (FONT_STYLE_PATTERN.test(cls)) {
+              reportError(
+                filePath,
+                node,
+                `Font style '${cls}' on raw <${tagName}>. Use Typography, Badge, or other UI components for text styling.`,
+              );
+              break; // Only report once per element
+            }
           }
         }
       }

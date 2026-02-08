@@ -135,6 +135,17 @@ Use components from `src/components/ui/` instead of raw HTML:
 <Flex align="center" gap="sm">
 ```
 
+### Font Styles
+```tsx
+// ❌ Don't - font styles on raw elements
+<span className="text-sm font-medium">{text}</span>
+<div className="text-xs text-ui-text-secondary">{label}</div>
+
+// ✅ Do - use Typography or appropriate UI component
+<Typography variant="small">{text}</Typography>
+<MetadataItem>{label}</MetadataItem>
+```
+
 ### Required Fields
 ```tsx
 // ❌ Don't
@@ -156,6 +167,8 @@ Use components from `src/components/ui/` instead of raw HTML:
 | Emoji strings | `<Icon icon={...}>` |
 | `<div className="flex">` | `<Flex>` |
 | `<span>*</span>` for required | `<Label required>` |
+| `<span className="text-sm">` | `<Typography variant="small">` |
+| `<div className="font-medium">` | `<Typography variant="label">` |
 
 ## Design Tokens (Tailwind v4)
 
