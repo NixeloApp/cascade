@@ -183,26 +183,6 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
 
-      - name: Configure Convex Auth (Generate Keys)
-        if: github.ref != 'refs/heads/main'
-        run: |
-          node -e "
-            const { generateKeyPairSync } = require('crypto');
-            const fs = require('fs');
-
-            // Generate RSA Key Pair for JWT
-            const { privateKey } = generateKeyPairSync('rsa', {
-              modulusLength: 2048,
-              publicKeyEncoding: { type: 'spki', format: 'pem' },
-              privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
-            });
-
-            // Append to .env.local with proper escaping
-            const envContent = \`JWT_PRIVATE_KEY=\"\${privateKey.replace(/\n/g, '\\\\n')}\"\n\`;
-            fs.appendFileSync('.env.local', envContent);
-            console.log('✅ Generated JWT_PRIVATE_KEY and added to .env.local');
-          "
-
       - name: Start Local Convex Backend
         if: github.ref != 'refs/heads/main'
         env:
@@ -224,6 +204,15 @@ jobs:
           }
           echo "Convex functions are ready!"
           cat convex.log
+
+      - name: Configure Convex Auth
+        if: github.ref != 'refs/heads/main'
+        run: |
+          # Set auth environment variables from GitHub secrets
+          echo "${{ secrets.JWT_PRIVATE_KEY }}" | npx convex env set JWT_PRIVATE_KEY
+          echo '${{ secrets.JWKS }}' | npx convex env set JWKS
+          npx convex env set SITE_URL "http://localhost:5555"
+          echo "✅ Set JWT_PRIVATE_KEY, JWKS, and SITE_URL in Convex backend"
 
       - name: Run E2E tests
         # Use 2 workers per shard on standard GitHub runners to avoid choking
