@@ -18,7 +18,8 @@
       "!**/.output",
       "!**/node_modules",
       "!**/src/index.css",
-      "!**/docs/research/library/**/*_discovery.json"
+      "!**/docs/research/library/**/*_discovery.json",
+      "!**/docs/research/library/mintlify/**"
     ]
   },
   "formatter": {
