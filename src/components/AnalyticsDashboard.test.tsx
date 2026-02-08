@@ -98,39 +98,44 @@ function isQuery(queryArg: any, path: string) {
   return false;
 }
 
+// Extracted handler to reduce complexity
+const createQueryHandler = (
+  analyticsData: typeof mockAnalytics = mockAnalytics,
+  velocityData: any = mockVelocity,
+  activityData: typeof mockActivity = mockActivity,
+) => {
+  let callCount = 0;
+  return (queryArg: any) => {
+    // 1. Try robust matching
+    if (
+      queryArg === api.analytics.getProjectAnalytics ||
+      isQuery(queryArg, "getProjectAnalytics")
+    ) {
+      return analyticsData;
+    }
+    if (queryArg === api.analytics.getTeamVelocity || isQuery(queryArg, "getTeamVelocity")) {
+      return velocityData;
+    }
+    if (queryArg === api.analytics.getRecentActivity || isQuery(queryArg, "getRecentActivity")) {
+      return activityData;
+    }
+
+    // 2. Fallback to order-based matching (modulo to handle re-renders)
+    const index = callCount % 3;
+    callCount++;
+
+    if (index === 0) return analyticsData;
+    if (index === 1) return velocityData;
+    if (index === 2) return activityData;
+
+    return null;
+  };
+};
+
 describe("AnalyticsDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Fallback counter for when query matching fails (due to proxy identity issues in tests)
-    let callCount = 0;
-
-    mockUseQuery.mockImplementation((queryArg: any) => {
-      // 1. Try robust matching
-      if (
-        queryArg === api.analytics.getProjectAnalytics ||
-        isQuery(queryArg, "getProjectAnalytics")
-      ) {
-        return mockAnalytics;
-      }
-      if (queryArg === api.analytics.getTeamVelocity || isQuery(queryArg, "getTeamVelocity")) {
-        return mockVelocity;
-      }
-      if (queryArg === api.analytics.getRecentActivity || isQuery(queryArg, "getRecentActivity")) {
-        return mockActivity;
-      }
-
-      // 2. Fallback to order-based matching (modulo to handle re-renders)
-      // Order: Analytics -> Velocity -> Activity
-      const index = callCount % 3;
-      callCount++;
-
-      if (index === 0) return mockAnalytics;
-      if (index === 1) return mockVelocity;
-      if (index === 2) return mockActivity;
-
-      return null;
-    });
+    mockUseQuery.mockImplementation(createQueryHandler());
   });
 
   it("should render loading state when data is not available", () => {
@@ -250,35 +255,9 @@ describe("AnalyticsDashboard", () => {
 
   it("should show no completed sprints message when velocity data is empty", () => {
     vi.clearAllMocks();
-
-    let callCount = 0;
-
-    mockUseQuery.mockImplementation((queryArg: any) => {
-      // 1. Try robust matching
-      if (
-        queryArg === api.analytics.getProjectAnalytics ||
-        isQuery(queryArg, "getProjectAnalytics")
-      ) {
-        return mockAnalytics;
-      }
-      if (queryArg === api.analytics.getTeamVelocity || isQuery(queryArg, "getTeamVelocity")) {
-        // Override for this test
-        return { velocityData: [], averageVelocity: 0 };
-      }
-      if (queryArg === api.analytics.getRecentActivity || isQuery(queryArg, "getRecentActivity")) {
-        return mockActivity;
-      }
-
-      // 2. Fallback to order-based matching (modulo to handle re-renders)
-      const index = callCount % 3;
-      callCount++;
-
-      if (index === 0) return mockAnalytics;
-      if (index === 1) return { velocityData: [], averageVelocity: 0 };
-      if (index === 2) return mockActivity;
-
-      return null;
-    });
+    mockUseQuery.mockImplementation(
+      createQueryHandler(mockAnalytics, { velocityData: [], averageVelocity: 0 }, mockActivity),
+    );
 
     render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
 
