@@ -238,6 +238,9 @@
   --spacing-form-field: 16px;
   --spacing-section: 32px;
 
+  /* Textarea min-height */
+  --min-height-textarea: 120px;
+
   /* ============================================================
    * ANIMATIONS - Mintlify-inspired premium motion
    * ============================================================ */
