@@ -155,7 +155,9 @@ export function OnboardingChecklist() {
                 {item.completed ? (
                   <Check className="w-3.5 h-3.5" />
                 ) : (
-                  <span className="text-xs font-medium">{index + 1}</span>
+                  <Typography variant="caption" as="span">
+                    {index + 1}
+                  </Typography>
                 )}
               </Flex>
               <div className="flex-1 min-w-0">

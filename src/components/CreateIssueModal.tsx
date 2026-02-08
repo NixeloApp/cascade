@@ -24,6 +24,7 @@ import {
 import { Flex } from "./ui/Flex";
 import { Select } from "./ui/form";
 import { Icon } from "./ui/Icon";
+import { Typography } from "./ui/Typography";
 
 // =============================================================================
 // Schema
@@ -377,7 +378,9 @@ export function CreateIssueModal({
           {/* Labels (outside form - array state) */}
           {labels && labels.length > 0 && (
             <div>
-              <div className="block text-sm font-medium text-ui-text mb-2">Labels</div>
+              <Typography variant="label" className="block text-ui-text mb-2">
+                Labels
+              </Typography>
               <Flex wrap gap="sm">
                 {labels.map((label: Doc<"labels">) => (
                   <button

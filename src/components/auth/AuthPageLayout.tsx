@@ -80,8 +80,10 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
             {children}
           </div>
           {/* Footer with delayed fade */}
-          <div
-            className="mt-6 text-center text-xs text-ui-text-tertiary animate-fade-in"
+          <Typography
+            variant="caption"
+            color="tertiary"
+            className="mt-6 text-center animate-fade-in"
             style={{ animationDelay: "0.4s", animationFillMode: "backwards" }}
           >
             By continuing, you acknowledge that you understand and agree to the{" "}
@@ -95,7 +97,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
             >
               Privacy Policy
             </a>
-          </div>
+          </Typography>
         </div>
       </div>
     </Flex>

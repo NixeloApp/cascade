@@ -166,7 +166,10 @@ const SuggestionCard = React.memo(function SuggestionCard({
           </Typography>
           {suggestion.reasoning && (
             <Typography variant="caption" className="mt-2">
-              <span className="font-medium">Reasoning:</span> {suggestion.reasoning}
+              <Typography variant="label" as="span">
+                Reasoning:
+              </Typography>{" "}
+              {suggestion.reasoning}
             </Typography>
           )}
           {suggestion.confidence !== undefined && (

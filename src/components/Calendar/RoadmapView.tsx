@@ -193,17 +193,21 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
           {/* Timeline Header */}
           <div className="sticky top-0 z-10 bg-ui-bg-secondary border-b border-ui-border">
             <Flex>
-              <div className="w-40 sm:w-48 md:w-64 shrink-0 p-2 sm:p-3 border-r border-ui-border font-medium text-xs sm:text-sm text-ui-text">
+              <Typography
+                variant="label"
+                className="w-40 sm:w-48 md:w-64 shrink-0 p-2 sm:p-3 border-r border-ui-border text-ui-text"
+              >
                 Item
-              </div>
+              </Typography>
               <Flex className="flex-1">
                 {columns.map((col) => (
-                  <div
+                  <Typography
                     key={col.date.getTime()}
-                    className="flex-1 p-2 sm:p-3 border-r border-ui-border text-center text-xs sm:text-sm font-medium text-ui-text"
+                    variant="label"
+                    className="flex-1 p-2 sm:p-3 border-r border-ui-border text-center text-ui-text"
                   >
                     {col.label}
-                  </div>
+                  </Typography>
                 ))}
               </Flex>
             </Flex>
@@ -211,9 +215,9 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
 
           {/* Roadmap Items */}
           {sortedItems.length === 0 ? (
-            <div className="p-4 sm:p-8 text-center text-sm sm:text-base text-ui-text-tertiary">
+            <Typography variant="muted" className="p-4 sm:p-8 text-center">
               No items with dates found. Add due dates to issues or create sprints to see them here.
-            </div>
+            </Typography>
           ) : (
             <div>
               {sortedItems.map((item) => (
@@ -231,9 +235,9 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                         </Badge>
                       )}
                     </Flex>
-                    <div className="text-xs sm:text-sm font-medium text-ui-text mt-1 truncate">
+                    <Typography variant="label" className="text-ui-text mt-1 truncate">
                       {item.title}
-                    </div>
+                    </Typography>
                   </div>
 
                   {/* Timeline Bar */}

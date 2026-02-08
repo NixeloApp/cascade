@@ -290,7 +290,7 @@ export function HourComplianceDashboard() {
                         </div>
                       </Flex>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
                         <div>
                           <Typography variant="meta">Period:</Typography>
                           <Typography variant="small" className="font-medium">

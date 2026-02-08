@@ -59,7 +59,11 @@ function TeamsList() {
               <Card hoverable className="p-6">
                 <Flex direction="column" gap="md">
                   <Flex align="center" gap="sm">
-                    {team.icon && <span className="text-3xl">{team.icon}</span>}
+                    {team.icon && (
+                      <Typography variant="h2" as="span">
+                        {team.icon}
+                      </Typography>
+                    )}
                     <Typography variant="h3">{team.name}</Typography>
                   </Flex>
 

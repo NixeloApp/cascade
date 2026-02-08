@@ -129,9 +129,13 @@ export function TimeEntriesList({
       {groupedEntries.map(({ date, entries: dateEntries, duration }) => (
         <div key={date} className="space-y-3">
           {/* Date header */}
-          <Flex justify="between" align="end" className="text-sm text-ui-text-secondary px-1">
-            <span className="font-medium">{formatDate(new Date(date).getTime())}</span>
-            <span>{formatDurationDisplay(duration)}</span>
+          <Flex justify="between" align="end" className="text-ui-text-secondary px-1">
+            <Typography variant="label" as="span">
+              {formatDate(new Date(date).getTime())}
+            </Typography>
+            <Typography variant="small" as="span">
+              {formatDurationDisplay(duration)}
+            </Typography>
           </Flex>
 
           <div className="bg-ui-bg border border-ui-border rounded-lg divide-y divide-ui-border">
@@ -180,13 +184,13 @@ export function TimeEntriesList({
 
                 {/* Duration and cost */}
                 <div className="shrink-0 text-right">
-                  <div className="text-sm font-semibold text-ui-text">
+                  <Typography variant="label" className="text-ui-text">
                     {formatDurationDisplay(entry.duration)}
-                  </div>
+                  </Typography>
                   {entry.totalCost !== undefined && entry.totalCost > 0 && (
-                    <div className="text-xs text-ui-text-secondary">
+                    <Typography variant="caption" color="secondary">
                       {formatCurrency(entry.totalCost, entry.currency)}
-                    </div>
+                    </Typography>
                   )}
                 </div>
 

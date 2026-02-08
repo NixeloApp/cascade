@@ -142,15 +142,21 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                   {/* Metadata */}
                   <div className="grid grid-cols-3 gap-4 mb-2">
                     <Typography variant="meta">
-                      <span className="font-medium text-ui-text">Attempts:</span>{" "}
+                      <Typography variant="label" as="span" className="text-ui-text">
+                        Attempts:
+                      </Typography>{" "}
                       {execution.attempts}
                     </Typography>
                     <Typography variant="meta">
-                      <span className="font-medium text-ui-text">Duration:</span>{" "}
+                      <Typography variant="label" as="span" className="text-ui-text">
+                        Duration:
+                      </Typography>{" "}
                       {formatDuration(execution._creationTime, execution.completedAt)}
                     </Typography>
                     <Typography variant="meta">
-                      <span className="font-medium text-ui-text">Status:</span>{" "}
+                      <Typography variant="label" as="span" className="text-ui-text">
+                        Status:
+                      </Typography>{" "}
                       {String(execution.status)}
                     </Typography>
                   </div>
@@ -158,10 +164,12 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                   {/* Error message */}
                   {execution.error && (
                     <div className="bg-status-error-bg border border-status-error/30 rounded p-3 mt-3">
-                      <div className="text-xs font-medium text-status-error-text mb-1">Error:</div>
-                      <div className="text-xs text-status-error-text/90 font-mono">
+                      <Typography variant="caption" className="text-status-error-text mb-1">
+                        Error:
+                      </Typography>
+                      <Typography variant="mono" className="text-status-error-text/90">
                         {String(execution.error)}
-                      </div>
+                      </Typography>
                     </div>
                   )}
 

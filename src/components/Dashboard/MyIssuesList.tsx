@@ -104,7 +104,9 @@ export function MyIssuesList({
           aria-label="Filter Assigned"
         >
           Assigned
-          <span className="ml-1.5 opacity-60 font-medium">({myIssues?.length || 0})</span>
+          <Typography variant="label" as="span" className="ml-1.5 opacity-60">
+            ({myIssues?.length || 0})
+          </Typography>
         </button>
         <button
           type="button"
@@ -118,7 +120,9 @@ export function MyIssuesList({
           aria-label="Filter Created"
         >
           Created
-          <span className="ml-1.5 opacity-60 font-medium">({myCreatedIssues?.length || 0})</span>
+          <Typography variant="label" as="span" className="ml-1.5 opacity-60">
+            ({myCreatedIssues?.length || 0})
+          </Typography>
         </button>
       </Flex>
       <Flex direction="column" className="p-4 flex-1 overflow-hidden">

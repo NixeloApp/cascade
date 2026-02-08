@@ -156,13 +156,14 @@ export const IssueCard = memo(function IssueCard({
       {issue.labels.length > 0 && (
         <Flex wrap gap="xs" className="mb-2">
           {issue.labels.slice(0, 3).map((label) => (
-            <span
+            <Badge
               key={label.name}
-              className="px-1.5 py-0.5 text-xs font-medium rounded-md text-brand-foreground"
+              size="sm"
+              className="text-brand-foreground"
               style={{ backgroundColor: label.color }}
             >
               {label.name}
-            </span>
+            </Badge>
           ))}
           {issue.labels.length > 3 && (
             <Tooltip

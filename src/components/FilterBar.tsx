@@ -102,7 +102,9 @@ function FilterDropdown<T>({
           </DropdownMenuCheckboxItem>
         ))}
         {(!items || items.length === 0) && (
-          <div className="px-2 py-1.5 text-sm text-ui-text-secondary">{emptyMessage}</div>
+          <Typography variant="small" color="secondary" className="px-2 py-1.5">
+            {emptyMessage}
+          </Typography>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -147,7 +149,9 @@ function SavedFiltersDropdown({
             >
               {filter.name}
               {filter.isPublic && (
-                <span className="ml-1 text-xs text-ui-text-tertiary">(public)</span>
+                <Typography variant="caption" color="tertiary" as="span" className="ml-1">
+                  (public)
+                </Typography>
               )}
             </button>
             {filter.isOwner && (

@@ -66,9 +66,9 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
         <Typography variant="h3" className="text-sm font-medium text-ui-text">
           Sub-tasks
           {totalSubtasks > 0 && (
-            <span className="ml-2 text-xs text-ui-text-tertiary">
+            <Typography variant="caption" color="tertiary" as="span" className="ml-2">
               ({completedSubtasks}/{totalSubtasks} completed)
-            </span>
+            </Typography>
           )}
         </Typography>
         <button

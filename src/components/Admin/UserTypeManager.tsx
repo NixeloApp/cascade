@@ -503,7 +503,7 @@ export function UserTypeManager() {
                         </div>
                       </Flex>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
                         {profile.jobTitle && (
                           <div>
                             <Typography variant="caption" color="tertiary">

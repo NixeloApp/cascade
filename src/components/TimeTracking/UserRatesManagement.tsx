@@ -119,13 +119,13 @@ export function UserRatesManagement() {
                       {rate.rateType}
                     </span>
                   </Flex>
-                  <div className="mt-2 text-xs text-ui-text-secondary">
+                  <Typography variant="caption" color="secondary" className="mt-2">
                     {rate.projectId ? (
                       <span>Project-specific rate</span>
                     ) : (
                       <span>Default rate (applies to all projects)</span>
                     )}
-                  </div>
+                  </Typography>
                   {rate.notes && (
                     <Typography className="mt-2 text-xs text-ui-text-tertiary">
                       {rate.notes}
@@ -133,10 +133,12 @@ export function UserRatesManagement() {
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-ui-text">
+                  <Typography variant="h3" className="text-ui-text">
                     {formatCurrency(rate.hourlyRate, rate.currency)}
-                  </div>
-                  <div className="text-xs text-ui-text-tertiary">per hour</div>
+                  </Typography>
+                  <Typography variant="caption" color="tertiary">
+                    per hour
+                  </Typography>
                 </div>
               </Flex>
             </div>
@@ -211,7 +213,9 @@ export function UserRatesManagement() {
 
             {/* Rate Type */}
             <div>
-              <div className="block text-sm font-medium text-ui-text mb-1">Rate Type</div>
+              <Typography variant="label" className="block text-ui-text mb-1">
+                Rate Type
+              </Typography>
               <Flex gap="md">
                 <label
                   className={cn(
@@ -230,8 +234,12 @@ export function UserRatesManagement() {
                       className="w-4 h-4 text-brand"
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-ui-text">Internal Cost</div>
-                      <div className="text-xs text-ui-text-tertiary">What you pay</div>
+                      <Typography variant="label" className="text-ui-text">
+                        Internal Cost
+                      </Typography>
+                      <Typography variant="caption" color="tertiary">
+                        What you pay
+                      </Typography>
                     </div>
                   </Flex>
                 </label>
@@ -252,8 +260,12 @@ export function UserRatesManagement() {
                       className="w-4 h-4 text-brand"
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-ui-text">Billable Rate</div>
-                      <div className="text-xs text-ui-text-tertiary">Charge clients</div>
+                      <Typography variant="label" className="text-ui-text">
+                        Billable Rate
+                      </Typography>
+                      <Typography variant="caption" color="tertiary">
+                        Charge clients
+                      </Typography>
                     </div>
                   </Flex>
                 </label>

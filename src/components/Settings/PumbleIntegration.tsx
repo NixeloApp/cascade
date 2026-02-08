@@ -275,9 +275,9 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
 
       {/* Stats */}
       {webhook.lastMessageAt && (
-        <div className="text-xs text-ui-text-tertiary mb-3">
+        <Typography variant="caption" color="tertiary" className="mb-3">
           Last triggered: {new Date(webhook.lastMessageAt).toLocaleDateString()}
-        </div>
+        </Typography>
       )}
 
       {/* Actions */}

@@ -147,7 +147,9 @@ export function CreateProjectFromTemplate({
                     className="text-left p-6 border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
                   >
                     <Flex align="start" gap="lg">
-                      <div className="text-4xl shrink-0">{template.icon}</div>
+                      <Typography variant="h2" className="shrink-0">
+                        {template.icon}
+                      </Typography>
                       <div className="flex-1 min-w-0">
                         <Typography
                           variant="h3"
@@ -180,7 +182,9 @@ export function CreateProjectFromTemplate({
             {selectedTemplate && (
               <div className="p-4 bg-ui-bg-secondary rounded-lg">
                 <Flex align="center" gap="md">
-                  <span className="text-3xl">{selectedTemplate.icon}</span>
+                  <Typography variant="h3" as="span">
+                    {selectedTemplate.icon}
+                  </Typography>
                   <div>
                     <Typography variant="h3" className="font-semibold text-ui-text">
                       {selectedTemplate.name}
@@ -243,7 +247,7 @@ export function CreateProjectFromTemplate({
                 <Typography variant="h4" className="text-sm font-medium text-ui-text mb-3">
                   What's Included:
                 </Typography>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2">
                   <Flex align="center" gap="sm">
                     <svg
                       aria-hidden="true"

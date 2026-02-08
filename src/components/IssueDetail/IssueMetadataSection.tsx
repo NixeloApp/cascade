@@ -1,4 +1,5 @@
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
+import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 
@@ -77,13 +78,14 @@ export function IssueMetadataSection({
           </Typography>
           <Flex wrap gap="sm">
             {labels.map((label) => (
-              <span
+              <Badge
                 key={label.name}
-                className="px-2 py-0.5 text-xs font-medium rounded-md text-brand-foreground transition-transform duration-default hover:scale-105"
+                size="sm"
+                className="text-brand-foreground transition-transform duration-default hover:scale-105"
                 style={{ backgroundColor: label.color }}
               >
                 {label.name}
-              </span>
+              </Badge>
             ))}
           </Flex>
         </div>

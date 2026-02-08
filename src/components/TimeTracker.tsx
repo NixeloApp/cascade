@@ -68,8 +68,10 @@ function TimeProgress({
   if (totalLoggedHours > 0) {
     return (
       <Typography variant="caption">
-        <span className="font-semibold">{totalLoggedHours.toFixed(1)}h</span> logged (no estimate
-        set)
+        <Typography variant="label" as="span">
+          {totalLoggedHours.toFixed(1)}h
+        </Typography>{" "}
+        logged (no estimate set)
       </Typography>
     );
   }

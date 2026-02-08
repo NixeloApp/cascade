@@ -123,7 +123,7 @@ function AssistantConfig() {
                     <Bot className="w-5 h-5" />
                   </div>
                   <div>
-                    <Typography variant="h6" className="mb-1">
+                    <Typography variant="h5" className="mb-1">
                       Assistant Status
                     </Typography>
                     <Typography variant="small" color="secondary">
@@ -141,7 +141,9 @@ function AssistantConfig() {
                       className="px-2.5 py-0.5 rounded-full bg-status-success-bg border border-status-success/20"
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
-                      <span className="text-xs font-medium text-status-success">Active</span>
+                      <Typography variant="caption" as="span" className="text-status-success">
+                        Active
+                      </Typography>
                     </Flex>
                   )}
                   <Switch checked={enabled} onCheckedChange={setEnabled} />
@@ -237,7 +239,7 @@ function AssistantConfig() {
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <Typography variant="h6" className="mb-1 text-brand-foreground">
+                  <Typography variant="h5" className="mb-1 text-brand-foreground">
                     Upgrade to Pro
                   </Typography>
                   <Typography variant="p" className="mb-4 text-ui-text-secondary max-w-lg">

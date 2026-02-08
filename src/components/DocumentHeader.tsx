@@ -125,7 +125,9 @@ export function DocumentHeader({
               className="px-2 sm:px-3 py-1.5 border border-ui-border text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-default min-h-0"
               aria-label="Version history"
             >
-              <span className="hidden sm:inline text-sm">History</span>
+              <Typography variant="small" as="span" className="hidden sm:inline">
+                History
+              </Typography>
               {versionCount !== undefined && versionCount > 0 && (
                 <Badge variant="secondary" className="ml-1">
                   {versionCount}
@@ -145,7 +147,9 @@ export function DocumentHeader({
               className="px-2 sm:px-3 py-1.5 border border-ui-border text-ui-text-secondary hover:text-brand hover:bg-brand-subtle hover:border-brand-border transition-default min-h-0 disabled:opacity-50"
               aria-label="Import from Markdown"
             >
-              <span className="hidden sm:inline text-sm">Import</span>
+              <Typography variant="small" as="span" className="hidden sm:inline">
+                Import
+              </Typography>
             </Button>
           </Tooltip>
 
@@ -160,7 +164,9 @@ export function DocumentHeader({
               className="px-2 sm:px-3 py-1.5 border border-ui-border text-ui-text-secondary hover:text-brand hover:bg-brand-subtle hover:border-brand-border transition-default min-h-0 disabled:opacity-50"
               aria-label="Export as Markdown"
             >
-              <span className="hidden sm:inline text-sm">Export</span>
+              <Typography variant="small" as="span" className="hidden sm:inline">
+                Export
+              </Typography>
             </Button>
           </Tooltip>
 

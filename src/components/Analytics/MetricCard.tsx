@@ -40,9 +40,9 @@ export const MetricCard = memo(function MetricCard({
               </Typography>
             )}
           </div>
-          <div className="text-4xl">
+          <Typography variant="h2" className="text-ui-text-secondary">
             {typeof icon === "string" ? icon : <Icon icon={icon} size="xl" />}
-          </div>
+          </Typography>
         </Flex>
       </CardBody>
     </Card>

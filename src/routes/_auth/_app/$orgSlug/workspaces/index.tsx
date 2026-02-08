@@ -74,7 +74,11 @@ function WorkspacesList() {
               <Card hoverable className="p-6">
                 <Flex direction="column" gap="md">
                   <Flex align="center" gap="sm">
-                    {workspace.icon && <span className="text-3xl">{workspace.icon}</span>}
+                    {workspace.icon && (
+                      <Typography variant="h2" as="span">
+                        {workspace.icon}
+                      </Typography>
+                    )}
                     <Typography variant="h3">{workspace.name}</Typography>
                   </Flex>
 

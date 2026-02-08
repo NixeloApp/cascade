@@ -121,8 +121,12 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
             <Flex gap="md" align="center">
               <Icon icon={FileSpreadsheet} size="lg" />
               <div>
-                <div className="font-semibold text-ui-text">CSV</div>
-                <div className="text-xs text-ui-text-tertiary">Spreadsheet format</div>
+                <Typography variant="label" className="text-ui-text">
+                  CSV
+                </Typography>
+                <Typography variant="caption" color="tertiary">
+                  Spreadsheet format
+                </Typography>
               </div>
             </Flex>
           </Card>
@@ -137,8 +141,12 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
             <Flex gap="md" align="center">
               <Icon icon={FileCode} size="lg" />
               <div>
-                <div className="font-semibold text-ui-text">JSON</div>
-                <div className="text-xs text-ui-text-tertiary">Data interchange format</div>
+                <Typography variant="label" className="text-ui-text">
+                  JSON
+                </Typography>
+                <Typography variant="caption" color="tertiary">
+                  Data interchange format
+                </Typography>
               </div>
             </Flex>
           </Card>
@@ -148,7 +156,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
       <div className="bg-brand-subtle border border-brand-border rounded-lg p-4">
         <Flex gap="md" align="start">
           <Icon icon={Info} size="lg" className="text-brand" />
-          <div className="text-sm text-brand-active">
+          <div className="text-brand-active">
             <Typography variant="p" className="font-semibold mb-1">
               Export Information
             </Typography>

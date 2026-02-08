@@ -102,8 +102,12 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
             <Flex gap="md" align="center">
               <Icon icon={FileSpreadsheet} size="lg" />
               <div>
-                <div className="font-semibold text-ui-text">CSV</div>
-                <div className="text-xs text-ui-text-secondary">Spreadsheet format</div>
+                <Typography variant="label" className="text-ui-text">
+                  CSV
+                </Typography>
+                <Typography variant="caption" color="secondary">
+                  Spreadsheet format
+                </Typography>
               </div>
             </Flex>
           </Card>
@@ -118,8 +122,12 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
             <Flex gap="md" align="center">
               <Icon icon={FileCode} size="lg" />
               <div>
-                <div className="font-semibold text-ui-text">JSON</div>
-                <div className="text-xs text-ui-text-secondary">Data interchange format</div>
+                <Typography variant="label" className="text-ui-text">
+                  JSON
+                </Typography>
+                <Typography variant="caption" color="secondary">
+                  Data interchange format
+                </Typography>
               </div>
             </Flex>
           </Card>
@@ -127,7 +135,9 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
       </div>
 
       <div>
-        <div className="block text-sm font-medium text-ui-text mb-2">Select File</div>
+        <Typography variant="label" className="block text-ui-text mb-2">
+          Select File
+        </Typography>
         <input
           type="file"
           accept={importFormat === "csv" ? ".csv" : ".json"}
@@ -144,7 +154,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
       <div className="bg-status-warning/10 border border-status-warning/30 rounded-lg p-4">
         <Flex gap="md" align="start">
           <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
-          <div className="text-sm text-status-warning">
+          <div className="text-status-warning">
             <Typography variant="p" className="font-semibold mb-1">
               Import Requirements
             </Typography>

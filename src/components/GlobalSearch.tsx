@@ -136,9 +136,9 @@ function SearchListContent({
 }) {
   if (query.length < 2) {
     return (
-      <div className="p-8 text-center text-ui-text-secondary text-sm">
+      <Typography variant="small" color="secondary" className="p-8 text-center">
         Type at least 2 characters to search
-      </div>
+      </Typography>
     );
   }
 
@@ -250,7 +250,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
           <Typography variant="p" className="font-medium mt-1 truncate">
             {result.title}
           </Typography>
-          <Typography variant="muted" size="xs" className="mt-1 line-clamp-2">
+          <Typography variant="meta" className="mt-1 line-clamp-2">
             {result.description || "No description"}
           </Typography>
         </div>

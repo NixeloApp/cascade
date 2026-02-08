@@ -98,9 +98,9 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
 
       {/* Empty State */}
       {watchers && watchers.length === 0 && (
-        <div className="text-center py-4 text-sm text-ui-text-secondary">
+        <Typography variant="small" color="secondary" className="text-center py-4">
           No watchers yet. Be the first to watch this issue!
-        </div>
+        </Typography>
       )}
     </div>
   );

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { Typography } from "@/components/ui/Typography";
 import { type FuzzySearchResult, highlightMatches } from "@/hooks/useFuzzySearch";
 import { cn } from "@/lib/utils";
 
@@ -235,9 +236,9 @@ export function FuzzySearchInput<T>({
           className="absolute z-50 w-full mt-1.5 bg-ui-bg-elevated border border-ui-border rounded-md shadow-elevated max-h-60 overflow-y-auto scrollbar-subtle animate-scale-in"
         >
           {results.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-ui-text-tertiary">
+            <Typography variant="small" color="tertiary" className="px-4 py-3">
               No results found for "{query}"
-            </div>
+            </Typography>
           ) : (
             results.map((result, index) => (
               <button
@@ -260,9 +261,9 @@ export function FuzzySearchInput<T>({
               >
                 <div className="flex-1">{renderItem(result)}</div>
                 {showScore && result.score !== undefined && result.score > 0 && (
-                  <span className="text-xs text-ui-text-tertiary ml-2">
+                  <Typography variant="caption" color="tertiary" as="span" className="ml-2">
                     {((1 - result.score) * 100).toFixed(0)}%
-                  </span>
+                  </Typography>
                 )}
               </button>
             ))

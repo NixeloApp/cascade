@@ -133,7 +133,9 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
               </div>
             )}
             {status === "LoadingMore" && (
-              <div className="text-center pt-2 text-sm text-ui-text-tertiary">Loading...</div>
+              <Typography variant="small" color="tertiary" className="text-center pt-2">
+                Loading...
+              </Typography>
             )}
           </>
         )}

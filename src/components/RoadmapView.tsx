@@ -304,15 +304,18 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           {/* Timeline Header (Fixed) */}
           <div className="border-b border-ui-border bg-ui-bg-secondary p-4 shrink-0">
             <Flex>
-              <div className="w-64 shrink-0 font-medium text-ui-text">Issue</div>
+              <Typography variant="label" className="w-64 shrink-0 text-ui-text">
+                Issue
+              </Typography>
               <div className="flex-1 grid grid-cols-6">
                 {timelineMonths.map((month) => (
-                  <div
+                  <Typography
                     key={month.getTime()}
-                    className="text-center text-sm font-medium text-ui-text border-l border-ui-border px-2"
+                    variant="label"
+                    className="text-center text-ui-text border-l border-ui-border px-2"
                   >
                     {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                  </div>
+                  </Typography>
                 ))}
               </div>
             </Flex>

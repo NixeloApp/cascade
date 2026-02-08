@@ -249,16 +249,16 @@ export function ProjectWizard({
                     Continuous flow of work through columns. Great for ongoing projects and support
                     teams.
                   </Typography>
-                  <ul className="mt-3 text-xs text-ui-text-tertiary space-y-1">
-                    <li>
+                  <ul className="mt-3 text-ui-text-tertiary space-y-1">
+                    <Typography as="li" variant="caption">
                       <Icon icon={Check} size="xs" className="inline mr-1" /> No time constraints
-                    </li>
-                    <li>
+                    </Typography>
+                    <Typography as="li" variant="caption">
                       <Icon icon={Check} size="xs" className="inline mr-1" /> Visualize workflow
-                    </li>
-                    <li>
+                    </Typography>
+                    <Typography as="li" variant="caption">
                       <Icon icon={Check} size="xs" className="inline mr-1" /> Limit work in progress
-                    </li>
+                    </Typography>
                   </ul>
                 </button>
 
@@ -282,16 +282,16 @@ export function ProjectWizard({
                     Work in sprints with defined goals. Great for product development and fixed
                     deadlines.
                   </Typography>
-                  <ul className="mt-3 text-xs text-ui-text-tertiary space-y-1">
-                    <li>
+                  <ul className="mt-3 text-ui-text-tertiary space-y-1">
+                    <Typography as="li" variant="caption">
                       <Icon icon={Check} size="xs" className="inline mr-1" /> Sprint planning
-                    </li>
-                    <li>
+                    </Typography>
+                    <Typography as="li" variant="caption">
                       <Icon icon={Check} size="xs" className="inline mr-1" /> Velocity tracking
-                    </li>
-                    <li>
+                    </Typography>
+                    <Typography as="li" variant="caption">
                       <Icon icon={Check} size="xs" className="inline mr-1" /> Burndown charts
-                    </li>
+                    </Typography>
                   </ul>
                 </button>
               </div>

@@ -73,7 +73,11 @@ export function AssigneeSearchDropdown({
   const { results, search, query, clear, isDebouncing } = useUserFuzzySearch(searchItems);
 
   if (!members) {
-    return <div className="text-sm text-ui-text-tertiary">Loading members...</div>;
+    return (
+      <Typography variant="small" color="tertiary">
+        Loading members...
+      </Typography>
+    );
   }
 
   // Get selected user details
@@ -90,7 +94,9 @@ export function AssigneeSearchDropdown({
         >
           <Flex gap="sm" align="center">
             <Avatar name={selectedUser.userName} email={selectedUser.userEmail} size="sm" />
-            <span className="text-sm">{selectedUser.userName}</span>
+            <Typography variant="small" as="span">
+              {selectedUser.userName}
+            </Typography>
           </Flex>
           <button
             type="button"
@@ -134,14 +140,18 @@ export function AssigneeSearchDropdown({
             <Flex gap="sm" align="center">
               <Avatar name={user.name} email={user.email} size="md" />
               <div>
-                <div className="text-sm font-medium">
+                <Typography variant="label">
                   {nameMatch ? (
                     <HighlightedText text={user.name || "Unknown"} matches={nameMatch.indices} />
                   ) : (
                     user.name || "Unknown"
                   )}
-                </div>
-                {user.email && <div className="text-xs text-ui-text-tertiary">{user.email}</div>}
+                </Typography>
+                {user.email && (
+                  <Typography variant="caption" color="tertiary">
+                    {user.email}
+                  </Typography>
+                )}
               </div>
             </Flex>
           );

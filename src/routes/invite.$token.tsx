@@ -234,9 +234,12 @@ function InviteRoute() {
                 {/* User is logged in - show accept button */}
                 <div className="space-y-4">
                   {acceptError && (
-                    <div className="p-3 rounded-lg bg-status-error-bg text-status-error-text text-sm">
+                    <Typography
+                      variant="small"
+                      className="p-3 rounded-lg bg-status-error-bg text-status-error-text"
+                    >
                       {acceptError}
-                    </div>
+                    </Typography>
                   )}
                   <Button
                     variant="primary"

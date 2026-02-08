@@ -270,9 +270,9 @@ export function IssuesCalendarView({
           {/* Weekday Headers */}
           <div className="grid grid-cols-7 bg-ui-bg-secondary border-b border-ui-border">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="p-2 text-center text-sm font-semibold text-ui-text">
+              <Typography key={day} variant="label" className="p-2 text-center text-ui-text">
                 {day}
-              </div>
+              </Typography>
             ))}
           </div>
 

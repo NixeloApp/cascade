@@ -451,8 +451,8 @@ function GenerateKeyModal({
                 </div>
 
                 {/* Copy Instructions */}
-                <div className="text-left mb-6 p-4 bg-status-info-bg rounded-lg text-sm">
-                  <Typography className="font-medium text-status-info-text mb-2">
+                <div className="text-left mb-6 p-4 bg-status-info-bg rounded-lg">
+                  <Typography variant="label" className="text-status-info-text mb-2">
                     Usage Example:
                   </Typography>
                   <code className="block bg-ui-bg p-2 rounded text-xs font-mono">

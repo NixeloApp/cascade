@@ -42,7 +42,10 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
             </Badge>
           </Flex>
           <Typography className="text-sm text-ui-text-secondary mb-1">
-            <span className="font-medium">Title:</span> {template.titleTemplate}
+            <Typography variant="label" as="span">
+              Title:
+            </Typography>{" "}
+            {template.titleTemplate}
           </Typography>
           {template.descriptionTemplate && (
             <Typography className="text-xs text-ui-text-tertiary line-clamp-2">
