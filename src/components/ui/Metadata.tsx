@@ -146,7 +146,22 @@ export function MetadataTimestamp({
 }: MetadataTimestampProps) {
   const { size } = useMetadataContext();
 
-  const dateObj = date instanceof Date ? date : new Date(date);
+  let dateObj: Date;
+  try {
+    dateObj = date instanceof Date ? date : new Date(date);
+    // Check if date is valid
+    if (Number.isNaN(dateObj.getTime())) {
+      throw new Error("Invalid date");
+    }
+  } catch (_e) {
+    // Render fallback for invalid dates
+    return (
+      <span className={cn("text-ui-text-tertiary", size === "xs" ? "text-xs" : "text-sm")}>
+        Invalid date
+      </span>
+    );
+  }
+
   const isoString = dateObj.toISOString();
   const displayText =
     format === "relative" ? formatRelativeTime(dateObj) : formatAbsoluteTime(dateObj);
