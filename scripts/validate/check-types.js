@@ -36,18 +36,12 @@ export function run() {
   const SRC_DIR = path.join(ROOT, "src");
 
   let errorCount = 0;
-  let warningCount = 0;
   const messages = [];
 
-  function report(filePath, line, message, level = "error") {
+  function report(filePath, line, message) {
     const rel = relPath(filePath);
-    const color = level === "error" ? c.red : c.yellow;
-    messages.push(`  ${color}${level.toUpperCase()}${c.reset} ${rel}:${line} - ${message}`);
-    if (level === "error") {
-      errorCount++;
-    } else {
-      warningCount++;
-    }
+    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - ${message}`);
+    errorCount++;
   }
 
   function isCanonicalSource(filePath) {
@@ -123,8 +117,7 @@ export function run() {
       report(
         filePath,
         line + 1,
-        "Inline string union matches IssueType pattern. Consider using 'IssueType' from '@/lib/issue-utils'.",
-        "warning",
+        "Inline string union matches IssueType pattern. Use 'IssueType' from '@/lib/issue-utils'.",
       );
     }
 
@@ -136,8 +129,7 @@ export function run() {
       report(
         filePath,
         line + 1,
-        "Inline string union matches IssuePriority pattern. Consider using 'IssuePriority' from '@/lib/issue-utils'.",
-        "warning",
+        "Inline string union matches IssuePriority pattern. Use 'IssuePriority' from '@/lib/issue-utils'.",
       );
     }
   }
@@ -172,18 +164,10 @@ export function run() {
     checkFile(f);
   }
 
-  let detail = null;
-  if (errorCount > 0) {
-    detail = `${errorCount} duplicate(s)${warningCount > 0 ? `, ${warningCount} warning(s)` : ""}`;
-  } else if (warningCount > 0) {
-    detail = `${warningCount} warning(s)`;
-  }
-
   return {
     passed: errorCount === 0,
     errors: errorCount,
-    warnings: warningCount,
-    detail,
+    detail: errorCount > 0 ? `${errorCount} violation(s)` : null,
     messages,
   };
 }

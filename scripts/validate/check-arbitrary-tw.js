@@ -1,6 +1,6 @@
 /**
  * CHECK 5: Arbitrary Tailwind
- * Arbitrary values like h-[50px] (warning only)
+ * Arbitrary values like h-[50px] — these should use design tokens instead
  */
 
 import fs from "node:fs";
@@ -77,12 +77,11 @@ export function run() {
   }
 
   return {
-    passed: true, // warnings only, never fails
-    errors: 0,
-    warnings: totalFound,
-    detail: totalFound > 0 ? `${totalFound} arbitrary value(s), warning` : null,
+    passed: totalFound === 0,
+    errors: totalFound,
+    detail: totalFound > 0 ? `${totalFound} arbitrary value(s)` : null,
     messages: violations.map((v) => ({
-      type: "warning",
+      type: "error",
       file: v.file,
       line: v.line,
       message: `Arbitrary ${v.desc} value`,

@@ -21,29 +21,16 @@ export function run() {
   ];
 
   let errorCount = 0;
-  let warningCount = 0;
   const errors = [];
 
   const PATTERNS = [
-    { regex: /\)\s*as\s+any\b/, message: "Unsafe 'as any' type assertion", level: "error" },
-    {
-      regex: /\)\s*as\s+unknown\s+as\b/,
-      message: "Unsafe 'as unknown as' double assertion",
-      level: "error",
-    },
-    { regex: /\)\s*as\s+never\b/, message: "Unsafe 'as never' type assertion", level: "error" },
-    { regex: /@ts-ignore\b/, message: "@ts-ignore suppresses type errors", level: "error" },
-    { regex: /@ts-nocheck\b/, message: "@ts-nocheck disables type checking", level: "error" },
-    {
-      regex: /@ts-expect-error\b/,
-      message: "@ts-expect-error suppresses type errors",
-      level: "warning",
-    },
-    {
-      regex: /biome-ignore\b/,
-      message: "biome-ignore suppresses lint rules",
-      level: "warning",
-    },
+    { regex: /\)\s*as\s+any\b/, message: "Unsafe 'as any' type assertion" },
+    { regex: /\)\s*as\s+unknown\s+as\b/, message: "Unsafe 'as unknown as' double assertion" },
+    { regex: /\)\s*as\s+never\b/, message: "Unsafe 'as never' type assertion" },
+    { regex: /@ts-ignore\b/, message: "@ts-ignore suppresses type errors" },
+    { regex: /@ts-nocheck\b/, message: "@ts-nocheck disables type checking" },
+    { regex: /@ts-expect-error\b/, message: "@ts-expect-error suppresses type errors" },
+    { regex: /biome-ignore\b/, message: "biome-ignore suppresses lint rules" },
   ];
 
   function checkFile(filePath) {
@@ -54,17 +41,10 @@ export function run() {
     const lines = content.split("\n");
 
     lines.forEach((line, index) => {
-      for (const { regex, message, level } of PATTERNS) {
+      for (const { regex, message } of PATTERNS) {
         if (regex.test(line)) {
-          const color = level === "error" ? c.red : c.yellow;
-          errors.push(
-            `  ${color}${level.toUpperCase()}${c.reset} ${rel}:${index + 1} - ${message}`,
-          );
-          if (level === "error") {
-            errorCount++;
-          } else {
-            warningCount++;
-          }
+          errors.push(`  ${c.red}ERROR${c.reset} ${rel}:${index + 1} - ${message}`);
+          errorCount++;
         }
       }
     });
@@ -76,18 +56,10 @@ export function run() {
     for (const f of files) checkFile(f);
   }
 
-  let detail = null;
-  if (errorCount > 0) {
-    detail = `${errorCount} error(s)${warningCount > 0 ? `, ${warningCount} warning(s)` : ""}`;
-  } else if (warningCount > 0) {
-    detail = `${warningCount} warning(s)`;
-  }
-
   return {
     passed: errorCount === 0,
     errors: errorCount,
-    warnings: warningCount,
-    detail,
+    detail: errorCount > 0 ? `${errorCount} error(s)` : null,
     messages: errors,
   };
 }

@@ -241,22 +241,21 @@ export function run() {
     }
   }
 
+  const totalErrors = highCount + medCount + lowCount;
   let detail;
-  if (highCount > 0) {
-    detail = `${highCount} high severity`;
-  } else if (medCount + lowCount > 0) {
+  if (totalErrors > 0) {
     const parts = [];
+    if (highCount > 0) parts.push(`${highCount} high`);
     if (medCount > 0) parts.push(`${medCount} medium`);
     if (lowCount > 0) parts.push(`${lowCount} low`);
-    detail = `0 high severity, ${parts.join(", ")} warning(s)`;
+    detail = parts.join(", ");
   } else {
     detail = "0 high severity";
   }
 
   return {
-    passed: highCount === 0,
-    errors: highCount,
-    warnings: medCount + lowCount,
+    passed: totalErrors === 0,
+    errors: totalErrors,
     detail,
     messages,
   };

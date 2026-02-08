@@ -26,18 +26,12 @@ export function run() {
   ];
 
   let errorCount = 0;
-  let warningCount = 0;
   const messages = [];
 
-  function reportError(filePath, line, col, message, level = "error") {
+  function reportError(filePath, line, col, message) {
     const rel = relPath(filePath);
-    const color = level === "error" ? c.red : c.yellow;
-    messages.push(`  ${color}${level.toUpperCase()}${c.reset} ${rel}:${line}:${col} - ${message}`);
-    if (level === "error") {
-      errorCount++;
-    } else {
-      warningCount++;
-    }
+    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line}:${col} - ${message}`);
+    errorCount++;
   }
 
   /**
@@ -172,19 +166,10 @@ export function run() {
     checkE2EFile(file);
   }
 
-  const passed = errorCount === 0;
-  const detail =
-    errorCount > 0
-      ? `${errorCount} error(s)`
-      : warningCount > 0
-        ? `${warningCount} warning(s)`
-        : undefined;
-
   return {
-    passed,
+    passed: errorCount === 0,
     errors: errorCount,
-    warnings: warningCount,
-    detail,
+    detail: errorCount > 0 ? `${errorCount} error(s)` : undefined,
     messages: messages.length > 0 ? messages : undefined,
   };
 }
