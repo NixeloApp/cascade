@@ -7,6 +7,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/form";
+import { Grid } from "../ui/Grid";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
 
@@ -33,7 +34,7 @@ type ProfileUser = {
  */
 export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <Grid cols={2} colsMd={5} gap="lg">
       <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
         <Typography variant="h3" color="brand" className="text-2xl">
           {stats.projects}
@@ -64,7 +65,7 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
         </Typography>
         <Typography variant="caption">Comments</Typography>
       </div>
-    </div>
+    </Grid>
   );
 }
 

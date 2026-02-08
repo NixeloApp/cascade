@@ -1,5 +1,6 @@
 import { FileText, Kanban, Zap } from "lucide-react";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 
@@ -39,7 +40,7 @@ function FeatureCard({ icon, iconBg, title, description }: FeatureCardProps) {
 
 export function FeatureHighlights() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <Grid cols={1} colsSm={3} gap="lg">
       <FeatureCard
         icon={<Kanban className="w-6 h-6 text-brand" />}
         iconBg="bg-brand-subtle"
@@ -58,6 +59,6 @@ export function FeatureHighlights() {
         title="Sprint Planning"
         description="Plan and track team velocity"
       />
-    </div>
+    </Grid>
   );
 }

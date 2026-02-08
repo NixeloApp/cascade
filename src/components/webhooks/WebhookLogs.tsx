@@ -9,6 +9,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Typography } from "../ui/Typography";
@@ -140,7 +141,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                   </Flex>
 
                   {/* Metadata */}
-                  <div className="grid grid-cols-3 gap-4 mb-2">
+                  <Grid cols={3} gap="lg" className="mb-2">
                     <Typography variant="meta">
                       <Typography variant="label" as="span" className="text-ui-text">
                         Attempts:
@@ -159,7 +160,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                       </Typography>{" "}
                       {String(execution.status)}
                     </Typography>
-                  </div>
+                  </Grid>
 
                   {/* Error message */}
                   {execution.error && (

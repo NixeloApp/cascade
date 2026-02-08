@@ -9,6 +9,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Textarea } from "../ui/form";
 import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
@@ -228,7 +229,7 @@ export function ProjectWizard({
                 How do you want to organize your work? You can change this later.
               </Typography>
 
-              <div className="grid grid-cols-2 gap-4">
+              <Grid cols={2} gap="lg">
                 <button
                   type="button"
                   onClick={() => setBoardType("kanban")}
@@ -294,7 +295,7 @@ export function ProjectWizard({
                     </Typography>
                   </ul>
                 </button>
-              </div>
+              </Grid>
             </div>
           )}
 

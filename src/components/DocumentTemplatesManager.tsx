@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import { FileText } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -222,7 +223,7 @@ export function DocumentTemplatesManager({
                 <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
                   Built-in Templates
                 </Typography>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Grid cols={1} colsMd={2} colsLg={3} gap="lg">
                   {builtInTemplates.map((template: Doc<"documentTemplates">) => (
                     <button
                       key={template._id}
@@ -254,7 +255,7 @@ export function DocumentTemplatesManager({
                       </Flex>
                     </button>
                   ))}
-                </div>
+                </Grid>
               </div>
             )}
 
@@ -264,7 +265,7 @@ export function DocumentTemplatesManager({
                 <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
                   Custom Templates
                 </Typography>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Grid cols={1} colsMd={2} colsLg={3} gap="lg">
                   {customTemplates.map((template: Doc<"documentTemplates">) => (
                     <div
                       key={template._id}
@@ -348,7 +349,7 @@ export function DocumentTemplatesManager({
                       </Flex>
                     </div>
                   ))}
-                </div>
+                </Grid>
               </div>
             )}
           </div>
@@ -368,7 +369,7 @@ export function DocumentTemplatesManager({
             }}
             className="space-y-4"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Grid cols={1} colsSm={2} gap="lg">
               <form.Field name="name">
                 {(field) => (
                   <FormInput
@@ -392,7 +393,7 @@ export function DocumentTemplatesManager({
                   />
                 )}
               </form.Field>
-            </div>
+            </Grid>
 
             <form.Field name="description">
               {(field) => (
@@ -405,7 +406,7 @@ export function DocumentTemplatesManager({
               )}
             </form.Field>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Grid cols={1} colsSm={2} gap="lg">
               <form.Field name="category">
                 {(field) => (
                   <FormSelect field={field} label="Category" required>
@@ -435,7 +436,7 @@ export function DocumentTemplatesManager({
                   </Flex>
                 )}
               </form.Field>
-            </div>
+            </Grid>
 
             <DialogFooter>
               <form.Subscribe selector={(state) => state.isSubmitting}>

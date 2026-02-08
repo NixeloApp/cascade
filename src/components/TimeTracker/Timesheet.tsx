@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex, FlexItem } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
@@ -124,7 +125,7 @@ export function Timesheet() {
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-4">
+      <Grid cols={7} gap="lg">
         {weekDays.map((day) => {
           const isToday = day.date.toDateString() === new Date().toDateString();
           const dayHours = day.entries.reduce(
@@ -199,7 +200,7 @@ export function Timesheet() {
             </div>
           );
         })}
-      </div>
+      </Grid>
 
       {/* Empty state */}
       {timesheet.totalHours === 0 && (

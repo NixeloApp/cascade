@@ -38,7 +38,7 @@ export function AttachmentList({ attachmentIds, issueId, canEdit = false }: Atta
       <Typography variant="h4" className="text-sm font-medium text-ui-text">
         Attachments ({attachmentIds.length})
       </Typography>
-      <div className="grid grid-cols-1 gap-2">
+      <Flex direction="column" gap="sm">
         {attachmentIds.map((storageId) => (
           <AttachmentItem
             key={storageId}
@@ -47,7 +47,7 @@ export function AttachmentList({ attachmentIds, issueId, canEdit = false }: Atta
             onRemove={() => handleRemove(storageId)}
           />
         ))}
-      </div>
+      </Flex>
     </div>
   );
 }

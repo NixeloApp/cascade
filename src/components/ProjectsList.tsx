@@ -5,6 +5,7 @@ import type { FunctionReference } from "convex/server";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
@@ -57,7 +58,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Grid cols={1} colsMd={2} colsLg={3} gap="xl">
           {projects.map((project) => (
             <Link
               key={project._id}
@@ -117,7 +118,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
               </div>
             </Link>
           ))}
-        </div>
+        </Grid>
       )}
 
       {status === "CanLoadMore" && (

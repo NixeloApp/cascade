@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
 import {
   Select,
@@ -50,7 +51,7 @@ function AssistantStats() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <Grid cols={1} colsMd={3} gap="lg" className="mb-8">
       {stats.map((stat) => (
         <Card key={stat.label} className="card-subtle relative overflow-hidden group">
           {/* Green left border accent for active feel */}
@@ -84,7 +85,7 @@ function AssistantStats() {
           </CardBody>
         </Card>
       ))}
-    </div>
+    </Grid>
   );
 }
 
@@ -183,7 +184,7 @@ function AssistantConfig() {
                 </Typography>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Grid cols={1} colsMd={2} gap="xl">
                 {/* Model Selection */}
                 <div className="space-y-3">
                   <Typography variant="small" className="font-medium">
@@ -209,7 +210,7 @@ function AssistantConfig() {
                   </Typography>
                   <Input type="email" placeholder="support@example.com" className="bg-ui-bg" />
                 </div>
-              </div>
+              </Grid>
 
               {/* Show Help Button Toggle */}
               <Flex

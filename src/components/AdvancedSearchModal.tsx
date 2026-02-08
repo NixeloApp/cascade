@@ -9,6 +9,7 @@ import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
+import { Grid } from "./ui/Grid";
 import { Input } from "./ui/form";
 import { Icon } from "./ui/Icon";
 
@@ -102,7 +103,7 @@ export function AdvancedSearchModal({
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Grid cols={1} colsMd={3} gap="lg">
             <FilterCheckboxGroup
               label="Type"
               options={["task", "bug", "story", "epic"]}
@@ -130,7 +131,7 @@ export function AdvancedSearchModal({
               onToggle={(status) => toggleFilter(status, selectedStatus, setSelectedStatus)}
               maxHeight="max-h-40 overflow-y-auto"
             />
-          </div>
+          </Grid>
 
           {/* Results */}
           <div>

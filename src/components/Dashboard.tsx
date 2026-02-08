@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useListNavigation } from "../hooks/useListNavigation";
@@ -76,7 +77,7 @@ export function Dashboard() {
       </div>
 
       {/* Top Actionable Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+      <Grid cols={1} colsLg={12} gap="xl" className="mb-8">
         {/* Focus Zone - Span 5 */}
         <div className="lg:col-span-5">
           <FocusZone task={focusTask} />
@@ -97,10 +98,10 @@ export function Dashboard() {
             </Flex>
           )}
         </div>
-      </div>
+      </Grid>
 
       {/* Main Workspace Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <Grid cols={1} colsLg={3} gap="xl">
         {/* Main Feed/Issues */}
         <Flex className={sidebarVisible ? "lg:col-span-2" : "lg:col-span-3"}>
           <div className="bg-ui-bg rounded-xl border border-ui-border overflow-hidden">
@@ -129,7 +130,7 @@ export function Dashboard() {
             {showRecentActivity && <RecentActivity activities={recentActivity} />}
           </div>
         )}
-      </div>
+      </Grid>
     </div>
   );
 }

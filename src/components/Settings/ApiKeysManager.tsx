@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -512,7 +513,7 @@ function UsageStatsModal({
         ) : (
           <div className="space-y-6">
             {/* Overview Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Grid cols={2} colsSm={4} gap="lg">
               <div className="p-4 bg-ui-bg-secondary rounded-lg">
                 <Typography className="text-xs text-ui-text-secondary mb-1">Total Calls</Typography>
                 <Typography className="text-2xl font-bold text-ui-text">
@@ -546,7 +547,7 @@ function UsageStatsModal({
                   {stats.avgResponseTime}ms
                 </Typography>
               </div>
-            </div>
+            </Grid>
 
             {/* Recent Requests */}
             <div>

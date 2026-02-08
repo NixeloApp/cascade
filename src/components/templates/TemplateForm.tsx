@@ -10,6 +10,7 @@ import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Grid } from "../ui/Grid";
 
 // =============================================================================
 // Schema
@@ -113,7 +114,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
           }}
           className="space-y-4"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Grid cols={1} colsSm={2} gap="lg">
             <form.Field name="name">
               {(field) => (
                 <FormInput
@@ -136,7 +137,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
                 </FormSelect>
               )}
             </form.Field>
-          </div>
+          </Grid>
 
           <form.Field name="titleTemplate">
             {(field) => (
@@ -162,7 +163,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
             )}
           </form.Field>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Grid cols={1} colsSm={2} gap="lg">
             <form.Field name="defaultPriority">
               {(field) => (
                 <FormSelect field={field} label="Default Priority">
@@ -184,7 +185,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
                 />
               )}
             </form.Field>
-          </div>
+          </Grid>
 
           <DialogFooter>
             <form.Subscribe selector={(state) => state.isSubmitting}>

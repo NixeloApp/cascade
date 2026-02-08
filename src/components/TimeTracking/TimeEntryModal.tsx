@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Textarea } from "../ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Typography } from "../ui/Typography";
@@ -252,7 +253,7 @@ function TimeRangeModeFields({
           required
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <Grid cols={2} gap="lg">
         <div>
           <label htmlFor="time-entry-start" className="block text-sm font-medium text-ui-text mb-1">
             Start Time *
@@ -279,7 +280,7 @@ function TimeRangeModeFields({
             required
           />
         </div>
-      </div>
+      </Grid>
       {timeRangeDuration > 0 && (
         <div className="p-3 bg-brand-indigo-track border border-brand-indigo-border rounded-lg">
           <Typography variant="mono" className="text-sm font-medium text-brand-indigo-text">

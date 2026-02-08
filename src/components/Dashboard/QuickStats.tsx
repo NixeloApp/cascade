@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Progress } from "../ui/Progress";
 import { SkeletonStatCard } from "../ui/Skeleton";
 import { Typography } from "../ui/Typography";
@@ -126,12 +127,12 @@ function HighPriorityCard({ count }: { count: number }) {
 export function QuickStats({ stats }: QuickStatsProps) {
   if (!stats) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <Grid cols={1} colsSm={2} colsLg={4} gap="lg" className="mb-8">
         <SkeletonStatCard />
         <SkeletonStatCard />
         <SkeletonStatCard />
         <SkeletonStatCard />
-      </div>
+      </Grid>
     );
   }
 
@@ -141,7 +142,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
     totalAssigned > 0 ? (stats.completedThisWeek / totalAssigned) * 100 : 0;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <Grid cols={1} colsSm={2} colsLg={4} gap="lg" className="mb-8">
       <StatCard
         title="Active Load"
         value={stats.assignedToMe}
@@ -162,6 +163,6 @@ export function QuickStats({ stats }: QuickStatsProps) {
         subtitle="Reported issues"
         variant="accent"
       />
-    </div>
+    </Grid>
   );
 }

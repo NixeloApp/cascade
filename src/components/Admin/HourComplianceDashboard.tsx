@@ -14,6 +14,7 @@ import { Card, CardBody, CardHeader } from "../ui/Card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Input, Select, Textarea } from "../ui/form";
 
 type ComplianceStatus = "compliant" | "under_hours" | "over_hours" | "equity_under";
@@ -140,7 +141,7 @@ export function HourComplianceDashboard() {
     <Flex direction="column" gap="xl">
       {/* Summary Stats */}
       {summary && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Grid cols={2} colsMd={5} gap="lg">
           <Card>
             <CardBody>
               <div className="text-center">
@@ -203,7 +204,7 @@ export function HourComplianceDashboard() {
               </div>
             </CardBody>
           </Card>
-        </div>
+        </Grid>
       )}
 
       {/* Compliance Records */}
@@ -220,7 +221,7 @@ export function HourComplianceDashboard() {
 
         <CardBody>
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Grid cols={1} colsMd={3} gap="lg" className="mb-6">
             <Select
               label="Status"
               value={selectedStatus}
@@ -246,7 +247,7 @@ export function HourComplianceDashboard() {
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
-          </div>
+          </Grid>
 
           {/* Records List */}
           {!records ? (
@@ -290,7 +291,7 @@ export function HourComplianceDashboard() {
                         </div>
                       </Flex>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                      <Grid cols={2} colsMd={4} gap="md" className="mt-3">
                         <div>
                           <Typography variant="meta">Period:</Typography>
                           <Typography variant="small" className="font-medium">
@@ -340,7 +341,7 @@ export function HourComplianceDashboard() {
                             </Typography>
                           </div>
                         )}
-                      </div>
+                      </Grid>
 
                       {record.reviewNotes && (
                         <Flex className="mt-3 p-2 bg-accent-subtle rounded">

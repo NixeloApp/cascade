@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
@@ -108,7 +109,7 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
       </Flex>
 
       {/* Burn Rate Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Grid cols={1} colsMd={4} gap="lg">
         <MetricCard
           label="Total Cost"
           value={formatCurrency(burnRate.totalCost)}
@@ -133,10 +134,10 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
           icon={Calendar}
           color="warning"
         />
-      </div>
+      </Grid>
 
       {/* Hours Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Grid cols={1} colsMd={2} gap="lg">
         <div className="p-4 bg-ui-bg border border-ui-border rounded-lg">
           <Typography variant="h3" className="text-sm font-medium text-ui-text mb-2">
             Total Hours
@@ -160,7 +161,7 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
             {formatCurrency(burnRate.billableCost)} billable
           </Typography>
         </div>
-      </div>
+      </Grid>
 
       {/* Team Costs Breakdown */}
       <div>

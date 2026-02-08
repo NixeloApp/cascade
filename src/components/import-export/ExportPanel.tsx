@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
@@ -110,7 +111,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
         <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
           Select Export Format
         </Typography>
-        <div className="grid grid-cols-2 gap-3">
+        <Grid cols={2} gap="md">
           <Card
             onClick={() => setExportFormat("csv")}
             className={cn(
@@ -150,7 +151,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
               </div>
             </Flex>
           </Card>
-        </div>
+        </Grid>
       </div>
 
       <div className="bg-brand-subtle border border-brand-border rounded-lg p-4">

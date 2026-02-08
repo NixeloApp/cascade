@@ -7,6 +7,7 @@ import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -64,7 +65,7 @@ function WorkspacesList() {
           ),
         }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Grid cols={1} colsMd={2} colsLg={3} gap="xl">
           {workspaces?.map((workspace) => (
             <Link
               key={workspace._id}
@@ -101,7 +102,7 @@ function WorkspacesList() {
               </Card>
             </Link>
           ))}
-        </div>
+        </Grid>
       </PageContent>
     </PageLayout>
   );

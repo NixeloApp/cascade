@@ -4,6 +4,7 @@ import { useMutation } from "convex/react";
 import { ArrowLeft, Building2, FolderPlus, Sparkles, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -248,7 +249,7 @@ export function LeadOnboarding({
         </div>
 
         {/* Options - Mintlify-inspired card styling */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Grid cols={1} colsSm={2} gap="lg">
           {/* Sample Project - Highlighted as recommended */}
           <button
             type="button"
@@ -298,7 +299,7 @@ export function LeadOnboarding({
               <Typography variant="caption">For experienced users</Typography>
             </Flex>
           </button>
-        </div>
+        </Grid>
 
         {/* Skip option */}
         <div className="text-center">

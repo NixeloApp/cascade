@@ -137,6 +137,19 @@ export function run() {
             }
           }
         }
+
+        // Grid classes on raw elements — use Grid component instead
+        if (RAW_ELEMENTS.has(tagName)) {
+          const classText = getClassNameText(node);
+          const classes = classText.split(/\s+/);
+          if (classes.includes("grid")) {
+            reportError(
+              filePath,
+              node,
+              `Use <Grid> component instead of <${tagName} className="grid"> for grid layouts.`,
+            );
+          }
+        }
       }
 
       // className checks

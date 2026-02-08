@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
+import { Grid } from "./ui/Grid";
 import { Select } from "./ui/form";
 import { Icon } from "./ui/Icon";
 import { Typography } from "./ui/Typography";
@@ -321,7 +322,7 @@ export function CreateIssueModal({
           </form.Field>
 
           {/* Type & Priority */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Grid cols={1} colsSm={2} gap="lg">
             <form.Field name="type">
               {(field) => (
                 <FormSelect field={field} label="Type">
@@ -345,7 +346,7 @@ export function CreateIssueModal({
                 </FormSelect>
               )}
             </form.Field>
-          </div>
+          </Grid>
 
           {/* Assignee */}
           <form.Field name="assigneeId">

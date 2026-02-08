@@ -12,6 +12,7 @@ import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
+import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
 import { Typography } from "../ui/Typography";
 
@@ -439,7 +440,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
             <Label required className="block mb-3">
               Events to Send
             </Label>
-            <div className="grid grid-cols-2 gap-3">
+            <Grid cols={2} gap="md">
               {AVAILABLE_EVENTS.map((event) => (
                 <Checkbox
                   key={event.value}
@@ -448,7 +449,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
                   onChange={() => toggleEvent(event.value)}
                 />
               ))}
-            </div>
+            </Grid>
             {selectedEvents.length === 0 && (
               <Typography variant="small" color="error" className="mt-1">
                 Select at least one event
@@ -581,7 +582,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
             <Label required className="block mb-3">
               Events to Send
             </Label>
-            <div className="grid grid-cols-2 gap-3">
+            <Grid cols={2} gap="md">
               {AVAILABLE_EVENTS.map((event) => (
                 <Checkbox
                   key={event.value}
@@ -590,7 +591,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
                   onChange={() => toggleEvent(event.value)}
                 />
               ))}
-            </div>
+            </Grid>
             {selectedEvents.length === 0 && (
               <Typography variant="small" color="error" className="mt-1">
                 Select at least one event

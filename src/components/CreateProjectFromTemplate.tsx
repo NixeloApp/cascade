@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowLeft } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -138,7 +139,7 @@ export function CreateProjectFromTemplate({
                 <LoadingSpinner />
               </Flex>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Grid cols={1} colsMd={2} gap="lg">
                 {templates.map((template: Doc<"projectTemplates">) => (
                   <button
                     type="button"
@@ -172,7 +173,7 @@ export function CreateProjectFromTemplate({
                     </Flex>
                   </button>
                 ))}
-              </div>
+              </Grid>
             )}
           </div>
         ) : (

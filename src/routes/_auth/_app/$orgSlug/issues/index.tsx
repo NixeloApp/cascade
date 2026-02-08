@@ -9,6 +9,7 @@ import { IssueDetailModal } from "@/components/IssueDetailModal";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Filter, Plus, Search, SearchX } from "@/lib/icons";
 
@@ -103,7 +104,7 @@ function AllIssuesPage() {
           description: "Try adjusting your filters or create a new issue.",
         }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <Grid cols={1} colsMd={2} colsLg={3} colsXl={4} gap="lg">
           {filteredIssues.map((issue) => (
             <IssueCard
               key={issue._id}
@@ -114,7 +115,7 @@ function AllIssuesPage() {
               onClick={handleIssueClick}
             />
           ))}
-        </div>
+        </Grid>
       </PageContent>
 
       {/* Load More */}

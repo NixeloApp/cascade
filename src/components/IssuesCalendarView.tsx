@@ -3,6 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
@@ -270,16 +271,16 @@ export function IssuesCalendarView({
       <div className="overflow-x-auto">
         <div className="bg-ui-bg rounded-lg border border-ui-border overflow-hidden min-w-160">
           {/* Weekday Headers */}
-          <div className="grid grid-cols-7 bg-ui-bg-secondary border-b border-ui-border">
+          <Grid cols={7} className="bg-ui-bg-secondary border-b border-ui-border">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <Typography key={day} variant="label" className="p-2 text-center text-ui-text">
                 {day}
               </Typography>
             ))}
-          </div>
+          </Grid>
 
           {/* Calendar Days */}
-          <div className="grid grid-cols-7">{calendarDays}</div>
+          <Grid cols={7}>{calendarDays}</Grid>
         </div>
       </div>
 

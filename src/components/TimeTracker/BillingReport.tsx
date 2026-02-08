@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
@@ -131,7 +132,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
       </Flex>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <Grid cols={1} colsMd={2} colsLg={4} gap="lg" className="mb-6">
         <Card>
           <CardBody>
             <Flex align="center" gap="sm" className="text-sm text-ui-text-tertiary mb-2">
@@ -194,7 +195,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
             </Typography>
           </CardBody>
         </Card>
-      </div>
+      </Grid>
 
       {/* Team Breakdown */}
       <Card>
@@ -253,7 +254,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
       </Card>
 
       {/* Quick Stats */}
-      <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+      <Grid cols={3} gap="lg" className="mt-6 text-center">
         <div className="p-4 bg-ui-bg-secondary rounded-lg">
           <Typography variant="h3" className="text-ui-text">
             {billing.entries}
@@ -278,7 +279,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
             Blended Rate
           </Typography>
         </div>
-      </div>
+      </Grid>
     </div>
   );
 }
