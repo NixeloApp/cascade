@@ -105,7 +105,7 @@ describe("CommentRenderer", () => {
 
       const badge = screen.getByText("@User");
       expect(badge).toHaveClass("bg-brand-subtle");
-      expect(badge).toHaveClass("text-brand-subtle-foreground");
+      expect(badge).toHaveClass("text-brand-active");
     });
 
     it("should have title attribute with @username", () => {
