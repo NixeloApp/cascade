@@ -1,0 +1,20 @@
+{
+  "js": [],
+  "css": [],
+  "fonts": [],
+  "images": [
+    {
+      "url": "https://www.mintlify.com/blog/authors/peri.webp",
+      "local": "assets/images/peri.webp"
+    },
+    {
+      "url": "https://www.mintlify.com/blog/authors/michael.webp",
+      "local": "assets/images/michael.webp"
+    },
+    {
+      "url": "https://www.mintlify.com/blog/authors/han.webp",
+      "local": "assets/images/han.webp"
+    }
+  ],
+  "animations": []
+}

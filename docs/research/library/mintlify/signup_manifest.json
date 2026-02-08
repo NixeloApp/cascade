@@ -1,0 +1,130 @@
+{
+  "js": [
+    {
+      "url": "https://elements.stytch.com/telemetry.js",
+      "local": "assets/js/telemetry.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/aad4f00e7c047859.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/aad4f00e7c047859.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/e3e274130bc65aa0.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/e3e274130bc65aa0.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/f11ebd947e5774b2.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/f11ebd947e5774b2.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/98a2f6bf657dde7c.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/98a2f6bf657dde7c.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/1e410d85b8994490.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/1e410d85b8994490.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/24c1505a7dfe9196.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/24c1505a7dfe9196.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/dacf5462b3d19157.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/dacf5462b3d19157.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/2a2095af5b7bf5ed.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/2a2095af5b7bf5ed.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/d2eac8064c444a7a.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/d2eac8064c444a7a.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/69980d81dedcc64d.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/69980d81dedcc64d.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/fd4fddff46d3ef54.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/fd4fddff46d3ef54.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/a436cf2caea32536.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/a436cf2caea32536.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/db016d47da236208.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/db016d47da236208.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/4447c97490751220.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/4447c97490751220.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/d03dd13ec820f859.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/d03dd13ec820f859.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/fd77cea7f291d60b.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/fd77cea7f291d60b.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/fb7a8b43c93bb911.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/fb7a8b43c93bb911.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/turbopack-50df9d51ffc59e89.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/turbopack-50df9d51ffc59e89.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/ec96587253b951dd.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/ec96587253b951dd.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/e4a91679ae7672a0.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/e4a91679ae7672a0.js"
+    },
+    {
+      "url": "https://chat.cdn-plain.com/index.js",
+      "local": "assets/js/index.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/1eacabefa1e08d27.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/1eacabefa1e08d27.js"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/4c597b1353f106b7.js?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/js/4c597b1353f106b7.js"
+    }
+  ],
+  "css": [
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/29e7443de292356d.css?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/css/29e7443de292356d.css"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/8b3796742753cdf5.css?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/css/8b3796742753cdf5.css"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/05488ccf3bca24bf.css?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/css/05488ccf3bca24bf.css"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/8b660bac06bde336.css?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/css/8b660bac06bde336.css"
+    },
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/chunks/b06ecba1f8ed4e6a.css?dpl=dpl_23pdZKMGKntfJGif8CEkr8thmLHD",
+      "local": "assets/css/b06ecba1f8ed4e6a.css"
+    }
+  ],
+  "fonts": [
+    {
+      "url": "https://dashboard.mintlify.com/_next/static/media/70bc3e132a0a741e-s.p.15008bfb.woff2",
+      "local": "assets/fonts/70bc3e132a0a741e-s.p.15008bfb.woff2"
+    }
+  ],
+  "images": [],
+  "animations": []
+}

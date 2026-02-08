@@ -1,0 +1,403 @@
+{
+  "js": [
+    {
+      "url": "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+      "local": "assets/js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/95999-d603efdae86309d2.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/95999-d603efdae86309d2.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/19664-8ce43df6b74bea12.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/19664-8ce43df6b74bea12.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/app/error-ae8951292761c46b.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/error-ae8951292761c46b.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/83667-0a701734e1827e02.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/83667-0a701734e1827e02.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/70523-43da3b59f75962b1.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/70523-43da3b59f75962b1.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/86707-95b0afc35b822349.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/86707-95b0afc35b822349.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/98816-4875194b6205382d.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/98816-4875194b6205382d.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/d30757c7-2d2105da33b688d0.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/d30757c7-2d2105da33b688d0.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/webpack-04dcc36c2dbfdf5d.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/webpack-04dcc36c2dbfdf5d.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/56179-90bc6d525ac75790.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/56179-90bc6d525ac75790.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/(multitenant)/%40topbar/%5B%5B...slug%5D%5D/page-7bbeff5e057f9031.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/page-7bbeff5e057f9031.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/891cff7f-dcf0b8e94fd9e2cd.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/891cff7f-dcf0b8e94fd9e2cd.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/68789-7a4ceb9f7da63351.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/68789-7a4ceb9f7da63351.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/87c73c54-dd8d81ac9604067c.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/87c73c54-dd8d81ac9604067c.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/error-0ca8dda1c4624b87.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/error-0ca8dda1c4624b87.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/64829-8e7826b795168ab0.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/64829-8e7826b795168ab0.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/25263-13c498c06c716ea6.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/25263-13c498c06c716ea6.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/not-found-705457977ed35854.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/not-found-705457977ed35854.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/29226-b7e21a76604ff8d1.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/29226-b7e21a76604ff8d1.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/43881-67920a24b626c850.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/43881-67920a24b626c850.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/main-app-76ddd9525ef90e67.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/main-app-76ddd9525ef90e67.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/50528.a008835b58c523ea.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/50528.a008835b58c523ea.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/(multitenant)/%5B%5B...slug%5D%5D/page-aef7aad57935de8a.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/page-aef7aad57935de8a.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/30479-702637e5f5a041a8.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/30479-702637e5f5a041a8.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/73205-e6c8fd4d6bd49d37.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/73205-e6c8fd4d6bd49d37.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/82431-a3e0a126611457bf.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/82431-a3e0a126611457bf.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/90018-dd5f3cdd4baa73a9.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/90018-dd5f3cdd4baa73a9.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/21246-a76922653256bc59.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/21246-a76922653256bc59.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/cfdfcc00-442051842d4b5e4f.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/cfdfcc00-442051842d4b5e4f.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/24245-4d65d750685fc454.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/24245-4d65d750685fc454.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/37681-5acc3fad905adf8e.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/37681-5acc3fad905adf8e.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/33562-dc9d1f363d2b3db5.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/33562-dc9d1f363d2b3db5.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/14224-b1e82a367c38bdc1.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/14224-b1e82a367c38bdc1.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/35473-7f89ae84aeb2a384.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/35473-7f89ae84aeb2a384.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/(multitenant)/layout-b2cfd2c00fd1efb4.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/layout-b2cfd2c00fd1efb4.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/28433.6e0f14ae3b092066.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/28433.6e0f14ae3b092066.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/52883.941e686112c382dd.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/52883.941e686112c382dd.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/69848.1b5ee8e8ff184036.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/69848.1b5ee8e8ff184036.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/98270.79c37bfe877beac9.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/98270.79c37bfe877beac9.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/5924.af6b06b26a098f2d.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/5924.af6b06b26a098f2d.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/93940.4ba8dfc310511af1.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/93940.4ba8dfc310511af1.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/40439.bc16d6e33e6df950.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/40439.bc16d6e33e6df950.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/17638.5a976eb14ecb333a.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/17638.5a976eb14ecb333a.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/42261.22a1c076025571a1.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/42261.22a1c076025571a1.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/6907ee1e.a05dea7661b06d5b.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/6907ee1e.a05dea7661b06d5b.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/78513.ed0c286c90d4ea70.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/78513.ed0c286c90d4ea70.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/6234.b57a9f09b64783f7.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/6234.b57a9f09b64783f7.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/2383.ff4e82514a9b28d8.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/2383.ff4e82514a9b28d8.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/59a51a4c.a29bd69fdcf3c532.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/59a51a4c.a29bd69fdcf3c532.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/47178.2648299d4d4f9d0d.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/47178.2648299d4d4f9d0d.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/b3ef812f.287b5ce983a6f934.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/b3ef812f.287b5ce983a6f934.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/90036.2211674646c1fd55.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/90036.2211674646c1fd55.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/10661.996ebf90e070ef2a.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/10661.996ebf90e070ef2a.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/51972.45006755f1975ddf.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/51972.45006755f1975ddf.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/58f38233.efd41f4fc15e4dbf.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/58f38233.efd41f4fc15e4dbf.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/40748.d6681cfbd0ab0917.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/40748.d6681cfbd0ab0917.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/35076.0f387d5da3e2caec.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/35076.0f387d5da3e2caec.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/55598.827ba45db3293eac.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/55598.827ba45db3293eac.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/08e9f8d4.8ce89e007e5c174d.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/08e9f8d4.8ce89e007e5c174d.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/46888.7bf9e9ee1dde9d48.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/46888.7bf9e9ee1dde9d48.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/336436a7.fd164ad9f6edbdcf.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/336436a7.fd164ad9f6edbdcf.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/78883.0938b4ae0ea5d2ac.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/78883.0938b4ae0ea5d2ac.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/24210.62409e91e9fea7ae.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/24210.62409e91e9fea7ae.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/88206.1dde85d08c3df7ae.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/88206.1dde85d08c3df7ae.js"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/chunks/cd24890f.debc97bac8bd1786.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/js/cd24890f.debc97bac8bd1786.js"
+    }
+  ],
+  "css": [
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/css/93bac6dd9c729729.css?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/css/93bac6dd9c729729.css"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/css/99ae30c69aabebdd.css?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/css/99ae30c69aabebdd.css"
+    },
+    {
+      "url": "https://d4tuoctqmanu0.cloudfront.net/katex.min.css",
+      "local": "assets/css/katex.min.css"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/css/9b12a58f3c74c55e.css?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+      "local": "assets/css/9b12a58f3c74c55e.css"
+    }
+  ],
+  "fonts": [
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/media/bb3ef058b751a6ad-s.p.woff2",
+      "local": "assets/fonts/bb3ef058b751a6ad-s.p.woff2"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/media/c4b700dcb2187787-s.p.woff2",
+      "local": "assets/fonts/c4b700dcb2187787-s.p.woff2"
+    },
+    {
+      "url": "https://www.mintlify.com/docs/_next/static/media/e4af272ccee01ff0-s.p.woff2",
+      "local": "assets/fonts/e4af272ccee01ff0-s.p.woff2"
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/googlesans/v67/4UasrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iqcsih3SAyH6cAwhX9RPjIUvQ.woff2",
+      "local": "assets/fonts/4UasrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iqcsih3SAyH6cAwhX9RPjIUvQ.woff2"
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcCo3FwrK3iLTcviYwY.woff2",
+      "local": "assets/fonts/UcCo3FwrK3iLTcviYwY.woff2"
+    }
+  ],
+  "images": [
+    {
+      "url": "https://mintcdn.com/mintlify/e0-N9JebsJpsinlD/logo/dark.svg?fit=max&auto=format&n=e0-N9JebsJpsinlD&q=85&s=b42419758ebac281070d7ed579c40075",
+      "local": "assets/images/dark.svg"
+    },
+    {
+      "url": "https://mintcdn.com/mintlify/e0-N9JebsJpsinlD/logo/light.svg?fit=max&auto=format&n=e0-N9JebsJpsinlD&q=85&s=b0900d78fd30c5583e438ce3f2591f94",
+      "local": "assets/images/light.svg"
+    },
+    {
+      "url": "https://mintcdn.com/mintlify/dr8jV1oYIkkUJaB8/images/hero/background-dark.svg?w=2500&fit=max&auto=format&n=dr8jV1oYIkkUJaB8&q=85&s=9ef814010f6b14d8d04ec446e10814c0",
+      "local": "assets/images/background-dark.svg"
+    },
+    {
+      "url": "https://mintcdn.com/mintlify/dr8jV1oYIkkUJaB8/images/hero/background-light.svg?w=2500&fit=max&auto=format&n=dr8jV1oYIkkUJaB8&q=85&s=ecee4a35813e4c224dcc5bc3ba96e3d0",
+      "local": "assets/images/background-light.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/flags/US.svg",
+      "local": "assets/images/US.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/rocket.svg",
+      "local": "assets/images/rocket.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/file-json.svg",
+      "local": "assets/images/file-json.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/boxes.svg",
+      "local": "assets/images/boxes.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/wrench.svg",
+      "local": "assets/images/wrench.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/pen-line.svg",
+      "local": "assets/images/pen-line.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/paint-bucket.svg",
+      "local": "assets/images/paint-bucket.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/v7.1.0/brands/x-twitter.svg",
+      "local": "assets/images/x-twitter.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/v7.1.0/brands/linkedin.svg",
+      "local": "assets/images/linkedin.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/v7.1.0/brands/github.svg",
+      "local": "assets/images/github.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/map.svg",
+      "local": "assets/images/map.svg"
+    },
+    {
+      "url": "https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/components.png",
+      "local": "assets/images/components.png"
+    },
+    {
+      "url": "https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/rocket.png",
+      "local": "assets/images/rocket.png"
+    },
+    {
+      "url": "https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/cli-dark.png",
+      "local": "assets/images/cli-dark.png"
+    },
+    {
+      "url": "https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/rocket-dark.png",
+      "local": "assets/images/rocket-dark.png"
+    },
+    {
+      "url": "https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/editor.png",
+      "local": "assets/images/editor.png"
+    },
+    {
+      "url": "https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/cli.png",
+      "local": "assets/images/cli.png"
+    },
+    {
+      "url": "https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/editor-dark.png",
+      "local": "assets/images/editor-dark.png"
+    },
+    {
+      "url": "https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/components-dark.png",
+      "local": "assets/images/components-dark.png"
+    }
+  ],
+  "animations": []
+}

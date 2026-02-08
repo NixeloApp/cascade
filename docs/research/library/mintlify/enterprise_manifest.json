@@ -1,0 +1,24 @@
+{
+  "js": [
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/508b91fc023ac1e8.js",
+      "local": "assets/js/508b91fc023ac1e8.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/e67a48af2a637af7.js",
+      "local": "assets/js/e67a48af2a637af7.js"
+    },
+    {
+      "url": "https://js.hsforms.net/forms/embed/v2.js",
+      "local": "assets/js/v2.js"
+    },
+    {
+      "url": "https://assets.revenuehero.io/scheduler.min.js",
+      "local": "assets/js/scheduler.min.js"
+    }
+  ],
+  "css": [],
+  "fonts": [],
+  "images": [],
+  "animations": []
+}

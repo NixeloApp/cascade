@@ -70,3 +70,7 @@ docs/research/library/*/network.json
 docs/research/library/*/deep_data.json
 # Keep: *_tech.json (summaries)
 *.webm
+
+# EXCEPTIONS (Track these)
+!docs/research/library/mintlify/
+!docs/research/library/mintlify/**

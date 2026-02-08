@@ -1,0 +1,96 @@
+{
+  "js": [],
+  "css": [],
+  "fonts": [],
+  "images": [
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/folder.svg",
+      "local": "assets/images/folder.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/code.svg",
+      "local": "assets/images/code.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/message-circle.svg",
+      "local": "assets/images/message-circle.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/eye.svg",
+      "local": "assets/images/eye.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/file-code.svg",
+      "local": "assets/images/file-code.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/git-branch.svg",
+      "local": "assets/images/git-branch.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/palette.svg",
+      "local": "assets/images/palette.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/smile.svg",
+      "local": "assets/images/smile.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/list-ordered.svg",
+      "local": "assets/images/list-ordered.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/columns-3.svg",
+      "local": "assets/images/columns-3.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/panel-right.svg",
+      "local": "assets/images/panel-right.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/flag.svg",
+      "local": "assets/images/flag.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/award.svg",
+      "local": "assets/images/award.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/frame.svg",
+      "local": "assets/images/frame.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/arrow-left-right.svg",
+      "local": "assets/images/arrow-left-right.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/square.svg",
+      "local": "assets/images/square.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/layout-grid.svg",
+      "local": "assets/images/layout-grid.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/chevron-down.svg",
+      "local": "assets/images/chevron-down.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/message-square-warning.svg",
+      "local": "assets/images/message-square-warning.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/chevrons-down.svg",
+      "local": "assets/images/chevrons-down.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/text-cursor-input.svg",
+      "local": "assets/images/text-cursor-input.svg"
+    },
+    {
+      "url": "https://d3gk2c5xim1je2.cloudfront.net/lucide/v0.545.0/bell.svg",
+      "local": "assets/images/bell.svg"
+    }
+  ],
+  "animations": []
+}

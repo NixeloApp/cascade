@@ -1,0 +1,590 @@
+[
+  {
+    "url": "https://www.mintlify.com/blog",
+    "status": 200,
+    "type": "document",
+    "size": 243811
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/1f80dd64fe990312.css",
+    "status": 200,
+    "type": "stylesheet",
+    "size": 1631
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/media/797e433ab948586e-s.p.dbea232f.woff2",
+    "status": 200,
+    "type": "font",
+    "size": 31288
+  },
+  {
+    "url": "https://js.hs-scripts.com/46331888.js",
+    "status": 200,
+    "type": "script",
+    "size": 1557
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/946f1ce0e5bb0824.js",
+    "status": 200,
+    "type": "script",
+    "size": 17890
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/0ba13a3f09f095ac.js",
+    "status": 200,
+    "type": "script",
+    "size": 84120
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/454c6af3126cdd58.js",
+    "status": 200,
+    "type": "script",
+    "size": 32452
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/media/InterVariable-s.p.494bb210.ttf",
+    "status": 200,
+    "type": "font",
+    "size": 879708
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/09f933b9632d5d93.js",
+    "status": 200,
+    "type": "script",
+    "size": 25114
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/2a3086e0cb77be9d.js",
+    "status": 200,
+    "type": "script",
+    "size": 30845
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/df749965d2748117.js",
+    "status": 200,
+    "type": "script",
+    "size": 187527
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/ff1a16fafef87110.js",
+    "status": 200,
+    "type": "script",
+    "size": 282
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/0df7abccd332a362.js",
+    "status": 200,
+    "type": "script",
+    "size": 259919
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/e7134a54e50d8160.js",
+    "status": 200,
+    "type": "script",
+    "size": 136206
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/940810caada8b86e.js",
+    "status": 200,
+    "type": "script",
+    "size": 36398
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/7656837aa582faa9.js",
+    "status": 200,
+    "type": "script",
+    "size": 340374
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/ab2e83ca801f25e0.css",
+    "status": 200,
+    "type": "stylesheet",
+    "size": 183658
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/b046604fe28bc373.js",
+    "status": 200,
+    "type": "script",
+    "size": 181602
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/152c201b125f89b9.js",
+    "status": 200,
+    "type": "script",
+    "size": 52074
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/bebba3b5a3e6eed6.js",
+    "status": 200,
+    "type": "script",
+    "size": 117768
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MJWB25XN",
+    "status": 200,
+    "type": "script",
+    "size": 400970
+  },
+  {
+    "url": "https://www.mintlify.com/_next/image?url=%2Fimages%2Fweb-editor-2.png&w=640&q=75",
+    "status": 200,
+    "type": "image",
+    "size": 16380
+  },
+  {
+    "url": "https://www.mintlify.com/_next/image?url=%2Fimages%2Ffeatured%2Fskills-discovery-from-any-url.png&w=640&q=75",
+    "status": 200,
+    "type": "image",
+    "size": 10630
+  },
+  {
+    "url": "https://www.mintlify.com/_next/image?url=%2Fimages%2Fcontext-for-agents.png&w=640&q=75",
+    "status": 200,
+    "type": "image",
+    "size": 12052
+  },
+  {
+    "url": "https://www.mintlify.com/_next/image?url=%2Fimages%2F2025-year-in-review.png&w=1920&q=75",
+    "status": 200,
+    "type": "image",
+    "size": 102952
+  },
+  {
+    "url": "https://www.mintlify.com/_next/image?url=%2Fimages%2Fagent-analytics-cover.png&w=640&q=75",
+    "status": 200,
+    "type": "image",
+    "size": 12052
+  },
+  {
+    "url": "https://www.mintlify.com/_next/image?url=%2Fimages%2Ffeatured%2Fwhy-do-we-need-mcp-if-skills-exist.png&w=640&q=75",
+    "status": 200,
+    "type": "image",
+    "size": 8006
+  },
+  {
+    "url": "https://www.mintlify.com/_next/image?url=%2Fimages%2Ffeatured%2Fskill-md-dark.png&w=640&q=75",
+    "status": 200,
+    "type": "image",
+    "size": 2122
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/54afae82ba38f00b.js",
+    "status": 200,
+    "type": "script",
+    "size": 64606
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/turbopack-e75fd67be2e3d023.js",
+    "status": 200,
+    "type": "script",
+    "size": 10299
+  },
+  {
+    "url": "https://scripts.attributionapp.com/v3/attribution.js",
+    "status": 200,
+    "type": "script",
+    "size": 109120
+  },
+  {
+    "url": "https://www.mintlify.com/blog/authors/peri.webp",
+    "status": 200,
+    "type": "image",
+    "size": 10844
+  },
+  {
+    "url": "https://www.mintlify.com/blog/authors/michael.webp",
+    "status": 200,
+    "type": "image",
+    "size": 15566
+  },
+  {
+    "url": "https://www.mintlify.com/blog/authors/han.webp",
+    "status": 200,
+    "type": "image",
+    "size": 9096
+  },
+  {
+    "url": "https://ph.mintlify.com/static/dead-clicks-autocapture.js?v=1.265.1",
+    "status": 200,
+    "type": "script",
+    "size": 13059
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/60c5248f51744f68.js",
+    "status": 200,
+    "type": "script",
+    "size": 1458
+  },
+  {
+    "url": "https://ph.mintlify.com/array/phc_eNuN6Ojnk9O7uWfC17z12AK85fNR0BY6IiGVy0Gfwzw/config.js",
+    "status": 200,
+    "type": "script",
+    "size": 4682
+  },
+  {
+    "url": "https://ph.mintlify.com/flags/?v=2&config=true&ip=0&_=1770185804924&ver=1.265.1&compression=base64",
+    "status": 200,
+    "type": "fetch",
+    "size": 6780
+  },
+  {
+    "url": "https://tag.unifyintent.com/v1/ShALG1c5rTJzkBaNJWFZWP/script.js",
+    "status": 200,
+    "type": "script",
+    "size": 30565
+  },
+  {
+    "url": "https://js.hs-analytics.net/analytics/1770185700000/46331888.js",
+    "status": 200,
+    "type": "script",
+    "size": 109518
+  },
+  {
+    "url": "https://js.hscollectedforms.net/collectedforms.js",
+    "status": 200,
+    "type": "script",
+    "size": 76924
+  },
+  {
+    "url": "https://js.hs-banner.com/v2/46331888/banner.js",
+    "status": 200,
+    "type": "script",
+    "size": 69979
+  },
+  {
+    "url": "https://cdn.vector.co/pixel.js",
+    "status": 200,
+    "type": "script",
+    "size": 76710
+  },
+  {
+    "url": "https://www.dubcdn.com/analytics/script.js",
+    "status": 200,
+    "type": "script",
+    "size": 3590
+  },
+  {
+    "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+    "status": 200,
+    "type": "script",
+    "size": 53612
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=AW-16757101070&cx=c&gtm=4e6221",
+    "status": 200,
+    "type": "script",
+    "size": 398784
+  },
+  {
+    "url": "https://www.googletagmanager.com/static/service_worker/61k0/sw_iframe.html?origin=https%3A%2F%2Fwww.mintlify.com",
+    "status": 200,
+    "type": "document",
+    "size": 3503
+  },
+  {
+    "url": "https://www.mintlify.com/blog/agent-analytics?_rsc=hoa4u",
+    "status": 200,
+    "type": "fetch",
+    "size": 194
+  },
+  {
+    "url": "https://www.mintlify.com/blog/improved-web-editor?_rsc=hoa4u",
+    "status": 200,
+    "type": "fetch",
+    "size": 202
+  },
+  {
+    "url": "https://www.mintlify.com/blog/2025-year-in-review?_rsc=hoa4u",
+    "status": 200,
+    "type": "fetch",
+    "size": 202
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=G-NZ6RFCB9LN&cx=c&gtm=4e6221",
+    "status": 200,
+    "type": "script",
+    "size": 517910
+  },
+  {
+    "url": "https://www.google.com/ccm/collect?frm=0&en=page_view&dl=https%3A%2F%2Fwww.mintlify.com%2Fblog&scrsrc=www.googletagmanager.com&rnd=1370818182.1770185805&dt=Blog%20-%20Mintlify&auid=1708023795.1770185805&navt=n&npa=0&ep.ads_data_redaction=0&gtm=45He6221v9200393344za200zd9200393344xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938466~115938469~116185181~116185182~116988315~117041587&apve=1&apvf=f&apvc=1&tft=1770185805084&tfd=717",
+    "status": 200,
+    "type": "fetch",
+    "size": 0
+  },
+  {
+    "url": "https://www.mintlify.com/?_rsc=hoa4u",
+    "status": 200,
+    "type": "fetch",
+    "size": 110
+  },
+  {
+    "url": "https://app.cal.com/embed/embed.js",
+    "status": 200,
+    "type": "script",
+    "size": 87476
+  },
+  {
+    "url": "https://js-na1.hs-scripts.com/46331888.js",
+    "status": 200,
+    "type": "script",
+    "size": 1557
+  },
+  {
+    "url": "https://www.mintlify.com/blog/skills-discovery-from-any-url?_rsc=hoa4u",
+    "status": 200,
+    "type": "fetch",
+    "size": 222
+  },
+  {
+    "url": "https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=6729188&time=1770185805224&li_adsId=b6eb4afd-16bf-4873-b99e-8d048455c5af&url=https%3A%2F%2Fwww.mintlify.com%2Fblog",
+    "status": 302,
+    "type": "image",
+    "size": 0
+  },
+  {
+    "url": "https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=6729188&time=1770185805224&li_adsId=b6eb4afd-16bf-4873-b99e-8d048455c5af&url=https%3A%2F%2Fwww.mintlify.com%2Fblog&cookiesTest=true",
+    "status": 302,
+    "type": "image",
+    "size": 0
+  },
+  {
+    "url": "https://track.hubspot.com/__ptq.gif?k=1&sd=1920x1080&cd=24-bit&cs=UTF-8&ln=en-us&v=1.1&a=46331888&rcu=https%3A%2F%2Fwww.mintlify.com%2Fblog&pu=https%3A%2F%2Fwww.mintlify.com%2Fblog&t=Blog+-+Mintlify&cts=1770185805191&vi=49b93558314d6e0d578d422fac2b00b1&nc=true&ce=false&cc=0",
+    "status": 200,
+    "type": "image",
+    "size": 45
+  },
+  {
+    "url": "https://ph.mintlify.com/static/posthog-recorder.js?v=1.265.1",
+    "status": 200,
+    "type": "script",
+    "size": 250451
+  },
+  {
+    "url": "https://ph.mintlify.com/static/surveys.js?v=1.265.1",
+    "status": 200,
+    "type": "script",
+    "size": 88854
+  },
+  {
+    "url": "https://ph.mintlify.com/static/web-vitals.js?v=1.265.1",
+    "status": 200,
+    "type": "script",
+    "size": 6599
+  },
+  {
+    "url": "https://static.ads-twitter.com/uwt.js",
+    "status": 200,
+    "type": "script",
+    "size": 55693
+  },
+  {
+    "url": "https://forms.hscollectedforms.net/collected-forms/v1/config/json?portalId=46331888&utk=49b93558314d6e0d578d422fac2b00b1",
+    "status": 200,
+    "type": "xhr",
+    "size": 135
+  },
+  {
+    "url": "https://www.mintlify.com/customers?_rsc=1n5ie",
+    "status": 200,
+    "type": "fetch",
+    "size": 56461
+  },
+  {
+    "url": "https://www.mintlify.com/blog/context-for-agents?_rsc=hoa4u",
+    "status": 200,
+    "type": "fetch",
+    "size": 200
+  },
+  {
+    "url": "https://px.ads.linkedin.com/attribution_trigger?pid=6729188&time=1770185805224&url=https%3A%2F%2Fwww.mintlify.com%2Fblog",
+    "status": 200,
+    "type": "xhr",
+    "size": 2
+  },
+  {
+    "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/16757101070/?random=1770185805245&cv=11&fst=1770185805245&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be6221v9200108681z89200393344za20gzb9200393344zd9200393344xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=102015666~103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315~117041588&u_w=1920&u_h=1080&url=https%3A%2F%2Fwww.mintlify.com%2Fblog&frm=0&tiba=Blog%20-%20Mintlify&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1708023795.1770185805&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+    "status": 200,
+    "type": "script",
+    "size": 4165
+  },
+  {
+    "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/16757101070/?random=1770185805290&cv=11&fst=1770185805290&bg=ffffff&guid=ON&async=1&gtm=45be6221v9200108681z89200393344za20gzb9200393344zd9200393344xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=102015666~103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315~117041588&u_w=1920&u_h=1080&url=https%3A%2F%2Fwww.mintlify.com%2Fblog&frm=0&tiba=Blog%20-%20Mintlify&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1708023795.1770185805&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&_tu=CA&rfmt=3&fmt=4",
+    "status": 200,
+    "type": "script",
+    "size": 4126
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/53a223d08da9322c.js",
+    "status": 200,
+    "type": "script",
+    "size": 30827
+  },
+  {
+    "url": "https://track.attributionapp.com/v1/p",
+    "status": 200,
+    "type": "fetch",
+    "size": 0
+  },
+  {
+    "url": "https://www.mintlify.com/startups?_rsc=1n5ie",
+    "status": 200,
+    "type": "fetch",
+    "size": 132216
+  },
+  {
+    "url": "https://www.google.com/ccm/collect?frm=0&en=page_view&dl=https%3A%2F%2Fwww.mintlify.com%2Fblog&scrsrc=www.googletagmanager.com&rnd=1370818182.1770185805&dt=Blog%20-%20Mintlify&auid=1708023795.1770185805&navt=n&npa=0&gtm=45be6221v9200108681z89200393344za20gzb9200393344zd9200393344xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=102015666~103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315~117041588&apve=1&apvf=f&apvc=0&tids=AW-16757101070&tid=AW-16757101070&tft=1770185805293&tfd=927",
+    "status": 200,
+    "type": "fetch",
+    "size": 0
+  },
+  {
+    "url": "https://www.google.com/ccm/collect?frm=0&dl=https%3A%2F%2Fwww.mintlify.com%2Fblog&scrsrc=www.googletagmanager.com&rnd=1370818182.1770185805&dt=Blog%20-%20Mintlify&auid=1708023795.1770185805&navt=n&npa=0&_tu=CA&gtm=45be6221v9200108681z89200393344za20gzb9200393344zd9200393344xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=102015666~103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315~117041588&apve=1&apvf=f&apvc=0&tids=AW-16757101070&tid=AW-16757101070&tft=1770185805293&tfd=927",
+    "status": 200,
+    "type": "fetch",
+    "size": 0
+  },
+  {
+    "url": "https://www.mintlify.com/pricing?_rsc=1n5ie",
+    "status": 200,
+    "type": "fetch",
+    "size": 233401
+  },
+  {
+    "url": "https://api.unifyintent.com/analytics/v1/page",
+    "status": 200,
+    "type": "fetch",
+    "size": 0
+  },
+  {
+    "url": "https://www.mintlify.com/contact/sales?_rsc=hoa4u",
+    "status": 200,
+    "type": "fetch",
+    "size": 105882
+  },
+  {
+    "url": "https://api.vector.co/pixel/ip-info",
+    "status": 200,
+    "type": "fetch",
+    "size": 381
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/de0ae00c83d36cbc.css",
+    "status": 200,
+    "type": "stylesheet",
+    "size": 454
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/af58be9e09fbbb75.css",
+    "status": 200,
+    "type": "stylesheet",
+    "size": 689
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/52df9d2196a9379b.css",
+    "status": 200,
+    "type": "stylesheet",
+    "size": 3750
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/b078440d20b452b2.js",
+    "status": 200,
+    "type": "script",
+    "size": 24503
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/4ad6826ba49259ee.js",
+    "status": 200,
+    "type": "script",
+    "size": 33221
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/095ad1ea9b60e7d2.js",
+    "status": 200,
+    "type": "script",
+    "size": 45352
+  },
+  {
+    "url": "https://www.mintlify.com/_next/static/chunks/626d03ae7c799ab2.js",
+    "status": 200,
+    "type": "script",
+    "size": 2492
+  },
+  {
+    "url": "https://ph.mintlify.com/api/surveys/?token=phc_eNuN6Ojnk9O7uWfC17z12AK85fNR0BY6IiGVy0Gfwzw&ip=0&_=1770185805473&ver=1.265.1",
+    "status": 200,
+    "type": "fetch",
+    "size": 3319
+  },
+  {
+    "url": "https://www.linkedin.com/px/li_sync?redirect=https%3A%2F%2Fpx.ads.linkedin.com%2Fcollect%3Fv%3D2%26fmt%3Djs%26pid%3D6729188%26time%3D1770185805224%26li_adsId%3Db6eb4afd-16bf-4873-b99e-8d048455c5af%26url%3Dhttps%253A%252F%252Fwww.mintlify.com%252Fblog%26cookiesTest%3Dtrue%26liSync%3Dtrue",
+    "status": 302,
+    "type": "image",
+    "size": 0
+  },
+  {
+    "url": "https://api.vector.co/pixel/d0bd9d51-ca58-4723-8346-34ccc3c47470/settings",
+    "status": 200,
+    "type": "fetch",
+    "size": 69
+  },
+  {
+    "url": "https://www.google.com/pagead/1p-user-list/16757101070/?random=1770185805245&cv=11&fst=1770184800000&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be6221v9200108681z89200393344za20gzb9200393344zd9200393344xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=102015666~103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315~117041588&u_w=1920&u_h=1080&url=https%3A%2F%2Fwww.mintlify.com%2Fblog&frm=0&tiba=Blog%20-%20Mintlify&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1708023795.1770185805&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=3&is_vtc=1&cid=CAQSfwDnonV5R7qMAlXIFIhdJVWjsd9VKgAVCnuhjKtQowalcUKbbmA2kDZYC3dbY8HDDWAROYoIOAzeL_YglESuh1B-roIWD0YrlnsWuDbVkh4NfjgYs2cd7i7RFL6eqLUNLsoVZQx_28qDeDD4MUcF_XKrw5LbPgv3wl9EY-8oF1o&random=2914018897&rmt_tld=0&ipr=y",
+    "status": 200,
+    "type": "image",
+    "size": 42
+  },
+  {
+    "url": "https://www.google.com/pagead/1p-user-list/16757101070/?random=1770185805290&cv=11&fst=1770184800000&bg=ffffff&guid=ON&async=1&gtm=45be6221v9200108681z89200393344za20gzb9200393344zd9200393344xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=102015666~103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315~117041588&u_w=1920&u_h=1080&url=https%3A%2F%2Fwww.mintlify.com%2Fblog&frm=0&tiba=Blog%20-%20Mintlify&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1708023795.1770185805&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&_tu=CA&rfmt=3&fmt=3&is_vtc=1&cid=CAQSfwDnonV5XTdIyNdhUnC_OEJKXwcEFLUuzM0tHQJ6h72_siFmkIeEEb1orOxu0nKJcnKksYr8JX5I66Q6_VfYYurH9l32Yze97XSpZkWLKYCz9MDr1bDta6_R6XZagcceh6hGlHD95P0N70p7KBXFIC8vKJyNzCigc73E7dYoKks&random=2164117986&rmt_tld=0&ipr=y",
+    "status": 200,
+    "type": "image",
+    "size": 42
+  },
+  {
+    "url": "https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=6729188&time=1770185805224&li_adsId=b6eb4afd-16bf-4873-b99e-8d048455c5af&url=https%3A%2F%2Fwww.mintlify.com%2Fblog&cookiesTest=true&liSync=true",
+    "status": 200,
+    "type": "image",
+    "size": 0
+  },
+  {
+    "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-NZ6RFCB9LN&gtm=45je6221v899931484z89200393344za20gzb9200393344zd9200393344&_p=1770185805008&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=1193446091.1770185806&ul=en-us&sr=1920x1080&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&are=1&frm=0&pscdl=noapi&_prs=gs&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115616986~115938466~115938468~116185181~116185182~116988316~117025849~117041588&sid=1770185805&sct=1&seg=0&dl=https%3A%2F%2Fwww.mintlify.com%2Fblog&dt=Blog%20-%20Mintlify&en=page_view&_fv=2&_nsi=1&_ss=1&tfd=1236",
+    "status": 204,
+    "type": "fetch",
+    "size": 0
+  },
+  {
+    "url": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=America%2FChicago%26en-US%26Google%20Inc.%26Win32%26255%261920%261080%2620%2624%261920%261080%260%26na&eci=3&event=%7B%7D&event_id=401e659f-5d7a-4dd8-9271-6df14541645b&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=8af728b3-3f6a-4d61-bb9b-28609ed43a4a&pt=Blog%20-%20Mintlify&tw_document_href=https%3A%2F%2Fwww.mintlify.com%2Fblog&tw_iframe_status=0&txn_id=opv42&type=javascript&version=2.3.35",
+    "status": 200,
+    "type": "image",
+    "size": 43
+  },
+  {
+    "url": "https://px.ads.linkedin.com/wa/?medium=fetch&fmt=g",
+    "status": 204,
+    "type": "fetch",
+    "size": 0
+  },
+  {
+    "url": "https://t.co/1/i/adsct?bci=4&dv=America%2FChicago%26en-US%26Google%20Inc.%26Win32%26255%261920%261080%2620%2624%261920%261080%260%26na&eci=3&event=%7B%7D&event_id=401e659f-5d7a-4dd8-9271-6df14541645b&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=8af728b3-3f6a-4d61-bb9b-28609ed43a4a&pt=Blog%20-%20Mintlify&tw_document_href=https%3A%2F%2Fwww.mintlify.com%2Fblog&tw_iframe_status=0&txn_id=opv42&type=javascript&version=2.3.35",
+    "status": 200,
+    "type": "image",
+    "size": 43
+  },
+  {
+    "url": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=America%2FChicago%26en-US%26Google%20Inc.%26Win32%26255%261920%261080%2620%2624%261920%261080%260%26na&eci=4&email_address=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&event=%7B%22value%22%3Anull%2C%22currency%22%3Anull%2C%22contents%22%3A%5B%7B%22content_type%22%3Anull%2C%22content_id%22%3Anull%2C%22content_name%22%3Anull%2C%22content_price%22%3Anull%2C%22num_items%22%3Anull%2C%22content_group_id%22%3Anull%7D%2C%7B%22content_type%22%3Anull%2C%22content_id%22%3Anull%2C%22content_name%22%3Anull%2C%22content_price%22%3Anull%2C%22num_items%22%3Anull%2C%22content_group_id%22%3Anull%7D%5D%2C%22conversion_id%22%3Anull%7D&event_id=95808ee3-ae6a-4158-85f8-eb847430aa44&integration=advertiser&p_id=Twitter&p_user_id=0&phone_number=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&pl_id=8af728b3-3f6a-4d61-bb9b-28609ed43a4a&pt=Blog%20-%20Mintlify&tw_document_href=https%3A%2F%2Fwww.mintlify.com%2Fblog&tw_iframe_status=0&txn_id=tw-opv42-r2hx7&type=javascript&version=2.3.35",
+    "status": 200,
+    "type": "image",
+    "size": 43
+  },
+  {
+    "url": "https://t.co/1/i/adsct?bci=4&dv=America%2FChicago%26en-US%26Google%20Inc.%26Win32%26255%261920%261080%2620%2624%261920%261080%260%26na&eci=4&email_address=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&event=%7B%22value%22%3Anull%2C%22currency%22%3Anull%2C%22contents%22%3A%5B%7B%22content_type%22%3Anull%2C%22content_id%22%3Anull%2C%22content_name%22%3Anull%2C%22content_price%22%3Anull%2C%22num_items%22%3Anull%2C%22content_group_id%22%3Anull%7D%2C%7B%22content_type%22%3Anull%2C%22content_id%22%3Anull%2C%22content_name%22%3Anull%2C%22content_price%22%3Anull%2C%22num_items%22%3Anull%2C%22content_group_id%22%3Anull%7D%5D%2C%22conversion_id%22%3Anull%7D&event_id=95808ee3-ae6a-4158-85f8-eb847430aa44&integration=advertiser&p_id=Twitter&p_user_id=0&phone_number=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&pl_id=8af728b3-3f6a-4d61-bb9b-28609ed43a4a&pt=Blog%20-%20Mintlify&tw_document_href=https%3A%2F%2Fwww.mintlify.com%2Fblog&tw_iframe_status=0&txn_id=tw-opv42-r2hx7&type=javascript&version=2.3.35",
+    "status": 200,
+    "type": "image",
+    "size": 43
+  },
+  {
+    "url": "https://www.mintlify.com/feed.xml?_rsc=hoa4u",
+    "status": 200,
+    "type": "fetch",
+    "size": 63662
+  }
+]

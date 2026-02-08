@@ -1,0 +1,12 @@
+{
+  "js": [],
+  "css": [],
+  "fonts": [],
+  "images": [
+    {
+      "url": "https://www.mintlify.com/enterprise/coinbase.svg",
+      "local": "assets/images/coinbase.svg"
+    }
+  ],
+  "animations": []
+}

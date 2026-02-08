@@ -1,0 +1,240 @@
+{
+  "js": [
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/ff1a16fafef87110.js",
+      "local": "assets/js/ff1a16fafef87110.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/946f1ce0e5bb0824.js",
+      "local": "assets/js/946f1ce0e5bb0824.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/54afae82ba38f00b.js",
+      "local": "assets/js/54afae82ba38f00b.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/2a3086e0cb77be9d.js",
+      "local": "assets/js/2a3086e0cb77be9d.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/turbopack-e75fd67be2e3d023.js",
+      "local": "assets/js/turbopack-e75fd67be2e3d023.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/df749965d2748117.js",
+      "local": "assets/js/df749965d2748117.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/7656837aa582faa9.js",
+      "local": "assets/js/7656837aa582faa9.js"
+    },
+    {
+      "url": "https://js.hs-scripts.com/46331888.js",
+      "local": "assets/js/46331888.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/48b251fac464e7c8.js",
+      "local": "assets/js/48b251fac464e7c8.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/26717ddebf3fbaac.js",
+      "local": "assets/js/26717ddebf3fbaac.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/bebba3b5a3e6eed6.js",
+      "local": "assets/js/bebba3b5a3e6eed6.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/454c6af3126cdd58.js",
+      "local": "assets/js/454c6af3126cdd58.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/09f933b9632d5d93.js",
+      "local": "assets/js/09f933b9632d5d93.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/b046604fe28bc373.js",
+      "local": "assets/js/b046604fe28bc373.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/e7134a54e50d8160.js",
+      "local": "assets/js/e7134a54e50d8160.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/0ba13a3f09f095ac.js",
+      "local": "assets/js/0ba13a3f09f095ac.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/152c201b125f89b9.js",
+      "local": "assets/js/152c201b125f89b9.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/0df7abccd332a362.js",
+      "local": "assets/js/0df7abccd332a362.js"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MJWB25XN",
+      "local": "assets/js/gtm.js"
+    },
+    {
+      "url": "https://scripts.attributionapp.com/v3/attribution.js",
+      "local": "assets/js/attribution.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/60c5248f51744f68.js",
+      "local": "assets/js/60c5248f51744f68.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/9e2f23fde434a2d1.js",
+      "local": "assets/js/9e2f23fde434a2d1.js"
+    },
+    {
+      "url": "https://ph.mintlify.com/static/dead-clicks-autocapture.js?v=1.265.1",
+      "local": "assets/js/dead-clicks-autocapture.js"
+    },
+    {
+      "url": "https://ph.mintlify.com/array/phc_eNuN6Ojnk9O7uWfC17z12AK85fNR0BY6IiGVy0Gfwzw/config.js",
+      "local": "assets/js/config.js"
+    },
+    {
+      "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "local": "assets/js/insight.min.js"
+    },
+    {
+      "url": "https://js.hscollectedforms.net/collectedforms.js",
+      "local": "assets/js/collectedforms.js"
+    },
+    {
+      "url": "https://js.hs-banner.com/v2/46331888/banner.js",
+      "local": "assets/js/banner.js"
+    },
+    {
+      "url": "https://cdn.vector.co/pixel.js",
+      "local": "assets/js/pixel.js"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=AW-16757101070&cx=c&gtm=4e6221",
+      "local": "assets/js/js"
+    },
+    {
+      "url": "https://www.dubcdn.com/analytics/script.js",
+      "local": "assets/js/script.js"
+    },
+    {
+      "url": "https://app.cal.com/embed/embed.js",
+      "local": "assets/js/embed.js"
+    },
+    {
+      "url": "https://static.ads-twitter.com/uwt.js",
+      "local": "assets/js/uwt.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/b078440d20b452b2.js",
+      "local": "assets/js/b078440d20b452b2.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/940810caada8b86e.js",
+      "local": "assets/js/940810caada8b86e.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/626d03ae7c799ab2.js",
+      "local": "assets/js/626d03ae7c799ab2.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/53a223d08da9322c.js",
+      "local": "assets/js/53a223d08da9322c.js"
+    },
+    {
+      "url": "https://ph.mintlify.com/static/web-vitals.js?v=1.265.1",
+      "local": "assets/js/web-vitals.js"
+    },
+    {
+      "url": "https://ph.mintlify.com/static/posthog-recorder.js?v=1.265.1",
+      "local": "assets/js/posthog-recorder.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/4ad6826ba49259ee.js",
+      "local": "assets/js/4ad6826ba49259ee.js"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/095ad1ea9b60e7d2.js",
+      "local": "assets/js/095ad1ea9b60e7d2.js"
+    },
+    {
+      "url": "https://ph.mintlify.com/static/surveys.js?v=1.265.1",
+      "local": "assets/js/surveys.js"
+    },
+    {
+      "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/16757101070/?random=1770185452125&cv=11&fst=1770185452125&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be6221v9200108681z89200393344za20gzb9200393344zd9200393344xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938469~116185181~116185182~116988315~117041588&u_w=1920&u_h=1080&url=https%3A%2F%2Fwww.mintlify.com%2F&frm=0&tiba=Mintlify%20-%20The%20Intelligent%20Documentation%20Platform&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1047143537.1770185452&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+      "local": "assets/js/16757101070"
+    }
+  ],
+  "css": [
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/ab2e83ca801f25e0.css",
+      "local": "assets/css/ab2e83ca801f25e0.css"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/1f80dd64fe990312.css",
+      "local": "assets/css/1f80dd64fe990312.css"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/658cef65a54441da.css",
+      "local": "assets/css/658cef65a54441da.css"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/52df9d2196a9379b.css",
+      "local": "assets/css/52df9d2196a9379b.css"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/de0ae00c83d36cbc.css",
+      "local": "assets/css/de0ae00c83d36cbc.css"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/chunks/af58be9e09fbbb75.css",
+      "local": "assets/css/af58be9e09fbbb75.css"
+    }
+  ],
+  "fonts": [
+    {
+      "url": "https://www.mintlify.com/_next/static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "local": "assets/fonts/797e433ab948586e-s.p.dbea232f.woff2"
+    },
+    {
+      "url": "https://www.mintlify.com/_next/static/media/InterVariable-s.p.494bb210.ttf",
+      "local": "assets/fonts/InterVariable-s.p.494bb210.ttf"
+    }
+  ],
+  "images": [
+    {
+      "url": "https://www.mintlify.com/hero/hero-image-light.svg",
+      "local": "assets/images/hero-image-light.svg"
+    },
+    {
+      "url": "https://www.mintlify.com/hero/hero-image-dark.svg",
+      "local": "assets/images/hero-image-dark.svg"
+    },
+    {
+      "url": "https://www.mintlify.com/hero/bg-light.svg",
+      "local": "assets/images/bg-light.svg"
+    },
+    {
+      "url": "https://www.mintlify.com/enterprise/anthropic.svg",
+      "local": "assets/images/anthropic.svg"
+    },
+    {
+      "url": "https://forms.hsforms.com/embed/v3/counters.gif?key=collected-forms-embed-js-form-bind&count=1",
+      "local": "assets/images/counters.gif"
+    },
+    {
+      "url": "https://track.hubspot.com/__ptq.gif?k=1&sd=1920x1080&cd=24-bit&cs=UTF-8&ln=en-us&v=1.1&a=46331888&rcu=https%3A%2F%2Fwww.mintlify.com%2F&pu=https%3A%2F%2Fwww.mintlify.com%2F&t=Mintlify+-+The+Intelligent+Documentation+Platform&cts=1770185452264&vi=4a5920a44d5388d5d5b4f21eb5909aa5&nc=true&u=214098760.4a5920a44d5388d5d5b4f21eb5909aa5.1770185452260.1770185452260.1770185452260.1&b=214098760.1.1770185452260&cc=15",
+      "local": "assets/images/__ptq.gif"
+    }
+  ],
+  "animations": [
+    {
+      "url": "https://www.mintlify.com/features/light-assistant-lottie.json",
+      "local": "assets/animations/light-assistant-lottie.json"
+    }
+  ]
+}

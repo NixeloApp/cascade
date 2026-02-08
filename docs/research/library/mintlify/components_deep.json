@@ -1,0 +1,1883 @@
+{
+  "cssVars": {
+    "--tw-content": "\"\"",
+    "--tw-border-spacing-x": "0",
+    "--tw-border-spacing-y": "0",
+    "--tw-translate-x": "-50%",
+    "--tw-translate-y": "-50%",
+    "--tw-rotate": "0",
+    "--tw-skew-x": "0",
+    "--tw-skew-y": "0",
+    "--tw-scale-x": "1",
+    "--tw-scale-y": "1",
+    "--tw-pan-x": "",
+    "--tw-pan-y": "",
+    "--tw-pinch-zoom": "",
+    "--tw-scroll-snap-strictness": "proximity",
+    "--tw-gradient-from-position": "",
+    "--tw-gradient-via-position": "",
+    "--tw-gradient-to-position": "",
+    "--tw-ordinal": "",
+    "--tw-slashed-zero": "",
+    "--tw-numeric-figure": "",
+    "--tw-numeric-spacing": "",
+    "--tw-numeric-fraction": "",
+    "--tw-ring-inset": "",
+    "--tw-ring-offset-width": "2px",
+    "--tw-ring-offset-color": "hsl(var(--background))",
+    "--tw-ring-color": "hsl(var(--ring))",
+    "--tw-ring-offset-shadow": "var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)",
+    "--tw-ring-shadow": "var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color)",
+    "--tw-shadow": "0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1)",
+    "--tw-shadow-colored": "0 4px 6px -1px var(--tw-shadow-color),0 2px 4px -2px var(--tw-shadow-color)",
+    "--tw-blur": "",
+    "--tw-brightness": "",
+    "--tw-contrast": "",
+    "--tw-grayscale": "",
+    "--tw-hue-rotate": "",
+    "--tw-invert": "",
+    "--tw-saturate": "",
+    "--tw-sepia": "",
+    "--tw-drop-shadow": "",
+    "--tw-backdrop-blur": "",
+    "--tw-backdrop-brightness": "",
+    "--tw-backdrop-contrast": "",
+    "--tw-backdrop-grayscale": "",
+    "--tw-backdrop-hue-rotate": "",
+    "--tw-backdrop-invert": "",
+    "--tw-backdrop-opacity": "",
+    "--tw-backdrop-saturate": "",
+    "--tw-backdrop-sepia": "",
+    "--tw-contain-size": "",
+    "--tw-contain-layout": "",
+    "--tw-contain-paint": "",
+    "--tw-contain-style": "",
+    "--spacing-16-14": "1.142857142857143em",
+    "--spacing-8-14": "0.571428571428571em",
+    "--scroll-mt": "9.5rem",
+    "--twoslash-border-color": "#222526",
+    "--twoslash-underline-color": "currentColor",
+    "--twoslash-popup-bg": "#151819",
+    "--twoslash-popup-color": "inherit",
+    "--twoslash-popup-shadow": "rgba(0,0,0,0.08) 0px 1px 4px",
+    "--twoslash-code-font": "inherit",
+    "--twoslash-code-font-size": "1em",
+    "--twoslash-matched-color": "inherit",
+    "--twoslash-highlighted-border": "#ffa50080",
+    "--twoslash-highlighted-bg": "#ffa50030",
+    "--twoslash-unmatched-color": "#aaa",
+    "--twoslash-cursor-color": "#bbbb",
+    "--twoslash-error-color": "#ff6b6b",
+    "--twoslash-error-bg": "#ff6b6b30",
+    "--twoslash-warn-color": "#ffa500",
+    "--twoslash-warn-bg": "#ffa50030",
+    "--twoslash-tag-color": "#6bb6ff",
+    "--twoslash-tag-bg": "#6bb6ff30",
+    "--twoslash-tag-warn-color": "var(--twoslash-warn-color)",
+    "--twoslash-tag-warn-bg": "var(--twoslash-warn-bg)",
+    "--twoslash-tag-annotate-color": "#4ade80",
+    "--twoslash-tag-annotate-bg": "#4ade8030",
+    "--twoslash-text-size": "0.8rem",
+    "--twoslash-docs-tag-style": "italic",
+    "--fade-width": "163px",
+    "--code-padding-right": "0px",
+    "--tw-prose-body": "var(--tw-prose-invert-body)",
+    "--tw-prose-headings": "var(--tw-prose-invert-headings)",
+    "--tw-prose-lead": "var(--tw-prose-invert-lead)",
+    "--tw-prose-links": "var(--tw-prose-invert-links)",
+    "--tw-prose-bold": "var(--tw-prose-invert-bold)",
+    "--tw-prose-counters": "var(--tw-prose-invert-counters)",
+    "--tw-prose-bullets": "var(--tw-prose-invert-bullets)",
+    "--tw-prose-hr": "var(--tw-prose-invert-hr)",
+    "--tw-prose-quotes": "var(--tw-prose-invert-quotes)",
+    "--tw-prose-quote-borders": "var(--tw-prose-invert-quote-borders)",
+    "--tw-prose-captions": "var(--tw-prose-invert-captions)",
+    "--tw-prose-kbd": "var(--tw-prose-invert-kbd)",
+    "--tw-prose-kbd-shadows": "var(--tw-prose-invert-kbd-shadows)",
+    "--tw-prose-code": "var(--tw-prose-invert-code)",
+    "--tw-prose-pre-code": "var(--tw-prose-invert-pre-code)",
+    "--tw-prose-pre-bg": "var(--tw-prose-invert-pre-bg)",
+    "--tw-prose-th-borders": "var(--tw-prose-invert-th-borders)",
+    "--tw-prose-td-borders": "var(--tw-prose-invert-td-borders)",
+    "--tw-prose-invert-body": "#d1d5db",
+    "--tw-prose-invert-headings": "#fff",
+    "--tw-prose-invert-lead": "#9ca3af",
+    "--tw-prose-invert-links": "#fff",
+    "--tw-prose-invert-bold": "#fff",
+    "--tw-prose-invert-counters": "#9ca3af",
+    "--tw-prose-invert-bullets": "#4b5563",
+    "--tw-prose-invert-hr": "#374151",
+    "--tw-prose-invert-quotes": "#f3f4f6",
+    "--tw-prose-invert-quote-borders": "#374151",
+    "--tw-prose-invert-captions": "#9ca3af",
+    "--tw-prose-invert-kbd": "#fff",
+    "--tw-prose-invert-kbd-shadows": "255 255 255",
+    "--tw-prose-invert-code": "#fff",
+    "--tw-prose-invert-pre-code": "#d1d5db",
+    "--tw-prose-invert-pre-bg": "rgb(0 0 0/50%)",
+    "--tw-prose-invert-th-borders": "#4b5563",
+    "--tw-prose-invert-td-borders": "#374151",
+    "--tw-space-x-reverse": "0",
+    "--tw-space-y-reverse": "0",
+    "--tw-divide-x-reverse": "0",
+    "--tw-divide-y-reverse": "0",
+    "--tw-border-opacity": "1",
+    "--tw-bg-opacity": "1",
+    "--tw-gradient-from": "#d946ef var(--tw-gradient-from-position)",
+    "--tw-gradient-to": "#06b6d4 var(--tw-gradient-to-position)",
+    "--tw-gradient-stops": "var(--tw-gradient-from),var(--tw-gradient-to)",
+    "--tw-text-opacity": "1",
+    "--tw-shadow-color": "rgb(var(--gray-500)/0.05)",
+    "--tw-ring-opacity": "1",
+    "--scrollbar-track": "transparent",
+    "--scrollbar-thumb": "rgb(255 255 255/0.2)",
+    "--scrollbar-thumb-radius": "var(--rounded,0.25rem)",
+    "--color-bg-disabled": "rgba(255,255,255,0.24)",
+    "--color-bg": "rgba(255,255,255,0.95)",
+    "--color-text-disabled": "rgba(51,104,240,0.30)",
+    "--color-text": "rgba(11,12,14,0.60)",
+    "--page-padding": "0px",
+    "--tw-enter-opacity": "0",
+    "--tw-enter-scale": ".95",
+    "--tw-enter-rotate": "initial",
+    "--tw-enter-translate-x": "-50%",
+    "--tw-enter-translate-y": "-48%",
+    "--tw-exit-opacity": "0",
+    "--tw-exit-scale": ".95",
+    "--tw-exit-rotate": "initial",
+    "--tw-exit-translate-x": "-50%",
+    "--tw-exit-translate-y": "-48%",
+    "--scrollbar-thumb-hover": "rgb(255 255 255/0.25)",
+    "--scrollbar-thumb-active": "rgb(255 255 255/0.25)",
+    "--json-property": "#3a9685",
+    "--json-index": "#ae408b",
+    "--json-number": "#ae408b",
+    "--json-string": "#8123a9",
+    "--json-boolean": "#0184bc",
+    "--json-null": "#0184bc",
+    "--background": "0 0% 100%",
+    "--foreground": "222.2 47.4% 11.2%",
+    "--muted": "210 40% 96.1%",
+    "--muted-foreground": "215.4 16.3% 46.9%",
+    "--popover": "0 0% 100%",
+    "--popover-foreground": "222.2 47.4% 11.2%",
+    "--border": "214.3 31.8% 91.4%",
+    "--input": "214.3 31.8% 91.4%",
+    "--card": "0 0% 100%",
+    "--card-foreground": "222.2 47.4% 11.2%",
+    "--primary": "22 110 63",
+    "--primary-foreground": "210 40% 98%",
+    "--secondary": "210 40% 96.1%",
+    "--secondary-foreground": "222.2 47.4% 11.2%",
+    "--accent": "210 40% 96.1%",
+    "--accent-foreground": "222.2 47.4% 11.2%",
+    "--destructive": "0 100% 50%",
+    "--destructive-foreground": "210 40% 98%",
+    "--ring": "215 20.2% 65.1%",
+    "--radius": "0.5rem",
+    "--font-inter": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+    "--font-jetbrains-mono": "\"JetBrains Mono\",\"JetBrains Mono Fallback\",SF Mono,SFMono-Regular,Menlo,Monaco,Cascadia Mono,Segoe UI Mono,Roboto Mono,Oxygen Mono,Ubuntu Monospace,Source Code Pro,Fira Mono,Droid Sans Mono,Consolas,Courier New,monospace",
+    "--font-family-headings-custom": "\"Google Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+    "--font-family-body-custom": "\"Google Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+    "--primary-light": "38 189 108",
+    "--primary-dark": "22 110 63",
+    "--tooltip-foreground": "255 255 255",
+    "--background-light": "255 255 255",
+    "--background-dark": "10 13 13",
+    "--gray-50": "243 246 244",
+    "--gray-100": "238 241 239",
+    "--gray-200": "223 225 224",
+    "--gray-300": "206 209 207",
+    "--gray-400": "159 161 160",
+    "--gray-500": "112 115 113",
+    "--gray-600": "80 83 81",
+    "--gray-700": "63 65 64",
+    "--gray-800": "38 40 39",
+    "--gray-900": "23 26 24",
+    "--gray-950": "10 13 12",
+    "--font-geist-mono": "'Geist Mono', 'Menlo', 'Monaco', 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace"
+  },
+  "keyframes": [
+    {
+      "name": "slide-up",
+      "cssText": "@keyframes slide-up { \n  0% { transform: translateY(100%); }\n  100% { transform: translateY(0px); }\n}"
+    },
+    {
+      "name": "fadeIn",
+      "cssText": "@keyframes fadeIn { \n  0% { opacity: 0; }\n  100% { opacity: 1; }\n}"
+    },
+    {
+      "name": "pulse",
+      "cssText": "@keyframes pulse { \n  50% { opacity: 0.5; }\n}"
+    },
+    {
+      "name": "shimmer",
+      "cssText": "@keyframes shimmer { \n  0% { background-position: 200% 0px; }\n  100% { background-position: -200% 0px; }\n}"
+    },
+    {
+      "name": "spin",
+      "cssText": "@keyframes spin { \n  100% { transform: rotate(1turn); }\n}"
+    },
+    {
+      "name": "enter",
+      "cssText": "@keyframes enter { \n  0% { opacity: var(--tw-enter-opacity,1); transform: translate3d(var(--tw-enter-translate-x,0),var(--tw-enter-translate-y,0),0) scale3d(var(--tw-enter-scale,1),var(--tw-enter-scale,1),var(--tw-enter-scale,1)) rotate(var(--tw-enter-rotate,0)); }\n}"
+    },
+    {
+      "name": "exit",
+      "cssText": "@keyframes exit { \n  100% { opacity: var(--tw-exit-opacity,1); transform: translate3d(var(--tw-exit-translate-x,0),var(--tw-exit-translate-y,0),0) scale3d(var(--tw-exit-scale,1),var(--tw-exit-scale,1),var(--tw-exit-scale,1)) rotate(var(--tw-exit-rotate,0)); }\n}"
+    },
+    {
+      "name": "nct-spin",
+      "cssText": "@keyframes nct-spin { \n  100% { transform: rotate(1turn); }\n}"
+    },
+    {
+      "name": "enter",
+      "cssText": "@keyframes enter { \n  0% { opacity: var(--tw-enter-opacity,1); transform: translate3d(var(--tw-enter-translate-x,0),var(--tw-enter-translate-y,0),0) scale3d(var(--tw-enter-scale,1),var(--tw-enter-scale,1),var(--tw-enter-scale,1)) rotate(var(--tw-enter-rotate,0)); }\n}"
+    },
+    {
+      "name": "exit",
+      "cssText": "@keyframes exit { \n  100% { opacity: var(--tw-exit-opacity,1); transform: translate3d(var(--tw-exit-translate-x,0),var(--tw-exit-translate-y,0),0) scale3d(var(--tw-exit-scale,1),var(--tw-exit-scale,1),var(--tw-exit-scale,1)) rotate(var(--tw-exit-rotate,0)); }\n}"
+    }
+  ],
+  "fonts": [
+    {
+      "family": "Latin Modern",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Latin Modern",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Latin Modern",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Latin Modern",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "CMU Typewriter Text",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter Fallback",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "normal"
+    },
+    {
+      "family": "JetBrains Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 800"
+    },
+    {
+      "family": "JetBrains Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 800"
+    },
+    {
+      "family": "JetBrains Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 800"
+    },
+    {
+      "family": "JetBrains Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 800"
+    },
+    {
+      "family": "JetBrains Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 800"
+    },
+    {
+      "family": "JetBrains Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 800"
+    },
+    {
+      "family": "JetBrains Mono Fallback",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "normal"
+    },
+    {
+      "family": "KaTeX_AMS",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Caligraphic",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "KaTeX_Caligraphic",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Fraktur",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "KaTeX_Fraktur",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Main",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "KaTeX_Main",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "KaTeX_Main",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Main",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Math",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "KaTeX_Math",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_SansSerif",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "KaTeX_SansSerif",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_SansSerif",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Script",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Size1",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Size2",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Size3",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Size4",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "KaTeX_Typewriter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "400"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "loaded",
+      "style": "normal",
+      "weight": "500"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "loaded",
+      "style": "normal",
+      "weight": "600"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Google Sans",
+      "status": "loaded",
+      "style": "normal",
+      "weight": "700"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Inter",
+      "status": "loaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Geist Mono",
+      "status": "unloaded",
+      "style": "normal",
+      "weight": "100 900"
+    }
+  ],
+  "scripts": [
+    "https://ddwl4m2hdecbv.cloudfront.net/b/0OV0VHYEM96Z/0OV0VHYEM96Z.js.gz",
+    "https://www.mintlify.com/docs/_next/static/chunks/87c73c54-dd8d81ac9604067c.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/90018-dd5f3cdd4baa73a9.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/main-app-76ddd9525ef90e67.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/891cff7f-dcf0b8e94fd9e2cd.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/82431-a3e0a126611457bf.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/43881-67920a24b626c850.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/98816-4875194b6205382d.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/37681-5acc3fad905adf8e.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/19664-8ce43df6b74bea12.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/56179-90bc6d525ac75790.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/30479-702637e5f5a041a8.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/app/error-ae8951292761c46b.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/cfdfcc00-442051842d4b5e4f.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/d30757c7-2d2105da33b688d0.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/21246-a76922653256bc59.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/24245-4d65d750685fc454.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/35473-7f89ae84aeb2a384.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/70523-43da3b59f75962b1.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/68789-7a4ceb9f7da63351.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/95999-d603efdae86309d2.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/73205-e6c8fd4d6bd49d37.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/14224-b1e82a367c38bdc1.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/83667-0a701734e1827e02.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/86707-95b0afc35b822349.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/29226-b7e21a76604ff8d1.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/(multitenant)/layout-b2cfd2c00fd1efb4.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/not-found-705457977ed35854.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/error-0ca8dda1c4624b87.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/25263-13c498c06c716ea6.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/64829-8e7826b795168ab0.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/(multitenant)/%40topbar/%5B%5B...slug%5D%5D/page-7bbeff5e057f9031.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/33562-dc9d1f363d2b3db5.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/app/%255Fsites/%5Bsubdomain%5D/(multitenant)/%5B%5B...slug%5D%5D/page-aef7aad57935de8a.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://www.mintlify.com/docs/_next/static/chunks/polyfills-42372ed130431b0a.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://ph.mintlify.com/static/web-vitals.js?v=1.302.2",
+    "https://ph.mintlify.com/static/surveys.js?v=1.302.2",
+    "https://ph.mintlify.com/static/dead-clicks-autocapture.js?v=1.302.2",
+    "https://ph.mintlify.com/array/phc_l0gu1V19gegCphI9sE7GgmONC5MFx3KmppIFVeqxWrR/config.js",
+    "https://www.mintlify.com/docs/_next/static/chunks/webpack-04dcc36c2dbfdf5d.js?dpl=dpl_Fahyq3HPKpinWYoQ93UXVD5uJ2C7",
+    "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+    "https://www.googletagmanager.com/gtag/js?id=G-RCYWHL7EQ7"
+  ],
+  "fingerprint": {
+    "frameworks": [
+      "Next.js"
+    ],
+    "libraries": [],
+    "ui": [
+      "Tailwind CSS"
+    ],
+    "analytics": []
+  },
+  "scrapedAt": "2026-02-04T06:14:40.696Z"
+}
