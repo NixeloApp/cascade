@@ -63,6 +63,7 @@ export {
   GraduationCap,
   Grid3X3,
   Hash,
+  CircleHelp as HelpCircle,
   History,
   Home,
   Inbox,
