@@ -9,8 +9,8 @@ import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
-import { Grid } from "./ui/Grid";
 import { Input } from "./ui/form";
+import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 
 interface AdvancedSearchModalProps {

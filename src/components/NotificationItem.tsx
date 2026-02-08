@@ -106,7 +106,11 @@ export const NotificationItem = memo(function NotificationItem({
         </Link>
       );
     }
-    return <FlexItem flex="1" className="min-w-0 text-left">{children}</FlexItem>;
+    return (
+      <FlexItem flex="1" className="min-w-0 text-left">
+        {children}
+      </FlexItem>
+    );
   };
 
   return (
@@ -117,7 +121,9 @@ export const NotificationItem = memo(function NotificationItem({
       )}
     >
       {/* Icon */}
-      <FlexItem shrink={false} className="mt-0.5">{getNotificationIcon(notification.type)}</FlexItem>
+      <FlexItem shrink={false} className="mt-0.5">
+        {getNotificationIcon(notification.type)}
+      </FlexItem>
 
       {/* Main Content (Clickable if linked) */}
       <ContentWrapper>

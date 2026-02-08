@@ -9,8 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-and-typecheck:
-    name: Lint & Type Check
+  biome-and-typecheck:
+    name: Biome & TypeScript
     # runs-on: blacksmith-4vcpu-ubuntu-2404
     runs-on: ubuntu-latest
     steps:
@@ -101,7 +101,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, backend-tests]
+    needs: [biome-and-typecheck, unit-tests, backend-tests]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

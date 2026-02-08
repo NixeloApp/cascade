@@ -364,7 +364,12 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
             const label = labels?.find((l) => l.name === name);
             return (
               <Flex align="center" gap="sm">
-                <FlexItem as="span" shrink={false} className="w-3 h-3 rounded-full" style={{ backgroundColor: label?.color }} />
+                <FlexItem
+                  as="span"
+                  shrink={false}
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: label?.color }}
+                />
                 {name}
               </Flex>
             );

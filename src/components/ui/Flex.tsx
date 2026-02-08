@@ -167,19 +167,7 @@ export interface FlexItemProps extends React.HTMLAttributes<HTMLDivElement> {
  * </Flex>
  */
 export const FlexItem = React.forwardRef<HTMLDivElement, FlexItemProps>(
-  (
-    {
-      flex,
-      grow,
-      shrink,
-      align,
-      as: Component = "div",
-      className,
-      children,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ flex, grow, shrink, align, as: Component = "div", className, children, ...props }, ref) => {
     return (
       <Component
         ref={ref}

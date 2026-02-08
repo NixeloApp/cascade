@@ -226,7 +226,10 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               {sortedItems.map((item) => (
                 <Flex className="border-b border-ui-border" key={`${item.type}-${item.id}`}>
                   {/* Item Info */}
-                  <FlexItem shrink={false} className="w-40 sm:w-48 md:w-64 p-2 sm:p-3 border-r border-ui-border">
+                  <FlexItem
+                    shrink={false}
+                    className="w-40 sm:w-48 md:w-64 p-2 sm:p-3 border-r border-ui-border"
+                  >
                     <Flex gap="sm" align="center" className="gap-1 sm:gap-2">
                       {item.type === "sprint" ? (
                         <Badge variant="accent" size="md">

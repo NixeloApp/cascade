@@ -98,7 +98,12 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
   };
 
   return (
-    <Grid cols={1} colsSm={2} gap="xl" className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
+    <Grid
+      cols={1}
+      colsSm={2}
+      gap="xl"
+      className="animate-in fade-in slide-in-from-bottom-8 duration-1000"
+    >
       <RoleCard
         icon={<Users className="w-10 h-10" />}
         title="Team Lead"

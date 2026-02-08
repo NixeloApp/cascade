@@ -55,10 +55,24 @@ export function run() {
     /^(font-(mono|sans|serif|thin|extralight|light|normal|medium|semibold|bold|extrabold|black)|text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl|caption)|leading-|tracking-)$/;
 
   // Flex item classes that should use FlexItem component
-  const FLEX_ITEM_PATTERN = /^(flex-(1|auto|initial|none)|grow|grow-0|shrink|shrink-0|self-(auto|start|center|end|stretch|baseline))$/;
+  const FLEX_ITEM_PATTERN =
+    /^(flex-(1|auto|initial|none)|grow|grow-0|shrink|shrink-0|self-(auto|start|center|end|stretch|baseline))$/;
 
   // Elements that should NOT have font styles (use Typography, Badge, etc. instead)
-  const RAW_ELEMENTS = new Set(["div", "span", "section", "article", "aside", "header", "footer", "main", "nav", "li", "ul", "ol"]);
+  const RAW_ELEMENTS = new Set([
+    "div",
+    "span",
+    "section",
+    "article",
+    "aside",
+    "header",
+    "footer",
+    "main",
+    "nav",
+    "li",
+    "ul",
+    "ol",
+  ]);
 
   function getClassText(node) {
     let classText = "";

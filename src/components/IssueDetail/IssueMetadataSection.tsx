@@ -28,7 +28,12 @@ export function IssueMetadataSection({
   return (
     <>
       {/* Metadata Grid */}
-      <Grid cols={1} colsSm={2} gap="lg" className="p-4 bg-ui-bg-soft rounded-lg border border-ui-border/30">
+      <Grid
+        cols={1}
+        colsSm={2}
+        gap="lg"
+        className="p-4 bg-ui-bg-soft rounded-lg border border-ui-border/30"
+      >
         <div className="space-y-1">
           <Typography variant="muted" className="text-xs text-ui-text-secondary">
             Status
