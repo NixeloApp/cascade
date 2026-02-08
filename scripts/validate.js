@@ -8,8 +8,9 @@
  *   4. Query issues         — N+1 queries, unbounded .collect(), missing indexes
  *   5. Arbitrary Tailwind   — arbitrary values like h-[50px] (warning only)
  *   6. Type consistency     — ensures types imported from canonical sources, not duplicated
- *   7. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
- *   8. E2E quality          — catches broad selectors, networkidle, waitForSelector
+ *   7. Type safety          — flags unsafe type assertions and lint suppressions
+ *   8. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
+ *   9. E2E quality          — catches broad selectors, networkidle, waitForSelector
  *
  * Exit code 1 if any error-level check fails.
  * Arbitrary Tailwind + MEDIUM/LOW query issues + networkidle are warnings only.
@@ -26,6 +27,7 @@ import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
 import { run as runStandardsCheck } from "./validate/check-standards.js";
 import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
 import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
+import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
 import { c } from "./validate/utils.js";
 
 const checks = [
@@ -35,6 +37,7 @@ const checks = [
   { name: "Query issues", fn: runQueryIssuesCheck },
   { name: "Arbitrary Tailwind", fn: runArbitraryTailwindCheck },
   { name: "Type consistency", fn: runTypeConsistencyCheck },
+  { name: "Type safety", fn: runTypeSafetyCheck },
   { name: "Test ID constants", fn: runTestIdsCheck },
   { name: "E2E quality", fn: runE2EQualityCheck },
 ];
