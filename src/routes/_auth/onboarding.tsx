@@ -9,7 +9,7 @@ import { LeadOnboarding } from "@/components/Onboarding/LeadOnboarding";
 import { MemberOnboarding } from "@/components/Onboarding/MemberOnboarding";
 import { RoleSelector } from "@/components/Onboarding/RoleSelector";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -137,7 +137,7 @@ function OnboardingPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-6">
+      <FlexItem as="main" flex="1" className="flex items-center justify-center p-6">
         <div className="w-full max-w-2xl">
           {/* Invited User Flow - skip role selection, go straight to complete */}
           {step === "invited" && inviteStatus && (
@@ -191,7 +191,7 @@ function OnboardingPage() {
             </div>
           )}
         </div>
-      </main>
+      </FlexItem>
 
       {/* Footer */}
       <footer className="p-6 text-center">

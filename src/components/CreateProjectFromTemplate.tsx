@@ -3,7 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowLeft } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -147,10 +147,10 @@ export function CreateProjectFromTemplate({
                     className="text-left p-6 border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
                   >
                     <Flex align="start" gap="lg">
-                      <Typography variant="h2" className="shrink-0">
-                        {template.icon}
-                      </Typography>
-                      <div className="flex-1 min-w-0">
+                      <FlexItem shrink={false}>
+                        <Typography variant="h2">{template.icon}</Typography>
+                      </FlexItem>
+                      <FlexItem flex="1" className="min-w-0">
                         <Typography
                           variant="h3"
                           className="text-lg font-semibold text-ui-text mb-1"
@@ -168,7 +168,7 @@ export function CreateProjectFromTemplate({
                             {template.boardType}
                           </Badge>
                         </Flex>
-                      </div>
+                      </FlexItem>
                     </Flex>
                   </button>
                 ))}

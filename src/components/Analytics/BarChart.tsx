@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 
 /**
@@ -23,7 +23,7 @@ export const BarChart = memo(function BarChart({
           <Typography variant="small" className="w-24 text-ui-text truncate" title={item.label}>
             {item.label}
           </Typography>
-          <div className="flex-1 bg-ui-bg-tertiary rounded-full h-6 relative">
+          <FlexItem flex="1" className="bg-ui-bg-tertiary rounded-full h-6 relative">
             <div
               className={cn(
                 color,
@@ -38,7 +38,7 @@ export const BarChart = memo(function BarChart({
                 {item.value}
               </Typography>
             </div>
-          </div>
+          </FlexItem>
         </Flex>
       ))}
     </Flex>

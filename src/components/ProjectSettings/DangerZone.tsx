@@ -7,7 +7,7 @@ import { ROUTES } from "@/config/routes";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Input } from "../ui/form";
 import { Typography } from "../ui/Typography";
 
@@ -70,7 +70,7 @@ export function DangerZone({
 
         <div className="p-5 bg-status-error/5 border border-status-error/15 rounded-lg transition-default">
           <Flex justify="between" align="start" gap="lg">
-            <div className="flex-1">
+            <FlexItem flex="1">
               <Typography variant="small" className="font-semibold text-status-error-text">
                 Delete this project
               </Typography>
@@ -78,7 +78,7 @@ export function DangerZone({
                 Once you delete a project, there is no going back. This will permanently delete the
                 project "{projectName}" and all its issues, sprints, and data.
               </Typography>
-            </div>
+            </FlexItem>
             {!showConfirm && (
               <Button variant="danger" size="sm" onClick={() => setShowConfirm(true)}>
                 Delete Project

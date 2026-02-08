@@ -8,7 +8,7 @@ import { IssueCard } from "@/components/IssueCard";
 import { IssueDetailModal } from "@/components/IssueDetailModal";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Filter, Plus, Search, SearchX } from "@/lib/icons";
 
@@ -68,7 +68,7 @@ function AllIssuesPage() {
 
       {/* Filters & Search */}
       <Flex gap="md" className="mb-6 bg-ui-bg p-4 rounded-lg border border-ui-border">
-        <div className="relative flex-1">
+        <FlexItem flex="1" className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ui-text-tertiary" />
           <input
             type="text"
@@ -77,7 +77,7 @@ function AllIssuesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-ui-bg-secondary border border-ui-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-ring"
           />
-        </div>
+        </FlexItem>
         <Flex gap="sm" align="center">
           <Filter className="w-4 h-4 text-ui-text-tertiary" />
           <select

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
@@ -163,14 +163,14 @@ export function Timesheet() {
                     className="p-2 bg-ui-bg-secondary rounded border border-ui-border"
                   >
                     <Flex justify="between" align="start" className="mb-1">
-                      <div className="flex-1 min-w-0">
+                      <FlexItem flex="1" className="min-w-0">
                         <Typography variant="code" className="text-ui-text truncate block">
                           {entry.projectKey}
                         </Typography>
                         <Typography variant="caption" color="secondary" className="truncate block">
                           {entry.issueKey}
                         </Typography>
-                      </div>
+                      </FlexItem>
                       {entry.billable && (
                         <DollarSign className="w-3 h-3 text-status-success shrink-0" />
                       )}

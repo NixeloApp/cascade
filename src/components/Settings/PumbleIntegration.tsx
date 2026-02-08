@@ -10,7 +10,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Label } from "../ui/Label";
 import { Typography } from "../ui/Typography";
@@ -53,7 +53,7 @@ export function PumbleIntegration() {
       <div className="p-6 border-b border-ui-border">
         <Flex justify="between" align="start">
           <Flex gap="md" align="center">
-            <div className="shrink-0">
+            <FlexItem shrink={false}>
               <Flex
                 align="center"
                 justify="center"
@@ -74,7 +74,7 @@ export function PumbleIntegration() {
                   />
                 </svg>
               </Flex>
-            </div>
+            </FlexItem>
             <div>
               <Typography variant="h3" className="text-lg font-semibold text-ui-text">
                 Pumble Integration
@@ -240,7 +240,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
   return (
     <div className="border border-ui-border rounded-lg p-4 hover:border-accent-muted:border-accent-hover transition-colors">
       <Flex justify="between" align="start" className="mb-3">
-        <div className="flex-1">
+        <FlexItem flex="1">
           <Flex gap="sm" align="center" className="mb-1">
             <Typography variant="h4" className="font-medium text-ui-text">
               {webhook.name}
@@ -261,7 +261,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
               Project: {project.name}
             </Typography>
           )}
-        </div>
+        </FlexItem>
       </Flex>
 
       {/* Events */}

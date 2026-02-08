@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { showError, showSuccess } from "@/lib/toast";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Metadata, MetadataItem } from "../ui/Metadata";
@@ -144,7 +144,7 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
                 }}
                 className="mt-1"
               />
-              <div className="flex-1">
+              <FlexItem flex="1">
                 <Metadata separator="-">
                   <MetadataItem className="font-mono text-ui-text">{subtask.key}</MetadataItem>
                   <MetadataItem className="text-ui-text">{subtask.title}</MetadataItem>
@@ -154,7 +154,7 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
                     Assigned to {subtask.assignee.name || subtask.assignee.email || "Unknown"}
                   </Typography>
                 )}
-              </div>
+              </FlexItem>
             </Flex>
           ))}
         </Flex>

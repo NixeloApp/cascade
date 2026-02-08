@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IssueDetailContent } from "./IssueDetailContent";
 import { IssueDetailSidebar } from "./IssueDetailSidebar";
 import type { useIssueDetail } from "./useIssueDetail";
@@ -23,7 +23,7 @@ export function IssueDetailLayout({
     <Flex direction="column" className="h-full bg-ui-bg">
       {header}
 
-      <div className="flex-1 overflow-auto">
+      <FlexItem flex="1" className="overflow-auto">
         <Flex
           direction="column"
           className="max-w-400 mx-auto md:flex-row bg-ui-bg-elevated border border-ui-border rounded-lg shadow-card m-4"
@@ -57,7 +57,7 @@ export function IssueDetailLayout({
             billingEnabled={billingEnabled}
           />
         </Flex>
-      </div>
+      </FlexItem>
     </Flex>
   );
 }

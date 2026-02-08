@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { AtSign, Info, MessageSquare, RefreshCw, User } from "@/lib/icons";
 import { Card } from "../ui/Card";
@@ -62,13 +62,13 @@ export function NotificationsTab() {
       <Card>
         <div className="p-6">
           <Flex align="start" justify="between">
-            <div className="flex-1">
+            <FlexItem flex="1">
               <Typography variant="h5">Email Notifications</Typography>
               <Typography variant="caption" className="mt-1">
                 Master switch for all email notifications. Turn this off to stop receiving all
                 emails.
               </Typography>
-            </div>
+            </FlexItem>
             <Switch
               checked={preferences.emailEnabled}
               onCheckedChange={(value) => handleToggle("emailEnabled", value)}
@@ -93,7 +93,7 @@ export function NotificationsTab() {
               justify="between"
               className="py-3 border-b border-ui-border-secondary last:border-0"
             >
-              <div className="flex-1">
+              <FlexItem flex="1">
                 <Flex align="center" gap="sm">
                   <Icon icon={AtSign} size="md" />
                   <Typography variant="label">Mentions</Typography>
@@ -101,7 +101,7 @@ export function NotificationsTab() {
                 <Typography variant="caption" className="mt-1">
                   When someone @mentions you in a comment or description
                 </Typography>
-              </div>
+              </FlexItem>
               <Switch
                 checked={preferences.emailMentions}
                 onCheckedChange={(value) => handleToggle("emailMentions", value)}
@@ -116,7 +116,7 @@ export function NotificationsTab() {
               justify="between"
               className="py-3 border-b border-ui-border-secondary last:border-0"
             >
-              <div className="flex-1">
+              <FlexItem flex="1">
                 <Flex align="center" gap="sm">
                   <Icon icon={User} size="md" />
                   <Typography variant="label">Assignments</Typography>
@@ -124,7 +124,7 @@ export function NotificationsTab() {
                 <Typography variant="caption" className="mt-1">
                   When you are assigned to an issue
                 </Typography>
-              </div>
+              </FlexItem>
               <Switch
                 checked={preferences.emailAssignments}
                 onCheckedChange={(value) => handleToggle("emailAssignments", value)}
@@ -139,7 +139,7 @@ export function NotificationsTab() {
               justify="between"
               className="py-3 border-b border-ui-border-secondary last:border-0"
             >
-              <div className="flex-1">
+              <FlexItem flex="1">
                 <Flex align="center" gap="sm">
                   <Icon icon={MessageSquare} size="md" />
                   <Typography variant="label">Comments</Typography>
@@ -147,7 +147,7 @@ export function NotificationsTab() {
                 <Typography variant="caption" className="mt-1">
                   When someone comments on your issues
                 </Typography>
-              </div>
+              </FlexItem>
               <Switch
                 checked={preferences.emailComments}
                 onCheckedChange={(value) => handleToggle("emailComments", value)}
@@ -158,7 +158,7 @@ export function NotificationsTab() {
 
             {/* Status Changes */}
             <Flex align="start" justify="between" className="py-3">
-              <div className="flex-1">
+              <FlexItem flex="1">
                 <Flex align="center" gap="sm">
                   <Icon icon={RefreshCw} size="md" />
                   <Typography variant="label">Status Changes</Typography>
@@ -166,7 +166,7 @@ export function NotificationsTab() {
                 <Typography variant="caption" className="mt-1">
                   When issue status changes on issues you're watching
                 </Typography>
-              </div>
+              </FlexItem>
               <Switch
                 checked={preferences.emailStatusChanges}
                 onCheckedChange={(value) => handleToggle("emailStatusChanges", value)}
@@ -248,7 +248,7 @@ export function NotificationsTab() {
       <div className="mt-6 p-4 bg-brand-subtle rounded-lg border border-brand-border">
         <Flex gap="md">
           <Icon icon={Info} size="md" className="text-brand" />
-          <div className="flex-1">
+          <FlexItem flex="1">
             <Typography variant="label" className="text-brand-active mb-1">
               Email Configuration
             </Typography>
@@ -256,7 +256,7 @@ export function NotificationsTab() {
               Email notifications require Resend API configuration. If you're not receiving emails,
               contact your administrator to set up email notifications.
             </Typography>
-          </div>
+          </FlexItem>
         </Flex>
       </div>
     </div>

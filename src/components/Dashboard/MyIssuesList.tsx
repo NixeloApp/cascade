@@ -9,7 +9,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { SkeletonList } from "../ui/Skeleton";
@@ -158,7 +158,7 @@ export function MyIssuesList({
                 )}
               >
                 <Flex justify="between" align="start">
-                  <div className="flex-1">
+                  <FlexItem flex="1">
                     <Flex gap="sm" align="center" className="mb-1.5">
                       <Typography
                         variant="small"
@@ -183,7 +183,7 @@ export function MyIssuesList({
                       <MetadataItem>{issue.projectName}</MetadataItem>
                       <MetadataItem>{issue.status}</MetadataItem>
                     </Metadata>
-                  </div>
+                  </FlexItem>
                 </Flex>
               </button>
             ))}

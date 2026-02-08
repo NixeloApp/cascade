@@ -2,7 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
@@ -28,7 +28,7 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
   return (
     <div className="p-4 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary transition-colors">
       <Flex justify="between" align="start">
-        <div className="flex-1">
+        <FlexItem flex="1">
           <Flex gap="sm" align="center" className="mb-2">
             <Icon icon={ISSUE_TYPE_ICONS[template.type]} size="md" />
             <Typography variant="h4" className="font-medium text-ui-text">
@@ -61,7 +61,7 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
               ))}
             </Flex>
           )}
-        </div>
+        </FlexItem>
 
         <Flex gap="sm" className="ml-4">
           <Button

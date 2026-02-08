@@ -8,7 +8,7 @@ import { type BoardFilters, FilterBar } from "@/components/FilterBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import {
   Select,
   SelectContent,
@@ -109,9 +109,9 @@ function BoardPage() {
       <FilterBar projectId={project._id} filters={filters} onFilterChange={setFilters} />
 
       {/* Board Content */}
-      <div className="flex-1 overflow-hidden">
+      <FlexItem flex="1" className="overflow-hidden">
         <KanbanBoard projectId={project._id} sprintId={effectiveSprintId} filters={filters} />
-      </div>
+      </FlexItem>
     </Flex>
   );
 }

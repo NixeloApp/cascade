@@ -7,7 +7,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { CommandPalette, useCommands } from "@/components/CommandPalette";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { createKeyboardShortcuts, createKeySequences } from "@/config/keyboardShortcuts";
@@ -181,9 +181,9 @@ function OrganizationLayoutInner() {
           />
 
           {/* Page content */}
-          <main className="flex-1 overflow-auto bg-ui-bg scrollbar-subtle">
+          <FlexItem as="main" flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
             <Outlet />
-          </main>
+          </FlexItem>
         </Flex>
 
         {/* Command Palette Modal */}

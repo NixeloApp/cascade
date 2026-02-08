@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
 import { Search } from "@/lib/icons";
@@ -240,7 +240,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
         </Flex>
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
+        <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" wrap>
             {result.type === "issue" && <code className="font-mono text-sm">{result.key}</code>}
             <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
@@ -253,7 +253,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
           <Typography variant="meta" className="mt-1 line-clamp-2">
             {result.description || "No description"}
           </Typography>
-        </div>
+        </FlexItem>
       </Flex>
     </CommandItem>
   );

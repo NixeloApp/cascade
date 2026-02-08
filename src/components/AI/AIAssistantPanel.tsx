@@ -10,7 +10,7 @@ import { Bot, Lightbulb, MessageSquare } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Badge } from "../ui/Badge";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/Sheet";
 import { AIChat } from "./AIChat";
@@ -114,7 +114,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
         </Flex>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <FlexItem flex="1" className="overflow-hidden">
           <div
             className={cn(
               "h-full transition-opacity",
@@ -142,7 +142,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
               )}
             </ErrorBoundary>
           </div>
-        </div>
+        </FlexItem>
       </SheetContent>
     </Sheet>
   );

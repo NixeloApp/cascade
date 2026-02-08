@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { formatDate } from "@/lib/dates";
 import { Trophy } from "@/lib/icons";
 import { getStatusColor } from "@/lib/issue-utils";
@@ -48,7 +48,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         gap="lg"
         className="sm:flex-row sm:items-center"
       >
-        <div className="flex-1 w-full sm:w-auto">
+        <FlexItem flex="1" className="w-full sm:w-auto">
           <Flex wrap align="center" gap="sm" className="sm:gap-3 mb-2">
             <Typography variant="h5">{sprint.name}</Typography>
             <Badge size="md" className={getStatusColor(sprint.status)}>
@@ -87,7 +87,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
               {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
             </Typography>
           )}
-        </div>
+        </FlexItem>
         {canEdit && (
           <Flex direction="column" gap="sm" className="sm:flex-row w-full sm:w-auto">
             {sprint.status === "future" && (

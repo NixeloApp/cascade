@@ -2,7 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Pencil, Trash } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 
 interface WebhookCardProps {
@@ -26,7 +26,7 @@ export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
   return (
     <div className="p-4 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary transition-colors">
       <Flex justify="between" align="start">
-        <div className="flex-1">
+        <FlexItem flex="1">
           <Flex gap="sm" align="center" className="mb-2">
             <Typography variant="h4" className="font-medium text-ui-text">
               {webhook.name}
@@ -50,7 +50,7 @@ export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
               Last triggered: {new Date(webhook.lastTriggered).toLocaleString()}
             </Typography>
           )}
-        </div>
+        </FlexItem>
 
         <Flex gap="sm" className="ml-4">
           <Button

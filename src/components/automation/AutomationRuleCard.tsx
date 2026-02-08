@@ -5,7 +5,7 @@ import { ArrowRight, Pause, Pencil, Play, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
@@ -69,7 +69,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
   return (
     <Card className="p-4">
       <Flex justify="between" align="start" gap="lg">
-        <div className="flex-1 min-w-0">
+        <FlexItem flex="1" className="min-w-0">
           <Flex gap="md" align="center" className="mb-2">
             <Typography variant="h4" className="font-medium text-ui-text">
               {rule.name}
@@ -108,7 +108,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
 
             <Typography variant="muted">Executed: {rule.executionCount} times</Typography>
           </Flex>
-        </div>
+        </FlexItem>
 
         <Flex gap="sm" align="center" className="shrink-0">
           <button

@@ -54,6 +54,9 @@ export function run() {
   const FONT_STYLE_PATTERN =
     /^(font-(mono|sans|serif|thin|extralight|light|normal|medium|semibold|bold|extrabold|black)|text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl|caption)|leading-|tracking-)$/;
 
+  // Flex item classes that should use FlexItem component
+  const FLEX_ITEM_PATTERN = /^(flex-(1|auto|initial|none)|grow|grow-0|shrink|shrink-0|self-(auto|start|center|end|stretch|baseline))$/;
+
   // Elements that should NOT have font styles (use Typography, Badge, etc. instead)
   const RAW_ELEMENTS = new Set(["div", "span", "section", "article", "aside", "header", "footer", "main", "nav", "li", "ul", "ol"]);
 
@@ -113,6 +116,22 @@ export function run() {
                 filePath,
                 node,
                 `Font style '${cls}' on raw <${tagName}>. Use Typography, Badge, or other UI components for text styling.`,
+              );
+              break; // Only report once per element
+            }
+          }
+        }
+
+        // Flex item classes on raw elements — use FlexItem component instead
+        if (RAW_ELEMENTS.has(tagName)) {
+          const classText = getClassNameText(node);
+          const classes = classText.split(/\s+/);
+          for (const cls of classes) {
+            if (FLEX_ITEM_PATTERN.test(cls)) {
+              reportError(
+                filePath,
+                node,
+                `Flex item class '${cls}' on raw <${tagName}>. Use <FlexItem> component instead.`,
               );
               break; // Only report once per element
             }

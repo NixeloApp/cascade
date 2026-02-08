@@ -10,7 +10,7 @@ import { formatCurrency, formatDate } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
 
@@ -147,7 +147,7 @@ export function TimeEntriesList({
                 key={entry._id}
               >
                 {/* Details */}
-                <div className="flex-1 min-w-0">
+                <FlexItem flex="1" className="min-w-0">
                   {entry.description && (
                     <Typography className="text-sm font-medium text-ui-text">
                       {entry.description}
@@ -180,10 +180,10 @@ export function TimeEntriesList({
                       </Flex>
                     )}
                   </Flex>
-                </div>
+                </FlexItem>
 
                 {/* Duration and cost */}
-                <div className="shrink-0 text-right">
+                <FlexItem shrink={false} className="text-right">
                   <Typography variant="label" className="text-ui-text">
                     {formatDurationDisplay(entry.duration)}
                   </Typography>
@@ -192,11 +192,11 @@ export function TimeEntriesList({
                       {formatCurrency(entry.totalCost, entry.currency)}
                     </Typography>
                   )}
-                </div>
+                </FlexItem>
 
                 {/* Actions */}
                 {!(entry.isLocked || entry.billed) && (
-                  <div className="shrink-0">
+                  <FlexItem shrink={false}>
                     <Button
                       onClick={() => handleDelete(entry._id)}
                       variant="ghost"
@@ -206,7 +206,7 @@ export function TimeEntriesList({
                     >
                       <Trash className="w-4 h-4" />
                     </Button>
-                  </div>
+                  </FlexItem>
                 )}
               </Flex>
             ))}

@@ -1,5 +1,5 @@
 import { Badge } from "../ui/Badge";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Metadata, MetadataTimestamp } from "../ui/Metadata";
 import { Typography } from "../ui/Typography";
 
@@ -47,7 +47,7 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
               >
                 {activity.userName.charAt(0).toUpperCase()}
               </Flex>
-              <div className="flex-1 min-w-0">
+              <FlexItem flex="1" className="min-w-0">
                 <Typography variant="p" className="mb-0">
                   <strong>{activity.userName}</strong> {activity.action}{" "}
                   {activity.field && (
@@ -65,7 +65,7 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
                 <Metadata className="mt-1.5">
                   <MetadataTimestamp date={activity._creationTime} format="absolute" />
                 </Metadata>
-              </div>
+              </FlexItem>
             </Flex>
           ))}
         </Flex>

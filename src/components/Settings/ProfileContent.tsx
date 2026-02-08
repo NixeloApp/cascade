@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -135,7 +135,7 @@ export function ProfileHeader({
       </div>
 
       {/* User Info */}
-      <div className="flex-1">
+      <FlexItem flex="1">
         {isEditing ? (
           <div className="space-y-3">
             <Input
@@ -171,7 +171,7 @@ export function ProfileHeader({
             )}
           </>
         )}
-      </div>
+      </FlexItem>
     </Flex>
   );
 }

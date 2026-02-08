@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { type FuzzySearchResult, highlightMatches } from "@/hooks/useFuzzySearch";
 import { cn } from "@/lib/utils";
@@ -259,7 +260,7 @@ export function FuzzySearchInput<T>({
                     : "hover:bg-ui-bg-hover text-ui-text",
                 )}
               >
-                <div className="flex-1">{renderItem(result)}</div>
+                <FlexItem flex="1">{renderItem(result)}</FlexItem>
                 {showScore && result.score !== undefined && result.score > 0 && (
                   <Typography variant="caption" color="tertiary" as="span" className="ml-2">
                     {((1 - result.score) * 100).toFixed(0)}%

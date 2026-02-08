@@ -5,7 +5,7 @@ import { Bell } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { showError } from "@/lib/toast";
@@ -122,7 +122,7 @@ export function NotificationCenter() {
         </Flex>
 
         {/* Notifications List */}
-        <div className="flex-1 overflow-y-auto">
+        <FlexItem flex="1" className="overflow-y-auto">
           {!notifications || notifications.length === 0 ? (
             <EmptyState icon={Inbox} title="No notifications" />
           ) : (
@@ -138,7 +138,7 @@ export function NotificationCenter() {
               ))}
             </div>
           )}
-        </div>
+        </FlexItem>
       </PopoverContent>
     </Popover>
   );

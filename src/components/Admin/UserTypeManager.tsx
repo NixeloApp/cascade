@@ -11,7 +11,7 @@ import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
 import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
@@ -480,7 +480,7 @@ export function UserTypeManager() {
                   className="p-4 border border-ui-border rounded-lg transition-default hover:bg-ui-bg-hover"
                 >
                   <Flex justify="between" align="start">
-                    <div className="flex-1">
+                    <FlexItem flex="1">
                       <Flex gap="md" align="center" className="mb-2">
                         {getTypeIcon(profile.employmentType, "w-5 h-5")}
                         <div>
@@ -541,7 +541,7 @@ export function UserTypeManager() {
                           </Typography>
                         </div>
                       </div>
-                    </div>
+                    </FlexItem>
 
                     <Flex gap="sm" className="ml-4">
                       <Button

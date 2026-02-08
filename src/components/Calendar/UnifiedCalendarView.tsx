@@ -1,7 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Calendar, Map as MapIcon } from "@/lib/icons";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";
@@ -50,7 +50,7 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
       </div>
 
       {/* View Content */}
-      <div className="flex-1 overflow-hidden">
+      <FlexItem flex="1" className="overflow-hidden">
         {viewType === "calendar" ? (
           <CalendarView />
         ) : projectId ? (
@@ -67,7 +67,7 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
             </div>
           </Flex>
         )}
-      </div>
+      </FlexItem>
     </Flex>
   );
 }

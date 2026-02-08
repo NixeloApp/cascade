@@ -17,7 +17,7 @@ import {
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "./ui/EmptyState";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { SkeletonList } from "./ui/Skeleton";
 import { Typography } from "./ui/Typography";
@@ -193,9 +193,9 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
           </Flex>
 
           {/* Activity content */}
-          <div className="flex-1 min-w-0">
+          <FlexItem flex="1" className="min-w-0">
             <Flex align="start" justify="between" gap="sm">
-              <div className="flex-1 min-w-0">
+              <FlexItem flex="1" className="min-w-0">
                 <Typography variant="p" className={cn(compact ? "text-sm" : "text-base", "m-0")}>
                   <strong>{activity.userName}</strong>{" "}
                   <span className={getActionColorClass(activity.action)}>
@@ -210,7 +210,7 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
                     {activity.field}: {activity.newValue}
                   </Typography>
                 )}
-              </div>
+              </FlexItem>
               <Typography
                 variant="muted"
                 className={cn(
@@ -221,7 +221,7 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
                 {formatRelativeTime(activity._creationTime)}
               </Typography>
             </Flex>
-          </div>
+          </FlexItem>
         </Flex>
       ))}
     </Flex>

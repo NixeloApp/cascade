@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { formatRelativeTime } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { CommentReactions } from "./CommentReactions";
@@ -90,12 +90,12 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                 key={comment._id}
               >
                 {/* Avatar */}
-                <div className="shrink-0">
+                <FlexItem shrink={false}>
                   <Avatar name={comment.author?.name} src={comment.author?.image} size="lg" />
-                </div>
+                </FlexItem>
 
                 {/* Comment Content */}
-                <div className="flex-1 min-w-0">
+                <FlexItem flex="1" className="min-w-0">
                   {/* Author and Date */}
                   <Flex align="center" gap="sm" className="mb-2 text-sm">
                     <strong>{comment.author?.name || "Unknown User"}</strong>
@@ -121,7 +121,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                     reactions={comment.reactions || []}
                     currentUserId={currentUser?._id}
                   />
-                </div>
+                </FlexItem>
               </Flex>
             ))}
 

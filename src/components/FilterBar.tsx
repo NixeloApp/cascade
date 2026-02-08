@@ -23,7 +23,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "./ui/DropdownMenu";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Checkbox, Input } from "./ui/form";
 import { Icon } from "./ui/Icon";
 import { Typography } from "./ui/Typography";
@@ -364,10 +364,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
             const label = labels?.find((l) => l.name === name);
             return (
               <Flex align="center" gap="sm">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: label?.color }}
-                />
+                <FlexItem as="span" shrink={false} className="w-3 h-3 rounded-full" style={{ backgroundColor: label?.color }} />
                 {name}
               </Flex>
             );

@@ -4,7 +4,7 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import { FileText } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -234,7 +234,7 @@ export function DocumentTemplatesManager({
                         <Typography variant="label" className="text-3xl">
                           {template.icon}
                         </Typography>
-                        <div className="flex-1">
+                        <FlexItem flex="1">
                           <Typography variant="h4" className="font-semibold text-ui-text mb-1">
                             {template.name}
                           </Typography>
@@ -250,7 +250,7 @@ export function DocumentTemplatesManager({
                           >
                             {template.category}
                           </Badge>
-                        </div>
+                        </FlexItem>
                       </Flex>
                     </button>
                   ))}
@@ -279,7 +279,7 @@ export function DocumentTemplatesManager({
                           <Typography variant="label" className="text-2xl">
                             {template.icon}
                           </Typography>
-                          <div className="flex-1">
+                          <FlexItem flex="1">
                             <Typography variant="h4" className="font-medium text-ui-text mb-1">
                               {template.name}
                             </Typography>
@@ -298,7 +298,7 @@ export function DocumentTemplatesManager({
                                 </Badge>
                               )}
                             </Flex>
-                          </div>
+                          </FlexItem>
                         </button>
 
                         <Flex gap="xs">

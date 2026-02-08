@@ -7,7 +7,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { ResponsiveText } from "../ui/ResponsiveText";
 
 interface RoadmapViewProps {
@@ -188,7 +188,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
       </div>
 
       {/* Roadmap Grid */}
-      <div className="flex-1 overflow-auto">
+      <FlexItem flex="1" className="overflow-auto">
         <div className="min-w-max">
           {/* Timeline Header */}
           <div className="sticky top-0 z-10 bg-ui-bg-secondary border-b border-ui-border">
@@ -199,17 +199,20 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               >
                 Item
               </Typography>
-              <Flex className="flex-1">
-                {columns.map((col) => (
-                  <Typography
-                    key={col.date.getTime()}
-                    variant="label"
-                    className="flex-1 p-2 sm:p-3 border-r border-ui-border text-center text-ui-text"
-                  >
-                    {col.label}
-                  </Typography>
-                ))}
-              </Flex>
+              <FlexItem flex="1">
+                <Flex>
+                  {columns.map((col) => (
+                    <FlexItem key={col.date.getTime()} flex="1">
+                      <Typography
+                        variant="label"
+                        className="p-2 sm:p-3 border-r border-ui-border text-center text-ui-text"
+                      >
+                        {col.label}
+                      </Typography>
+                    </FlexItem>
+                  ))}
+                </Flex>
+              </FlexItem>
             </Flex>
           </div>
 
@@ -223,7 +226,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               {sortedItems.map((item) => (
                 <Flex className="border-b border-ui-border" key={`${item.type}-${item.id}`}>
                   {/* Item Info */}
-                  <div className="w-40 sm:w-48 md:w-64 shrink-0 p-2 sm:p-3 border-r border-ui-border">
+                  <FlexItem shrink={false} className="w-40 sm:w-48 md:w-64 p-2 sm:p-3 border-r border-ui-border">
                     <Flex gap="sm" align="center" className="gap-1 sm:gap-2">
                       {item.type === "sprint" ? (
                         <Badge variant="accent" size="md">
@@ -238,15 +241,16 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                     <Typography variant="label" className="text-ui-text mt-1 truncate">
                       {item.title}
                     </Typography>
-                  </div>
+                  </FlexItem>
 
                   {/* Timeline Bar */}
-                  <div className="flex-1 relative">
+                  <FlexItem flex="1" className="relative">
                     <Flex className="absolute inset-0">
                       {columns.map((col) => (
-                        <div
+                        <FlexItem
                           key={col.date.getTime()}
-                          className="flex-1 border-r border-ui-border"
+                          flex="1"
+                          className="border-r border-ui-border"
                         />
                       ))}
                     </Flex>
@@ -255,13 +259,13 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                     <Flex align="center" className="absolute inset-y-0 px-2">
                       {renderDateBar(item, startDate, endDate, columns.length)}
                     </Flex>
-                  </div>
+                  </FlexItem>
                 </Flex>
               ))}
             </div>
           )}
         </div>
-      </div>
+      </FlexItem>
     </Flex>
   );
 }

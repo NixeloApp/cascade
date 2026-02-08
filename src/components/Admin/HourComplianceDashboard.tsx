@@ -13,7 +13,7 @@ import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
 
 type ComplianceStatus = "compliant" | "under_hours" | "over_hours" | "equity_under";
@@ -271,7 +271,7 @@ export function HourComplianceDashboard() {
                   className="p-4 border border-ui-border rounded-lg hover:bg-ui-bg-tertiary transition-colors"
                 >
                   <Flex justify="between" align="start">
-                    <div className="flex-1">
+                    <FlexItem flex="1">
                       <Flex gap="md" align="center" className="mb-2">
                         <Icon icon={getStatusIcon(record.status)} size="md" />
                         <div>
@@ -349,7 +349,7 @@ export function HourComplianceDashboard() {
                           </Typography>
                         </Flex>
                       )}
-                    </div>
+                    </FlexItem>
 
                     <Flex gap="sm" className="ml-4">
                       {!record.reviewedBy && (

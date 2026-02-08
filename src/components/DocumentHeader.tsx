@@ -1,6 +1,6 @@
 import type { Doc } from "@convex/_generated/dataModel";
 import { useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -95,7 +95,7 @@ export function DocumentHeader({
         gap="md"
         className="sm:flex-row sm:items-center sm:gap-4 mb-3 sm:mb-4"
       >
-        <div className="flex-1 w-full sm:w-auto">
+        <FlexItem flex="1" className="w-full sm:w-auto">
           {isEditingTitle ? (
             <Input
               type="text"
@@ -110,7 +110,7 @@ export function DocumentHeader({
           ) : (
             titleComponent
           )}
-        </div>
+        </FlexItem>
 
         <Flex wrap align="center" className="gap-1.5 sm:gap-2 w-full sm:w-auto">
           <PresenceIndicator roomId={document._id} userId={userId} />

@@ -11,7 +11,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Icon } from "../ui/Icon";
@@ -177,7 +177,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
   return (
     <div className="p-4 bg-ui-bg-secondary rounded-lg border border-ui-border">
       <Flex justify="between" align="start">
-        <div className="flex-1">
+        <FlexItem flex="1">
           {/* Name & Status */}
           <Flex gap="sm" align="center" className="mb-2">
             <Typography variant="h4" className="font-medium text-ui-text">
@@ -238,7 +238,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
               </MetadataItem>
             )}
           </Metadata>
-        </div>
+        </FlexItem>
 
         {/* Actions */}
         <Flex gap="sm" align="center" className="ml-4">

@@ -6,7 +6,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { Archive, File, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 
 interface AttachmentListProps {
@@ -71,7 +71,9 @@ function AttachmentItem({
         className="p-2.5 bg-ui-bg-soft rounded-lg border border-ui-border"
       >
         <div className="animate-pulse h-8 w-8 bg-ui-bg-tertiary rounded-md" />
-        <div className="flex-1 animate-pulse h-4 bg-ui-bg-tertiary rounded-md" />
+        <FlexItem flex="1">
+          <div className="animate-pulse h-4 bg-ui-bg-tertiary rounded-md" />
+        </FlexItem>
       </Flex>
     );
   }
@@ -86,7 +88,7 @@ function AttachmentItem({
       className="p-2.5 bg-ui-bg-soft rounded-lg border border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default group"
     >
       <Icon icon={fileIcon} size="lg" />
-      <div className="flex-1 min-w-0">
+      <FlexItem flex="1" className="min-w-0">
         <a
           href={url}
           target="_blank"
@@ -95,7 +97,7 @@ function AttachmentItem({
         >
           {filename}
         </a>
-      </div>
+      </FlexItem>
       <Flex
         gap="xs"
         className="opacity-0 group-hover:opacity-100 transition-opacity duration-default"

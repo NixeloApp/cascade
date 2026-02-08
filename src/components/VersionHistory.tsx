@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Clock, History, RotateCcw } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -101,7 +101,7 @@ export function VersionHistory({
         </DialogHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto scrollbar-subtle">
+        <FlexItem flex="1" className="overflow-auto scrollbar-subtle">
           {versions === undefined ? (
             <Flex align="center" justify="center" className="py-12">
               <LoadingSpinner size="lg" />
@@ -134,7 +134,7 @@ export function VersionHistory({
                     )}
                   >
                     <Flex align="start" justify="between">
-                      <div className="flex-1">
+                      <FlexItem flex="1">
                         <Flex align="center" gap="sm" className="mb-1.5">
                           {isLatest && (
                             <Badge variant="success" size="sm">
@@ -156,7 +156,7 @@ export function VersionHistory({
                             {version.changeDescription}
                           </Typography>
                         )}
-                      </div>
+                      </FlexItem>
 
                       {!isLatest && (
                         <Button
@@ -175,7 +175,7 @@ export function VersionHistory({
               })}
             </div>
           )}
-        </div>
+        </FlexItem>
 
         {/* Footer */}
         <div className="pt-4 border-t border-ui-border">
