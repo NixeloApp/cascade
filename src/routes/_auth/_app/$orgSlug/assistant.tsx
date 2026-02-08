@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/ShadcnTabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { Typography } from "@/components/ui/Typography";
 import { Bot, CheckCircle, MessageSquare, Sparkles, Zap } from "@/lib/icons";

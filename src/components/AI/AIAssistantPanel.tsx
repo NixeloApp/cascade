@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/Sheet";
 import { AIChat } from "./AIChat";
 import { AIErrorFallback } from "./AIErrorFallback";
 import { AISuggestionsPanel } from "./AISuggestionsPanel";

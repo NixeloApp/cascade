@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
 
 interface BurnRateDashboardProps {

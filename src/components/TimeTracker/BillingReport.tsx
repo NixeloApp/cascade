@@ -6,7 +6,7 @@ import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Typography } from "../ui/Typography";
 

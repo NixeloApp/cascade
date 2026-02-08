@@ -10,7 +10,7 @@ import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { MetadataTimestamp } from "../ui/Metadata";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Skeleton } from "../ui/Skeleton";
 import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";

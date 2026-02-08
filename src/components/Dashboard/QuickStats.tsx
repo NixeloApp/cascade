@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { SkeletonStatCard } from "../ui/Skeleton";
 import { Typography } from "../ui/Typography";
 

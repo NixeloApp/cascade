@@ -8,7 +8,7 @@ import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
 
 // Type for time entry with computed hours field

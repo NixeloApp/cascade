@@ -5,7 +5,7 @@ import { Check, ChevronDown, ChevronUp, Rocket, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
 
 interface ChecklistItem {
