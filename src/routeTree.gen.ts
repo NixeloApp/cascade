@@ -22,6 +22,7 @@ import { Route as AuthAppOrgSlugRouteRouteImport } from './routes/_auth/_app/$or
 import { Route as AuthAppOrgSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/index'
 import { Route as AuthAppOrgSlugTimeTrackingRouteImport } from './routes/_auth/_app/$orgSlug/time-tracking'
 import { Route as AuthAppOrgSlugDashboardRouteImport } from './routes/_auth/_app/$orgSlug/dashboard'
+import { Route as AuthAppOrgSlugAssistantRouteImport } from './routes/_auth/_app/$orgSlug/assistant'
 import { Route as AuthAppOrgSlugWorkspacesIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/index'
 import { Route as AuthAppOrgSlugSettingsIndexRouteImport } from './routes/_auth/_app/$orgSlug/settings/index'
 import { Route as AuthAppOrgSlugProjectsIndexRouteImport } from './routes/_auth/_app/$orgSlug/projects/index'
@@ -115,6 +116,11 @@ const AuthAppOrgSlugTimeTrackingRoute =
 const AuthAppOrgSlugDashboardRoute = AuthAppOrgSlugDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthAppOrgSlugRouteRoute,
+} as any)
+const AuthAppOrgSlugAssistantRoute = AuthAppOrgSlugAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => AuthAppOrgSlugRouteRoute,
 } as any)
 const AuthAppOrgSlugWorkspacesIndexRoute =
@@ -310,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof InviteTokenRoute
   '/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
   '/app': typeof AuthAppAppRoute
+  '/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
   '/$orgSlug/': typeof AuthAppOrgSlugIndexRoute
@@ -352,6 +359,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
   '/app': typeof AuthAppAppRoute
+  '/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
   '/$orgSlug': typeof AuthAppOrgSlugIndexRoute
@@ -395,6 +403,7 @@ export interface FileRoutesById {
   '/invite/$token': typeof InviteTokenRoute
   '/_auth/_app/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
   '/_auth/_app/app': typeof AuthAppAppRoute
+  '/_auth/_app/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/_auth/_app/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/_auth/_app/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
   '/_auth/_app/$orgSlug/': typeof AuthAppOrgSlugIndexRoute
@@ -440,6 +449,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/$orgSlug'
     | '/app'
+    | '/$orgSlug/assistant'
     | '/$orgSlug/dashboard'
     | '/$orgSlug/time-tracking'
     | '/$orgSlug/'
@@ -482,6 +492,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/invite/$token'
     | '/app'
+    | '/$orgSlug/assistant'
     | '/$orgSlug/dashboard'
     | '/$orgSlug/time-tracking'
     | '/$orgSlug'
@@ -524,6 +535,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/_auth/_app/$orgSlug'
     | '/_auth/_app/app'
+    | '/_auth/_app/$orgSlug/assistant'
     | '/_auth/_app/$orgSlug/dashboard'
     | '/_auth/_app/$orgSlug/time-tracking'
     | '/_auth/_app/$orgSlug/'
@@ -659,6 +671,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/$orgSlug/dashboard'
       preLoaderRoute: typeof AuthAppOrgSlugDashboardRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/assistant': {
+      id: '/_auth/_app/$orgSlug/assistant'
+      path: '/assistant'
+      fullPath: '/$orgSlug/assistant'
+      preLoaderRoute: typeof AuthAppOrgSlugAssistantRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/workspaces/': {
@@ -966,6 +985,7 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren =
   )
 
 interface AuthAppOrgSlugRouteRouteChildren {
+  AuthAppOrgSlugAssistantRoute: typeof AuthAppOrgSlugAssistantRoute
   AuthAppOrgSlugDashboardRoute: typeof AuthAppOrgSlugDashboardRoute
   AuthAppOrgSlugTimeTrackingRoute: typeof AuthAppOrgSlugTimeTrackingRoute
   AuthAppOrgSlugIndexRoute: typeof AuthAppOrgSlugIndexRoute
@@ -983,6 +1003,7 @@ interface AuthAppOrgSlugRouteRouteChildren {
 }
 
 const AuthAppOrgSlugRouteRouteChildren: AuthAppOrgSlugRouteRouteChildren = {
+  AuthAppOrgSlugAssistantRoute: AuthAppOrgSlugAssistantRoute,
   AuthAppOrgSlugDashboardRoute: AuthAppOrgSlugDashboardRoute,
   AuthAppOrgSlugTimeTrackingRoute: AuthAppOrgSlugTimeTrackingRoute,
   AuthAppOrgSlugIndexRoute: AuthAppOrgSlugIndexRoute,
