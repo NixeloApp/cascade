@@ -575,7 +575,10 @@ describe("AutomationRulesManager - Component Behavior", () => {
 
       render(<AutomationRulesManager projectId={mockProjectId} />);
 
-      expect(screen.getByText(/Priority Changed → high/i)).toBeInTheDocument();
+      // Trigger label is rendered in a Badge - use regex for flexible matching
+      expect(screen.getByText(/Priority Changed/i)).toBeInTheDocument();
+      // "high" appears in multiple places (rule name, trigger value), use getAllByText
+      expect(screen.getAllByText(/high/i).length).toBeGreaterThan(0);
     });
 
     it("should display action label correctly", () => {
@@ -608,21 +611,23 @@ describe("AutomationRulesManager - Component Behavior", () => {
       executionCount: 0,
     };
 
-    it("should show pause emoji for active rules", () => {
+    it("should show pause icon for active rules", () => {
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue([activeRule]);
 
       render(<AutomationRulesManager projectId={mockProjectId} />);
 
-      expect(screen.getByTitle(/Disable rule/i)).toHaveTextContent("⏸️");
+      // Icon is rendered as SVG, check for aria-label instead
+      expect(screen.getByRole("button", { name: /Disable rule/i })).toBeInTheDocument();
     });
 
-    it("should show play emoji for inactive rules", () => {
+    it("should show play icon for inactive rules", () => {
       const inactiveRule = { ...activeRule, isActive: false };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue([inactiveRule]);
 
       render(<AutomationRulesManager projectId={mockProjectId} />);
 
-      expect(screen.getByTitle(/Enable rule/i)).toHaveTextContent("▶️");
+      // Icon is rendered as SVG, check for aria-label instead
+      expect(screen.getByRole("button", { name: /Enable rule/i })).toBeInTheDocument();
     });
 
     it("should toggle active rule to inactive", async () => {

@@ -48,7 +48,7 @@ const mockActivity = [
     issueId: "issue1" as Id<"issues">,
     userId: "user1" as Id<"users">,
     action: "created",
-    createdAt: Date.now() - 1000 * 60 * 5, // 5 mins ago
+    _creationTime: Date.now() - 1000 * 60 * 5, // 5 mins ago
     userName: "Alice",
     userImage: undefined,
     issueKey: "PROJ-1",
@@ -60,7 +60,7 @@ const mockActivity = [
     userId: "user2" as Id<"users">,
     action: "updated",
     field: "status",
-    createdAt: Date.now() - 1000 * 60 * 10, // 10 mins ago
+    _creationTime: Date.now() - 1000 * 60 * 10, // 10 mins ago
     userName: "Bob",
     userImage: undefined,
     issueKey: "PROJ-2",

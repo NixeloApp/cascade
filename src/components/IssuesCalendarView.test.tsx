@@ -20,9 +20,13 @@ vi.mock("convex/react", () => ({
 }));
 
 // Mock Utils
-vi.mock("@/lib/issue-utils", () => ({
-  getPriorityColor: vi.fn(() => "bg-red-500"),
-}));
+vi.mock("@/lib/issue-utils", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/issue-utils")>();
+  return {
+    ...actual,
+    getPriorityColor: vi.fn(() => "bg-red-500"),
+  };
+});
 
 // Mock IssueDetailModal to avoid complex rendering
 vi.mock("./IssueDetailModal", () => ({

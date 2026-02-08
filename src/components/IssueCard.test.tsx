@@ -4,8 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { IssueCard } from "./IssueCard";
 
-// Mock Lucide icons
-const MockIcon = () => null;
+// Create mock icon that's hoisted to be available in vi.mock
+const { MockIcon } = vi.hoisted(() => ({
+  MockIcon: () => null,
+}));
 
 // Mock issue utilities
 vi.mock("@/lib/issue-utils", () => ({
@@ -72,23 +74,23 @@ describe("IssueCard", () => {
   it("should display story points when present", () => {
     render(<IssueCard issue={mockIssue} onDragStart={mockOnDragStart} />);
 
-    expect(screen.getByText("5")).toBeInTheDocument();
-    expect(screen.getByText("pts")).toBeInTheDocument();
+    // Story points badge contains "5 pts" - use regex to handle whitespace
+    expect(screen.getByText(/5\s*pts/)).toBeInTheDocument();
   });
 
   it("should not display story points when undefined", () => {
     const issueWithoutPoints = { ...mockIssue, storyPoints: undefined };
     render(<IssueCard issue={issueWithoutPoints} onDragStart={mockOnDragStart} />);
 
-    expect(screen.queryByText("pts")).not.toBeInTheDocument();
+    expect(screen.queryByText(/pts/)).not.toBeInTheDocument();
   });
 
   it("should display decimal story points", () => {
     const issueWithDecimalPoints = { ...mockIssue, storyPoints: 3.5 };
     render(<IssueCard issue={issueWithDecimalPoints} onDragStart={mockOnDragStart} />);
 
-    expect(screen.getByText("3.5")).toBeInTheDocument();
-    expect(screen.getByText("pts")).toBeInTheDocument();
+    // Story points badge contains "3.5 pts" - use regex to handle whitespace
+    expect(screen.getByText(/3\.5\s*pts/)).toBeInTheDocument();
   });
 
   it("should display tooltip with assignee name on hover", async () => {
