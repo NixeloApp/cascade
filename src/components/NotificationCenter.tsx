@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
 import { Badge } from "./ui/Badge";
@@ -78,6 +79,7 @@ export function NotificationCenter() {
             type="button"
             className="relative p-2 text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-secondary rounded-lg transition-colors"
             aria-label={dynamicLabel}
+            data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
           >
             <Bell className="w-6 h-6" />
             {/* Unread Badge */}
@@ -98,6 +100,7 @@ export function NotificationCenter() {
       <PopoverContent
         align="end"
         className="w-full sm:w-96 max-w-notification p-0 bg-ui-bg border-ui-border max-h-panel flex flex-col"
+        data-testid={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       >
         {/* Header */}
         <Flex
