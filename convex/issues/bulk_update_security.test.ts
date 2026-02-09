@@ -40,10 +40,6 @@ describe("Bulk Update Deleted Issue Reproduction", () => {
       newStatus: "done",
     });
 
-    // Check if it reported as updated
-    // If the bug exists, this will likely be 1. If fixed, 0.
-    console.log("Updated count:", result.updated);
-
     // Verify status in DB
     const dbIssueAfter = await t.run(async (ctx) => ctx.db.get(issueId));
 
