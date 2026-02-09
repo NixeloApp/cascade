@@ -57,11 +57,13 @@ export const OTPVerification = Resend({
     ctx: ConvexAuthContext,
   ) => {
     const isTestEmail = email.endsWith("@inbox.mailtrap.io");
+    const isDevOrTest =
+      process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test" || !!process.env.CI;
 
     try {
       // For test emails, store plaintext OTP in testOtpCodes table
       // The authVerificationCodes table stores hashed codes (unreadable)
-      if (isTestEmail && ctx?.runMutation) {
+      if (isTestEmail && isDevOrTest && ctx?.runMutation) {
         try {
           await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
         } catch (e) {
