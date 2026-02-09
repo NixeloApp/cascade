@@ -65,10 +65,9 @@ authenticatedTest.describe("Non-existent Resources", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Should show error boundary or document not found
+    // Note: Error page uses plain text, not headings
     await expect(
-      page
-        .getByRole("heading", { name: /document not found/i })
-        .or(page.getByRole("heading", { name: /something went wrong/i })),
+      page.getByText(/document not found/i).or(page.getByText(/something went wrong/i)),
     ).toBeVisible();
   });
 
