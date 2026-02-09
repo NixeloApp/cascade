@@ -185,12 +185,8 @@
     "https://www.dubcdn.com/analytics/script.js"
   ],
   "fingerprint": {
-    "frameworks": [
-      "Next.js"
-    ],
-    "libraries": [
-      "Lottie"
-    ],
+    "frameworks": ["Next.js"],
+    "libraries": ["Lottie"],
     "ui": [],
     "analytics": []
   },

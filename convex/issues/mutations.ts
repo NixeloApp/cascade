@@ -424,6 +424,8 @@ export const bulkUpdateStatus = authenticatedMutation({
       const issueId = args.issueIds[i];
       if (!issue) continue;
 
+      if (issue.isDeleted) continue;
+
       try {
         await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
       } catch {
@@ -477,6 +479,8 @@ export const bulkUpdatePriority = authenticatedMutation({
       const issueId = args.issueIds[i];
       if (!issue) continue;
 
+      if (issue.isDeleted) continue;
+
       try {
         await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
       } catch {
@@ -521,6 +525,8 @@ export const bulkAssign = authenticatedMutation({
       const issue = issues[i];
       const issueId = args.issueIds[i];
       if (!issue) continue;
+
+      if (issue.isDeleted) continue;
 
       try {
         await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
@@ -567,6 +573,8 @@ export const bulkAddLabels = authenticatedMutation({
       const issueId = args.issueIds[i];
       if (!issue) continue;
 
+      if (issue.isDeleted) continue;
+
       try {
         await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
       } catch {
@@ -612,6 +620,8 @@ export const bulkMoveToSprint = authenticatedMutation({
       const issueId = args.issueIds[i];
       if (!issue) continue;
 
+      if (issue.isDeleted) continue;
+
       try {
         await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
       } catch {
@@ -654,6 +664,8 @@ export const bulkDelete = authenticatedMutation({
       const issue = issues[i];
       const issueId = args.issueIds[i];
       if (!issue) continue;
+
+      if (issue.isDeleted) continue;
 
       try {
         await assertIsProjectAdmin(ctx, issue.projectId as Id<"projects">, ctx.userId);

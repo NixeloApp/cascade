@@ -1870,13 +1870,9 @@
     "https://www.googletagmanager.com/gtag/js?id=G-RCYWHL7EQ7"
   ],
   "fingerprint": {
-    "frameworks": [
-      "Next.js"
-    ],
+    "frameworks": ["Next.js"],
     "libraries": [],
-    "ui": [
-      "Tailwind CSS"
-    ],
+    "ui": ["Tailwind CSS"],
     "analytics": []
   },
   "scrapedAt": "2026-02-04T06:14:35.652Z"
