@@ -52,11 +52,7 @@ export function EmptyState({
   }[variant];
 
   return (
-    <div
-      className={cn("text-center py-12 px-4 animate-fade-in", className)}
-      role="status"
-      aria-label={title}
-    >
+    <section className={cn("text-center py-12 px-4 animate-fade-in", className)} aria-label={title}>
       <div className={cn("text-6xl mb-4", iconColorClass)}>
         {typeof icon === "string" ? icon : <Icon icon={icon} size="xl" className="mx-auto" />}
       </div>
@@ -69,6 +65,6 @@ export function EmptyState({
         </Typography>
       )}
       {action && <div className="mt-4">{renderAction()}</div>}
-    </div>
+    </section>
   );
 }

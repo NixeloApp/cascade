@@ -1,3 +1,4 @@
+import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
@@ -77,18 +78,64 @@ vi.mock("convex/react", () => ({
   useQuery: mockUseQuery,
 }));
 
+// Helper to identify queries regardless of object identity
+function isQuery(queryArg: any, path: string) {
+  // Check strict equality
+  if (queryArg === api.analytics.getProjectAnalytics && path === "getProjectAnalytics") return true;
+  if (queryArg === api.analytics.getTeamVelocity && path === "getTeamVelocity") return true;
+  if (queryArg === api.analytics.getRecentActivity && path === "getRecentActivity") return true;
+
+  // Fallback: Check if it's a string path (sometimes used in Convex) or object with matching properties
+  try {
+    if (typeof queryArg === "string" && queryArg.includes(path)) return true;
+    if (typeof queryArg === "function" && queryArg.name === path) return true;
+    // @ts-expect-error
+    if (queryArg?._functionName === path) return true;
+  } catch (e) {
+    // ignore
+  }
+
+  return false;
+}
+
+// Extracted handler to reduce complexity
+const createQueryHandler = (
+  analyticsData: typeof mockAnalytics = mockAnalytics,
+  velocityData: any = mockVelocity,
+  activityData: typeof mockActivity = mockActivity,
+) => {
+  let callCount = 0;
+  return (queryArg: any) => {
+    // 1. Try robust matching
+    if (
+      queryArg === api.analytics.getProjectAnalytics ||
+      isQuery(queryArg, "getProjectAnalytics")
+    ) {
+      return analyticsData;
+    }
+    if (queryArg === api.analytics.getTeamVelocity || isQuery(queryArg, "getTeamVelocity")) {
+      return velocityData;
+    }
+    if (queryArg === api.analytics.getRecentActivity || isQuery(queryArg, "getRecentActivity")) {
+      return activityData;
+    }
+
+    // 2. Fallback to order-based matching (modulo to handle re-renders)
+    const index = callCount % 3;
+    callCount++;
+
+    if (index === 0) return analyticsData;
+    if (index === 1) return velocityData;
+    if (index === 2) return activityData;
+
+    return null;
+  };
+};
+
 describe("AnalyticsDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Set up default mock - return data for all calls
-    let callCount = 0;
-    mockUseQuery.mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) return mockAnalytics;
-      if (callCount === 2) return mockVelocity;
-      if (callCount === 3) return mockActivity;
-      return null;
-    });
+    mockUseQuery.mockImplementation(createQueryHandler());
   });
 
   it("should render loading state when data is not available", () => {
@@ -208,15 +255,9 @@ describe("AnalyticsDashboard", () => {
 
   it("should show no completed sprints message when velocity data is empty", () => {
     vi.clearAllMocks();
-    // Override for this test with empty velocity data
-    let callCount = 0;
-    mockUseQuery.mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) return mockAnalytics;
-      if (callCount === 2) return { velocityData: [], averageVelocity: 0 };
-      if (callCount === 3) return mockActivity;
-      return null;
-    });
+    mockUseQuery.mockImplementation(
+      createQueryHandler(mockAnalytics, { velocityData: [], averageVelocity: 0 }, mockActivity),
+    );
 
     render(<AnalyticsDashboard projectId={"test" as Id<"projects">} />);
 

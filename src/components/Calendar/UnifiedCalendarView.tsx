@@ -37,7 +37,7 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
             disabled={!projectId}
             title={!projectId ? "Select a project to view roadmap" : ""}
           >
-            <Icon icon={MapIcon} size="sm" className="mr-1" />
+            <Icon icon={Map} size="sm" className="mr-1" />
             <span className="sm:hidden">Roadmap</span>
             <span className="hidden sm:inline">Roadmap (Issues)</span>
           </ToggleGroupItem>

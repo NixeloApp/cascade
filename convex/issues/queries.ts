@@ -303,21 +303,31 @@ export const listSelectableIssues = authenticatedQuery({
       return [];
     }
 
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_project_deleted", (q) =>
-        q.eq("projectId", args.projectId).lt("isDeleted", true),
-      )
-      .order("desc")
-      .take(500);
+    // Optimization: Fetch root issue types in parallel using the by_project_type index.
+    // This avoids fetching subtasks (which can be numerous) and ensures we get a diverse set of selectable issues.
+    // We take 500 of each type to ensure we get the most recent items across all types, matching the original global limit behavior.
+    const outcomes = await Promise.all(
+      ROOT_ISSUE_TYPES.map((type) =>
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_type", (q) =>
+            q.eq("projectId", args.projectId).eq("type", type).lt("isDeleted", true),
+          )
+          .order("desc")
+          .take(500),
+      ),
+    );
 
-    return issues
-      .filter((i: Doc<"issues">) => !i.parentId && i.type !== "subtask")
-      .map((i) => ({
-        _id: i._id,
-        key: i.key,
-        title: i.title,
-      }));
+    const issues = outcomes.flat();
+
+    // Sort by creation time descending (newest first)
+    issues.sort((a, b) => b._creationTime - a._creationTime);
+
+    return issues.slice(0, 500).map((i) => ({
+      _id: i._id,
+      key: i.key,
+      title: i.title,
+    }));
   },
 });
 

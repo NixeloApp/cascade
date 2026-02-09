@@ -380,16 +380,22 @@ export const SettingsPage: Story = {
       </TabsList>
       <TabsContent value="profile" className="space-y-4 pt-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-ui-text">Display Name</label>
+          <label htmlFor="display-name" className="text-sm font-medium text-ui-text">
+            Display Name
+          </label>
           <input
+            id="display-name"
             type="text"
             className="w-full rounded-md border border-ui-border bg-ui-bg px-3 py-2 text-sm"
             placeholder="John Doe"
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-ui-text">Email</label>
+          <label htmlFor="email" className="text-sm font-medium text-ui-text">
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             className="w-full rounded-md border border-ui-border bg-ui-bg px-3 py-2 text-sm"
             placeholder="john@example.com"
@@ -398,8 +404,13 @@ export const SettingsPage: Story = {
       </TabsContent>
       <TabsContent value="account" className="space-y-4 pt-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-ui-text">Language</label>
-          <select className="w-full rounded-md border border-ui-border bg-ui-bg px-3 py-2 text-sm">
+          <label htmlFor="language" className="text-sm font-medium text-ui-text">
+            Language
+          </label>
+          <select
+            id="language"
+            className="w-full rounded-md border border-ui-border bg-ui-bg px-3 py-2 text-sm"
+          >
             <option>English</option>
             <option>Spanish</option>
             <option>French</option>
@@ -408,12 +419,16 @@ export const SettingsPage: Story = {
       </TabsContent>
       <TabsContent value="notifications" className="space-y-4 pt-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-ui-text">Email notifications</span>
-          <input type="checkbox" defaultChecked />
+          <label htmlFor="email-notif" className="text-sm text-ui-text">
+            Email notifications
+          </label>
+          <input id="email-notif" type="checkbox" defaultChecked />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-ui-text">Push notifications</span>
-          <input type="checkbox" />
+          <label htmlFor="push-notif" className="text-sm text-ui-text">
+            Push notifications
+          </label>
+          <input id="push-notif" type="checkbox" />
         </div>
       </TabsContent>
     </Tabs>
