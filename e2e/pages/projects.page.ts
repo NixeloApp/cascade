@@ -216,7 +216,7 @@ export class ProjectsPage extends BasePage {
           name: /Software Development/i,
         });
         await expect(template).toBeVisible();
-        await template.click({ force: true });
+        await template.click();
 
         // Verify we proceeded to configuration step
         await expect(this.createProjectForm.getByText("Configure Project")).toBeVisible();
@@ -323,7 +323,7 @@ export class ProjectsPage extends BasePage {
     await expect(tabLocator).toBeEnabled();
 
     // Use force click to ensure we hit it even if animations are playing
-    await tabLocator.click({ force: true });
+    await tabLocator.click();
   }
 
   /**
@@ -373,7 +373,7 @@ export class ProjectsPage extends BasePage {
         await this.startTimerButton.click();
       } catch (_e) {
         console.log("Standard click failed/timed out, trying force click...");
-        await this.startTimerButton.click({ force: true });
+        await this.startTimerButton.click();
       }
 
       // If still not working, the test will retry this block via toPass

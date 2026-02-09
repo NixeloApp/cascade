@@ -421,7 +421,7 @@ export class SettingsPage extends BasePage {
     await expect(this.saveSettingsButton).toBeEnabled();
 
     // Click immediately after enabled check passes
-    await this.saveSettingsButton.click({ force: true });
+    await this.saveSettingsButton.click();
 
     // Wait for success toast - use data attribute to be more specific
     await expect(this.page.locator("[data-sonner-toast][data-type='success']").first()).toBeVisible(

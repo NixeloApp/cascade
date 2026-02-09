@@ -120,6 +120,8 @@ export const TEST_IDS = {
     PASSWORD_INPUT: "auth-password-input",
     /** @see src/components/auth/SignInForm.tsx */
     SUBMIT_BUTTON: "auth-submit-button",
+    /** @see src/components/auth/SignInForm.tsx - form element with data-expanded attribute */
+    FORM: "auth-form",
   },
 
   // ============================================================

@@ -69,7 +69,6 @@ export function Metadata({
   const validChildren = React.Children.toArray(children).filter(Boolean);
   const childrenWithSeparators = validChildren.flatMap((child, index) => {
     if (index === 0) return [child];
-    // biome-ignore lint/suspicious/noArrayIndexKey: index is stable relative to children
     return [<MetadataSeparator key={`sep-${index}`}>{separator}</MetadataSeparator>, child];
   });
 

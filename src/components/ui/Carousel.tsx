@@ -103,7 +103,6 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
     }, []);
 
     // Update total slides count after all slides are registered
-    // biome-ignore lint/correctness/useExhaustiveDependencies: children dependency needed for slide registration
     React.useEffect(() => {
       setTotalSlides(slideCountRef.current);
     }, []);
@@ -141,7 +140,6 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
     }, [autoPlay, totalSlides, goToNext]);
 
     // Reset slide count when children change
-    // biome-ignore lint/correctness/useExhaustiveDependencies: reset count when children change
     React.useEffect(() => {
       slideCountRef.current = 0;
     }, []);
@@ -277,7 +275,6 @@ const CarouselIndicators = React.forwardRef<HTMLDivElement, React.HTMLAttributes
       >
         {Array.from({ length: totalSlides }).map((_, index) => (
           <button
-            // biome-ignore lint/suspicious/noArrayIndexKey: index is stable for indicators
             key={index}
             type="button"
             onClick={() => goToSlide(index)}

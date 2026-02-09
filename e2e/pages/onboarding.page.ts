@@ -272,7 +272,7 @@ export class OnboardingPage {
       await this.waitForSplashScreen();
 
       // The role cards have a small pending state/delay, so we might need to retry click
-      await this.teamLeadCard.click({ force: true });
+      await this.teamLeadCard.click();
 
       // Check for the outcome (first screen of lead flow)
       await expect(this.teamLeadHeading).toBeVisible();
@@ -293,7 +293,7 @@ export class OnboardingPage {
 
       await this.waitForSplashScreen();
 
-      await this.teamMemberCard.click({ force: true });
+      await this.teamMemberCard.click();
 
       // Check for the outcome (first screen of member flow)
       await expect(this.page.getByRole("heading", { name: /name your project/i })).toBeVisible();

@@ -282,7 +282,7 @@ export class DashboardPage extends BasePage {
 
     // Click and wait for navigation if it's a link-based tab
     const urlBefore = this.page.url();
-    await tabs[tab].click({ force: true });
+    await tabs[tab].click();
 
     // If it's a navigation tab, wait for URL to actually change or for load to complete
     if (tab !== "dashboard" || !urlBefore.includes("/dashboard")) {
@@ -335,7 +335,7 @@ export class DashboardPage extends BasePage {
   }
 
   async openShortcutsHelp() {
-    await this.shortcutsHelpButton.click({ force: true });
+    await this.shortcutsHelpButton.click();
     await expect(this.shortcutsModal).toBeVisible();
   }
 
@@ -345,7 +345,7 @@ export class DashboardPage extends BasePage {
       await this.page.keyboard.press("Escape");
       // Fallback: click outside if escape fails (try clicking main content)
       if (await this.shortcutsModal.isVisible()) {
-        await this.mainContent.click({ force: true, position: { x: 10, y: 10 } }).catch(() => {});
+        await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
       }
       await expect(this.shortcutsModal).not.toBeVisible();
     }).toPass();
@@ -357,11 +357,11 @@ export class DashboardPage extends BasePage {
       dark: this.darkThemeButton,
       system: this.systemThemeButton,
     };
-    await buttons[theme].click({ force: true });
+    await buttons[theme].click();
   }
 
   async openNotifications() {
-    await this.notificationButton.click({ force: true });
+    await this.notificationButton.click();
   }
 
   async closeNotifications() {
@@ -369,7 +369,7 @@ export class DashboardPage extends BasePage {
   }
 
   async signOut() {
-    await this.signOutButton.click({ force: true });
+    await this.signOutButton.click();
   }
 
   async signOutViaUserMenu() {
@@ -434,7 +434,7 @@ export class DashboardPage extends BasePage {
       assigned: this.assignedTab,
       created: this.createdTab,
     };
-    await tabs[filter].click({ force: true });
+    await tabs[filter].click();
   }
 
   // ===================
@@ -442,7 +442,7 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async createNewDocument() {
-    await this.newDocumentButton.click({ force: true });
+    await this.newDocumentButton.click();
   }
 
   async searchDocuments(query: string) {
@@ -454,7 +454,7 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async createNewProject() {
-    await this.newProjectButton.click({ force: true });
+    await this.newProjectButton.click();
   }
 
   // ===================
