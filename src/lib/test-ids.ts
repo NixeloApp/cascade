@@ -22,6 +22,8 @@ export const TEST_IDS = {
     /** @see src/components/IssueCard.tsx */
     CARD: "issue-card",
     /** @see src/components/IssueCard.tsx */
+    TITLE: "issue-title",
+    /** @see src/components/IssueCard.tsx */
     KEY: "issue-key",
     /** @see src/components/IssueCard.tsx */
     PRIORITY: "issue-priority",

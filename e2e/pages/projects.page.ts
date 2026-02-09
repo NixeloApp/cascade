@@ -330,7 +330,7 @@ export class ProjectsPage extends BasePage {
    * Get an issue card by its title
    */
   getIssueCard(title: string) {
-    return this.page.getByRole("heading", { name: title, level: 4 });
+    return this.page.getByTestId(TEST_IDS.ISSUE.TITLE).filter({ hasText: title });
   }
 
   /**
