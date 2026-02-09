@@ -30,6 +30,23 @@ function generateOTP(): string {
 }
 
 /**
+ * Helper to store test OTPs in the testOtpCodes table
+ */
+async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string) {
+  const isTestEmail = email.endsWith("@inbox.mailtrap.io");
+  const isDevOrTest =
+    process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test" || !!process.env.CI;
+
+  if (isTestEmail && isDevOrTest && ctx?.runMutation) {
+    try {
+      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
+    } catch (e) {
+      logger.warn(`[OTPVerification] Failed to store test OTP: ${e}`);
+    }
+  }
+}
+
+/**
  * OTP Verification Provider for email verification during signup
  *
  * Uses the universal sendEmail() which handles:
@@ -56,20 +73,9 @@ export const OTPVerification = Resend({
     { identifier: email, token }: { identifier: string; token: string },
     ctx: ConvexAuthContext,
   ) => {
-    const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-    const isDevOrTest =
-      process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test" || !!process.env.CI;
-
     try {
-      // For test emails, store plaintext OTP in testOtpCodes table
-      // The authVerificationCodes table stores hashed codes (unreadable)
-      if (isTestEmail && isDevOrTest && ctx?.runMutation) {
-        try {
-          await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
-        } catch (e) {
-          logger.warn(`[OTPVerification] Failed to store test OTP: ${e}`);
-        }
-      }
+      // Store test OTP if applicable
+      await storeTestOtp(ctx, email, token);
 
       // Check if user is already verified (e.g., E2E test users)
       // Safety check: ctx.db might be undefined depending on how the provider is called
@@ -101,6 +107,7 @@ export const OTPVerification = Resend({
       });
 
       if (!result.success) {
+        const isTestEmail = email.endsWith("@inbox.mailtrap.io");
         // For test emails, don't fail on email send errors (e.g., Mailtrap rate limiting)
         // E2E tests can retrieve the OTP via /e2e/get-latest-otp endpoint instead
         if (isTestEmail) {
@@ -112,6 +119,7 @@ export const OTPVerification = Resend({
         throw new Error(`Could not send verification email: ${result.error}`);
       }
     } catch (err) {
+      const isTestEmail = email.endsWith("@inbox.mailtrap.io");
       // For test emails, don't fail on email send errors
       if (isTestEmail) {
         logger.warn(`[OTPVerification] Email send failed for test user, continuing: ${err}`);
