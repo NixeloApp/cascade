@@ -1,6 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
-import { Calendar } from "@/lib/icons";
+import { Calendar, Map as MapIcon } from "@/lib/icons";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
@@ -37,7 +37,7 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
             disabled={!projectId}
             title={!projectId ? "Select a project to view roadmap" : ""}
           >
-            <Icon icon={Map} size="sm" className="mr-1" />
+            <Icon icon={MapIcon} size="sm" className="mr-1" />
             <span className="sm:hidden">Roadmap</span>
             <span className="hidden sm:inline">Roadmap (Issues)</span>
           </ToggleGroupItem>
