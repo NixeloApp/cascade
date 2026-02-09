@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 import { BasePage } from "./base.page";
 
 /**
@@ -166,8 +167,8 @@ export class SettingsPage extends BasePage {
 
     // Admin - Organization Settings
     this.organizationNameInput = page.locator("#orgName");
-    this.requiresTimeApprovalSwitch = page.getByRole("switch", { name: /require time approval/i });
-    this.saveSettingsButton = page.getByRole("button", { name: /save changes/i });
+    this.requiresTimeApprovalSwitch = page.getByTestId(TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH);
+    this.saveSettingsButton = page.getByTestId(TEST_IDS.SETTINGS.SAVE_BUTTON);
   }
 
   // ===================
@@ -412,21 +413,41 @@ export class SettingsPage extends BasePage {
       return;
     }
 
-    // Click the switch to toggle - verify the aria-checked changes
-    await this.requiresTimeApprovalSwitch.click();
     const expectedChecked = enabled ? "true" : "false";
-    await expect(this.requiresTimeApprovalSwitch).toHaveAttribute("aria-checked", expectedChecked);
 
-    // Wait for save button to be enabled (form has changes)
-    await expect(this.saveSettingsButton).toBeEnabled();
+    // Use retry pattern for the entire toggle + save cycle to handle Convex real-time updates
+    // The Convex subscription can reset formData which disables the save button
+    await expect(async () => {
+      // Re-check current state in case it changed
+      const currentChecked = await this.requiresTimeApprovalSwitch.getAttribute("aria-checked");
 
-    // Click immediately after enabled check passes
-    await this.saveSettingsButton.click();
+      // Only click if we need to change the state
+      if (currentChecked !== expectedChecked) {
+        // Ensure switch is in viewport and not covered
+        await this.requiresTimeApprovalSwitch.scrollIntoViewIfNeeded();
 
-    // Wait for success toast - use data attribute to be more specific
-    await expect(this.page.locator("[data-sonner-toast][data-type='success']").first()).toBeVisible(
-      {},
-    );
+        // Click the switch to toggle
+        await this.requiresTimeApprovalSwitch.click();
+
+        // Verify the aria-checked changes
+        await expect(this.requiresTimeApprovalSwitch).toHaveAttribute(
+          "aria-checked",
+          expectedChecked,
+        );
+      }
+
+      // Wait for React to process the state change and enable the save button
+      // This must be inside the retry loop because Convex subscription can reset state
+      await expect(this.saveSettingsButton).toBeEnabled();
+
+      // Click save button - this must also be in the retry loop
+      await this.saveSettingsButton.click();
+
+      // Verify success toast appears
+      await expect(
+        this.page.locator("[data-sonner-toast][data-type='success']").first(),
+      ).toBeVisible();
+    }).toPass();
   }
 
   async expectOrganizationName(name: string) {

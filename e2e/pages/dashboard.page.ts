@@ -119,7 +119,7 @@ export class DashboardPage extends BasePage {
     // "Commands ⌘K" button - has aria-label and data-tour attribute
     this.commandPaletteButton = page.getByRole("button", { name: /open command palette/i });
     // Keyboard shortcuts help button (? icon)
-    this.shortcutsHelpButton = page.getByRole("button", { name: /keyboard shortcuts/i });
+    this.shortcutsHelpButton = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
     // Global search button with aria-label "Open search (⌘K)"
     this.globalSearchButton = page.getByRole("button", { name: /open search/i });
     // Bell notification icon button - aria-label is "Notifications" or "Notifications, N unread"
@@ -335,8 +335,14 @@ export class DashboardPage extends BasePage {
   }
 
   async openShortcutsHelp() {
-    await this.shortcutsHelpButton.click();
-    await expect(this.shortcutsModal).toBeVisible();
+    // Wait for button to be visible and stable
+    await this.shortcutsHelpButton.waitFor({ state: "visible" });
+
+    // Use retry pattern to handle potential React re-renders
+    await expect(async () => {
+      await this.shortcutsHelpButton.click();
+      await expect(this.shortcutsModal).toBeVisible();
+    }).toPass();
   }
 
   async closeShortcutsHelp() {

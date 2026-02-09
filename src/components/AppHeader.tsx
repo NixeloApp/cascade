@@ -3,6 +3,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { Menu } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationCenter } from "./NotificationCenter";
 import { TimerWidget as NavTimerWidget } from "./TimeTracking/TimerWidget";
@@ -71,6 +72,7 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
               onClick={onShowShortcutsHelp}
               className="hidden sm:flex items-center justify-center p-2 text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover rounded-lg transition-all duration-default"
               aria-label="Keyboard shortcuts"
+              data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
             >
               <svg
                 aria-hidden="true"

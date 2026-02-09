@@ -2,6 +2,7 @@ import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
@@ -201,6 +202,7 @@ export function OrganizationSettings() {
                   setFormData({ ...formData, requiresTimeApproval: checked })
                 }
                 aria-label="Require time approval"
+                data-testid={TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH}
               />
             </Flex>
           </Flex>
@@ -238,7 +240,12 @@ export function OrganizationSettings() {
 
       {/* Save Button */}
       <Flex gap="md">
-        <Button onClick={handleSave} isLoading={isSubmitting} disabled={!hasChanges}>
+        <Button
+          onClick={handleSave}
+          isLoading={isSubmitting}
+          disabled={!hasChanges}
+          data-testid={TEST_IDS.SETTINGS.SAVE_BUTTON}
+        >
           Save Changes
         </Button>
         {hasChanges && (

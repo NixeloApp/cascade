@@ -213,6 +213,10 @@ export const TEST_IDS = {
   SETTINGS: {
     /** @see src/routes/_app.$orgSlug.settings.tsx */
     ORG_TAB: "settings-org-tab",
+    /** @see src/components/Admin/OrganizationSettings.tsx */
+    TIME_APPROVAL_SWITCH: "settings-time-approval-switch",
+    /** @see src/components/Admin/OrganizationSettings.tsx */
+    SAVE_BUTTON: "settings-save-button",
   },
 
   // ============================================================
