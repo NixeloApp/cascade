@@ -35,19 +35,28 @@ export interface TextareaProps
  * <Textarea variant="error" error="Description is required" />
  */
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, variant, error, ...props }, ref) => {
+  ({ className, variant, error, id, "aria-describedby": ariaDescribedBy, ...props }, ref) => {
+    const generatedId = React.useId();
+    const textareaId = id || generatedId;
+    const errorId = `${textareaId}-error`;
     const computedVariant = error ? "error" : variant;
+
+    const combinedDescribedBy = [ariaDescribedBy, error ? errorId : undefined]
+      .filter(Boolean)
+      .join(" ");
 
     return (
       <div className="w-full">
         <textarea
+          id={textareaId}
           className={cn(textareaVariants({ variant: computedVariant, className }))}
           ref={ref}
           aria-invalid={!!error}
+          aria-describedby={combinedDescribedBy || undefined}
           {...props}
         />
         {error && (
-          <Typography variant="muted" className="mt-1 text-sm text-status-error">
+          <Typography id={errorId} variant="muted" color="error" className="mt-1 text-sm">
             {error}
           </Typography>
         )}

@@ -614,7 +614,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
     it("should show pause icon for active rules", () => {
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue([activeRule]);
 
-      render(<AutomationRulesManager projectId={mockProjectId} />);
+      const { container } = render(<AutomationRulesManager projectId={mockProjectId} />);
 
       // Icon is rendered as SVG, check for aria-label instead
       expect(screen.getByRole("button", { name: /Disable rule/i })).toBeInTheDocument();
@@ -624,7 +624,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
       const inactiveRule = { ...activeRule, isActive: false };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue([inactiveRule]);
 
-      render(<AutomationRulesManager projectId={mockProjectId} />);
+      const { container } = render(<AutomationRulesManager projectId={mockProjectId} />);
 
       // Icon is rendered as SVG, check for aria-label instead
       expect(screen.getByRole("button", { name: /Enable rule/i })).toBeInTheDocument();

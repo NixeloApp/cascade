@@ -29,3 +29,7 @@
 ## 2026-02-05 - Fixing Nested Interactive Controls
 **Learning:** Found a pattern where interactive elements (e.g., delete buttons) were nested inside a clickable container implemented as a `<button>`. This is invalid HTML and breaks screen reader navigation.
 **Action:** When creating complex list items with multiple actions, use a `div` or `li` container. Wrap the main content area in a `Link` or `button`, and keep secondary actions as siblings, using absolute positioning or flexbox to maintain the visual layout.
+
+## 2026-03-03 - Linking Input Errors
+**Learning:** `Input` and `Textarea` components often render error text visually but fail to link it programmatically, leaving screen reader users unaware of the invalid state context.
+**Action:** Use `React.useId` to generate stable IDs for error messages and explicitly link them via `aria-describedby` on the input element. Ensure to preserve and merge any existing `aria-describedby` values from props.
