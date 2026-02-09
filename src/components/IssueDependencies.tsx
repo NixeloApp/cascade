@@ -35,8 +35,12 @@ function IssueDisplay({
   return (
     <Flex as="span" align="center" gap="sm" className="min-w-0">
       <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" className="shrink-0" />
-      <code className="shrink-0 font-mono text-xs text-ui-text-secondary">{issueKey}</code>
-      <span className="truncate text-sm text-ui-text">{title}</span>
+      <Typography variant="mono" as="code" className="shrink-0 text-ui-text-secondary">
+        {issueKey}
+      </Typography>
+      <Typography variant="small" as="span" className="truncate text-ui-text">
+        {title}
+      </Typography>
     </Flex>
   );
 }
@@ -285,7 +289,10 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
             {/* Selected Issue */}
             {selectedIssueKey && (
               <Typography variant="caption">
-                Selected: <span className="font-medium">{selectedIssueKey}</span>
+                Selected:{" "}
+                <Typography variant="label" as="span">
+                  {selectedIssueKey}
+                </Typography>
               </Typography>
             )}
 

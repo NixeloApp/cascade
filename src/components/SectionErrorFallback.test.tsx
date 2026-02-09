@@ -6,9 +6,11 @@ import { SectionErrorFallback } from "./SectionErrorFallback";
 describe("SectionErrorFallback", () => {
   describe("Rendering", () => {
     it("should render error icon", () => {
-      render(<SectionErrorFallback title="Error Title" />);
+      const { container } = render(<SectionErrorFallback title="Error Title" />);
 
-      expect(screen.getByText("⚠️")).toBeInTheDocument();
+      // Icon component renders an SVG with AlertTriangle icon
+      const icon = container.querySelector("svg");
+      expect(icon).toBeInTheDocument();
     });
 
     it("should render provided title", () => {
@@ -83,7 +85,8 @@ describe("SectionErrorFallback", () => {
     it("should mark warning icon as hidden from screen readers", () => {
       const { container } = render(<SectionErrorFallback title="Error" />);
 
-      const icon = container.querySelector(".text-4xl");
+      // Icon component renders with the status-error class
+      const icon = container.querySelector(".text-status-error");
       expect(icon).toBeInTheDocument();
       // Icon is decorative and doesn't need ARIA label
     });

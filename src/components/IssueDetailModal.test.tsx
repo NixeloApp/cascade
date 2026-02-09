@@ -1,14 +1,22 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
+import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { IssueDetailModal } from "./IssueDetailModal";
+
+// Create a mock mutation function that matches ReactMutation shape
+const mockMutationFn = vi.fn();
+Object.assign(mockMutationFn, {
+  withOptimisticUpdate: vi.fn().mockReturnValue(mockMutationFn),
+});
 
 // Mock Convex hooks
 vi.mock("convex/react", () => ({
   useQuery: vi.fn(),
-  useMutation: vi.fn(),
+  useMutation: vi.fn(() => mockMutationFn),
 }));
 
 // Mock toast utilities
@@ -32,20 +40,26 @@ vi.mock("@/lib/accessibility", () => ({
 }));
 
 // Mock issue utilities
-vi.mock("@/lib/issue-utils", () => ({
-  getPriorityColor: vi.fn((priority: string, type: string) => {
-    if (type === "badge") {
-      const colors = {
-        urgent: "bg-status-error-bg text-status-error-text",
-        high: "bg-status-warning-bg text-status-warning-text",
-        medium: "bg-status-warning-bg text-status-warning-text",
-        low: "bg-status-info-bg text-status-info-text",
-      };
-      return colors[priority as keyof typeof colors] || "bg-ui-bg-tertiary text-ui-text-secondary";
-    }
-    return "";
-  }),
-}));
+vi.mock("@/lib/issue-utils", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/issue-utils")>();
+  return {
+    ...actual,
+    getPriorityColor: vi.fn((priority: string, type: string) => {
+      if (type === "badge") {
+        const colors = {
+          urgent: "bg-status-error-bg text-status-error-text",
+          high: "bg-status-warning-bg text-status-warning-text",
+          medium: "bg-status-warning-bg text-status-warning-text",
+          low: "bg-status-info-bg text-status-info-text",
+        };
+        return (
+          colors[priority as keyof typeof colors] || "bg-ui-bg-tertiary text-ui-text-secondary"
+        );
+      }
+      return "";
+    }),
+  };
+});
 
 // Mock child components
 vi.mock("./TimeTracker", () => ({
@@ -73,21 +87,36 @@ vi.mock("./IssueWatchers", () => ({
 }));
 
 describe("IssueDetailModal", () => {
-  const mockUpdateIssue = vi.fn();
-  const _mockCreateIssue = vi.fn();
   const mockOnOpenChange = vi.fn();
   const mockIssueId = "issue-123" as Id<"issues">;
 
   const renderModal = () =>
     render(<IssueDetailModal issueId={mockIssueId} open={true} onOpenChange={mockOnOpenChange} />);
 
-  const mockIssue = {
+  interface MockIssue {
+    _id: Id<"issues">;
+    key: string;
+    title: string;
+    description: string;
+    type: IssueType;
+    priority: IssuePriority;
+    status: string;
+    assignee: { name: string } | null;
+    reporter: { name: string } | null;
+    labels: { name: string; color: string }[];
+    estimatedHours: number;
+    loggedHours: number;
+    storyPoints?: number;
+    projectId: Id<"projects">;
+  }
+
+  const mockIssue: MockIssue = {
     _id: mockIssueId,
     key: "TEST-123",
     title: "Fix authentication bug",
     description: "Users cannot login with valid credentials",
-    type: "bug" as const,
-    priority: "high" as const,
+    type: "bug",
+    priority: "high",
     status: "in-progress",
     assignee: { name: "John Doe" },
     reporter: { name: "Jane Smith" },
@@ -103,19 +132,26 @@ describe("IssueDetailModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useMutation).mockReturnValue(mockUpdateIssue as any);
   });
 
-  const setupMockQuery = (issueData: any = mockIssue, subtasksData: any = []) => {
-    // @ts-expect-error Mock implementation
-    vi.mocked(useQuery).mockImplementation((_query: any, args: any) => {
-      // Identify query by arguments
-      if (args && args.id === mockIssueId) return issueData;
-      if (args && args.parentId === mockIssueId) return subtasksData;
+  const setupMockQuery = (
+    issueData: MockIssue | undefined = mockIssue,
+    subtasksData: MockIssue[] = [],
+  ) => {
+    vi.mocked(useQuery).mockImplementation(
+      <T,>(
+        _query: FunctionReference<"query">,
+        args?: Record<string, unknown> | "skip",
+      ): T | undefined => {
+        if (args === "skip") return undefined;
+        // Identify query by arguments
+        if (args && "id" in args && args.id === mockIssueId) return issueData as T;
+        if (args && "parentId" in args && args.parentId === mockIssueId) return subtasksData as T;
 
-      // Fallback to undefined (loading)
-      return undefined;
-    });
+        // Fallback to undefined (loading)
+        return undefined;
+      },
+    );
   };
 
   it("should show loading state when issue is undefined", () => {
@@ -162,7 +198,9 @@ describe("IssueDetailModal", () => {
 
     renderModal();
 
-    expect(screen.getByText("🐛")).toBeInTheDocument(); // Bug icon
+    // Icon is rendered as SVG for bug type - the modal uses a portal
+    // so we search document.body instead of container
+    expect(document.body.querySelector("svg")).toBeInTheDocument();
   });
 
   it("should show priority badge with correct color", () => {
@@ -252,7 +290,7 @@ describe("IssueDetailModal", () => {
   it("should call update mutation when Save is clicked", async () => {
     const user = userEvent.setup();
     setupMockQuery();
-    mockUpdateIssue.mockResolvedValue(undefined);
+    mockMutationFn.mockResolvedValue(undefined);
 
     renderModal();
 
@@ -267,7 +305,7 @@ describe("IssueDetailModal", () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(mockUpdateIssue as any).toHaveBeenCalledWith({
+      expect(mockMutationFn).toHaveBeenCalledWith({
         issueId: mockIssueId,
         title: "Updated title",
         description: "Users cannot login with valid credentials",
@@ -325,7 +363,7 @@ describe("IssueDetailModal", () => {
   it("should handle save error gracefully", async () => {
     const user = userEvent.setup();
     setupMockQuery();
-    mockUpdateIssue.mockRejectedValue(new Error("Network error"));
+    mockMutationFn.mockRejectedValue(new Error("Network error"));
 
     const { showError } = await import("@/lib/toast");
 

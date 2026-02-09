@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "./ui/Avatar";
+import { FlexItem } from "./ui/Flex";
 import { Typography } from "./ui/Typography";
 
 interface MentionInputProps {
@@ -197,21 +198,21 @@ export function MentionInput({
               <Avatar name={member.userName} size="md" />
 
               {/* User Info */}
-              <div className="flex-1 min-w-0">
+              <FlexItem flex="1" className="min-w-0">
                 <Typography variant="p" className="font-medium truncate">
                   {member.userName}
                 </Typography>
-                <Typography variant="muted" size="xs" className="capitalize">
+                <Typography variant="caption" className="capitalize">
                   User
                 </Typography>
-              </div>
+              </FlexItem>
             </button>
           ))}
         </div>
       )}
 
       {/* Helper text */}
-      <Typography variant="muted" size="xs" className="mt-1">
+      <Typography variant="caption" className="mt-1">
         Type @ to mention team members
       </Typography>
     </div>

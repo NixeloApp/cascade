@@ -6,6 +6,7 @@ import type { FunctionReference } from "convex/server";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils";
 
@@ -93,11 +94,19 @@ function SidebarTeamProjects({
   );
 
   if (status === "LoadingFirstPage") {
-    return <div className="ml-6 text-xs text-ui-text-tertiary px-3 py-1">Loading...</div>;
+    return (
+      <Typography variant="caption" color="tertiary" className="ml-6 px-3 py-1">
+        Loading...
+      </Typography>
+    );
   }
 
   if (projects.length === 0) {
-    return <div className="ml-6 text-xs text-ui-text-tertiary px-3 py-1">No projects</div>;
+    return (
+      <Typography variant="caption" color="tertiary" className="ml-6 px-3 py-1">
+        No projects
+      </Typography>
+    );
   }
 
   return (

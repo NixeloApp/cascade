@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { CircleHelp, Info, Settings, Trash2 } from "@/lib/icons";
-import { Button } from "./button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from "./tooltip";
+import { Button } from "./Button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from "./Tooltip";
 
 const meta: Meta<typeof Tooltip> = {
   title: "UI/Tooltip",

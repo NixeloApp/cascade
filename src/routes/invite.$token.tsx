@@ -5,7 +5,7 @@ import { AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { AuthRedirect, SignInForm } from "@/components/auth";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { showError, showSuccess } from "@/lib/toast";
@@ -178,7 +178,7 @@ function InviteRoute() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-6">
+      <FlexItem as="main" flex="1" className="flex items-center justify-center p-6">
         <div className="max-w-md w-full">
           {/* Invitation Card */}
           <div className="bg-ui-bg rounded-2xl shadow-lg p-8 mb-6">
@@ -234,9 +234,12 @@ function InviteRoute() {
                 {/* User is logged in - show accept button */}
                 <div className="space-y-4">
                   {acceptError && (
-                    <div className="p-3 rounded-lg bg-status-error-bg text-status-error-text text-sm">
+                    <Typography
+                      variant="small"
+                      className="p-3 rounded-lg bg-status-error-bg text-status-error-text"
+                    >
                       {acceptError}
-                    </div>
+                    </Typography>
                   )}
                   <Button
                     variant="primary"
@@ -276,7 +279,7 @@ function InviteRoute() {
             )}
           </div>
         </div>
-      </main>
+      </FlexItem>
     </Flex>
   );
 }

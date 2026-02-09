@@ -117,7 +117,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
 CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, children, ...props }, ref) => (
+  ({ className, children, color: _color, ...props }, ref) => (
     <Typography
       ref={ref}
       as="h3"
@@ -134,7 +134,7 @@ CardTitle.displayName = "CardTitle";
 const CardDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, color: _color, ...props }, ref) => (
   <Typography ref={ref} variant="muted" className={cn("text-sm", className)} {...props}>
     {children}
   </Typography>

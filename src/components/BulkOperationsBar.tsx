@@ -6,6 +6,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
+import { Grid } from "./ui/Grid";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { Typography } from "./ui/Typography";
 
@@ -136,7 +137,7 @@ export function BulkOperationsBar({
           {/* Expanded Actions */}
           {showActions && (
             <div className="mt-3 pt-3 border-t border-ui-border">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <Grid cols={1} colsSm={2} colsLg={4} gap="md">
                 {/* Status */}
                 <div>
                   <Typography
@@ -226,7 +227,7 @@ export function BulkOperationsBar({
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              </Grid>
             </div>
           )}
         </div>

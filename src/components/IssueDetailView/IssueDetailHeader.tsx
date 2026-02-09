@@ -1,3 +1,4 @@
+import type { IssueTypeWithSubtask } from "@convex/validators";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
@@ -9,7 +10,7 @@ import { Icon } from "../ui/Icon";
 
 interface IssueDetailHeaderProps {
   issueKey: string;
-  issueType: string;
+  issueType: IssueTypeWithSubtask;
   hasCopied: boolean;
   onCopyKey: () => void;
   breadcrumb?: ReactNode;

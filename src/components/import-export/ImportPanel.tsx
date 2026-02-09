@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
@@ -91,7 +92,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
         <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
           Select Import Format
         </Typography>
-        <div className="grid grid-cols-2 gap-3">
+        <Grid cols={2} gap="md">
           <Card
             onClick={() => setImportFormat("csv")}
             className={cn(
@@ -102,8 +103,12 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
             <Flex gap="md" align="center">
               <Icon icon={FileSpreadsheet} size="lg" />
               <div>
-                <div className="font-semibold text-ui-text">CSV</div>
-                <div className="text-xs text-ui-text-secondary">Spreadsheet format</div>
+                <Typography variant="label" className="text-ui-text">
+                  CSV
+                </Typography>
+                <Typography variant="caption" color="secondary">
+                  Spreadsheet format
+                </Typography>
               </div>
             </Flex>
           </Card>
@@ -118,16 +123,22 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
             <Flex gap="md" align="center">
               <Icon icon={FileCode} size="lg" />
               <div>
-                <div className="font-semibold text-ui-text">JSON</div>
-                <div className="text-xs text-ui-text-secondary">Data interchange format</div>
+                <Typography variant="label" className="text-ui-text">
+                  JSON
+                </Typography>
+                <Typography variant="caption" color="secondary">
+                  Data interchange format
+                </Typography>
               </div>
             </Flex>
           </Card>
-        </div>
+        </Grid>
       </div>
 
       <div>
-        <div className="block text-sm font-medium text-ui-text mb-2">Select File</div>
+        <Typography variant="label" className="block text-ui-text mb-2">
+          Select File
+        </Typography>
         <input
           type="file"
           accept={importFormat === "csv" ? ".csv" : ".json"}
@@ -144,7 +155,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
       <div className="bg-status-warning/10 border border-status-warning/30 rounded-lg p-4">
         <Flex gap="md" align="start">
           <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
-          <div className="text-sm text-status-warning">
+          <div className="text-status-warning">
             <Typography variant="p" className="font-semibold mb-1">
               Import Requirements
             </Typography>

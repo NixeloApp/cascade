@@ -22,6 +22,8 @@ export const TEST_IDS = {
     /** @see src/components/IssueCard.tsx */
     CARD: "issue-card",
     /** @see src/components/IssueCard.tsx */
+    TITLE: "issue-title",
+    /** @see src/components/IssueCard.tsx */
     KEY: "issue-key",
     /** @see src/components/IssueCard.tsx */
     PRIORITY: "issue-priority",
@@ -60,6 +62,25 @@ export const TEST_IDS = {
     SIDEBAR: "sidebar",
     /** @see src/routes/__root.tsx */
     MAIN_CONTENT: "main-content",
+  },
+
+  // ============================================================
+  // Header Actions
+  // ============================================================
+
+  HEADER: {
+    /** @see src/components/NotificationCenter.tsx */
+    NOTIFICATION_BUTTON: "header-notification-button",
+    /** @see src/components/NotificationCenter.tsx */
+    NOTIFICATION_PANEL: "header-notification-panel",
+    /** @see src/components/CommandPalette.tsx */
+    COMMAND_PALETTE_BUTTON: "header-command-palette-button",
+    /** @see src/components/GlobalSearch.tsx */
+    SEARCH_BUTTON: "header-search-button",
+    /** @see src/components/Header.tsx */
+    SHORTCUTS_BUTTON: "header-shortcuts-button",
+    /** @see src/components/UserMenu.tsx */
+    USER_MENU_BUTTON: "header-user-menu-button",
   },
 
   // ============================================================

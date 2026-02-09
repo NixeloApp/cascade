@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Avatar, AvatarFallback } from "./avatar";
-import { Badge } from "./badge";
-import { Card, CardBody, CardHeader } from "./card";
+import { Avatar } from "./Avatar";
+import { Badge } from "./Badge";
+import { Card, CardBody, CardHeader } from "./Card";
 import { Flex } from "./Flex";
 import { ScrollArea, ScrollBar } from "./ScrollArea";
 
@@ -157,14 +157,7 @@ export const HorizontalCardList: Story = {
             <Card key={member.id} className="w-48 shrink-0">
               <CardBody>
                 <Flex direction="column" align="center" gap="sm" className="text-center">
-                  <Avatar>
-                    <AvatarFallback>
-                      {member.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
+                  <Avatar name={member.name} />
                   <div>
                     <p className="text-sm font-medium text-ui-text">{member.name}</p>
                     <p className="text-xs text-ui-text-tertiary">{member.role}</p>
@@ -280,14 +273,7 @@ export const ListWithItems: Story = {
               className="rounded-md p-2 transition-colors hover:bg-ui-bg-hover cursor-pointer"
             >
               <Flex align="center" gap="sm">
-                <Avatar size="sm">
-                  <AvatarFallback>
-                    {member.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
+                <Avatar size="sm" name={member.name} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-ui-text truncate">{member.name}</p>
                   <p className="text-xs text-ui-text-tertiary truncate">{member.role}</p>

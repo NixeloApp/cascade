@@ -1,6 +1,6 @@
 import type { Doc } from "@convex/_generated/dataModel";
 import { useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -95,7 +95,7 @@ export function DocumentHeader({
         gap="md"
         className="sm:flex-row sm:items-center sm:gap-4 mb-3 sm:mb-4"
       >
-        <div className="flex-1 w-full sm:w-auto">
+        <FlexItem flex="1" className="w-full sm:w-auto">
           {isEditingTitle ? (
             <Input
               type="text"
@@ -110,7 +110,7 @@ export function DocumentHeader({
           ) : (
             titleComponent
           )}
-        </div>
+        </FlexItem>
 
         <Flex wrap align="center" className="gap-1.5 sm:gap-2 w-full sm:w-auto">
           <PresenceIndicator roomId={document._id} userId={userId} />
@@ -125,7 +125,9 @@ export function DocumentHeader({
               className="px-2 sm:px-3 py-1.5 border border-ui-border text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-default min-h-0"
               aria-label="Version history"
             >
-              <span className="hidden sm:inline text-sm">History</span>
+              <Typography variant="small" as="span" className="hidden sm:inline">
+                History
+              </Typography>
               {versionCount !== undefined && versionCount > 0 && (
                 <Badge variant="secondary" className="ml-1">
                   {versionCount}
@@ -145,7 +147,9 @@ export function DocumentHeader({
               className="px-2 sm:px-3 py-1.5 border border-ui-border text-ui-text-secondary hover:text-brand hover:bg-brand-subtle hover:border-brand-border transition-default min-h-0 disabled:opacity-50"
               aria-label="Import from Markdown"
             >
-              <span className="hidden sm:inline text-sm">Import</span>
+              <Typography variant="small" as="span" className="hidden sm:inline">
+                Import
+              </Typography>
             </Button>
           </Tooltip>
 
@@ -160,7 +164,9 @@ export function DocumentHeader({
               className="px-2 sm:px-3 py-1.5 border border-ui-border text-ui-text-secondary hover:text-brand hover:bg-brand-subtle hover:border-brand-border transition-default min-h-0 disabled:opacity-50"
               aria-label="Export as Markdown"
             >
-              <span className="hidden sm:inline text-sm">Export</span>
+              <Typography variant="small" as="span" className="hidden sm:inline">
+                Export
+              </Typography>
             </Button>
           </Tooltip>
 

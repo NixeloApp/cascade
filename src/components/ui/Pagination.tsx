@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Button, type ButtonProps } from "./button";
+import { Button, type ButtonProps } from "./Button";
 
 /* ============================================================
  * Pagination Component - Mintlify-inspired styling
@@ -80,7 +80,6 @@ export function Pagination({
 
   return (
     <nav
-      role="navigation"
       aria-label="Pagination"
       className={cn("flex items-center justify-center gap-1", className)}
       {...props}

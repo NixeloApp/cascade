@@ -3,7 +3,8 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowLeft } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -138,7 +139,7 @@ export function CreateProjectFromTemplate({
                 <LoadingSpinner />
               </Flex>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Grid cols={1} colsMd={2} gap="lg">
                 {templates.map((template: Doc<"projectTemplates">) => (
                   <button
                     type="button"
@@ -147,8 +148,10 @@ export function CreateProjectFromTemplate({
                     className="text-left p-6 border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
                   >
                     <Flex align="start" gap="lg">
-                      <div className="text-4xl shrink-0">{template.icon}</div>
-                      <div className="flex-1 min-w-0">
+                      <FlexItem shrink={false}>
+                        <Typography variant="h2">{template.icon}</Typography>
+                      </FlexItem>
+                      <FlexItem flex="1" className="min-w-0">
                         <Typography
                           variant="h3"
                           className="text-lg font-semibold text-ui-text mb-1"
@@ -166,11 +169,11 @@ export function CreateProjectFromTemplate({
                             {template.boardType}
                           </Badge>
                         </Flex>
-                      </div>
+                      </FlexItem>
                     </Flex>
                   </button>
                 ))}
-              </div>
+              </Grid>
             )}
           </div>
         ) : (
@@ -180,7 +183,9 @@ export function CreateProjectFromTemplate({
             {selectedTemplate && (
               <div className="p-4 bg-ui-bg-secondary rounded-lg">
                 <Flex align="center" gap="md">
-                  <span className="text-3xl">{selectedTemplate.icon}</span>
+                  <Typography variant="h3" as="span">
+                    {selectedTemplate.icon}
+                  </Typography>
                   <div>
                     <Typography variant="h3" className="font-semibold text-ui-text">
                       {selectedTemplate.name}
@@ -243,7 +248,7 @@ export function CreateProjectFromTemplate({
                 <Typography variant="h4" className="text-sm font-medium text-ui-text mb-3">
                   What's Included:
                 </Typography>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2">
                   <Flex align="center" gap="sm">
                     <svg
                       aria-hidden="true"

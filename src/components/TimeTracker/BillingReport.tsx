@@ -5,8 +5,9 @@ import { useMemo, useState } from "react";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Typography } from "../ui/Typography";
 
@@ -131,21 +132,21 @@ export function BillingReport({ projectId }: BillingReportProps) {
       </Flex>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <Grid cols={1} colsMd={2} colsLg={4} gap="lg" className="mb-6">
         <Card>
           <CardBody>
             <Flex align="center" gap="sm" className="text-sm text-ui-text-tertiary mb-2">
               <DollarSign className="w-4 h-4" />
               Total Revenue
             </Flex>
-            <div className="text-3xl font-bold text-status-success">
+            <Typography variant="h2" color="success">
               {formatCurrency(billing.totalRevenue)}
-            </div>
+            </Typography>
             {project.budget && (
-              <div className="text-xs text-ui-text-tertiary mt-1">
+              <Typography variant="caption" color="tertiary" className="mt-1">
                 of {formatCurrency(project.budget)} budget (
                 {((billing.totalRevenue / project.budget) * 100).toFixed(0)}%)
-              </div>
+              </Typography>
             )}
           </CardBody>
         </Card>
@@ -156,12 +157,12 @@ export function BillingReport({ projectId }: BillingReportProps) {
               <Clock className="w-4 h-4" />
               Billable Hours
             </Flex>
-            <div className="text-3xl font-bold text-brand">
+            <Typography variant="h2" color="brand">
               {formatHours(billing.billableHours)}
-            </div>
-            <div className="text-xs text-ui-text-tertiary mt-1">
+            </Typography>
+            <Typography variant="caption" color="tertiary" className="mt-1">
               of {formatHours(billing.totalHours)} total hours
-            </div>
+            </Typography>
           </CardBody>
         </Card>
 
@@ -171,10 +172,12 @@ export function BillingReport({ projectId }: BillingReportProps) {
               <TrendingUp className="w-4 h-4" />
               Utilization Rate
             </Flex>
-            <div className="text-3xl font-bold text-accent">{utilizationRate.toFixed(0)}%</div>
-            <div className="text-xs text-ui-text-tertiary mt-1">
+            <Typography variant="h2" color="accent">
+              {utilizationRate.toFixed(0)}%
+            </Typography>
+            <Typography variant="caption" color="tertiary" className="mt-1">
               {billing.nonBillableHours.toFixed(2)}h non-billable
-            </div>
+            </Typography>
           </CardBody>
         </Card>
 
@@ -184,13 +187,15 @@ export function BillingReport({ projectId }: BillingReportProps) {
               <DollarSign className="w-4 h-4" />
               Avg Hourly Rate
             </Flex>
-            <div className="text-3xl font-bold text-status-warning">
+            <Typography variant="h2" color="warning">
               {formatCurrency(averageRate)}
-            </div>
-            <div className="text-xs text-ui-text-tertiary mt-1">per billable hour</div>
+            </Typography>
+            <Typography variant="caption" color="tertiary" className="mt-1">
+              per billable hour
+            </Typography>
           </CardBody>
         </Card>
-      </div>
+      </Grid>
 
       {/* Team Breakdown */}
       <Card>
@@ -219,18 +224,22 @@ export function BillingReport({ projectId }: BillingReportProps) {
                   <div key={userId} className="p-4 bg-ui-bg-secondary rounded-lg">
                     <Flex justify="between" align="center" className="mb-2">
                       <div>
-                        <div className="font-medium text-ui-text">{billingStats.name}</div>
-                        <div className="text-xs text-ui-text-tertiary">
+                        <Typography variant="label" className="text-ui-text">
+                          {billingStats.name}
+                        </Typography>
+                        <Typography variant="caption" color="tertiary">
                           {formatHours(billingStats.billableHours)} /{" "}
                           {formatHours(billingStats.hours)} hours ({userUtilization.toFixed(0)}%
                           billable)
-                        </div>
+                        </Typography>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-status-success">
+                        <Typography variant="h4" color="success">
                           {formatCurrency(billingStats.revenue)}
-                        </div>
-                        <div className="text-xs text-ui-text-tertiary">revenue</div>
+                        </Typography>
+                        <Typography variant="caption" color="tertiary">
+                          revenue
+                        </Typography>
                       </div>
                     </Flex>
 
@@ -245,24 +254,32 @@ export function BillingReport({ projectId }: BillingReportProps) {
       </Card>
 
       {/* Quick Stats */}
-      <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+      <Grid cols={3} gap="lg" className="mt-6 text-center">
         <div className="p-4 bg-ui-bg-secondary rounded-lg">
-          <div className="text-2xl font-bold text-ui-text">{billing.entries}</div>
-          <div className="text-sm text-ui-text-tertiary">Time Entries</div>
+          <Typography variant="h3" className="text-ui-text">
+            {billing.entries}
+          </Typography>
+          <Typography variant="small" color="tertiary">
+            Time Entries
+          </Typography>
         </div>
         <div className="p-4 bg-ui-bg-secondary rounded-lg">
-          <div className="text-2xl font-bold text-ui-text">
+          <Typography variant="h3" className="text-ui-text">
             {Object.keys(billing.byUser).length}
-          </div>
-          <div className="text-sm text-ui-text-tertiary">Team Members</div>
+          </Typography>
+          <Typography variant="small" color="tertiary">
+            Team Members
+          </Typography>
         </div>
         <div className="p-4 bg-ui-bg-secondary rounded-lg">
-          <div className="text-2xl font-bold text-ui-text">
+          <Typography variant="h3" className="text-ui-text">
             {averageRate > 0 ? formatCurrency(averageRate) : "N/A"}
-          </div>
-          <div className="text-sm text-ui-text-tertiary">Blended Rate</div>
+          </Typography>
+          <Typography variant="small" color="tertiary">
+            Blended Rate
+          </Typography>
         </div>
-      </div>
+      </Grid>
     </div>
   );
 }

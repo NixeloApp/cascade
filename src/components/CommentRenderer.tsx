@@ -1,4 +1,5 @@
 import type { Id } from "@convex/_generated/dataModel";
+import { Badge } from "./ui/Badge";
 
 interface CommentRendererProps {
   content: string;
@@ -53,11 +54,13 @@ interface MentionBadgeProps {
 
 function MentionBadge({ userName }: MentionBadgeProps) {
   return (
-    <span
-      className="px-1.5 py-0.5 rounded bg-brand-subtle text-brand-subtle-foreground font-medium transition-colors duration-default hover:bg-brand-border cursor-default"
+    <Badge
+      variant="brand"
+      size="sm"
+      className="transition-colors duration-default hover:bg-brand-border cursor-default"
       title={`@${userName}`}
     >
       @{userName}
-    </span>
+    </Badge>
   );
 }

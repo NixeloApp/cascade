@@ -396,7 +396,7 @@ describe("NotificationCenter", () => {
       expect(screen.getByText("Notification 1")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Just now")).toBeInTheDocument();
+    expect(screen.getByText("just now")).toBeInTheDocument();
     expect(screen.getByText("5m ago")).toBeInTheDocument();
     expect(screen.getByText("2h ago")).toBeInTheDocument();
   });

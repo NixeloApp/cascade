@@ -1,6 +1,6 @@
 /**
  * CHECK 5: Arbitrary Tailwind
- * Arbitrary values like h-[50px] (warning only)
+ * Arbitrary values like h-[50px] — these should use design tokens instead
  */
 
 import fs from "node:fs";
@@ -8,22 +8,18 @@ import path from "node:path";
 import { ROOT, walkDir } from "./utils.js";
 
 // Skip these files entirely (demo/test files)
-const SKIP_FILES = [
-  /\.stories\.tsx$/,
-  /\.test\.tsx$/,
-  /\.spec\.tsx$/,
-];
+const SKIP_FILES = [/\.stories\.tsx$/, /\.test\.tsx$/, /\.spec\.tsx$/];
 
 // Allow these specific patterns (Radix runtime vars, CSS selectors, one-offs)
 const ALLOWED_PATTERNS = [
-  /var\(--radix-/,           // Radix UI dynamic vars
-  /var\(--scale-/,           // Scale CSS vars from theme
-  /\[&>.*?\]:/,              // Tailwind child selectors [&>svg]:
-  /\[&~.*?\]:/,              // Tailwind sibling selectors [&~*]:
-  /\[perspective:/,          // 3D perspective (valid CSS-in-TW)
-  /rounded-\[inherit\]/,     // Inherit border-radius
-  /top-\[60%\]/,             // NavigationMenu indicator position
-  /scale-\[0\.9[0-9]\]/,     // Active/press scale states (0.95-0.99)
+  /var\(--radix-/, // Radix UI dynamic vars
+  /var\(--scale-/, // Scale CSS vars from theme
+  /\[&>.*?\]:/, // Tailwind child selectors [&>svg]:
+  /\[&~.*?\]:/, // Tailwind sibling selectors [&~*]:
+  /\[perspective:/, // 3D perspective (valid CSS-in-TW)
+  /rounded-\[inherit\]/, // Inherit border-radius
+  /top-\[60%\]/, // NavigationMenu indicator position
+  /scale-\[0\.9[0-9]\]/, // Active/press scale states (0.95-0.99)
 ];
 
 export function run() {
@@ -81,12 +77,11 @@ export function run() {
   }
 
   return {
-    passed: true, // warnings only, never fails
-    errors: 0,
-    warnings: totalFound,
-    detail: totalFound > 0 ? `${totalFound} arbitrary value(s), warning` : null,
+    passed: totalFound === 0,
+    errors: totalFound,
+    detail: totalFound > 0 ? `${totalFound} arbitrary value(s)` : null,
     messages: violations.map((v) => ({
-      type: "warning",
+      type: "error",
       file: v.file,
       line: v.line,
       message: `Arbitrary ${v.desc} value`,

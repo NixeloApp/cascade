@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Input } from "./input";
-import { Label } from "./label";
+import { Input } from "./Input";
+import { Label } from "./Label";
 
 const meta: Meta<typeof Input> = {
   title: "UI/Input",
@@ -77,7 +77,7 @@ export const DisabledWithValue: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     placeholder: "Enter email",
     error: "This field is required",

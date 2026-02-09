@@ -5,7 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
@@ -121,7 +121,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           )}
         >
           {/* Issue Info */}
-          <div className="w-64 shrink-0 pr-4">
+          <FlexItem shrink={false} className="w-64 pr-4">
             <Flex align="center" gap="sm" className="mb-1">
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
               <button
@@ -140,10 +140,10 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
             <Typography className="text-xs text-ui-text-secondary truncate">
               {issue.title}
             </Typography>
-          </div>
+          </FlexItem>
 
           {/* Timeline Bar */}
-          <div className="flex-1 relative h-8">
+          <FlexItem flex="1" className="relative h-8">
             {issue.dueDate && (
               <button
                 type="button"
@@ -174,7 +174,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               style={{ left: `${getPositionOnTimeline(Date.now())}%` }}
               title="Today"
             />
-          </div>
+          </FlexItem>
         </div>
       );
     },
@@ -204,31 +204,31 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
             className="flex-1 bg-ui-bg rounded-lg border border-ui-border overflow-hidden"
           >
             {/* Skeleton Dates Header */}
-            <div className="border-b border-ui-border bg-ui-bg-secondary p-4 shrink-0">
+            <FlexItem shrink={false} className="border-b border-ui-border bg-ui-bg-secondary p-4">
               <Flex>
-                <div className="w-64 shrink-0">
+                <FlexItem shrink={false} className="w-64">
                   <Skeleton className="h-5 w-24" />
-                </div>
-                <div className="flex-1 grid grid-cols-6 gap-2">
+                </FlexItem>
+                <FlexItem flex="1" className="grid grid-cols-6 gap-2">
                   {[1, 2, 3, 4, 5, 6].map((id) => (
                     <Skeleton key={id} className="h-5 w-full" />
                   ))}
-                </div>
+                </FlexItem>
               </Flex>
-            </div>
+            </FlexItem>
 
             {/* Skeleton Rows */}
-            <div className="flex-1 overflow-auto">
+            <FlexItem flex="1" className="overflow-auto">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <Flex align="center" className="p-3 border-b border-ui-border" key={i}>
-                  <div className="w-64 shrink-0 pr-4 space-y-2">
+                  <FlexItem shrink={false} className="w-64 pr-4 space-y-2">
                     <Flex align="center" gap="sm">
                       <Skeleton className="h-4 w-4 rounded-full" />
                       <Skeleton className="h-4 w-16" />
                     </Flex>
                     <Skeleton className="h-3 w-32" />
-                  </div>
-                  <div className="flex-1 relative h-8">
+                  </FlexItem>
+                  <FlexItem flex="1" className="relative h-8">
                     <div
                       className="absolute h-6"
                       style={{
@@ -238,10 +238,10 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                     >
                       <Skeleton className="h-full w-full rounded-full opacity-50" />
                     </div>
-                  </div>
+                  </FlexItem>
                 </Flex>
               ))}
-            </div>
+            </FlexItem>
           </Flex>
         </Flex>
       </PageLayout>
@@ -302,24 +302,27 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           className="flex-1 bg-ui-bg rounded-lg border border-ui-border overflow-hidden"
         >
           {/* Timeline Header (Fixed) */}
-          <div className="border-b border-ui-border bg-ui-bg-secondary p-4 shrink-0">
+          <FlexItem shrink={false} className="border-b border-ui-border bg-ui-bg-secondary p-4">
             <Flex>
-              <div className="w-64 shrink-0 font-medium text-ui-text">Issue</div>
-              <div className="flex-1 grid grid-cols-6">
+              <Typography variant="label" className="w-64 shrink-0 text-ui-text">
+                Issue
+              </Typography>
+              <FlexItem flex="1" className="grid grid-cols-6">
                 {timelineMonths.map((month) => (
-                  <div
+                  <Typography
                     key={month.getTime()}
-                    className="text-center text-sm font-medium text-ui-text border-l border-ui-border px-2"
+                    variant="label"
+                    className="text-center text-ui-text border-l border-ui-border px-2"
                   >
                     {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                  </div>
+                  </Typography>
                 ))}
-              </div>
+              </FlexItem>
             </Flex>
-          </div>
+          </FlexItem>
 
           {/* Timeline Body (Virtualized) */}
-          <div className="flex-1">
+          <FlexItem flex="1">
             {filteredIssues.length === 0 ? (
               <div className="p-12 text-center text-ui-text-secondary">
                 <Typography>No issues with due dates to display</Typography>
@@ -337,7 +340,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 rowComponent={Row}
               />
             )}
-          </div>
+          </FlexItem>
         </Flex>
 
         {/* Issue Detail Modal */}

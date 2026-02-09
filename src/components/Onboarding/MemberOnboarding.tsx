@@ -4,6 +4,7 @@ import { ArrowLeft, Bell, Building2, Clock, FileText, Kanban } from "lucide-reac
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
 import { KeyboardShortcut } from "@/components/ui/KeyboardShortcut";
 import { showError, showSuccess } from "@/lib/toast";
@@ -167,7 +168,7 @@ export function MemberOnboarding({
           Here's what you can do in Nixelo:
         </Typography>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Grid cols={1} colsSm={2} gap="md">
           <Flex
             align="start"
             gap="md"
@@ -255,7 +256,7 @@ export function MemberOnboarding({
               </Typography>
             </div>
           </Flex>
-        </div>
+        </Grid>
       </div>
 
       {/* Keyboard shortcuts tip */}

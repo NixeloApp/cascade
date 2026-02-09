@@ -1,5 +1,7 @@
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
+import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
 interface IssueMetadataProps {
@@ -26,7 +28,12 @@ export function IssueMetadataSection({
   return (
     <>
       {/* Metadata Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-ui-bg-soft rounded-lg border border-ui-border/30">
+      <Grid
+        cols={1}
+        colsSm={2}
+        gap="lg"
+        className="p-4 bg-ui-bg-soft rounded-lg border border-ui-border/30"
+      >
         <div className="space-y-1">
           <Typography variant="muted" className="text-xs text-ui-text-secondary">
             Status
@@ -67,7 +74,7 @@ export function IssueMetadataSection({
             {storyPoints ?? "Not set"}
           </Typography>
         </div>
-      </div>
+      </Grid>
 
       {/* Labels */}
       {labels.length > 0 && (
@@ -77,13 +84,14 @@ export function IssueMetadataSection({
           </Typography>
           <Flex wrap gap="sm">
             {labels.map((label) => (
-              <span
+              <Badge
                 key={label.name}
-                className="px-2 py-0.5 text-xs font-medium rounded-md text-brand-foreground transition-transform duration-default hover:scale-105"
+                size="sm"
+                className="text-brand-foreground transition-transform duration-default hover:scale-105"
                 style={{ backgroundColor: label.color }}
               >
                 {label.name}
-              </span>
+              </Badge>
             ))}
           </Flex>
         </div>

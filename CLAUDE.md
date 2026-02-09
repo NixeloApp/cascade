@@ -72,6 +72,104 @@ Use components from `src/components/ui/` instead of raw HTML:
 - Use `<Typography>` instead of raw `<p>`, `<h1>`–`<h6>` tags.
 - Use `cn()` from `@/lib/utils` for conditional class merging. Never use template literals or string concatenation for className.
 
+## UI Slop Guide (Do This, Not That)
+
+### Typography
+```tsx
+// ❌ Don't - override size/weight with className
+<Typography variant="h1" className="text-2xl font-bold mb-3">{title}</Typography>
+
+// ✅ Do - use correct variant, move spacing to parent
+<Typography variant="h1">{title}</Typography>
+```
+
+### Inline Text
+```tsx
+// ❌ Don't
+<span className="text-xs text-ui-text-secondary">{text}</span>
+<Typography variant="meta" as="span">{text}</Typography>
+
+// ✅ Do
+<MetadataItem>{text}</MetadataItem>
+<Badge variant="secondary" size="sm">{text}</Badge>
+```
+
+### Metadata & Timestamps
+```tsx
+// ❌ Don't
+<span>{time}</span><span>•</span><span>{author}</span>
+<span>{formatDate(date)}</span>
+
+// ✅ Do
+<Metadata>
+  <MetadataTimestamp date={time} />
+  <MetadataItem>{author}</MetadataItem>
+</Metadata>
+```
+
+### Keyboard Shortcuts
+```tsx
+// ❌ Don't
+<kbd className="bg-ui-bg border px-2 py-1 rounded">⌘K</kbd>
+
+// ✅ Do
+<KeyboardShortcut shortcut="cmd+K" />
+```
+
+### Icons
+```tsx
+// ❌ Don't
+<span className="text-xl">🐛</span>
+<Bug className="w-5 h-5" />
+
+// ✅ Do
+<Icon icon={Bug} size="md" />
+```
+
+### Flex Layouts
+```tsx
+// ❌ Don't
+<div className="flex items-center gap-2">
+
+// ✅ Do
+<Flex align="center" gap="sm">
+```
+
+### Font Styles
+```tsx
+// ❌ Don't - font styles on raw elements
+<span className="text-sm font-medium">{text}</span>
+<div className="text-xs text-ui-text-secondary">{label}</div>
+
+// ✅ Do - use Typography or appropriate UI component
+<Typography variant="small">{text}</Typography>
+<MetadataItem>{label}</MetadataItem>
+```
+
+### Required Fields
+```tsx
+// ❌ Don't
+<label>Email <span className="text-status-error">*</span></label>
+
+// ✅ Do
+<Label required>Email</Label>
+```
+
+### Component Cheatsheet
+
+| Instead of | Use |
+|------------|-----|
+| `<Typography as="span">` | `<MetadataItem>` or plain text |
+| `<span className="...">` | `<Badge>`, `<MetadataItem>`, or plain text |
+| Manual `•` separators | `<Metadata>` (auto-separates) |
+| `<span>{date}</span>` | `<MetadataTimestamp>` or `<time>` |
+| `<kbd className="...">` | `<KeyboardShortcut>` |
+| Emoji strings | `<Icon icon={...}>` |
+| `<div className="flex">` | `<Flex>` |
+| `<span>*</span>` for required | `<Label required>` |
+| `<span className="text-sm">` | `<Typography variant="small">` |
+| `<div className="font-medium">` | `<Typography variant="label">` |
+
 ## Design Tokens (Tailwind v4)
 
 This project uses **Tailwind CSS v4** with a `@theme` block in `src/index.css` — not a `tailwind.config.js` for theming. All design tokens are CSS custom properties.
@@ -138,7 +236,7 @@ Run `node scripts/validate.js` to check for:
 5. **Arbitrary Tailwind** — flags bracket syntax; allowlist in `ALLOWED_PATTERNS`
 6. **Undefined TW colors** — classes referencing colors not in the theme
 
-Run this after UI changes. Target: 0 errors, 0 warnings.
+Run this after UI changes. Target: 0 errors.
 
 ## Deployment
 

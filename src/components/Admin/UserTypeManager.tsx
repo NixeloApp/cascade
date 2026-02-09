@@ -11,8 +11,9 @@ import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
@@ -349,7 +350,7 @@ export function UserTypeManager() {
               }}
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Grid cols={1} colsMd={3} gap="lg">
               {configs.map((config: EmploymentTypeConfig) => (
                 <div
                   key={config.type}
@@ -420,7 +421,7 @@ export function UserTypeManager() {
                   </Button>
                 </div>
               ))}
-            </div>
+            </Grid>
           )}
         </CardBody>
       </Card>
@@ -480,7 +481,7 @@ export function UserTypeManager() {
                   className="p-4 border border-ui-border rounded-lg transition-default hover:bg-ui-bg-hover"
                 >
                   <Flex justify="between" align="start">
-                    <div className="flex-1">
+                    <FlexItem flex="1">
                       <Flex gap="md" align="center" className="mb-2">
                         {getTypeIcon(profile.employmentType, "w-5 h-5")}
                         <div>
@@ -503,7 +504,7 @@ export function UserTypeManager() {
                         </div>
                       </Flex>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                      <Grid cols={2} colsMd={4} gap="md" className="mt-3">
                         {profile.jobTitle && (
                           <div>
                             <Typography variant="caption" color="tertiary">
@@ -540,8 +541,8 @@ export function UserTypeManager() {
                             {profile.maxHoursPerDay || "Default"}
                           </Typography>
                         </div>
-                      </div>
-                    </div>
+                      </Grid>
+                    </FlexItem>
 
                     <Flex gap="sm" className="ml-4">
                       <Button
@@ -594,7 +595,7 @@ export function UserTypeManager() {
                 onChange={(e) => setConfigDescription(e.target.value)}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <Grid cols={2} gap="lg">
                 <Input
                   label="Max Hours per Week"
                   type="number"
@@ -614,7 +615,7 @@ export function UserTypeManager() {
                   max={24}
                   required
                 />
-              </div>
+              </Grid>
 
               <Flex direction="column" gap="md">
                 <label>
@@ -715,7 +716,7 @@ export function UserTypeManager() {
                 <option value="intern">Intern</option>
               </Select>
 
-              <div className="grid grid-cols-2 gap-4">
+              <Grid cols={2} gap="lg">
                 <Input
                   label="Job Title"
                   value={profileJobTitle}
@@ -729,13 +730,13 @@ export function UserTypeManager() {
                   onChange={(e) => setProfileDepartment(e.target.value)}
                   placeholder="e.g., Engineering"
                 />
-              </div>
+              </Grid>
 
               <div className="p-4 bg-ui-bg-secondary rounded-lg">
                 <Typography variant="h4" className="font-medium text-sm mb-3 text-ui-text">
                   Hour Overrides (leave empty to use type defaults)
                 </Typography>
-                <div className="grid grid-cols-2 gap-4">
+                <Grid cols={2} gap="lg">
                   <Input
                     label="Max Hours per Week"
                     type="number"
@@ -755,10 +756,10 @@ export function UserTypeManager() {
                     min={1}
                     max={24}
                   />
-                </div>
+                </Grid>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <Grid cols={2} gap="lg">
                 <Input
                   label="Start Date"
                   type="date"
@@ -772,7 +773,7 @@ export function UserTypeManager() {
                   value={profileEndDate}
                   onChange={(e) => setProfileEndDate(e.target.value)}
                 />
-              </div>
+              </Grid>
 
               {/* Equity Compensation Section (Employees Only) */}
               {profileType === "employee" && (
@@ -801,7 +802,7 @@ export function UserTypeManager() {
 
                   {profileHasEquity && (
                     <Flex direction="column" gap="lg">
-                      <div className="grid grid-cols-2 gap-4">
+                      <Grid cols={2} gap="lg">
                         <Input
                           label="Equity Percentage (%)"
                           type="number"
@@ -821,9 +822,9 @@ export function UserTypeManager() {
                           step="0.01"
                           min={0}
                         />
-                      </div>
+                      </Grid>
 
-                      <div className="grid grid-cols-3 gap-4">
+                      <Grid cols={3} gap="lg">
                         <Input
                           label="Required Hours/Week"
                           type="number"
@@ -852,7 +853,7 @@ export function UserTypeManager() {
                           min={0}
                           max={168}
                         />
-                      </div>
+                      </Grid>
 
                       <Textarea
                         label="Equity Notes"

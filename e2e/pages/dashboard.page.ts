@@ -122,8 +122,8 @@ export class DashboardPage extends BasePage {
     this.shortcutsHelpButton = page.getByRole("button", { name: /keyboard shortcuts/i });
     // Global search button with aria-label "Open search (⌘K)"
     this.globalSearchButton = page.getByRole("button", { name: /open search/i });
-    // Bell notification icon button - find by the unique bell SVG path (no aria-label in NotificationCenter component)
-    this.notificationButton = page.locator("button:has(svg path[d*='M15 17h5'])");
+    // Bell notification icon button - aria-label is "Notifications" or "Notifications, N unread"
+    this.notificationButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
     // "Sign out" text button
     this.signOutButton = page.getByRole("button", { name: /sign out/i });
 
@@ -139,7 +139,8 @@ export class DashboardPage extends BasePage {
     // Content areas - use last() to get innermost main element (nested layout)
     this.mainContent = page.getByRole("main").last();
     this.sidebar = page.locator("[data-tour='sidebar']");
-    this.loadingSpinner = page.getByRole("status").or(page.locator("[data-loading-spinner]"));
+    // Use aria-label="Loading" to target actual loading spinners, not empty states
+    this.loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
 
     // Dashboard specific content - match actual UI headings
     this.myIssuesSection = page.getByRole("heading", { name: /feed/i }).first();
@@ -164,10 +165,8 @@ export class DashboardPage extends BasePage {
     this.globalSearchModal = page.getByTestId(TEST_IDS.SEARCH.MODAL);
     this.globalSearchInput = page.getByPlaceholder(/search issues and documents/i);
 
-    // Notifications - PopoverContent with "Notifications" h3 heading
-    this.notificationPanel = page.locator("[data-radix-popper-content-wrapper]").filter({
-      has: page.getByText("Notifications", { exact: true }),
-    });
+    // Notifications panel
+    this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
     this.markAllReadButton = page.getByRole("button", { name: /mark all read/i });
     this.notificationItems = page.locator("[data-notification-item]");
 

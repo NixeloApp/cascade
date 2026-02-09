@@ -3,9 +3,9 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, Rocket, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
 
 interface ChecklistItem {
@@ -155,10 +155,12 @@ export function OnboardingChecklist() {
                 {item.completed ? (
                   <Check className="w-3.5 h-3.5" />
                 ) : (
-                  <span className="text-xs font-medium">{index + 1}</span>
+                  <Typography variant="caption" as="span">
+                    {index + 1}
+                  </Typography>
                 )}
               </Flex>
-              <div className="flex-1 min-w-0">
+              <FlexItem flex="1" className="min-w-0">
                 <Typography
                   className={cn(
                     "font-medium text-sm leading-tight",
@@ -170,7 +172,7 @@ export function OnboardingChecklist() {
                 <Typography className="text-xs text-ui-text-tertiary mt-0.5">
                   {item.description}
                 </Typography>
-              </div>
+              </FlexItem>
             </Flex>
           ))}
 

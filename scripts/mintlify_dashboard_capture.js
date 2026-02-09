@@ -7,7 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const OUTPUT_DIR = path.resolve(__dirname, "../docs/research/library/mintlify/dashboard");
-const SESSION_PATH = path.resolve(__dirname, "../docs/research/library/mintlify/onboarding/mintlify_session.json");
+const SESSION_PATH = path.resolve(
+  __dirname,
+  "../docs/research/library/mintlify/onboarding/mintlify_session.json",
+);
 
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -83,37 +86,56 @@ async function main() {
 
     // Look for navigation links and capture discovered pages
     console.log("\n🔍 Discovering internal routes...");
-    
+
     const navLinks = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll("a, button"));
       const routes = [];
       const seen = new Set();
-      
-      const keywords = [
-        "settings", "project", "docs", "editor", "preview",
-        "deploy", "api", "analytics", "team", "billing",
-        "integrations", "domains", "customize", "theme",
-        "navigation", "pages", "content", "seo", "search",
-        "feedback", "changelog", "versions", "redirects",
-        "openapi", "components", "snippets", "variables"
+
+      const _keywords = [
+        "settings",
+        "project",
+        "docs",
+        "editor",
+        "preview",
+        "deploy",
+        "api",
+        "analytics",
+        "team",
+        "billing",
+        "integrations",
+        "domains",
+        "customize",
+        "theme",
+        "navigation",
+        "pages",
+        "content",
+        "seo",
+        "search",
+        "feedback",
+        "changelog",
+        "versions",
+        "redirects",
+        "openapi",
+        "components",
+        "snippets",
+        "variables",
       ];
 
       for (const el of links) {
         const href = el.getAttribute("href") || "";
         const text = el.innerText.toLowerCase().trim();
-        
+
         if (href.startsWith("/") || href.includes("dashboard.mintlify.com")) {
-          const fullUrl = href.startsWith("/") 
-            ? `https://dashboard.mintlify.com${href}` 
-            : href;
-            
+          const fullUrl = href.startsWith("/") ? `https://dashboard.mintlify.com${href}` : href;
+
           if (!seen.has(fullUrl) && !fullUrl.includes("logout")) {
             routes.push({ url: fullUrl, text: text.slice(0, 30) });
             seen.add(fullUrl);
           }
         }
       }
-      
+
       return routes;
     });
 
@@ -121,7 +143,8 @@ async function main() {
 
     // Capture each discovered route
     let idx = 2;
-    for (const link of navLinks.slice(0, 30)) { // Limit to 30 pages
+    for (const link of navLinks.slice(0, 30)) {
+      // Limit to 30 pages
       const safeName = link.text.replace(/[^a-z0-9]/gi, "-").slice(0, 20) || "page";
       await capturePage(link.url, `${String(idx).padStart(2, "0")}-${safeName}`);
       idx++;
@@ -157,7 +180,6 @@ async function main() {
 
     // Final summary
     console.log(`\n✨ Captured ${capturedUrls.size} unique pages`);
-
   } catch (err) {
     console.error("\n❌ Error:", err.message);
     await screenshot(page, "error-state");

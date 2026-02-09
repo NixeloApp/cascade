@@ -10,7 +10,7 @@ import {
   SkeletonStatCard,
   SkeletonTable,
   SkeletonText,
-} from "./skeleton";
+} from "./Skeleton";
 
 const meta: Meta<typeof Skeleton> = {
   title: "UI/Skeleton",

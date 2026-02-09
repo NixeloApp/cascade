@@ -6,8 +6,7 @@
  * from the form directory to make both import styles work.
  */
 
+// Also export form primitives for components that need them
+export { FormDescription, FormItem, FormLabel, FormMessage } from "./FormPrimitives";
 // Re-export all form components from the directory
 export * from "./form/index";
-
-// Also export form primitives for components that need them
-export { FormDescription, FormItem, FormLabel, FormMessage } from "./form-primitives";

@@ -9,6 +9,7 @@ import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import {
+  BarChart3,
   Bot,
   Calendar,
   ChevronDown,
@@ -19,7 +20,6 @@ import {
   FolderKanban,
   Home,
   ListIcon,
-  BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -250,7 +250,7 @@ export function AppSidebar() {
               <Typography
                 variant="small"
                 color="tertiary"
-                className="px-3 mt-4 mb-2 text-[10px] font-bold uppercase tracking-wider"
+                className="px-3 mt-4 mb-2 text-caption font-bold uppercase tracking-wider"
               >
                 Products
               </Typography>

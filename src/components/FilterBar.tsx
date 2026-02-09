@@ -23,7 +23,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "./ui/DropdownMenu";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Checkbox, Input } from "./ui/form";
 import { Icon } from "./ui/Icon";
 import { Typography } from "./ui/Typography";
@@ -102,7 +102,9 @@ function FilterDropdown<T>({
           </DropdownMenuCheckboxItem>
         ))}
         {(!items || items.length === 0) && (
-          <div className="px-2 py-1.5 text-sm text-ui-text-secondary">{emptyMessage}</div>
+          <Typography variant="small" color="secondary" className="px-2 py-1.5">
+            {emptyMessage}
+          </Typography>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -147,7 +149,9 @@ function SavedFiltersDropdown({
             >
               {filter.name}
               {filter.isPublic && (
-                <span className="ml-1 text-xs text-ui-text-tertiary">(public)</span>
+                <Typography variant="caption" color="tertiary" as="span" className="ml-1">
+                  (public)
+                </Typography>
               )}
             </button>
             {filter.isOwner && (
@@ -360,8 +364,10 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
             const label = labels?.find((l) => l.name === name);
             return (
               <Flex align="center" gap="sm">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
+                <FlexItem
+                  as="span"
+                  shrink={false}
+                  className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: label?.color }}
                 />
                 {name}

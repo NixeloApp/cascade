@@ -7,10 +7,10 @@ import React from "react";
 import { AlertTriangle, Calendar, Check, Lightbulb, Sparkles, Target, X } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { MetadataTimestamp } from "../ui/Metadata";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Skeleton } from "../ui/Skeleton";
 import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";
@@ -98,7 +98,7 @@ export const AISuggestionsPanel = React.memo(function AISuggestionsPanel({
       </div>
 
       {/* Suggestions List */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+      <FlexItem flex="1" className="overflow-y-auto p-3 sm:p-4">
         {!suggestions ? (
           <Flex direction="column" gap="md">
             <Skeleton className="h-24 w-full" />
@@ -130,7 +130,7 @@ export const AISuggestionsPanel = React.memo(function AISuggestionsPanel({
             ))}
           </Flex>
         )}
-      </div>
+      </FlexItem>
     </Flex>
   );
 });
@@ -154,7 +154,7 @@ const SuggestionCard = React.memo(function SuggestionCard({
     <div className="bg-ui-bg border border-ui-border rounded-lg p-3 sm:p-4 shadow-card hover:shadow-card-hover transition-shadow">
       <Flex align="start" gap="md">
         <Icon icon={metadata?.icon || Lightbulb} size="lg" className="shrink-0" />
-        <div className="flex-1 min-w-0">
+        <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" className="mb-2">
             <Badge variant="brand" shape="pill">
               {metadata?.label || suggestion.suggestionType}
@@ -166,7 +166,10 @@ const SuggestionCard = React.memo(function SuggestionCard({
           </Typography>
           {suggestion.reasoning && (
             <Typography variant="caption" className="mt-2">
-              <span className="font-medium">Reasoning:</span> {suggestion.reasoning}
+              <Typography variant="label" as="span">
+                Reasoning:
+              </Typography>{" "}
+              {suggestion.reasoning}
             </Typography>
           )}
           {suggestion.confidence !== undefined && (
@@ -218,7 +221,7 @@ const SuggestionCard = React.memo(function SuggestionCard({
               </Badge>
             </div>
           )}
-        </div>
+        </FlexItem>
       </Flex>
     </div>
   );

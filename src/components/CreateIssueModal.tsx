@@ -9,20 +9,7 @@ import { z } from "zod";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
-import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUp,
-  BookOpen,
-  Bug,
-  Check,
-  CheckSquare,
-  ChevronDown,
-  ChevronUp,
-  CircleDot,
-  Sparkles,
-  Zap,
-} from "@/lib/icons";
+import { Check, Sparkles } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
@@ -36,7 +23,9 @@ import {
 } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Select } from "./ui/form";
+import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { Typography } from "./ui/Typography";
 
 // =============================================================================
 // Schema
@@ -333,7 +322,7 @@ export function CreateIssueModal({
           </form.Field>
 
           {/* Type & Priority */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Grid cols={1} colsSm={2} gap="lg">
             <form.Field name="type">
               {(field) => (
                 <FormSelect field={field} label="Type">
@@ -357,7 +346,7 @@ export function CreateIssueModal({
                 </FormSelect>
               )}
             </form.Field>
-          </div>
+          </Grid>
 
           {/* Assignee */}
           <form.Field name="assigneeId">
@@ -390,7 +379,9 @@ export function CreateIssueModal({
           {/* Labels (outside form - array state) */}
           {labels && labels.length > 0 && (
             <div>
-              <div className="block text-sm font-medium text-ui-text mb-2">Labels</div>
+              <Typography variant="label" className="block text-ui-text mb-2">
+                Labels
+              </Typography>
               <Flex wrap gap="sm">
                 {labels.map((label: Doc<"labels">) => (
                   <button

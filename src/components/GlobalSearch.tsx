@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
 import { Search } from "@/lib/icons";
@@ -136,9 +136,9 @@ function SearchListContent({
 }) {
   if (query.length < 2) {
     return (
-      <div className="p-8 text-center text-ui-text-secondary text-sm">
+      <Typography variant="small" color="secondary" className="p-8 text-center">
         Type at least 2 characters to search
-      </div>
+      </Typography>
     );
   }
 
@@ -240,7 +240,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
         </Flex>
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
+        <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" wrap>
             {result.type === "issue" && <code className="font-mono text-sm">{result.key}</code>}
             <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
@@ -250,10 +250,10 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
           <Typography variant="p" className="font-medium mt-1 truncate">
             {result.title}
           </Typography>
-          <Typography variant="muted" size="xs" className="mt-1 line-clamp-2">
+          <Typography variant="meta" className="mt-1 line-clamp-2">
             {result.description || "No description"}
           </Typography>
-        </div>
+        </FlexItem>
       </Flex>
     </CommandItem>
   );

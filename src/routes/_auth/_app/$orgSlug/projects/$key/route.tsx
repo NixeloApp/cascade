@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { PageContent, PageError } from "@/components/layout";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { ROUTES } from "@/config/routes";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -87,9 +87,9 @@ function ProjectLayout() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-hidden">
+      <FlexItem flex="1" className="overflow-hidden">
         <Outlet />
-      </div>
+      </FlexItem>
     </Flex>
   );
 }

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Typography } from "../ui/Typography";
 import {
@@ -154,7 +155,7 @@ export function CreateEventModal({
                   >
                     Event Type
                   </Typography>
-                  <div className="grid grid-cols-4 gap-2">
+                  <Grid cols={4} gap="sm">
                     {eventTypes.map((type) => (
                       <button
                         key={type}
@@ -175,7 +176,7 @@ export function CreateEventModal({
                         {type}
                       </button>
                     ))}
-                  </div>
+                  </Grid>
                 </div>
 
                 {/* Color */}
@@ -211,7 +212,7 @@ export function CreateEventModal({
                 </div>
 
                 {/* Date and Time */}
-                <div className="grid grid-cols-3 gap-4">
+                <Grid cols={3} gap="lg">
                   <div className="col-span-3 sm:col-span-1">
                     <form.Field name="startDate">
                       {(field) => (
@@ -283,7 +284,7 @@ export function CreateEventModal({
                       )}
                     </form.Field>
                   </div>
-                </div>
+                </Grid>
 
                 {/* All Day Toggle */}
                 <form.Field name="allDay">

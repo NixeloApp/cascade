@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Typography } from "../ui/Typography";
 import { calculateManualEntryTimes, validateManualTimeEntry } from "./manualTimeEntryValidation";
@@ -373,7 +374,7 @@ export function ManualTimeEntryModal({
           {/* Time Range Mode */}
           {entryMode === "timeRange" && (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <Grid cols={2} gap="lg">
                 <form.Field name="startTime">
                   {(field) => (
                     <div>
@@ -414,7 +415,7 @@ export function ManualTimeEntryModal({
                     </div>
                   )}
                 </form.Field>
-              </div>
+              </Grid>
 
               {/* Duration Display */}
               {timeRangeDuration > 0 && (

@@ -1,6 +1,6 @@
 /**
  * CHECK 1: Standards (AST)
- * Typography, className concat, dark mode, raw TW colors, shorthands
+ * Typography, className concat, dark mode, raw TW colors, shorthands, font styles
  */
 
 import fs from "node:fs";
@@ -20,14 +20,11 @@ export function run() {
   let errorCount = 0;
   const errors = [];
 
-  function reportError(filePath, node, message, level = "error") {
+  function reportError(filePath, node, message) {
     const { line, character } = node.getSourceFile().getLineAndCharacterOfPosition(node.getStart());
     const rel = relPath(filePath);
-    const color = level === "error" ? c.red : c.yellow;
-    errors.push(
-      `  ${color}${level.toUpperCase()}${c.reset} ${rel}:${line + 1}:${character + 1} - ${message}`,
-    );
-    if (level === "error") errorCount++;
+    errors.push(`  ${c.red}ERROR${c.reset} ${rel}:${line + 1}:${character + 1} - ${message}`);
+    errorCount++;
   }
 
   function getClassNameText(node) {
@@ -52,6 +49,30 @@ export function run() {
     "flex-grow-0": "grow-0",
     "flex-grow": "grow",
   };
+
+  // Font-related classes that should only be used in UI components
+  const FONT_STYLE_PATTERN =
+    /^(font-(mono|sans|serif|thin|extralight|light|normal|medium|semibold|bold|extrabold|black)|text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl|caption)|leading-|tracking-)$/;
+
+  // Flex item classes that should use FlexItem component
+  const FLEX_ITEM_PATTERN =
+    /^(flex-(1|auto|initial|none)|grow|grow-0|shrink|shrink-0|self-(auto|start|center|end|stretch|baseline))$/;
+
+  // Elements that should NOT have font styles (use Typography, Badge, etc. instead)
+  const RAW_ELEMENTS = new Set([
+    "div",
+    "span",
+    "section",
+    "article",
+    "aside",
+    "header",
+    "footer",
+    "main",
+    "nav",
+    "li",
+    "ul",
+    "ol",
+  ]);
 
   function getClassText(node) {
     let classText = "";
@@ -95,7 +116,51 @@ export function run() {
               filePath,
               node,
               `Use <Flex> component instead of <${tagName} className="flex"> for one-dimensional layouts.`,
-              "warning",
+            );
+          }
+        }
+
+        // Font styles on raw elements — use Typography, Badge, etc. instead
+        if (RAW_ELEMENTS.has(tagName)) {
+          const classText = getClassNameText(node);
+          const classes = classText.split(/\s+/);
+          for (const cls of classes) {
+            if (FONT_STYLE_PATTERN.test(cls)) {
+              reportError(
+                filePath,
+                node,
+                `Font style '${cls}' on raw <${tagName}>. Use Typography, Badge, or other UI components for text styling.`,
+              );
+              break; // Only report once per element
+            }
+          }
+        }
+
+        // Flex item classes on raw elements — use FlexItem component instead
+        if (RAW_ELEMENTS.has(tagName)) {
+          const classText = getClassNameText(node);
+          const classes = classText.split(/\s+/);
+          for (const cls of classes) {
+            if (FLEX_ITEM_PATTERN.test(cls)) {
+              reportError(
+                filePath,
+                node,
+                `Flex item class '${cls}' on raw <${tagName}>. Use <FlexItem> component instead.`,
+              );
+              break; // Only report once per element
+            }
+          }
+        }
+
+        // Grid classes on raw elements — use Grid component instead
+        if (RAW_ELEMENTS.has(tagName)) {
+          const classText = getClassNameText(node);
+          const classes = classText.split(/\s+/);
+          if (classes.includes("grid")) {
+            reportError(
+              filePath,
+              node,
+              `Use <Grid> component instead of <${tagName} className="grid"> for grid layouts.`,
             );
           }
         }
@@ -126,7 +191,6 @@ export function run() {
             filePath,
             node,
             "Redundant dark: prefix on semantic token. All semantic tokens use light-dark() and handle dark mode automatically.",
-            "warning",
           );
         }
 
@@ -149,7 +213,6 @@ export function run() {
               filePath,
               node,
               `Non-canonical Tailwind class: '${cls}'. Use '${tailwindShorthandMap[cls]}' instead.`,
-              "warning",
             );
           }
         }
@@ -164,19 +227,10 @@ export function run() {
   const files = walkDir(SRC_DIR, { extensions: new Set([".tsx"]) });
   for (const f of files) checkFile(f);
 
-  const warningCount = errors.length - errorCount;
-  let detail = null;
-  if (errorCount > 0) {
-    detail = `${errorCount} violation(s)${warningCount > 0 ? `, ${warningCount} warning(s)` : ""}`;
-  } else if (warningCount > 0) {
-    detail = `${warningCount} warning(s)`;
-  }
-
   return {
     passed: errorCount === 0,
     errors: errorCount,
-    warnings: warningCount,
-    detail,
+    detail: errorCount > 0 ? `${errorCount} violation(s)` : null,
     messages: errors,
   };
 }

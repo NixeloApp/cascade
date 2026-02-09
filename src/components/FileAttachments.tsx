@@ -2,12 +2,12 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useRef, useState } from "react";
-import { Archive, File, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
+import { Archive, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { Metadata, MetadataTimestamp } from "./ui/Metadata";
 import { Tooltip } from "./ui/Tooltip";
@@ -187,7 +187,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
             >
               <Flex align="center" gap="md" className="flex-1 min-w-0">
                 <Icon icon={getFileIcon(attachment.filename)} size="lg" className="shrink-0" />
-                <div className="flex-1 min-w-0">
+                <FlexItem flex="1" className="min-w-0">
                   <a
                     href={attachment.url || "#"}
                     download={attachment.filename}
@@ -198,7 +198,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                   <Metadata>
                     <MetadataTimestamp date={attachment.uploadedAt} format="absolute" />
                   </Metadata>
-                </div>
+                </FlexItem>
               </Flex>
               <Flex align="center" gap="sm" className="shrink-0">
                 <Tooltip content="Download">

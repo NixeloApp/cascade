@@ -4,7 +4,7 @@ import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { useQuery } from "convex/react";
 import { useCallback, useMemo, useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
 import { useListNavigation } from "@/hooks/useListNavigation";
@@ -156,16 +156,17 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
 
   if (isLoading) {
     return (
-      <div className="flex-1 overflow-x-auto">
+      <FlexItem flex="1" className="overflow-x-auto">
         <Flex align="center" justify="between" className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2">
           <SkeletonText lines={1} className="w-32" />
           <SkeletonText lines={1} className="w-32" />
         </Flex>
         <Flex className="space-x-3 sm:space-x-6 px-4 sm:px-6 pb-6 overflow-x-auto">
           {[1, 2, 3, 4].map((i) => (
-            <div
+            <FlexItem
               key={i}
-              className="shrink-0 w-72 sm:w-80 bg-ui-bg-soft rounded-container border border-ui-border"
+              shrink={false}
+              className="w-72 sm:w-80 bg-ui-bg-soft rounded-container border border-ui-border"
             >
               <div className="p-3 sm:p-4 border-b border-ui-border/50 bg-transparent rounded-t-container">
                 <SkeletonText lines={1} className="w-24" />
@@ -175,10 +176,10 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
                 <SkeletonKanbanCard />
                 <SkeletonKanbanCard />
               </div>
-            </div>
+            </FlexItem>
           ))}
         </Flex>
-      </div>
+      </FlexItem>
     );
   }
 
@@ -200,7 +201,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   const canEdit = isProjectMode ? project?.userRole !== "viewer" : true;
 
   return (
-    <div className="flex-1 overflow-x-auto" data-tour="kanban-board">
+    <FlexItem flex="1" className="overflow-x-auto" data-tour="kanban-board">
       <BoardToolbar
         sprintId={sprintId}
         selectionMode={selectionMode}
@@ -277,6 +278,6 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
           workflowStates={workflowStates}
         />
       )}
-    </div>
+    </FlexItem>
   );
 }

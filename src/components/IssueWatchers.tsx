@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { Eye } from "lucide-react";
 import { toast } from "sonner";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { Typography } from "./ui/Typography";
@@ -80,16 +80,16 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
                 <Avatar name={watcher.userName} size="md" />
 
                 {/* User Info */}
-                <div className="flex-1 min-w-0">
+                <FlexItem flex="1" className="min-w-0">
                   <Typography variant="p" className="font-medium truncate">
                     {watcher.userName}
                   </Typography>
                   {watcher.userEmail && (
-                    <Typography variant="muted" size="xs" className="truncate">
+                    <Typography variant="caption" className="truncate">
                       {watcher.userEmail}
                     </Typography>
                   )}
-                </div>
+                </FlexItem>
               </Flex>
             ))}
           </div>
@@ -98,9 +98,9 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
 
       {/* Empty State */}
       {watchers && watchers.length === 0 && (
-        <div className="text-center py-4 text-sm text-ui-text-secondary">
+        <Typography variant="small" color="secondary" className="text-center py-4">
           No watchers yet. Be the first to watch this issue!
-        </div>
+        </Typography>
       )}
     </div>
   );

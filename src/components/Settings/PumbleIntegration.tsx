@@ -10,8 +10,9 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
+import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
 import { Typography } from "../ui/Typography";
 
@@ -53,7 +54,7 @@ export function PumbleIntegration() {
       <div className="p-6 border-b border-ui-border">
         <Flex justify="between" align="start">
           <Flex gap="md" align="center">
-            <div className="shrink-0">
+            <FlexItem shrink={false}>
               <Flex
                 align="center"
                 justify="center"
@@ -74,7 +75,7 @@ export function PumbleIntegration() {
                   />
                 </svg>
               </Flex>
-            </div>
+            </FlexItem>
             <div>
               <Typography variant="h3" className="text-lg font-semibold text-ui-text">
                 Pumble Integration
@@ -240,7 +241,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
   return (
     <div className="border border-ui-border rounded-lg p-4 hover:border-accent-muted:border-accent-hover transition-colors">
       <Flex justify="between" align="start" className="mb-3">
-        <div className="flex-1">
+        <FlexItem flex="1">
           <Flex gap="sm" align="center" className="mb-1">
             <Typography variant="h4" className="font-medium text-ui-text">
               {webhook.name}
@@ -261,7 +262,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
               Project: {project.name}
             </Typography>
           )}
-        </div>
+        </FlexItem>
       </Flex>
 
       {/* Events */}
@@ -275,9 +276,9 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
 
       {/* Stats */}
       {webhook.lastMessageAt && (
-        <div className="text-xs text-ui-text-tertiary mb-3">
+        <Typography variant="caption" color="tertiary" className="mb-3">
           Last triggered: {new Date(webhook.lastMessageAt).toLocaleDateString()}
-        </div>
+        </Typography>
       )}
 
       {/* Actions */}
@@ -439,7 +440,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
             <Label required className="block mb-3">
               Events to Send
             </Label>
-            <div className="grid grid-cols-2 gap-3">
+            <Grid cols={2} gap="md">
               {AVAILABLE_EVENTS.map((event) => (
                 <Checkbox
                   key={event.value}
@@ -448,7 +449,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
                   onChange={() => toggleEvent(event.value)}
                 />
               ))}
-            </div>
+            </Grid>
             {selectedEvents.length === 0 && (
               <Typography variant="small" color="error" className="mt-1">
                 Select at least one event
@@ -581,7 +582,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
             <Label required className="block mb-3">
               Events to Send
             </Label>
-            <div className="grid grid-cols-2 gap-3">
+            <Grid cols={2} gap="md">
               {AVAILABLE_EVENTS.map((event) => (
                 <Checkbox
                   key={event.value}
@@ -590,7 +591,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
                   onChange={() => toggleEvent(event.value)}
                 />
               ))}
-            </div>
+            </Grid>
             {selectedEvents.length === 0 && (
               <Typography variant="small" color="error" className="mt-1">
                 Select at least one event

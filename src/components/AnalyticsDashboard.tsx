@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { useMemo } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { CheckCircle, MapPin, TrendingUp, Zap } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { BarChart } from "./Analytics/BarChart";
@@ -120,15 +121,15 @@ export function AnalyticsDashboard({ projectId }: Props) {
           </div>
 
           {/* Metric Cards Skeleton */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <Grid cols={2} colsMd={4} gap="md" className="sm:gap-4">
             <SkeletonStatCard />
             <SkeletonStatCard />
             <SkeletonStatCard />
             <SkeletonStatCard />
-          </div>
+          </Grid>
 
           {/* Charts Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <Grid cols={1} colsLg={2} gap="lg" className="sm:gap-6">
             <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
@@ -145,7 +146,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
             </div>
-          </div>
+          </Grid>
         </div>
       </PageLayout>
     );
@@ -162,7 +163,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
         />
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Grid cols={2} colsMd={4} gap="md" className="sm:gap-4">
           <MetricCard
             title="Total Issues"
             value={analytics.totalIssues}
@@ -189,10 +190,10 @@ export function AnalyticsDashboard({ projectId }: Props) {
             icon={CheckCircle}
             testId={TEST_IDS.ANALYTICS.METRIC_COMPLETED_SPRINTS}
           />
-        </div>
+        </Grid>
 
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Grid cols={1} colsLg={2} gap="lg" className="sm:gap-6">
           {/* Issues by Status */}
           <ChartCard title="Issues by Status">
             <BarChart data={statusChartData} color="bg-status-info" />
@@ -218,7 +219,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
               </Flex>
             )}
           </ChartCard>
-        </div>
+        </Grid>
 
         {/* Issues by Assignee */}
         {assigneeChartData.length > 0 && (

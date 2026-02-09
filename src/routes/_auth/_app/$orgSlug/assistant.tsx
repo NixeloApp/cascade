@@ -1,23 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Flex } from "@/components/ui/Flex";
-import { Typography } from "@/components/ui/Typography";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
-import { Switch } from "@/components/ui/Switch";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/Select";
-import { Bot, Sparkles, MessageSquare, Zap, CheckCircle, CircleHelp } from "@/lib/icons";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/ShadcnTabs";
+import { Switch } from "@/components/ui/Switch";
+import { Textarea } from "@/components/ui/Textarea";
+import { Typography } from "@/components/ui/Typography";
+import { Bot, CheckCircle, MessageSquare, Sparkles, Zap } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/assistant")({
@@ -50,7 +51,7 @@ function AssistantStats() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <Grid cols={1} colsMd={3} gap="lg" className="mb-8">
       {stats.map((stat) => (
         <Card key={stat.label} className="card-subtle relative overflow-hidden group">
           {/* Green left border accent for active feel */}
@@ -84,7 +85,7 @@ function AssistantStats() {
           </CardBody>
         </Card>
       ))}
-    </div>
+    </Grid>
   );
 }
 
@@ -98,8 +99,12 @@ function AssistantConfig() {
     <div className="max-w-4xl">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-6 bg-ui-bg-secondary p-1 rounded-lg inline-flex">
-          <TabsTrigger value="general" className="px-4 py-1.5 text-sm">General</TabsTrigger>
-          <TabsTrigger value="billing" className="px-4 py-1.5 text-sm">Billing</TabsTrigger>
+          <TabsTrigger value="general" className="px-4 py-1.5 text-sm">
+            General
+          </TabsTrigger>
+          <TabsTrigger value="billing" className="px-4 py-1.5 text-sm">
+            Billing
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 animate-fade-in">
@@ -108,95 +113,122 @@ function AssistantConfig() {
             <CardBody className="p-6">
               <Flex justify="between" align="center">
                 <Flex gap="md" align="center">
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-                    enabled ? "bg-status-success-bg text-status-success" : "bg-ui-bg-tertiary text-ui-text-tertiary"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                      enabled
+                        ? "bg-status-success-bg text-status-success"
+                        : "bg-ui-bg-tertiary text-ui-text-tertiary",
+                    )}
+                  >
                     <Bot className="w-5 h-5" />
                   </div>
                   <div>
-                    <Typography variant="h6" className="mb-1">Assistant Status</Typography>
+                    <Typography variant="h5" className="mb-1">
+                      Assistant Status
+                    </Typography>
                     <Typography variant="small" color="secondary">
-                      {enabled ? "Your assistant is active and answering questions." : "Assistant is currently disabled."}
+                      {enabled
+                        ? "Your assistant is active and answering questions."
+                        : "Assistant is currently disabled."}
                     </Typography>
                   </div>
                 </Flex>
-                <div className="flex items-center gap-4">
+                <Flex align="center" gap="md">
                   {enabled && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-status-success-bg border border-status-success/20">
+                    <Flex
+                      align="center"
+                      gap="xs"
+                      className="px-2.5 py-0.5 rounded-full bg-status-success-bg border border-status-success/20"
+                    >
                       <div className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
-                      <span className="text-xs font-medium text-status-success">Active</span>
-                    </div>
+                      <Typography variant="caption" as="span" className="text-status-success">
+                        Active
+                      </Typography>
+                    </Flex>
                   )}
                   <Switch checked={enabled} onCheckedChange={setEnabled} />
-                </div>
+                </Flex>
               </Flex>
             </CardBody>
           </Card>
 
           {/* Configuration Form */}
-          <Card className={cn("card-subtle transition-opacity duration-300", !enabled && "opacity-60 pointer-events-none")}>
-             <CardHeader className="pb-4 border-b border-ui-border">
-                <CardTitle>Configuration</CardTitle>
-             </CardHeader>
-             <CardBody className="p-6 space-y-6">
-                
-                {/* System Prompt */}
+          <Card
+            className={cn(
+              "card-subtle transition-opacity duration-300",
+              !enabled && "opacity-60 pointer-events-none",
+            )}
+          >
+            <CardHeader className="pb-4 border-b border-ui-border">
+              <CardTitle>Configuration</CardTitle>
+            </CardHeader>
+            <CardBody className="p-6 space-y-6">
+              {/* System Prompt */}
+              <div className="space-y-3">
+                <Flex justify="between">
+                  <Typography variant="small" className="font-medium">
+                    System Prompt
+                  </Typography>
+                  <Typography variant="small" color="tertiary" className="text-xs">
+                    Max 2000 chars
+                  </Typography>
+                </Flex>
+                <Textarea
+                  placeholder="You are a helpful assistant for..."
+                  className="min-h-textarea font-mono text-sm bg-ui-bg"
+                  defaultValue="You are a helpful documentation assistant. Answer questions based on the provided context."
+                />
+                <Typography variant="small" color="tertiary" className="text-xs">
+                  Instructions for how the assistant should behave and answer questions.
+                </Typography>
+              </div>
+
+              <Grid cols={1} colsMd={2} gap="xl">
+                {/* Model Selection */}
                 <div className="space-y-3">
-                   <div className="flex justify-between">
-                      <Typography variant="small" className="font-medium">System Prompt</Typography>
-                      <Typography variant="small" color="tertiary" className="text-xs">Max 2000 chars</Typography>
-                   </div>
-                   <Textarea 
-                      placeholder="You are a helpful assistant for..." 
-                      className="min-h-[120px] font-mono text-sm bg-ui-bg"
-                      defaultValue="You are a helpful documentation assistant. Answer questions based on the provided context."
-                   />
-                   <Typography variant="small" color="tertiary" className="text-xs">
-                      Instructions for how the assistant should behave and answer questions.
-                   </Typography>
+                  <Typography variant="small" className="font-medium">
+                    Model
+                  </Typography>
+                  <Select value={model} onValueChange={setModel}>
+                    <SelectTrigger className="bg-ui-bg">
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gpt-4o">GPT-4o (Recommended)</SelectItem>
+                      <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
+                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                      <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   {/* Model Selection */}
-                   <div className="space-y-3">
-                      <Typography variant="small" className="font-medium">Model</Typography>
-                      <Select value={model} onValueChange={setModel}>
-                         <SelectTrigger className="bg-ui-bg">
-                            <SelectValue placeholder="Select model" />
-                         </SelectTrigger>
-                         <SelectContent>
-                            <SelectItem value="gpt-4o">GPT-4o (Recommended)</SelectItem>
-                            <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                            <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                            <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                         </SelectContent>
-                      </Select>
-                   </div>
-
-                   {/* Support Email */}
-                   <div className="space-y-3">
-                      <Typography variant="small" className="font-medium">Support Email</Typography>
-                      <Input 
-                         type="email" 
-                         placeholder="support@example.com" 
-                         className="bg-ui-bg"
-                      />
-                   </div>
+                {/* Support Email */}
+                <div className="space-y-3">
+                  <Typography variant="small" className="font-medium">
+                    Support Email
+                  </Typography>
+                  <Input type="email" placeholder="support@example.com" className="bg-ui-bg" />
                 </div>
+              </Grid>
 
-                {/* Show Help Button Toggle */}
-                <div className="flex items-center justify-between pt-4 border-t border-ui-border-secondary">
-                   <div className="space-y-1">
-                      <Typography variant="small" className="font-medium">Show Help Button</Typography>
-                      <Typography variant="small" color="tertiary" className="text-xs">
-                         Display a floating help button on your documentation pages.
-                      </Typography>
-                   </div>
-                   <Switch checked={showHelpButton} onCheckedChange={setShowHelpButton} />
+              {/* Show Help Button Toggle */}
+              <Flex
+                align="center"
+                justify="between"
+                className="pt-4 border-t border-ui-border-secondary"
+              >
+                <div className="space-y-1">
+                  <Typography variant="small" className="font-medium">
+                    Show Help Button
+                  </Typography>
+                  <Typography variant="small" color="tertiary" className="text-xs">
+                    Display a floating help button on your documentation pages.
+                  </Typography>
                 </div>
-
-             </CardBody>
+                <Switch checked={showHelpButton} onCheckedChange={setShowHelpButton} />
+              </Flex>
+            </CardBody>
           </Card>
         </TabsContent>
 
@@ -204,31 +236,43 @@ function AssistantConfig() {
           <Card className="card-subtle border-brand-subtle bg-brand-subtle/10 mb-6">
             <CardBody className="p-6">
               <Flex gap="md" align="start">
-                 <div className="p-2 bg-brand-subtle rounded-md text-brand">
-                    <Sparkles className="w-5 h-5" />
-                 </div>
-                 <div>
-                    <Typography variant="h6" className="mb-1 text-brand-foreground">Upgrade to Pro</Typography>
-                    <Typography variant="p" className="mb-4 text-ui-text-secondary max-w-lg">
-                       Get access to advanced models (GPT-4o), custom system prompts, and higher usage limits.
-                    </Typography>
-                    <Button variant="primary" className="bg-brand hover:bg-brand-hover text-white border-none shadow-lg shadow-brand/20">
-                       Upgrade Plan
-                    </Button>
-                 </div>
+                <div className="p-2 bg-brand-subtle rounded-md text-brand">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <Typography variant="h5" className="mb-1 text-brand-foreground">
+                    Upgrade to Pro
+                  </Typography>
+                  <Typography variant="p" className="mb-4 text-ui-text-secondary max-w-lg">
+                    Get access to advanced models (GPT-4o), custom system prompts, and higher usage
+                    limits.
+                  </Typography>
+                  <Button
+                    variant="primary"
+                    className="bg-brand hover:bg-brand-hover text-white border-none shadow-lg shadow-brand/20"
+                  >
+                    Upgrade Plan
+                  </Button>
+                </div>
               </Flex>
             </CardBody>
           </Card>
-          
+
           <Card className="card-subtle">
-             <CardHeader>
-                <CardTitle>Usage</CardTitle>
-             </CardHeader>
-             <CardBody className="p-6">
-                <div className="h-48 flex items-center justify-center bg-ui-bg-tertiary rounded-md border border-dashed border-ui-border-secondary">
-                   <Typography variant="small" color="tertiary">Usage chart placeholder</Typography>
-                </div>
-             </CardBody>
+            <CardHeader>
+              <CardTitle>Usage</CardTitle>
+            </CardHeader>
+            <CardBody className="p-6">
+              <Flex
+                align="center"
+                justify="center"
+                className="h-48 bg-ui-bg-tertiary rounded-md border border-dashed border-ui-border-secondary"
+              >
+                <Typography variant="small" color="tertiary">
+                  Usage chart placeholder
+                </Typography>
+              </Flex>
+            </CardBody>
           </Card>
         </TabsContent>
       </Tabs>
@@ -239,11 +283,11 @@ function AssistantConfig() {
 function AssistantPage() {
   return (
     <PageLayout>
-      <PageHeader 
-        title="Assistant" 
+      <PageHeader
+        title="Assistant"
         description="Manage your AI assistant settings and view usage metrics."
       />
-      
+
       <div className="p-6 max-w-7xl mx-auto w-full">
         <AssistantStats />
         <AssistantConfig />

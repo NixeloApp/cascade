@@ -82,7 +82,7 @@ function Alert({ className, variant = "default", onDismiss, children, ...props }
   );
 }
 
-function AlertTitle({ className, children, ...props }: React.ComponentProps<"h5">) {
+function AlertTitle({ className, children, color: _color, ...props }: React.ComponentProps<"h5">) {
   return (
     <Typography
       as="h5"

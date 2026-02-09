@@ -6,6 +6,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
@@ -51,7 +52,7 @@ export function OfflineTab() {
           </Flex>
 
           <div className="mt-6 pt-6 border-t border-ui-border">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Grid cols={1} colsSm={3} gap="lg">
               <div className="p-4 bg-ui-bg-secondary rounded-lg">
                 <Typography className="text-sm text-ui-text-secondary">Pending Changes</Typography>
                 <Typography className="text-2xl font-bold text-ui-text mt-1">
@@ -68,7 +69,7 @@ export function OfflineTab() {
                 <Typography className="text-sm text-ui-text-secondary">Storage</Typography>
                 <Typography className="text-2xl font-bold text-ui-text mt-1">IndexedDB</Typography>
               </div>
-            </div>
+            </Grid>
           </div>
         </div>
       </Card>

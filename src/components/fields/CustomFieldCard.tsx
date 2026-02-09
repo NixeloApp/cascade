@@ -13,7 +13,7 @@ import {
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Typography } from "../ui/Typography";
@@ -65,7 +65,7 @@ export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProp
       <Flex justify="between" align="start">
         <Flex gap="md" align="start" className="flex-1">
           <Icon icon={getFieldTypeIcon(field.fieldType)} size="lg" />
-          <div className="flex-1">
+          <FlexItem flex="1">
             <Flex gap="sm" align="center">
               <Typography variant="h3" className="font-semibold text-ui-text">
                 {field.name}
@@ -94,7 +94,7 @@ export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProp
                 ))}
               </Flex>
             )}
-          </div>
+          </FlexItem>
         </Flex>
         <Flex gap="sm">
           <Button onClick={onEdit} variant="secondary" size="sm">

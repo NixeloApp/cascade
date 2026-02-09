@@ -80,7 +80,10 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
         Verify your email
       </Typography>
       <Typography variant="p" color="secondary" className="mb-6 text-sm">
-        We sent a verification code to <span className="font-medium text-ui-text">{email}</span>
+        We sent a verification code to{" "}
+        <Typography variant="label" as="span" className="text-ui-text">
+          {email}
+        </Typography>
       </Typography>
       <form className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
         <Input

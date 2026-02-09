@@ -30,7 +30,6 @@ export function useIssueModal(): {
   const openIssue = useCallback(
     (key: string) => {
       navigate({
-        // biome-ignore lint/suspicious/noExplicitAny: Temporary fix for strict router types
         search: ((prev: Record<string, unknown>) => ({ ...prev, issue: key })) as any,
         replace: false,
       });
@@ -43,7 +42,6 @@ export function useIssueModal(): {
       search: ((prev: Record<string, unknown>) => {
         const { issue: _, ...rest } = prev;
         return rest;
-        // biome-ignore lint/suspicious/noExplicitAny: Temporary fix for strict router types
       }) as any,
       replace: true,
     });

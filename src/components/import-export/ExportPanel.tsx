@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
@@ -110,7 +111,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
         <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
           Select Export Format
         </Typography>
-        <div className="grid grid-cols-2 gap-3">
+        <Grid cols={2} gap="md">
           <Card
             onClick={() => setExportFormat("csv")}
             className={cn(
@@ -121,8 +122,12 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
             <Flex gap="md" align="center">
               <Icon icon={FileSpreadsheet} size="lg" />
               <div>
-                <div className="font-semibold text-ui-text">CSV</div>
-                <div className="text-xs text-ui-text-tertiary">Spreadsheet format</div>
+                <Typography variant="label" className="text-ui-text">
+                  CSV
+                </Typography>
+                <Typography variant="caption" color="tertiary">
+                  Spreadsheet format
+                </Typography>
               </div>
             </Flex>
           </Card>
@@ -137,18 +142,22 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
             <Flex gap="md" align="center">
               <Icon icon={FileCode} size="lg" />
               <div>
-                <div className="font-semibold text-ui-text">JSON</div>
-                <div className="text-xs text-ui-text-tertiary">Data interchange format</div>
+                <Typography variant="label" className="text-ui-text">
+                  JSON
+                </Typography>
+                <Typography variant="caption" color="tertiary">
+                  Data interchange format
+                </Typography>
               </div>
             </Flex>
           </Card>
-        </div>
+        </Grid>
       </div>
 
       <div className="bg-brand-subtle border border-brand-border rounded-lg p-4">
         <Flex gap="md" align="start">
           <Icon icon={Info} size="lg" className="text-brand" />
-          <div className="text-sm text-brand-active">
+          <div className="text-brand-active">
             <Typography variant="p" className="font-semibold mb-1">
               Export Information
             </Typography>

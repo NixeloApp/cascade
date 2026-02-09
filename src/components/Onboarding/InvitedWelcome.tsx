@@ -35,8 +35,10 @@ export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelc
           Welcome to Nixelo!
         </Typography>
         <Typography className="text-lg text-ui-text-secondary">
-          <span className="font-semibold text-ui-text">{inviterName}</span> invited you to
-          collaborate
+          <Typography variant="label" as="span" className="text-ui-text">
+            {inviterName}
+          </Typography>{" "}
+          invited you to collaborate
         </Typography>
       </div>
 

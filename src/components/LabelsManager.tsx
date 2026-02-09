@@ -9,6 +9,7 @@ import { useEntityForm } from "@/hooks/useEntityForm";
 import { useModal } from "@/hooks/useModal";
 import { Tag } from "@/lib/icons";
 import { showSuccess } from "@/lib/toast";
+import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
 import { ColorPicker } from "./ui/ColorPicker";
@@ -338,12 +339,12 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                             className="p-3 hover:bg-ui-bg-secondary transition-colors"
                           >
                             <Flex gap="md" align="center">
-                              <span
-                                className="px-3 py-1 rounded-full text-sm font-medium text-brand-foreground"
+                              <Badge
+                                className="text-brand-foreground"
                                 style={{ backgroundColor: label.color }}
                               >
                                 {label.name}
-                              </span>
+                              </Badge>
                               <code className="text-xs text-ui-text-tertiary">{label.color}</code>
                             </Flex>
 
@@ -372,7 +373,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
 
                     {/* Empty Group State */}
                     {!isCollapsed && group.labels.length === 0 && (
-                      <div className="p-4 text-center text-sm text-ui-text-secondary">
+                      <Typography variant="small" color="secondary" className="p-4 text-center">
                         No labels in this group.{" "}
                         <button
                           type="button"
@@ -381,7 +382,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                         >
                           Add one
                         </button>
-                      </div>
+                      </Typography>
                     )}
                   </div>
                 );
@@ -436,13 +437,15 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
 
               {/* Preview */}
               <div>
-                <div className="block text-sm font-medium text-ui-text mb-2">Preview</div>
-                <span
-                  className="px-3 py-1 rounded-full text-sm font-medium text-brand-foreground"
+                <Typography variant="label" className="block text-ui-text mb-2">
+                  Preview
+                </Typography>
+                <Badge
+                  className="text-brand-foreground"
                   style={{ backgroundColor: labelForm.formData.color }}
                 >
                   {labelForm.formData.name || "Label name"}
-                </span>
+                </Badge>
               </div>
 
               <DialogFooter className="pt-4">

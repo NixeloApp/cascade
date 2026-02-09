@@ -161,10 +161,10 @@ describe("EmptyState", () => {
     it("should handle empty string description", () => {
       const { container } = render(<EmptyState icon="📦" title="Empty" description="" />);
 
-      // The paragraph for description shouldn't be rendered
-      // Note: The title is also a paragraph, so we check specifically for description
+      // The paragraph for description shouldn't be rendered when empty
+      // Title renders as h3, so no paragraphs should exist
       const paragraphs = container.querySelectorAll("p");
-      expect(paragraphs.length).toBe(1); // Only title
+      expect(paragraphs.length).toBe(0);
     });
 
     it("should handle very long title", () => {
@@ -217,8 +217,8 @@ describe("EmptyState", () => {
     it("should have proper heading level", () => {
       render(<EmptyState icon="📦" title="Heading Test" />);
 
-      // Typography variant="large" renders as <p>
-      expect(screen.getByText("Heading Test").tagName).toBe("P");
+      // Typography variant="large" with as="h3" renders as <h3>
+      expect(screen.getByText("Heading Test").tagName).toBe("H3");
     });
 
     it("should apply animation class to container", () => {

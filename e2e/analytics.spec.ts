@@ -98,8 +98,10 @@ test.describe("Analytics Dashboard", () => {
     await expect(priorityChart).toBeVisible();
     console.log("✓ Issues by Priority chart visible");
 
-    // Use heading role to avoid matching the page description ("Project insights, team velocity...")
-    const velocityChart = page.getByRole("heading", { name: /team velocity/i });
+    // Team Velocity chart - may need to scroll into view
+    // Note: ChartCard uses Typography variant="large" which renders <p>, not a heading
+    const velocityChart = page.getByText("Team Velocity (Last 10 Sprints)");
+    await velocityChart.scrollIntoViewIfNeeded();
     await expect(velocityChart).toBeVisible();
     console.log("✓ Team Velocity chart visible");
   });

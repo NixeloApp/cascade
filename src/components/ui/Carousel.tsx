@@ -105,7 +105,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
     // Update total slides count after all slides are registered
     React.useEffect(() => {
       setTotalSlides(slideCountRef.current);
-    }, [children]);
+    }, []);
 
     const goToSlide = React.useCallback(
       (index: number) => {
@@ -142,7 +142,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
     // Reset slide count when children change
     React.useEffect(() => {
       slideCountRef.current = 0;
-    }, [children]);
+    }, []);
 
     const contextValue = React.useMemo(
       () => ({

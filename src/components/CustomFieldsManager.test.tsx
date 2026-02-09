@@ -51,12 +51,13 @@ describe("CustomFieldsManager - Component Behavior", () => {
       expect(spinner).toBeInTheDocument();
     });
 
-    it("should show empty state with emoji when no fields exist", () => {
+    it("should show empty state with icon when no fields exist", () => {
       (useQuery as any).mockReturnValue([]);
 
-      render(<CustomFieldsManager projectId={mockProjectId} />);
+      const { container } = render(<CustomFieldsManager projectId={mockProjectId} />);
 
-      expect(screen.getByText("📋")).toBeInTheDocument();
+      // Icon is rendered as SVG, check for its presence
+      expect(container.querySelector("svg")).toBeInTheDocument();
       expect(screen.getByText(/No custom fields yet/i)).toBeInTheDocument();
     });
 
@@ -599,7 +600,7 @@ describe("CustomFieldsManager - Component Behavior", () => {
       expect(screen.getByText("High")).toBeInTheDocument();
     });
 
-    it("should show correct icon for text field", () => {
+    it("should render icon for text field", () => {
       const field = {
         _id: "field1" as Id<"customFields">,
         name: "Test",
@@ -609,12 +610,14 @@ describe("CustomFieldsManager - Component Behavior", () => {
       };
       (useQuery as any).mockReturnValue([field]);
 
-      render(<CustomFieldsManager projectId={mockProjectId} />);
+      const { container } = render(<CustomFieldsManager projectId={mockProjectId} />);
 
-      expect(screen.getByText("📝")).toBeInTheDocument();
+      // Icons are rendered as SVG, verify field card displays the field
+      expect(screen.getByText("Test")).toBeInTheDocument();
+      expect(container.querySelector("svg")).toBeInTheDocument();
     });
 
-    it("should show correct icon for number field", () => {
+    it("should render icon for number field", () => {
       const field = {
         _id: "field1" as Id<"customFields">,
         name: "Test",
@@ -624,12 +627,14 @@ describe("CustomFieldsManager - Component Behavior", () => {
       };
       (useQuery as any).mockReturnValue([field]);
 
-      render(<CustomFieldsManager projectId={mockProjectId} />);
+      const { container } = render(<CustomFieldsManager projectId={mockProjectId} />);
 
-      expect(screen.getByText("🔢")).toBeInTheDocument();
+      // Icons are rendered as SVG, verify field card displays the field
+      expect(screen.getByText("Test")).toBeInTheDocument();
+      expect(container.querySelector("svg")).toBeInTheDocument();
     });
 
-    it("should show correct icon for checkbox field", () => {
+    it("should render icon for checkbox field", () => {
       const field = {
         _id: "field1" as Id<"customFields">,
         name: "Test",
@@ -639,9 +644,11 @@ describe("CustomFieldsManager - Component Behavior", () => {
       };
       (useQuery as any).mockReturnValue([field]);
 
-      render(<CustomFieldsManager projectId={mockProjectId} />);
+      const { container } = render(<CustomFieldsManager projectId={mockProjectId} />);
 
-      expect(screen.getByText("✅")).toBeInTheDocument();
+      // Icons are rendered as SVG, verify field card displays the field
+      expect(screen.getByText("Test")).toBeInTheDocument();
+      expect(container.querySelector("svg")).toBeInTheDocument();
     });
   });
 

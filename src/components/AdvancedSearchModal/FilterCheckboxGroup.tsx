@@ -1,23 +1,23 @@
 import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 
-interface FilterCheckboxGroupProps {
+interface FilterCheckboxGroupProps<T extends string> {
   label: string;
-  options: string[];
+  options: readonly T[];
   selectedValues: string[];
-  onToggle: (value: string) => void;
-  renderLabel?: (option: string) => React.ReactNode;
+  onToggle: (value: T) => void;
+  renderLabel?: (option: T) => React.ReactNode;
   maxHeight?: string;
 }
 
-export function FilterCheckboxGroup({
+export function FilterCheckboxGroup<T extends string>({
   label,
   options,
   selectedValues,
   onToggle,
   renderLabel,
   maxHeight,
-}: FilterCheckboxGroupProps) {
+}: FilterCheckboxGroupProps<T>) {
   return (
     <div>
       <Typography variant="label" className="block text-sm font-medium mb-2">

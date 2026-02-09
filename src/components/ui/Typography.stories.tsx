@@ -42,11 +42,6 @@ const meta: Meta<typeof Typography> = {
       ],
       description: "The text color",
     },
-    size: {
-      control: "select",
-      options: ["xs", "sm", "md", "lg", "xl"],
-      description: "Override the default text size",
-    },
     as: {
       control: "text",
       description: "Override the rendered HTML element",
@@ -337,7 +332,7 @@ export const AllColors: Story = {
       <Typography color="default">Default - Primary text color</Typography>
       <Typography color="secondary">Secondary - Subdued text</Typography>
       <Typography color="tertiary">Tertiary - Most subtle text</Typography>
-      <Typography color="primary">Primary - Brand color</Typography>
+      <Typography color="brand">Brand - Brand color</Typography>
       <Typography color="error">Error - Indicates errors</Typography>
       <Typography color="success">Success - Indicates success</Typography>
       <Typography color="warning">Warning - Indicates caution</Typography>
@@ -361,17 +356,17 @@ export const AllColors: Story = {
 export const AllSizes: Story = {
   render: () => (
     <div className="flex flex-col gap-2">
-      <Typography size="xs">Extra Small (xs) - 12px</Typography>
-      <Typography size="sm">Small (sm) - 14px</Typography>
-      <Typography size="md">Medium (md) - 16px</Typography>
-      <Typography size="lg">Large (lg) - 18px</Typography>
-      <Typography size="xl">Extra Large (xl) - 20px</Typography>
+      <Typography variant="caption">Caption (xs) - 12px</Typography>
+      <Typography variant="small">Small (sm) - 14px</Typography>
+      <Typography variant="p">Paragraph (base) - 16px</Typography>
+      <Typography variant="large">Large - 18px</Typography>
+      <Typography variant="lead">Lead (xl) - 20px</Typography>
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: "Text size scale from xs to xl.",
+        story: "Text sizes are controlled through variants.",
       },
     },
   },
@@ -387,8 +382,8 @@ export const HeadingsWithColors: Story = {
       <Typography variant="h2" color="default">
         Default Heading
       </Typography>
-      <Typography variant="h2" color="primary">
-        Primary Heading
+      <Typography variant="h2" color="brand">
+        Brand Heading
       </Typography>
       <Typography variant="h2" color="secondary">
         Secondary Heading

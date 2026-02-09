@@ -9,9 +9,10 @@ import { useState } from "react";
 import { Bot, Lightbulb, MessageSquare } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "../ErrorBoundary";
-import { Flex } from "../ui/Flex";
+import { Badge } from "../ui/Badge";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/Sheet";
 import { AIChat } from "./AIChat";
 import { AIErrorFallback } from "./AIErrorFallback";
 import { AISuggestionsPanel } from "./AISuggestionsPanel";
@@ -88,9 +89,9 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
           >
             <Icon icon={MessageSquare} size="sm" className="inline mr-1" /> Chat
             {chats && chats.length > 0 && (
-              <span className="ml-2 text-xs bg-ui-bg-tertiary px-2 py-0.5 rounded-full">
+              <Badge variant="secondary" size="sm" className="ml-2">
                 {chats.length}
-              </span>
+              </Badge>
             )}
           </button>
           <button
@@ -105,15 +106,15 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
           >
             <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Suggestions
             {unreadSuggestions > 0 && (
-              <span className="ml-2 text-xs bg-status-error text-brand-foreground px-2 py-0.5 rounded-full">
+              <Badge variant="error" size="sm" className="ml-2">
                 {unreadSuggestions}
-              </span>
+              </Badge>
             )}
           </button>
         </Flex>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <FlexItem flex="1" className="overflow-hidden">
           <div
             className={cn(
               "h-full transition-opacity",
@@ -141,7 +142,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
               )}
             </ErrorBoundary>
           </div>
-        </div>
+        </FlexItem>
       </SheetContent>
     </Sheet>
   );

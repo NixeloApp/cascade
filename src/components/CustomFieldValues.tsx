@@ -3,7 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Check, X } from "@/lib/icons";
 import { Badge } from "./ui/Badge";
@@ -222,7 +222,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
         return (
           <div key={field._id} className="border-b border-ui-border-secondary pb-3">
             <Flex align="start" justify="between" className="mb-2">
-              <div className="flex-1">
+              <FlexItem flex="1">
                 <Flex align="center" gap="sm">
                   <Label required={field.isRequired}>{field.name}</Label>
                 </Flex>
@@ -231,7 +231,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
                     {field.description}
                   </Typography>
                 )}
-              </div>
+              </FlexItem>
               {!isEditing && (
                 <Button
                   onClick={() => handleEdit(field._id, fieldValue?.value)}

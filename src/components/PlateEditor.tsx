@@ -16,7 +16,7 @@ import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Typography } from "@/components/ui/Typography";
 import { getEditorPlugins, getInitialValue } from "@/lib/plate/editor";
@@ -118,11 +118,11 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
             <Skeleton className="h-4 w-40" />
           </Flex>
         </div>
-        <div className="flex-1 overflow-auto bg-ui-bg">
+        <FlexItem flex="1" className="overflow-auto bg-ui-bg">
           <div className="max-w-3xl mx-auto px-4 py-8 sm:px-8 sm:py-12">
             <SkeletonText lines={8} />
           </div>
-        </div>
+        </FlexItem>
       </Flex>
     );
   }
@@ -179,7 +179,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
       />
 
       {/* Editor - Clean Mintlify-inspired layout */}
-      <div className="flex-1 overflow-auto bg-ui-bg scrollbar-subtle">
+      <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
         <div className="max-w-3xl mx-auto px-4 py-8 sm:px-8 sm:py-12">
           <ErrorBoundary
             fallback={
@@ -204,7 +204,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
             </Plate>
           </ErrorBoundary>
         </div>
-      </div>
+      </FlexItem>
 
       {/* Version History Modal */}
       <VersionHistory

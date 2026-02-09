@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { IssueComments } from "@/components/IssueComments";
 import { SubtasksList } from "@/components/IssueDetail/SubtasksList";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
 import { Textarea } from "@/components/ui/form/Textarea";
 import { Typography } from "@/components/ui/Typography";
@@ -40,7 +40,7 @@ export function IssueDetailContent({
   onCancel,
 }: IssueDetailContentProps): ReactNode {
   return (
-    <div className="flex-1 min-w-0 p-6 space-y-8 max-w-4xl border-r border-ui-border/50">
+    <FlexItem flex="1" className="min-w-0 p-6 space-y-8 max-w-4xl border-r border-ui-border/50">
       {/* Title & Description */}
       <div className="space-y-4">
         {isEditing ? (
@@ -104,6 +104,6 @@ export function IssueDetailContent({
         </Typography>
         <IssueComments issueId={issueId} projectId={projectId} />
       </div>
-    </div>
+    </FlexItem>
   );
 }

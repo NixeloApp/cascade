@@ -2,7 +2,8 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useMemo, useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
@@ -158,12 +159,14 @@ export function IssuesCalendarView({
               >
                 <Flex align="center" gap="xs">
                   <div className={cn("w-2 h-2 rounded-full", getPriorityColor(issue.priority))} />
-                  <Flex align="center" gap="xs" className="flex-1 min-w-0">
-                    <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
-                    <Typography variant="muted" className="text-xs truncate">
-                      {issue.title}
-                    </Typography>
-                  </Flex>
+                  <FlexItem flex="1" className="min-w-0">
+                    <Flex align="center" gap="xs">
+                      <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
+                      <Typography variant="muted" className="text-xs truncate">
+                        {issue.title}
+                      </Typography>
+                    </Flex>
+                  </FlexItem>
                 </Flex>
               </button>
             </Tooltip>
@@ -179,7 +182,7 @@ export function IssuesCalendarView({
   }
 
   return (
-    <div className="flex-1 p-3 sm:p-6 overflow-auto">
+    <FlexItem flex="1" className="p-3 sm:p-6 overflow-auto">
       {/* Header */}
       <Flex
         direction="column"
@@ -268,16 +271,16 @@ export function IssuesCalendarView({
       <div className="overflow-x-auto">
         <div className="bg-ui-bg rounded-lg border border-ui-border overflow-hidden min-w-160">
           {/* Weekday Headers */}
-          <div className="grid grid-cols-7 bg-ui-bg-secondary border-b border-ui-border">
+          <Grid cols={7} className="bg-ui-bg-secondary border-b border-ui-border">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="p-2 text-center text-sm font-semibold text-ui-text">
+              <Typography key={day} variant="label" className="p-2 text-center text-ui-text">
                 {day}
-              </div>
+              </Typography>
             ))}
-          </div>
+          </Grid>
 
           {/* Calendar Days */}
-          <div className="grid grid-cols-7">{calendarDays}</div>
+          <Grid cols={7}>{calendarDays}</Grid>
         </div>
       </div>
 
@@ -318,6 +321,6 @@ export function IssuesCalendarView({
           canEdit={canEdit}
         />
       )}
-    </div>
+    </FlexItem>
   );
 }

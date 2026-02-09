@@ -6,9 +6,10 @@ import { useState } from "react";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
 
 interface BurnRateDashboardProps {
@@ -108,7 +109,7 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
       </Flex>
 
       {/* Burn Rate Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Grid cols={1} colsMd={4} gap="lg">
         <MetricCard
           label="Total Cost"
           value={formatCurrency(burnRate.totalCost)}
@@ -133,15 +134,17 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
           icon={Calendar}
           color="warning"
         />
-      </div>
+      </Grid>
 
       {/* Hours Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Grid cols={1} colsMd={2} gap="lg">
         <div className="p-4 bg-ui-bg border border-ui-border rounded-lg">
           <Typography variant="h3" className="text-sm font-medium text-ui-text mb-2">
             Total Hours
           </Typography>
-          <div className="text-3xl font-bold text-ui-text">{formatHours(burnRate.totalHours)}h</div>
+          <Typography variant="h2" className="text-ui-text">
+            {formatHours(burnRate.totalHours)}h
+          </Typography>
           <Typography className="text-xs text-ui-text-tertiary mt-1">
             {burnRate.entriesCount} time entries
           </Typography>
@@ -151,14 +154,14 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
           <Typography variant="h3" className="text-sm font-medium text-ui-text mb-2">
             Billable Hours
           </Typography>
-          <div className="text-3xl font-bold text-status-success">
+          <Typography variant="h2" color="success">
             {formatHours(burnRate.billableHours)}h
-          </div>
+          </Typography>
           <Typography className="text-xs text-ui-text-tertiary mt-1">
             {formatCurrency(burnRate.billableCost)} billable
           </Typography>
         </div>
-      </div>
+      </Grid>
 
       {/* Team Costs Breakdown */}
       <div>
@@ -202,29 +205,29 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
                           </Flex>
                         )}
                         <div>
-                          <div className="text-sm font-medium text-ui-text">
+                          <Typography variant="label" className="text-ui-text">
                             {member.user?.name || "Unknown"}
-                          </div>
-                          <div className="text-xs text-ui-text-tertiary">
+                          </Typography>
+                          <Typography variant="caption" color="tertiary">
                             {formatHours(member.hours)}h total ({formatHours(member.billableHours)}h
                             billable)
-                          </div>
+                          </Typography>
                         </div>
                       </Flex>
 
                       <Flex direction="column" align="end">
-                        <div className="py-2 text-right text-sm font-medium text-ui-text">
+                        <Typography variant="label" className="py-2 text-right text-ui-text">
                           {formatHours(member.hours)}
-                        </div>
-                        <div className="py-2 text-right text-sm font-medium text-ui-text">
+                        </Typography>
+                        <Typography variant="label" className="py-2 text-right text-ui-text">
                           {formatHours(member.billableHours)}
-                        </div>
-                        <div className="text-sm font-semibold text-ui-text">
+                        </Typography>
+                        <Typography variant="label" className="text-ui-text">
                           {formatCurrency(member.cost)}
-                        </div>
-                        <div className="text-xs text-ui-text-tertiary">
+                        </Typography>
+                        <Typography variant="caption" color="tertiary">
                           {percentOfTotal.toFixed(0)}% of total
-                        </div>
+                        </Typography>
                       </Flex>
                     </Flex>
                   </div>
@@ -264,7 +267,9 @@ function MetricCard({ label, value, icon, color }: MetricCardProps) {
           {label}
         </Typography>
       </Flex>
-      <div className="text-2xl font-bold text-ui-text">{value}</div>
+      <Typography variant="h3" className="text-ui-text">
+        {value}
+      </Typography>
     </div>
   );
 }

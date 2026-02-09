@@ -576,7 +576,7 @@ describe("CustomFieldValues - Component Behavior", () => {
       expect(screen.getByText("Not set")).toBeInTheDocument();
     });
 
-    it("should display '✓ Yes' for checkbox value 'true'", () => {
+    it("should display 'Yes' with check icon for checkbox value 'true'", () => {
       const mockFields = [
         {
           _id: "field1" as Id<"customFields">,
@@ -595,10 +595,11 @@ describe("CustomFieldValues - Component Behavior", () => {
 
       render(<CustomFieldValues issueId={mockIssueId} projectId={mockProjectId} />);
 
-      expect(screen.getByText("✓ Yes")).toBeInTheDocument();
+      // Icon is rendered as SVG with text "Yes"
+      expect(screen.getByText(/Yes/)).toBeInTheDocument();
     });
 
-    it("should display '✗ No' for checkbox value 'false'", () => {
+    it("should display 'No' with X icon for checkbox value 'false'", () => {
       const mockFields = [
         {
           _id: "field1" as Id<"customFields">,
@@ -617,7 +618,8 @@ describe("CustomFieldValues - Component Behavior", () => {
 
       render(<CustomFieldValues issueId={mockIssueId} projectId={mockProjectId} />);
 
-      expect(screen.getByText("✗ No")).toBeInTheDocument();
+      // Icon is rendered as SVG with text "No"
+      expect(screen.getByText(/No/)).toBeInTheDocument();
     });
 
     it("should display URL as clickable link with target blank", () => {

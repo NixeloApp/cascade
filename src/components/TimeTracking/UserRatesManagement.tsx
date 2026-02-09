@@ -6,7 +6,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Textarea } from "../ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Typography } from "../ui/Typography";
@@ -103,7 +103,7 @@ export function UserRatesManagement() {
               className="p-4 bg-ui-bg border border-ui-border rounded-lg transition-default hover:bg-ui-bg-hover"
             >
               <Flex justify="between" align="start">
-                <div className="flex-1">
+                <FlexItem flex="1">
                   <Flex align="center" gap="md">
                     <Typography variant="h3" className="text-sm font-medium text-ui-text">
                       {rate.user?.name || "Unknown User"}
@@ -119,24 +119,26 @@ export function UserRatesManagement() {
                       {rate.rateType}
                     </span>
                   </Flex>
-                  <div className="mt-2 text-xs text-ui-text-secondary">
+                  <Typography variant="caption" color="secondary" className="mt-2">
                     {rate.projectId ? (
                       <span>Project-specific rate</span>
                     ) : (
                       <span>Default rate (applies to all projects)</span>
                     )}
-                  </div>
+                  </Typography>
                   {rate.notes && (
                     <Typography className="mt-2 text-xs text-ui-text-tertiary">
                       {rate.notes}
                     </Typography>
                   )}
-                </div>
+                </FlexItem>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-ui-text">
+                  <Typography variant="h3" className="text-ui-text">
                     {formatCurrency(rate.hourlyRate, rate.currency)}
-                  </div>
-                  <div className="text-xs text-ui-text-tertiary">per hour</div>
+                  </Typography>
+                  <Typography variant="caption" color="tertiary">
+                    per hour
+                  </Typography>
                 </div>
               </Flex>
             </div>
@@ -211,7 +213,9 @@ export function UserRatesManagement() {
 
             {/* Rate Type */}
             <div>
-              <div className="block text-sm font-medium text-ui-text mb-1">Rate Type</div>
+              <Typography variant="label" className="block text-ui-text mb-1">
+                Rate Type
+              </Typography>
               <Flex gap="md">
                 <label
                   className={cn(
@@ -229,10 +233,14 @@ export function UserRatesManagement() {
                       onChange={() => setRateType("internal")}
                       className="w-4 h-4 text-brand"
                     />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-ui-text">Internal Cost</div>
-                      <div className="text-xs text-ui-text-tertiary">What you pay</div>
-                    </div>
+                    <FlexItem flex="1">
+                      <Typography variant="label" className="text-ui-text">
+                        Internal Cost
+                      </Typography>
+                      <Typography variant="caption" color="tertiary">
+                        What you pay
+                      </Typography>
+                    </FlexItem>
                   </Flex>
                 </label>
                 <label
@@ -251,10 +259,14 @@ export function UserRatesManagement() {
                       onChange={() => setRateType("billable")}
                       className="w-4 h-4 text-brand"
                     />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-ui-text">Billable Rate</div>
-                      <div className="text-xs text-ui-text-tertiary">Charge clients</div>
-                    </div>
+                    <FlexItem flex="1">
+                      <Typography variant="label" className="text-ui-text">
+                        Billable Rate
+                      </Typography>
+                      <Typography variant="caption" color="tertiary">
+                        Charge clients
+                      </Typography>
+                    </FlexItem>
                   </Flex>
                 </label>
               </Flex>
@@ -269,7 +281,7 @@ export function UserRatesManagement() {
                 Hourly Rate
               </label>
               <Flex gap="sm">
-                <div className="relative flex-1">
+                <FlexItem flex="1" className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ui-text-tertiary">
                     $
                   </span>
@@ -283,7 +295,7 @@ export function UserRatesManagement() {
                     min="0"
                     className="w-full pl-8 pr-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
                   />
-                </div>
+                </FlexItem>
                 <Select value={currency} onValueChange={(value) => setCurrency(value)}>
                   <SelectTrigger className="w-24">
                     <SelectValue placeholder="Currency" />

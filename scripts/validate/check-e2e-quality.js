@@ -4,12 +4,10 @@
  * Catches common anti-patterns in E2E spec files that lead to flaky or
  * meaningless tests.
  *
- * Rules (errors):
+ * Rules:
  * 1. `.first()` on broad page-level selectors (page.locator("tag").first())
  * 2. Generic CSS-class selectors on page (page.locator(".animate-pulse"))
  * 3. `waitForSelector` usage (use locator assertions instead)
- *
- * Rules (warnings):
  * 4. `waitForLoadState("networkidle")` — flaky, prefer element assertions
  */
 
@@ -61,18 +59,12 @@ export function run() {
   const E2E_DIR = path.join(ROOT, "e2e");
 
   let errorCount = 0;
-  let warningCount = 0;
   const messages = [];
 
-  function report(filePath, line, message, level = "error") {
+  function report(filePath, line, message) {
     const rel = relPath(filePath);
-    const color = level === "error" ? c.red : c.yellow;
-    messages.push(`  ${color}${level.toUpperCase()}${c.reset} ${rel}:${line} - ${message}`);
-    if (level === "error") {
-      errorCount++;
-    } else {
-      warningCount++;
-    }
+    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - ${message}`);
+    errorCount++;
   }
 
   /**
@@ -123,13 +115,12 @@ export function run() {
         );
       }
 
-      // ── Rule 4: networkidle (warning) ──
+      // ── Rule 4: networkidle ──
       if (/waitForLoadState\(\s*["'`]networkidle["'`]\s*\)/.test(line)) {
         report(
           filePath,
           lineNum,
           `waitForLoadState("networkidle") is flaky. Prefer waiting for a specific element assertion.`,
-          "warning",
         );
       }
     }
@@ -144,19 +135,10 @@ export function run() {
     checkFile(file);
   }
 
-  const passed = errorCount === 0;
-  const detail =
-    errorCount > 0
-      ? `${errorCount} error(s)`
-      : warningCount > 0
-        ? `${warningCount} warning(s)`
-        : undefined;
-
   return {
-    passed,
+    passed: errorCount === 0,
     errors: errorCount,
-    warnings: warningCount,
-    detail,
+    detail: errorCount > 0 ? `${errorCount} error(s)` : undefined,
     messages: messages.length > 0 ? messages : undefined,
   };
 }

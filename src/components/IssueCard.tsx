@@ -148,7 +148,12 @@ export const IssueCard = memo(function IssueCard({
       </Flex>
 
       {/* Title */}
-      <Typography variant="label" as="p" className="text-xs sm:text-sm mb-2 line-clamp-2">
+      <Typography
+        variant="label"
+        as="p"
+        className="text-xs sm:text-sm mb-2 line-clamp-2"
+        data-testid={TEST_IDS.ISSUE.TITLE}
+      >
         {issue.title}
       </Typography>
 
@@ -156,13 +161,14 @@ export const IssueCard = memo(function IssueCard({
       {issue.labels.length > 0 && (
         <Flex wrap gap="xs" className="mb-2">
           {issue.labels.slice(0, 3).map((label) => (
-            <span
+            <Badge
               key={label.name}
-              className="px-1.5 py-0.5 text-xs font-medium rounded-md text-brand-foreground"
+              size="sm"
+              className="text-brand-foreground"
               style={{ backgroundColor: label.color }}
             >
               {label.name}
-            </span>
+            </Badge>
           ))}
           {issue.labels.length > 3 && (
             <Tooltip
@@ -171,7 +177,6 @@ export const IssueCard = memo(function IssueCard({
                 .map((l) => l.name)
                 .join(", ")}
             >
-              {/* biome-ignore lint/a11y/useSemanticElements: Nested buttons are invalid, using span with role="button" */}
               <span
                 tabIndex={0}
                 role="button"

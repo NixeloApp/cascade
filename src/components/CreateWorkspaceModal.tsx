@@ -69,7 +69,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <Flex direction="column" gap="md" className="py-2">
-            <div className="grid w-full items-center gap-1.5">
+            <Flex direction="column" gap="xs" className="w-full items-center">
               <Label htmlFor="workspace-name">Workspace Name</Label>
               <Input
                 id="workspace-name"
@@ -79,8 +79,8 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
                 autoFocus
                 required
               />
-            </div>
-            <div className="grid w-full items-center gap-1.5">
+            </Flex>
+            <Flex direction="column" gap="xs" className="w-full items-center">
               <Label htmlFor="workspace-description" className="text-ui-text-secondary">
                 Description (Optional)
               </Label>
@@ -90,7 +90,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
-            </div>
+            </Flex>
           </Flex>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>

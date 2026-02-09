@@ -86,7 +86,7 @@ export function CreateTeamModal({
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <Flex direction="column" gap="md" className="py-2">
-            <div className="grid w-full items-center gap-1.5">
+            <Flex direction="column" gap="xs" className="w-full items-center">
               <Label htmlFor="team-name">Team Name</Label>
               <Input
                 id="team-name"
@@ -96,8 +96,8 @@ export function CreateTeamModal({
                 autoFocus
                 required
               />
-            </div>
-            <div className="grid w-full items-center gap-1.5">
+            </Flex>
+            <Flex direction="column" gap="xs" className="w-full items-center">
               <Label htmlFor="team-description" className="text-ui-text-secondary">
                 Description (Optional)
               </Label>
@@ -107,7 +107,7 @@ export function CreateTeamModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
-            </div>
+            </Flex>
             <Flex align="center" className="space-x-2 pt-2">
               <Checkbox
                 id="team-private"

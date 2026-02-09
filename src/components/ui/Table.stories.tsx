@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Star } from "lucide-react";
 import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
-import { Badge } from "./badge";
-import { Button } from "./button";
-import { Checkbox } from "./checkbox";
+import { Avatar } from "./Avatar";
+import { Badge } from "./Badge";
+import { Button } from "./Button";
+import { Checkbox } from "./Checkbox";
 import { Flex } from "./Flex";
 import {
   Table,
@@ -421,8 +421,7 @@ function SelectableTableDemo() {
           <TableRow>
             <TableHead className="w-12">
               <Checkbox
-                checked={isAllSelected}
-                indeterminate={isIndeterminate}
+                checked={isAllSelected || (isIndeterminate ? "indeterminate" : false)}
                 onCheckedChange={toggleAll}
                 aria-label="Select all"
               />
@@ -492,15 +491,7 @@ export const WithAvatars: Story = {
           <TableRow key={user.id}>
             <TableCell>
               <Flex align="center" gap="sm">
-                <Avatar size="sm">
-                  <AvatarImage src={user.avatarUrl} alt={user.name} />
-                  <AvatarFallback>
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
+                <Avatar size="sm" name={user.name} src={user.avatarUrl} />
                 <span className="font-medium text-ui-text">{user.name}</span>
               </Flex>
             </TableCell>
@@ -849,14 +840,7 @@ export const AllComponents: Story = {
                 </TableCell>
                 <TableCell>
                   <Flex align="center" gap="sm">
-                    <Avatar size="sm">
-                      <AvatarFallback>
-                        {user.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
+                    <Avatar size="sm" name={user.name} />
                     <span className="font-medium text-ui-text">{user.name}</span>
                   </Flex>
                 </TableCell>

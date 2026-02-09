@@ -50,7 +50,7 @@ function useListItemContext() {
 
 // --- ListItem (container) ---
 
-export interface ListItemProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ListItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   /** Size variant */
   size?: "sm" | "md";
   /** Show hover state */

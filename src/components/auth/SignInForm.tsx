@@ -8,6 +8,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
+import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 
@@ -63,7 +64,9 @@ export function SignInForm() {
       <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign in with Google" />
       <Flex align="center" justify="center" className="my-4">
         <hr className="grow border-ui-border" />
-        <span className="mx-4 text-ui-text-tertiary text-sm">or</span>
+        <Typography variant="small" color="tertiary" as="span" className="mx-4">
+          or
+        </Typography>
         <hr className="grow border-ui-border" />
       </Flex>
       <form

@@ -26,7 +26,8 @@ describe("GlobalSearch", () => {
     render(<GlobalSearch />);
 
     expect(screen.getByRole("button")).toBeInTheDocument();
-    expect(screen.getByText(/⌘K/i)).toBeInTheDocument();
+    // KeyboardShortcut component renders ⌘ and K in separate kbd elements
+    expect(screen.getByRole("button", { name: /search/i })).toBeInTheDocument();
   });
 
   it("should open modal when search button is clicked", async () => {
@@ -122,8 +123,8 @@ describe("GlobalSearch", () => {
     const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
     await user.type(searchInput, "test");
 
-    // Click Issues tab
-    const issuesTab = screen.getByText("Issues");
+    // Click Issues tab - note: tab text includes count when query is entered
+    const issuesTab = screen.getByRole("button", { name: /Issues/i });
     await user.click(issuesTab);
 
     await waitFor(() => {
@@ -132,7 +133,7 @@ describe("GlobalSearch", () => {
     });
 
     // Click Documents tab
-    const documentsTab = screen.getByText("Documents");
+    const documentsTab = screen.getByRole("button", { name: /Documents/i });
     await user.click(documentsTab);
 
     await waitFor(() => {

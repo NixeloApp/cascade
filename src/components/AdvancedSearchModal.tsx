@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
@@ -10,6 +11,7 @@ import { Button } from "./ui/Button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
+import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 
 interface AdvancedSearchModalProps {
@@ -102,10 +104,10 @@ export function AdvancedSearchModal({
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Grid cols={1} colsMd={3} gap="lg">
             <FilterCheckboxGroup
               label="Type"
-              options={["task", "bug", "story", "epic"]}
+              options={ISSUE_TYPES}
               selectedValues={selectedType}
               onToggle={(type) => toggleFilter(type, selectedType, setSelectedType)}
               renderLabel={(type) => (
@@ -118,7 +120,7 @@ export function AdvancedSearchModal({
 
             <FilterCheckboxGroup
               label="Priority"
-              options={["highest", "high", "medium", "low", "lowest"]}
+              options={ISSUE_PRIORITIES}
               selectedValues={selectedPriority}
               onToggle={(priority) => toggleFilter(priority, selectedPriority, setSelectedPriority)}
             />
@@ -130,7 +132,7 @@ export function AdvancedSearchModal({
               onToggle={(status) => toggleFilter(status, selectedStatus, setSelectedStatus)}
               maxHeight="max-h-40 overflow-y-auto"
             />
-          </div>
+          </Grid>
 
           {/* Results */}
           <div>

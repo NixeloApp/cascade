@@ -11,9 +11,10 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
+import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -177,7 +178,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
   return (
     <div className="p-4 bg-ui-bg-secondary rounded-lg border border-ui-border">
       <Flex justify="between" align="start">
-        <div className="flex-1">
+        <FlexItem flex="1">
           {/* Name & Status */}
           <Flex gap="sm" align="center" className="mb-2">
             <Typography variant="h4" className="font-medium text-ui-text">
@@ -238,7 +239,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
               </MetadataItem>
             )}
           </Metadata>
-        </div>
+        </FlexItem>
 
         {/* Actions */}
         <Flex gap="sm" align="center" className="ml-4">
@@ -451,8 +452,8 @@ function GenerateKeyModal({
                 </div>
 
                 {/* Copy Instructions */}
-                <div className="text-left mb-6 p-4 bg-status-info-bg rounded-lg text-sm">
-                  <Typography className="font-medium text-status-info-text mb-2">
+                <div className="text-left mb-6 p-4 bg-status-info-bg rounded-lg">
+                  <Typography variant="label" className="text-status-info-text mb-2">
                     Usage Example:
                   </Typography>
                   <code className="block bg-ui-bg p-2 rounded text-xs font-mono">
@@ -512,7 +513,7 @@ function UsageStatsModal({
         ) : (
           <div className="space-y-6">
             {/* Overview Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Grid cols={2} colsSm={4} gap="lg">
               <div className="p-4 bg-ui-bg-secondary rounded-lg">
                 <Typography className="text-xs text-ui-text-secondary mb-1">Total Calls</Typography>
                 <Typography className="text-2xl font-bold text-ui-text">
@@ -546,7 +547,7 @@ function UsageStatsModal({
                   {stats.avgResponseTime}ms
                 </Typography>
               </div>
-            </div>
+            </Grid>
 
             {/* Recent Requests */}
             <div>

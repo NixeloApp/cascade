@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Label } from "./label";
-import { Textarea } from "./textarea";
+import { Label } from "./Label";
+import { Textarea } from "./Textarea";
 
 const meta: Meta<typeof Textarea> = {
   title: "UI/Textarea",
@@ -71,7 +71,7 @@ export const DisabledWithValue: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     placeholder: "Enter description",
     error: "Description is required",

@@ -9,7 +9,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { SkeletonList } from "../ui/Skeleton";
@@ -104,7 +104,9 @@ export function MyIssuesList({
           aria-label="Filter Assigned"
         >
           Assigned
-          <span className="ml-1.5 opacity-60 font-medium">({myIssues?.length || 0})</span>
+          <Typography variant="label" as="span" className="ml-1.5 opacity-60">
+            ({myIssues?.length || 0})
+          </Typography>
         </button>
         <button
           type="button"
@@ -118,7 +120,9 @@ export function MyIssuesList({
           aria-label="Filter Created"
         >
           Created
-          <span className="ml-1.5 opacity-60 font-medium">({myCreatedIssues?.length || 0})</span>
+          <Typography variant="label" as="span" className="ml-1.5 opacity-60">
+            ({myCreatedIssues?.length || 0})
+          </Typography>
         </button>
       </Flex>
       <Flex direction="column" className="p-4 flex-1 overflow-hidden">
@@ -154,7 +158,7 @@ export function MyIssuesList({
                 )}
               >
                 <Flex justify="between" align="start">
-                  <div className="flex-1">
+                  <FlexItem flex="1">
                     <Flex gap="sm" align="center" className="mb-1.5">
                       <Typography
                         variant="small"
@@ -179,7 +183,7 @@ export function MyIssuesList({
                       <MetadataItem>{issue.projectName}</MetadataItem>
                       <MetadataItem>{issue.status}</MetadataItem>
                     </Metadata>
-                  </div>
+                  </FlexItem>
                 </Flex>
               </button>
             ))}

@@ -77,7 +77,7 @@ export function DevToolsTab() {
           Current User Info
         </Typography>
         {currentUser ? (
-          <div className="text-sm space-y-2">
+          <div className="space-y-2">
             <Flex gap="sm">
               <Typography variant="small" color="secondary">
                 ID:

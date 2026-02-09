@@ -1,6 +1,7 @@
 import { Check, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 
@@ -97,7 +98,12 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+    <Grid
+      cols={1}
+      colsSm={2}
+      gap="xl"
+      className="animate-in fade-in slide-in-from-bottom-8 duration-1000"
+    >
       <RoleCard
         icon={<Users className="w-10 h-10" />}
         title="Team Lead"
@@ -114,6 +120,6 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
         disabled={isPending}
         onClick={() => handleSelect("team_member")}
       />
-    </div>
+    </Grid>
   );
 }

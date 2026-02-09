@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -19,7 +19,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "./ui/command";
+} from "./ui/Command";
 import { ShortcutHint } from "./ui/KeyboardShortcut";
 import { Typography } from "./ui/Typography";
 
@@ -103,14 +103,14 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
                   className="cursor-pointer data-[selected=true]:bg-brand-subtle"
                 >
                   {cmd.icon && <Icon icon={cmd.icon} size="md" className="mr-2" />}
-                  <div className="flex-1">
+                  <FlexItem flex="1">
                     <Typography variant="label" as="p">
                       {cmd.label}
                     </Typography>
                     {cmd.description && (
                       <Typography variant="caption">{cmd.description}</Typography>
                     )}
-                  </div>
+                  </FlexItem>
                 </CommandItem>
               ))}
             </CommandGroup>

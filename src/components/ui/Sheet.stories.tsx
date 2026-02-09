@@ -10,12 +10,11 @@ import {
   Settings,
   SlidersHorizontal,
   User,
-  X,
 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "./button";
+import { Button } from "./Button";
 import { Input } from "./Input";
-import { Label } from "./label";
+import { Label } from "./Label";
 import {
   Sheet,
   SheetClose,

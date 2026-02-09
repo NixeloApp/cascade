@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { memo } from "react";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -106,7 +106,11 @@ export const NotificationItem = memo(function NotificationItem({
         </Link>
       );
     }
-    return <div className="flex-1 min-w-0 text-left">{children}</div>;
+    return (
+      <FlexItem flex="1" className="min-w-0 text-left">
+        {children}
+      </FlexItem>
+    );
   };
 
   return (
@@ -117,7 +121,9 @@ export const NotificationItem = memo(function NotificationItem({
       )}
     >
       {/* Icon */}
-      <div className="shrink-0 mt-0.5">{getNotificationIcon(notification.type)}</div>
+      <FlexItem shrink={false} className="mt-0.5">
+        {getNotificationIcon(notification.type)}
+      </FlexItem>
 
       {/* Main Content (Clickable if linked) */}
       <ContentWrapper>

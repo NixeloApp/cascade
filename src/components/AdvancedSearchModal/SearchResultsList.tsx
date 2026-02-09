@@ -1,8 +1,9 @@
 import type { Id } from "@convex/_generated/dataModel";
+import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
 
@@ -10,8 +11,8 @@ interface SearchResult {
   _id: Id<"issues">;
   key: string;
   title: string;
-  type: string;
-  priority: string;
+  type: IssueTypeWithSubtask;
+  priority: IssuePriority;
 }
 
 interface SearchResultsListProps {
@@ -73,7 +74,7 @@ export function SearchResultsList({
           >
             <Flex gap="md" align="start">
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="md" className="shrink-0" />
-              <div className="flex-1 min-w-0">
+              <FlexItem flex="1" className="min-w-0">
                 <Flex gap="sm" align="center" className="mb-1">
                   <Typography variant="muted" className="text-sm font-mono">
                     {issue.key}
@@ -85,7 +86,7 @@ export function SearchResultsList({
                 <Typography variant="h4" className="text-sm font-medium text-ui-text">
                   {issue.title}
                 </Typography>
-              </div>
+              </FlexItem>
             </Flex>
           </button>
         ))}

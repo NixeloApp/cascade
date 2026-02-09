@@ -247,7 +247,7 @@ describe("CardHeader", () => {
     it("should render title as h3", () => {
       render(<CardHeader title="Title" />);
 
-      const heading = screen.getByRole("heading", { level: 4 });
+      const heading = screen.getByRole("heading", { level: 3 });
       expect(heading).toHaveTextContent("Title");
     });
 

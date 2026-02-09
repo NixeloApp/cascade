@@ -6,9 +6,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Progress } from "../ui/progress";
+import { Progress } from "../ui/Progress";
 import { Typography } from "../ui/Typography";
 
 // Type for time entry with computed hours field
@@ -88,21 +89,29 @@ export function Timesheet() {
           </div>
           <Flex gap="lg">
             <div className="text-right">
-              <div className="text-sm text-ui-text-tertiary">Total Hours</div>
-              <div className="text-2xl font-bold text-ui-text">
+              <Typography variant="small" color="tertiary">
+                Total Hours
+              </Typography>
+              <Typography variant="h3" className="text-ui-text">
                 {formatHours(timesheet.totalHours)}
-              </div>
+              </Typography>
             </div>
             <div className="text-right">
-              <div className="text-sm text-ui-text-tertiary">Billable</div>
-              <div className="text-2xl font-bold text-status-success">
+              <Typography variant="small" color="tertiary">
+                Billable
+              </Typography>
+              <Typography variant="h3" color="success">
                 {formatHours(timesheet.billableHours)}
-              </div>
+              </Typography>
             </div>
             {billableRevenue > 0 && (
               <div className="text-right">
-                <div className="text-sm text-ui-text-tertiary">Revenue</div>
-                <div className="text-2xl font-bold text-brand">${billableRevenue.toFixed(2)}</div>
+                <Typography variant="small" color="tertiary">
+                  Revenue
+                </Typography>
+                <Typography variant="h3" color="brand">
+                  ${billableRevenue.toFixed(2)}
+                </Typography>
               </div>
             )}
           </Flex>
@@ -110,13 +119,13 @@ export function Timesheet() {
 
         {/* Progress bar */}
         <Progress value={Math.min((timesheet.totalHours / 40) * 100, 100)} />
-        <div className="text-xs text-ui-text-tertiary mt-1">
+        <Typography variant="caption" color="tertiary" className="mt-1">
           {formatHours(timesheet.totalHours)} / 40 hours (full-time week)
-        </div>
+        </Typography>
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-4">
+      <Grid cols={7} gap="lg">
         {weekDays.map((day) => {
           const isToday = day.date.toDateString() === new Date().toDateString();
           const dayHours = day.entries.reduce(
@@ -134,14 +143,16 @@ export function Timesheet() {
             >
               {/* Day header */}
               <div className="mb-2">
-                <div className="font-semibold text-ui-text">
+                <Typography variant="label" className="text-ui-text">
                   {day.date.toLocaleDateString("en-US", { weekday: "short" })}
-                </div>
-                <div className="text-xs text-ui-text-tertiary">{day.date.getDate()}</div>
+                </Typography>
+                <Typography variant="caption" color="tertiary">
+                  {day.date.getDate()}
+                </Typography>
                 {dayHours > 0 && (
-                  <div className="text-xs font-medium text-brand mt-1">
+                  <Typography variant="caption" color="brand" className="mt-1">
                     {formatHours(dayHours)}h
-                  </div>
+                  </Typography>
                 )}
               </div>
 
@@ -153,14 +164,14 @@ export function Timesheet() {
                     className="p-2 bg-ui-bg-secondary rounded border border-ui-border"
                   >
                     <Flex justify="between" align="start" className="mb-1">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-mono font-medium text-ui-text truncate">
+                      <FlexItem flex="1" className="min-w-0">
+                        <Typography variant="mono" className="text-ui-text truncate block">
                           {entry.projectKey}
-                        </div>
-                        <div className="text-xs text-ui-text-secondary truncate">
+                        </Typography>
+                        <Typography variant="caption" color="secondary" className="truncate block">
                           {entry.issueKey}
-                        </div>
-                      </div>
+                        </Typography>
+                      </FlexItem>
                       {entry.billable && (
                         <DollarSign className="w-3 h-3 text-status-success shrink-0" />
                       )}
@@ -179,9 +190,9 @@ export function Timesheet() {
                       </button>
                     </Flex>
                     {entry.description && (
-                      <div className="text-xs text-ui-text-tertiary mt-1 line-clamp-1">
+                      <Typography variant="caption" color="tertiary" className="mt-1 line-clamp-1">
                         {entry.description}
-                      </div>
+                      </Typography>
                     )}
                   </div>
                 ))}
@@ -189,7 +200,7 @@ export function Timesheet() {
             </div>
           );
         })}
-      </div>
+      </Grid>
 
       {/* Empty state */}
       {timesheet.totalHours === 0 && (

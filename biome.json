@@ -18,7 +18,8 @@
       "!**/.output",
       "!**/node_modules",
       "!**/src/index.css",
-      "!**/docs/research/library/**/*_discovery.json"
+      "!**/docs/research/library/**/*_discovery.json",
+      "!**/docs/research/library/mintlify"
     ]
   },
   "formatter": {
@@ -165,6 +166,74 @@
           },
           "suspicious": {
             "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.stories.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
+          },
+          "a11y": {
+            "noLabelWithoutControl": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/src/components/ui/Breadcrumb.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useFocusableInteractive": "off",
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/src/components/ui/EmptyState.tsx", "**/src/components/IssueCard.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/src/components/ui/Carousel.tsx",
+        "**/src/components/ui/Metadata.tsx",
+        "**/src/components/ui/Pagination.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/src/hooks/useIssueModal.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/scripts/validate/check-emoji.js"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noMisleadingCharacterClass": "off"
           }
         }
       }

@@ -3,7 +3,7 @@ import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
 import { SkeletonText } from "../ui/Skeleton";
 import { Typography } from "../ui/Typography";
@@ -74,11 +74,11 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                 >
                   <Flex gap="md" align="start">
                     {/* User avatar */}
-                    <div className="shrink-0 relative z-10 bg-ui-bg rounded-full">
+                    <FlexItem shrink={false} className="relative z-10 bg-ui-bg rounded-full">
                       <Avatar name={activity.userName} size="md" variant="brand" />
-                    </div>
+                    </FlexItem>
 
-                    <div className="flex-1 min-w-0">
+                    <FlexItem flex="1" className="min-w-0">
                       <Typography variant="p" className="text-sm m-0">
                         <strong>{activity.userName}</strong> {activity.action}
                       </Typography>
@@ -94,7 +94,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                         <MetadataItem className="font-medium">{activity.projectName}</MetadataItem>
                         <MetadataTimestamp date={activity._creationTime} format="absolute" />
                       </Metadata>
-                    </div>
+                    </FlexItem>
                   </Flex>
                 </div>
               ))}

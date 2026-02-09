@@ -5,6 +5,8 @@ type Direction = "row" | "column";
 type GapSize = "none" | "xs" | "sm" | "md" | "lg" | "xl";
 type Align = "start" | "center" | "end" | "stretch" | "baseline";
 type Justify = "start" | "center" | "end" | "between" | "around" | "evenly";
+type FlexValue = "1" | "auto" | "initial" | "none";
+type SelfAlign = "auto" | "start" | "center" | "end" | "stretch" | "baseline";
 
 const directionClasses: Record<Direction, string> = {
   row: "flex-row",
@@ -35,6 +37,22 @@ const justifyClasses: Record<Justify, string> = {
   between: "justify-between",
   around: "justify-around",
   evenly: "justify-evenly",
+};
+
+const flexClasses: Record<FlexValue, string> = {
+  "1": "flex-1",
+  auto: "flex-auto",
+  initial: "flex-initial",
+  none: "flex-none",
+};
+
+const selfAlignClasses: Record<SelfAlign, string> = {
+  auto: "self-auto",
+  start: "self-start",
+  center: "self-center",
+  end: "self-end",
+  stretch: "self-stretch",
+  baseline: "self-baseline",
 };
 
 export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -115,3 +133,58 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
   },
 );
 Flex.displayName = "Flex";
+
+// =============================================================================
+// FlexItem
+// =============================================================================
+
+export interface FlexItemProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Flex shorthand: "1" (grow), "auto", "initial", "none" */
+  flex?: FlexValue;
+  /** Allow item to grow */
+  grow?: boolean;
+  /** Allow item to shrink */
+  shrink?: boolean;
+  /** Align self on cross axis */
+  align?: SelfAlign;
+  /** Render as a different element */
+  as?: React.ElementType;
+}
+
+/**
+ * Flex item component for controlling flex child behavior.
+ *
+ * @example
+ * <Flex gap="md">
+ *   <FlexItem flex="1">Takes remaining space</FlexItem>
+ *   <FlexItem shrink={false}>Fixed width</FlexItem>
+ * </Flex>
+ *
+ * @example
+ * <Flex align="stretch">
+ *   <FlexItem align="center">Vertically centered</FlexItem>
+ *   <FlexItem flex="1">Grows to fill</FlexItem>
+ * </Flex>
+ */
+export const FlexItem = React.forwardRef<HTMLDivElement, FlexItemProps>(
+  ({ flex, grow, shrink, align, as: Component = "div", className, children, ...props }, ref) => {
+    return (
+      <Component
+        ref={ref}
+        className={cn(
+          flex && flexClasses[flex],
+          grow === true && "grow",
+          grow === false && "grow-0",
+          shrink === true && "shrink",
+          shrink === false && "shrink-0",
+          align && selfAlignClasses[align],
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </Component>
+    );
+  },
+);
+FlexItem.displayName = "FlexItem";
