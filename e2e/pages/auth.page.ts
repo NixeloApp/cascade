@@ -109,7 +109,7 @@ export class AuthPage extends BasePage {
     this.signInButton = page.getByRole("button", { name: "Sign in", exact: true });
     this.signUpButton = page.getByRole("button", { name: "Create account", exact: true });
     this.forgotPasswordLink = page.getByRole("button", { name: "Forgot password?" });
-    this.googleSignInButton = page.getByRole("button", { name: /sign in with google/i });
+    this.googleSignInButton = page.getByTestId(TEST_IDS.AUTH.GOOGLE_BUTTON);
 
     // Navigation links between auth pages
     this.signUpLink = page.getByRole("link", { name: /sign up/i });
@@ -225,11 +225,7 @@ export class AuthPage extends BasePage {
         return; // Already expanded
       }
 
-      // Focus the button first to ensure React event handlers are ready
-      await submitButton.focus();
-
       // Click the button to expand the form
-      // Use force:true to click even if element is animating or partially obscured
       await submitButton.click();
 
       // Verify form expanded using data-expanded attribute
@@ -462,7 +458,9 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     await expect(this.emailInput).toBeVisible();
     await expect(this.passwordInput).toBeVisible();
-    await expect(this.signUpButton).toBeVisible();
+    // Verify form is expanded using data-testid instead of button text
+    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
+    await expect(authForm).toHaveAttribute("data-expanded", "true");
   }
 
   async expectForgotPasswordForm() {

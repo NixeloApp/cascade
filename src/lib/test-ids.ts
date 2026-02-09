@@ -122,6 +122,8 @@ export const TEST_IDS = {
     SUBMIT_BUTTON: "auth-submit-button",
     /** @see src/components/auth/SignInForm.tsx - form element with data-expanded attribute */
     FORM: "auth-form",
+    /** @see src/components/auth/GoogleAuthButton.tsx */
+    GOOGLE_BUTTON: "auth-google-button",
   },
 
   // ============================================================
