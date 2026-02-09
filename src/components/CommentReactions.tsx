@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
 import { Flex } from "./ui/Flex";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
+import { Tooltip } from "./ui/Tooltip";
 
 interface CommentReactionsProps {
   commentId: Id<"issueComments">;
@@ -34,43 +35,51 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
       {reactions.map((reaction) => {
         const hasReacted = currentUserId && reaction.userIds.includes(currentUserId);
         return (
-          <button
-            key={reaction.emoji}
-            type="button"
-            onClick={() => handleToggle(reaction.emoji)}
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-default border",
-              hasReacted
-                ? "bg-brand-subtle border-brand-border text-brand-subtle-foreground"
-                : "bg-ui-bg-soft border-ui-border text-ui-text-secondary hover:border-ui-border-secondary hover:bg-ui-bg-hover",
-            )}
-          >
-            <span>{reaction.emoji}</span>
-            <span>{reaction.userIds.length}</span>
-          </button>
+          <Tooltip key={reaction.emoji} content={hasReacted ? "Remove reaction" : "Add reaction"}>
+            <button
+              type="button"
+              onClick={() => handleToggle(reaction.emoji)}
+              aria-label={`${reaction.emoji} reaction, ${reaction.userIds.length} vote${reaction.userIds.length === 1 ? "" : "s"}`}
+              aria-pressed={hasReacted}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-default border",
+                hasReacted
+                  ? "bg-brand-subtle border-brand-border text-brand-subtle-foreground"
+                  : "bg-ui-bg-soft border-ui-border text-ui-text-secondary hover:border-ui-border-secondary hover:bg-ui-bg-hover",
+              )}
+            >
+              <span>{reaction.emoji}</span>
+              <span>{reaction.userIds.length}</span>
+            </button>
+          </Tooltip>
         );
       })}
 
       <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-ui-text-tertiary hover:text-ui-text-secondary hover:bg-ui-bg-hover transition-colors duration-default"
-          >
-            <Smile size={16} />
-          </button>
-        </PopoverTrigger>
+        <Tooltip content="Add reaction">
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label="Add reaction"
+              className="inline-flex items-center justify-center w-6 h-6 rounded-full text-ui-text-tertiary hover:text-ui-text-secondary hover:bg-ui-bg-hover transition-colors duration-default"
+            >
+              <Smile size={16} />
+            </button>
+          </PopoverTrigger>
+        </Tooltip>
         <PopoverContent side="top" align="start" className="w-auto p-1">
           <Flex gap="xs">
             {COMMON_EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => handleToggle(emoji)}
-                className="w-8 h-8 flex items-center justify-center rounded hover:bg-ui-bg-hover transition-colors duration-default text-lg"
-              >
-                {emoji}
-              </button>
+              <Tooltip key={emoji} content={emoji}>
+                <button
+                  type="button"
+                  onClick={() => handleToggle(emoji)}
+                  aria-label={`React with ${emoji}`}
+                  className="w-8 h-8 flex items-center justify-center rounded hover:bg-ui-bg-hover transition-colors duration-default text-lg"
+                >
+                  {emoji}
+                </button>
+              </Tooltip>
             ))}
           </Flex>
         </PopoverContent>
