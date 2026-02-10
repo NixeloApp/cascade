@@ -54,11 +54,46 @@ interface KanbanColumnProps {
 }
 
 /**
+ * Custom equality check for KanbanColumn props
+ * Optimizes performance by checking if selectedIssueIds actually affects this column
+ */
+function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
+  // Check shallow equality for all props except selectedIssueIds
+  const prevKeys = Object.keys(prev) as (keyof KanbanColumnProps)[];
+  const nextKeys = Object.keys(next) as (keyof KanbanColumnProps)[];
+
+  if (prevKeys.length !== nextKeys.length) {
+    return false;
+  }
+
+  for (const key of prevKeys) {
+    if (key === "selectedIssueIds") continue;
+    if (prev[key] !== next[key]) return false;
+  }
+
+  // If selectedIssueIds is the same reference, no change
+  if (prev.selectedIssueIds === next.selectedIssueIds) {
+    return true;
+  }
+
+  // If selectedIssueIds changed, check if it affects any issue in this column
+  // We assume issues are stable if step 1 passed (prev.issues === next.issues)
+  // If issues changed reference but same content, step 1 failed so we re-render anyway (safe)
+  for (const issue of next.issues) {
+    if (prev.selectedIssueIds.has(issue._id) !== next.selectedIssueIds.has(issue._id)) {
+      return false; // Selection state changed for an issue in this column
+    }
+  }
+
+  return true; // No relevant change
+}
+
+/**
  * Individual Kanban column for a workflow state
  * Extracted from KanbanBoard for better organization
  * Memoized to prevent unnecessary re-renders when other columns change
  */
-export const KanbanColumn = memo(function KanbanColumn({
+const KanbanColumnComponent = function KanbanColumn({
   state,
   issues,
   columnIndex,
@@ -218,4 +253,6 @@ export const KanbanColumn = memo(function KanbanColumn({
       </div>
     </section>
   );
-});
+};
+
+export const KanbanColumn = memo(KanbanColumnComponent, arePropsEqual);

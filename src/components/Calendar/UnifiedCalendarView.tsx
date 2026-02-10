@@ -1,6 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
+import { Calendar, Map as MapIcon } from "lucide-react";
 import { useState } from "react";
-import { Calendar, MapIcon } from "@/lib/icons";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
