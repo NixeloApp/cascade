@@ -116,7 +116,7 @@ export const NotificationItem = memo(function NotificationItem({
   return (
     <div
       className={cn(
-        "group relative flex items-start gap-3 p-4 border-b border-ui-border last:border-0 hover:bg-ui-bg-secondary transition-colors",
+        "group relative flex items-start gap-3 p-4 border-b border-ui-border last:border-0 hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary transition-colors",
         !notification.isRead && "bg-brand-subtle/10",
       )}
     >
@@ -144,7 +144,7 @@ export const NotificationItem = memo(function NotificationItem({
       <Flex
         direction="column"
         gap="xs"
-        className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100"
+        className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
       >
         {!notification.isRead && (
           <Tooltip content="Mark as read">

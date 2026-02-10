@@ -37,3 +37,7 @@
 ## 2026-03-04 - Accessible Reaction Controls
 **Learning:** Reaction interfaces often use icon-only buttons (emoji + count) that lack accessible names, making them confusing for screen reader users (e.g., just hearing "Thumbs Up 3").
 **Action:** Always provide an explicit `aria-label` that describes the action (e.g., "Add Thumbs Up reaction") or the current state (e.g., "Thumbs Up reaction, 3 votes"). Use `aria-pressed` to indicate if the current user has reacted. Wrap these controls in `Tooltip` components to provide visual confirmation of the action.
+
+## 2026-05-24 - Context-Sensitive Actions Visibility
+**Learning:** Hiding contextual actions until hover (`opacity-0 group-hover:opacity-100`) makes them effectively invisible to keyboard users. Users must blindly tab into invisible elements to discover them, which is a poor experience.
+**Action:** Add `group-focus-within:opacity-100` to the action container. This ensures that when the user focuses on the parent row (or the main interactive element within it), the secondary actions become visible immediately, providing the same context-awareness as the hover state.
