@@ -349,22 +349,18 @@ export class SettingsPage extends BasePage {
       // Wait for select dropdown to close (React re-render completes)
       await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
     }
-    // Wait for the submit button to be stable and click with retry pattern
+    // Submit form and wait for email to appear in the invites table
+    // Don't rely on toasts - wait for the actual result (email in table)
+    const inviteTable = this.page.getByTestId(TEST_IDS.INVITE.TABLE);
+
     await expect(async () => {
       await expect(this.sendInviteButton).toBeVisible();
       await expect(this.sendInviteButton).toBeEnabled();
       await this.sendInviteButton.click();
-      // Wait for success toast (appears before table updates)
-      await expect(
-        this.page.locator("[data-sonner-toast][data-type='success']").first(),
-      ).toBeVisible();
+      // Wait for invite to appear in table - this is the real success indicator
+      await expect(inviteTable).toBeVisible();
+      await expect(inviteTable.getByText(email)).toBeVisible();
     }).toPass();
-
-    // After toast appears, wait for the invite to show in the table
-    // The table may not exist yet if this is the first invite (EmptyState is shown)
-    const inviteTable = this.page.getByTestId(TEST_IDS.INVITE.TABLE);
-    await expect(inviteTable).toBeVisible();
-    await expect(inviteTable.getByText(email)).toBeVisible();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
