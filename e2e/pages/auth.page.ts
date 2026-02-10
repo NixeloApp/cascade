@@ -109,7 +109,7 @@ export class AuthPage extends BasePage {
     this.signInButton = page.getByRole("button", { name: "Sign in", exact: true });
     this.signUpButton = page.getByRole("button", { name: "Create account", exact: true });
     this.forgotPasswordLink = page.getByRole("button", { name: "Forgot password?" });
-    this.googleSignInButton = page.getByRole("button", { name: /sign in with google/i });
+    this.googleSignInButton = page.getByTestId(TEST_IDS.AUTH.GOOGLE_BUTTON);
 
     // Navigation links between auth pages
     this.signUpLink = page.getByRole("link", { name: /sign up/i });
@@ -153,9 +153,8 @@ export class AuthPage extends BasePage {
     await this.waitForHydration();
     // Expand form using robust click logic
     await this.expandEmailForm();
-    // Verify form is expanded by checking button text shows "Sign in"
-    const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    await expect(submitButton).toHaveText(/Sign in/i);
+    // Verify form is expanded using data-expanded attribute
+    await this.waitForFormExpanded();
   }
 
   /**
@@ -168,9 +167,8 @@ export class AuthPage extends BasePage {
     await this.waitForHydration();
     // Expand form using robust click logic
     await this.expandEmailForm();
-    // Verify form is expanded by checking button text shows "Create account"
-    const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    await expect(submitButton).toHaveText(/Create account/i);
+    // Verify form is expanded using data-expanded attribute
+    await this.waitForFormExpanded();
   }
 
   /**
@@ -203,27 +201,35 @@ export class AuthPage extends BasePage {
     // Wait for hydration first
     await this.waitForHydration();
 
-    // The submit button with test ID - text changes from "Continue with email" to "Sign in"/"Create account"
+    // The submit button with test ID
     const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
+    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
 
     // Wait for button to be visible and enabled
     await expect(submitButton).toBeVisible();
     await expect(submitButton).toBeEnabled();
 
+    // Check if already expanded
+    const isAlreadyExpanded = await authForm.getAttribute("data-expanded");
+    if (isAlreadyExpanded === "true") {
+      await this.waitForFormReady();
+      return;
+    }
+
     // Retry expansion to handle React timing issues
     // toPass() uses Playwright's default intervals and timeout (no hardcoded values)
     await expect(async () => {
-      // Check if already expanded by looking at button text
-      const currentText = await submitButton.textContent();
-      if (currentText?.includes("Sign in") || currentText?.includes("Create account")) {
-        return; // Expanded
+      // Check if expanded
+      const isExpanded = await authForm.getAttribute("data-expanded");
+      if (isExpanded === "true") {
+        return; // Already expanded
       }
 
       // Click the button to expand the form
       await submitButton.click();
 
-      // Verify button text changed (uses Playwright's default assertion timeout)
-      await expect(submitButton).toHaveText(/Sign in|Create account/i);
+      // Verify form expanded using data-expanded attribute
+      await expect(authForm).toHaveAttribute("data-expanded", "true");
     }).toPass();
 
     // Wait for form-ready state
@@ -253,11 +259,11 @@ export class AuthPage extends BasePage {
       // Ensure the email form is expanded
       await this.expandEmailForm();
 
-      // Verify form is actually expanded by checking button text
-      const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-      const buttonText = await submitButton.textContent();
-      if (!buttonText?.includes("Create account")) {
-        throw new Error(`Form not expanded - button shows: ${buttonText}`);
+      // Verify form is actually expanded using data-expanded attribute
+      const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
+      const isExpanded = await authForm.getAttribute("data-expanded");
+      if (isExpanded !== "true") {
+        throw new Error(`Form not expanded - data-expanded: ${isExpanded}`);
       }
 
       // Fill the form fields - wait for inputs to be ready
@@ -265,24 +271,25 @@ export class AuthPage extends BasePage {
       await this.emailInput.fill(email);
 
       // Verify form still expanded after filling email
-      const textAfterEmail = await submitButton.textContent();
-      if (!textAfterEmail?.includes("Create account")) {
-        throw new Error(`Form collapsed after email fill - button shows: ${textAfterEmail}`);
+      const expandedAfterEmail = await authForm.getAttribute("data-expanded");
+      if (expandedAfterEmail !== "true") {
+        throw new Error(`Form collapsed after email fill`);
       }
 
       await expect(this.passwordInput).toBeVisible();
       await this.passwordInput.fill(password);
 
       // Verify form still expanded after filling password
-      const textAfterPassword = await submitButton.textContent();
-      if (!textAfterPassword?.includes("Create account")) {
-        throw new Error(`Form collapsed after password fill - button shows: ${textAfterPassword}`);
+      const expandedAfterPassword = await authForm.getAttribute("data-expanded");
+      if (expandedAfterPassword !== "true") {
+        throw new Error(`Form collapsed after password fill`);
       }
 
       // Ensure form is ready before clicking submit
       await this.waitForFormReady();
 
       // Submit the form
+      const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
       await submitButton.click();
 
       // Wait for either verification form or toast to appear
@@ -307,17 +314,15 @@ export class AuthPage extends BasePage {
   async switchToSignUp() {
     await this.navigateToSignUp();
     await this.expandEmailForm();
-    // Verify form is expanded by checking button text
-    const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    await expect(submitButton).toHaveText(/Create account/i);
+    // Verify form is expanded using data-expanded attribute
+    await this.waitForFormExpanded();
   }
 
   async switchToSignIn() {
     await this.navigateToSignIn();
     await this.expandEmailForm();
-    // Verify form is expanded by checking button text
-    const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    await expect(submitButton).toHaveText(/Sign in/i);
+    // Verify form is expanded using data-expanded attribute
+    await this.waitForFormExpanded();
   }
 
   async signInWithGoogle() {
@@ -383,17 +388,17 @@ export class AuthPage extends BasePage {
 
   async verifyEmail(code: string) {
     await this.verifyCodeInput.fill(code);
-    await this.verifyEmailButton.click({ force: true });
+    await this.verifyEmailButton.click();
     // Wait for verification to process - wait for DOM update after API call
     await this.page.waitForLoadState("domcontentloaded");
   }
 
   async resendVerificationCode() {
-    await this.resendCodeButton.click({ force: true });
+    await this.resendCodeButton.click();
   }
 
   async signOutFromVerification() {
-    await this.signOutLink.click({ force: true });
+    await this.signOutLink.click();
   }
 
   // ===================
@@ -408,6 +413,15 @@ export class AuthPage extends BasePage {
     await this.page.locator('form[data-hydrated="true"]').waitFor({
       state: "attached",
     });
+  }
+
+  /**
+   * Wait for form to be expanded (email/password fields visible)
+   * Uses data-expanded attribute set by React component
+   */
+  async waitForFormExpanded() {
+    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
+    await expect(authForm).toHaveAttribute("data-expanded", "true");
   }
 
   /**
@@ -444,7 +458,9 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     await expect(this.emailInput).toBeVisible();
     await expect(this.passwordInput).toBeVisible();
-    await expect(this.signUpButton).toBeVisible();
+    // Verify form is expanded using data-testid instead of button text
+    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
+    await expect(authForm).toHaveAttribute("data-expanded", "true");
   }
 
   async expectForgotPasswordForm() {

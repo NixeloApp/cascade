@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 import { BasePage } from "./base.page";
 
 /**
@@ -160,14 +161,14 @@ export class SettingsPage extends BasePage {
 
     // Invite user form (it's an inline Card, not a dialog)
     this.inviteUserModal = page.getByRole("heading", { name: /send invitation/i });
-    this.inviteEmailInput = page.getByPlaceholder("user@example.com");
-    this.inviteRoleSelect = page.getByLabel(/role/i);
-    this.sendInviteButton = page.getByRole("button", { name: "Send Invitation", exact: true });
+    this.inviteEmailInput = page.getByTestId(TEST_IDS.INVITE.EMAIL_INPUT);
+    this.inviteRoleSelect = page.getByTestId(TEST_IDS.INVITE.ROLE_SELECT);
+    this.sendInviteButton = page.getByTestId(TEST_IDS.INVITE.SEND_BUTTON);
 
     // Admin - Organization Settings
     this.organizationNameInput = page.locator("#orgName");
-    this.requiresTimeApprovalSwitch = page.getByRole("switch", { name: /require time approval/i });
-    this.saveSettingsButton = page.getByRole("button", { name: /save changes/i });
+    this.requiresTimeApprovalSwitch = page.getByTestId(TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH);
+    this.saveSettingsButton = page.getByTestId(TEST_IDS.SETTINGS.SAVE_BUTTON);
   }
 
   // ===================
@@ -353,7 +354,17 @@ export class SettingsPage extends BasePage {
       await expect(this.sendInviteButton).toBeVisible();
       await expect(this.sendInviteButton).toBeEnabled();
       await this.sendInviteButton.click();
+      // Wait for success toast (appears before table updates)
+      await expect(
+        this.page.locator("[data-sonner-toast][data-type='success']").first(),
+      ).toBeVisible();
     }).toPass();
+
+    // After toast appears, wait for the invite to show in the table
+    // The table may not exist yet if this is the first invite (EmptyState is shown)
+    const inviteTable = this.page.getByTestId(TEST_IDS.INVITE.TABLE);
+    await expect(inviteTable).toBeVisible();
+    await expect(inviteTable.getByText(email)).toBeVisible();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
@@ -412,21 +423,41 @@ export class SettingsPage extends BasePage {
       return;
     }
 
-    // Click the switch to toggle - verify the aria-checked changes
-    await this.requiresTimeApprovalSwitch.click();
     const expectedChecked = enabled ? "true" : "false";
-    await expect(this.requiresTimeApprovalSwitch).toHaveAttribute("aria-checked", expectedChecked);
 
-    // Wait for save button to be enabled (form has changes)
-    await expect(this.saveSettingsButton).toBeEnabled();
+    // Use retry pattern for the entire toggle + save cycle to handle Convex real-time updates
+    // The Convex subscription can reset formData which disables the save button
+    await expect(async () => {
+      // Re-check current state in case it changed
+      const currentChecked = await this.requiresTimeApprovalSwitch.getAttribute("aria-checked");
 
-    // Click immediately after enabled check passes
-    await this.saveSettingsButton.click({ force: true });
+      // Only click if we need to change the state
+      if (currentChecked !== expectedChecked) {
+        // Ensure switch is in viewport and not covered
+        await this.requiresTimeApprovalSwitch.scrollIntoViewIfNeeded();
 
-    // Wait for success toast - use data attribute to be more specific
-    await expect(this.page.locator("[data-sonner-toast][data-type='success']").first()).toBeVisible(
-      {},
-    );
+        // Click the switch to toggle
+        await this.requiresTimeApprovalSwitch.click();
+
+        // Verify the aria-checked changes
+        await expect(this.requiresTimeApprovalSwitch).toHaveAttribute(
+          "aria-checked",
+          expectedChecked,
+        );
+      }
+
+      // Wait for React to process the state change and enable the save button
+      // This must be inside the retry loop because Convex subscription can reset state
+      await expect(this.saveSettingsButton).toBeEnabled();
+
+      // Click save button - this must also be in the retry loop
+      await this.saveSettingsButton.click();
+
+      // Verify success toast appears
+      await expect(
+        this.page.locator("[data-sonner-toast][data-type='success']").first(),
+      ).toBeVisible();
+    }).toPass();
   }
 
   async expectOrganizationName(name: string) {

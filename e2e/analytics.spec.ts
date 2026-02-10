@@ -79,7 +79,7 @@ test.describe("Analytics Dashboard", () => {
     const projectTabs = page.getByLabel("Tabs");
     const analyticsTab = projectTabs.getByRole("link", { name: /analytics/i });
     await expect(analyticsTab).toBeVisible();
-    await analyticsTab.click({ force: true });
+    await analyticsTab.click();
     await expect(page).toHaveURL(/\/analytics/);
 
     // Wait for loading to complete — target analytics heading instead of generic skeleton class

@@ -79,7 +79,7 @@ export {
   ListTodo,
   Lock,
   Mail,
-  Map,
+  Map as MapIcon,
   MapPin,
   Menu,
   MessageCircle,

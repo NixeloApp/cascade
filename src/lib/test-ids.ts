@@ -120,6 +120,10 @@ export const TEST_IDS = {
     PASSWORD_INPUT: "auth-password-input",
     /** @see src/components/auth/SignInForm.tsx */
     SUBMIT_BUTTON: "auth-submit-button",
+    /** @see src/components/auth/SignInForm.tsx - form element with data-expanded attribute */
+    FORM: "auth-form",
+    /** @see src/components/auth/GoogleAuthButton.tsx */
+    GOOGLE_BUTTON: "auth-google-button",
   },
 
   // ============================================================
@@ -209,6 +213,27 @@ export const TEST_IDS = {
   SETTINGS: {
     /** @see src/routes/_app.$orgSlug.settings.tsx */
     ORG_TAB: "settings-org-tab",
+    /** @see src/components/Admin/OrganizationSettings.tsx */
+    TIME_APPROVAL_SWITCH: "settings-time-approval-switch",
+    /** @see src/components/Admin/OrganizationSettings.tsx */
+    SAVE_BUTTON: "settings-save-button",
+  },
+
+  // ============================================================
+  // Invites (User Management)
+  // ============================================================
+
+  INVITE: {
+    /** @see src/components/Admin/UserManagement.tsx - Email input in invite form */
+    EMAIL_INPUT: "invite-email-input",
+    /** @see src/components/Admin/UserManagement.tsx - Role select in invite form */
+    ROLE_SELECT: "invite-role-select",
+    /** @see src/components/Admin/UserManagement.tsx - Send invitation button */
+    SEND_BUTTON: "invite-send-button",
+    /** @see src/components/Admin/UserManagement.tsx - Invitations table */
+    TABLE: "invite-table",
+    /** @see src/components/Admin/UserManagement.tsx - Invite row in table */
+    ROW: "invite-row",
   },
 
   // ============================================================

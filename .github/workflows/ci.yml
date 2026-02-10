@@ -121,7 +121,8 @@ jobs:
       - name: Build
         run: pnpm run build
         env:
-          VITE_CONVEX_URL: ${{ github.ref == 'refs/heads/main' && secrets.VITE_CONVEX_URL || 'http://localhost:3210' }}
+          # Must match E2E tests VITE_CONVEX_URL (127.0.0.1, not localhost) for WebSocket connection
+          VITE_CONVEX_URL: ${{ github.ref == 'refs/heads/main' && secrets.VITE_CONVEX_URL || 'http://127.0.0.1:3210' }}
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 

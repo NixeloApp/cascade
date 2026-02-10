@@ -89,7 +89,6 @@ function isQuery(queryArg: any, path: string) {
   try {
     if (typeof queryArg === "string" && queryArg.includes(path)) return true;
     if (typeof queryArg === "function" && queryArg.name === path) return true;
-    // @ts-expect-error
     if (queryArg?._functionName === path) return true;
   } catch (e) {
     // ignore

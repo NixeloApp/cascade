@@ -123,6 +123,8 @@ export function SignUpForm() {
         onSubmit={handleSubmit}
         data-form-ready={formReady}
         data-hydrated={hydrated}
+        data-expanded={showEmailForm}
+        data-testid={TEST_IDS.AUTH.FORM}
       >
         <div
           className={cn(
