@@ -350,17 +350,35 @@ export class SettingsPage extends BasePage {
       await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
     }
     // Submit form and wait for email to appear in the invites table
-    // Don't rely on toasts - wait for the actual result (email in table)
     const inviteTable = this.page.getByTestId(TEST_IDS.INVITE.TABLE);
+    const errorToast = this.page.locator("[data-sonner-toast][data-type='error']");
 
-    await expect(async () => {
-      await expect(this.sendInviteButton).toBeVisible();
-      await expect(this.sendInviteButton).toBeEnabled();
-      await this.sendInviteButton.click();
-      // Wait for invite to appear in table - this is the real success indicator
-      await expect(inviteTable).toBeVisible();
-      await expect(inviteTable.getByText(email)).toBeVisible();
-    }).toPass();
+    await expect(this.sendInviteButton).toBeVisible();
+    await expect(this.sendInviteButton).toBeEnabled();
+    await this.sendInviteButton.click();
+
+    // Wait for either: table with email (success) OR error toast (failure)
+    // Race between success and failure conditions
+    const result = await Promise.race([
+      inviteTable
+        .getByText(email)
+        .waitFor({ state: "visible" })
+        .then(() => "success" as const),
+      errorToast
+        .first()
+        .waitFor({ state: "visible" })
+        .then(async () => {
+          const text = await errorToast.first().textContent();
+          return `error: ${text}` as const;
+        }),
+    ]);
+
+    if (result.startsWith("error:")) {
+      throw new Error(`Invite failed: ${result}`);
+    }
+
+    // Verify the table is visible (it should be if email appeared)
+    await expect(inviteTable).toBeVisible();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
