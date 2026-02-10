@@ -354,6 +354,12 @@ export class SettingsPage extends BasePage {
       await expect(this.sendInviteButton).toBeVisible();
       await expect(this.sendInviteButton).toBeEnabled();
       await this.sendInviteButton.click();
+      // Wait for success - either toast or the invite appearing in the table
+      await expect(
+        this.page
+          .getByText(/invitation sent|invited successfully/i)
+          .or(this.page.getByRole("cell", { name: email })),
+      ).toBeVisible();
     }).toPass();
   }
 
