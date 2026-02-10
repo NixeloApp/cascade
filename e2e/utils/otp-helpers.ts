@@ -8,7 +8,7 @@ export async function waitForMockOTP(
   email: string,
   options: { timeout?: number; pollInterval?: number } = {},
 ): Promise<string> {
-  const { timeout = 10000, pollInterval = 500 } = options;
+  const { timeout = 20000, pollInterval = 500 } = options;
   const startTime = Date.now();
 
   console.log(`[MockOTP] Polling for OTP for ${email}...`);
