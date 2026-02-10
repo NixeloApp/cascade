@@ -33,3 +33,7 @@
 ## 2026-03-03 - Linking Input Errors
 **Learning:** `Input` and `Textarea` components often render error text visually but fail to link it programmatically, leaving screen reader users unaware of the invalid state context.
 **Action:** Use `React.useId` to generate stable IDs for error messages and explicitly link them via `aria-describedby` on the input element. Ensure to preserve and merge any existing `aria-describedby` values from props.
+
+## 2026-03-04 - Accessible Reaction Controls
+**Learning:** Reaction interfaces often use icon-only buttons (emoji + count) that lack accessible names, making them confusing for screen reader users (e.g., just hearing "Thumbs Up 3").
+**Action:** Always provide an explicit `aria-label` that describes the action (e.g., "Add Thumbs Up reaction") or the current state (e.g., "Thumbs Up reaction, 3 votes"). Use `aria-pressed` to indicate if the current user has reacted. Wrap these controls in `Tooltip` components to provide visual confirmation of the action.
