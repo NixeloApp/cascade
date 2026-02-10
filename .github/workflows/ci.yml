@@ -206,14 +206,24 @@ jobs:
           echo "Convex functions are ready!"
           cat convex.log
 
-      - name: Configure Convex Auth
+      - name: Configure Convex Environment
         if: github.ref != 'refs/heads/main'
         run: |
           # Set auth environment variables from GitHub secrets
           echo "${{ secrets.JWT_PRIVATE_KEY }}" | npx convex env set JWT_PRIVATE_KEY
           echo '${{ secrets.JWKS }}' | npx convex env set JWKS
           npx convex env set SITE_URL "http://localhost:5555"
-          echo "✅ Set JWT_PRIVATE_KEY, JWKS, and SITE_URL in Convex backend"
+
+          # Set CI flag so backend knows it's running in CI (for test OTP storage)
+          npx convex env set CI "true"
+
+          # Set email provider env vars for invite functionality
+          npx convex env set MAILTRAP_API_TOKEN "${{ secrets.MAILTRAP_API_TOKEN }}"
+          npx convex env set MAILTRAP_INBOX_ID "${{ secrets.MAILTRAP_INBOX_ID }}"
+          npx convex env set MAILTRAP_FROM_EMAIL "noreply@nixelo-test.com"
+          npx convex env set MAILTRAP_MODE "sandbox"
+
+          echo "✅ Configured Convex backend: auth, CI flag, and email settings"
 
       - name: Run E2E tests
         # Use 2 workers per shard on standard GitHub runners to avoid choking
