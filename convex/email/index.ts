@@ -216,6 +216,20 @@ export async function sendEmail(
   ctx: DbContext | null,
   params: EmailSendParams,
 ): Promise<EmailSendResult & { provider?: string }> {
+  // Mock sending for E2E test emails to prevent rate limits and timeouts
+  // This is safe because E2E tests retrieve OTPs from the database (via storeTestOtp)
+  // or verify UI changes (toasts), rather than checking an external inbox.
+  const recipients = Array.isArray(params.to) ? params.to : [params.to];
+  const isTestEmail = recipients.some((email) => email.endsWith("@inbox.mailtrap.io"));
+
+  if (isTestEmail) {
+    return {
+      id: "mock-email-id",
+      success: true,
+      provider: "mock",
+    };
+  }
+
   // Select provider
   let selected: { name: string; provider: EmailProvider };
 
