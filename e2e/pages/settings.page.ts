@@ -161,9 +161,9 @@ export class SettingsPage extends BasePage {
 
     // Invite user form (it's an inline Card, not a dialog)
     this.inviteUserModal = page.getByRole("heading", { name: /send invitation/i });
-    this.inviteEmailInput = page.getByPlaceholder("user@example.com");
-    this.inviteRoleSelect = page.getByLabel(/role/i);
-    this.sendInviteButton = page.getByRole("button", { name: "Send Invitation", exact: true });
+    this.inviteEmailInput = page.getByTestId(TEST_IDS.INVITE.EMAIL_INPUT);
+    this.inviteRoleSelect = page.getByTestId(TEST_IDS.INVITE.ROLE_SELECT);
+    this.sendInviteButton = page.getByTestId(TEST_IDS.INVITE.SEND_BUTTON);
 
     // Admin - Organization Settings
     this.organizationNameInput = page.locator("#orgName");
@@ -354,12 +354,9 @@ export class SettingsPage extends BasePage {
       await expect(this.sendInviteButton).toBeVisible();
       await expect(this.sendInviteButton).toBeEnabled();
       await this.sendInviteButton.click();
-      // Wait for success - either toast or the invite appearing in the table
-      await expect(
-        this.page
-          .getByText(/invitation sent|invited successfully/i)
-          .or(this.page.getByRole("cell", { name: email })),
-      ).toBeVisible();
+      // Wait for success - the invite row appearing in the table with the email
+      const inviteTable = this.page.getByTestId(TEST_IDS.INVITE.TABLE);
+      await expect(inviteTable.getByText(email)).toBeVisible();
     }).toPass();
   }
 

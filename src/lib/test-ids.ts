@@ -220,6 +220,23 @@ export const TEST_IDS = {
   },
 
   // ============================================================
+  // Invites (User Management)
+  // ============================================================
+
+  INVITE: {
+    /** @see src/components/Admin/UserManagement.tsx - Email input in invite form */
+    EMAIL_INPUT: "invite-email-input",
+    /** @see src/components/Admin/UserManagement.tsx - Role select in invite form */
+    ROLE_SELECT: "invite-role-select",
+    /** @see src/components/Admin/UserManagement.tsx - Send invitation button */
+    SEND_BUTTON: "invite-send-button",
+    /** @see src/components/Admin/UserManagement.tsx - Invitations table */
+    TABLE: "invite-table",
+    /** @see src/components/Admin/UserManagement.tsx - Invite row in table */
+    ROW: "invite-row",
+  },
+
+  // ============================================================
   // Teams
   // ============================================================
 

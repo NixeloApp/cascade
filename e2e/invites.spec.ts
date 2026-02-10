@@ -1,3 +1,4 @@
+import { TEST_IDS } from "../src/lib/test-ids";
 import { generateTestEmail } from "./config";
 import { expect, authenticatedTest as test } from "./fixtures";
 
@@ -35,16 +36,16 @@ test.describe("User Invitations", () => {
     const testEmail = generateTestEmail("invite-test");
     await settingsPage.inviteUser(testEmail, "user");
 
-    // 3. Verify invite was created - check table cell (toast may disappear quickly)
-    // The invite should appear in the invitations table
-    await expect(page.getByRole("cell", { name: testEmail })).toBeVisible();
+    // 3. Verify invite was created - check table for the email
+    const inviteTable = page.getByTestId(TEST_IDS.INVITE.TABLE);
+    await expect(inviteTable.getByText(testEmail)).toBeVisible();
 
     // 4. Revoke the invite
     // Handle confirmation dialog BEFORE clicking (needs to be registered first)
     page.once("dialog", (dialog) => dialog.accept());
 
     // Find the row with our test email and click its Revoke button
-    const row = page.getByRole("row").filter({ hasText: testEmail });
+    const row = inviteTable.getByTestId(TEST_IDS.INVITE.ROW).filter({ hasText: testEmail });
     await row.getByRole("button", { name: /revoke/i }).click();
 
     // 5. Verify revocation - wait for success toast or status change

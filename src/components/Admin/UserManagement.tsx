@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Mail, Users } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
@@ -212,6 +213,7 @@ export function UserManagement() {
                     placeholder="user@example.com"
                     required
                     autoFocus
+                    data-testid={TEST_IDS.INVITE.EMAIL_INPUT}
                   />
                 </div>
 
@@ -223,7 +225,10 @@ export function UserManagement() {
                     value={role}
                     onValueChange={(value) => setRole(value as "user" | "superAdmin")}
                   >
-                    <SelectTrigger className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-ring">
+                    <SelectTrigger
+                      className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-ring"
+                      data-testid={TEST_IDS.INVITE.ROLE_SELECT}
+                    >
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -237,7 +242,11 @@ export function UserManagement() {
                 </div>
 
                 <Flex gap="md">
-                  <Button type="submit" isLoading={isSubmitting}>
+                  <Button
+                    type="submit"
+                    isLoading={isSubmitting}
+                    data-testid={TEST_IDS.INVITE.SEND_BUTTON}
+                  >
                     Send Invitation
                   </Button>
                   <Button
@@ -282,6 +291,7 @@ export function UserManagement() {
                 <table
                   className="min-w-full divide-y divide-ui-border"
                   aria-label="User invitations"
+                  data-testid={TEST_IDS.INVITE.TABLE}
                 >
                   <thead className="bg-ui-bg-secondary">
                     <tr>
@@ -334,7 +344,7 @@ export function UserManagement() {
                       (
                         invite: Doc<"invites"> & { acceptedByName?: string; inviterName?: string },
                       ) => (
-                        <tr key={invite._id}>
+                        <tr key={invite._id} data-testid={TEST_IDS.INVITE.ROW}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-ui-text">
                             {invite.email}
                           </td>
