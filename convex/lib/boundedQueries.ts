@@ -336,6 +336,6 @@ export async function efficientCount<T>(query: CountableQuery<T>, limit = 2000):
  * - BOUNDED_LIST_LIMIT (1000) - General lists
  * - BOUNDED_RELATION_LIMIT (500) - Per-parent relations
  * - BOUNDED_SEARCH_LIMIT (200) - Search results
- * - BOUNDED_SELECT_LIMIT (500) - Dropdowns/pickers
+ * - BOUNDED_SELECT_LIMIT (50) - Dropdowns/pickers
  * - BOUNDED_COUNT_LIMIT (2000) - Counting operations
  */
