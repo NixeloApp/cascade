@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import type { TableNames } from "./_generated/dataModel";
-import { mutation } from "./_generated/server";
+import { internalMutation } from "./_generated/server";
 import { validation } from "./lib/errors";
 
 const TABLES: TableNames[] = [
@@ -75,7 +75,7 @@ const TABLES: TableNames[] = [
 ];
 
 /** Purges all data from the database in batches, requires confirmation parameter. */
-export const purgeData = mutation({
+export const purgeData = internalMutation({
   args: {
     confirm: v.boolean(),
   },
