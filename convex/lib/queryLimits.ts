@@ -74,6 +74,12 @@ export const MAX_OFFLINE_SYNC_ITEMS = 50;
 /** Max compliance records for reports */
 export const MAX_COMPLIANCE_RECORDS = 1000;
 
+/** Max health check records to retain */
+export const MAX_HEALTH_CHECK_RECORDS = 100;
+
+/** Window size for consecutive failure detection */
+export const CONSECUTIVE_FAILURE_WINDOW = 10;
+
 /** Max team members per team query (reasonable upper bound) */
 export const MAX_TEAM_MEMBERS = 500;
 

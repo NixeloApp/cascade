@@ -16,6 +16,7 @@ temp/
 *.local
 .env
 .env.production
+.env.local.cloud
 
 # Editor directories and files
 .vscode/*
@@ -57,6 +58,7 @@ build-output/
 # Secrets (Local only)
 secrets.json
 .secrets.*
+
 
 # Competitor Mirror Assets (Large, regenerable)
 docs/research/library/*/assets/

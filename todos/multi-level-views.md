@@ -1,187 +1,110 @@
 # Multi-Level Views
 
-> **Priority:** P1 (Core MVP feature)
+> **Priority:** P1 (Core MVP)
 > **Effort:** Large
-> **Status:** Not started
+> **Status:** Not Started
 
 ---
 
-## Problem Statement
+## Problem
 
-Nixelo supports a hierarchy: Organization → Workspace → Team → Project. However, views (boards, wikis, calendars) currently only exist at the Project level. Users need:
-
-- **Organization-level views** - See all issues across all workspaces
-- **Workspace-level views** - See issues across all teams in a workspace
-- **Team-level views** - See issues across all projects in a team
-
-**Impact:** Users can't get a high-level overview without opening each project individually.
+Views (boards, wikis, calendars) only exist at Project level. Users need org/workspace/team level views for high-level overview.
 
 ---
 
-## Tasks
+## Schema Blockers
 
-### Board Views
+Before implementing calendar views, the schema needs updates:
 
-#### 1. Workspace Backlog (Unassigned Issues)
+- [ ] Add `organizationId` to `calendarEvents` table
+- [ ] Add `workspaceId` to `calendarEvents` table
+- [ ] Add `teamId` to `calendarEvents` table
+- [ ] Add `teamId` to `documents` table (for team wiki)
+- [ ] Add indexes for new fields
 
-**What:** A view showing all issues in a workspace that aren't assigned to any sprint.
+---
 
-**Route:** `/:orgSlug/workspaces/:workspaceSlug/backlog`
+## Board Views
 
-**Implementation:**
+### 1. Workspace Backlog
+
+Route: `/:orgSlug/workspaces/:workspaceSlug/backlog`
+
 - [ ] Create `convex/workspaces.ts` → `getBacklogIssues` query
-- [ ] Create `src/routes/$orgSlug/workspaces/$workspaceSlug/backlog.tsx`
-- [ ] Add sidebar link under workspace
+- [ ] Create route file `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog.tsx`
+- [ ] Add sidebar link
 
----
+### 2. Workspace Sprints
 
-#### 2. Workspace Sprint View
+Route: `/:orgSlug/workspaces/:workspaceSlug/sprints`
 
-**What:** Combined view of all active sprints across teams in a workspace.
-
-**Route:** `/:orgSlug/workspaces/:workspaceSlug/sprints`
-
-**Implementation:**
 - [ ] Create `convex/workspaces.ts` → `getActiveSprints` query
 - [ ] Create sprint overview component
-- [ ] Add route and sidebar link
+- [ ] Create route file and sidebar link
 
----
+### 3. Cross-Team Dependencies
 
-#### 3. Cross-Team Dependencies View
+Route: `/:orgSlug/workspaces/:workspaceSlug/dependencies`
 
-**What:** Visual graph showing issue dependencies that span multiple teams.
+- [ ] Query issues with cross-team blockedBy/blocks
+- [ ] Create dependency visualization (react-flow)
+- [ ] Add filtering by team/status/priority
 
-**Route:** `/:orgSlug/workspaces/:workspaceSlug/dependencies`
+### 4. Personal Board (@me)
 
-**Implementation:**
-- [ ] Query issues with cross-team blockedBy/blocks relationships
-- [ ] Use react-flow or similar for visualization
-- [ ] Add filtering by team, status, priority
+Route: `/:orgSlug/my-issues`
 
----
-
-#### 4. Personal Boards (@me)
-
-**What:** View showing all issues assigned to the current user across all projects.
-
-**Route:** `/:orgSlug/my-issues`
-
-**Implementation:**
-- [ ] Already have `dashboard` with my issues - extend with board view
-- [ ] Add toggle between list and board view
+- [ ] Extend dashboard with board view toggle
 - [ ] Group by project or status
 
 ---
 
-### Document/Wiki Views
+## Wiki Views
 
-#### 5. Organization Wiki
+### 5. Workspace Wiki
 
-**What:** Shared documents visible across all workspaces.
+Route: `/:orgSlug/workspaces/:workspaceSlug/wiki`
 
-**Route:** `/:orgSlug/wiki`
-
-**Implementation:**
-- [ ] Add `organizationId` field to documents (currently only has `workspaceId`)
-- [ ] Create org-level documents list view
-- [ ] Add "Organization Docs" section to sidebar
-
----
-
-#### 6. Workspace Wiki
-
-**What:** Documents scoped to a workspace, shared across teams.
-
-**Route:** `/:orgSlug/workspaces/:workspaceSlug/wiki`
-
-**Implementation:**
+- [ ] Create route file (constant already defined)
 - [ ] Filter documents by workspaceId
-- [ ] Create workspace documents view
-- [ ] Integrate with existing document components
+- [ ] Add sidebar link
 
----
+### 6. Team Wiki
 
-#### 7. Team Wiki
+Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/wiki`
 
-**What:** Documents scoped to a specific team.
-
-**Route:** `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/wiki`
-
-**Implementation:**
-- [ ] Add `teamId` field to documents
+- [ ] Add `teamId` to documents schema (blocker)
+- [ ] Create route file
 - [ ] Create team documents view
-- [ ] Add team sidebar section
 
 ---
 
-### Calendar Views
+## Calendar Views
 
-#### 8. Organization Calendar
+### 7. Organization Calendar
 
-**What:** All events across the organization.
+Route: `/:orgSlug/calendar`
 
-**Route:** `/:orgSlug/calendar`
-
-**Implementation:**
+- [ ] Add `organizationId` to calendarEvents (blocker)
 - [ ] Aggregate events from all workspaces
 - [ ] Color-code by workspace/team
 - [ ] Add filtering controls
 
----
+### 8. Workspace Calendar
 
-#### 9. Workspace Calendar
+Route: `/:orgSlug/workspaces/:workspaceSlug/calendar`
 
-**What:** Events scoped to a workspace.
-
-**Route:** `/:orgSlug/workspaces/:workspaceSlug/calendar`
-
-**Implementation:**
+- [ ] Add `workspaceId` to calendarEvents (blocker)
 - [ ] Filter events by workspaceId
-- [ ] Show team events within workspace
 - [ ] Add to workspace sidebar
 
----
+### 9. Team Calendar
 
-#### 10. Team Calendar
+Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 
-**What:** Events scoped to a team.
-
-**Route:** `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
-
-**Implementation:**
-- [ ] Filter events by teamId
+- [ ] Add `teamId` to calendarEvents (blocker)
+- [ ] Implement actual calendar (currently stub)
 - [ ] Include project-level events
-- [ ] Add E2E test coverage
-
----
-
-### Document Templates
-
-#### 11. Expose Document Templates
-
-**What:** Add UI route for managing document templates.
-
-**Current state:** Backend exists (`convex/documentTemplates.ts`), no UI route.
-
-**Route:** `/:orgSlug/documents/templates`
-
-**Implementation:**
-- [ ] Create route file
-- [ ] Import existing `DocumentTemplatesManager` component
-- [ ] Add sidebar link
-
----
-
-## Acceptance Criteria
-
-- [ ] Users can view backlogs at workspace level
-- [ ] Users can see all active sprints across a workspace
-- [ ] Cross-team dependencies are visualized
-- [ ] Wikis exist at org, workspace, and team levels
-- [ ] Calendars aggregate appropriately at each level
-- [ ] Document templates are accessible via UI
-- [ ] All new routes have E2E test coverage
 
 ---
 
@@ -191,4 +114,4 @@ Nixelo supports a hierarchy: Organization → Workspace → Team → Project. Ho
 - `convex/workspaces.ts` - Workspace queries
 - `convex/documents.ts` - Document queries
 - `convex/calendarEvents.ts` - Calendar queries
-- `src/routes/` - Route components
+- `convex/schema.ts` - Database schema

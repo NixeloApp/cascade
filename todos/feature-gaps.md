@@ -1,137 +1,84 @@
-# Feature Gaps (P1-P2)
+# Feature Gaps
 
-> **Priority:** P2 (Nice-to-have for MVP)
+> **Priority:** P2
 > **Effort:** Medium
-> **Status:** Partially complete
+> **Status:** In Progress
 
 ---
 
-## Completed
+## 1. Rich Text Comments
 
-- [x] **Label groups** - Organize labels into groups (Priority, Component, Area)
-- [x] **Velocity charts** - Track story points per sprint
-- [x] **Saved Filters UI** - Backend exists, UI integrated
+Improve comment editor to match document editor quality.
 
----
+### Tasks
 
-## Tasks
+- [ ] Add Markdown preview toggle to comment textarea
+- [ ] Improve `CommentRenderer.tsx` Markdown rendering
+- [ ] Add emoji picker to comments (can reuse from emoji-overhaul)
+- [ ] Add file attachment support inline with comments
 
-### 1. Rich Text Comments
+### Current State
 
-**What:** Improve Markdown support in issue comments to match the document editor quality.
-
-**Current state:** Comments support basic Markdown but lack:
-- Live preview
-- @ mentions with autocomplete
-- Emoji picker
-- File attachments inline
-
-**Implementation:**
-
-```tsx
-// Option 1: Use same Plate editor as documents (heavyweight)
-// Option 2: Simple Markdown textarea with preview toggle (lightweight)
-
-// Recommendation: Option 2 for comments, keep them lightweight
-```
-
-**Files to update:**
-- [ ] `src/components/CommentEditor.tsx` - Add preview toggle
-- [ ] `src/components/CommentRenderer.tsx` - Improve Markdown rendering
-- [ ] Add @ mention autocomplete (query users)
+- Mentions with `@[name](id)` syntax work
+- Basic textarea, no preview
+- No emoji picker
+- No inline attachments
 
 ---
 
-### 2. User Picker Custom Field
+## 2. User Picker Custom Field
 
-**What:** A custom field type that lets you pick a user (for "Reviewer", "QA", "Designer" fields).
+Add "user" type to custom fields for Reviewer, QA, Designer fields.
 
-**Current custom field types:** `text`, `number`, `date`, `select`, `multiselect`, `url`
+### Tasks
 
-**New type needed:** `user`
+- [ ] Add `v.literal("user")` to schema `fieldType` union
+- [ ] Update `convex/customFields.ts` validation
+- [ ] Create user picker UI in `CustomFieldValues.tsx`
+- [ ] Update `CustomFieldsManager.tsx` to allow creating user fields
 
-**Implementation:**
+### Current Types
 
 ```typescript
-// convex/schema.ts
-customFields: defineTable({
-  // ...existing fields
-  type: v.union(
-    v.literal("text"),
-    v.literal("number"),
-    v.literal("date"),
-    v.literal("select"),
-    v.literal("multiselect"),
-    v.literal("url"),
-    v.literal("user"),  // ← Add this
-  ),
-})
-
-// convex/customFields.ts - Update validation
-// For "user" type, value should be a user ID
-
-// src/components/CustomFieldValues.tsx
-// Add user picker component using existing FuzzySearchInput
+v.literal("text"),
+v.literal("number"),
+v.literal("select"),
+v.literal("multiselect"),
+v.literal("date"),
+v.literal("checkbox"),
+v.literal("url"),
+// Missing: v.literal("user")
 ```
-
-**Files to update:**
-- [ ] `convex/schema.ts` - Add `user` type
-- [ ] `convex/customFields.ts` - Add validation for user type
-- [ ] `src/components/CustomFieldValues.tsx` - Add user picker UI
-- [ ] `src/components/CustomFieldsManager.tsx` - Allow creating user fields
 
 ---
 
-### 3. Slack Integration
+## 3. Slack Integration
 
-**What:** Extend existing webhook infrastructure to support Slack.
+Extend webhook infrastructure to support Slack (currently only Pumble).
 
-**Current state:** We have `pumbleWebhooks` for Pumble (Slack clone). Need to adapt for Slack.
+### Phase 1: Outbound Notifications
 
-**Slack-specific requirements:**
-- OAuth app installation flow
-- Different API format (`chat.postMessage` vs Pumble's format)
-- Slash commands (`/nixelo create "Bug title"`)
-- Link unfurling (paste issue URL → shows preview)
-
-**Implementation phases:**
-
-#### Phase 1: Outbound notifications
 - [ ] Create Slack OAuth app in Slack API dashboard
 - [ ] Implement OAuth callback handler
-- [ ] Adapt `pumbleWebhooks.ts` to support Slack format
+- [ ] Create `convex/slack.ts` adapting Pumble patterns
 - [ ] Add Slack workspace connection UI in settings
 
-#### Phase 2: Slash commands
+### Phase 2: Slash Commands
+
 - [ ] Register `/nixelo` command with Slack
 - [ ] Create `convex/http.ts` handler for slash commands
 - [ ] Support `create`, `search`, `assign` subcommands
 
-#### Phase 3: Link unfurling
+### Phase 3: Link Unfurling
+
 - [ ] Register URL patterns with Slack
-- [ ] Create unfurl handler that returns issue details
-- [ ] Cache unfurl responses
-
-**Files to create/update:**
-- [ ] `convex/slack.ts` - Slack-specific functions
-- [ ] `convex/http.ts` - Add Slack webhook handlers
-- [ ] `src/routes/$orgSlug/settings/integrations/slack.tsx` - Connection UI
-- [ ] `src/components/Settings/SlackIntegration.tsx` - Component
-
----
-
-## Acceptance Criteria
-
-- [ ] Comments have Markdown preview and @ mentions
-- [ ] "User" custom field type works with user picker
-- [ ] Slack notifications work for issue events
-- [ ] (Optional) Slack slash commands create issues
-- [ ] All features have unit tests
+- [ ] Create unfurl handler returning issue details
 
 ---
 
 ## Related Files
 
-- `convex/pumbleWebhooks.ts` - Reference for webhook patterns
+- `convex/pumble.ts` - Reference webhook implementation
 - `src/components/CustomFieldValues.tsx` - Custom field rendering
-- `src/components/fuzzy-search/FuzzySearchInput.tsx` - User picker base
+- `src/components/MentionInput.tsx` - Mention autocomplete
+- `src/components/CommentRenderer.tsx` - Comment display

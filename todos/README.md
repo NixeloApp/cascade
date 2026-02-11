@@ -1,35 +1,50 @@
 # Nixelo - Feature Todos
 
-> **Organized, comprehensive feature specifications**
+> **Last Updated:** 2026-02-10
 
-Each file in this folder is a complete feature specification with:
-- Problem statement and motivation
-- Detailed implementation steps with code examples
-- Acceptance criteria
-- Related files and dependencies
+---
+
+## Current Focus
+
+| Priority | File | Feature | Status |
+|----------|------|---------|--------|
+| **P1** | [multi-level-views.md](./multi-level-views.md) | Org/Workspace/Team views | Not Started |
+| **P2** | [feature-gaps.md](./feature-gaps.md) | Comments, user picker, Slack | In Progress |
+| **P2** | [emoji-overhaul.md](./emoji-overhaul.md) | Icon picker component | Phase 2 Pending |
+
+---
 
 ## Active (MVP)
 
-| File | Feature | Priority | Effort |
-|------|---------|----------|--------|
-| [quality-overhaul.md](./quality-overhaul.md) | E2E tests, type consistency, complexity, docstrings | P0/P2 | Large |
-| [multi-level-views.md](./multi-level-views.md) | Board/Wiki/Calendar at org/workspace/team levels | P1 | Large |
-| [feature-gaps.md](./feature-gaps.md) | Rich text comments, user picker, Slack | P2 | Medium |
-| [agency-mvp.md](./agency-mvp.md) | Invoicing, client portal | P2 | Large |
+| File | Description | Effort |
+|------|-------------|--------|
+| [multi-level-views.md](./multi-level-views.md) | Schema migration + 9 new views | Large |
+| [feature-gaps.md](./feature-gaps.md) | Rich comments, user field, Slack | Medium |
+| [emoji-overhaul.md](./emoji-overhaul.md) | IconPicker + accessibility | Medium |
+
+---
+
+## In Progress
+
+| File | Description | Priority |
+|------|-------------|----------|
+| [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Metrics, fallback UI, feature flags | P2 |
+
+---
 
 ## Deferred (Post-MVP)
 
-| File | Feature | Priority |
-|------|---------|----------|
-| [public-launch.md](./public-launch.md) | Demo video, HN, Reddit, PH | P3 |
-| [uptime-monitoring.md](./uptime-monitoring.md) | Monitors, status pages, incident auto-creation | P3 |
+| File | Description | Priority |
+|------|-------------|----------|
+| [agency-mvp.md](./agency-mvp.md) | Invoicing, client portal | P2 |
+| [public-launch.md](./public-launch.md) | Demo video, HN, Reddit | P3 |
+| [uptime-monitoring.md](./uptime-monitoring.md) | Monitors, status pages | P3 |
 | [enterprise.md](./enterprise.md) | SSO/SAML, Stripe, AI | P4 |
-| [growth-features.md](./growth-features.md) | Slack sync, advanced search, version history | P4 |
+| [growth-features.md](./growth-features.md) | Slack sync, search, versioning | P4 |
 
-## How to Use
+---
 
-1. **Pick a feature** from the table above
-2. **Read the full spec** - understand the problem, implementation, and acceptance criteria
-3. **Work through tasks sequentially** - each spec is ordered by dependency
-4. **Check off tasks** as you complete them
-5. **Update the spec** if you discover new requirements or edge cases
+## Related Docs
+
+- [CLAUDE.md](../CLAUDE.md) - Development guide
+- [RULES.md](../RULES.md) - Development rules

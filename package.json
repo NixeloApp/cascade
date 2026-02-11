@@ -13,8 +13,10 @@
   },
   "scripts": {
     "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev:cloud": "npm-run-all --parallel dev:frontend dev:backend:cloud",
     "dev:frontend": "vite",
     "dev:backend": "convex dev",
+    "dev:backend:cloud": "convex dev --env-file .env.local.cloud",
     "build": "convex codegen --typecheck disable && vite build",
     "biome": "biome check --write .",
     "biome:check": "biome check .",
