@@ -1,3 +1,5 @@
+import { TEST_IDS } from "../src/lib/test-ids";
+import { TEST_USERS } from "./config";
 import { expect, test } from "./fixtures";
 import { getTestEmailAddress } from "./utils/helpers";
 import { waitForMockOTP } from "./utils/otp-helpers";
@@ -193,5 +195,87 @@ test.describe("Integration", () => {
         .or(page.getByRole("link", { name: /dashboard/i }))
         .or(page.locator('[data-sidebar="sidebar"]')), // Sidebar indicates we're in the app
     ).toBeVisible();
+  });
+
+  test("can sign in with existing user and lands on dashboard", async ({ authPage, page }) => {
+    // Use the pre-existing teamLead test user
+    const { email, password } = TEST_USERS.teamLead;
+    await authPage.gotoSignIn();
+
+    // Sign in with existing user
+    await authPage.signIn(email, password);
+
+    // Wait for navigation to complete
+    await page.waitForLoadState("domcontentloaded");
+
+    // Should land on dashboard (existing user has completed onboarding)
+    await expect(async () => {
+      const url = page.url();
+      // Should be on dashboard, not landing or auth pages
+      expect(url).toMatch(/\/[^/]+\/dashboard/);
+    }).toPass();
+
+    // Verify dashboard elements are visible
+    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
+    console.log("[Test] Successfully signed in and landed on dashboard");
+  });
+
+  test("password reset flow sends code and allows reset", async ({ authPage, page }) => {
+    // Create a fresh user for password reset test
+    const testEmail = getTestEmailAddress("reset-test");
+    const originalPassword = "OriginalPassword123!";
+    const newPassword = "NewPassword456!";
+
+    // First, sign up to create the user
+    await authPage.gotoSignUp();
+    await authPage.signUp(testEmail, originalPassword);
+
+    // Wait for verification form and complete verification
+    await authPage.expectVerificationForm();
+    const signupOtp = await waitForMockOTP(testEmail);
+    await authPage.verifyEmail(signupOtp);
+
+    // Wait for navigation away from verification
+    await page.waitForLoadState("domcontentloaded");
+    console.log("[Test] User created and verified");
+
+    // Sign out (if we're in the app) to test password reset
+    // Navigate to forgot password page
+    await authPage.gotoForgotPassword();
+    await authPage.expectForgotPasswordForm();
+
+    // Request password reset
+    await authPage.requestPasswordReset(testEmail);
+
+    // Wait for reset code form to appear
+    await authPage.expectResetCodeForm();
+    console.log("[Test] Reset code form appeared");
+
+    // Get the reset code from backend
+    const resetCode = await waitForMockOTP(testEmail);
+    console.log(`[Test] Got reset code: ${resetCode}`);
+
+    // Complete password reset
+    await authPage.completePasswordReset(resetCode, newPassword);
+
+    // Wait for success indication (toast or redirect to sign in)
+    const successToast = page.locator("[data-sonner-toast]").filter({ hasText: /reset|success/i });
+    const signInForm = authPage.signInHeading;
+
+    await expect(successToast.or(signInForm)).toBeVisible();
+    console.log("[Test] Password reset completed");
+
+    // Verify can sign in with new password
+    await authPage.gotoSignIn();
+    await authPage.signIn(testEmail, newPassword);
+
+    // Should navigate to dashboard or onboarding
+    await page.waitForLoadState("domcontentloaded");
+    await expect(
+      page
+        .getByRole("heading", { name: /welcome to nixelo/i })
+        .or(page.locator('[data-sidebar="sidebar"]')),
+    ).toBeVisible();
+    console.log("[Test] Successfully signed in with new password");
   });
 });
