@@ -207,17 +207,25 @@ jobs:
       - name: Configure Convex Backend Environment
         if: github.ref != 'refs/heads/main'
         run: |
-          # Auth
+          # Auth (JWT)
           echo "${{ secrets.JWT_PRIVATE_KEY }}" | npx convex env set JWT_PRIVATE_KEY
           echo '${{ secrets.JWKS }}' | npx convex env set JWKS
           npx convex env set SITE_URL "http://localhost:5555"
-          # CI flag for test OTP storage
+
+          # Auth (Google OAuth)
+          npx convex env set AUTH_GOOGLE_ID "${{ secrets.AUTH_GOOGLE_ID }}"
+          npx convex env set AUTH_GOOGLE_SECRET "${{ secrets.AUTH_GOOGLE_SECRET }}"
+
+          # CI/E2E flags
           npx convex env set CI "true"
-          # Email (Mailtrap sandbox)
+          npx convex env set E2E_TEST_MODE "${{ secrets.E2E_TEST_MODE }}"
+
+          # Email (Mailtrap)
           npx convex env set MAILTRAP_API_TOKEN "${{ secrets.MAILTRAP_API_TOKEN }}"
           npx convex env set MAILTRAP_INBOX_ID "${{ secrets.MAILTRAP_INBOX_ID }}"
-          npx convex env set MAILTRAP_FROM_EMAIL "noreply@nixelo-test.com"
-          npx convex env set MAILTRAP_MODE "sandbox"
+          npx convex env set MAILTRAP_ACCOUNT_ID "${{ secrets.MAILTRAP_ACCOUNT_ID }}"
+          npx convex env set MAILTRAP_FROM_EMAIL "${{ secrets.MAILTRAP_FROM_EMAIL }}"
+          npx convex env set MAILTRAP_MODE "${{ secrets.MAILTRAP_MODE }}"
 
       - name: Run E2E tests
         # Use 2 workers per shard on standard GitHub runners to avoid choking
