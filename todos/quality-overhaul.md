@@ -1,37 +1,49 @@
 # Quality Overhaul
 
-> **Priority:** P2 (Maintenance)
+> **Priority:** P0 (Critical)
 > **Effort:** Medium
-> **Status:** Near Complete
+> **Status:** In Progress
 
 ---
 
-## Remaining: Flaky E2E Tests
+## Flaky E2E Tests
 
-These tests fail intermittently in CI (pass locally). Need investigation:
+These tests fail intermittently in CI. Each needs investigation and fix:
 
-- `analytics.spec.ts:25` - "Completed Sprints" strict mode violation (2 elements)
-- `analytics.spec.ts:69` - chart sections
-- `activity-feed.spec.ts:26` - empty state detection
-- `auth-comprehensive.spec.ts:15` - sign in form elements
-- `auth.spec.ts:126` - sign up verification email
-- `integration-workflow.spec.ts:113` - dashboard shows issues
-- `invite.spec.ts:33` - invalid invite page
-- `invites.spec.ts:26` - admin send/revoke invites
-- `permission-cascade.spec.ts:46` - org owner create workspaces
-- `search.spec.ts:70` - no results found
-- `teams.spec.ts:28` - navigate to teams list
+### Authentication Tests
+- [ ] `auth-comprehensive.spec.ts:15` - Sign in form elements not found
+- [ ] `auth.spec.ts:126` - Sign up verification email flow timing
+
+### Dashboard & Navigation
+- [ ] `integration-workflow.spec.ts:113` - Dashboard shows issues assertion fails
+- [ ] `teams.spec.ts:28` - Navigate to teams list timing issue
+
+### Permissions & Invites
+- [ ] `invite.spec.ts:33` - Invalid invite page detection
+- [ ] `invites.spec.ts:26` - Admin send/revoke invites race condition
+- [ ] `permission-cascade.spec.ts:46` - Org owner create workspaces
+
+### Features
+- [ ] `analytics.spec.ts:25` - "Completed Sprints" strict mode violation (2 elements)
+- [ ] `analytics.spec.ts:69` - Chart sections rendering
+- [ ] `activity-feed.spec.ts:26` - Empty state detection
+- [ ] `search.spec.ts:70` - No results found timing
 
 ---
 
-## Completed
+## Investigation Approach
 
-- [x] `src/lib/test-ids.ts` shared constants
-- [x] All E2E tests use `TEST_IDS` (AST validator enforces)
-- [x] Validation scripts in CI (`check-test-ids.js`, `check-e2e-quality.js`)
-- [x] High-severity `.first()` on generic selectors fixed
-- [x] RULES.md documents E2E standards
-- [x] JSDoc on core convex functions (~95% coverage)
-- [x] No duplicate type definitions
-- [x] No `console.log` in production code
-- [x] All Biome complexity warnings resolved
+For each flaky test:
+1. Run locally 10+ times to reproduce
+2. Check for race conditions (state not ready, animations)
+3. Replace hardcoded waits with proper assertions
+4. Use `expect().toPass()` for retry patterns
+5. Verify CI environment differences
+
+---
+
+## Related Files
+
+- `e2e/` - All E2E test files
+- `e2e/pages/` - Page object models
+- `scripts/validate/check-e2e-quality.js` - E2E validator
