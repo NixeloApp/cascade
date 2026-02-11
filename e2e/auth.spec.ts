@@ -197,9 +197,14 @@ test.describe("Integration", () => {
     ).toBeVisible();
   });
 
-  test("can sign in with existing user and lands on dashboard", async ({ authPage, page }) => {
-    // Use the pre-existing teamLead test user
-    const { email, password } = TEST_USERS.teamLead;
+  test("can sign in with existing user and lands on dashboard", async ({
+    authPage,
+    page,
+  }, testInfo) => {
+    // Use the pre-existing teamLead test user (with worker-specific email)
+    const workerSuffix = `w${testInfo.parallelIndex}`;
+    const email = TEST_USERS.teamLead.email.replace("@", `-${workerSuffix}@`);
+    const { password } = TEST_USERS.teamLead;
     await authPage.gotoSignIn();
 
     // Sign in with existing user
