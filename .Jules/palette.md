@@ -41,3 +41,7 @@
 ## 2026-05-24 - Context-Sensitive Actions Visibility
 **Learning:** Hiding contextual actions until hover (`opacity-0 group-hover:opacity-100`) makes them effectively invisible to keyboard users. Users must blindly tab into invisible elements to discover them, which is a poor experience.
 **Action:** Add `group-focus-within:opacity-100` to the action container. This ensures that when the user focuses on the parent row (or the main interactive element within it), the secondary actions become visible immediately, providing the same context-awareness as the hover state.
+
+## 2024-05-22 - Accessible Description Association in Switch
+**Learning:** The `Switch` component supported a `description` prop visually but failed to programmatically associate it with the input, leaving screen reader users without context.
+**Action:** Implemented automatic ID generation and `aria-describedby` linkage for the `description` prop. Also updated `label` and `description` to accept `ReactNode` to allow for rich content (links, bold text) while maintaining accessible relationships. This pattern should be applied to other form controls that have built-in description props.
