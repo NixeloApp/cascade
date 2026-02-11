@@ -8,7 +8,7 @@
 
 | Priority | File | Feature | Status |
 |----------|------|---------|--------|
-| **P0** | [quality-overhaul.md](./quality-overhaul.md) | Fix 11 flaky E2E tests | In Progress |
+| ~~**P0**~~ | ~~[quality-overhaul.md](./quality-overhaul.md)~~ | ~~E2E test stability~~ | ✅ Done |
 | **P1** | [multi-level-views.md](./multi-level-views.md) | Org/Workspace/Team views | Not Started |
 | **P2** | [feature-gaps.md](./feature-gaps.md) | Comments, user picker, Slack | In Progress |
 | **P2** | [emoji-overhaul.md](./emoji-overhaul.md) | Icon picker component | Phase 2 Pending |
@@ -19,7 +19,6 @@
 
 | File | Description | Effort |
 |------|-------------|--------|
-| [quality-overhaul.md](./quality-overhaul.md) | 11 flaky E2E tests to fix | Medium |
 | [multi-level-views.md](./multi-level-views.md) | Schema migration + 9 new views | Large |
 | [feature-gaps.md](./feature-gaps.md) | Rich comments, user field, Slack | Medium |
 | [emoji-overhaul.md](./emoji-overhaul.md) | IconPicker + accessibility | Medium |
@@ -38,12 +37,9 @@
 
 ---
 
-## Quick Start
+## Completed
 
-1. Pick a file from **Current Focus**
-2. Read the full spec
-3. Work through tasks in order
-4. Check off completed items
+- [quality-overhaul.md](./quality-overhaul.md) - E2E tests stable (Feb 10)
 
 ---
 
