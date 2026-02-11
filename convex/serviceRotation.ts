@@ -6,7 +6,8 @@
  */
 
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
+import { requireBotApiKey } from "./lib/botAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { notFound } from "./lib/errors";
 import { freeUnitTypes, serviceTypes } from "./validators";
@@ -208,6 +209,7 @@ export const getUsageSummary = query({
 /** Records usage for a provider after each API call to track consumption and calculate free vs paid units. */
 export const recordUsage = mutation({
   args: {
+    apiKey: v.string(),
     serviceType: serviceTypes,
     provider: v.string(),
     unitsUsed: v.number(),
@@ -220,6 +222,9 @@ export const recordUsage = mutation({
     isUsingFreeTier: v.boolean(),
   }),
   handler: async (ctx, args) => {
+    // Validate bot service API key
+    await requireBotApiKey(ctx, args.apiKey);
+
     const month = getCurrentMonth();
 
     // Get provider config
@@ -294,7 +299,7 @@ export const recordUsage = mutation({
 /**
  * Initialize or update a provider configuration
  */
-export const upsertProvider = mutation({
+export const upsertProvider = internalMutation({
   args: {
     serviceType: serviceTypes,
     provider: v.string(),
@@ -334,7 +339,7 @@ export const upsertProvider = mutation({
 });
 
 /** Seeds default provider configurations with monthly-reset free tiers for transcription and email services. */
-export const seedProviders = mutation({
+export const seedProviders = internalMutation({
   args: {},
   returns: v.object({ seeded: v.boolean() }),
   handler: async (ctx) => {
@@ -486,7 +491,7 @@ export const seedProviders = mutation({
 /**
  * Mark a provider as configured (has API key)
  */
-export const setProviderConfigured = mutation({
+export const setProviderConfigured = internalMutation({
   args: {
     provider: v.string(),
     isConfigured: v.boolean(),

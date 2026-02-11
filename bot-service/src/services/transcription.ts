@@ -26,12 +26,14 @@ interface ProviderSelection {
 
 export class TranscriptionService {
   private convex: ConvexHttpClient;
+  private apiKey: string;
 
   constructor() {
     const convexUrl = process.env.CONVEX_URL;
     if (!convexUrl) {
       throw new Error("CONVEX_URL environment variable not set");
     }
+    this.apiKey = process.env.BOT_SERVICE_API_KEY || "";
     this.convex = new ConvexHttpClient(convexUrl);
   }
 
@@ -53,8 +55,11 @@ export class TranscriptionService {
    * Record usage to Convex after transcription
    */
   private async recordUsage(provider: string, minutesUsed: number): Promise<void> {
+    if (!this.apiKey) return;
+
     try {
       await this.convex.mutation(api.serviceRotation.recordUsage, {
+        apiKey: this.apiKey,
         serviceType: "transcription",
         provider,
         unitsUsed: Math.ceil(minutesUsed), // Round up to nearest minute
