@@ -187,13 +187,27 @@ export const getCurrentUserProjects = authenticatedQuery({
     const MAX_ISSUE_COUNT = 1000;
     const issueCountsPromises = projectIds.map(async (projectId) => {
       // batch fetch
-      const count = await efficientCount(
-        ctx.db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
-        MAX_ISSUE_COUNT,
-      );
+      // Since isDeleted is optional/sparse, by_project_deleted only indexes items with isDeleted set.
+      // Active items (isDeleted: undefined) are not in that index.
+      // So we count total items (by_project) and subtract deleted items (by_project_deleted).
+      const [totalCount, deletedCount] = await Promise.all([
+        efficientCount(
+          ctx.db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
+          MAX_ISSUE_COUNT,
+        ),
+        efficientCount(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_deleted", (q) =>
+              q.eq("projectId", projectId).eq("isDeleted", true),
+            ),
+          MAX_ISSUE_COUNT,
+        ),
+      ]);
+
       return {
         projectId,
-        count,
+        count: Math.max(0, totalCount - deletedCount),
       };
     });
     const issueCounts = await Promise.all(issueCountsPromises);

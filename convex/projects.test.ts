@@ -337,6 +337,50 @@ describe("Projects", () => {
       expect(projects[0]).toHaveProperty("isOwner");
       await t.finishInProgressScheduledFunctions();
     });
+
+    it("should exclude soft-deleted issues from issue count", async () => {
+      const t = convexTest(schema, modules);
+      const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
+
+      const projectId = await asUser.mutation(api.projects.createProject, {
+        name: "Count Project",
+        key: "COUNT",
+        isPublic: false,
+        boardType: "kanban",
+        organizationId,
+        workspaceId,
+        teamId,
+      });
+
+      // Create an active issue
+      await asUser.mutation(api.issues.create, {
+        title: "Active Issue",
+        type: "task",
+        priority: "medium",
+        projectId,
+      });
+
+      // Create an issue and then delete it
+      const deletedIssueId = await asUser.mutation(api.issues.create, {
+        title: "Deleted Issue",
+        type: "bug",
+        priority: "high",
+        projectId,
+      });
+
+      await asUser.mutation(api.issues.bulkDelete, {
+        issueIds: [deletedIssueId],
+      });
+
+      const { page: projects } = await asUser.query(api.projects.getCurrentUserProjects, {
+        paginationOpts: { numItems: 10, cursor: null },
+      });
+
+      const project = projects.find((p) => p._id === projectId);
+      expect(project).toBeDefined();
+      expect(project?.issueCount).toBe(1); // Should count only the active issue
+      await t.finishInProgressScheduledFunctions();
+    });
   });
 
   describe("updateWorkflow", () => {

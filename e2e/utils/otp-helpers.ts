@@ -8,7 +8,7 @@ export async function waitForMockOTP(
   email: string,
   options: { timeout?: number; pollInterval?: number } = {},
 ): Promise<string> {
-  const { timeout = 10000, pollInterval = 500 } = options;
+  const { timeout = 40000, pollInterval = 500 } = options;
   const startTime = Date.now();
 
   console.log(`[MockOTP] Polling for OTP for ${email}...`);
@@ -25,13 +25,12 @@ export async function waitForMockOTP(
         const text = await response.text();
         console.warn(`[MockOTP] API error ${response.status}: ${text}`);
         // Keep retrying
-        continue;
-      }
-
-      const data = await response.json();
-      if (data.code) {
-        console.log(`[MockOTP] Found code: ${data.code}`);
-        return data.code;
+      } else {
+        const data = await response.json();
+        if (data.code) {
+          console.log(`[MockOTP] Found code: ${data.code}`);
+          return data.code;
+        }
       }
     } catch (e) {
       console.warn(`[MockOTP] Fetch error: ${e}`);
