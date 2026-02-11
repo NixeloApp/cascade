@@ -167,12 +167,16 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       // Wait for the route to be triggered
       await page.waitForTimeout(1000);
 
-      // Verify state parameter is present
-      expect(capturedOAuthUrl).toBeTruthy();
-      const url = new URL(capturedOAuthUrl as string);
+      // Verify OAuth URL was captured
+      if (!capturedOAuthUrl) {
+        throw new Error("OAuth redirect URL was not captured");
+      }
+      const url = new URL(capturedOAuthUrl);
       const state = url.searchParams.get("state");
-      expect(state).toBeTruthy();
-      expect(state?.length).toBeGreaterThan(5);
+      if (!state) {
+        throw new Error("State parameter missing from OAuth URL");
+      }
+      expect(state.length).toBeGreaterThan(5);
     });
 
     test("should request correct OAuth scopes", async ({ page, baseURL }) => {
@@ -190,8 +194,11 @@ test.describe("Google OAuth Flow (Mocked)", () => {
 
       await page.waitForTimeout(1000);
 
-      expect(capturedOAuthUrl).toBeTruthy();
-      const url = new URL(capturedOAuthUrl as string);
+      // Verify OAuth URL was captured
+      if (!capturedOAuthUrl) {
+        throw new Error("OAuth redirect URL was not captured");
+      }
+      const url = new URL(capturedOAuthUrl);
       const scope = url.searchParams.get("scope");
 
       // Should include email scope at minimum
@@ -214,8 +221,11 @@ test.describe("Google OAuth Flow (Mocked)", () => {
 
       await page.waitForTimeout(1000);
 
-      expect(capturedOAuthUrl).toBeTruthy();
-      const url = new URL(capturedOAuthUrl as string);
+      // Verify OAuth URL was captured
+      if (!capturedOAuthUrl) {
+        throw new Error("OAuth redirect URL was not captured");
+      }
+      const url = new URL(capturedOAuthUrl);
       const redirectUri = url.searchParams.get("redirect_uri");
 
       expect(redirectUri).toBeTruthy();
