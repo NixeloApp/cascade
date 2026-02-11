@@ -239,7 +239,10 @@ test.describe("Integration", () => {
     await page.waitForLoadState("domcontentloaded");
     console.log("[Test] User created and verified");
 
-    // Sign out (if we're in the app) to test password reset
+    // Clear session to test password reset as unauthenticated user
+    // (forgot-password page has AuthRedirect which would redirect authenticated users)
+    await page.context().clearCookies();
+
     // Navigate to forgot password page
     await authPage.gotoForgotPassword();
     await authPage.expectForgotPasswordForm();

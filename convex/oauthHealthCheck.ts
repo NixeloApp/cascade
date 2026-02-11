@@ -25,23 +25,96 @@ export const recordHealthCheck = internalMutation({
     error: v.optional(v.string()),
     errorCode: v.optional(v.string()),
   },
-  handler: async (_ctx, args) => {
-    // Store in a health check log table (optional - for dashboard)
-    // For now, we just log. Can be extended to store in DB.
+  handler: async (ctx, args) => {
+    // Persist to database for tracking consecutive failures
+    await ctx.db.insert("oauthHealthChecks", {
+      success: args.success,
+      latencyMs: args.latencyMs,
+      error: args.error,
+      errorCode: args.errorCode,
+      timestamp: Date.now(),
+    });
+
     console.log(
       `[OAuth Health] ${args.success ? "✓" : "✗"} ${args.latencyMs}ms ${args.error || ""}`,
     );
+
+    // Clean up old records (keep last 100)
+    // Take 150 to check if cleanup is needed, then delete anything beyond 100
+    const recentChecks = await ctx.db
+      .query("oauthHealthChecks")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .take(150);
+
+    if (recentChecks.length > 100) {
+      const toDelete = recentChecks.slice(100);
+      for (const check of toDelete) {
+        await ctx.db.delete(check._id);
+      }
+    }
+  },
+});
+
+// Get count of consecutive failures from most recent checks
+export const getConsecutiveFailureCount = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<number> => {
+    const recentChecks = await ctx.db
+      .query("oauthHealthChecks")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .take(10);
+
+    let consecutiveFailures = 0;
+    for (const check of recentChecks) {
+      if (!check.success) {
+        consecutiveFailures++;
+      } else {
+        break; // Stop counting at first success
+      }
+    }
+    return consecutiveFailures;
   },
 });
 
 export const getHealthStatus = internalQuery({
   args: {},
-  handler: async () => {
-    // This could query a health log table to return recent status
-    // For now, return a placeholder
+  handler: async (ctx) => {
+    const latestCheck = await ctx.db
+      .query("oauthHealthChecks")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .first();
+
+    if (!latestCheck) {
+      return {
+        lastCheck: null,
+        isHealthy: true, // No checks yet, assume healthy
+        consecutiveFailures: 0,
+      };
+    }
+
+    const consecutiveFailures = await ctx.db
+      .query("oauthHealthChecks")
+      .withIndex("by_timestamp")
+      .order("desc")
+      .take(10);
+
+    let failureCount = 0;
+    for (const check of consecutiveFailures) {
+      if (!check.success) {
+        failureCount++;
+      } else {
+        break;
+      }
+    }
+
     return {
-      lastCheck: new Date().toISOString(),
-      isHealthy: true,
+      lastCheck: new Date(latestCheck.timestamp).toISOString(),
+      isHealthy: latestCheck.success,
+      consecutiveFailures: failureCount,
+      lastError: latestCheck.error,
     };
   },
 });
@@ -64,7 +137,6 @@ export const checkGoogleOAuthHealth = internalAction({
     }
 
     const startTime = Date.now();
-    let consecutiveFailures = 0;
 
     try {
       // Step 1: Exchange refresh token for access token
@@ -116,7 +188,6 @@ export const checkGoogleOAuthHealth = internalAction({
       });
     } catch (error) {
       const latencyMs = Date.now() - startTime;
-      consecutiveFailures++;
 
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error(`[OAuth Health] ✗ Failed (${latencyMs}ms): ${errorMessage}`);
@@ -126,6 +197,11 @@ export const checkGoogleOAuthHealth = internalAction({
         latencyMs,
         error: errorMessage,
       });
+
+      // Query consecutive failures from database
+      const consecutiveFailures = await ctx.runQuery(
+        internal.oauthHealthCheck.getConsecutiveFailureCount,
+      );
 
       // Send alert after 2 consecutive failures
       if (consecutiveFailures >= 2) {

@@ -84,6 +84,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       await googleButton.click();
 
       await page.waitForURL(/dashboard|onboarding|app/, { timeout: 15000 });
+      await verifyOAuthSuccess(page);
     });
   });
 
@@ -99,13 +100,18 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       const googleButton = page.getByRole("button", { name: /google/i });
       await googleButton.click();
 
-      // Should show error or stay on signin page
-      // Wait a bit for any redirects/errors to process
-      await page.waitForTimeout(1000);
+      // Wait for either: stay on signin page OR show an error
+      await expect(async () => {
+        const onSigninPage = page.url().includes("signin");
+        const hasError = await page
+          .getByRole("alert")
+          .isVisible()
+          .catch(() => false);
+        expect(onSigninPage || hasError).toBe(true);
+      }).toPass({ timeout: 5000 });
 
-      // Either on signin page or showing error
-      const onSigninPage = page.url().includes("signin");
-      if (!onSigninPage) {
+      // Verify error state if we left signin page
+      if (!page.url().includes("signin")) {
         await verifyOAuthError(page);
       }
     });
@@ -121,10 +127,17 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       const googleButton = page.getByRole("button", { name: /google/i });
       await googleButton.click();
 
-      await page.waitForTimeout(1000);
+      // Wait for either: stay on signin page OR show an error
+      await expect(async () => {
+        const onSigninPage = page.url().includes("signin");
+        const hasError = await page
+          .getByRole("alert")
+          .isVisible()
+          .catch(() => false);
+        expect(onSigninPage || hasError).toBe(true);
+      }).toPass({ timeout: 5000 });
 
-      const onSigninPage = page.url().includes("signin");
-      if (!onSigninPage) {
+      if (!page.url().includes("signin")) {
         await verifyOAuthError(page);
       }
     });
@@ -140,10 +153,17 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       const googleButton = page.getByRole("button", { name: /google/i });
       await googleButton.click();
 
-      await page.waitForTimeout(1000);
+      // Wait for either: stay on signin page OR show an error
+      await expect(async () => {
+        const onSigninPage = page.url().includes("signin");
+        const hasError = await page
+          .getByRole("alert")
+          .isVisible()
+          .catch(() => false);
+        expect(onSigninPage || hasError).toBe(true);
+      }).toPass({ timeout: 5000 });
 
-      const onSigninPage = page.url().includes("signin");
-      if (!onSigninPage) {
+      if (!page.url().includes("signin")) {
         await verifyOAuthError(page);
       }
     });
@@ -164,14 +184,12 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       const googleButton = page.getByRole("button", { name: /google/i });
       await googleButton.click();
 
-      // Wait for the route to be triggered
-      await page.waitForTimeout(1000);
+      // Wait for the route handler to capture the OAuth URL
+      await expect(() => {
+        expect(capturedOAuthUrl).not.toBeNull();
+      }).toPass({ timeout: 5000 });
 
-      // Verify OAuth URL was captured
-      if (!capturedOAuthUrl) {
-        throw new Error("OAuth redirect URL was not captured");
-      }
-      const url = new URL(capturedOAuthUrl);
+      const url = new URL(capturedOAuthUrl as string);
       const state = url.searchParams.get("state");
       if (!state) {
         throw new Error("State parameter missing from OAuth URL");
@@ -192,13 +210,12 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       const googleButton = page.getByRole("button", { name: /google/i });
       await googleButton.click();
 
-      await page.waitForTimeout(1000);
+      // Wait for the route handler to capture the OAuth URL
+      await expect(() => {
+        expect(capturedOAuthUrl).not.toBeNull();
+      }).toPass({ timeout: 5000 });
 
-      // Verify OAuth URL was captured
-      if (!capturedOAuthUrl) {
-        throw new Error("OAuth redirect URL was not captured");
-      }
-      const url = new URL(capturedOAuthUrl);
+      const url = new URL(capturedOAuthUrl as string);
       const scope = url.searchParams.get("scope");
 
       // Should include email scope at minimum
@@ -219,13 +236,12 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       const googleButton = page.getByRole("button", { name: /google/i });
       await googleButton.click();
 
-      await page.waitForTimeout(1000);
+      // Wait for the route handler to capture the OAuth URL
+      await expect(() => {
+        expect(capturedOAuthUrl).not.toBeNull();
+      }).toPass({ timeout: 5000 });
 
-      // Verify OAuth URL was captured
-      if (!capturedOAuthUrl) {
-        throw new Error("OAuth redirect URL was not captured");
-      }
-      const url = new URL(capturedOAuthUrl);
+      const url = new URL(capturedOAuthUrl as string);
       const redirectUri = url.searchParams.get("redirect_uri");
 
       expect(redirectUri).toBeTruthy();

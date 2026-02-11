@@ -1587,6 +1587,15 @@ const applicationTables = {
   })
     .index("by_email", ["email"])
     .index("by_expiry", ["expiresAt"]),
+
+  // OAuth Health Monitoring: Track health check results for alerting
+  oauthHealthChecks: defineTable({
+    success: v.boolean(),
+    latencyMs: v.number(),
+    error: v.optional(v.string()),
+    errorCode: v.optional(v.string()),
+    timestamp: v.number(),
+  }).index("by_timestamp", ["timestamp"]),
 };
 
 export default defineSchema({

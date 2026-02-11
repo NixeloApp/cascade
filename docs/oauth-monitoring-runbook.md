@@ -6,7 +6,7 @@ Nixelo uses synthetic OAuth monitoring that runs every 15 minutes to verify Goog
 
 ## How It Works
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  Every 15 minutes (Convex cron):                                │
 │                                                                 │
@@ -131,8 +131,8 @@ Check the Convex logs:
 **Cause:** OAuth credentials are wrong or deleted.
 
 **Recovery:**
-1. Verify `AUTH_GOOGLE_ID` in Convex env vars
-2. Verify `AUTH_GOOGLE_SECRET` in Convex env vars
+1. Verify `OAUTH_MONITOR_GOOGLE_CLIENT_ID` in Convex env vars
+2. Verify `OAUTH_MONITOR_GOOGLE_CLIENT_SECRET` in Convex env vars
 3. Check Google Cloud Console → APIs & Services → Credentials
 4. If client was deleted, create new and update secrets
 
@@ -172,12 +172,12 @@ Check the Convex logs:
 ### Expected Log Output
 
 **Success:**
-```
+```text
 [OAuth Health] ✓ Passed (245ms)
 ```
 
 **Failure:**
-```
+```text
 [OAuth Health] ✗ Failed (1023ms): Token has been expired or revoked
 ```
 
