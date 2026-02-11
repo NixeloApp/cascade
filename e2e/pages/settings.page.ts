@@ -349,22 +349,36 @@ export class SettingsPage extends BasePage {
       // Wait for select dropdown to close (React re-render completes)
       await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
     }
-    // Wait for the submit button to be stable and click with retry pattern
-    await expect(async () => {
-      await expect(this.sendInviteButton).toBeVisible();
-      await expect(this.sendInviteButton).toBeEnabled();
-      await this.sendInviteButton.click();
-      // Wait for success toast (appears before table updates)
-      await expect(
-        this.page.locator("[data-sonner-toast][data-type='success']").first(),
-      ).toBeVisible();
-    }).toPass();
-
-    // After toast appears, wait for the invite to show in the table
-    // The table may not exist yet if this is the first invite (EmptyState is shown)
+    // Submit form and wait for email to appear in the invites table
     const inviteTable = this.page.getByTestId(TEST_IDS.INVITE.TABLE);
+    const errorToast = this.page.locator("[data-sonner-toast][data-type='error']");
+
+    await expect(this.sendInviteButton).toBeVisible();
+    await expect(this.sendInviteButton).toBeEnabled();
+    await this.sendInviteButton.click();
+
+    // Wait for either: table with email (success) OR error toast (failure)
+    // Race between success and failure conditions
+    const result = await Promise.race([
+      inviteTable
+        .getByText(email)
+        .waitFor({ state: "visible" })
+        .then(() => "success" as const),
+      errorToast
+        .first()
+        .waitFor({ state: "visible" })
+        .then(async () => {
+          const text = await errorToast.first().textContent();
+          return `error: ${text}` as const;
+        }),
+    ]);
+
+    if (result.startsWith("error:")) {
+      throw new Error(`Invite failed: ${result}`);
+    }
+
+    // Verify the table is visible (it should be if email appeared)
     await expect(inviteTable).toBeVisible();
-    await expect(inviteTable.getByText(email)).toBeVisible();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
