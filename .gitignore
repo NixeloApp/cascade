@@ -58,8 +58,8 @@ build-output/
 secrets.json
 .secrets.*
 
-# Claude Code
-.claude/
+# Claude Code local env
+.env.local.cloud
 
 # Competitor Mirror Assets (Large, regenerable)
 docs/research/library/*/assets/
