@@ -16,6 +16,11 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import {
+  CONSECUTIVE_FAILURE_WINDOW,
+  FETCH_BUFFER_MULTIPLIER,
+  MAX_HEALTH_CHECK_RECORDS,
+} from "./lib/queryLimits";
 
 // Store health check results for monitoring dashboard
 export const recordHealthCheck = internalMutation({
@@ -39,16 +44,17 @@ export const recordHealthCheck = internalMutation({
       `[OAuth Health] ${args.success ? "✓" : "✗"} ${args.latencyMs}ms ${args.error || ""}`,
     );
 
-    // Clean up old records (keep last 100)
-    // Take 150 to check if cleanup is needed, then delete anything beyond 100
+    // Clean up old records (keep last MAX_HEALTH_CHECK_RECORDS)
+    // Fetch with buffer to check if cleanup is needed
+    const fetchBuffer = MAX_HEALTH_CHECK_RECORDS * FETCH_BUFFER_MULTIPLIER;
     const recentChecks = await ctx.db
       .query("oauthHealthChecks")
       .withIndex("by_timestamp")
       .order("desc")
-      .take(150);
+      .take(fetchBuffer);
 
-    if (recentChecks.length > 100) {
-      const toDelete = recentChecks.slice(100);
+    if (recentChecks.length > MAX_HEALTH_CHECK_RECORDS) {
+      const toDelete = recentChecks.slice(MAX_HEALTH_CHECK_RECORDS);
       for (const check of toDelete) {
         await ctx.db.delete(check._id);
       }
@@ -64,7 +70,7 @@ export const getConsecutiveFailureCount = internalQuery({
       .query("oauthHealthChecks")
       .withIndex("by_timestamp")
       .order("desc")
-      .take(10);
+      .take(CONSECUTIVE_FAILURE_WINDOW);
 
     let consecutiveFailures = 0;
     for (const check of recentChecks) {
@@ -99,7 +105,7 @@ export const getHealthStatus = internalQuery({
       .query("oauthHealthChecks")
       .withIndex("by_timestamp")
       .order("desc")
-      .take(10);
+      .take(CONSECUTIVE_FAILURE_WINDOW);
 
     let failureCount = 0;
     for (const check of consecutiveFailures) {
