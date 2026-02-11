@@ -8,6 +8,7 @@ import { batchFetchUsers } from "../lib/batchHelpers";
 import {
   BOUNDED_LIST_LIMIT,
   BOUNDED_SEARCH_LIMIT,
+  BOUNDED_SELECT_LIMIT,
   efficientCount,
   safeCollect,
 } from "../lib/boundedQueries";
@@ -305,7 +306,7 @@ export const listSelectableIssues = authenticatedQuery({
 
     // Optimization: Fetch root issue types in parallel using the by_project_type index.
     // This avoids fetching subtasks (which can be numerous) and ensures we get a diverse set of selectable issues.
-    // We take 500 of each type to ensure we get the most recent items across all types, matching the original global limit behavior.
+    // We use BOUNDED_SELECT_LIMIT (50) for performance, as this list is for dropdowns.
     const outcomes = await Promise.all(
       ROOT_ISSUE_TYPES.map((type) =>
         ctx.db
@@ -314,7 +315,7 @@ export const listSelectableIssues = authenticatedQuery({
             q.eq("projectId", args.projectId).eq("type", type).lt("isDeleted", true),
           )
           .order("desc")
-          .take(500),
+          .take(BOUNDED_SELECT_LIMIT),
       ),
     );
 
@@ -323,7 +324,7 @@ export const listSelectableIssues = authenticatedQuery({
     // Sort by creation time descending (newest first)
     issues.sort((a, b) => b._creationTime - a._creationTime);
 
-    return issues.slice(0, 500).map((i) => ({
+    return issues.slice(0, BOUNDED_SELECT_LIMIT).map((i) => ({
       _id: i._id,
       key: i.key,
       title: i.title,
