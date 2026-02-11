@@ -58,6 +58,9 @@ build-output/
 secrets.json
 .secrets.*
 
+# Claude Code
+.claude/
+
 # Competitor Mirror Assets (Large, regenerable)
 docs/research/library/*/assets/
 docs/research/library/*/*.html
