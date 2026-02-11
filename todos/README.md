@@ -24,6 +24,14 @@
 
 ---
 
+## In Progress
+
+| File | Description | Priority |
+|------|-------------|----------|
+| [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Metrics, fallback UI, feature flags | P2 |
+
+---
+
 ## Deferred (Post-MVP)
 
 | File | Description | Priority |

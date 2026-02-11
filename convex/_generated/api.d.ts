@@ -93,6 +93,7 @@ import type * as meetingBot from "../meetingBot.js";
 import type * as mocks_testConfig from "../mocks/testConfig.js";
 import type * as notificationPreferences from "../notificationPreferences.js";
 import type * as notifications from "../notifications.js";
+import type * as oauthHealthCheck from "../oauthHealthCheck.js";
 import type * as offlineSync from "../offlineSync.js";
 import type * as onboarding from "../onboarding.js";
 import type * as organizations from "../organizations.js";
@@ -224,6 +225,7 @@ declare const fullApi: ApiFromModules<{
   "mocks/testConfig": typeof mocks_testConfig;
   notificationPreferences: typeof notificationPreferences;
   notifications: typeof notifications;
+  oauthHealthCheck: typeof oauthHealthCheck;
   offlineSync: typeof offlineSync;
   onboarding: typeof onboarding;
   organizations: typeof organizations;

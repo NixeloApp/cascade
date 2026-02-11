@@ -73,4 +73,15 @@ crons.daily(
   internal.softDeleteCleanup.permanentlyDeleteOld,
 );
 
+/**
+ * OAuth Health Check
+ * Runs every 15 minutes to verify Google OAuth is working
+ * Catches issues like expired refresh tokens or API outages
+ */
+crons.interval(
+  "oauth health check",
+  { minutes: 15 },
+  internal.oauthHealthCheck.checkGoogleOAuthHealth,
+);
+
 export default crons;
