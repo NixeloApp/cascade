@@ -378,3 +378,64 @@ export const FeatureToggle: Story = {
     );
   },
 };
+
+// Rich Content Example
+export const RichContent: Story = {
+  render: () => (
+    <div className="w-80">
+      <Switch
+        label={<span className="font-bold text-brand">Priority Mode</span>}
+        description={
+          <div className="flex flex-col gap-1 mt-1">
+            <span className="text-sm font-medium">Enable high priority processing</span>
+            <span className="text-xs text-ui-text-tertiary">
+              This may consume more resources.{" "}
+              <a href="https://example.com" className="underline text-brand">
+                Learn more
+              </a>
+            </span>
+          </div>
+        }
+      />
+    </div>
+  ),
+};
+
+// Accessible Description Example
+export const AccessibleDescription: Story = {
+  render: () => (
+    <div className="w-80">
+      <Switch
+        label="Email Notifications"
+        description="Receive daily summaries of your activity. This text is programmatically associated with the switch via aria-describedby."
+      />
+    </div>
+  ),
+};
+
+// Master Toggle Example (Replicating Notification Settings)
+export const MasterToggleExample: Story = {
+  render: function MasterToggle() {
+    const [enabled, setEnabled] = useState(true);
+    return (
+      <div className="w-[500px] p-6 border border-ui-border rounded-lg bg-ui-bg">
+        <Switch
+          checked={enabled}
+          onCheckedChange={setEnabled}
+          labelSide="left"
+          className="items-start"
+          label={
+            <div className="mr-4">
+              <p className="text-base font-semibold text-ui-text">Email Notifications</p>
+            </div>
+          }
+          description={
+            <p className="text-xs text-ui-text-secondary mt-1 max-w-sm">
+              Master switch for all email notifications. Turn this off to stop receiving all emails.
+            </p>
+          }
+        />
+      </div>
+    );
+  },
+};

@@ -6,9 +6,9 @@ import { Label } from "./Label";
 
 export interface SwitchProps extends React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> {
   /** Label text for the switch */
-  label?: string;
+  label?: React.ReactNode;
   /** Description text */
-  description?: string;
+  description?: React.ReactNode;
   /** Side where the label should appear. Defaults to "right" */
   labelSide?: "left" | "right";
 }
@@ -17,7 +17,13 @@ const Switch = React.forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, 
   ({ className, label, description, labelSide = "right", id, disabled, ...props }, ref) => {
     const generatedId = React.useId();
     const switchId = id || generatedId;
+    const descriptionId = `${switchId}-description`;
     const hasLabel = !!(label || description);
+
+    // Combine aria-describedby from props with our generated descriptionId
+    const ariaDescribedBy = [props["aria-describedby"], description ? descriptionId : undefined]
+      .filter(Boolean)
+      .join(" ");
 
     const switchElement = (
       <SwitchPrimitives.Root
@@ -28,6 +34,7 @@ const Switch = React.forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, 
         id={switchId}
         disabled={disabled}
         {...props}
+        aria-describedby={ariaDescribedBy || undefined}
         ref={ref}
       >
         <SwitchPrimitives.Thumb
@@ -58,7 +65,11 @@ const Switch = React.forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, 
             {label}
           </Label>
         )}
-        {description && <p className="text-sm text-ui-text-secondary">{description}</p>}
+        {description && (
+          <div id={descriptionId} className="text-sm text-ui-text-secondary">
+            {description}
+          </div>
+        )}
       </div>
     );
 
