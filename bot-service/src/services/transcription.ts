@@ -34,6 +34,9 @@ export class TranscriptionService {
       throw new Error("CONVEX_URL environment variable not set");
     }
     this.apiKey = process.env.BOT_SERVICE_API_KEY || "";
+    if (!this.apiKey) {
+      console.warn("BOT_SERVICE_API_KEY not set - usage tracking will be disabled");
+    }
     this.convex = new ConvexHttpClient(convexUrl);
   }
 
@@ -55,7 +58,10 @@ export class TranscriptionService {
    * Record usage to Convex after transcription
    */
   private async recordUsage(provider: string, minutesUsed: number): Promise<void> {
-    if (!this.apiKey) return;
+    if (!this.apiKey) {
+      console.warn("Skipping usage recording: BOT_SERVICE_API_KEY is not configured");
+      return;
+    }
 
     try {
       await this.convex.mutation(api.serviceRotation.recordUsage, {
@@ -66,6 +72,7 @@ export class TranscriptionService {
       });
     } catch (_error) {
       // Don't throw - usage tracking shouldn't block transcription
+      console.error("Failed to record transcription usage:", _error);
     }
   }
 
