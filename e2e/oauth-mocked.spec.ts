@@ -25,7 +25,7 @@ import {
 
 // Skip in CI - OAuth mocking doesn't work with server-side redirects
 // The mock intercepts client-side requests but Convex OAuth uses server redirects
-test.skip(!!process.env.CI, "Skip in CI - OAuth mocking doesn't work with server-side redirects");
+test.skip(({ project }) => (project?.name ? project.name.includes("CI") : false) || !!process.env.CI);
 
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
