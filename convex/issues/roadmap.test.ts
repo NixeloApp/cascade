@@ -19,7 +19,9 @@ describe("listRoadmapIssues optimization", () => {
         await ctx.db.insert("issues", {
           projectId,
           organizationId,
+          // biome-ignore lint/style/noNonNullAssertion: testing convenience
           workspaceId: project!.workspaceId,
+          // biome-ignore lint/style/noNonNullAssertion: testing convenience
           teamId: project!.teamId,
           key: `PROJ-${i + 1}`,
           title: `Issue ${i}`,
@@ -39,42 +41,18 @@ describe("listRoadmapIssues optimization", () => {
     // Create 5 issues with due dates
     const datedIssueIds = [];
     for (let i = 0; i < 5; i++) {
-        const id = await t.run(async (ctx) => {
-          const project = await ctx.db.get(projectId);
-          return await ctx.db.insert("issues", {
-            projectId,
-            organizationId,
-            workspaceId: project!.workspaceId,
-            teamId: project!.teamId,
-            key: `PROJ-D-${i + 1}`,
-            title: `Dated Issue ${i}`,
-            type: "task",
-            status: "todo",
-            priority: "medium",
-            reporterId: userId,
-            dueDate: Date.now() + 100000,
-            updatedAt: Date.now(),
-            labels: [],
-            linkedDocuments: [],
-            attachments: [],
-            order: 10 + i,
-          });
-        });
-        datedIssueIds.push(id);
-    }
-
-    // Create a subtask with due date (should be excluded)
-    await t.run(async (ctx) => {
+      const id = await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
-        await ctx.db.insert("issues", {
+        return await ctx.db.insert("issues", {
           projectId,
           organizationId,
+          // biome-ignore lint/style/noNonNullAssertion: testing convenience
           workspaceId: project!.workspaceId,
+          // biome-ignore lint/style/noNonNullAssertion: testing convenience
           teamId: project!.teamId,
-          key: `PROJ-SUB-1`,
-          title: `Subtask with date`,
-          type: "subtask",
-          parentId: datedIssueIds[0],
+          key: `PROJ-D-${i + 1}`,
+          title: `Dated Issue ${i}`,
+          type: "task",
           status: "todo",
           priority: "medium",
           reporterId: userId,
@@ -83,8 +61,36 @@ describe("listRoadmapIssues optimization", () => {
           labels: [],
           linkedDocuments: [],
           attachments: [],
-          order: 100,
+          order: 10 + i,
         });
+      });
+      datedIssueIds.push(id);
+    }
+
+    // Create a subtask with due date (should be excluded)
+    await t.run(async (ctx) => {
+      const project = await ctx.db.get(projectId);
+      await ctx.db.insert("issues", {
+        projectId,
+        organizationId,
+        // biome-ignore lint/style/noNonNullAssertion: testing convenience
+        workspaceId: project!.workspaceId,
+        // biome-ignore lint/style/noNonNullAssertion: testing convenience
+        teamId: project!.teamId,
+        key: `PROJ-SUB-1`,
+        title: `Subtask with date`,
+        type: "subtask",
+        parentId: datedIssueIds[0],
+        status: "todo",
+        priority: "medium",
+        reporterId: userId,
+        dueDate: Date.now() + 100000,
+        updatedAt: Date.now(),
+        labels: [],
+        linkedDocuments: [],
+        attachments: [],
+        order: 100,
+      });
     });
 
     // Query with hasDueDate: true
@@ -96,8 +102,8 @@ describe("listRoadmapIssues optimization", () => {
     // Should return exactly 5 issues
     expect(issues.length).toBe(5);
     for (const issue of issues) {
-        expect(issue.dueDate).toBeDefined();
-        expect(issue.type).not.toBe("subtask");
+      expect(issue.dueDate).toBeDefined();
+      expect(issue.type).not.toBe("subtask");
     }
   });
 
@@ -114,7 +120,9 @@ describe("listRoadmapIssues optimization", () => {
         await ctx.db.insert("issues", {
           projectId,
           organizationId,
+          // biome-ignore lint/style/noNonNullAssertion: testing convenience
           workspaceId: project!.workspaceId,
+          // biome-ignore lint/style/noNonNullAssertion: testing convenience
           teamId: project!.teamId,
           key: `PROJ-${i + 1}`,
           title: `Issue ${i}`,
