@@ -35,10 +35,17 @@ function generateOTP(): string {
 async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string) {
   const isTestEmail = email.endsWith("@inbox.mailtrap.io");
 
-  // Always store OTPs for test emails, regardless of environment.
+  // Only allow storing test OTPs if environment is configured for testing/dev OR if E2E API key is present
+  const isSafeEnvironment =
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test" ||
+    !!process.env.CI ||
+    !!process.env.E2E_API_KEY;
+
+  // Store OTPs for test emails ONLY if environment permits it.
   // This allows E2E tests to run against preview/prod environments where NODE_ENV might be "production"
-  // and process.env.CI might be missing.
-  if (isTestEmail && ctx?.runMutation) {
+  // and process.env.CI might be missing, BUT explicitly requires E2E_API_KEY to be set.
+  if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
     try {
       await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
     } catch (e) {

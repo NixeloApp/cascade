@@ -39,3 +39,8 @@
 **Vulnerability:** E2E tests failed because backend logic relied on `process.env.CI` or `NODE_ENV` to detect test environment, which may be unreliable in some deployment contexts (e.g. cloud previews).
 **Learning:** Do not rely on environment variables to detect test requests if possible. Use data properties (like email domain `@inbox.mailtrap.io`) which are immutable and propagated reliably.
 **Prevention:** Use explicit data signals (test domains, headers) rather than environment variables for test-specific logic.
+
+## 2025-05-21 - Secure Storage of Test Secrets in Production
+**Vulnerability:** The system stored plaintext OTPs for any email ending in `@inbox.mailtrap.io`, even in production environments. While intended for E2E testing, this exposed a risk if real users (or attackers) registered with that domain, populating the database with plaintext secrets.
+**Learning:** Relying solely on data properties (like email domain) for security decisions is insufficient when it triggers sensitive behaviors (like storing secrets). Environment configuration must also act as a gatekeeper.
+**Prevention:** Modified `OTPVerification` and `OTPPasswordReset` to require BOTH the test email domain AND a safe environment signal (`NODE_ENV=test/dev`, `CI=true`, or `E2E_API_KEY` present). This ensures test secrets are only stored when the environment is explicitly configured for testing.
