@@ -72,6 +72,7 @@ import type * as lib_batchHelpers from "../lib/batchHelpers.js";
 import type * as lib_botAuth from "../lib/botAuth.js";
 import type * as lib_boundedQueries from "../lib/boundedQueries.js";
 import type * as lib_constrainedValidators from "../lib/constrainedValidators.js";
+import type * as lib_crypto from "../lib/crypto.js";
 import type * as lib_encryption from "../lib/encryption.js";
 import type * as lib_env from "../lib/env.js";
 import type * as lib_errors from "../lib/errors.js";
@@ -205,6 +206,7 @@ declare const fullApi: ApiFromModules<{
   "lib/botAuth": typeof lib_botAuth;
   "lib/boundedQueries": typeof lib_boundedQueries;
   "lib/constrainedValidators": typeof lib_constrainedValidators;
+  "lib/crypto": typeof lib_crypto;
   "lib/encryption": typeof lib_encryption;
   "lib/env": typeof lib_env;
   "lib/errors": typeof lib_errors;

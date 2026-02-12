@@ -36,8 +36,13 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
   ({ className, label, description, id, ...props }, ref) => {
     const generatedId = React.useId();
     const checkboxId = id || generatedId;
+    const descriptionId = `${checkboxId}-description`;
 
     const hasLabel = !!(label || description);
+
+    const ariaDescribedBy = [props["aria-describedby"], description ? descriptionId : undefined]
+      .filter(Boolean)
+      .join(" ");
 
     const checkboxElement = (
       <CheckboxPrimitive.Root
@@ -48,6 +53,7 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
           className,
         )}
         {...props}
+        aria-describedby={ariaDescribedBy || undefined}
       >
         <CheckboxPrimitive.Indicator
           className={cn("flex items-center justify-center text-current")}
@@ -74,7 +80,7 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
             </label>
           )}
           {description && (
-            <Typography variant="muted" className="text-sm">
+            <Typography variant="muted" className="text-sm" id={descriptionId}>
               {description}
             </Typography>
           )}
