@@ -54,7 +54,11 @@ export function EmptyState({
   return (
     <section className={cn("text-center py-12 px-4 animate-fade-in", className)} aria-label={title}>
       <div className={cn("text-6xl mb-4", iconColorClass)}>
-        {typeof icon === "string" ? icon : <Icon icon={icon} size="xl" className="mx-auto" />}
+        {typeof icon === "string" ? (
+          <span aria-hidden="true">{icon}</span>
+        ) : (
+          <Icon icon={icon} size="xl" className="mx-auto" aria-hidden="true" />
+        )}
       </div>
       <Typography variant="large" as="h3" className="mb-1">
         {title}
