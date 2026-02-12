@@ -208,7 +208,11 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     Promise.all([
 <<<<<<< HEAD
+      // Clean up old caches (convex, static, js-css)
+=======
+<<<<<<< HEAD
       // Clean up old caches and claim clients
+>>>>>>> main
       caches
         .keys()
         .then((cacheNames) => {
