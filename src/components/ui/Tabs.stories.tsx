@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Bell, CreditCard, FileText, Home, Lock, Settings, User, Users } from "lucide-react";
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ShadcnTabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
 
 const meta: Meta<typeof Tabs> = {
   title: "UI/Tabs",
