@@ -18,9 +18,7 @@ export const Default: Story = {
     <Accordion type="single" collapsible className="w-full min-w-[300px]">
       <AccordionItem value="item-1">
         <AccordionTrigger>Is it accessible?</AccordionTrigger>
-        <AccordionContent>
-          Yes. It adheres to the WAI-ARIA design pattern.
-        </AccordionContent>
+        <AccordionContent>Yes. It adheres to the WAI-ARIA design pattern.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-2">
         <AccordionTrigger>Is it styled?</AccordionTrigger>
@@ -43,15 +41,11 @@ export const Multiple: Story = {
     <Accordion type="multiple" className="w-full min-w-[300px]">
       <AccordionItem value="item-1">
         <AccordionTrigger>First Item</AccordionTrigger>
-        <AccordionContent>
-          You can have multiple items open at once.
-        </AccordionContent>
+        <AccordionContent>You can have multiple items open at once.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-2">
         <AccordionTrigger>Second Item</AccordionTrigger>
-        <AccordionContent>
-          Try opening another one.
-        </AccordionContent>
+        <AccordionContent>Try opening another one.</AccordionContent>
       </AccordionItem>
     </Accordion>
   ),
