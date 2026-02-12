@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 import { computeProjectAccess } from "./projectAccess";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  createOrganizationAdmin,
-  createTestUser,
-} from "./testUtils";
+import { createOrganizationAdmin, createTestUser } from "./testUtils";
 
 describe("Project Access", () => {
   it("should grant editor access to members of the owning team", async () => {
