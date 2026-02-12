@@ -1611,6 +1611,10 @@ export default defineSchema({
     phoneVerificationTime: v.optional(v.number()),
     image: v.optional(v.string()),
     isAnonymous: v.optional(v.boolean()),
+    // Pending email verification
+    pendingEmail: v.optional(v.string()),
+    pendingEmailVerificationToken: v.optional(v.string()),
+    pendingEmailVerificationExpires: v.optional(v.number()),
     // Custom fields for Nixelo
     defaultOrganizationId: v.optional(v.id("organizations")), // User's primary/default organization
     bio: v.optional(v.string()), // User bio/description

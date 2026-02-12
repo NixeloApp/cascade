@@ -1,11 +1,15 @@
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
+import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalQuery, type MutationCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { sendEmail } from "./email";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { validate } from "./lib/constrainedValidators";
+import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
+import { logger } from "./lib/logger";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { sanitizeUserForAuth } from "./lib/userUtils";
@@ -93,13 +97,14 @@ export const updateProfile = authenticatedMutation({
   handler: async (ctx, args) => {
     const updates: {
       name?: string;
-      email?: string;
       image?: string;
       bio?: string;
       timezone?: string;
       emailNotifications?: boolean;
       desktopNotifications?: boolean;
-      emailVerificationTime?: number;
+      pendingEmail?: string;
+      pendingEmailVerificationToken?: string;
+      pendingEmailVerificationExpires?: number;
     } = {};
 
     if (args.name !== undefined) {
@@ -127,11 +132,16 @@ export const updateProfile = authenticatedMutation({
       // Check if email actually changed
       const currentUser = await ctx.db.get(ctx.userId);
       if (currentUser?.email !== args.email) {
-        updates.email = args.email;
-        // Revoke email verification if email changed
-        updates.emailVerificationTime = undefined;
+        // Do NOT update email immediately. Start pending verification flow.
+        const token = generateOTP();
+        const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
 
-        await syncEmailToAuthAccounts(ctx, ctx.userId, args.email);
+        updates.pendingEmail = args.email;
+        updates.pendingEmailVerificationToken = token;
+        updates.pendingEmailVerificationExpires = expiresAt;
+
+        // Send verification email
+        await sendVerificationEmail(ctx, args.email, token);
       }
     }
 
@@ -152,6 +162,91 @@ export const updateProfile = authenticatedMutation({
       updates.desktopNotifications = args.desktopNotifications;
 
     await ctx.db.patch(ctx.userId, updates);
+  },
+});
+
+/**
+ * Helper to send verification email for profile updates
+ */
+async function sendVerificationEmail(ctx: MutationCtx, email: string, token: string) {
+  const isTestEmail = email.endsWith("@inbox.mailtrap.io");
+  const isSafeEnvironment =
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test" ||
+    !!process.env.CI ||
+    !!process.env.E2E_API_KEY;
+
+  // Store OTPs for test emails
+  if (isTestEmail && isSafeEnvironment) {
+    try {
+      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
+    } catch (e) {
+      logger.warn(`[Users] Failed to store test OTP: ${e}`);
+    }
+  }
+
+  await sendEmail(ctx, {
+    to: email,
+    subject: "Verify your new email address",
+    html: `
+      <h2>Verify your new email address</h2>
+      <p>Use the code below to verify your new email address:</p>
+      <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
+      <p>This code expires in 15 minutes.</p>
+      <p>If you didn't request this change, you can safely ignore this email.</p>
+    `,
+    text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.`,
+  });
+}
+
+export const verifyEmailChange = authenticatedMutation({
+  args: { token: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(ctx.userId);
+    if (!user) {
+      throw validation("user", "User not found");
+    }
+
+    if (
+      !user.pendingEmail ||
+      !user.pendingEmailVerificationToken ||
+      !user.pendingEmailVerificationExpires
+    ) {
+      throw validation("token", "No pending email verification found");
+    }
+
+    if (Date.now() > user.pendingEmailVerificationExpires) {
+      throw validation("token", "Verification token expired");
+    }
+
+    if (args.token !== user.pendingEmailVerificationToken) {
+      throw validation("token", "Invalid verification token");
+    }
+
+    const newEmail = user.pendingEmail;
+
+    // Double check if email is taken (race condition)
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", newEmail))
+      .first();
+
+    if (existingUser && existingUser._id !== ctx.userId) {
+      throw conflict("Email already in use");
+    }
+
+    // Update email and clear pending fields
+    await ctx.db.patch(ctx.userId, {
+      email: newEmail,
+      emailVerificationTime: Date.now(),
+      pendingEmail: undefined,
+      pendingEmailVerificationToken: undefined,
+      pendingEmailVerificationExpires: undefined,
+    });
+
+    // Sync to auth accounts
+    await syncEmailToAuthAccounts(ctx, ctx.userId, newEmail);
   },
 });
 

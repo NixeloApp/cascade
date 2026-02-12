@@ -221,8 +221,10 @@ export async function sendEmail(
   // or verify UI changes (toasts), rather than checking an external inbox.
   const recipients = Array.isArray(params.to) ? params.to : [params.to];
   const isTestEmail = recipients.some((email) => email.endsWith("@inbox.mailtrap.io"));
+  // Also mock in unit test environment to avoid missing API key errors
+  const isTestEnv = process.env.NODE_ENV === "test";
 
-  if (isTestEmail) {
+  if (isTestEmail || isTestEnv) {
     return {
       id: "mock-email-id",
       success: true,
