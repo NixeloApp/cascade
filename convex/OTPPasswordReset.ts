@@ -45,11 +45,14 @@ export const OTPPasswordReset = Resend({
     ctx: ConvexAuthContext,
   ) => {
     const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-    const isDevOrTest =
-      process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test" || !!process.env.CI;
+    const isSafeEnvironment =
+      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test" ||
+      !!process.env.CI ||
+      !!process.env.E2E_API_KEY;
 
-    // For test emails, store plaintext OTP in testOtpCodes table
-    if (isTestEmail && isDevOrTest && ctx?.runMutation) {
+    // For test emails, store plaintext OTP in testOtpCodes table if environment permits
+    if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
       try {
         await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
       } catch (e) {

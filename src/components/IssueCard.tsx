@@ -128,7 +128,13 @@ export const IssueCard = memo(function IssueCard({
             />
           )}
           <Tooltip content={getTypeLabel(issue.type)}>
-            <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" className="cursor-help" />
+            <Icon
+              icon={ISSUE_TYPE_ICONS[issue.type]}
+              size="sm"
+              className="cursor-help"
+              role="img"
+              aria-label={getTypeLabel(issue.type)}
+            />
           </Tooltip>
           <code data-testid={TEST_IDS.ISSUE.KEY} className="font-mono text-xs">
             {issue.key}
@@ -142,6 +148,7 @@ export const IssueCard = memo(function IssueCard({
             size="sm"
             data-testid={TEST_IDS.ISSUE.PRIORITY}
             aria-label={`Priority: ${issue.priority}`}
+            role="img"
             className={cn("cursor-help", getPriorityColor(issue.priority))}
           />
         </Tooltip>

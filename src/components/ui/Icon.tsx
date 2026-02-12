@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { forwardRef, type SVGProps } from "react";
 import { cn } from "@/lib/utils";
 
 export type IconSize = "xs" | "sm" | "md" | "lg" | "xl";
@@ -11,7 +12,7 @@ const SIZE_CLASSES: Record<IconSize, string> = {
   xl: "w-8 h-8",
 };
 
-interface IconProps {
+interface IconProps extends Omit<SVGProps<SVGSVGElement>, "ref"> {
   /** The Lucide icon component to render */
   icon: LucideIcon;
   /** Size preset */
@@ -31,6 +32,9 @@ interface IconProps {
  * <Icon icon={Calendar} size="sm" className="text-brand" />
  * ```
  */
-export function Icon({ icon: IconComponent, size = "md", className }: IconProps) {
-  return <IconComponent className={cn(SIZE_CLASSES[size], className)} />;
-}
+export const Icon = forwardRef<SVGSVGElement, IconProps>(
+  ({ icon: IconComponent, size = "md", className, ...props }, ref) => {
+    return <IconComponent ref={ref} className={cn(SIZE_CLASSES[size], className)} {...props} />;
+  },
+);
+Icon.displayName = "Icon";
