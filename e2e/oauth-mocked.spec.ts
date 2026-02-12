@@ -25,8 +25,7 @@ import {
 
 // Skip in CI - OAuth mocking doesn't work with server-side redirects
 // The mock intercepts client-side requests but Convex OAuth uses server redirects
-// biome-ignore lint/correctness/noEmptyPattern: Playwright requires object destructuring for fixtures
-test.skip(({}, testInfo) => testInfo.project.name.includes("CI") || !!process.env.CI);
+test.skip(!!process.env.CI, "Skip in CI - OAuth mocking doesn't work with server-side redirects");
 
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
