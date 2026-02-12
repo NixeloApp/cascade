@@ -149,13 +149,7 @@ window.addEventListener('message', async (message) => {
     reportCompressedSize: true,
   },
   optimizeDeps: {
-    include: [
-      "convex/react",
-      "sonner",
-      "clsx",
-      "tailwind-merge",
-      "remark-gfm",
-    ],
+    include: ["convex/react", "sonner", "clsx", "tailwind-merge", "remark-gfm"],
     exclude: ["driver.js", "posthog-js"],
   },
 }));
