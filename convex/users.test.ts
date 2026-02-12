@@ -33,7 +33,19 @@ describe("Users", () => {
         email: "new.email@example.com",
       });
 
-      const user = await t.run(async (ctx) => ctx.db.get(userId));
+      // Email update is now two-step
+      let user = await t.run(async (ctx) => ctx.db.get(userId));
+      expect(user?.email).not.toBe("new.email@example.com");
+      expect(user?.pendingEmail).toBe("new.email@example.com");
+
+      const token = user?.pendingEmailVerificationToken;
+      expect(token).toBeDefined();
+
+      await asUser.mutation(api.users.verifyEmailChange, {
+        token: token!,
+      });
+
+      user = await t.run(async (ctx) => ctx.db.get(userId));
       expect(user?.email).toBe("new.email@example.com");
     });
 
