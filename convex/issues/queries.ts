@@ -196,6 +196,29 @@ export const listRoadmapIssues = authenticatedQuery({
           i.projectId === args.projectId &&
           (ROOT_ISSUE_TYPES as readonly string[]).includes(i.type),
       );
+    } else if (args.hasDueDate) {
+      // Optimization: Use the due date index directly.
+      // This is efficient because it only includes items with a due date set (sparse index).
+      // We filter out deleted items, subtasks, and optionally epics in memory.
+      // This avoids scanning all project issues when we only want those on the timeline.
+      const allDatedIssues = await safeCollect(
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_due_date", (q) =>
+            q.eq("projectId", args.projectId).gt("dueDate", 0),
+          ),
+        // Use a higher limit to account for filtered items (subtasks, deleted)
+        // Since we are fetching all types in one go, we can afford a higher limit than per-type
+        BOUNDED_LIST_LIMIT * 4,
+        "roadmap dated issues",
+      );
+
+      issues = allDatedIssues.filter(
+        (i) =>
+          !i.isDeleted &&
+          (ROOT_ISSUE_TYPES as readonly string[]).includes(i.type) &&
+          i.dueDate !== undefined,
+      );
     } else {
       // Bounded: fetch by type with limits
       // Optimization: Skip fetching epics if they will be excluded anyway
