@@ -39,6 +39,7 @@ describe("Users Security", () => {
       // Verify
       const token = user?.pendingEmailVerificationToken;
       expect(token).toBeDefined();
+      // biome-ignore lint/style/noNonNullAssertion: test
       await asUser.mutation(api.users.verifyEmailChange, { token: token! });
 
       // Now it should be changed and verified
@@ -112,7 +113,12 @@ describe("Users Security", () => {
 
       // Verify
       const user = await t.run(async (ctx) => ctx.db.get(userId));
-      await asUser.mutation(api.users.verifyEmailChange, { token: user?.pendingEmailVerificationToken! });
+      if (!user?.pendingEmailVerificationToken) {
+        throw new Error("Missing verification token");
+      }
+      await asUser.mutation(api.users.verifyEmailChange, {
+        token: user.pendingEmailVerificationToken,
+      });
 
       // Verify authAccount state (changed)
       authAccount = await t.run(async (ctx) => {

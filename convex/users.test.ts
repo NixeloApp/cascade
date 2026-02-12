@@ -42,6 +42,7 @@ describe("Users", () => {
       expect(token).toBeDefined();
 
       await asUser.mutation(api.users.verifyEmailChange, {
+        // biome-ignore lint/style/noNonNullAssertion: test
         token: token!,
       });
 

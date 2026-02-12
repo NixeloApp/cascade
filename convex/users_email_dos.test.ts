@@ -1,4 +1,3 @@
-
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
@@ -72,6 +71,7 @@ describe("Email Claim Vulnerability Fix", () => {
 
     // Verify
     await asUser.mutation(api.users.verifyEmailChange, {
+      // biome-ignore lint/style/noNonNullAssertion: test
       token: token!,
     });
 

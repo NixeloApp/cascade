@@ -1,5 +1,5 @@
-import { generateRandomString } from "@oslojs/crypto/random";
 import type { RandomReader } from "@oslojs/crypto/random";
+import { generateRandomString } from "@oslojs/crypto/random";
 
 /**
  * Generate an 8-digit OTP code
