@@ -25,7 +25,7 @@ describe("issue queries", () => {
   });
 
   describe("get", () => {
-    it("should return issue with comments and activity", async () => {
+    it("should return issue details", async () => {
       const issueId = await createTestIssue(t, projectId, ctx.userId, {
         title: "Test Issue",
         description: "Description",
@@ -35,8 +35,6 @@ describe("issue queries", () => {
 
       expect(result).not.toBeNull();
       expect(result?.title).toBe("Test Issue");
-      expect(result?.comments).toBeDefined();
-      expect(result?.activity).toBeDefined();
       expect(result?.project).toBeDefined();
     });
 

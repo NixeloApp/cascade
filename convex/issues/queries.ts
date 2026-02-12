@@ -481,42 +481,13 @@ export const get = query({
       }
     }
 
-    const [comments, activities, enriched]: [
-      Doc<"issueComments">[],
-      Doc<"issueActivity">[],
-      EnrichedIssue,
-    ] = await Promise.all([
-      ctx.db
-        .query("issueComments")
-        .withIndex("by_issue", (q) => q.eq("issueId", args.id))
-        .order("asc")
-        .take(200),
-      ctx.db
-        .query("issueActivity")
-        .withIndex("by_issue", (q) => q.eq("issueId", args.id))
-        .order("desc")
-        .take(20),
-      enrichIssue(ctx, issue),
-    ]);
+    const enriched = await enrichIssue(ctx, issue);
 
-    const commentAuthorIds = comments.map((c) => c.authorId);
-    const activityUserIds = activities.map((a) => a.userId);
-    const allUserIds = [...commentAuthorIds, ...activityUserIds];
-    const userMap = await batchFetchUsers(ctx, allUserIds);
-
-    const activity = activities.map((act) => {
-      const user = userMap.get(act.userId);
-      return {
-        ...act,
-        user: sanitizeUserForAuth(user),
-      };
-    });
-
+    // Optimization: Comments and activity are fetched separately by the frontend components
+    // (IssueComments and IssueActivity) to allow for pagination and better performance.
     return {
       ...enriched,
       project,
-      comments: await enrichComments(ctx, comments),
-      activity,
     };
   },
 });
