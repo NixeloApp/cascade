@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { expect, test } from "./fixtures";
@@ -218,8 +219,25 @@ test.describe("Integration", () => {
     if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
       await page.waitForTimeout(2000); // Give it a moment
       if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
-        console.log("[Test] Still on landing page, forcing navigation to app...");
-        await page.goto(ROUTES.app.build());
+        console.log("[Test] Still on landing page, forcing navigation...");
+
+        // Try to recover by navigating directly to the specific dashboard URL
+        // We read the org slug saved during global setup
+        let targetUrl = ROUTES.app.build();
+        try {
+          const configPath = `.auth/dashboard-config-${testInfo.parallelIndex}.json`;
+          if (fs.existsSync(configPath)) {
+            const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+            if (config.orgSlug) {
+              targetUrl = ROUTES.dashboard.build(config.orgSlug);
+              console.log(`[Test] Using explicit dashboard URL: ${targetUrl}`);
+            }
+          }
+        } catch (e) {
+          console.warn("[Test] Failed to read dashboard config, falling back to /app", e);
+        }
+
+        await page.goto(targetUrl);
       }
     }
 

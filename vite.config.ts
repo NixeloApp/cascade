@@ -149,22 +149,7 @@ window.addEventListener('message', async (message) => {
     reportCompressedSize: true,
   },
   optimizeDeps: {
-    include: [
-      "convex/react",
-      "sonner",
-      "clsx",
-      "tailwind-merge",
-      // BlockNote's unified ecosystem (CommonJS packages)
-      "extend",
-      "unified",
-      "remark-parse",
-      "remark-stringify",
-      "remark-gfm",
-      "remark-rehype",
-      "rehype-parse",
-      "rehype-stringify",
-      "rehype-remark",
-    ],
+    include: ["convex/react", "sonner", "clsx", "tailwind-merge", "remark-gfm"],
     exclude: ["driver.js", "posthog-js"],
   },
 }));
