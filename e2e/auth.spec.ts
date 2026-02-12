@@ -228,7 +228,7 @@ test.describe("Integration", () => {
       const url = page.url();
       // Should be on dashboard, not landing or auth pages
       expect(url).toMatch(/\/[^/]+\/dashboard/);
-    }).toPass();
+    }).toPass({ timeout: 15000 });
 
     // Verify dashboard elements are visible
     await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
