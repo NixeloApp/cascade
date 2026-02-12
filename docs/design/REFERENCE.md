@@ -120,7 +120,7 @@
 - `ContextMenu` - Right-click menu
 - `Menubar` - Menu bar
 - `NavigationMenu` - Navigation links
-- `ShadcnTabs` - Tabbed interface
+- `Tabs` - Tabbed interface
 - `Pagination` - Page navigation
 - `Command` - Command palette (⌘K)
 

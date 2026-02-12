@@ -15,7 +15,7 @@ import { OfflineTab } from "./Settings/OfflineTab";
 import { PreferencesTab } from "./Settings/PreferencesTab";
 import { ProfileTab } from "./Settings/ProfileTab";
 import { PumbleIntegration } from "./Settings/PumbleIntegration";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/ShadcnTabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 
 const isTestEmail = (email?: string) => email?.endsWith("@inbox.mailtrap.io") ?? false;
 
