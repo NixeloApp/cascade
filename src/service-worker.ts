@@ -207,7 +207,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     Promise.all([
-      // Clean up old caches
+      // Clean up old caches and claim clients
       caches
         .keys()
         .then((cacheNames) => {
