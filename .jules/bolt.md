@@ -1,9 +1,37 @@
-# Bolt's Journal
+# Performance Improvement: Project Access Caching
 
-## 2024-05-24 - Soft Delete Performance Optimization
-**Learning:** Convex indexes require `isDeleted` (or equivalent) to be explicitly included in the index fields to allow efficient filtering of active items at the database level. Using `.filter(notDeleted)` without index support causes full scans of all items matching other criteria, which degrades performance as the number of soft-deleted items grows.
-**Action:** Always include `isDeleted` in indexes used for listing "active" items, especially for high-cardinality collections like Issues. Use `.lt("isDeleted", true)` range query to efficiently select active items (where `isDeleted` is `undefined`) while preserving sort order by creation time (implicit tie-breaker).
+## Summary
 
-## 2025-05-23 - Optimization of Selectable Issues List
-**Learning:** Filtering large datasets in memory (e.g., excluding subtasks from all project issues) is a major bottleneck when the excluded set grows large.
-**Action:** Instead of fetching all items and filtering, use parallel index queries for the *included* types (`Promise.all(types.map(...))`). This pushes filtering to the database index, significantly reducing data transfer and memory usage.
+Implemented a request-scoped cache for `computeProjectAccess` using a `WeakMap`.
+
+## Problem
+
+Operations like `bulkUpdateStatus` iterate over a list of issues and perform access checks (`assertCanEditProject`) for each issue.
+`computeProjectAccess` involves multiple database queries:
+1. `ctx.db.get(projectId)` (efficiently cached by Convex).
+2. `isOrganizationAdmin` (query `organizationMembers`).
+3. `ctx.db.query("projectMembers")...`.
+4. `checkTeamBasedAccess` (query `teamMembers`).
+5. `checkOrgPublicAccess` (query `organizationMembers`).
+
+For a bulk update of N issues in the same project, this resulted in O(N) redundant database queries, significantly slowing down the mutation.
+
+## Solution
+
+We introduced a `WeakMap<QueryCtx | MutationCtx, Map<string, Promise<ProjectAccessResult>>>` to cache the result of `computeProjectAccess` keyed by the request context (`ctx`) and the arguments (`projectId`, `userId`).
+
+```typescript
+const projectAccessCache = new WeakMap<object, Map<string, Promise<ProjectAccessResult>>>();
+```
+
+Since `ctx` is unique per request but shared across function calls within that request, this effectively caches the access result for the duration of the request.
+
+## Impact
+
+- **Complexity**: Reduced database query complexity for bulk operations from O(N) to O(1) (per unique project).
+- **Performance**: Significant reduction in latency for bulk mutations (e.g., updating 100 issues).
+- **Correctness**: The cache is scoped to the request, ensuring fresh data for each new request while optimizing within-request redundancy.
+
+## Code Changes
+
+Modified `convex/projectAccess.ts` to wrap the `computeProjectAccess` logic with the caching mechanism.

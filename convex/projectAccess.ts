@@ -9,6 +9,9 @@ import { notDeleted } from "./lib/softDeleteHelpers";
 // Project Access Control Helpers
 // ============================================================================
 
+// Cache for project access checks within a single request context
+const projectAccessCache = new WeakMap<object, Map<string, Promise<ProjectAccessResult>>>();
+
 /**
  * Access level enum for comparison
  */
@@ -147,6 +150,32 @@ async function checkOrgPublicAccess(
  * Call this once and use the result for any access decisions.
  */
 export async function computeProjectAccess(
+  ctx: QueryCtx | MutationCtx,
+  projectId: Id<"projects">,
+  userId: Id<"users">,
+): Promise<ProjectAccessResult> {
+  // Check cache first
+  let requestCache = projectAccessCache.get(ctx);
+  if (!requestCache) {
+    requestCache = new Map();
+    projectAccessCache.set(ctx, requestCache);
+  }
+
+  const cacheKey = `${projectId}_${userId}`;
+  const cachedPromise = requestCache.get(cacheKey);
+  if (cachedPromise) {
+    return cachedPromise;
+  }
+
+  const promise = computeProjectAccessImpl(ctx, projectId, userId);
+  requestCache.set(cacheKey, promise);
+  return promise;
+}
+
+/**
+ * Implementation of project access computation
+ */
+async function computeProjectAccessImpl(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<"projects">,
   userId: Id<"users">,

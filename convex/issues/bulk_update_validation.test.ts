@@ -3,13 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createProjectInOrganization,
-  createTestContext,
-  createTestIssue,
-  createTestUser,
-} from "../testUtils";
+import { createProjectInOrganization, createTestContext, createTestIssue } from "../testUtils";
 
 describe("Bulk Update Validation", () => {
   it("should not update status if new status is invalid for the project", async () => {
@@ -27,6 +21,7 @@ describe("Bulk Update Validation", () => {
     });
 
     const initialIssue = await t.run(async (ctx) => ctx.db.get(issueId));
+    // biome-ignore lint/style/noNonNullAssertion: Test setup guarantees existence
     const initialStatus = initialIssue!.status;
 
     // Attempt to bulk update to a non-existent status
@@ -45,6 +40,7 @@ describe("Bulk Update Validation", () => {
 
     const updatedIssue = await t.run(async (ctx) => ctx.db.get(issueId));
     // Status should remain unchanged
+    // biome-ignore lint/style/noNonNullAssertion: Test setup guarantees existence
     expect(updatedIssue!.status).toBe(initialStatus);
     await t.finishInProgressScheduledFunctions();
   });
