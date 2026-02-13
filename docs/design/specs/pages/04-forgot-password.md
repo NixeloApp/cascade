@@ -1,17 +1,17 @@
-# Sign Up Page - Execution Spec
+# Forgot Password Page - Execution Spec
 
-> **Route**: `/signup`
-> **Status**: 🔴 SLOP - Same issues as signin
+> **Route**: `/forgot-password`
+> **Status**: 🔴 SLOP - Same issues as signin/signup
 > **Priority**: P0 - Auth Flow
-> **Director Reference**: See `DIRECTOR.md` → `/signup`
+> **Director Reference**: See `DIRECTOR.md` → `/forgot-password`
 
 ---
 
 ## Executive Summary
 
-The signup page shares `AuthPageLayout.tsx` with signin and inherits all its problems: card wrapper, "Back to Home" link, verbose legal text, staggered animations. Additionally, the signup-specific elements have their own issues.
+The forgot password page uses `AuthPageLayout.tsx` and inherits all its problems: card wrapper, "Back to Home" link, verbose legal text, staggered animations. The page itself is simpler than signin/signup (just email input + submit), but the layout issues persist.
 
-**Target**: Minimal, confident, premium sign up. Mirrors signin layout exactly. Same principles, same execution.
+**Target**: Minimal, confident password reset flow. Mirrors signin/signup layout. Same principles, same execution.
 
 ---
 
@@ -21,23 +21,24 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 
 | Viewport | Theme | Path |
 |----------|-------|------|
-| Desktop | Dark | `e2e/screenshots/desktop-dark-*-signup.png` |
-| Desktop | Light | `e2e/screenshots/desktop-light-*-signup.png` |
-| Tablet | Light | `e2e/screenshots/tablet-light-*-signup.png` |
-| Mobile | Light | `e2e/screenshots/mobile-light-*-signup.png` |
+| Desktop | Dark | `e2e/screenshots/desktop-dark-*-forgot-password.png` |
+| Desktop | Light | `e2e/screenshots/desktop-light-*-forgot-password.png` |
+| Tablet | Light | `e2e/screenshots/tablet-light-*-forgot-password.png` |
+| Mobile | Light | `e2e/screenshots/mobile-light-*-forgot-password.png` |
 
 ### Current Files
 
 | File | Purpose | Lines |
 |------|---------|-------|
-| `src/routes/signup.tsx` | Route definition | 23 |
+| `src/routes/forgot-password.tsx` | Route + form logic | 99 |
 | `src/components/auth/AuthPageLayout.tsx` | Shared layout (THE PROBLEM) | 106 |
-| `src/components/auth/SignUpForm.tsx` | Form logic + step indicator | 207 |
-| `src/components/auth/GoogleAuthButton.tsx` | OAuth button | ~50 |
-| `src/components/auth/AuthLink.tsx` | Styled link | ~20 |
-| `src/components/auth/EmailVerificationForm.tsx` | OTP verification | ~100 |
+| `src/components/auth/ForgotPasswordForm.tsx` | Unused legacy form | 62 |
+| `src/components/auth/ResetPasswordForm.tsx` | Code + new password form | 70 |
+| `src/components/auth/AuthLink.tsx` | Styled link/button | ~30 |
 
 ### Current Structure (ASCII)
+
+#### Step 1: Email Entry
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -50,26 +51,58 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 │         │                                             │                     │
 │         │              [Nixelo Logo 48px]             │ ← card-subtle       │
 │         │                                             │   p-8              │
-│         │           Create an account                 │   shadow-card       │
-│         │     Sign up to get started with Nixelo      │                     │
-│         │                                             │   SLOP: Kill card   │
-│         │     [ ● ● ○ ]  ← Step indicator             │ ← Unnecessary here  │
+│         │           Forgot password?                  │   shadow-card       │
+│         │     Enter your email and we'll send you     │                     │
+│         │              a reset code                   │   SLOP: Kill card   │
 │         │                                             │                     │
 │         │     ┌───────────────────────────────────┐   │                     │
-│         │     │ G  Sign up with Google            │   │                     │
+│         │     │ ✉  Email                          │   │                     │
 │         │     └───────────────────────────────────┘   │                     │
 │         │                                             │                     │
-│         │     ──────────── or ────────────            │                     │
-│         │                                             │                     │
 │         │     ┌───────────────────────────────────┐   │                     │
-│         │     │ ✉  Continue with email            │   │ ← Expands to show   │
-│         │     └───────────────────────────────────┘   │   email/password    │
+│         │     │        Send reset code            │   │                     │
+│         │     └───────────────────────────────────┘   │                     │
 │         │                                             │                     │
-│         │     Already have an account? Sign in        │ ← In wrong place    │
-│         │                                             │                     │
+│         │         Back to sign in                     │ ← Should be below   │
+│         │                                             │   heading, not form │
 │         │     By continuing, you acknowledge that     │ ← SLOP: Too verbose │
 │         │     you understand and agree to the         │                     │
 │         │     Terms & Conditions and Privacy Policy   │                     │
+│         │                                             │                     │
+│         └─────────────────────────────────────────────┘                     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Step 2: Code Entry + New Password
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│         ← Back to Home                                                      │
+│                                                                             │
+│         ┌─────────────────────────────────────────────┐                     │
+│         │                                             │                     │
+│         │              [Nixelo Logo 48px]             │                     │
+│         │                                             │                     │
+│         │            Reset password                   │                     │
+│         │     Enter the code from your email          │                     │
+│         │                                             │                     │
+│         │     ┌───────────────────────────────────┐   │                     │
+│         │     │  8-digit code                     │   │                     │
+│         │     └───────────────────────────────────┘   │                     │
+│         │                                             │                     │
+│         │     ┌───────────────────────────────────┐   │                     │
+│         │     │  New password                     │   │                     │
+│         │     └───────────────────────────────────┘   │                     │
+│         │                                             │                     │
+│         │     ┌───────────────────────────────────┐   │                     │
+│         │     │        Reset password             │   │                     │
+│         │     └───────────────────────────────────┘   │                     │
+│         │                                             │                     │
+│         │     Didn't receive a code? Try again        │                     │
+│         │                                             │                     │
+│         │     [Legal text...]                         │                     │
 │         │                                             │                     │
 │         └─────────────────────────────────────────────┘                     │
 │                                                                             │
@@ -84,12 +117,10 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 | 2 | "Back to Home" link with arrow | `AuthPageLayout.tsx:19-44` | HIGH |
 | 3 | Verbose legal text (3 lines) | `AuthPageLayout.tsx:83-100` | MEDIUM |
 | 4 | 6 staggered animations (0.05s - 0.4s delays) | `AuthPageLayout.tsx` throughout | MEDIUM |
-| 5 | Step indicator shown before email expansion | `SignUpForm.tsx:101-111` | MEDIUM |
-| 6 | "Already have account?" placed inside card | `signup.tsx:16-18` | MEDIUM |
-| 7 | Generic subtitle | `signup.tsx:14` | LOW |
-| 8 | Full logo (48px) could be smaller | `AuthPageLayout.tsx:57` | LOW |
-| 9 | `max-w-md` (448px) slightly too wide | `AuthPageLayout.tsx:17` | LOW |
-| 10 | Password hint styling inconsistent | `SignUpForm.tsx:154-156` | LOW |
+| 5 | "Back to sign in" placed below form | `forgot-password.tsx:93-95` | MEDIUM |
+| 6 | Full logo (48px) could be smaller | `AuthPageLayout.tsx:57` | LOW |
+| 7 | `max-w-md` (448px) slightly too wide | `AuthPageLayout.tsx:17` | LOW |
+| 8 | Unused `ForgotPasswordForm.tsx` component | `components/auth/` | LOW |
 
 ---
 
@@ -104,6 +135,8 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 
 ### Target Structure (ASCII)
 
+#### Step 1: Email Entry
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                                                             │
@@ -117,32 +150,72 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 │                         (Logo, 32px)                                        │
 │                                                                             │
 │                                                                             │
-│                       Create your account                                   │
+│                       Reset your password                                   │
 │                       ───────────────────                                   │
 │                    (24px, font-semibold, white)                            │
 │                                                                             │
-│                  Already have an account? Sign in →                        │
+│                    Remember your password? Sign in →                       │
 │                    (14px, tertiary + brand link)                           │
 │                                                                             │
 │                                                                             │
 │                    ┌───────────────────────────────┐                        │
-│                    │ G  Continue with Google       │                        │
+│                    │ ✉  Email                      │                        │
 │                    └───────────────────────────────┘                        │
-│                         (outlined, subtle border)                          │
-│                                                                             │
-│                    ──────────── or ────────────                            │
 │                                                                             │
 │                    ┌───────────────────────────────┐                        │
-│                    │ ✉  Continue with email        │                        │
+│                    │       Send reset code         │                        │
 │                    └───────────────────────────────┘                        │
-│                         (secondary variant)                                │
-│                                                                             │
+│                         (primary variant)                                  │
 │                                                                             │
 │                                                                             │
 │                                                                             │
 │                                                                             │
 │                    Terms of Service · Privacy Policy                       │
 │                         (12px, tertiary, links)                            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Step 2: Code Entry + New Password
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│     bg: bg-ui-bg (#08090a dark / white light)                              │
+│                                                                             │
+│                                                                             │
+│                                                                             │
+│                              [N]                                            │
+│                         (Logo, 32px)                                        │
+│                                                                             │
+│                                                                             │
+│                       Check your email                                      │
+│                       ────────────────                                      │
+│                    (24px, font-semibold, white)                            │
+│                                                                             │
+│                    We sent a code to user@example.com                       │
+│                    (14px, tertiary)                                         │
+│                                                                             │
+│                                                                             │
+│                    ┌───────────────────────────────┐                        │
+│                    │  8-digit code                 │                        │
+│                    └───────────────────────────────┘                        │
+│                         ↕ 12px                                              │
+│                    ┌───────────────────────────────┐                        │
+│                    │  New password                 │                        │
+│                    └───────────────────────────────┘                        │
+│                         ↕ 4px                                               │
+│                    Must be at least 8 characters                            │
+│                         ↕ 16px                                              │
+│                    ┌───────────────────────────────┐                        │
+│                    │       Reset password          │                        │
+│                    └───────────────────────────────┘                        │
+│                                                                             │
+│                    Didn't receive? Try again                                │
+│                    (12px, tertiary + brand link)                           │
+│                                                                             │
+│                                                                             │
+│                    Terms of Service · Privacy Policy                       │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -155,10 +228,10 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 | Card wrapper | Yes (`card-subtle`) | **NO** |
 | Back link | Yes | **NO** |
 | Logo size | 48px | 32px |
-| Heading | "Create an account" | "Create your account" |
-| Subtitle | Separate line | Inline with signin link |
-| Signin link | Inside card, below form | Below heading |
-| Step indicator | Always visible | Only after email expansion |
+| Heading (step 1) | "Forgot password?" | "Reset your password" |
+| Subtitle | Generic | Inline with signin link |
+| Signin link | Below form | Below heading |
+| Heading (step 2) | "Reset password" | "Check your email" |
 | Legal text | 3-line paragraph | Single line, bottom |
 | Animations | 6 staggered | 1 fade-in |
 | Max width | 448px (`max-w-md`) | 360px |
@@ -167,7 +240,7 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 
 ## Detailed Specifications
 
-### Layout
+### Layout (Step 1: Email Entry)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -186,11 +259,9 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 │  │  │      ↕ 8px (gap-2)                                            │   │   │
 │  │  │  [Subtitle + link]         20px line-height                   │   │   │
 │  │  │      ↕ 32px (gap-8)                                           │   │   │
-│  │  │  [Google button]           48px height                        │   │   │
+│  │  │  [Email input]             48px height                        │   │   │
 │  │  │      ↕ 16px (gap-4)                                           │   │   │
-│  │  │  [Divider]                 20px height                        │   │   │
-│  │  │      ↕ 16px (gap-4)                                           │   │   │
-│  │  │  [Email button]            48px height                        │   │   │
+│  │  │  [Submit button]           48px height                        │   │   │
 │  │  │                                                               │   │   │
 │  │  └───────────────────────────────────────────────────────────────┘   │   │
 │  │                                                                      │   │
@@ -215,9 +286,8 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 | Logo → Heading | gap | 32px | `gap-8` or `mb-8` |
 | Heading → Subtitle | gap | 8px | `gap-2` or `mb-2` |
 | Subtitle → Form | gap | 32px | `gap-8` or `mt-8` |
-| Google → Divider | gap | 16px | `gap-4` |
-| Divider → Email | gap | 16px | `gap-4` |
-| Email → Password | gap | 12px | `gap-3` |
+| Email → Button | gap | 16px | `gap-4` |
+| Code → Password | gap | 12px | `gap-3` |
 | Password → Hint | gap | 4px | `-mt-2` (negative to tighten) |
 | Legal | position | fixed bottom | `fixed bottom-0` |
 | Legal | padding-bottom | 32px | `pb-8` |
@@ -231,6 +301,7 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 | Signin link | Inter | 14px | 500 | `text-brand` | normal |
 | Button text | Inter | 14px | 500 | varies | normal |
 | Password hint | Inter | 12px | 400 | `text-ui-text-tertiary` | normal |
+| Retry link | Inter | 12px | 400 | `text-ui-text-tertiary` | normal |
 | Legal | Inter | 12px | 400 | `text-ui-text-tertiary` | underline |
 
 ### Colors
@@ -241,61 +312,12 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 | Heading | `gray-900` | `#ffffff` | `text-ui-text` |
 | Subtitle | `gray-400` | `rgba(255,255,255,0.5)` | `text-ui-text-tertiary` |
 | Brand link | `indigo-600` | `indigo-400` | `text-brand` |
-| Button bg (Google) | `transparent` | `transparent` | - |
-| Button border | `gray-200` | `rgba(255,255,255,0.07)` | `border-ui-border` |
-| Divider line | `gray-200` | `rgba(255,255,255,0.07)` | `border-ui-border` |
-| Divider text | `gray-400` | `rgba(255,255,255,0.5)` | `text-ui-text-tertiary` |
-| Step indicator (active) | `indigo-600` | `indigo-400` | `bg-brand` |
-| Step indicator (inactive) | `gray-200` | `rgba(255,255,255,0.07)` | `bg-ui-border` |
+| Button bg | `indigo-600` | `indigo-500` | `bg-brand` |
+| Input border | `gray-200` | `rgba(255,255,255,0.07)` | `border-ui-border` |
 
 ### Buttons
 
-#### Google OAuth Button
-
-```tsx
-<Button
-  variant="outline"
-  size="lg"
-  className="w-full"
->
-  <GoogleIcon className="w-5 h-5 mr-2" />
-  Continue with Google
-</Button>
-```
-
-| Property | Value |
-|----------|-------|
-| Height | 48px |
-| Border radius | 8px (`rounded`) |
-| Border | 1px `border-ui-border` |
-| Background | transparent |
-| Hover background | `bg-ui-bg-hover` |
-| Text color | `text-ui-text` |
-| Font size | 14px |
-| Font weight | 500 |
-
-#### Email Button (Collapsed)
-
-```tsx
-<Button
-  variant="secondary"
-  size="lg"
-  className="w-full"
->
-  <MailIcon className="w-5 h-5 mr-2" />
-  Continue with email
-</Button>
-```
-
-| Property | Value |
-|----------|-------|
-| Height | 48px |
-| Border radius | 8px |
-| Background | `bg-ui-bg-secondary` |
-| Hover background | `bg-ui-bg-tertiary` |
-| Text color | `text-ui-text` |
-
-#### Create Account Button (Expanded)
+#### Send Reset Code Button (Step 1)
 
 ```tsx
 <Button
@@ -303,7 +325,7 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
   size="lg"
   className="w-full"
 >
-  Create account
+  Send reset code
 </Button>
 ```
 
@@ -315,31 +337,23 @@ The signup page shares `AuthPageLayout.tsx` with signin and inherits all its pro
 | Hover background | `bg-brand-hover` |
 | Text color | `text-brand-foreground` |
 
-### Form Fields (Expanded State)
+#### Reset Password Button (Step 2)
 
-When email form is expanded:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│                    ┌───────────────────────────────┐                        │
-│                    │ ✉  email@example.com          │  ← Email input        │
-│                    └───────────────────────────────┘                        │
-│                         ↕ 12px                                              │
-│                    ┌───────────────────────────────┐                        │
-│                    │ ●●●●●●●●                      │  ← Password input     │
-│                    └───────────────────────────────┘                        │
-│                         ↕ 4px                                               │
-│                    Must be at least 8 characters      ← Password hint       │
-│                         ↕ 16px                                              │
-│                    ┌───────────────────────────────┐                        │
-│                    │       Create account          │  ← Primary button     │
-│                    └───────────────────────────────┘                        │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+```tsx
+<Button
+  variant="primary"
+  size="lg"
+  className="w-full"
+>
+  Reset password
+</Button>
 ```
 
-#### Input Fields
+Same specs as above.
+
+### Form Fields
+
+#### Email Input (Step 1)
 
 | Property | Value |
 |----------|-------|
@@ -347,41 +361,31 @@ When email form is expanded:
 | Border radius | 8px |
 | Border | 1px `border-ui-border` |
 | Background | `bg-ui-bg` (transparent in dark) |
-| Placeholder color | `text-ui-text-tertiary` |
+| Placeholder | "Email" |
 | Focus border | `border-brand` |
 | Focus ring | `ring-2 ring-brand/20` |
-| Padding | 12px 16px |
-| Font size | 14px |
 
-### Step Indicator
-
-Show step indicator ONLY when email form is expanded (step >= 1):
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│     Step 0 (default):       No indicator visible                            │
-│                                                                             │
-│     Step 1 (email form):    [ ●━━━━ ○━━━━ ○ ]                              │
-│                              Form   Verify  Done                            │
-│                                                                             │
-│     Step 2 (verification):  [ ●━━━━ ●━━━━ ○ ]                              │
-│                              Form   Verify  Done                            │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+#### Code Input (Step 2)
 
 | Property | Value |
 |----------|-------|
-| Indicator height | 6px (h-1.5) |
-| Active width | 32px (w-8) |
-| Inactive width | 16px (w-4) |
-| Border radius | pill |
-| Active color | `bg-brand` |
-| Inactive color | `bg-ui-border` |
-| Gap between | 8px (gap-2) |
-| Position | Above form, centered |
-| Margin below | 24px (mb-6) |
+| Height | 48px |
+| Border radius | 8px |
+| Placeholder | "8-digit code" |
+| Pattern | `[0-9]{8}` |
+| Max length | 8 |
+| Input mode | `numeric` |
+
+#### New Password Input (Step 2)
+
+| Property | Value |
+|----------|-------|
+| Height | 48px |
+| Border radius | 8px |
+| Placeholder | "New password" |
+| Min length | 8 |
+| Type | `password` |
+| aria-describedby | "password-hint" |
 
 ### Animations
 
@@ -416,37 +420,17 @@ Single animation for entire content block:
 
 **NO staggered animations.** One animation, entire block.
 
-#### Form Expand
+#### Step Transition
 
-When clicking "Continue with email":
+When transitioning from step 1 to step 2:
 
 ```css
-.form-fields {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition: grid-template-rows 0.2s ease-out, opacity 0.2s ease-out;
-}
-
-.form-fields.expanded {
-  grid-template-rows: 1fr;
-  opacity: 1;
+.step-content {
+  animation: auth-enter 0.3s ease-out;
 }
 ```
 
-| Property | Value |
-|----------|-------|
-| Duration | 0.2s |
-| Easing | ease-out |
-| Properties | grid-template-rows, opacity |
-
-#### Step Indicator
-
-```css
-.step-indicator {
-  transition: width 0.3s ease-out, background-color 0.3s ease-out;
-}
-```
+Same fade-in as page enter. Simple, not fancy.
 
 #### Button States
 
@@ -462,87 +446,78 @@ button:active {
 
 ### States
 
-#### 1. Default State (Step 0)
+#### Step 1: Email Entry
 
-- Form collapsed
-- Google button and Email button visible
-- No inputs visible
-- NO step indicator visible
+##### 1a. Default State
 
-#### 2. Email Expanded State (Step 1)
+- Email input empty
+- Submit button enabled
+- Signin link visible in subtitle
 
-- Form expanded with email/password inputs
-- Email button becomes "Create account" primary button
-- Password hint visible below password field
-- Step indicator appears (1/3 active)
+##### 1b. Submitting State
 
-#### 3. Submitting State
+- Button shows "Sending..."
+- Email input disabled
+- Button disabled
 
-- Button shows spinner + "Creating account..."
+```tsx
+<Button disabled>
+  Sending...
+</Button>
+```
+
+##### 1c. Success State
+
+- Toast: "If an account exists, you'll receive a reset code"
+- Transition to Step 2
+
+#### Step 2: Code + New Password
+
+##### 2a. Default State
+
+- Code input empty
+- Password input empty
+- Submit button enabled
+- Email shown in subtitle
+
+##### 2b. Submitting State
+
+- Button shows "Resetting..."
 - All inputs disabled
 - Button disabled
 
 ```tsx
 <Button disabled>
-  <Spinner className="w-4 h-4 mr-2 animate-spin" />
-  Creating account...
+  Resetting...
 </Button>
 ```
 
-#### 4. Verification State (Step 2)
+##### 2c. Success State
 
-- Form replaced with OTP input
-- Step indicator shows (2/3 active)
-- Instructions for email check
+- Toast: "Password reset successfully!"
+- Redirect to `/app`
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│                    [ ●━━━━ ●━━━━ ○ ]                                       │
-│                                                                             │
-│                    Check your email                                         │
-│                    (24px, semibold)                                         │
-│                                                                             │
-│                    We sent a code to user@example.com                       │
-│                    (14px, tertiary)                                         │
-│                                                                             │
-│                    ┌─┐ ┌─┐ ┌─┐ ┌─┐ ┌─┐ ┌─┐                                │
-│                    │ │ │ │ │ │ │ │ │ │ │ │  ← 6-digit OTP                  │
-│                    └─┘ └─┘ └─┘ └─┘ └─┘ └─┘                                │
-│                                                                             │
-│                    Didn't receive? Resend                                   │
-│                    (12px, tertiary + brand link)                           │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+##### 2d. Error State
 
-#### 5. Error State
-
-- Toast notification for registration errors
+- Toast: "Invalid code or password. Please try again."
 - Inputs remain enabled
 - Form values preserved
 
-```tsx
-toast.error("Could not create account");
-```
+##### 2e. Retry State
 
-#### 6. Success State
-
-- Immediate redirect to `/app`
-- No visible success state needed
+- User clicks "Try again" link
+- Returns to Step 1
+- Email cleared
 
 ### Error Handling
 
 | Error | Display | Recovery |
 |-------|---------|----------|
 | Invalid email format | Inline below input (HTML5 validation) | User corrects |
-| Password too short | Inline below input | User corrects |
-| Email already registered | Toast: "An account with this email already exists" | Redirect to signin |
 | Network error | Toast: "Connection failed. Please try again." | Retry |
-| OAuth cancelled | Toast: "Sign up cancelled" | Retry |
-| Rate limited | Toast: "Too many attempts. Please wait." | Wait |
-| Invalid OTP | Inline below OTP input | User re-enters |
-| OTP expired | Toast: "Code expired. We sent a new one." | Auto-resend |
+| Invalid code | Toast: "Invalid code or password. Please try again." | User re-enters |
+| Code expired | Toast: "Code expired. Please request a new one." | Back to step 1 |
+| Password too short | Inline below input | User corrects |
 
 ### Responsive Behavior
 
@@ -568,18 +543,24 @@ toast.error("Could not create account");
 
 ### Accessibility
 
-#### Focus Order
+#### Focus Order (Step 1)
 
 1. Logo (link to home)
 2. "Sign in" link
-3. Google button
-4. Email button / Email input (when expanded)
-5. Password input (when expanded)
-6. Submit button (when expanded)
-7. OTP inputs (when in verification state)
-8. Resend link (when in verification state)
-9. Terms link
-10. Privacy link
+3. Email input
+4. Submit button
+5. Terms link
+6. Privacy link
+
+#### Focus Order (Step 2)
+
+1. Logo (link to home)
+2. Code input
+3. Password input
+4. Submit button
+5. "Try again" link
+6. Terms link
+7. Privacy link
 
 #### Keyboard Navigation
 
@@ -587,14 +568,14 @@ toast.error("Could not create account");
 |-----|--------|
 | Tab | Move to next focusable element |
 | Shift+Tab | Move to previous focusable element |
-| Enter | Submit form / Click focused button |
-| Escape | No action (form stays) |
+| Enter | Submit form |
+| Escape | No action |
 
 #### Screen Reader
 
 ```tsx
-<main aria-labelledby="signup-heading">
-  <h1 id="signup-heading">Create your account</h1>
+<main aria-labelledby="forgot-heading">
+  <h1 id="forgot-heading">Reset your password</h1>
   ...
 </main>
 ```
@@ -603,14 +584,13 @@ toast.error("Could not create account");
 
 | Element | Attribute | Value |
 |---------|-----------|-------|
-| Form | `aria-label` | "Sign up form" |
+| Form | `aria-label` | "Password reset form" |
 | Email input | `aria-required` | "true" |
+| Code input | `aria-required` | "true" |
 | Password input | `aria-required` | "true" |
 | Password input | `aria-describedby` | "password-hint" |
-| Password hint | `id` | "password-hint" |
 | Submit button | `aria-busy` | "true" when submitting |
 | Error toast | `role` | "alert" |
-| OTP input group | `aria-label` | "Verification code" |
 
 #### Color Contrast
 
@@ -620,7 +600,6 @@ toast.error("Could not create account");
 | Subtitle (dark) | rgba(255,255,255,0.5) | #08090a | 7.5:1 | ✓ AAA |
 | Brand link (dark) | indigo-400 | #08090a | 5.2:1 | ✓ AA |
 | Button text | #ffffff | indigo-600 | 8.1:1 | ✓ AAA |
-| Password hint (dark) | rgba(255,255,255,0.5) | #08090a | 7.5:1 | ✓ AAA |
 
 ---
 
@@ -631,12 +610,13 @@ toast.error("Could not create account");
 | File | Action | Changes |
 |------|--------|---------|
 | `src/components/auth/AuthPageLayout.tsx` | REWRITE | Remove card, back link, verbose legal, staggered animations |
-| `src/routes/signup.tsx` | MODIFY | Update heading, move signin link to subtitle prop |
-| `src/components/auth/SignUpForm.tsx` | MODIFY | Hide step indicator in step 0, styling tweaks |
+| `src/routes/forgot-password.tsx` | MODIFY | Update heading, move signin link to subtitle, consolidate forms |
+| `src/components/auth/ResetPasswordForm.tsx` | MODIFY | Add password hint, minor styling tweaks |
+| `src/components/auth/ForgotPasswordForm.tsx` | DELETE | Unused, logic is in route file |
 
 ### AuthPageLayout.tsx - Target Code
 
-**NOTE**: This is the SAME as signin - fixing AuthPageLayout fixes both pages.
+**NOTE**: This is the SAME as signin/signup - fixing AuthPageLayout fixes ALL auth pages.
 
 ```tsx
 import { Link } from "@tanstack/react-router";
@@ -677,7 +657,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
           {title}
         </Typography>
 
-        {/* Subtitle (optional, usually contains signin/signup link) */}
+        {/* Subtitle (optional) */}
         {subtitle && (
           <Typography
             variant="muted"
@@ -717,66 +697,116 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
 }
 ```
 
-### signup.tsx - Target Code
+### forgot-password.tsx - Target Code
 
 ```tsx
-import { createFileRoute } from "@tanstack/react-router";
-import { AuthLink, AuthPageLayout, AuthRedirect, SignUpForm } from "@/components/auth";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/auth";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/form/Input";
 import { ROUTES } from "@/config/routes";
+import { getConvexSiteUrl } from "@/lib/convex";
+import { TEST_IDS } from "@/lib/test-ids";
 
-export const Route = createFileRoute("/signup")({
-  component: SignUpRoute,
+export const Route = createFileRoute("/forgot-password")({
+  component: ForgotPasswordRoute,
   ssr: false,
 });
 
-function SignUpRoute() {
+function ForgotPasswordRoute() {
   return (
     <AuthRedirect>
-      <AuthPageLayout
-        title="Create your account"
-        subtitle={
-          <>
-            Already have an account?{" "}
-            <AuthLink to={ROUTES.signin.path}>Sign in →</AuthLink>
-          </>
-        }
-      >
-        <SignUpForm />
-      </AuthPageLayout>
+      <ForgotPasswordPage />
     </AuthRedirect>
+  );
+}
+
+function ForgotPasswordPage() {
+  const [submitting, setSubmitting] = useState(false);
+  const [email, setEmail] = useState("");
+  const [showReset, setShowReset] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+    const formEmail = formData.get("email") as string;
+
+    try {
+      await fetch(`${getConvexSiteUrl()}/auth/request-reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formEmail }),
+      });
+    } catch {
+      // Ignore network errors
+    }
+
+    setEmail(formEmail);
+    setShowReset(true);
+    toast.success("If an account exists, you'll receive a reset code");
+    setSubmitting(false);
+  };
+
+  if (showReset) {
+    return (
+      <AuthPageLayout
+        title="Check your email"
+        subtitle={<>We sent a code to <strong>{email}</strong></>}
+      >
+        <ResetPasswordForm
+          email={email}
+          onSuccess={() => navigate({ to: ROUTES.app.path })}
+          onRetry={() => {
+            setShowReset(false);
+            setEmail("");
+          }}
+        />
+      </AuthPageLayout>
+    );
+  }
+
+  return (
+    <AuthPageLayout
+      title="Reset your password"
+      subtitle={
+        <>
+          Remember your password?{" "}
+          <AuthLink to={ROUTES.signin.path}>Sign in →</AuthLink>
+        </>
+      }
+    >
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <Input
+          type="email"
+          name="email"
+          placeholder="Email"
+          required
+          data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
+        />
+        <Button className="w-full" type="submit" disabled={submitting}>
+          {submitting ? "Sending..." : "Send reset code"}
+        </Button>
+      </form>
+    </AuthPageLayout>
   );
 }
 ```
 
-### SignUpForm.tsx - Key Changes
-
-1. **Hide step indicator in step 0**:
+### ResetPasswordForm.tsx - Key Changes
 
 ```tsx
-// Current: Always shows step indicator
-<Flex justify="center" gap="sm" className="mb-6">
-  {[0, 1, 2].map((step) => ...)}
-</Flex>
-
-// Target: Only show when step >= 1
-{currentStep > 0 && (
-  <Flex justify="center" gap="sm" className="mb-6">
-    {[0, 1, 2].map((step) => ...)}
-  </Flex>
-)}
-```
-
-2. **Remove any Typography with `variant="muted"` for the "already have account" text** - this is now in `AuthPageLayout` subtitle.
-
-3. **Add aria-describedby for password hint**:
-
-```tsx
+// Add password hint with proper accessibility
 <Input
   type="password"
-  name="password"
-  placeholder="Password"
+  name="newPassword"
+  placeholder="New password"
+  required
   minLength={8}
-  required={formReady}
   aria-describedby="password-hint"
 />
 <Typography
@@ -804,41 +834,35 @@ function SignUpRoute() {
 
 ### Typography
 
-- [ ] Heading is "Create your account"
-- [ ] Heading is 24px, semibold, tracking-tight
-- [ ] Subtitle contains signin link with arrow
+- [ ] Heading (step 1) is "Reset your password"
+- [ ] Heading (step 2) is "Check your email"
+- [ ] Headings are 24px, semibold, tracking-tight
+- [ ] Subtitle contains signin link with arrow (step 1)
+- [ ] Subtitle shows email address (step 2)
 - [ ] Legal uses 12px caption variant
-- [ ] Password hint is 12px, tertiary
 
 ### Spacing
 
 - [ ] Logo to heading: 32px
 - [ ] Heading to subtitle: 8px
 - [ ] Subtitle to form: 32px
-- [ ] Form elements: 12-16px gaps
+- [ ] Form elements: 16px gaps
 - [ ] Legal: 32px from bottom
-
-### Step Indicator
-
-- [ ] Hidden in default state (step 0)
-- [ ] Shows when email form expanded
-- [ ] Correct colors (brand active, border inactive)
-- [ ] Smooth width transition
 
 ### Animation
 
 - [ ] Single fade-in animation (no stagger)
 - [ ] Duration: 0.3s
 - [ ] No individual element delays
-- [ ] Form expand is smooth
+- [ ] Step transition is simple fade-in
 
 ### States
 
-- [ ] Default: Shows Google + Email buttons, no step indicator
-- [ ] Expanded: Shows email/password inputs, step indicator appears
-- [ ] Submitting: Shows spinner, disabled inputs
-- [ ] Verification: Shows OTP input, step 2 active
+- [ ] Step 1: Email input + submit button
+- [ ] Step 2: Code input + password input + submit button
+- [ ] Submitting: Shows loading text, disabled inputs
 - [ ] Error: Toast notification
+- [ ] Success: Toast + redirect
 
 ### Responsive
 
@@ -859,8 +883,12 @@ function SignUpRoute() {
 
 - [ ] No visible card/container border
 - [ ] Background is pure bg-ui-bg
-- [ ] Mirrors signin page layout
+- [ ] Mirrors signin/signup page layout
 - [ ] Would not embarrass us to Linear's team
+
+### Cleanup
+
+- [ ] Delete unused `ForgotPasswordForm.tsx`
 
 ---
 
@@ -875,7 +903,7 @@ docs/research/library/mintlify/signup_desktop_dark.png
 ### Current (Nixelo) - Before
 
 ```
-e2e/screenshots/desktop-dark-*-signup.png
+e2e/screenshots/desktop-dark-*-forgot-password.png
 ```
 
 ### Expected (Nixelo) - After
@@ -886,8 +914,8 @@ After implementation, regenerate screenshots with `pnpm screenshots` and verify 
 
 ## Notes
 
-- **Shared Layout**: Fixing `AuthPageLayout.tsx` once fixes both signin and signup pages
-- The `SignUpForm.tsx` logic (expand/collapse, validation, verification flow) is fine and should be preserved
-- Same pattern applies to `/forgot-password` - it also uses `AuthPageLayout`
-- Step indicator adds useful feedback for signup specifically - but should only appear after user commits to email flow
-- Verification flow (`EmailVerificationForm`) styling should match the minimal aesthetic but is out of scope for this spec
+- **Shared Layout**: Fixing `AuthPageLayout.tsx` once fixes ALL auth pages (signin, signup, forgot-password)
+- The two-step flow (email → code + password) is correct and should be preserved
+- Security note: Always return success for email submission to prevent email enumeration
+- `ForgotPasswordForm.tsx` is legacy and unused - the form logic is directly in the route file. Delete it.
+- The "Try again" link should return to step 1 and clear the email state
