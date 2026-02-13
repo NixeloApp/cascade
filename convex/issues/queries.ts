@@ -207,8 +207,7 @@ export const listRoadmapIssues = authenticatedQuery({
           .withIndex("by_project_due_date", (q) =>
             q.eq("projectId", args.projectId).gt("dueDate", 0),
           ),
-        // Use a higher limit to account for filtered items (subtasks, deleted)
-        // Since we are fetching all types in one go, we can afford a higher limit than per-type
+        // Use a higher limit to account for filtering (subtasks, deleted items)
         BOUNDED_LIST_LIMIT * 4,
         "roadmap dated issues",
       );
@@ -217,7 +216,7 @@ export const listRoadmapIssues = authenticatedQuery({
         (i) =>
           !i.isDeleted &&
           (ROOT_ISSUE_TYPES as readonly string[]).includes(i.type) &&
-          i.dueDate !== undefined,
+          (!args.excludeEpics || i.type !== "epic"),
       );
     } else {
       // Bounded: fetch by type with limits

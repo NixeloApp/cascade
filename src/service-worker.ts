@@ -207,7 +207,15 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     Promise.all([
+<<<<<<< HEAD
       // Clean up old caches (convex, static, js-css)
+=======
+<<<<<<< HEAD
+      // Clean up old caches
+=======
+      // Clean up old caches (convex, static, js-css)
+>>>>>>> main
+>>>>>>> main
       caches
         .keys()
         .then((cacheNames) => {
