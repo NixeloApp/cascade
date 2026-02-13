@@ -417,50 +417,47 @@ export const bulkUpdateStatus = authenticatedMutation({
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
     const now = Date.now();
-    const results = [];
 
-    for (let i = 0; i < issues.length; i++) {
-      const issue = issues[i];
-      const issueId = args.issueIds[i];
-      if (!issue) continue;
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
 
-      if (issue.isDeleted) continue;
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
 
-      try {
-        await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        continue;
-      }
+        const oldStatus = issue.status;
 
-      // Validate that the new status exists in the project's workflow
-      const project = await ctx.db.get(issue.projectId);
-      if (!project) continue;
+        // Validate that the new status exists in the project's workflow
+        const project = await ctx.db.get(issue.projectId);
+        if (!project) return 0;
 
-      const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
-      if (!isValidStatus) continue;
+        const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
+        if (!isValidStatus) return 0;
 
-      const oldStatus = issue.status;
-
-      await ctx.db.patch(issueId, {
-        status: args.newStatus,
-        updatedAt: now,
-      });
-
-      if (oldStatus !== args.newStatus) {
-        await ctx.db.insert("issueActivity", {
-          issueId,
-          userId: ctx.userId,
-          action: "updated",
-          field: "status",
-          oldValue: oldStatus,
-          newValue: args.newStatus,
+        await ctx.db.patch(issue._id, {
+          status: args.newStatus,
+          updatedAt: now,
         });
-      }
 
-      results.push(issueId);
-    }
+        if (oldStatus !== args.newStatus) {
+          await ctx.db.insert("issueActivity", {
+            issueId: issue._id,
+            userId: ctx.userId,
+            action: "updated",
+            field: "status",
+            oldValue: oldStatus,
+            newValue: args.newStatus,
+          });
+        }
 
-    return { updated: results.length };
+        return 1;
+      }),
+    );
+
+    return { updated: results.reduce((a: number, b) => a + b, 0) };
   },
 });
 
@@ -479,41 +476,38 @@ export const bulkUpdatePriority = authenticatedMutation({
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
     const now = Date.now();
-    const results = [];
 
-    for (let i = 0; i < issues.length; i++) {
-      const issue = issues[i];
-      const issueId = args.issueIds[i];
-      if (!issue) continue;
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
 
-      if (issue.isDeleted) continue;
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
 
-      try {
-        await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        continue;
-      }
+        const oldPriority = issue.priority;
 
-      const oldPriority = issue.priority;
+        await ctx.db.patch(issue._id, {
+          priority: args.priority,
+          updatedAt: now,
+        });
 
-      await ctx.db.patch(issueId, {
-        priority: args.priority,
-        updatedAt: now,
-      });
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "updated",
+          field: "priority",
+          oldValue: oldPriority,
+          newValue: args.priority,
+        });
 
-      await ctx.db.insert("issueActivity", {
-        issueId,
-        userId: ctx.userId,
-        action: "updated",
-        field: "priority",
-        oldValue: oldPriority,
-        newValue: args.priority,
-      });
+        return 1;
+      }),
+    );
 
-      results.push(issueId);
-    }
-
-    return { updated: results.length };
+    return { updated: results.reduce((a: number, b) => a + b, 0) };
   },
 });
 
@@ -526,41 +520,38 @@ export const bulkAssign = authenticatedMutation({
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
     const now = Date.now();
-    const results = [];
 
-    for (let i = 0; i < issues.length; i++) {
-      const issue = issues[i];
-      const issueId = args.issueIds[i];
-      if (!issue) continue;
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
 
-      if (issue.isDeleted) continue;
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
 
-      try {
-        await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        continue;
-      }
+        const oldAssignee = issue.assigneeId;
 
-      const oldAssignee = issue.assigneeId;
+        await ctx.db.patch(issue._id, {
+          assigneeId: args.assigneeId ?? undefined,
+          updatedAt: now,
+        });
 
-      await ctx.db.patch(issueId, {
-        assigneeId: args.assigneeId ?? undefined,
-        updatedAt: now,
-      });
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "updated",
+          field: "assignee",
+          oldValue: oldAssignee ? String(oldAssignee) : "",
+          newValue: args.assigneeId ? String(args.assigneeId) : "",
+        });
 
-      await ctx.db.insert("issueActivity", {
-        issueId,
-        userId: ctx.userId,
-        action: "updated",
-        field: "assignee",
-        oldValue: oldAssignee ? String(oldAssignee) : "",
-        newValue: args.assigneeId ? String(args.assigneeId) : "",
-      });
+        return 1;
+      }),
+    );
 
-      results.push(issueId);
-    }
-
-    return { updated: results.length };
+    return { updated: results.reduce((a: number, b) => a + b, 0) };
   },
 });
 
@@ -573,41 +564,38 @@ export const bulkAddLabels = authenticatedMutation({
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
     const now = Date.now();
-    const results = [];
 
-    for (let i = 0; i < issues.length; i++) {
-      const issue = issues[i];
-      const issueId = args.issueIds[i];
-      if (!issue) continue;
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
 
-      if (issue.isDeleted) continue;
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
 
-      try {
-        await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        continue;
-      }
+        const updatedLabels = Array.from(new Set([...issue.labels, ...args.labels]));
 
-      const updatedLabels = Array.from(new Set([...issue.labels, ...args.labels]));
+        await ctx.db.patch(issue._id, {
+          labels: updatedLabels,
+          updatedAt: now,
+        });
 
-      await ctx.db.patch(issueId, {
-        labels: updatedLabels,
-        updatedAt: now,
-      });
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "updated",
+          field: "labels",
+          oldValue: issue.labels.join(", "),
+          newValue: updatedLabels.join(", "),
+        });
 
-      await ctx.db.insert("issueActivity", {
-        issueId: issueId,
-        userId: ctx.userId,
-        action: "updated",
-        field: "labels",
-        oldValue: issue.labels.join(", "),
-        newValue: updatedLabels.join(", "),
-      });
+        return 1;
+      }),
+    );
 
-      results.push(issueId);
-    }
-
-    return { updated: results.length };
+    return { updated: results.reduce((a: number, b) => a + b, 0) };
   },
 });
 
@@ -620,41 +608,38 @@ export const bulkMoveToSprint = authenticatedMutation({
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
     const now = Date.now();
-    const results = [];
 
-    for (let i = 0; i < issues.length; i++) {
-      const issue = issues[i];
-      const issueId = args.issueIds[i];
-      if (!issue) continue;
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
 
-      if (issue.isDeleted) continue;
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
 
-      try {
-        await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        continue;
-      }
+        const oldSprint = issue.sprintId;
 
-      const oldSprint = issue.sprintId;
+        await ctx.db.patch(issue._id, {
+          sprintId: args.sprintId ?? undefined,
+          updatedAt: now,
+        });
 
-      await ctx.db.patch(issueId, {
-        sprintId: args.sprintId ?? undefined,
-        updatedAt: now,
-      });
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "updated",
+          field: "sprint",
+          oldValue: oldSprint ? String(oldSprint) : "",
+          newValue: args.sprintId ? String(args.sprintId) : "",
+        });
 
-      await ctx.db.insert("issueActivity", {
-        issueId,
-        userId: ctx.userId,
-        action: "updated",
-        field: "sprint",
-        oldValue: oldSprint ? String(oldSprint) : "",
-        newValue: args.sprintId ? String(args.sprintId) : "",
-      });
+        return 1;
+      }),
+    );
 
-      results.push(issueId);
-    }
-
-    return { updated: results.length };
+    return { updated: results.reduce((a: number, b) => a + b, 0) };
   },
 });
 
@@ -665,34 +650,30 @@ export const bulkDelete = authenticatedMutation({
   handler: async (ctx, args) => {
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
-    const results = [];
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
 
-    for (let i = 0; i < issues.length; i++) {
-      const issue = issues[i];
-      const issueId = args.issueIds[i];
-      if (!issue) continue;
+        try {
+          await assertIsProjectAdmin(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
 
-      if (issue.isDeleted) continue;
+        // Soft delete issue
+        await ctx.db.patch(issue._id, softDeleteFields(ctx.userId));
 
-      try {
-        await assertIsProjectAdmin(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        continue;
-      }
+        // Log activity
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "deleted",
+        });
 
-      // Soft delete issue
-      await ctx.db.patch(issueId, softDeleteFields(ctx.userId));
+        return 1;
+      }),
+    );
 
-      // Log activity
-      await ctx.db.insert("issueActivity", {
-        issueId,
-        userId: ctx.userId,
-        action: "deleted",
-      });
-
-      results.push(issueId);
-    }
-
-    return { deleted: results.length };
+    return { deleted: results.reduce((a: number, b) => a + b, 0) };
   },
 });
