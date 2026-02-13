@@ -49,3 +49,7 @@
 ## 2026-06-15 - Contextual Alert Roles
 **Learning:** The `Alert` component defaulted to `role="alert"` for all variants, causing non-critical messages (success, info) to interrupt screen readers aggressively. Additionally, `lucide-react` icons in this codebase include `aria-hidden="true"` by default, simplifying decorative icon handling.
 **Action:** Use `role="alert"` only for high-severity alerts (error, warning). Use `role="status"` for informational updates (success, info, default). Rely on default accessibility of library icons but verify with tests.
+
+## 2026-06-16 - Explicit Typing in Tests
+**Learning:** When using empty arrays in TypeScript tests (e.g., `const ids = []`), TS infers `any[]`. This causes build failures when `noImplicitAny` is enabled in strict mode or CI pipelines.
+**Action:** Always explicitly type empty arrays that will be populated later (e.g., `const ids: Id<"issues">[] = []`) to prevent implicit `any` errors and ensure type safety in test files.
