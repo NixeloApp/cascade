@@ -7,7 +7,12 @@
  *   - tablet-light (768x1024)
  *   - mobile-light (390x844)
  *
- * Output: e2e/screenshots/ (flat folder, files prefixed with viewport-theme)
+ * Output: Screenshots go to their corresponding spec folders:
+ *   - docs/design/specs/pages/02-signin/screenshots/
+ *   - docs/design/specs/pages/03-signup/screenshots/
+ *   - etc.
+ *
+ * Pages without specs go to: e2e/screenshots/ (flat folder)
  *
  * Usage:
  *   pnpm screenshots              # capture all
@@ -29,8 +34,23 @@ import { type SeedScreenshotResult, testUserService } from "./utils/test-user-se
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:5555";
 const CONVEX_URL = process.env.VITE_CONVEX_URL || "";
-const SCREENSHOT_BASE_DIR = path.join(process.cwd(), "e2e", "screenshots");
+const SPECS_BASE_DIR = path.join(process.cwd(), "docs", "design", "specs", "pages");
+const FALLBACK_SCREENSHOT_DIR = path.join(process.cwd(), "e2e", "screenshots");
 const SETTLE_MS = 2000;
+
+// Map page identifiers to their spec folder names
+// Pages with specs get screenshots in their spec folder
+// Pages without specs go to the fallback directory
+const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
+  // Public auth pages
+  "public-signin": "02-signin",
+  "public-signup": "03-signup",
+  "public-forgot-password": "04-forgot-password",
+  // Add more mappings as specs are created:
+  // "public-landing": "01-landing",
+  // "filled-dashboard": "05-dashboard",
+  // etc.
+};
 
 const VIEWPORTS = {
   desktop: { width: 1920, height: 1080 },
@@ -76,6 +96,30 @@ function nextIndex(prefix: string): number {
 // Screenshot helpers
 // ---------------------------------------------------------------------------
 
+function getScreenshotPath(prefix: string, name: string): string {
+  const pageId = `${prefix}-${name}`;
+  const specFolder = PAGE_TO_SPEC_FOLDER[pageId];
+
+  // Filename: viewport-theme.png (e.g., desktop-dark.png)
+  const filename = `${currentConfigPrefix}.png`;
+
+  if (specFolder) {
+    // Page has a spec folder - put screenshot there
+    const specScreenshotDir = path.join(SPECS_BASE_DIR, specFolder, "screenshots");
+    if (!fs.existsSync(specScreenshotDir)) {
+      fs.mkdirSync(specScreenshotDir, { recursive: true });
+    }
+    return path.join(specScreenshotDir, filename);
+  }
+
+  // No spec folder - use fallback with full naming
+  const fallbackFilename = `${currentConfigPrefix}-${prefix}-${name}.png`;
+  if (!fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
+    fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+  }
+  return path.join(FALLBACK_SCREENSHOT_DIR, fallbackFilename);
+}
+
 async function takeScreenshot(
   page: Page,
   prefix: string,
@@ -84,16 +128,20 @@ async function takeScreenshot(
 ): Promise<void> {
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
-  const filename = `${currentConfigPrefix}-${num}-${prefix}-${name}.png`;
+  const screenshotPath = getScreenshotPath(prefix, name);
+
   try {
     await page.goto(`${BASE_URL}${url}`, { waitUntil: "networkidle", timeout: 15000 });
   } catch {
     // networkidle often times out on real-time apps -- page is still usable
   }
   await page.waitForTimeout(SETTLE_MS);
-  await page.screenshot({ path: path.join(SCREENSHOT_BASE_DIR, filename) });
+  await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
-  console.log(`    ${num}  [${prefix}] ${name}`);
+
+  // Show relative path for clarity
+  const relativePath = path.relative(process.cwd(), screenshotPath);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
 }
 
 async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | null> {
@@ -269,10 +317,11 @@ async function screenshotFilledStates(
       }
       const n = nextIndex(p);
       const num = String(n).padStart(2, "0");
-      const filename = `${currentConfigPrefix}-${num}-${p}-calendar-${mode}.png`;
-      await page.screenshot({ path: path.join(SCREENSHOT_BASE_DIR, filename) });
+      const screenshotPath = getScreenshotPath(p, `calendar-${mode}`);
+      await page.screenshot({ path: screenshotPath });
       totalScreenshots++;
-      console.log(`    ${num}  [${p}] calendar-${mode}`);
+      const relativePath = path.relative(process.cwd(), screenshotPath);
+      console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
     }
 
     // Event details modal screenshot — click first visible calendar event
@@ -291,10 +340,11 @@ async function screenshotFilledStates(
       await page.waitForTimeout(SETTLE_MS);
       const n = nextIndex(p);
       const num = String(n).padStart(2, "0");
-      const filename = `${currentConfigPrefix}-${num}-${p}-calendar-event-modal.png`;
-      await page.screenshot({ path: path.join(SCREENSHOT_BASE_DIR, filename) });
+      const screenshotPath = getScreenshotPath(p, "calendar-event-modal");
+      await page.screenshot({ path: screenshotPath });
       totalScreenshots++;
-      console.log(`    ${num}  [${p}] calendar-event-modal`);
+      const relativePath = path.relative(process.cwd(), screenshotPath);
+      console.log(`    ${num}  [${p}] calendar-event-modal → ${relativePath}`);
 
       // Close the modal via Escape
       await page.keyboard.press("Escape");
@@ -421,17 +471,33 @@ async function captureForConfig(
 // ---------------------------------------------------------------------------
 
 async function run(): Promise<void> {
-  // Clean and recreate base directory
-  if (fs.existsSync(SCREENSHOT_BASE_DIR)) {
-    fs.rmSync(SCREENSHOT_BASE_DIR, { recursive: true });
+  // Clean screenshot folders in spec directories
+  const specFolders = Object.values(PAGE_TO_SPEC_FOLDER);
+  for (const folder of [...new Set(specFolders)]) {
+    const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
+    if (fs.existsSync(screenshotDir)) {
+      // Only remove generated screenshots (viewport-theme.png), keep reference-* files
+      const files = fs.readdirSync(screenshotDir);
+      for (const file of files) {
+        if (!file.startsWith("reference-") && file.endsWith(".png")) {
+          fs.unlinkSync(path.join(screenshotDir, file));
+        }
+      }
+    }
   }
-  fs.mkdirSync(SCREENSHOT_BASE_DIR, { recursive: true });
+
+  // Clean fallback directory
+  if (fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
+    fs.rmSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+  }
+  fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
 
   console.log("\n╔════════════════════════════════════════════════════════════╗");
   console.log("║         NIXELO SCREENSHOT CAPTURE                          ║");
   console.log("╚════════════════════════════════════════════════════════════╝");
   console.log(`\n  Base URL: ${BASE_URL}`);
   console.log(`  Configs: ${CONFIGS.map((c) => `${c.viewport}-${c.theme}`).join(", ")}`);
+  console.log(`  Spec folders: ${[...new Set(specFolders)].join(", ")}`);
 
   const headless = !process.argv.includes("--headed");
   const browser = await chromium.launch({ headless });
@@ -488,9 +554,26 @@ async function run(): Promise<void> {
   console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured`);
   console.log("╚════════════════════════════════════════════════════════════╝\n");
 
-  // Summary
-  const files = fs.readdirSync(SCREENSHOT_BASE_DIR).filter((f) => f.endsWith(".png"));
-  console.log(`  Output: ${SCREENSHOT_BASE_DIR}/ (${files.length} files)`);
+  // Summary - count files in each location
+  console.log("  Output:");
+  const uniqueSpecFolders = [...new Set(Object.values(PAGE_TO_SPEC_FOLDER))];
+  for (const folder of uniqueSpecFolders) {
+    const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
+    if (fs.existsSync(screenshotDir)) {
+      const files = fs
+        .readdirSync(screenshotDir)
+        .filter((f) => f.endsWith(".png") && !f.startsWith("reference-"));
+      if (files.length > 0) {
+        console.log(`    ${folder}/screenshots/ (${files.length} screenshots)`);
+      }
+    }
+  }
+  if (fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
+    const fallbackFiles = fs.readdirSync(FALLBACK_SCREENSHOT_DIR).filter((f) => f.endsWith(".png"));
+    if (fallbackFiles.length > 0) {
+      console.log(`    e2e/screenshots/ (${fallbackFiles.length} screenshots without specs)`);
+    }
+  }
   console.log("");
 }
 

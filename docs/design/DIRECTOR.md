@@ -60,13 +60,30 @@ We're not copying Mintlify. We're learning from them:
 
 ### Our Screenshots
 
-Location: `e2e/screenshots/`
-
 Generated via `pnpm screenshots`. Four configs:
-- `desktop-dark-*` (1920x1080)
-- `desktop-light-*` (1920x1080)
-- `tablet-light-*` (768x1024)
-- `mobile-light-*` (390x844)
+- `desktop-dark` (1920x1080)
+- `desktop-light` (1920x1080)
+- `tablet-light` (768x1024)
+- `mobile-light` (390x844)
+
+**Location**: Screenshots are co-located with their specs:
+```
+docs/design/specs/pages/
+  02-signin/
+    README.md                          # The spec
+    screenshots/
+      desktop-dark.png                 # Current state
+      desktop-light.png
+      tablet-light.png
+      mobile-light.png
+      reference-mintlify-desktop-dark.png  # Target reference
+      reference-mintlify-desktop-light.png
+      reference-mintlify-mobile-dark.png
+  03-signup/
+    ...
+```
+
+Pages without specs go to `e2e/screenshots/` (fallback).
 
 These are the SOURCE OF TRUTH for current state.
 

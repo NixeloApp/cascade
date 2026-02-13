@@ -19,12 +19,21 @@ The forgot password page uses `AuthPageLayout.tsx` and inherits all its problems
 
 ### Screenshots
 
-| Viewport | Theme | Path |
-|----------|-------|------|
-| Desktop | Dark | `e2e/screenshots/desktop-dark-*-forgot-password.png` |
-| Desktop | Light | `e2e/screenshots/desktop-light-*-forgot-password.png` |
-| Tablet | Light | `e2e/screenshots/tablet-light-*-forgot-password.png` |
-| Mobile | Light | `e2e/screenshots/mobile-light-*-forgot-password.png` |
+All screenshots are in `./screenshots/`:
+
+| Viewport | Theme | File | Preview |
+|----------|-------|------|---------|
+| Desktop | Dark | `desktop-dark.png` | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | `desktop-light.png` | ![](screenshots/desktop-light.png) |
+| Tablet | Light | `tablet-light.png` | ![](screenshots/tablet-light.png) |
+| Mobile | Light | `mobile-light.png` | ![](screenshots/mobile-light.png) |
+
+### Reference (Mintlify)
+
+| Viewport | Theme | File | Preview |
+|----------|-------|------|---------|
+| Desktop | Dark | `reference-mintlify-desktop-dark.png` | ![](screenshots/reference-mintlify-desktop-dark.png) |
+| Desktop | Light | `reference-mintlify-desktop-light.png` | ![](screenshots/reference-mintlify-desktop-light.png) |
 
 ### Current Files
 
@@ -894,21 +903,13 @@ function ForgotPasswordPage() {
 
 ## Reference Screenshots
 
-### Target (Mintlify)
+All screenshots are co-located in `./screenshots/`:
 
-```
-docs/research/library/mintlify/signup_desktop_dark.png
-```
-
-### Current (Nixelo) - Before
-
-```
-e2e/screenshots/desktop-dark-*-forgot-password.png
-```
-
-### Expected (Nixelo) - After
-
-After implementation, regenerate screenshots with `pnpm screenshots` and verify against target.
+| Type | File |
+|------|------|
+| **Current (Before)** | `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png` |
+| **Reference (Mintlify)** | `reference-mintlify-desktop-dark.png`, `reference-mintlify-desktop-light.png` |
+| **Expected (After)** | Regenerate with `pnpm screenshots` after implementation |
 
 ---
 
