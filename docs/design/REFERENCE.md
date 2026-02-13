@@ -143,16 +143,3 @@
 - `EmptyState` - Empty state with icon and CTA
 - `EntityCard` - Card for entities (projects, issues, etc.)
 
----
-
-## Refactoring Status
-
-Files using new composition patterns:
-
-| File | Status | Pattern Used |
-|------|--------|--------------|
-| `MeetingRecordingSection.tsx` | ✅ Done | `Metadata`, `Collapsible` |
-| `IssueDependencies.tsx` | ✅ Done | `IssueDisplay` helper |
-| `GlobalSearch.tsx` | 🔄 Partial | Needs cleanup |
-| `NotificationBell.tsx` | ❌ TODO | - |
-| `LabelsManager.tsx` | ❌ TODO | - |
