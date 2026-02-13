@@ -418,6 +418,22 @@ export const bulkUpdateStatus = authenticatedMutation({
 
     const now = Date.now();
 
+    // Fetch projects in bulk to avoid N+1 query in loop
+    const projectIds = new Set<Id<"projects">>();
+    for (const issue of issues) {
+      if (issue && !issue.isDeleted) {
+        projectIds.add(issue.projectId);
+      }
+    }
+
+    const projects = await Promise.all(Array.from(projectIds).map((id) => ctx.db.get(id)));
+    const projectsMap = new Map<string, (typeof projects)[0]>();
+    for (const p of projects) {
+      if (p) {
+        projectsMap.set(p._id, p);
+      }
+    }
+
     const results = await Promise.all(
       issues.map(async (issue) => {
         if (!issue || issue.isDeleted) return 0;
@@ -431,7 +447,7 @@ export const bulkUpdateStatus = authenticatedMutation({
         const oldStatus = issue.status;
 
         // Validate that the new status exists in the project's workflow
-        const project = await ctx.db.get(issue.projectId);
+        const project = projectsMap.get(issue.projectId);
         if (!project) return 0;
 
         const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
