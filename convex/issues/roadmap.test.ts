@@ -39,7 +39,7 @@ describe("listRoadmapIssues optimization", () => {
     }
 
     // Create 5 issues with due dates
-    const datedIssueIds = [];
+    const datedIssueIds: any[] = [];
     for (let i = 0; i < 5; i++) {
       const id = await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
