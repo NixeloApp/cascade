@@ -207,20 +207,21 @@ export async function enrichIssues(
   const assigneeIds = new Set<Id<"users">>();
   const reporterIds = new Set<Id<"users">>();
   const epicIds = new Set<Id<"issues">>();
-  const projectIds = new Set<Id<"projects">>();
+  // We only track projects that actually need label fetching to optimize queries
+  const projectIdsWithLabels = new Set<Id<"projects">>();
 
   for (const issue of issues) {
     if (issue.assigneeId) assigneeIds.add(issue.assigneeId);
     reporterIds.add(issue.reporterId);
     if (issue.epicId) epicIds.add(issue.epicId);
-    // Optimization: Only fetch project labels if at least one issue in the batch has labels
+    // Optimization: Only fetch labels for projects where at least one issue has labels
     if (issue.projectId && issue.labels && issue.labels.length > 0) {
-      projectIds.add(issue.projectId);
+      projectIdsWithLabels.add(issue.projectId);
     }
   }
 
   // Batch fetch all data
-  const projectIdList = [...projectIds];
+  const projectIdList = [...projectIdsWithLabels];
   const [assignees, reporters, epics, projectLabelsArrays] = await Promise.all([
     asyncMap([...assigneeIds], (id) => ctx.db.get(id)),
     asyncMap([...reporterIds], (id) => ctx.db.get(id)),
