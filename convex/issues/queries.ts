@@ -207,7 +207,8 @@ export const listRoadmapIssues = authenticatedQuery({
           .withIndex("by_project_due_date", (q) =>
             q.eq("projectId", args.projectId).gt("dueDate", 0),
           ),
-        BOUNDED_LIST_LIMIT * 4, // Higher limit because we fetch mixed types (including subtasks)
+        // Use a higher limit to account for filtering (subtasks, deleted items)
+        BOUNDED_LIST_LIMIT * 4,
         "roadmap dated issues",
       );
 

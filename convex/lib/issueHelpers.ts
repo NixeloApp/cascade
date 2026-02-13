@@ -213,7 +213,10 @@ export async function enrichIssues(
     if (issue.assigneeId) assigneeIds.add(issue.assigneeId);
     reporterIds.add(issue.reporterId);
     if (issue.epicId) epicIds.add(issue.epicId);
-    if (issue.projectId) projectIds.add(issue.projectId);
+    // Optimization: Only fetch project labels if at least one issue in the batch has labels
+    if (issue.projectId && issue.labels && issue.labels.length > 0) {
+      projectIds.add(issue.projectId);
+    }
   }
 
   // Batch fetch all data
