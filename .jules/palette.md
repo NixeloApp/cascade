@@ -45,3 +45,7 @@
 ## 2024-05-22 - Accessible Description Association in Switch
 **Learning:** The `Switch` component supported a `description` prop visually but failed to programmatically associate it with the input, leaving screen reader users without context.
 **Action:** Implemented automatic ID generation and `aria-describedby` linkage for the `description` prop. Also updated `label` and `description` to accept `ReactNode` to allow for rich content (links, bold text) while maintaining accessible relationships. This pattern should be applied to other form controls that have built-in description props.
+
+## 2026-06-15 - Contextual Alert Roles
+**Learning:** The `Alert` component defaulted to `role="alert"` for all variants, causing non-critical messages (success, info) to interrupt screen readers aggressively. Additionally, `lucide-react` icons in this codebase include `aria-hidden="true"` by default, simplifying decorative icon handling.
+**Action:** Use `role="alert"` only for high-severity alerts (error, warning). Use `role="status"` for informational updates (success, info, default). Rely on default accessibility of library icons but verify with tests.
