@@ -3,14 +3,11 @@
  *
  * Captures screenshots across viewport/theme combinations:
  *   - desktop-dark (1920x1080)
+ *   - desktop-light (1920x1080)
  *   - tablet-light (768x1024)
  *   - mobile-light (390x844)
  *
- * Output structure:
- *   e2e/screenshots/
- *   ├── desktop-dark/
- *   ├── tablet-light/
- *   └── mobile-light/
+ * Output: e2e/screenshots/ (flat folder, files prefixed with viewport-theme)
  *
  * Usage:
  *   pnpm screenshots              # capture all
@@ -41,9 +38,10 @@ const VIEWPORTS = {
   mobile: { width: 390, height: 844 },
 } as const;
 
-// Desktop = dark mode, tablet/mobile = light mode
+// Desktop captures both themes, tablet/mobile light only
 const CONFIGS: Array<{ viewport: keyof typeof VIEWPORTS; theme: "dark" | "light" }> = [
   { viewport: "desktop", theme: "dark" },
+  { viewport: "desktop", theme: "light" },
   { viewport: "tablet", theme: "light" },
   { viewport: "mobile", theme: "light" },
 ];
@@ -60,7 +58,7 @@ const SCREENSHOT_USER = {
 // State
 // ---------------------------------------------------------------------------
 
-let currentOutputDir = "";
+let currentConfigPrefix = ""; // e.g. "desktop-dark", "tablet-light"
 let counters = new Map<string, number>();
 let totalScreenshots = 0;
 
@@ -86,14 +84,14 @@ async function takeScreenshot(
 ): Promise<void> {
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
-  const filename = `${num}-${prefix}-${name}.png`;
+  const filename = `${currentConfigPrefix}-${num}-${prefix}-${name}.png`;
   try {
     await page.goto(`${BASE_URL}${url}`, { waitUntil: "networkidle", timeout: 15000 });
   } catch {
     // networkidle often times out on real-time apps -- page is still usable
   }
   await page.waitForTimeout(SETTLE_MS);
-  await page.screenshot({ path: path.join(currentOutputDir, filename) });
+  await page.screenshot({ path: path.join(SCREENSHOT_BASE_DIR, filename) });
   totalScreenshots++;
   console.log(`    ${num}  [${prefix}] ${name}`);
 }
@@ -271,8 +269,8 @@ async function screenshotFilledStates(
       }
       const n = nextIndex(p);
       const num = String(n).padStart(2, "0");
-      const filename = `${num}-${p}-calendar-${mode}.png`;
-      await page.screenshot({ path: path.join(currentOutputDir, filename) });
+      const filename = `${currentConfigPrefix}-${num}-${p}-calendar-${mode}.png`;
+      await page.screenshot({ path: path.join(SCREENSHOT_BASE_DIR, filename) });
       totalScreenshots++;
       console.log(`    ${num}  [${p}] calendar-${mode}`);
     }
@@ -293,8 +291,8 @@ async function screenshotFilledStates(
       await page.waitForTimeout(SETTLE_MS);
       const n = nextIndex(p);
       const num = String(n).padStart(2, "0");
-      const filename = `${num}-${p}-calendar-event-modal.png`;
-      await page.screenshot({ path: path.join(currentOutputDir, filename) });
+      const filename = `${currentConfigPrefix}-${num}-${p}-calendar-event-modal.png`;
+      await page.screenshot({ path: path.join(SCREENSHOT_BASE_DIR, filename) });
       totalScreenshots++;
       console.log(`    ${num}  [${p}] calendar-event-modal`);
 
@@ -356,13 +354,11 @@ async function captureForConfig(
   orgSlug: string,
   seedResult: SeedScreenshotResult,
 ): Promise<void> {
-  const dirName = `${viewport}-${theme}`;
-  currentOutputDir = path.join(SCREENSHOT_BASE_DIR, dirName);
-  fs.mkdirSync(currentOutputDir, { recursive: true });
+  currentConfigPrefix = `${viewport}-${theme}`;
   resetCounters();
 
   console.log(
-    `\n  📸 ${dirName.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height})`,
+    `\n  📸 ${currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height})`,
   );
 
   const context = await browser.newContext({
@@ -493,14 +489,8 @@ async function run(): Promise<void> {
   console.log("╚════════════════════════════════════════════════════════════╝\n");
 
   // Summary
-  console.log("  Output directories:");
-  for (const config of CONFIGS) {
-    const dir = `${config.viewport}-${config.theme}`;
-    const files = fs.existsSync(path.join(SCREENSHOT_BASE_DIR, dir))
-      ? fs.readdirSync(path.join(SCREENSHOT_BASE_DIR, dir)).length
-      : 0;
-    console.log(`    ${SCREENSHOT_BASE_DIR}/${dir}/ (${files} files)`);
-  }
+  const files = fs.readdirSync(SCREENSHOT_BASE_DIR).filter((f) => f.endsWith(".png"));
+  console.log(`  Output: ${SCREENSHOT_BASE_DIR}/ (${files.length} files)`);
   console.log("");
 }
 

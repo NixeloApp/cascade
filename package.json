@@ -42,7 +42,6 @@
     "e2e:debug": "playwright test --debug",
     "e2e:setup-auth": "node node_modules/tsx/dist/cli.mjs e2e/setup-auth.ts",
     "screenshots": "node --env-file=.env.local node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/cli.mjs e2e/screenshot-pages.ts",
-    "screenshots:light-mode": "node --env-file=.env.local node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/cli.mjs e2e/screenshot-pages.ts --light",
     "kill-port": "node scripts/kill-port.cjs 5555",
     "build:e2e": "vite build --mode e2e",
     "preview": "vite preview",
