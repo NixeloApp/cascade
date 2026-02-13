@@ -415,6 +415,9 @@ export const bulkUpdateStatus = authenticatedMutation({
   },
   handler: async (ctx, args) => {
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+    const uniqueProjectIds = [...new Set(pruneNull(issues).map((i) => i.projectId))];
+    const projects = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
+    const projectMap = new Map(pruneNull(projects).map((p) => [p._id, p]));
 
     const now = Date.now();
 
@@ -431,7 +434,7 @@ export const bulkUpdateStatus = authenticatedMutation({
         const oldStatus = issue.status;
 
         // Validate that the new status exists in the project's workflow
-        const project = await ctx.db.get(issue.projectId);
+        const project = projectMap.get(issue.projectId);
         if (!project) return 0;
 
         const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);

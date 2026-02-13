@@ -177,8 +177,7 @@ async function triggerSingleWebhook(
   ctx: ActionCtx,
   webhook: Doc<"webhooks">,
   event: string,
-  // biome-ignore lint/suspicious/noExplicitAny: Payload structure varies by provider
-  payload: any,
+  payload: Record<string, unknown>,
 ) {
   const requestPayload = JSON.stringify({
     event: event,
