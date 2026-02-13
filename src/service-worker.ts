@@ -207,12 +207,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     Promise.all([
-<<<<<<< HEAD
       // Clean up old caches (convex, static, js-css)
-=======
-<<<<<<< HEAD
-      // Clean up old caches and claim clients
->>>>>>> main
       caches
         .keys()
         .then((cacheNames) => {
@@ -229,23 +224,6 @@ self.addEventListener("activate", (event) => {
               .map((cacheName) => caches.delete(cacheName)),
           );
         }),
-=======
-      // Clean up old caches
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter((cacheName) => {
-              // Delete old caches
-              return (
-                cacheName.startsWith("convex-") ||
-                cacheName.startsWith("static-") ||
-                cacheName.startsWith("js-css-")
-              );
-            })
-            .map((cacheName) => caches.delete(cacheName)),
-        );
-      }),
->>>>>>> main
       // Take control of all pages
       self.clients.claim(),
     ]),

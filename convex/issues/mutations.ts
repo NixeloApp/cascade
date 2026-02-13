@@ -430,6 +430,13 @@ export const bulkUpdateStatus = authenticatedMutation({
 
         const oldStatus = issue.status;
 
+        // Validate that the new status exists in the project's workflow
+        const project = await ctx.db.get(issue.projectId);
+        if (!project) return 0;
+
+        const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
+        if (!isValidStatus) return 0;
+
         await ctx.db.patch(issue._id, {
           status: args.newStatus,
           updatedAt: now,

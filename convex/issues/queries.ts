@@ -204,7 +204,9 @@ export const listRoadmapIssues = authenticatedQuery({
       const allDatedIssues = await safeCollect(
         ctx.db
           .query("issues")
-          .withIndex("by_project_due_date", (q) => q.eq("projectId", args.projectId)),
+          .withIndex("by_project_due_date", (q) =>
+            q.eq("projectId", args.projectId).gt("dueDate", 0),
+          ),
         // Use a higher limit to account for filtering (subtasks, deleted items)
         BOUNDED_LIST_LIMIT * 4,
         "roadmap dated issues",
