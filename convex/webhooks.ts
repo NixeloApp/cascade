@@ -1,8 +1,13 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
-import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import {
+  type ActionCtx,
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { notFound, validation } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
@@ -11,6 +16,8 @@ import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { assertIsProjectAdmin } from "./projectAccess";
 import { isTest } from "./testConfig";
 import { webhookResultStatuses } from "./validators";
+
+const WEBHOOK_TIMEOUT_MS = 10000;
 
 /** Create a new webhook for a project. Requires project admin role. */
 export const createWebhook = projectAdminMutation({
@@ -161,58 +168,81 @@ export const trigger = internalAction({
 
     // Trigger each webhook
     for (const webhook of webhooks) {
-      const requestPayload = JSON.stringify({
-        event: args.event,
-        payload: args.payload,
-        timestamp: Date.now(),
-      });
-
-      // Create execution log
-      const executionId = await ctx.runMutation(internal.webhooks.createExecution, {
-        webhookId: webhook._id,
-        event: args.event,
-        requestPayload,
-      });
-
-      try {
-        const response = await fetch(webhook.url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Webhook-Event": args.event,
-            ...(webhook.secret && {
-              "X-Webhook-Signature": await generateSignature(requestPayload, webhook.secret),
-            }),
-          },
-          body: requestPayload,
-        });
-
-        const responseBody = await response.text();
-
-        // Update execution log with success
-        await ctx.runMutation(internal.webhooks.updateExecution, {
-          id: executionId,
-          status: response.ok ? "success" : "failed",
-          responseStatus: response.status,
-          responseBody: responseBody.substring(0, 1000), // Limit to 1000 chars
-          error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
-        });
-
-        // Update last triggered time
-        await ctx.runMutation(internal.webhooks.updateLastTriggered, {
-          id: webhook._id,
-        });
-      } catch (error) {
-        // Update execution log with failure
-        await ctx.runMutation(internal.webhooks.updateExecution, {
-          id: executionId,
-          status: "failed",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
+      await triggerSingleWebhook(ctx, webhook, args.event, args.payload);
     }
   },
 });
+
+async function triggerSingleWebhook(
+  ctx: ActionCtx,
+  webhook: Doc<"webhooks">,
+  event: string,
+  // biome-ignore lint/suspicious/noExplicitAny: Payload structure varies by provider
+  payload: any,
+) {
+  const requestPayload = JSON.stringify({
+    event: event,
+    payload: payload,
+    timestamp: Date.now(),
+  });
+
+  // Create execution log
+  const executionId = await ctx.runMutation(internal.webhooks.createExecution, {
+    webhookId: webhook._id,
+    event: event,
+    requestPayload,
+  });
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(webhook.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Webhook-Event": event,
+        ...(webhook.secret && {
+          "X-Webhook-Signature": await generateSignature(requestPayload, webhook.secret),
+        }),
+      },
+      body: requestPayload,
+      signal: controller.signal,
+    });
+
+    const responseBody = await response.text();
+
+    // Update execution log with success
+    await ctx.runMutation(internal.webhooks.updateExecution, {
+      id: executionId,
+      status: response.ok ? "success" : "failed",
+      responseStatus: response.status,
+      responseBody: responseBody.substring(0, 1000), // Limit to 1000 chars
+      error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
+    });
+
+    // Update last triggered time
+    await ctx.runMutation(internal.webhooks.updateLastTriggered, {
+      id: webhook._id,
+    });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.name === "AbortError"
+          ? `Timeout: Webhook delivery exceeded ${WEBHOOK_TIMEOUT_MS}ms`
+          : error.message
+        : "Unknown error";
+
+    // Update execution log with failure
+    await ctx.runMutation(internal.webhooks.updateExecution, {
+      id: executionId,
+      status: "failed",
+      error: errorMessage,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 /** Retrieve all active webhooks subscribed to a specific event type within a project. */
 export const getActiveWebhooksForEvent = internalQuery({
@@ -315,6 +345,9 @@ export const deliverTestWebhook = internalAction({
       requestPayload,
     });
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
+
     try {
       const response = await fetch(webhook.url, {
         method: "POST",
@@ -326,6 +359,7 @@ export const deliverTestWebhook = internalAction({
           }),
         },
         body: requestPayload,
+        signal: controller.signal,
       });
 
       const responseBody = await response.text();
@@ -339,11 +373,20 @@ export const deliverTestWebhook = internalAction({
         error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
       });
     } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.name === "AbortError"
+            ? `Timeout: Webhook delivery exceeded ${WEBHOOK_TIMEOUT_MS}ms`
+            : error.message
+          : "Unknown error";
+
       await ctx.runMutation(internal.webhooks.updateExecution, {
         id: executionId,
         status: "failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: errorMessage,
       });
+    } finally {
+      clearTimeout(timeoutId);
     }
   },
 });
@@ -441,6 +484,9 @@ export const retryWebhookDelivery = internalAction({
     });
     if (!webhook) return;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
+
     try {
       const response = await fetch(webhook.url, {
         method: "POST",
@@ -455,6 +501,7 @@ export const retryWebhookDelivery = internalAction({
           }),
         },
         body: execution.requestPayload,
+        signal: controller.signal,
       });
 
       const responseBody = await response.text();
@@ -468,11 +515,20 @@ export const retryWebhookDelivery = internalAction({
         error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
       });
     } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.name === "AbortError"
+            ? `Timeout: Webhook delivery exceeded ${WEBHOOK_TIMEOUT_MS}ms`
+            : error.message
+          : "Unknown error";
+
       await ctx.runMutation(internal.webhooks.incrementExecutionAttempt, {
         id: args.executionId,
         status: "failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: errorMessage,
       });
+    } finally {
+      clearTimeout(timeoutId);
     }
   },
 });
