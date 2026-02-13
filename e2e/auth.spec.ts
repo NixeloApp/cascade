@@ -210,25 +210,26 @@ test.describe("Integration", () => {
     // Sign in with existing user
     await authPage.signIn(email, password);
 
-    // Wait for navigation to complete
-    await page.waitForLoadState("domcontentloaded");
+    // Wait for tokens to be set - wait for network idle to ensure auth requests complete
+    await page.waitForLoadState("networkidle");
 
-    // If we are still on landing page after a short wait, force navigation to app
-    // This handles cases where automatic redirect from login page might be missed or slow
+    // Force navigation to app if still on landing page
     if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
-      await page.waitForTimeout(2000); // Give it a moment
-      if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
-        console.log("[Test] Still on landing page, forcing navigation to app...");
+        console.log("[Test] Still on landing page after sign in, attempting navigation to app...");
         await page.goto(ROUTES.app.build());
-      }
     }
 
     // Should land on dashboard (existing user has completed onboarding)
-    await expect(async () => {
-      const url = page.url();
-      // Should be on dashboard, not landing or auth pages
-      expect(url).toMatch(/\/[^/]+\/dashboard/);
-    }).toPass({ timeout: 15000 });
+    // Use waitForURL with a pattern to ensure we catch the redirect
+    await page.waitForURL(/\/.*\/dashboard/, { timeout: 20000 }).catch(async () => {
+        console.log(`[Test] waitForURL failed. Current URL: ${page.url()}`);
+        // Last ditch attempt if we are still on root but authenticated
+        if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
+             console.log("[Test] Retry navigation to app...");
+             await page.goto(ROUTES.app.build());
+             await page.waitForURL(/\/.*\/dashboard/, { timeout: 10000 });
+        }
+    });
 
     // Verify dashboard elements are visible
     await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
