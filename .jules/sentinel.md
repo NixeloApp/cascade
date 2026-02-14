@@ -49,3 +49,8 @@
 **Vulnerability:** The OTP verification provider suppressed emails for already-verified users to avoid spamming/confusing them. This created a timing side-channel (fast DB check vs slow email send) allowing user enumeration, and also prevented verified users from logging in via OTP (Denial of Service).
 **Learning:** Suppressing side-effects (like email sending) based on user state in unauthenticated or semi-authenticated flows leaks information. It also often breaks legitimate use cases (retry/login).
 **Prevention:** Removed the conditional logic. The system now attempts to send the OTP regardless of the user's verification status, ensuring consistent timing and restoring functionality.
+
+## 2026-02-14 - Project Viewer Authorization Bypass in Documents
+**Vulnerability:** Project Viewers could create public documents linked to the project, effectively bypassing the read-only restriction of the "Viewer" role. They could also toggle private documents to public.
+**Learning:** `assertCanAccessProject` validates read access (Viewer+), but `create` and `update` mutations must use `assertCanEditProject` (Editor+) when modifying project-linked resources, especially public ones. The distinction between "access" and "edit" must be explicitly enforced for each mutation.
+**Prevention:** Audited `documents.ts` to ensure `assertCanEditProject` is used for `create` (when public) and `togglePublic`.
