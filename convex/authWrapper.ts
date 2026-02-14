@@ -10,12 +10,17 @@ import { internal } from "./_generated/api";
 import { httpAction, internalAction, internalMutation } from "./_generated/server";
 import { getConvexSiteUrl } from "./lib/env";
 
+const RESET_TIMEOUT_MS = 10000;
+
 /**
  * Internal action to perform the actual password reset request (can be slow)
  */
 export const performPasswordReset = internalAction({
   args: { email: v.string() },
   handler: async (_ctx, args) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), RESET_TIMEOUT_MS);
+
     try {
       const formData = new URLSearchParams();
       formData.set("email", args.email);
@@ -28,9 +33,12 @@ export const performPasswordReset = internalAction({
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: formData.toString(),
+        signal: controller.signal,
       });
     } catch {
       // Silently ignore - don't leak any info
+    } finally {
+      clearTimeout(timeoutId);
     }
   },
 });
