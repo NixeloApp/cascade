@@ -17,6 +17,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { type ActionCtx, httpAction, internalMutation, internalQuery } from "./_generated/server";
 import { constantTimeEqual } from "./lib/apiAuth";
+import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import type { CalendarEventColor } from "./validators";
 
@@ -1675,10 +1676,19 @@ export const storeTestOtp = internalMutation({
       await ctx.db.delete(existingOtp._id);
     }
 
+    // Encrypt if API key is present
+    let codeToStore = args.code;
+    const apiKey = process.env.E2E_API_KEY;
+
+    if (apiKey) {
+      const encrypted = await encryptE2EData(args.code, apiKey);
+      codeToStore = `enc:${encrypted}`;
+    }
+
     // Store new OTP with 15-minute expiration
     await ctx.db.insert("testOtpCodes", {
       email: args.email,
-      code: args.code,
+      code: codeToStore,
       type: args.type,
       expiresAt: Date.now() + 15 * 60 * 1000,
     });
@@ -1716,6 +1726,15 @@ export const getLatestOTP = internalQuery({
     // Check if expired
     if (otpRecord.expiresAt < Date.now()) {
       return null;
+    }
+
+    // Decrypt if necessary
+    if (otpRecord.code.startsWith("enc:")) {
+      const apiKey = process.env.E2E_API_KEY;
+      if (!apiKey) {
+        throw new Error("Cannot decrypt E2E data: E2E_API_KEY missing");
+      }
+      return await decryptE2EData(otpRecord.code.slice(4), apiKey);
     }
 
     return otpRecord.code;

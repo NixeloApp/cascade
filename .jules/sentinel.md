@@ -54,3 +54,8 @@
 **Vulnerability:** Project Viewers could create public documents linked to the project, effectively bypassing the read-only restriction of the "Viewer" role. They could also toggle private documents to public.
 **Learning:** `assertCanAccessProject` validates read access (Viewer+), but `create` and `update` mutations must use `assertCanEditProject` (Editor+) when modifying project-linked resources, especially public ones. The distinction between "access" and "edit" must be explicitly enforced for each mutation.
 **Prevention:** Audited `documents.ts` to ensure `assertCanEditProject` is used for `create` (when public) and `togglePublic`.
+
+## 2025-02-18 - Encrypted E2E Test Secrets
+**Vulnerability:** The system stored plaintext OTPs for test emails (@inbox.mailtrap.io) in the `testOtpCodes` table whenever `E2E_API_KEY` was present in the environment (e.g. production). If the database was compromised, these OTPs were readable.
+**Learning:** Even conditional storage for testing purposes should be encrypted at rest if the environment contains the necessary keys. Relying on "it's just for testing" often leaks into production configurations where testing tools are enabled.
+**Prevention:** Implemented AES-GCM encryption for stored test OTPs using the `E2E_API_KEY` as the encryption key. OTPs are only decryptable when the key is present and verified.
