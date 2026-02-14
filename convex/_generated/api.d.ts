@@ -86,6 +86,7 @@ import type * as lib_queryLimits from "../lib/queryLimits.js";
 import type * as lib_rateLimiter from "../lib/rateLimiter.js";
 import type * as lib_relationships from "../lib/relationships.js";
 import type * as lib_softDeleteHelpers from "../lib/softDeleteHelpers.js";
+import type * as lib_ssrf from "../lib/ssrf.js";
 import type * as lib_teamAccess from "../lib/teamAccess.js";
 import type * as lib_timeUtils from "../lib/timeUtils.js";
 import type * as lib_userUtils from "../lib/userUtils.js";
@@ -220,6 +221,7 @@ declare const fullApi: ApiFromModules<{
   "lib/rateLimiter": typeof lib_rateLimiter;
   "lib/relationships": typeof lib_relationships;
   "lib/softDeleteHelpers": typeof lib_softDeleteHelpers;
+  "lib/ssrf": typeof lib_ssrf;
   "lib/teamAccess": typeof lib_teamAccess;
   "lib/timeUtils": typeof lib_timeUtils;
   "lib/userUtils": typeof lib_userUtils;
