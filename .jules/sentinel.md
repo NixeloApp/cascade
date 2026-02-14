@@ -44,3 +44,8 @@
 **Vulnerability:** The system stored plaintext OTPs for any email ending in `@inbox.mailtrap.io`, even in production environments. While intended for E2E testing, this exposed a risk if real users (or attackers) registered with that domain, populating the database with plaintext secrets.
 **Learning:** Relying solely on data properties (like email domain) for security decisions is insufficient when it triggers sensitive behaviors (like storing secrets). Environment configuration must also act as a gatekeeper.
 **Prevention:** Modified `OTPVerification` and `OTPPasswordReset` to require BOTH the test email domain AND a safe environment signal (`NODE_ENV=test/dev`, `CI=true`, or `E2E_API_KEY` present). This ensures test secrets are only stored when the environment is explicitly configured for testing.
+
+## 2025-05-22 - User Enumeration via OTP Suppression
+**Vulnerability:** The OTP verification provider suppressed emails for already-verified users to avoid spamming/confusing them. This created a timing side-channel (fast DB check vs slow email send) allowing user enumeration, and also prevented verified users from logging in via OTP (Denial of Service).
+**Learning:** Suppressing side-effects (like email sending) based on user state in unauthenticated or semi-authenticated flows leaks information. It also often breaks legitimate use cases (retry/login).
+**Prevention:** Removed the conditional logic. The system now attempts to send the OTP regardless of the user's verification status, ensuring consistent timing and restoring functionality.

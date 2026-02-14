@@ -72,20 +72,6 @@ export const OTPVerification = Resend({
       // Store test OTP if applicable
       await storeTestOtp(ctx, email, token);
 
-      // Check if user is already verified (e.g., E2E test users)
-      // Safety check: ctx.db might be undefined depending on how the provider is called
-      if (ctx?.db) {
-        const existingUser = await ctx.db
-          .query("users")
-          .withIndex("email", (q) => q.eq("email", email))
-          .first();
-
-        if (existingUser?.emailVerificationTime) {
-          // User already verified - skip sending email
-          return;
-        }
-      }
-
       // Send verification email through the email provider system
       // In dev/E2E (MAILTRAP_MODE=sandbox), emails go to Mailtrap inbox
       const result = await sendEmail(ctx, {
