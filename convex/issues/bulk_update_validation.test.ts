@@ -3,13 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createProjectInOrganization,
-  createTestContext,
-  createTestIssue,
-  createTestUser,
-} from "../testUtils";
+import { createProjectInOrganization, createTestContext, createTestIssue } from "../testUtils";
 
 describe("Bulk Update Validation", () => {
   it("should not update status if new status is invalid for the project", async () => {
@@ -27,7 +21,7 @@ describe("Bulk Update Validation", () => {
     });
 
     const initialIssue = await t.run(async (ctx) => ctx.db.get(issueId));
-    const initialStatus = initialIssue!.status;
+    const initialStatus = initialIssue?.status;
 
     // Attempt to bulk update to a non-existent status
     const invalidStatus = "non-existent-status-id";
@@ -45,7 +39,7 @@ describe("Bulk Update Validation", () => {
 
     const updatedIssue = await t.run(async (ctx) => ctx.db.get(issueId));
     // Status should remain unchanged
-    expect(updatedIssue!.status).toBe(initialStatus);
+    expect(updatedIssue?.status).toBe(initialStatus);
     await t.finishInProgressScheduledFunctions();
   });
 });
