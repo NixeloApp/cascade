@@ -23,6 +23,9 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
 
   // API Endpoints: General rate limit
   apiEndpoint: { kind: "fixed window", rate: 100, period: 60_000 }, // 100/min
+
+  // Password Reset: Strict limit to prevent spam/DoS
+  passwordReset: { kind: "token bucket", rate: 3, period: 60_000, capacity: 3 }, // 3 per minute
 });
 
 /**
