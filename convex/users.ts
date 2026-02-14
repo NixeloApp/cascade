@@ -5,7 +5,8 @@ import type { Id } from "./_generated/dataModel";
 import { internalQuery, type MutationCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { sendEmail } from "./email";
-import { batchFetchUsers } from "./lib/batchHelpers";
+import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
+import { efficientCount } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
@@ -331,18 +332,28 @@ export const getUserStats = authenticatedQuery({
       allowedProjectIds = new Set(myMemberships.map((m) => m.projectId));
     }
 
-    // Get issues created
-    const issuesCreatedAll = await ctx.db
-      .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", args.userId))
-      .filter(notDeleted)
-      .take(MAX_ISSUES_FOR_STATS);
+    // Optimize: Use efficient counting when not filtering by shared projects (own profile)
+    let issuesCreatedCount = 0;
+    if (allowedProjectIds) {
+      const issuesCreatedAll = await ctx.db
+        .query("issues")
+        .withIndex("by_reporter", (q) => q.eq("reporterId", args.userId))
+        .filter(notDeleted)
+        .take(MAX_ISSUES_FOR_STATS);
+      issuesCreatedCount = issuesCreatedAll.filter((i) =>
+        allowedProjectIds.has(i.projectId),
+      ).length;
+    } else {
+      issuesCreatedCount = await efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_reporter", (q) => q.eq("reporterId", args.userId))
+          .filter(notDeleted),
+      );
+    }
 
-    const issuesCreated = allowedProjectIds
-      ? issuesCreatedAll.filter((i) => allowedProjectIds.has(i.projectId))
-      : issuesCreatedAll;
-
-    // Get issues assigned
+    // Get issues assigned - needed for issuesCompleted calculation so we always fetch
+    // Note: We could optimize this too but we need the status field
     const issuesAssignedAll = await ctx.db
       .query("issues")
       .withIndex("by_assignee", (q) => q.eq("assigneeId", args.userId))
@@ -353,47 +364,67 @@ export const getUserStats = authenticatedQuery({
       ? issuesAssignedAll.filter((i) => allowedProjectIds.has(i.projectId))
       : issuesAssignedAll;
 
-    // Get comments - filter by allowed projects when viewing another user
-    const commentsAll = await ctx.db
-      .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", args.userId))
-      .filter(notDeleted)
-      .take(MAX_COMMENTS_FOR_STATS);
-
-    // Filter comments by allowed projects (requires fetching parent issues)
-    let comments = commentsAll;
+    // Get comments
+    let commentsCount = 0;
     if (allowedProjectIds) {
-      // Batch fetch unique issue IDs to check project membership
+      const commentsAll = await ctx.db
+        .query("issueComments")
+        .withIndex("by_author", (q) => q.eq("authorId", args.userId))
+        .filter(notDeleted)
+        .take(MAX_COMMENTS_FOR_STATS);
+
+      // Batch fetch unique issue IDs to check project membership using batchFetchIssues
+      // This avoids unbounded Promise.all calls
       const issueIds = [...new Set(commentsAll.map((c) => c.issueId))];
-      const issues = await Promise.all(issueIds.map((id) => ctx.db.get(id)));
-      const allowedIssueIds = new Set(
-        issues
-          .filter((issue) => issue && allowedProjectIds.has(issue.projectId))
-          .map((issue) => issue?._id),
+      const issueMap = await batchFetchIssues(ctx, issueIds);
+
+      const allowedIssueIds = new Set<string>();
+      for (const [issueId, issue] of issueMap.entries()) {
+        if (issue.projectId && allowedProjectIds.has(issue.projectId)) {
+          allowedIssueIds.add(issueId);
+        }
+      }
+
+      commentsCount = commentsAll.filter((c) => allowedIssueIds.has(c.issueId)).length;
+    } else {
+      commentsCount = await efficientCount(
+        ctx.db
+          .query("issueComments")
+          .withIndex("by_author", (q) => q.eq("authorId", args.userId))
+          .filter(notDeleted),
       );
-      comments = commentsAll.filter((c) => allowedIssueIds.has(c.issueId));
     }
 
     // Get projects (as member)
-    const projectMembershipsAll = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .filter(notDeleted)
-      .take(MAX_PAGE_SIZE);
+    let projectsCount = 0;
+    if (allowedProjectIds) {
+      const projectMembershipsAll = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .filter(notDeleted)
+        .take(MAX_PAGE_SIZE);
 
-    const projectMemberships = allowedProjectIds
-      ? projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId))
-      : projectMembershipsAll;
+      projectsCount = projectMembershipsAll.filter((m) =>
+        allowedProjectIds.has(m.projectId),
+      ).length;
+    } else {
+      projectsCount = await efficientCount(
+        ctx.db
+          .query("projectMembers")
+          .withIndex("by_user", (q) => q.eq("userId", args.userId))
+          .filter(notDeleted),
+      );
+    }
 
     return {
-      issuesCreated: issuesCreated.length,
+      issuesCreated: issuesCreatedCount,
       issuesAssigned: issuesAssigned.length,
       issuesCompleted: issuesAssigned.filter((i) => {
         // Check if issue is in a "done" state - you'd need to check workflow states
         return i.status === "done";
       }).length,
-      comments: comments.length,
-      projects: projectMemberships.length,
+      comments: commentsCount,
+      projects: projectsCount,
     };
   },
 });
