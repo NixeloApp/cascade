@@ -434,20 +434,24 @@ export const bulkUpdateStatus = authenticatedMutation({
       issues.map(async (issue) => {
         if (!issue || issue.isDeleted) return 0;
 
+        const projectId = issue.projectId as Id<"projects">;
+        const project = projectMap.get(projectId);
+        if (!project) return 0;
+
         try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+          // Verify permissions using cached project (or re-check if needed, but permissions usually need DB)
+          // Since assertCanEditProject hits DB, we might want to optimize this too, but for now let's keep permission check robust
+          // Actually, assertCanEditProject does a get(), so we could optimize it by passing project, but the helper might not support it.
+          // Let's assume permission check is fast enough or cached at convex level.
+          await assertCanEditProject(ctx, projectId, ctx.userId);
         } catch {
           return 0;
         }
 
-        const oldStatus = issue.status;
-
-        // Validate that the new status exists in the project's workflow using cached map
-        const project = projectMap.get(issue.projectId.toString());
-        if (!project) return 0;
-
         const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
         if (!isValidStatus) return 0;
+
+        const oldStatus = issue.status;
 
         await ctx.db.patch(issue._id, {
           status: args.newStatus,

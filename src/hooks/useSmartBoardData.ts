@@ -77,10 +77,10 @@ function mergeStatusGroup(
   }
 
   if (uniqueNewIssues.length === 0) {
-    return existingIssues;
+    return existingIssues || [];
   }
 
-  return [...existingIssues, ...uniqueNewIssues];
+  return [...(existingIssues || []), ...uniqueNewIssues];
 }
 
 export function mergeIssuesByStatus(
