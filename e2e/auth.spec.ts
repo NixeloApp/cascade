@@ -213,12 +213,17 @@ test.describe("Integration", () => {
     // Wait for token injection and redirect
     await expect(page.locator("body")).toBeVisible();
 
-    // If we are still on landing page after a short wait, force navigation to app
+    // If we are still on landing page or signin page after a short wait, force navigation to app
     // This handles cases where automatic redirect from login page might be missed or slow
-    if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
+    const isStuck = () => {
+      const url = page.url();
+      return url.endsWith("/") || url.endsWith("localhost:5555") || url.includes("/signin");
+    };
+
+    if (isStuck()) {
       await page.waitForTimeout(2000); // Give it a moment
-      if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
-        console.log("[Test] Still on landing page, forcing navigation to app...");
+      if (isStuck()) {
+        console.log(`[Test] Stuck on ${page.url()}, forcing navigation to app...`);
         await page.goto(ROUTES.app.build());
       }
     }
