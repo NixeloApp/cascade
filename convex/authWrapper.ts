@@ -7,9 +7,15 @@
 
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { httpAction, internalAction, internalMutation } from "./_generated/server";
+import {
+  httpAction,
+  internalAction,
+  internalMutation,
+  type MutationCtx,
+} from "./_generated/server";
 import { getConvexSiteUrl } from "./lib/env";
 import { logger } from "./lib/logger";
+import { rateLimit } from "./rateLimits";
 
 const RESET_TIMEOUT_MS = 60000;
 
@@ -59,6 +65,24 @@ export const schedulePasswordReset = internalMutation({
 });
 
 /**
+ * Handler for rate limit check - exported for testing
+ */
+export const checkPasswordResetRateLimitHandler = async (
+  ctx: MutationCtx,
+  args: { ip: string },
+) => {
+  await rateLimit(ctx, "passwordReset", { key: args.ip });
+};
+
+/**
+ * Check rate limit for password reset
+ */
+export const checkPasswordResetRateLimit = internalMutation({
+  args: { ip: v.string() },
+  handler: checkPasswordResetRateLimitHandler,
+});
+
+/**
  * Secure password reset request
  *
  * Calls the actual auth endpoint internally but always returns success.
@@ -66,6 +90,19 @@ export const schedulePasswordReset = internalMutation({
  */
 export const securePasswordReset = httpAction(async (ctx, request) => {
   try {
+    // Check rate limit first
+    const clientIp = (request.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim();
+
+    try {
+      await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimit, { ip: clientIp });
+    } catch {
+      // Rate limit exceeded
+      return new Response(JSON.stringify({ success: false, error: "Rate limit exceeded" }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const body = await request.json();
     const { email } = body;
 
