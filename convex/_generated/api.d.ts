@@ -154,8 +154,8 @@ declare const fullApi: ApiFromModules<{
   "ai/semanticSearch": typeof ai_semanticSearch;
   "ai/suggestions": typeof ai_suggestions;
   analytics: typeof analytics;
-  apiKeys: typeof apiKeys;
   "api/issues": typeof api_issues;
+  apiKeys: typeof apiKeys;
   attachments: typeof attachments;
   auditLogs: typeof auditLogs;
   auth: typeof auth;
@@ -272,6 +272,14 @@ declare const fullApi: ApiFromModules<{
   yjs: typeof yjs;
 }>;
 
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export declare const api: FilterApi<
   typeof fullApi,
   FunctionReference<any, "public">
