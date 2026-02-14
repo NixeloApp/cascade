@@ -208,6 +208,7 @@ const applicationTables = {
     .index("by_team_deleted", ["teamId", "isDeleted"])
     .index("by_key", ["key"])
     .index("by_assignee", ["assigneeId", "isDeleted"])
+    .index("by_assignee_status", ["assigneeId", "status", "isDeleted"])
     .index("by_reporter", ["reporterId", "isDeleted"])
     .index("by_status", ["status"])
     .index("by_sprint", ["sprintId", "isDeleted"])

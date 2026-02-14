@@ -352,17 +352,37 @@ export const getUserStats = authenticatedQuery({
       );
     }
 
-    // Get issues assigned - needed for issuesCompleted calculation so we always fetch
-    // Note: We could optimize this too but we need the status field
-    const issuesAssignedAll = await ctx.db
-      .query("issues")
-      .withIndex("by_assignee", (q) => q.eq("assigneeId", args.userId))
-      .filter(notDeleted)
-      .take(MAX_ISSUES_FOR_STATS);
+    // Get issues assigned
+    let issuesAssignedCount = 0;
+    let issuesCompletedCount = 0;
 
-    const issuesAssigned = allowedProjectIds
-      ? issuesAssignedAll.filter((i) => allowedProjectIds.has(i.projectId))
-      : issuesAssignedAll;
+    if (allowedProjectIds) {
+      const issuesAssignedAll = await ctx.db
+        .query("issues")
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", args.userId))
+        .filter(notDeleted)
+        .take(MAX_ISSUES_FOR_STATS);
+
+      const filtered = issuesAssignedAll.filter((i) => allowedProjectIds.has(i.projectId));
+      issuesAssignedCount = filtered.length;
+      issuesCompletedCount = filtered.filter((i) => i.status === "done").length;
+    } else {
+      issuesAssignedCount = await efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_assignee", (q) => q.eq("assigneeId", args.userId))
+          .filter(notDeleted),
+      );
+
+      issuesCompletedCount = await efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_assignee_status", (q) =>
+            q.eq("assigneeId", args.userId).eq("status", "done"),
+          )
+          .filter(notDeleted),
+      );
+    }
 
     // Get comments
     let commentsCount = 0;
@@ -418,11 +438,8 @@ export const getUserStats = authenticatedQuery({
 
     return {
       issuesCreated: issuesCreatedCount,
-      issuesAssigned: issuesAssigned.length,
-      issuesCompleted: issuesAssigned.filter((i) => {
-        // Check if issue is in a "done" state - you'd need to check workflow states
-        return i.status === "done";
-      }).length,
+      issuesAssigned: issuesAssignedCount,
+      issuesCompleted: issuesCompletedCount,
       comments: commentsCount,
       projects: projectsCount,
     };
