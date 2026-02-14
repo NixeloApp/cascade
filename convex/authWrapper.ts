@@ -9,8 +9,9 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { httpAction, internalAction, internalMutation } from "./_generated/server";
 import { getConvexSiteUrl } from "./lib/env";
+import { logger } from "./lib/logger";
 
-const RESET_TIMEOUT_MS = 10000;
+const RESET_TIMEOUT_MS = 30000;
 
 /**
  * Internal action to perform the actual password reset request (can be slow)
@@ -35,8 +36,10 @@ export const performPasswordReset = internalAction({
         body: formData.toString(),
         signal: controller.signal,
       });
-    } catch {
-      // Silently ignore - don't leak any info
+    } catch (error) {
+      // Silently ignore to client - don't leak any info
+      // But log to server for debugging (e.g. timeout in CI)
+      logger.error("Password reset request failed", { error: String(error) });
     } finally {
       clearTimeout(timeoutId);
     }
