@@ -1,8 +1,9 @@
+import type { FilterBuilder, GenericTableInfo } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalQuery, type MutationCtx } from "./_generated/server";
+import { internalQuery, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { sendEmail } from "./email";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
@@ -311,6 +312,78 @@ export const isOrganizationAdmin = authenticatedQuery({
   },
 });
 
+// Helper to construct allowed project filter
+function isAllowedProject(q: FilterBuilder<GenericTableInfo>, projectIds: Id<"projects">[]) {
+  return q.or(...projectIds.map((id) => q.eq(q.field("projectId"), id)));
+}
+
+async function countIssuesByReporter(
+  ctx: QueryCtx,
+  reporterId: Id<"users">,
+  allowedProjectIds: Set<string> | null,
+) {
+  if (allowedProjectIds) {
+    if (allowedProjectIds.size === 0) return 0;
+    const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
+    return await efficientCount(
+      ctx.db
+        .query("issues")
+        .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
+        .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+      MAX_ISSUES_FOR_STATS,
+    );
+  }
+  return await efficientCount(
+    ctx.db
+      .query("issues")
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
+      .filter(notDeleted),
+  );
+}
+
+async function countIssuesByAssignee(
+  ctx: QueryCtx,
+  assigneeId: Id<"users">,
+  allowedProjectIds: Set<string> | null,
+) {
+  if (allowedProjectIds) {
+    if (allowedProjectIds.size === 0) return [0, 0];
+    const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
+    return await Promise.all([
+      efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
+          .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+        MAX_ISSUES_FOR_STATS,
+      ),
+      efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_assignee_status", (q) =>
+            q.eq("assigneeId", assigneeId).eq("status", "done"),
+          )
+          .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+        MAX_ISSUES_FOR_STATS,
+      ),
+    ]);
+  }
+  return await Promise.all([
+    efficientCount(
+      ctx.db
+        .query("issues")
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
+        .filter(notDeleted),
+    ),
+    efficientCount(
+      ctx.db
+        .query("issues")
+        .withIndex("by_assignee_status", (q) => q.eq("assigneeId", assigneeId).eq("status", "done"))
+        .filter(notDeleted),
+    ),
+  ]);
+}
+
 export const getUserStats = authenticatedQuery({
   args: { userId: v.id("users") },
   returns: v.object({
@@ -333,56 +406,12 @@ export const getUserStats = authenticatedQuery({
     }
 
     // Optimize: Use efficient counting when not filtering by shared projects (own profile)
-    let issuesCreatedCount = 0;
-    if (allowedProjectIds) {
-      const issuesCreatedAll = await ctx.db
-        .query("issues")
-        .withIndex("by_reporter", (q) => q.eq("reporterId", args.userId))
-        .filter(notDeleted)
-        .take(MAX_ISSUES_FOR_STATS);
-      issuesCreatedCount = issuesCreatedAll.filter((i) =>
-        allowedProjectIds.has(i.projectId),
-      ).length;
-    } else {
-      issuesCreatedCount = await efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_reporter", (q) => q.eq("reporterId", args.userId))
-          .filter(notDeleted),
-      );
-    }
-
-    // Get issues assigned
-    let issuesAssignedCount = 0;
-    let issuesCompletedCount = 0;
-
-    if (allowedProjectIds) {
-      const issuesAssignedAll = await ctx.db
-        .query("issues")
-        .withIndex("by_assignee", (q) => q.eq("assigneeId", args.userId))
-        .filter(notDeleted)
-        .take(MAX_ISSUES_FOR_STATS);
-
-      const filtered = issuesAssignedAll.filter((i) => allowedProjectIds.has(i.projectId));
-      issuesAssignedCount = filtered.length;
-      issuesCompletedCount = filtered.filter((i) => i.status === "done").length;
-    } else {
-      issuesAssignedCount = await efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_assignee", (q) => q.eq("assigneeId", args.userId))
-          .filter(notDeleted),
-      );
-
-      issuesCompletedCount = await efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_assignee_status", (q) =>
-            q.eq("assigneeId", args.userId).eq("status", "done"),
-          )
-          .filter(notDeleted),
-      );
-    }
+    const issuesCreatedCount = await countIssuesByReporter(ctx, args.userId, allowedProjectIds);
+    const [issuesAssignedCount, issuesCompletedCount] = await countIssuesByAssignee(
+      ctx,
+      args.userId,
+      allowedProjectIds,
+    );
 
     // Get comments
     let commentsCount = 0;
