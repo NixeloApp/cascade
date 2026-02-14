@@ -26,7 +26,12 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
 
   // Password Reset: Strict limit to prevent spam/DoS
   // Increased capacity/rate slightly to accommodate parallel E2E tests
-  passwordReset: { kind: "token bucket", rate: 10, period: 60_000, capacity: 10 }, // 10 per minute
+  passwordReset: {
+    kind: "token bucket",
+    rate: process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? 10 : 3,
+    period: 60_000,
+    capacity: process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? 10 : 3,
+  }, // 3 per minute (higher in dev/test)
 });
 
 /**

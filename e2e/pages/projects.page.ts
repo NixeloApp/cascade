@@ -333,7 +333,9 @@ export class ProjectsPage extends BasePage {
   getIssueCard(title: string) {
     // Match the accessible name (aria-label) which contains the title
     // e.g. "Open issue PROJ-123: Issue Title"
-    return this.page.getByRole("button", { name: new RegExp(title) });
+    // Escape regex characters to prevent matching errors
+    const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return this.page.getByRole("button", { name: new RegExp(escaped) });
   }
 
   /**
