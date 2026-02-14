@@ -47,7 +47,6 @@ describe("Time Tracking Security", () => {
     });
 
     // 4. Viewer tries to getBurnRate
-    // This SHOULD fail if properly secured, but currently it passes because it only checks "access"
     await expect(
       asViewer.query(api.timeTracking.getBurnRate, {
         projectId,
