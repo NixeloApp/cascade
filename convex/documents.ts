@@ -16,7 +16,7 @@ import {
 } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
-import { assertCanAccessProject } from "./projectAccess";
+import { assertCanAccessProject, assertCanEditProject } from "./projectAccess";
 
 export const create = authenticatedMutation({
   args: {
@@ -75,7 +75,12 @@ export const create = authenticatedMutation({
         throw validation("projectId", "Project does not belong to the specified organization");
       }
 
-      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+      // Security Fix: Require EDITOR permission if creating a public document in a project
+      if (args.isPublic) {
+        await assertCanEditProject(ctx, args.projectId, ctx.userId);
+      } else {
+        await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+      }
     }
 
     // Validate integrity: Workspace must belong to the specified organization
@@ -276,6 +281,11 @@ export const togglePublic = authenticatedMutation({
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to edit this document");
+    }
+
+    // Security Fix: Require EDITOR permission on project if changing visibility
+    if (document.projectId) {
+      await assertCanEditProject(ctx, document.projectId, ctx.userId);
     }
 
     await ctx.db.patch(args.id, {
