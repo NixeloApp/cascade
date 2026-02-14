@@ -876,9 +876,7 @@ export const listByTeamSmart = authenticatedQuery({
           // Batch query: Promise.all handles parallelism
           return ctx.db
             .query("issues")
-            .withIndex("by_team_status", (q) =>
-              q.eq("teamId", args.teamId).eq("status", state.id),
-            )
+            .withIndex("by_team_status", (q) => q.eq("teamId", args.teamId).eq("status", state.id))
             .order("asc")
             .filter(notDeleted);
         })();
