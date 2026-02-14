@@ -1252,8 +1252,12 @@ interface SearchArgs {
   priority?: string[];
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Convex search query types are internal/complex
-function applySearchFilters(q: any, args: SearchArgs) {
+interface SearchFilter {
+  search(field: string, query: string): SearchFilter;
+  eq(field: string, value: unknown): SearchFilter;
+}
+
+function applySearchFilters(q: SearchFilter, args: SearchArgs) {
   let searchQ = q.search("searchContent", args.query);
   if (args.projectId) {
     searchQ = searchQ.eq("projectId", args.projectId);
