@@ -223,6 +223,7 @@ export const listRoadmapIssues = authenticatedQuery({
         ),
       );
       issues = outcomes.flat();
+      // Resort by due date as parallel fetches may disrupt global order
       issues.sort((a, b) => (a.dueDate ?? 0) - (b.dueDate ?? 0));
     } else {
       // Bounded: fetch by type with limits
