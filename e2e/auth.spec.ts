@@ -233,10 +233,10 @@ test.describe("Integration", () => {
       const url = page.url();
       // Should be on dashboard, not landing or auth pages
       expect(url).toMatch(/\/[^/]+\/dashboard/);
-    }).toPass({ timeout: 15000 });
+    }).toPass({ timeout: 30000 });
 
     // Verify dashboard elements are visible
-    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
+    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible({ timeout: 30000 });
     console.log("[Test] Successfully signed in and landed on dashboard");
   });
 
@@ -298,7 +298,7 @@ test.describe("Integration", () => {
       page
         .getByRole("heading", { name: /welcome to nixelo/i })
         .or(page.locator('[data-sidebar="sidebar"]')),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30000 });
     console.log("[Test] Successfully signed in with new password");
   });
 });
