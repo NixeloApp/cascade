@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { IssueDetailModal } from "./IssueDetailModal";
 
@@ -169,8 +170,9 @@ describe("IssueDetailModal", () => {
     renderModal();
 
     expect(screen.getByText("TEST-123")).toBeInTheDocument();
-    expect(screen.getByText(/Fix authentication bug/i)).toBeInTheDocument();
-    expect(screen.getByText(/Users cannot login/i)).toBeInTheDocument();
+    // Title appears in modal header - use getAllByText since it may appear multiple times
+    expect(screen.getAllByText(/Fix authentication bug/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Users cannot login/i).length).toBeGreaterThan(0);
   });
 
   it("should display issue metadata", () => {
@@ -221,7 +223,7 @@ describe("IssueDetailModal", () => {
     expect(screen.getByText(/Time Tracking/i)).toBeInTheDocument();
   });
 
-  it("should close modal when close button is clicked", async () => {
+  it("should close modal when X button is clicked", async () => {
     const user = userEvent.setup();
     setupMockQuery();
 
@@ -234,16 +236,29 @@ describe("IssueDetailModal", () => {
     expect(mockOnOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("should close modal when close button is clicked via dialog-close", async () => {
+  it("should close modal when backdrop is clicked", async () => {
     const user = userEvent.setup();
     setupMockQuery();
 
     renderModal();
 
-    // Radix Dialog uses data-slot="dialog-close" for close buttons
-    const closeButton = document.querySelector('[data-slot="dialog-close"]');
-    expect(closeButton).toBeTruthy();
-    await user.click(closeButton as Element);
+    // Click the dialog overlay to close
+    const overlay = screen.getByTestId(TEST_IDS.DIALOG.OVERLAY);
+    await user.click(overlay);
+
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("should close modal when Escape is pressed", async () => {
+    const user = userEvent.setup();
+    setupMockQuery();
+
+    renderModal();
+
+    // Focus within the dialog first, then press Escape
+    const dialog = screen.getByRole("dialog");
+    dialog.focus();
+    await user.keyboard("{Escape}");
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false);
   });

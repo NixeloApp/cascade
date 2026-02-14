@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
@@ -76,17 +76,14 @@ export function ApiKeysManager() {
             <Typography className="text-sm text-ui-text-secondary mb-4">
               Generate your first API key to access Nixelo programmatically
             </Typography>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowGenerateModal(true)}
-              className="mx-auto"
-            >
-              <Flex gap="sm" align="center">
-                <Plus className="h-4 w-4" />
-                Generate Your First Key
-              </Flex>
-            </Button>
+            <Flex justify="center">
+              <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
+                <Flex gap="sm" align="center">
+                  <Plus className="h-4 w-4" />
+                  Generate Your First Key
+                </Flex>
+              </Button>
+            </Flex>
           </div>
         ) : (
           <Flex direction="column" gap="lg">
@@ -355,130 +352,130 @@ function GenerateKeyModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Generate API Key</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6">
-          {!generatedKey ? (
-            <>
-              {/* Key Name */}
-              <Input
-                label="Key Name *"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., CLI Tool, GitHub Actions, Claude Code"
-                helperText="A descriptive name to help you identify this key"
-              />
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Generate API Key"
+      className="sm:max-w-2xl"
+    >
+      <div className="space-y-6">
+        {!generatedKey ? (
+          <>
+            {/* Key Name */}
+            <Input
+              label="Key Name *"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., CLI Tool, GitHub Actions, Claude Code"
+              helperText="A descriptive name to help you identify this key"
+            />
 
-              {/* Scopes */}
-              <div>
-                <Label required className="block mb-2">
-                  Permissions (Scopes)
-                </Label>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {availableScopes.map((scope) => (
-                    <label
-                      key={scope.value}
-                      htmlFor={`scope-${scope.value}`}
-                      className="flex items-start p-3 bg-ui-bg-secondary rounded-lg cursor-pointer hover:bg-ui-bg-tertiary"
-                    >
-                      <Checkbox
-                        id={`scope-${scope.value}`}
-                        checked={selectedScopes.includes(scope.value)}
-                        onChange={() => toggleScope(scope.value)}
-                        className="mt-0.5"
-                      />
-                      <div className="ml-3">
-                        <Typography className="text-sm font-medium text-ui-text">
-                          {scope.label}
-                        </Typography>
-                        <Typography className="text-xs text-ui-text-tertiary">
-                          {scope.description}
-                        </Typography>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+            {/* Scopes */}
+            <div>
+              <Label required className="block mb-2">
+                Permissions (Scopes)
+              </Label>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {availableScopes.map((scope) => (
+                  <label
+                    key={scope.value}
+                    htmlFor={`scope-${scope.value}`}
+                    className="flex items-start p-3 bg-ui-bg-secondary rounded-lg cursor-pointer hover:bg-ui-bg-tertiary"
+                  >
+                    <Checkbox
+                      id={`scope-${scope.value}`}
+                      checked={selectedScopes.includes(scope.value)}
+                      onChange={() => toggleScope(scope.value)}
+                      className="mt-0.5"
+                    />
+                    <div className="ml-3">
+                      <Typography className="text-sm font-medium text-ui-text">
+                        {scope.label}
+                      </Typography>
+                      <Typography className="text-xs text-ui-text-tertiary">
+                        {scope.description}
+                      </Typography>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Rate Limit */}
+            <Input
+              label="Rate Limit (requests per minute)"
+              type="number"
+              value={rateLimit.toString()}
+              onChange={(e) => setRateLimit(parseInt(e.target.value, 10) || 100)}
+              min="10"
+              max="1000"
+              helperText="Maximum number of API requests allowed per minute (default: 100)"
+            />
+
+            {/* Actions */}
+            <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
+              <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleGenerate} disabled={isGenerating}>
+                {isGenerating ? "Generating..." : "Generate API Key"}
+              </Button>
+            </Flex>
+          </>
+        ) : (
+          <>
+            {/* Success - Show Generated Key */}
+            <div className="text-center">
+              <Flex
+                justify="center"
+                align="center"
+                className="mx-auto h-12 w-12 rounded-full bg-status-success-bg mb-4"
+              >
+                <Key className="h-6 w-6 text-status-success" />
+              </Flex>
+              <Typography variant="h3" className="text-lg font-semibold text-ui-text mb-2">
+                API Key Generated!
+              </Typography>
+              <Typography className="text-sm text-ui-text-secondary mb-6">
+                <Icon icon={AlertTriangle} size="sm" className="inline mr-1" />{" "}
+                <strong>Save this key now!</strong> You won't be able to see it again.
+              </Typography>
+
+              {/* Generated Key Display */}
+              <div className="mb-6 p-4 bg-ui-bg-tertiary rounded-lg">
+                <code className="text-sm font-mono text-status-success break-all select-all">
+                  {generatedKey}
+                </code>
               </div>
 
-              {/* Rate Limit */}
-              <Input
-                label="Rate Limit (requests per minute)"
-                type="number"
-                value={rateLimit.toString()}
-                onChange={(e) => setRateLimit(parseInt(e.target.value, 10) || 100)}
-                min="10"
-                max="1000"
-                helperText="Maximum number of API requests allowed per minute (default: 100)"
-              />
+              {/* Copy Instructions */}
+              <div className="text-left mb-6 p-4 bg-status-info-bg rounded-lg">
+                <Typography variant="label" className="text-status-info-text mb-2">
+                  Usage Example:
+                </Typography>
+                <code className="block bg-ui-bg p-2 rounded text-xs font-mono">
+                  curl -H "Authorization: Bearer {generatedKey.substring(0, 20)}..."
+                  https://nixelo.app/api/issues
+                </code>
+              </div>
 
               {/* Actions */}
-              <DialogFooter>
+              <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
                 <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  I've Saved It
                 </Button>
-                <Button variant="primary" onClick={handleGenerate} disabled={isGenerating}>
-                  {isGenerating ? "Generating..." : "Generate API Key"}
+                <Button variant="primary" onClick={copyAndClose} className="flex-1">
+                  <Flex justify="center" gap="sm" align="center">
+                    <Copy className="h-4 w-4" />
+                    Copy & Close
+                  </Flex>
                 </Button>
-              </DialogFooter>
-            </>
-          ) : (
-            <>
-              {/* Success - Show Generated Key */}
-              <div className="text-center">
-                <Flex
-                  justify="center"
-                  align="center"
-                  className="mx-auto h-12 w-12 rounded-full bg-status-success-bg mb-4"
-                >
-                  <Key className="h-6 w-6 text-status-success" />
-                </Flex>
-                <Typography variant="h3" className="text-lg font-semibold text-ui-text mb-2">
-                  API Key Generated!
-                </Typography>
-                <Typography className="text-sm text-ui-text-secondary mb-6">
-                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" />{" "}
-                  <strong>Save this key now!</strong> You won't be able to see it again.
-                </Typography>
-
-                {/* Generated Key Display */}
-                <div className="mb-6 p-4 bg-ui-bg-tertiary rounded-lg">
-                  <code className="text-sm font-mono text-status-success break-all select-all">
-                    {generatedKey}
-                  </code>
-                </div>
-
-                {/* Copy Instructions */}
-                <div className="text-left mb-6 p-4 bg-status-info-bg rounded-lg">
-                  <Typography variant="label" className="text-status-info-text mb-2">
-                    Usage Example:
-                  </Typography>
-                  <code className="block bg-ui-bg p-2 rounded text-xs font-mono">
-                    curl -H "Authorization: Bearer {generatedKey.substring(0, 20)}..."
-                    https://nixelo.app/api/issues
-                  </code>
-                </div>
-
-                {/* Actions */}
-                <DialogFooter>
-                  <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                    I've Saved It
-                  </Button>
-                  <Button variant="primary" onClick={copyAndClose} className="flex-1">
-                    <Flex justify="center" gap="sm" align="center">
-                      <Copy className="h-4 w-4" />
-                      Copy & Close
-                    </Flex>
-                  </Button>
-                </DialogFooter>
-              </div>
-            </>
-          )}
-        </div>
-      </DialogContent>
+              </Flex>
+            </div>
+          </>
+        )}
+      </div>
     </Dialog>
   );
 }
@@ -498,108 +495,100 @@ function UsageStatsModal({
   const stats = useQuery(api.apiKeys.getUsageStats, keyId ? { keyId } : "skip");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>API Key Usage Statistics</DialogTitle>
-        </DialogHeader>
-        {!stats ? (
-          <div className="text-center py-8">
-            <LoadingSpinner size="lg" />
-            <Typography className="mt-2 text-sm text-ui-text-tertiary">
-              Loading statistics...
-            </Typography>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Overview Stats */}
-            <Grid cols={2} colsSm={4} gap="lg">
-              <div className="p-4 bg-ui-bg-secondary rounded-lg">
-                <Typography className="text-xs text-ui-text-secondary mb-1">Total Calls</Typography>
-                <Typography className="text-2xl font-bold text-ui-text">
-                  {stats.totalCalls.toLocaleString()}
-                </Typography>
-              </div>
-              <div className="p-4 bg-ui-bg-secondary rounded-lg">
-                <Typography className="text-xs text-ui-text-secondary mb-1">
-                  Last 24 Hours
-                </Typography>
-                <Typography className="text-2xl font-bold text-ui-text">
-                  {stats.last24Hours.toLocaleString()}
-                </Typography>
-              </div>
-              <div className="p-4 bg-ui-bg-secondary rounded-lg">
-                <Typography className="text-xs text-ui-text-secondary mb-1">
-                  Success Rate
-                </Typography>
-                <Typography className="text-2xl font-bold text-status-success">
-                  {stats.last24Hours > 0
-                    ? Math.round((stats.successCount / stats.last24Hours) * 100)
-                    : 100}
-                  %
-                </Typography>
-              </div>
-              <div className="p-4 bg-ui-bg-secondary rounded-lg">
-                <Typography className="text-xs text-ui-text-secondary mb-1">
-                  Avg Response
-                </Typography>
-                <Typography className="text-2xl font-bold text-ui-text">
-                  {stats.avgResponseTime}ms
-                </Typography>
-              </div>
-            </Grid>
-
-            {/* Recent Requests */}
-            <div>
-              <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-3">
-                Recent Requests
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="API Key Usage Statistics"
+      className="sm:max-w-2xl"
+      footer={
+        <Button variant="secondary" onClick={() => onOpenChange(false)}>
+          Close
+        </Button>
+      }
+    >
+      {!stats ? (
+        <div className="text-center py-8">
+          <LoadingSpinner size="lg" />
+          <Typography className="mt-2 text-sm text-ui-text-tertiary">
+            Loading statistics...
+          </Typography>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Overview Stats */}
+          <Grid cols={2} colsSm={4} gap="lg">
+            <div className="p-4 bg-ui-bg-secondary rounded-lg">
+              <Typography className="text-xs text-ui-text-secondary mb-1">Total Calls</Typography>
+              <Typography className="text-2xl font-bold text-ui-text">
+                {stats.totalCalls.toLocaleString()}
               </Typography>
-              {stats.recentLogs.length === 0 ? (
-                <Typography className="text-sm text-ui-text-tertiary py-4 text-center">
-                  No recent requests
-                </Typography>
-              ) : (
-                <Flex direction="column" gap="sm" className="max-h-64 overflow-y-auto">
-                  {stats.recentLogs.map((log: UsageLog) => (
-                    <div
-                      key={`${log.endpoint}-${log.createdAt}`}
-                      className={cn("p-3 bg-ui-bg-secondary rounded-lg text-sm")}
-                    >
-                      <Flex justify="between" align="center" className="mb-1">
-                        <Flex gap="sm" align="center">
-                          <Typography variant="small" className="font-mono font-medium">
-                            {log.method}
-                          </Typography>
-                          <Typography variant="small" color="secondary">
-                            {log.endpoint}
-                          </Typography>
-                        </Flex>
-                        <Badge size="sm" variant={log.statusCode < 400 ? "success" : "error"}>
-                          {log.statusCode}
-                        </Badge>
-                      </Flex>
-                      <Metadata size="xs" gap="md">
-                        <MetadataItem>{log.responseTime}ms</MetadataItem>
-                        <MetadataTimestamp date={log.createdAt} format="absolute" />
-                        {log.error && (
-                          <MetadataItem className="text-status-error">{log.error}</MetadataItem>
-                        )}
-                      </Metadata>
-                    </div>
-                  ))}
-                </Flex>
-              )}
             </div>
+            <div className="p-4 bg-ui-bg-secondary rounded-lg">
+              <Typography className="text-xs text-ui-text-secondary mb-1">Last 24 Hours</Typography>
+              <Typography className="text-2xl font-bold text-ui-text">
+                {stats.last24Hours.toLocaleString()}
+              </Typography>
+            </div>
+            <div className="p-4 bg-ui-bg-secondary rounded-lg">
+              <Typography className="text-xs text-ui-text-secondary mb-1">Success Rate</Typography>
+              <Typography className="text-2xl font-bold text-status-success">
+                {stats.last24Hours > 0
+                  ? Math.round((stats.successCount / stats.last24Hours) * 100)
+                  : 100}
+                %
+              </Typography>
+            </div>
+            <div className="p-4 bg-ui-bg-secondary rounded-lg">
+              <Typography className="text-xs text-ui-text-secondary mb-1">Avg Response</Typography>
+              <Typography className="text-2xl font-bold text-ui-text">
+                {stats.avgResponseTime}ms
+              </Typography>
+            </div>
+          </Grid>
 
-            {/* Close Button */}
-            <DialogFooter>
-              <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-            </DialogFooter>
+          {/* Recent Requests */}
+          <div>
+            <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-3">
+              Recent Requests
+            </Typography>
+            {stats.recentLogs.length === 0 ? (
+              <Typography className="text-sm text-ui-text-tertiary py-4 text-center">
+                No recent requests
+              </Typography>
+            ) : (
+              <Flex direction="column" gap="sm" className="max-h-64 overflow-y-auto">
+                {stats.recentLogs.map((log: UsageLog) => (
+                  <div
+                    key={`${log.endpoint}-${log.createdAt}`}
+                    className={cn("p-3 bg-ui-bg-secondary rounded-lg text-sm")}
+                  >
+                    <Flex justify="between" align="center" className="mb-1">
+                      <Flex gap="sm" align="center">
+                        <Typography variant="small" className="font-mono font-medium">
+                          {log.method}
+                        </Typography>
+                        <Typography variant="small" color="secondary">
+                          {log.endpoint}
+                        </Typography>
+                      </Flex>
+                      <Badge size="sm" variant={log.statusCode < 400 ? "success" : "error"}>
+                        {log.statusCode}
+                      </Badge>
+                    </Flex>
+                    <Metadata size="xs" gap="md">
+                      <MetadataItem>{log.responseTime}ms</MetadataItem>
+                      <MetadataTimestamp date={log.createdAt} format="absolute" />
+                      {log.error && (
+                        <MetadataItem className="text-status-error">{log.error}</MetadataItem>
+                      )}
+                    </Metadata>
+                  </div>
+                ))}
+              </Flex>
+            )}
           </div>
-        )}
-      </DialogContent>
+        </div>
+      )}
     </Dialog>
   );
 }

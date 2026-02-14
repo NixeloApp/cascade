@@ -59,25 +59,36 @@ export const listByProject = projectQuery({
 
     // Fetch issues per sprint using index (more efficient than loading all issues)
     const sprintIds = sprints.map((s) => s._id);
-    const issueCountsPromises = sprintIds.map(async (sprintId) => {
+    const issueStatsPromises = sprintIds.map(async (sprintId) => {
       const issues = await ctx.db
         .query("issues")
         .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
         .filter(notDeleted)
         .take(MAX_SPRINT_ISSUES);
-      return { sprintId, count: issues.length };
+      const completedCount = issues.filter((i) => i.status === "done").length;
+      return { sprintId, count: issues.length, completedCount };
     });
-    const issueCounts = await Promise.all(issueCountsPromises);
+    const issueStats = await Promise.all(issueStatsPromises);
 
-    // Build count map from results
-    const issueCountBySprint = new Map(
-      issueCounts.map(({ sprintId, count }) => [sprintId.toString(), count]),
+    // Build stats map from results
+    const issueStatsBySprint = new Map(
+      issueStats.map(({ sprintId, count, completedCount }) => [
+        sprintId.toString(),
+        { count, completedCount },
+      ]),
     );
 
-    return sprints.map((sprint) => ({
-      ...sprint,
-      issueCount: issueCountBySprint.get(sprint._id.toString()) ?? 0,
-    }));
+    return sprints.map((sprint) => {
+      const stats = issueStatsBySprint.get(sprint._id.toString()) ?? {
+        count: 0,
+        completedCount: 0,
+      };
+      return {
+        ...sprint,
+        issueCount: stats.count,
+        completedCount: stats.completedCount,
+      };
+    });
   },
 });
 

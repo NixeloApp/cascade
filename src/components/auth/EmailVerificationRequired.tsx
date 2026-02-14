@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
-import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
+import { AuthPageLayout } from "./AuthPageLayout";
 
 export function EmailVerificationRequired() {
   const { signIn, signOut } = useAuthActions();
@@ -28,9 +28,8 @@ export function EmailVerificationRequired() {
     void signIn("password", formData)
       .then(() => {
         toast.success("Email verified successfully!");
-        // Page will refresh with verified user
       })
-      .catch((_error) => {
+      .catch(() => {
         toast.error("Invalid code. Please try again.");
       })
       .finally(() => setSubmitting(false));
@@ -58,65 +57,38 @@ export function EmailVerificationRequired() {
   };
 
   return (
-    <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-4">
-      <div className="w-full max-w-md bg-ui-bg rounded-xl shadow-lg p-8">
-        <div className="text-center mb-6">
-          <Flex
-            align="center"
-            justify="center"
-            className="w-16 h-16 bg-brand-subtle rounded-full mx-auto mb-4"
-          >
-            <svg
-              className="w-8 h-8 text-brand"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              role="img"
-              aria-label="Email icon"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-          </Flex>
-          <Typography variant="h1" className="text-2xl font-bold mb-2">
-            Verify your email
-          </Typography>
-          <Typography variant="p" color="secondary">
-            We sent a verification code to <strong className="text-ui-text">{email}</strong>
-          </Typography>
-        </div>
+    <AuthPageLayout
+      title="Check your email"
+      subtitle={
+        <>
+          We sent a code to <strong>{email}</strong>
+        </>
+      }
+    >
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <Input
+          className="text-center text-xl tracking-widest"
+          type="tel"
+          inputMode="numeric"
+          name="code"
+          placeholder="Enter 8-digit code"
+          required
+          pattern="[0-9]{8}"
+          maxLength={8}
+        />
+        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+          {submitting ? "Verifying..." : "Verify email"}
+        </Button>
+      </form>
 
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <Input
-            className="text-center text-xl tracking-widest"
-            type="tel"
-            inputMode="numeric"
-            name="code"
-            placeholder="Enter 8-digit code"
-            required
-            pattern="[0-9]{8}"
-            maxLength={8}
-          />
-          <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-            {submitting ? "Verifying..." : "Verify email"}
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center space-y-3">
-          <AuthLinkButton onClick={handleResend} disabled={resending}>
-            {resending ? "Sending..." : "Didn't receive a code? Resend"}
-          </AuthLinkButton>
-          <div>
-            <AuthLinkButton onClick={handleSignOut} variant="muted">
-              Sign out and use a different account
-            </AuthLinkButton>
-          </div>
-        </div>
-      </div>
-    </Flex>
+      <Flex direction="column" align="center" gap="sm" className="mt-6">
+        <AuthLinkButton onClick={handleResend} disabled={resending}>
+          {resending ? "Sending..." : "Resend code"}
+        </AuthLinkButton>
+        <AuthLinkButton onClick={handleSignOut} variant="muted">
+          Use a different account
+        </AuthLinkButton>
+      </Flex>
+    </AuthPageLayout>
   );
 }

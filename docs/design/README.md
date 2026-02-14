@@ -4,8 +4,10 @@
 
 | Doc | Purpose |
 |-----|---------|
-| [SLOP.md](./SLOP.md) | Do this, not that |
-| [REFERENCE.md](./REFERENCE.md) | Tokens & components |
+| [STANDARDS.md](./STANDARDS.md) | Core principles (tokens, spacing, semantic HTML) |
+| [PATTERNS.md](./PATTERNS.md) | Do this, not that (component usage) |
+| [REFERENCE.md](./REFERENCE.md) | Token values & component inventory |
+| [GAPS.md](./GAPS.md) | Actionable improvements (prioritized) |
 
 ## Specs
 
@@ -32,13 +34,14 @@ bg-brand, text-status-error
   <MetadataItem>value</MetadataItem>
 </Metadata>
 
-<ListItem icon={} title="" subtitle="" />
-
-<UserDisplay name="" image="" subtitle="" />
+<Flex align="center" gap="sm">
+  <Icon icon={Bug} size="md" />
+  <Typography variant="small">text</Typography>
+</Flex>
 ```
 
 ## Validation
 
 ```bash
-node scripts/validate.js
+node scripts/validate.js  # Target: 0 errors
 ```

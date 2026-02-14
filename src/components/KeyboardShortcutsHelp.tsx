@@ -1,5 +1,5 @@
 import { Flex } from "@/components/ui/Flex";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/Dialog";
+import { Dialog } from "./ui/Dialog";
 import { KeyboardShortcut } from "./ui/KeyboardShortcut";
 import { Typography } from "./ui/Typography";
 
@@ -61,47 +61,42 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Keyboard Shortcuts</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6">
-          {shortcuts.map((section) => (
-            <div key={section.category}>
-              <Typography variant="h3" className="text-lg font-semibold text-ui-text mb-3">
-                {section.category}
-              </Typography>
-              <div className="space-y-2">
-                {section.items.map((shortcut) => (
-                  <Flex
-                    align="center"
-                    justify="between"
-                    className="py-2"
-                    key={shortcut.description}
-                  >
-                    <Typography variant="p" className="text-sm">
-                      {shortcut.description}
-                    </Typography>
-                    <Flex gap="sm">
-                      {shortcut.keys.map((key) => (
-                        <KeyboardShortcut key={key} shortcut={key} />
-                      ))}
-                    </Flex>
-                  </Flex>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          <div className="pt-4 border-t border-ui-border">
-            <Typography variant="muted" className="text-sm">
-              <strong>Tip:</strong> Press <KeyboardShortcut shortcut="⌘+K" /> to quickly access all
-              commands and features.
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Keyboard Shortcuts"
+      className="sm:max-w-2xl"
+    >
+      <div className="space-y-6">
+        {shortcuts.map((section) => (
+          <div key={section.category}>
+            <Typography variant="h3" className="text-lg font-semibold text-ui-text mb-3">
+              {section.category}
             </Typography>
+            <div className="space-y-2">
+              {section.items.map((shortcut) => (
+                <Flex align="center" justify="between" className="py-2" key={shortcut.description}>
+                  <Typography variant="p" className="text-sm">
+                    {shortcut.description}
+                  </Typography>
+                  <Flex gap="sm">
+                    {shortcut.keys.map((key) => (
+                      <KeyboardShortcut key={key} shortcut={key} />
+                    ))}
+                  </Flex>
+                </Flex>
+              ))}
+            </div>
           </div>
+        ))}
+
+        <div className="pt-4 border-t border-ui-border">
+          <Typography variant="muted" className="text-sm">
+            <strong>Tip:</strong> Press <KeyboardShortcut shortcut="⌘+K" /> to quickly access all
+            commands and features.
+          </Typography>
         </div>
-      </DialogContent>
+      </div>
     </Dialog>
   );
 }

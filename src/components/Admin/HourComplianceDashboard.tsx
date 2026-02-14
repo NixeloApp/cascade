@@ -11,7 +11,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
@@ -380,39 +380,38 @@ export function HourComplianceDashboard() {
             setReviewNotes("");
           }
         }}
+        title="Review Compliance Record"
+        className="sm:max-w-lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setReviewingRecord(null);
+                setReviewNotes("");
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="review-form" isLoading={isSubmitting}>
+              Mark as Reviewed
+            </Button>
+          </>
+        }
       >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Review Compliance Record</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleReview}>
-            <Flex direction="column" gap="lg" className="p-6">
-              <Textarea
-                label="Review Notes (Optional)"
-                value={reviewNotes}
-                onChange={(e) => setReviewNotes(e.target.value)}
-                placeholder="Add notes about this compliance record..."
-                rows={4}
-              />
-            </Flex>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setReviewingRecord(null);
-                  setReviewNotes("");
-                }}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" isLoading={isSubmitting}>
-                Mark as Reviewed
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
+        <form id="review-form" onSubmit={handleReview}>
+          <Flex direction="column" gap="lg">
+            <Textarea
+              label="Review Notes (Optional)"
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+              placeholder="Add notes about this compliance record..."
+              rows={4}
+            />
+          </Flex>
+        </form>
       </Dialog>
     </Flex>
   );

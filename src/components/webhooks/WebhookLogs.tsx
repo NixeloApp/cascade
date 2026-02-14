@@ -7,7 +7,7 @@ import { BarChart3, Check, RefreshCw, X } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
@@ -79,133 +79,130 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-5xl">
-        <DialogHeader>
-          <DialogTitle>Webhook Delivery Logs</DialogTitle>
-        </DialogHeader>
-        {!executions || executions.length === 0 ? (
-          <div className="text-center py-12">
-            <Icon icon={BarChart3} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
-            <Typography variant="h5" className="mb-1">
-              No delivery logs yet
-            </Typography>
-            <Typography variant="caption">
-              Webhook deliveries will appear here once triggered
-            </Typography>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <Typography variant="caption" className="mb-4">
-              Showing {executions.length} most recent deliveries
-            </Typography>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Webhook Delivery Logs"
+      description="View recent webhook delivery attempts and their status"
+      className="sm:max-w-5xl"
+    >
+      {!executions || executions.length === 0 ? (
+        <div className="text-center py-12">
+          <Icon icon={BarChart3} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
+          <Typography variant="h5" className="mb-1">
+            No delivery logs yet
+          </Typography>
+          <Typography variant="caption">
+            Webhook deliveries will appear here once triggered
+          </Typography>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <Typography variant="caption" className="mb-4">
+            Showing {executions.length} most recent deliveries
+          </Typography>
 
-            <div className="space-y-3">
-              {executions.map((execution) => (
-                <div
-                  key={execution._id}
-                  className="border border-ui-border rounded-lg p-4 hover:border-ui-border-secondary transition-colors"
-                >
-                  {/* Header */}
-                  <Flex justify="between" align="center" className="mb-3">
-                    <Metadata gap="md">
-                      {getStatusBadge(execution.status)}
-                      <MetadataItem className="text-ui-text">{execution.event}</MetadataItem>
-                      {execution.responseStatus && (
-                        <MetadataItem>HTTP {String(execution.responseStatus)}</MetadataItem>
-                      )}
-                    </Metadata>
-                    <Metadata gap="md">
-                      <MetadataItem>{formatDate(execution._creationTime)}</MetadataItem>
-                      {execution.status === "failed" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRetry(execution._id)}
-                        >
-                          Retry
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setSelectedExecution(
-                            selectedExecution === execution._id ? null : execution._id,
-                          )
-                        }
-                      >
-                        {selectedExecution === execution._id ? "Hide Details" : "Show Details"}
+          <div className="space-y-3">
+            {executions.map((execution) => (
+              <div
+                key={execution._id}
+                className="border border-ui-border rounded-lg p-4 hover:border-ui-border-secondary transition-colors"
+              >
+                {/* Header */}
+                <Flex justify="between" align="center" className="mb-3">
+                  <Metadata gap="md">
+                    {getStatusBadge(execution.status)}
+                    <MetadataItem className="text-ui-text">{execution.event}</MetadataItem>
+                    {execution.responseStatus && (
+                      <MetadataItem>HTTP {String(execution.responseStatus)}</MetadataItem>
+                    )}
+                  </Metadata>
+                  <Metadata gap="md">
+                    <MetadataItem>{formatDate(execution._creationTime)}</MetadataItem>
+                    {execution.status === "failed" && (
+                      <Button variant="ghost" size="sm" onClick={() => handleRetry(execution._id)}>
+                        Retry
                       </Button>
-                    </Metadata>
-                  </Flex>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setSelectedExecution(
+                          selectedExecution === execution._id ? null : execution._id,
+                        )
+                      }
+                    >
+                      {selectedExecution === execution._id ? "Hide Details" : "Show Details"}
+                    </Button>
+                  </Metadata>
+                </Flex>
 
-                  {/* Metadata */}
-                  <Grid cols={3} gap="lg" className="mb-2">
-                    <Typography variant="meta">
-                      <Typography variant="label" as="span" className="text-ui-text">
-                        Attempts:
-                      </Typography>{" "}
-                      {execution.attempts}
-                    </Typography>
-                    <Typography variant="meta">
-                      <Typography variant="label" as="span" className="text-ui-text">
-                        Duration:
-                      </Typography>{" "}
-                      {formatDuration(execution._creationTime, execution.completedAt)}
-                    </Typography>
-                    <Typography variant="meta">
-                      <Typography variant="label" as="span" className="text-ui-text">
-                        Status:
-                      </Typography>{" "}
-                      {String(execution.status)}
-                    </Typography>
-                  </Grid>
+                {/* Metadata */}
+                <Grid cols={3} gap="lg" className="mb-2">
+                  <Typography variant="meta">
+                    <Typography variant="label" as="span" className="text-ui-text">
+                      Attempts:
+                    </Typography>{" "}
+                    {execution.attempts}
+                  </Typography>
+                  <Typography variant="meta">
+                    <Typography variant="label" as="span" className="text-ui-text">
+                      Duration:
+                    </Typography>{" "}
+                    {formatDuration(execution._creationTime, execution.completedAt)}
+                  </Typography>
+                  <Typography variant="meta">
+                    <Typography variant="label" as="span" className="text-ui-text">
+                      Status:
+                    </Typography>{" "}
+                    {String(execution.status)}
+                  </Typography>
+                </Grid>
 
-                  {/* Error message */}
-                  {execution.error && (
-                    <div className="bg-status-error-bg border border-status-error/30 rounded p-3 mt-3">
-                      <Typography variant="caption" className="text-status-error-text mb-1">
-                        Error:
+                {/* Error message */}
+                {execution.error && (
+                  <div className="bg-status-error-bg border border-status-error/30 rounded p-3 mt-3">
+                    <Typography variant="caption" className="text-status-error-text mb-1">
+                      Error:
+                    </Typography>
+                    <Typography variant="mono" className="text-status-error-text/90">
+                      {String(execution.error)}
+                    </Typography>
+                  </div>
+                )}
+
+                {/* Expandable Details */}
+                {selectedExecution === execution._id && (
+                  <div className="mt-3 pt-3 border-t border-ui-border space-y-3">
+                    {/* Request Payload */}
+                    <div>
+                      <Typography variant="label" className="mb-1">
+                        Request Payload:
                       </Typography>
-                      <Typography variant="mono" className="text-status-error-text/90">
-                        {String(execution.error)}
-                      </Typography>
+                      <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto">
+                        {JSON.stringify(JSON.parse(execution.requestPayload), null, 2)}
+                      </pre>
                     </div>
-                  )}
 
-                  {/* Expandable Details */}
-                  {selectedExecution === execution._id && (
-                    <div className="mt-3 pt-3 border-t border-ui-border space-y-3">
-                      {/* Request Payload */}
+                    {/* Response Body */}
+                    {execution.responseBody && (
                       <div>
                         <Typography variant="label" className="mb-1">
-                          Request Payload:
+                          Response Body:
                         </Typography>
-                        <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto">
-                          {JSON.stringify(JSON.parse(execution.requestPayload), null, 2)}
+                        <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto max-h-48">
+                          {execution.responseBody}
                         </pre>
                       </div>
-
-                      {/* Response Body */}
-                      {execution.responseBody && (
-                        <div>
-                          <Typography variant="label" className="mb-1">
-                            Response Body:
-                          </Typography>
-                          <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto max-h-48">
-                            {execution.responseBody}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-        )}
-      </DialogContent>
+        </div>
+      )}
     </Dialog>
   );
 }

@@ -1,124 +1,128 @@
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
-import * as React from "react";
-import { buttonVariants } from "@/components/ui/Button";
+import type * as React from "react";
+
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "./Button";
 import { Flex } from "./Flex";
 
-const AlertDialog = AlertDialogPrimitive.Root;
+// =============================================================================
+// AlertDialog - Clean API with required title/description
+// =============================================================================
 
-const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
+interface AlertDialogProps {
+  /** Controlled open state */
+  open: boolean;
+  /** Callback when open state changes */
+  onOpenChange: (open: boolean) => void;
+  /** Dialog title (required for accessibility) */
+  title: string;
+  /** Dialog description (required for accessibility) */
+  description: string;
+  /** Dialog content (optional - description is often enough) */
+  children?: React.ReactNode;
+  /** Additional class for the dialog panel */
+  className?: string;
+  /** Cancel button text */
+  cancelLabel?: string;
+  /** Action button text */
+  actionLabel: string;
+  /** Action button variant */
+  actionVariant?: "primary" | "danger";
+  /** Callback when action button is clicked */
+  onAction: () => void;
+  /** Whether action is in progress */
+  isLoading?: boolean;
+  /** Test ID for the dialog */
+  "data-testid"?: string;
+}
 
-const AlertDialogPortal = AlertDialogPrimitive.Portal;
+/**
+ * AlertDialog component with enforced accessibility.
+ * Used for confirmations that require user action.
+ *
+ * @example
+ * ```tsx
+ * <AlertDialog
+ *   open={open}
+ *   onOpenChange={setOpen}
+ *   title="Delete Item"
+ *   description="This action cannot be undone."
+ *   actionLabel="Delete"
+ *   actionVariant="danger"
+ *   onAction={handleDelete}
+ * />
+ * ```
+ */
+function AlertDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  className,
+  cancelLabel = "Cancel",
+  actionLabel,
+  actionVariant = "primary",
+  onAction,
+  isLoading = false,
+  "data-testid": testId,
+}: AlertDialogProps) {
+  return (
+    <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <AlertDialogPrimitive.Portal>
+        <AlertDialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-150" />
+        <AlertDialogPrimitive.Content
+          data-testid={testId}
+          className={cn(
+            "bg-ui-bg fixed top-1/2 left-1/2 z-50 grid w-full max-w-dialog-mobile -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-ui-border p-6 shadow-elevated sm:max-w-lg origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
+            className,
+          )}
+        >
+          {/* Header */}
+          <Flex direction="column" gap="sm" className="text-center sm:text-left">
+            <AlertDialogPrimitive.Title className="text-lg leading-none font-semibold tracking-tight text-ui-text">
+              {title}
+            </AlertDialogPrimitive.Title>
+            <AlertDialogPrimitive.Description className="text-ui-text-secondary text-sm">
+              {description}
+            </AlertDialogPrimitive.Description>
+          </Flex>
 
-const AlertDialogOverlay = React.forwardRef<
-  React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Overlay
-    className={cn(
-      "fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-150",
-      className,
-    )}
-    {...props}
-    ref={ref}
-  />
-));
-AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
+          {/* Optional additional content */}
+          {children}
 
-const AlertDialogContent = React.forwardRef<
-  React.ElementRef<typeof AlertDialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <AlertDialogPortal>
-    <AlertDialogOverlay />
-    <AlertDialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "bg-ui-bg fixed top-1/2 left-1/2 z-50 grid w-full max-w-dialog-mobile -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-ui-border p-6 shadow-elevated sm:max-w-lg origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
-        className,
-      )}
-      {...props}
-    />
-  </AlertDialogPortal>
-));
-AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
+          {/* Footer with actions */}
+          <Flex className="flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-4">
+            <AlertDialogPrimitive.Cancel
+              disabled={isLoading}
+              className={cn(buttonVariants({ variant: "secondary" }), "mt-2 sm:mt-0")}
+            >
+              {cancelLabel}
+            </AlertDialogPrimitive.Cancel>
+            <AlertDialogPrimitive.Action
+              onClick={onAction}
+              disabled={isLoading}
+              className={cn(
+                buttonVariants({ variant: actionVariant === "danger" ? "danger" : "primary" }),
+              )}
+            >
+              {actionLabel}
+            </AlertDialogPrimitive.Action>
+          </Flex>
+        </AlertDialogPrimitive.Content>
+      </AlertDialogPrimitive.Portal>
+    </AlertDialogPrimitive.Root>
+  );
+}
 
-const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <Flex
-    direction="column"
-    gap="sm"
-    className={cn("text-center sm:text-left", className)}
-    {...props}
-  />
-);
-AlertDialogHeader.displayName = "AlertDialogHeader";
+// =============================================================================
+// AlertDialogTrigger - For uncontrolled usage
+// =============================================================================
 
-const AlertDialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <Flex
-    className={cn("flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-4", className)}
-    {...props}
-  />
-);
-AlertDialogFooter.displayName = "AlertDialogFooter";
+function AlertDialogTrigger({
+  ...props
+}: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
+  return <AlertDialogPrimitive.Trigger {...props} />;
+}
 
-const AlertDialogTitle = React.forwardRef<
-  React.ElementRef<typeof AlertDialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Title
-    ref={ref}
-    className={cn("text-lg leading-none font-semibold tracking-tight text-ui-text", className)}
-    {...props}
-  />
-));
-AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
-
-const AlertDialogDescription = React.forwardRef<
-  React.ElementRef<typeof AlertDialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-ui-text-secondary", className)}
-    {...props}
-  />
-));
-AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
-
-const AlertDialogAction = React.forwardRef<
-  React.ElementRef<typeof AlertDialogPrimitive.Action>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Action
-    ref={ref}
-    className={cn(buttonVariants({ variant: "primary" }), className)}
-    {...props}
-  />
-));
-AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
-
-const AlertDialogCancel = React.forwardRef<
-  React.ElementRef<typeof AlertDialogPrimitive.Cancel>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Cancel
-    ref={ref}
-    className={cn(buttonVariants({ variant: "secondary" }), "mt-2 sm:mt-0", className)}
-    {...props}
-  />
-));
-AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
-
-export {
-  AlertDialog,
-  AlertDialogPortal,
-  AlertDialogOverlay,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogAction,
-  AlertDialogCancel,
-};
+export { AlertDialog, AlertDialogTrigger };

@@ -1,13 +1,6 @@
 import type { ReactNode } from "react";
 import { Button } from "./Button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./Dialog";
+import { Dialog } from "./Dialog";
 import { Flex } from "./Flex";
 
 interface FormDialogProps {
@@ -50,20 +43,14 @@ export function FormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={sizeClassMap[size]}>
-        <DialogHeader>
-          <DialogTitle className="tracking-tight">{title}</DialogTitle>
-          {description ? (
-            <DialogDescription className="text-ui-text-secondary">{description}</DialogDescription>
-          ) : (
-            <DialogDescription className="sr-only">Form dialog</DialogDescription>
-          )}
-        </DialogHeader>
-        <Flex direction="column" gap="lg" className="py-2">
-          {children}
-        </Flex>
-        <DialogFooter className="gap-3 pt-2">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description || "Form dialog"}
+      className={sizeClassMap[size]}
+      footer={
+        <>
           <Button
             variant="secondary"
             onClick={() => onOpenChange(false)}
@@ -80,8 +67,12 @@ export function FormDialog({
           >
             {saveLabel}
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </>
+      }
+    >
+      <Flex direction="column" gap="lg" className="py-2">
+        {children}
+      </Flex>
     </Dialog>
   );
 }

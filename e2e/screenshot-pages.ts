@@ -3,14 +3,16 @@
  *
  * Captures screenshots across viewport/theme combinations:
  *   - desktop-dark (1920x1080)
+ *   - desktop-light (1920x1080)
  *   - tablet-light (768x1024)
  *   - mobile-light (390x844)
  *
- * Output structure:
- *   e2e/screenshots/
- *   ├── desktop-dark/
- *   ├── tablet-light/
- *   └── mobile-light/
+ * Output: Screenshots go to their corresponding spec folders:
+ *   - docs/design/specs/pages/02-signin/screenshots/
+ *   - docs/design/specs/pages/03-signup/screenshots/
+ *   - etc.
+ *
+ * Pages without specs go to: e2e/screenshots/ (flat folder)
  *
  * Usage:
  *   pnpm screenshots              # capture all
@@ -32,8 +34,38 @@ import { type SeedScreenshotResult, testUserService } from "./utils/test-user-se
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:5555";
 const CONVEX_URL = process.env.VITE_CONVEX_URL || "";
-const SCREENSHOT_BASE_DIR = path.join(process.cwd(), "e2e", "screenshots");
+const SPECS_BASE_DIR = path.join(process.cwd(), "docs", "design", "specs", "pages");
+const FALLBACK_SCREENSHOT_DIR = path.join(process.cwd(), "e2e", "screenshots");
 const SETTLE_MS = 2000;
+
+// Map page identifiers to their spec folder names
+// Pages with specs get screenshots in their spec folder
+// Pages without specs go to the fallback directory
+const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
+  // Public pages
+  "public-landing": "01-landing",
+  "public-signin": "02-signin",
+  "public-signup": "03-signup",
+  "public-forgot-password": "04-forgot-password",
+
+  // Workspace-level pages (empty states)
+  "empty-dashboard": "04-dashboard",
+  "empty-projects": "05-projects",
+  "empty-issues": "07-backlog",
+  "empty-documents": "09-documents",
+  "empty-settings": "12-settings",
+
+  // Workspace-level pages (filled states)
+  "filled-dashboard": "04-dashboard",
+  "filled-projects": "05-projects",
+  "filled-issues": "07-backlog",
+  "filled-documents": "09-documents",
+  "filled-settings": "12-settings",
+
+  // Project sub-pages (filled states) - these use dynamic keys
+  // Pattern: filled-project-{key}-{tab}
+  // We'll handle these with a prefix match below
+};
 
 const VIEWPORTS = {
   desktop: { width: 1920, height: 1080 },
@@ -41,9 +73,10 @@ const VIEWPORTS = {
   mobile: { width: 390, height: 844 },
 } as const;
 
-// Desktop = dark mode, tablet/mobile = light mode
+// Desktop captures both themes, tablet/mobile light only
 const CONFIGS: Array<{ viewport: keyof typeof VIEWPORTS; theme: "dark" | "light" }> = [
   { viewport: "desktop", theme: "dark" },
+  { viewport: "desktop", theme: "light" },
   { viewport: "tablet", theme: "light" },
   { viewport: "mobile", theme: "light" },
 ];
@@ -60,7 +93,7 @@ const SCREENSHOT_USER = {
 // State
 // ---------------------------------------------------------------------------
 
-let currentOutputDir = "";
+let currentConfigPrefix = ""; // e.g. "desktop-dark", "tablet-light"
 let counters = new Map<string, number>();
 let totalScreenshots = 0;
 
@@ -78,6 +111,69 @@ function nextIndex(prefix: string): number {
 // Screenshot helpers
 // ---------------------------------------------------------------------------
 
+// Dynamic page patterns that map to spec folders
+// Pattern: [regex to match pageId, spec folder, filename suffix]
+const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
+  // Project board: filled-project-xxx-board → 06-board
+  [/^filled-project-[^-]+-board$/, "06-board", ""],
+  // Project backlog: filled-project-xxx-backlog → 07-backlog
+  [/^filled-project-[^-]+-backlog$/, "07-backlog", ""],
+  // Issue detail: filled-issue-xxx → 08-issue
+  [/^filled-issue-/, "08-issue", ""],
+  // Document editor: filled-document-editor → 10-editor
+  [/^filled-document-editor$/, "10-editor", ""],
+  // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
+  [/^filled-project-[^-]+-calendar$/, "11-calendar", ""],
+  [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
+  [/^filled-calendar-event-modal$/, "11-calendar", "-event-modal"],
+  // Project analytics: filled-project-xxx-analytics → 13-analytics
+  [/^filled-project-[^-]+-analytics$/, "13-analytics", ""],
+  // Project settings: filled-project-xxx-settings → 12-settings
+  [/^filled-project-[^-]+-settings$/, "12-settings", "-project"],
+];
+
+function getScreenshotPath(prefix: string, name: string): string {
+  const pageId = `${prefix}-${name}`;
+
+  // Check static mapping first
+  let specFolder = PAGE_TO_SPEC_FOLDER[pageId];
+  let filenameSuffix = "";
+
+  // Check dynamic patterns if no static match
+  if (!specFolder) {
+    for (const [pattern, folder, suffix] of DYNAMIC_PAGE_PATTERNS) {
+      if (pattern.test(pageId)) {
+        specFolder = folder;
+        // Replace $1 with captured group if present
+        const match = pageId.match(pattern);
+        filenameSuffix = suffix.replace("$1", match?.[1] ?? "");
+        break;
+      }
+    }
+  }
+
+  // Filename: viewport-theme.png or viewport-theme-suffix.png
+  const filename = filenameSuffix
+    ? `${currentConfigPrefix}${filenameSuffix}.png`
+    : `${currentConfigPrefix}.png`;
+
+  if (specFolder) {
+    // Page has a spec folder - put screenshot there
+    const specScreenshotDir = path.join(SPECS_BASE_DIR, specFolder, "screenshots");
+    if (!fs.existsSync(specScreenshotDir)) {
+      fs.mkdirSync(specScreenshotDir, { recursive: true });
+    }
+    return path.join(specScreenshotDir, filename);
+  }
+
+  // No spec folder - use fallback with full naming
+  const fallbackFilename = `${currentConfigPrefix}-${prefix}-${name}.png`;
+  if (!fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
+    fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+  }
+  return path.join(FALLBACK_SCREENSHOT_DIR, fallbackFilename);
+}
+
 async function takeScreenshot(
   page: Page,
   prefix: string,
@@ -86,16 +182,20 @@ async function takeScreenshot(
 ): Promise<void> {
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
-  const filename = `${num}-${prefix}-${name}.png`;
+  const screenshotPath = getScreenshotPath(prefix, name);
+
   try {
     await page.goto(`${BASE_URL}${url}`, { waitUntil: "networkidle", timeout: 15000 });
   } catch {
     // networkidle often times out on real-time apps -- page is still usable
   }
   await page.waitForTimeout(SETTLE_MS);
-  await page.screenshot({ path: path.join(currentOutputDir, filename) });
+  await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
-  console.log(`    ${num}  [${prefix}] ${name}`);
+
+  // Show relative path for clarity
+  const relativePath = path.relative(process.cwd(), screenshotPath);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
 }
 
 async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | null> {
@@ -190,6 +290,7 @@ async function screenshotPublicPages(page: Page): Promise<void> {
   await takeScreenshot(page, "public", "landing", "/");
   await takeScreenshot(page, "public", "signin", "/signin");
   await takeScreenshot(page, "public", "signup", "/signup");
+  await takeScreenshot(page, "public", "forgot-password", "/forgot-password");
   await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
 }
 
@@ -271,10 +372,11 @@ async function screenshotFilledStates(
       }
       const n = nextIndex(p);
       const num = String(n).padStart(2, "0");
-      const filename = `${num}-${p}-calendar-${mode}.png`;
-      await page.screenshot({ path: path.join(currentOutputDir, filename) });
+      const screenshotPath = getScreenshotPath(p, `calendar-${mode}`);
+      await page.screenshot({ path: screenshotPath });
       totalScreenshots++;
-      console.log(`    ${num}  [${p}] calendar-${mode}`);
+      const relativePath = path.relative(process.cwd(), screenshotPath);
+      console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
     }
 
     // Event details modal screenshot — click first visible calendar event
@@ -293,10 +395,11 @@ async function screenshotFilledStates(
       await page.waitForTimeout(SETTLE_MS);
       const n = nextIndex(p);
       const num = String(n).padStart(2, "0");
-      const filename = `${num}-${p}-calendar-event-modal.png`;
-      await page.screenshot({ path: path.join(currentOutputDir, filename) });
+      const screenshotPath = getScreenshotPath(p, "calendar-event-modal");
+      await page.screenshot({ path: screenshotPath });
       totalScreenshots++;
-      console.log(`    ${num}  [${p}] calendar-event-modal`);
+      const relativePath = path.relative(process.cwd(), screenshotPath);
+      console.log(`    ${num}  [${p}] calendar-event-modal → ${relativePath}`);
 
       // Close the modal via Escape
       await page.keyboard.press("Escape");
@@ -356,13 +459,11 @@ async function captureForConfig(
   orgSlug: string,
   seedResult: SeedScreenshotResult,
 ): Promise<void> {
-  const dirName = `${viewport}-${theme}`;
-  currentOutputDir = path.join(SCREENSHOT_BASE_DIR, dirName);
-  fs.mkdirSync(currentOutputDir, { recursive: true });
+  currentConfigPrefix = `${viewport}-${theme}`;
   resetCounters();
 
   console.log(
-    `\n  📸 ${dirName.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height})`,
+    `\n  📸 ${currentConfigPrefix.toUpperCase()} (${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height})`,
   );
 
   const context = await browser.newContext({
@@ -413,7 +514,7 @@ async function captureForConfig(
       // Filled states
       await screenshotFilledStates(page, orgSlug, seedResult);
     } catch {
-      console.log(`    ⚠️ Auth failed for ${dirName}, skipping authenticated pages`);
+      console.log(`    ⚠️ Auth failed for ${currentConfigPrefix}, skipping authenticated pages`);
     }
   }
 
@@ -425,17 +526,33 @@ async function captureForConfig(
 // ---------------------------------------------------------------------------
 
 async function run(): Promise<void> {
-  // Clean and recreate base directory
-  if (fs.existsSync(SCREENSHOT_BASE_DIR)) {
-    fs.rmSync(SCREENSHOT_BASE_DIR, { recursive: true });
+  // Clean screenshot folders in spec directories
+  const specFolders = Object.values(PAGE_TO_SPEC_FOLDER);
+  for (const folder of [...new Set(specFolders)]) {
+    const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
+    if (fs.existsSync(screenshotDir)) {
+      // Only remove generated screenshots (viewport-theme.png), keep reference-* files
+      const files = fs.readdirSync(screenshotDir);
+      for (const file of files) {
+        if (!file.startsWith("reference-") && file.endsWith(".png")) {
+          fs.unlinkSync(path.join(screenshotDir, file));
+        }
+      }
+    }
   }
-  fs.mkdirSync(SCREENSHOT_BASE_DIR, { recursive: true });
+
+  // Clean fallback directory
+  if (fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
+    fs.rmSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+  }
+  fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
 
   console.log("\n╔════════════════════════════════════════════════════════════╗");
   console.log("║         NIXELO SCREENSHOT CAPTURE                          ║");
   console.log("╚════════════════════════════════════════════════════════════╝");
   console.log(`\n  Base URL: ${BASE_URL}`);
   console.log(`  Configs: ${CONFIGS.map((c) => `${c.viewport}-${c.theme}`).join(", ")}`);
+  console.log(`  Spec folders: ${[...new Set(specFolders)].join(", ")}`);
 
   const headless = !process.argv.includes("--headed");
   const browser = await chromium.launch({ headless });
@@ -492,14 +609,25 @@ async function run(): Promise<void> {
   console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured`);
   console.log("╚════════════════════════════════════════════════════════════╝\n");
 
-  // Summary
-  console.log("  Output directories:");
-  for (const config of CONFIGS) {
-    const dir = `${config.viewport}-${config.theme}`;
-    const files = fs.existsSync(path.join(SCREENSHOT_BASE_DIR, dir))
-      ? fs.readdirSync(path.join(SCREENSHOT_BASE_DIR, dir)).length
-      : 0;
-    console.log(`    ${SCREENSHOT_BASE_DIR}/${dir}/ (${files} files)`);
+  // Summary - count files in each location
+  console.log("  Output:");
+  const uniqueSpecFolders = [...new Set(Object.values(PAGE_TO_SPEC_FOLDER))];
+  for (const folder of uniqueSpecFolders) {
+    const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
+    if (fs.existsSync(screenshotDir)) {
+      const files = fs
+        .readdirSync(screenshotDir)
+        .filter((f) => f.endsWith(".png") && !f.startsWith("reference-"));
+      if (files.length > 0) {
+        console.log(`    ${folder}/screenshots/ (${files.length} screenshots)`);
+      }
+    }
+  }
+  if (fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
+    const fallbackFiles = fs.readdirSync(FALLBACK_SCREENSHOT_DIR).filter((f) => f.endsWith(".png"));
+    if (fallbackFiles.length > 0) {
+      console.log(`    e2e/screenshots/ (${fallbackFiles.length} screenshots without specs)`);
+    }
   }
   console.log("");
 }

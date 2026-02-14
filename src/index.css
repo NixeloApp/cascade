@@ -208,6 +208,9 @@
   --max-width-notification: calc(100vw - 2rem);
   --max-width-toast: 90%;
 
+  /* Auth Content Width */
+  --max-width-auth: 360px;
+
   /* Decorative Blur */
   --blur-glow: 120px;
 

@@ -1,29 +1,50 @@
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { AlertCircle, AlertTriangle, Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "./AlertDialog";
+import { buttonVariants } from "./Button";
 import { Flex } from "./Flex";
 
+// =============================================================================
+// ConfirmDialog - Specialized AlertDialog with icon variants
+// =============================================================================
+
 interface ConfirmDialogProps {
+  /** Controlled open state */
   isOpen: boolean;
+  /** Callback when dialog closes */
   onClose: () => void;
+  /** Callback when confirm action is triggered */
   onConfirm: () => void;
+  /** Dialog title (required for accessibility) */
   title: string;
+  /** Dialog message/description (required for accessibility) */
   message: string;
+  /** Confirm button label */
   confirmLabel?: string;
+  /** Cancel button label */
   cancelLabel?: string;
+  /** Visual variant with icon */
   variant?: "danger" | "warning" | "info";
+  /** Whether confirm action is in progress */
   isLoading?: boolean;
 }
 
+/**
+ * ConfirmDialog component with icon variants for different confirmation types.
+ *
+ * @example
+ * ```tsx
+ * <ConfirmDialog
+ *   isOpen={isOpen}
+ *   onClose={() => setIsOpen(false)}
+ *   onConfirm={handleDelete}
+ *   title="Delete Item"
+ *   message="This action cannot be undone."
+ *   variant="danger"
+ *   confirmLabel="Delete"
+ * />
+ * ```
+ */
 export function ConfirmDialog({
   isOpen,
   onClose,
@@ -62,9 +83,11 @@ export function ConfirmDialog({
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <AlertDialogContent className="bg-ui-bg border-ui-border sm:max-w-md">
-        <AlertDialogHeader>
+    <AlertDialogPrimitive.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <AlertDialogPrimitive.Portal>
+        <AlertDialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-150" />
+        <AlertDialogPrimitive.Content className="bg-ui-bg border-ui-border fixed top-1/2 left-1/2 z-50 grid w-full max-w-dialog-mobile -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border p-6 shadow-elevated sm:max-w-md origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out">
+          {/* Header with icon */}
           <Flex align="start" gap="lg">
             <Flex
               align="center"
@@ -74,41 +97,43 @@ export function ConfirmDialog({
               <Icon className={cn("size-5", config.iconColor)} />
             </Flex>
             <Flex direction="column" gap="sm" className="flex-1 pt-0.5">
-              <AlertDialogTitle className="tracking-tight">{title}</AlertDialogTitle>
-              <AlertDialogDescription className="text-ui-text-secondary leading-relaxed">
+              <AlertDialogPrimitive.Title className="text-lg leading-none font-semibold tracking-tight text-ui-text">
+                {title}
+              </AlertDialogPrimitive.Title>
+              <AlertDialogPrimitive.Description className="text-ui-text-secondary text-sm leading-relaxed">
                 {message}
-              </AlertDialogDescription>
+              </AlertDialogPrimitive.Description>
             </Flex>
           </Flex>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="mt-6 gap-3">
-          <AlertDialogCancel
-            disabled={isLoading}
-            className="bg-ui-bg text-ui-text border border-ui-border hover:bg-ui-bg-secondary focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 transition-all duration-default"
-          >
-            {cancelLabel}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className={cn(
-              "transition-all duration-default focus:ring-2 focus:ring-offset-2",
-              variant === "info"
-                ? "bg-brand text-brand-foreground hover:bg-brand-hover focus:ring-brand-ring"
-                : "bg-status-error text-brand-foreground hover:bg-status-error/90 focus:ring-status-error/50",
-            )}
-          >
-            {isLoading ? (
-              <Flex align="center" gap="sm">
-                <Loader2 className="size-4 animate-spin" />
-                <span>Loading...</span>
-              </Flex>
-            ) : (
-              confirmLabel
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+
+          {/* Footer */}
+          <Flex className="flex-col-reverse gap-3 sm:flex-row sm:justify-end mt-6">
+            <AlertDialogPrimitive.Cancel
+              disabled={isLoading}
+              className={cn(
+                buttonVariants({ variant: "secondary" }),
+                "bg-ui-bg text-ui-text border border-ui-border hover:bg-ui-bg-secondary",
+              )}
+            >
+              {cancelLabel}
+            </AlertDialogPrimitive.Cancel>
+            <AlertDialogPrimitive.Action
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className={cn(buttonVariants({ variant: variant === "info" ? "primary" : "danger" }))}
+            >
+              {isLoading ? (
+                <Flex align="center" gap="sm">
+                  <Loader2 className="size-4 animate-spin" />
+                  <span>Loading...</span>
+                </Flex>
+              ) : (
+                confirmLabel
+              )}
+            </AlertDialogPrimitive.Action>
+          </Flex>
+        </AlertDialogPrimitive.Content>
+      </AlertDialogPrimitive.Portal>
+    </AlertDialogPrimitive.Root>
   );
 }

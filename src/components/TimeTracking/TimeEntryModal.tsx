@@ -8,7 +8,7 @@ import { formatDateForInput, formatDurationHuman } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
@@ -389,210 +389,210 @@ export function TimeEntryModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="tracking-tight">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={computed.isTimerMode ? "Start Timer" : "Log Time"}
+      className="sm:max-w-2xl"
+      footer={
+        <>
+          <Button type="button" onClick={() => onOpenChange(false)} variant="secondary">
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="time-entry-form"
+            variant="primary"
+            disabled={!computed.isTimerMode && computed.effectiveDuration <= 0}
+            leftIcon={computed.isTimerMode ? <Play className="w-4 h-4" /> : undefined}
+          >
             {computed.isTimerMode ? "Start Timer" : "Log Time"}
-          </DialogTitle>
-        </DialogHeader>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-          className="space-y-4"
-        >
-          {/* Mode Toggle */}
-          <Flex gap="xs" className="p-1 bg-ui-bg-secondary rounded-lg">
-            <ModeToggleButton
-              mode="timer"
-              currentMode={state.entryMode}
-              icon={Play}
-              label="Start Timer"
-              onClick={() => actions.setEntryMode("timer")}
-            />
-            <ModeToggleButton
-              mode="duration"
-              currentMode={state.entryMode}
-              icon={Hourglass}
-              label="Duration"
-              onClick={() => actions.setEntryMode("duration")}
-            />
-            <ModeToggleButton
-              mode="timeRange"
-              currentMode={state.entryMode}
-              icon={Clock}
-              label="Time Range"
-              onClick={() => actions.setEntryMode("timeRange")}
-            />
-          </Flex>
+          </Button>
+        </>
+      }
+    >
+      <form
+        id="time-entry-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
+        className="space-y-4"
+      >
+        {/* Mode Toggle */}
+        <Flex gap="xs" className="p-1 bg-ui-bg-secondary rounded-lg">
+          <ModeToggleButton
+            mode="timer"
+            currentMode={state.entryMode}
+            icon={Play}
+            label="Start Timer"
+            onClick={() => actions.setEntryMode("timer")}
+          />
+          <ModeToggleButton
+            mode="duration"
+            currentMode={state.entryMode}
+            icon={Hourglass}
+            label="Duration"
+            onClick={() => actions.setEntryMode("duration")}
+          />
+          <ModeToggleButton
+            mode="timeRange"
+            currentMode={state.entryMode}
+            icon={Clock}
+            label="Time Range"
+            onClick={() => actions.setEntryMode("timeRange")}
+          />
+        </Flex>
 
-          {/* Project Selection */}
+        {/* Project Selection */}
+        <div>
+          <label
+            htmlFor="time-entry-project"
+            className="block text-sm font-medium text-ui-text mb-1"
+          >
+            Project
+          </label>
+          <Select
+            value={state.projectId || "none"}
+            onValueChange={(value) => {
+              actions.setProjectId(value === "none" ? undefined : (value as Id<"projects">));
+              actions.setIssueId(undefined);
+            }}
+          >
+            <SelectTrigger id="time-entry-project" className="w-full">
+              <SelectValue placeholder="Select project..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No project</SelectItem>
+              {projects?.page?.map((project: ProjectItem) => (
+                <SelectItem key={project._id} value={project._id}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Issue Selection */}
+        {state.projectId && projectIssues && projectIssues.length > 0 && (
           <div>
             <label
-              htmlFor="time-entry-project"
+              htmlFor="time-entry-issue"
               className="block text-sm font-medium text-ui-text mb-1"
             >
-              Project
+              Issue
             </label>
             <Select
-              value={state.projectId || "none"}
-              onValueChange={(value) => {
-                actions.setProjectId(value === "none" ? undefined : (value as Id<"projects">));
-                actions.setIssueId(undefined);
-              }}
+              value={state.issueId || "none"}
+              onValueChange={(value) =>
+                actions.setIssueId(value === "none" ? undefined : (value as Id<"issues">))
+              }
             >
-              <SelectTrigger id="time-entry-project" className="w-full">
-                <SelectValue placeholder="Select project..." />
+              <SelectTrigger id="time-entry-issue" className="w-full">
+                <SelectValue placeholder="Select issue..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">No project</SelectItem>
-                {projects?.page?.map((project: ProjectItem) => (
-                  <SelectItem key={project._id} value={project._id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="none">No issue</SelectItem>
+                {projectIssues
+                  .sort((a: IssueItem, b: IssueItem) => (a.title > b.title ? 1 : -1))
+                  .map((issue: IssueItem) => (
+                    <SelectItem key={issue._id} value={issue._id}>
+                      {issue.key} - {issue.title}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
+        )}
 
-          {/* Issue Selection */}
-          {state.projectId && projectIssues && projectIssues.length > 0 && (
-            <div>
-              <label
-                htmlFor="time-entry-issue"
-                className="block text-sm font-medium text-ui-text mb-1"
-              >
-                Issue
-              </label>
-              <Select
-                value={state.issueId || "none"}
-                onValueChange={(value) =>
-                  actions.setIssueId(value === "none" ? undefined : (value as Id<"issues">))
-                }
-              >
-                <SelectTrigger id="time-entry-issue" className="w-full">
-                  <SelectValue placeholder="Select issue..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No issue</SelectItem>
-                  {projectIssues
-                    .sort((a: IssueItem, b: IssueItem) => (a.title > b.title ? 1 : -1))
-                    .map((issue: IssueItem) => (
-                      <SelectItem key={issue._id} value={issue._id}>
-                        {issue.key} - {issue.title}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        {/* Description */}
+        <Textarea
+          label="Description"
+          value={state.description}
+          onChange={(e) => actions.setDescription(e.target.value)}
+          placeholder="What are you working on?"
+          rows={2}
+        />
 
-          {/* Description */}
-          <Textarea
-            label="Description"
-            value={state.description}
-            onChange={(e) => actions.setDescription(e.target.value)}
-            placeholder="What are you working on?"
-            rows={2}
-          />
+        {/* Activity */}
+        <div>
+          <label
+            htmlFor="time-entry-activity"
+            className="block text-sm font-medium text-ui-text mb-1"
+          >
+            Activity
+          </label>
+          <Select
+            value={state.activity || "none"}
+            onValueChange={(value) => actions.setActivity(value === "none" ? "" : value)}
+          >
+            <SelectTrigger id="time-entry-activity" className="w-full">
+              <SelectValue placeholder="Select activity..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Select activity...</SelectItem>
+              {ACTIVITY_TYPES.map((activityType) => (
+                <SelectItem key={activityType} value={activityType}>
+                  {activityType}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Activity */}
+        {/* Billable */}
+        {billingEnabled && (
           <div>
-            <label
-              htmlFor="time-entry-activity"
-              className="block text-sm font-medium text-ui-text mb-1"
-            >
-              Activity
+            <label className="cursor-pointer">
+              <Flex align="center" gap="sm">
+                <input
+                  type="checkbox"
+                  checked={state.billable}
+                  onChange={(e) => actions.setBillable(e.target.checked)}
+                  className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
+                />
+                <Typography variant="label">Billable time</Typography>
+              </Flex>
             </label>
-            <Select
-              value={state.activity || "none"}
-              onValueChange={(value) => actions.setActivity(value === "none" ? "" : value)}
-            >
-              <SelectTrigger id="time-entry-activity" className="w-full">
-                <SelectValue placeholder="Select activity..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Select activity...</SelectItem>
-                {ACTIVITY_TYPES.map((activityType) => (
-                  <SelectItem key={activityType} value={activityType}>
-                    {activityType}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
+        )}
 
-          {/* Billable */}
-          {billingEnabled && (
-            <div>
-              <label className="cursor-pointer">
-                <Flex align="center" gap="sm">
-                  <input
-                    type="checkbox"
-                    checked={state.billable}
-                    onChange={(e) => actions.setBillable(e.target.checked)}
-                    className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
-                  />
-                  <Typography variant="label">Billable time</Typography>
-                </Flex>
-              </label>
-            </div>
-          )}
+        {/* Tags */}
+        <TagsInput
+          tags={state.tags}
+          tagInput={state.tagInput}
+          onTagInputChange={actions.setTagInput}
+          onAddTag={actions.handleAddTag}
+          onRemoveTag={actions.handleRemoveTag}
+        />
 
-          {/* Tags */}
-          <TagsInput
-            tags={state.tags}
-            tagInput={state.tagInput}
-            onTagInputChange={actions.setTagInput}
-            onAddTag={actions.handleAddTag}
-            onRemoveTag={actions.handleRemoveTag}
+        {/* Duration Mode Fields */}
+        {state.entryMode === "duration" && (
+          <DurationModeFields
+            date={state.date}
+            durationInput={state.durationInput}
+            durationSeconds={state.durationSeconds}
+            isDurationInputValid={computed.isDurationInputValid}
+            onDateChange={actions.setDate}
+            onDurationChange={actions.setDurationInput}
+            onQuickIncrement={actions.handleQuickIncrement}
+            onClearDuration={actions.clearDuration}
           />
+        )}
 
-          {/* Duration Mode Fields */}
-          {state.entryMode === "duration" && (
-            <DurationModeFields
-              date={state.date}
-              durationInput={state.durationInput}
-              durationSeconds={state.durationSeconds}
-              isDurationInputValid={computed.isDurationInputValid}
-              onDateChange={actions.setDate}
-              onDurationChange={actions.setDurationInput}
-              onQuickIncrement={actions.handleQuickIncrement}
-              onClearDuration={actions.clearDuration}
-            />
-          )}
-
-          {/* Time Range Mode Fields */}
-          {state.entryMode === "timeRange" && (
-            <TimeRangeModeFields
-              date={state.date}
-              startTime={state.startTime}
-              endTime={state.endTime}
-              timeRangeDuration={state.timeRangeDuration}
-              onDateChange={actions.setDate}
-              onStartTimeChange={actions.setStartTime}
-              onEndTimeChange={actions.setEndTime}
-            />
-          )}
-
-          {/* Footer */}
-          <DialogFooter>
-            <Button type="button" onClick={() => onOpenChange(false)} variant="secondary">
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={!computed.isTimerMode && computed.effectiveDuration <= 0}
-              leftIcon={computed.isTimerMode ? <Play className="w-4 h-4" /> : undefined}
-            >
-              {computed.isTimerMode ? "Start Timer" : "Log Time"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+        {/* Time Range Mode Fields */}
+        {state.entryMode === "timeRange" && (
+          <TimeRangeModeFields
+            date={state.date}
+            startTime={state.startTime}
+            endTime={state.endTime}
+            timeRangeDuration={state.timeRangeDuration}
+            onDateChange={actions.setDate}
+            onStartTimeChange={actions.setStartTime}
+            onEndTimeChange={actions.setEndTime}
+          />
+        )}
+      </form>
     </Dialog>
   );
 }

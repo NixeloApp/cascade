@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { useQuery } from "convex/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { act, render, screen, waitFor } from "@/test/custom-render";
 import { GlobalSearch } from "./GlobalSearch";
 
@@ -275,10 +276,9 @@ describe("GlobalSearch", () => {
       expect(screen.getByPlaceholderText(/Search issues and documents/i)).toBeInTheDocument();
     });
 
-    // Find the overlay by its data-slot attribute and click it
-    const overlay = document.querySelector('[data-slot="dialog-overlay"]');
-    expect(overlay).toBeInTheDocument();
-    if (overlay) await user.click(overlay);
+    // Find the overlay and click it to close
+    const overlay = screen.getByTestId(TEST_IDS.DIALOG.OVERLAY);
+    await user.click(overlay);
 
     await waitFor(() => {
       expect(screen.queryByPlaceholderText(/Search issues and documents/i)).not.toBeInTheDocument();

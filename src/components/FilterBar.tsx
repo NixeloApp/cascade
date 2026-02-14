@@ -9,14 +9,7 @@ import { ChevronDown, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/Dialog";
+import { Dialog } from "./ui/Dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -197,33 +190,35 @@ function SaveFilterDialog({
   onCancel,
 }: SaveFilterDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Save Filter</DialogTitle>
-          <DialogDescription className="sr-only">Save current filter settings</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <Input
-            label="Filter Name"
-            type="text"
-            value={filterName}
-            onChange={(e) => onFilterNameChange(e.target.value)}
-            placeholder="e.g., High Priority Bugs"
-          />
-          <Checkbox
-            label="Share with team (make public)"
-            checked={isPublic}
-            onChange={(e) => onIsPublicChange(e.target.checked)}
-          />
-        </div>
-        <DialogFooter>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Save Filter"
+      description="Save current filter settings"
+      className="sm:max-w-md"
+      footer={
+        <>
           <Button variant="secondary" onClick={onCancel}>
             Cancel
           </Button>
           <Button onClick={onSave}>Save</Button>
-        </DialogFooter>
-      </DialogContent>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <Input
+          label="Filter Name"
+          type="text"
+          value={filterName}
+          onChange={(e) => onFilterNameChange(e.target.value)}
+          placeholder="e.g., High Priority Bugs"
+        />
+        <Checkbox
+          label="Share with team (make public)"
+          checked={isPublic}
+          onChange={(e) => onIsPublicChange(e.target.checked)}
+        />
+      </div>
     </Dialog>
   );
 }

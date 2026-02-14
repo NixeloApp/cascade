@@ -4,13 +4,7 @@ import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/Dialog";
+import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -62,46 +56,52 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="tracking-tight">Create Workspace</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <Flex direction="column" gap="md" className="py-2">
-            <Flex direction="column" gap="xs" className="w-full items-center">
-              <Label htmlFor="workspace-name">Workspace Name</Label>
-              <Input
-                id="workspace-name"
-                placeholder="e.g. Engineering, Marketing..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-                required
-              />
-            </Flex>
-            <Flex direction="column" gap="xs" className="w-full items-center">
-              <Label htmlFor="workspace-description" className="text-ui-text-secondary">
-                Description (Optional)
-              </Label>
-              <Textarea
-                id="workspace-description"
-                placeholder="What is this workspace for?"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </Flex>
+    <Dialog
+      open={isOpen}
+      onOpenChange={onClose}
+      title="Create Workspace"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={isSubmitting}
+            form="create-workspace-form"
+          >
+            Create Workspace
+          </Button>
+        </>
+      }
+    >
+      <form id="create-workspace-form" onSubmit={handleSubmit}>
+        <Flex direction="column" gap="md" className="py-2">
+          <Flex direction="column" gap="xs" className="w-full items-center">
+            <Label htmlFor="workspace-name">Workspace Name</Label>
+            <Input
+              id="workspace-name"
+              placeholder="e.g. Engineering, Marketing..."
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              required
+            />
           </Flex>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" isLoading={isSubmitting}>
-              Create Workspace
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+          <Flex direction="column" gap="xs" className="w-full items-center">
+            <Label htmlFor="workspace-description" className="text-ui-text-secondary">
+              Description (Optional)
+            </Label>
+            <Textarea
+              id="workspace-description"
+              placeholder="What is this workspace for?"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Flex>
+        </Flex>
+      </form>
     </Dialog>
   );
 }
