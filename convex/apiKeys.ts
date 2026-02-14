@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import type { ApiAuthContext } from "./lib/apiAuth";
+import { type ApiAuthContext, hashApiKey } from "./lib/apiAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, requireOwned, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
@@ -27,29 +27,16 @@ function generateApiKey(): string {
   return `${prefix}_${randomPart}`;
 }
 
-// Hash API key using SHA-256 (Node.js crypto)
-async function hashApiKey(key: string): Promise<string> {
-  // In Convex, we can use Web Crypto API
-  const encoder = new TextEncoder();
-  const data = encoder.encode(key);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 /** Validates an API key for HTTP actions, returning auth context if valid and active. */
 export const validateApiKey = internalQuery({
   args: {
-    apiKey: v.string(),
+    keyHash: v.string(),
   },
   handler: async (ctx, args): Promise<ApiAuthContext | null> => {
-    // Hash the provided key
-    const keyHash = await hashApiKey(args.apiKey);
-
     // Find key by hash
     const key = await ctx.db
       .query("apiKeys")
-      .withIndex("by_key_hash", (q) => q.eq("keyHash", keyHash))
+      .withIndex("by_key_hash", (q) => q.eq("keyHash", args.keyHash))
       .first();
 
     if (!key) return null;
@@ -386,16 +373,13 @@ export const listExpiringSoon = authenticatedQuery({
  */
 export const validate = internalQuery({
   args: {
-    apiKey: v.string(),
+    keyHash: v.string(),
   },
   handler: async (ctx, args) => {
-    // Hash the provided key
-    const keyHash = await hashApiKey(args.apiKey);
-
     // Find key by hash
     const key = await ctx.db
       .query("apiKeys")
-      .withIndex("by_key_hash", (q) => q.eq("keyHash", keyHash))
+      .withIndex("by_key_hash", (q) => q.eq("keyHash", args.keyHash))
       .first();
 
     if (!key) {

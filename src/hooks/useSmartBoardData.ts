@@ -49,51 +49,64 @@ function isEnrichedIssueArray(data: unknown): data is EnrichedIssue[] {
   return true; // Empty array is valid
 }
 
-function mergeIssuesByStatus(
+// Helper to group additional issues by status
+function groupAdditionalIssues(additionalIssues: EnrichedIssue[]): Record<string, EnrichedIssue[]> {
+  const grouped: Record<string, EnrichedIssue[]> = {};
+  for (const issue of additionalIssues) {
+    if (!grouped[issue.status]) {
+      grouped[issue.status] = [];
+    }
+    grouped[issue.status].push(issue);
+  }
+  return grouped;
+}
+
+// Helper to merge a specific status group efficiently
+function mergeStatusGroup(
+  existingIssues: EnrichedIssue[] | undefined,
+  newIssues: EnrichedIssue[],
+): EnrichedIssue[] {
+  const existingIds = new Set((existingIssues || []).map((i) => i._id));
+  const uniqueNewIssues: EnrichedIssue[] = [];
+
+  for (const issue of newIssues) {
+    if (!existingIds.has(issue._id)) {
+      existingIds.add(issue._id);
+      uniqueNewIssues.push(issue);
+    }
+  }
+
+  if (uniqueNewIssues.length === 0) {
+    return existingIssues || [];
+  }
+
+  return [...(existingIssues || []), ...uniqueNewIssues];
+}
+
+export function mergeIssuesByStatus(
   smartIssues: Record<string, EnrichedIssue[]> | undefined,
   additionalIssues: EnrichedIssue[],
 ) {
   const result: Record<string, EnrichedIssue[]> = {};
 
+  // 1. Start with issues from smart query
   if (smartIssues) {
     for (const [status, issues] of Object.entries(smartIssues)) {
-      // Optimization: Preserve the original array reference
-      // instead of creating a shallow copy with [...issues]
-      // This allows downstream memoized components (KanbanColumn) to skip re-renders
-      // if the issue list for a column hasn't changed.
-      // Note: This reference may be replaced with a copy later if additional issues
-      // need to be merged (see isOriginalRef check below)
       result[status] = issues;
     }
   }
 
-  // Merge additional done issues into their respective statuses
-  for (const issue of additionalIssues) {
-    const status = issue.status;
-    const existingIssues = result[status];
+  // If no additional issues to merge, return early
+  if (additionalIssues.length === 0) {
+    return result;
+  }
 
-    // If no existing issues for this status, create a new array
-    if (!existingIssues) {
-      result[status] = [issue];
-      continue;
-    }
+  // 2. Group additional issues by status to batch processing
+  const additionalByStatus = groupAdditionalIssues(additionalIssues);
 
-    // Check for duplicates to avoid adding the same issue twice
-    if (existingIssues.some((i) => i._id === issue._id)) {
-      continue;
-    }
-
-    // Determine if the current array is the original reference from smartIssues
-    // If so, we MUST copy it before modifying to avoid mutating the source data
-    const isOriginalRef = smartIssues && smartIssues[status] === existingIssues;
-
-    if (isOriginalRef) {
-      // It's the original reference, so we MUST copy before modifying
-      result[status] = [...existingIssues, issue];
-    } else {
-      // It's already a copy or a new array we created in this loop, so we can safely mutate
-      existingIssues.push(issue);
-    }
+  // 3. Merge grouped issues efficiently
+  for (const [status, newIssues] of Object.entries(additionalByStatus)) {
+    result[status] = mergeStatusGroup(result[status], newIssues);
   }
 
   return result;

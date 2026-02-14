@@ -7,6 +7,7 @@ import {
   createErrorResponse,
   createSuccessResponse,
   extractApiKey,
+  hashApiKey,
   hasScope,
   verifyProjectAccess,
 } from "../lib/apiAuth";
@@ -145,7 +146,8 @@ async function authenticateAndRateLimit(
   }
 
   // 1. Validate Key (Read-only)
-  const auth = await ctx.runQuery(internal.apiKeys.validateApiKey, { apiKey });
+  const keyHash = await hashApiKey(apiKey);
+  const auth = await ctx.runQuery(internal.apiKeys.validateApiKey, { keyHash });
 
   if (!auth) {
     return {
