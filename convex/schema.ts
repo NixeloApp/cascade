@@ -238,7 +238,9 @@ const applicationTables = {
         "type",
         "status",
         "priority",
-      ], // Added organizationId
+        "assigneeId",
+        "reporterId",
+      ], // Added organizationId, assigneeId, reporterId
     })
     .vectorIndex("by_embedding", {
       vectorField: "embedding",

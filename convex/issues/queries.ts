@@ -687,15 +687,9 @@ export const search = authenticatedQuery({
       issues = await safeCollect(
         ctx.db
           .query("issues")
-          .withSearchIndex("search_title", (q) => {
-            let searchQ = q.search("searchContent", args.query as string);
-            if (args.projectId) searchQ = searchQ.eq("projectId", args.projectId);
-            if (args.organizationId) searchQ = searchQ.eq("organizationId", args.organizationId);
-            if (singleType) searchQ = searchQ.eq("type", singleType);
-            if (singleStatus) searchQ = searchQ.eq("status", singleStatus);
-            if (singlePriority) searchQ = searchQ.eq("priority", singlePriority);
-            return searchQ;
-          })
+          .withSearchIndex("search_title", (q) =>
+            applySearchFilters(q, args, singleType, singleStatus, singlePriority, ctx.userId),
+          )
           .filter(notDeleted),
         fetchLimit,
         "issue search",
@@ -748,6 +742,48 @@ export const search = authenticatedQuery({
     };
   },
 });
+
+// Minimal interface for SearchBuilder since it's not exported from convex/server
+interface SearchBuilder {
+  search(field: string, query: string): SearchBuilder;
+  eq(field: string, value: string | number | boolean | null): SearchBuilder;
+}
+
+// Helper to reduce cognitive complexity of search handler
+function applySearchFilters(
+  q: SearchBuilder,
+  args: {
+    query: string;
+    projectId?: Id<"projects">;
+    organizationId?: Id<"organizations">;
+    assigneeId?: Id<"users"> | "unassigned" | "me";
+    reporterId?: Id<"users">;
+  },
+  singleType: string | null,
+  singleStatus: string | null,
+  singlePriority: string | null,
+  userId: Id<"users">,
+) {
+  let searchQ = q.search("searchContent", args.query);
+  if (args.projectId) searchQ = searchQ.eq("projectId", args.projectId);
+  if (args.organizationId) searchQ = searchQ.eq("organizationId", args.organizationId);
+  if (singleType) searchQ = searchQ.eq("type", singleType);
+  if (singleStatus) searchQ = searchQ.eq("status", singleStatus);
+  if (singlePriority) searchQ = searchQ.eq("priority", singlePriority);
+
+  // Optimization: Push down assignee and reporter filters to search index
+  if (args.assigneeId === "me") {
+    searchQ = searchQ.eq("assigneeId", userId);
+  } else if (args.assigneeId && args.assigneeId !== "unassigned") {
+    searchQ = searchQ.eq("assigneeId", args.assigneeId as Id<"users">);
+  }
+
+  if (args.reporterId) {
+    searchQ = searchQ.eq("reporterId", args.reporterId);
+  }
+
+  return searchQ;
+}
 
 // Import the rest of the smart loading queries
 import { DEFAULT_PAGE_SIZE, getDoneColumnThreshold } from "../lib/pagination";
