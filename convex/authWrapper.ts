@@ -11,7 +11,7 @@ import { httpAction, internalAction, internalMutation } from "./_generated/serve
 import { getConvexSiteUrl } from "./lib/env";
 import { logger } from "./lib/logger";
 
-const RESET_TIMEOUT_MS = 30000;
+const RESET_TIMEOUT_MS = 60000;
 
 /**
  * Internal action to perform the actual password reset request (can be slow)
