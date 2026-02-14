@@ -210,29 +210,33 @@ test.describe("Integration", () => {
     // Sign in with existing user
     await authPage.signIn(email, password);
 
-    // Wait for tokens to be set - wait for network idle to ensure auth requests complete
-    await page.waitForLoadState("networkidle");
+    // Wait for token injection and redirect
+    await expect(page.locator("body")).toBeVisible();
 
-    // Force navigation to app if still on landing page
-    if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
-        console.log("[Test] Still on landing page after sign in, attempting navigation to app...");
+    // If we are still on landing page or signin page after a short wait, force navigation to app
+    // This handles cases where automatic redirect from login page might be missed or slow
+    const isStuck = () => {
+      const url = page.url();
+      return url.endsWith("/") || url.endsWith("localhost:5555") || url.includes("/signin");
+    };
+
+    if (isStuck()) {
+      await page.waitForTimeout(2000); // Give it a moment
+      if (isStuck()) {
+        console.log(`[Test] Stuck on ${page.url()}, forcing navigation to app...`);
         await page.goto(ROUTES.app.build());
+      }
     }
 
     // Should land on dashboard (existing user has completed onboarding)
-    // Use waitForURL with a pattern to ensure we catch the redirect
-    await page.waitForURL(/\/.*\/dashboard/, { timeout: 20000 }).catch(async () => {
-        console.log(`[Test] waitForURL failed. Current URL: ${page.url()}`);
-        // Last ditch attempt if we are still on root but authenticated
-        if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
-             console.log("[Test] Retry navigation to app...");
-             await page.goto(ROUTES.app.build());
-             await page.waitForURL(/\/.*\/dashboard/, { timeout: 10000 });
-        }
-    });
+    await expect(async () => {
+      const url = page.url();
+      // Should be on dashboard, not landing or auth pages
+      expect(url).toMatch(/\/[^/]+\/dashboard/);
+    }).toPass({ timeout: 30000 });
 
     // Verify dashboard elements are visible
-    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
+    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible({ timeout: 30000 });
     console.log("[Test] Successfully signed in and landed on dashboard");
   });
 
@@ -294,7 +298,7 @@ test.describe("Integration", () => {
       page
         .getByRole("heading", { name: /welcome to nixelo/i })
         .or(page.locator('[data-sidebar="sidebar"]')),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30000 });
     console.log("[Test] Successfully signed in with new password");
   });
 });

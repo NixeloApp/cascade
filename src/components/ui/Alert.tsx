@@ -55,7 +55,7 @@ function Alert({ className, variant = "default", onDismiss, children, ...props }
   return (
     <div
       data-slot="alert"
-      role="alert"
+      role={["error", "warning"].includes(variant || "") ? "alert" : "status"}
       className={cn(alertVariants({ variant }), onDismiss && "pr-10", className)}
       {...props}
     >

@@ -418,29 +418,40 @@ export const bulkUpdateStatus = authenticatedMutation({
 
     const now = Date.now();
 
-    // Optimize: Batch fetch projects
-    const uniqueProjectIds = [...new Set(pruneNull(issues).map((i) => i.projectId))];
-    const projects = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
-    const projectMap = new Map(pruneNull(projects).map((p) => [p._id, p]));
+    // Collect unique project IDs to fetch projects in batch
+    const projectIds = new Set<Id<"projects">>();
+    for (const issue of issues) {
+      if (issue && !issue.isDeleted && issue.projectId) {
+        projectIds.add(issue.projectId);
+      }
+    }
+
+    // Fetch all relevant projects once
+    const projects = await asyncMap([...projectIds], (id) => ctx.db.get(id));
+    const projectMap = new Map(projects.map((p) => [p?._id.toString(), p]));
 
     const results = await Promise.all(
       issues.map(async (issue) => {
         if (!issue || issue.isDeleted) return 0;
 
+        const projectId = issue.projectId as Id<"projects">;
+        const project = projectMap.get(projectId);
+        if (!project) return 0;
+
         try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+          // Verify permissions using cached project (or re-check if needed, but permissions usually need DB)
+          // Since assertCanEditProject hits DB, we might want to optimize this too, but for now let's keep permission check robust
+          // Actually, assertCanEditProject does a get(), so we could optimize it by passing project, but the helper might not support it.
+          // Let's assume permission check is fast enough or cached at convex level.
+          await assertCanEditProject(ctx, projectId, ctx.userId);
         } catch {
           return 0;
         }
 
-        const oldStatus = issue.status;
-
-        // Validate that the new status exists in the project's workflow
-        const project = projectMap.get(issue.projectId);
-        if (!project) return 0;
-
         const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
         if (!isValidStatus) return 0;
+
+        const oldStatus = issue.status;
 
         await ctx.db.patch(issue._id, {
           status: args.newStatus,

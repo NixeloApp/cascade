@@ -9,7 +9,7 @@ import { checkApiKeyRateLimit } from "./rateLimiter";
  */
 
 // Hash API key using SHA-256
-async function hashApiKey(key: string): Promise<string> {
+export async function hashApiKey(key: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(key);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
