@@ -162,12 +162,14 @@ export const listRoadmapIssues = authenticatedQuery({
     if (args.sprintId) {
       // Bounded: sprint issues are typically limited (<500 per sprint)
       // Optimization: use index with isDeleted to skip deleted items efficiently
+      // Optimization: filter out subtasks in DB to fill buffer with root types
       const allSprintIssues = await safeCollect(
         ctx.db
           .query("issues")
           .withIndex("by_sprint", (q) =>
             q.eq("sprintId", args.sprintId as Id<"sprints">).lt("isDeleted", true),
-          ),
+          )
+          .filter((q) => q.neq(q.field("type"), "subtask")),
         BOUNDED_LIST_LIMIT,
         "roadmap sprint issues",
       );
@@ -206,6 +208,13 @@ export const listRoadmapIssues = authenticatedQuery({
           .query("issues")
           .withIndex("by_project_due_date", (q) =>
             q.eq("projectId", args.projectId).gt("dueDate", 0),
+          )
+          .filter((q) =>
+            q.and(
+              q.neq(q.field("type"), "subtask"), // Exclude subtasks
+              q.neq(q.field("isDeleted"), true), // Exclude deleted
+              ...(args.excludeEpics ? [q.neq(q.field("type"), "epic")] : []), // Optionally exclude epics
+            ),
           ),
         // Use a higher limit to account for filtering (subtasks, deleted items)
         BOUNDED_LIST_LIMIT * 4,
