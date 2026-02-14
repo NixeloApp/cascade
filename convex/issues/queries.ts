@@ -388,7 +388,8 @@ export const listProjectIssues = authenticatedQuery({
             .withIndex("by_project_sprint_status", (q) =>
               q.eq("projectId", args.projectId).eq("sprintId", args.sprintId),
             )
-            .order("asc");
+            .order("asc")
+            .filter(notDeleted);
         }
         if (args.status) {
           return db
@@ -396,8 +397,8 @@ export const listProjectIssues = authenticatedQuery({
             .withIndex("by_project_status", (q) =>
               q.eq("projectId", args.projectId).eq("status", args.status as string),
             )
-            .filter(notDeleted)
-            .order("asc");
+            .order("asc")
+            .filter(notDeleted);
         }
         return db
           .query("issues")
@@ -468,8 +469,8 @@ export const listTeamIssues = authenticatedQuery({
             .withIndex("by_team_status", (q) =>
               q.eq("teamId", args.teamId).eq("status", args.status as string),
             )
-            .filter(notDeleted)
-            .order("asc");
+            .order("asc")
+            .filter(notDeleted);
         }
         return db
           .query("issues")
