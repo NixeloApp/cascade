@@ -42,8 +42,9 @@ test.describe("Board Drag-Drop", () => {
     // Switch to backlog to find the issue
     await projectsPage.switchToTab("backlog");
 
-    // Find the issue card - it's rendered as a button with the issue title
-    const issueCard = page.getByRole("button").filter({ hasText: issueTitle });
+    // Find the issue card - it's rendered as a button with the issue title in aria-label
+    // We use accessible name matching because the button itself is empty (overlay)
+    const issueCard = page.getByRole("button", { name: new RegExp(issueTitle) });
     await expect(issueCard).toBeVisible();
 
     // Verify the card has draggable attribute (cards are draggable when canEdit=true)
@@ -97,8 +98,8 @@ test.describe("Board Drag-Drop", () => {
     // Switch to backlog to see the issue
     await projectsPage.switchToTab("backlog");
 
-    // Find the issue card - it's rendered as a button with the issue title
-    const issueCard = page.getByRole("button").filter({ hasText: issueTitle });
+    // Find the issue card - it's rendered as a button with the issue title in aria-label
+    const issueCard = page.getByRole("button", { name: new RegExp(issueTitle) });
     await expect(issueCard).toBeVisible();
     console.log("✓ Issue card visible in initial column");
 

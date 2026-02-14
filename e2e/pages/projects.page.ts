@@ -328,9 +328,12 @@ export class ProjectsPage extends BasePage {
 
   /**
    * Get an issue card by its title
+   * Targets the overlay button which is the interactive element
    */
   getIssueCard(title: string) {
-    return this.page.getByTestId(TEST_IDS.ISSUE.TITLE).filter({ hasText: title });
+    // Match the accessible name (aria-label) which contains the title
+    // e.g. "Open issue PROJ-123: Issue Title"
+    return this.page.getByRole("button", { name: new RegExp(title) });
   }
 
   /**
