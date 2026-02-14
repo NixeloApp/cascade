@@ -354,7 +354,7 @@ export function CreateEventModal({
               </div>
 
               {/* Actions - Keep inside form.Subscribe to access isSubmitting */}
-              <div className="pt-4 border-t border-ui-border flex justify-end gap-2">
+              <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
                 <form.Subscribe selector={(state) => state.isSubmitting}>
                   {(isSubmitting) => (
                     <>
@@ -367,7 +367,7 @@ export function CreateEventModal({
                     </>
                   )}
                 </form.Subscribe>
-              </div>
+              </Flex>
             </Flex>
           )}
         </form.Subscribe>

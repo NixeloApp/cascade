@@ -114,7 +114,7 @@ export function SprintCard({ sprint, issues, onDrop }: SprintCardProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const completedCount = issues.filter(i => i.status === 'done').length;
-  const progressPercent = (completedCount / issues.length) * 100;
+  const progressPercent = issues.length > 0 ? (completedCount / issues.length) * 100 : 0;
 
   return (
     <Card

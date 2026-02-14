@@ -417,7 +417,7 @@ export function ProjectWizard({
         )}
 
         {/* Navigation Buttons - Mintlify-inspired with proper spacing */}
-        <div className="flex justify-between sm:justify-between pt-6 border-t border-ui-border">
+        <Flex justify="between" className="pt-6 border-t border-ui-border sm:justify-between">
           <div>
             {step > 1 && (
               <Button
@@ -467,7 +467,7 @@ export function ProjectWizard({
               </Button>
             )}
           </Flex>
-        </div>
+        </Flex>
       </div>
     </Dialog>
   );

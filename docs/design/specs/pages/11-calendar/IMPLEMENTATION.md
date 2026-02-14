@@ -441,6 +441,20 @@ export function CalendarDragLayer() {
   animation: slideInRight 0.15s ease-out forwards;
 }
 
+.calendar-animate-prev,
+.calendar-animate-next-enter,
+.calendar-day-cell,
+.event-card,
+.folder-content,
+.chevron-icon,
+.row-actions {
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 /* Drag states */
 .event-card[data-dragging="true"] {
   opacity: 0.5;

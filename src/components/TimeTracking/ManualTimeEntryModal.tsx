@@ -607,7 +607,7 @@ export function ManualTimeEntryModal({
         </form.Field>
 
         {/* Footer with form state - kept inside children */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-ui-border">
+        <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(isSubmitting) => (
               <>
@@ -625,7 +625,7 @@ export function ManualTimeEntryModal({
               </>
             )}
           </form.Subscribe>
-        </div>
+        </Flex>
       </form>
     </Dialog>
   );

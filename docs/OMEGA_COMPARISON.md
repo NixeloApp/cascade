@@ -255,7 +255,7 @@ const Button = ({ variant = "primary", size = "md", ...props }) => (
 2. **Keyboard navigation** - Plane's vim-style shortcuts
 3. **Empty states** - Both have polished empty state illustrations
 4. **Loading skeletons** - Plane's skeleton patterns
-5. **Error boundaries** - Cal.com's error handling patterns
+5. **Error-boundaries** - Cal.com's error handling patterns
 
 ---
 

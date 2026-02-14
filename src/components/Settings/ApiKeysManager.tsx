@@ -76,17 +76,14 @@ export function ApiKeysManager() {
             <Typography className="text-sm text-ui-text-secondary mb-4">
               Generate your first API key to access Nixelo programmatically
             </Typography>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowGenerateModal(true)}
-              className="mx-auto"
-            >
-              <Flex gap="sm" align="center">
-                <Plus className="h-4 w-4" />
-                Generate Your First Key
-              </Flex>
-            </Button>
+            <Flex justify="center">
+              <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
+                <Flex gap="sm" align="center">
+                  <Plus className="h-4 w-4" />
+                  Generate Your First Key
+                </Flex>
+              </Button>
+            </Flex>
           </div>
         ) : (
           <Flex direction="column" gap="lg">
@@ -417,14 +414,14 @@ function GenerateKeyModal({
             />
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-ui-border">
+            <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
               <Button variant="secondary" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button variant="primary" onClick={handleGenerate} disabled={isGenerating}>
                 {isGenerating ? "Generating..." : "Generate API Key"}
               </Button>
-            </div>
+            </Flex>
           </>
         ) : (
           <>
@@ -464,7 +461,7 @@ function GenerateKeyModal({
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-ui-border">
+              <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
                 <Button variant="secondary" onClick={() => onOpenChange(false)}>
                   I've Saved It
                 </Button>
@@ -474,7 +471,7 @@ function GenerateKeyModal({
                     Copy & Close
                   </Flex>
                 </Button>
-              </div>
+              </Flex>
             </div>
           </>
         )}

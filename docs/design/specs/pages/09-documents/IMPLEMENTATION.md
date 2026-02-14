@@ -114,7 +114,7 @@ export function FolderRow({ folder, level, isExpanded, onToggle, children }: Pro
     if (contentRef.current) {
       setContentHeight(contentRef.current.scrollHeight);
     }
-  }, [children]);
+  }, [expanded]); // Removed children from dependency array, use expanded state or ResizeObserver if content changes dynamically
 
   return (
     <div>

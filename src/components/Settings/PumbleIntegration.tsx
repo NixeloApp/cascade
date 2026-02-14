@@ -459,7 +459,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
         </div>
 
         {/* Actions - kept inside form due to form.Subscribe */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-ui-border">
+        <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(isSubmitting) => (
               <>
@@ -482,7 +482,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
               </>
             )}
           </form.Subscribe>
-        </div>
+        </Flex>
       </form>
     </Dialog>
   );
@@ -596,7 +596,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
         </div>
 
         {/* Actions - kept inside form due to form.Subscribe */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-ui-border">
+        <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(isSubmitting) => (
               <>
@@ -619,7 +619,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
               </>
             )}
           </form.Subscribe>
-        </div>
+        </Flex>
       </form>
     </Dialog>
   );
