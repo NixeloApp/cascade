@@ -1,9 +1,9 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 import { checkPasswordResetRateLimitHandler } from "./authWrapper";
+import { rateLimit } from "./rateLimits";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { rateLimit } from "./rateLimits";
 
 // Mock rateLimit
 vi.mock("./rateLimits", () => ({
