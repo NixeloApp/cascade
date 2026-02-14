@@ -219,6 +219,7 @@ const applicationTables = {
     .index("by_project_sprint_status_updated", ["projectId", "sprintId", "status", "updatedAt"]) // NEW OPTIMIZATION
     .index("by_project_updated", ["projectId", "updatedAt"])
     .index("by_project_due_date", ["projectId", "dueDate"])
+    .index("by_project_type_due_date", ["projectId", "type", "dueDate"])
     .index("by_organization_status", ["organizationId", "status", "isDeleted"]) // NEW
     .index("by_workspace_status", ["workspaceId", "status", "isDeleted"]) // Standardized
     .index("by_team_status", ["teamId", "status", "isDeleted"]) // NEW
