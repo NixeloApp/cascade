@@ -92,6 +92,7 @@ import type * as lib_teamAccess from "../lib/teamAccess.js";
 import type * as lib_timeUtils from "../lib/timeUtils.js";
 import type * as lib_userUtils from "../lib/userUtils.js";
 import type * as lib_vectorSearchHelpers from "../lib/vectorSearchHelpers.js";
+import type * as lib_webhookHelpers from "../lib/webhookHelpers.js";
 import type * as lib_workspaceAccess from "../lib/workspaceAccess.js";
 import type * as meetingBot from "../meetingBot.js";
 import type * as mocks_testConfig from "../mocks/testConfig.js";
@@ -228,6 +229,7 @@ declare const fullApi: ApiFromModules<{
   "lib/timeUtils": typeof lib_timeUtils;
   "lib/userUtils": typeof lib_userUtils;
   "lib/vectorSearchHelpers": typeof lib_vectorSearchHelpers;
+  "lib/webhookHelpers": typeof lib_webhookHelpers;
   "lib/workspaceAccess": typeof lib_workspaceAccess;
   meetingBot: typeof meetingBot;
   "mocks/testConfig": typeof mocks_testConfig;
