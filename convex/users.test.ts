@@ -220,12 +220,9 @@ describe("Users", () => {
       const targetId = ctxB.userId;
 
       // 3. Create Project Shared (in Viewer's org)
-      const projectSharedId = await createProjectInOrganization(
-        t,
-        viewerId,
-        ctxA.organizationId,
-        { name: "Shared Project" },
-      );
+      const projectSharedId = await createProjectInOrganization(t, viewerId, ctxA.organizationId, {
+        name: "Shared Project",
+      });
 
       // Add User B (targetId) to shared project as viewer
       await t.run(async (ctx) => {
@@ -238,12 +235,9 @@ describe("Users", () => {
       });
 
       // 4. Create Project Private (in Target's org)
-      const projectPrivateId = await createProjectInOrganization(
-        t,
-        targetId,
-        ctxB.organizationId,
-        { name: "Private Project" },
-      );
+      const projectPrivateId = await createProjectInOrganization(t, targetId, ctxB.organizationId, {
+        name: "Private Project",
+      });
 
       // 5. Create issues by Target in Shared Project
       await t.run(async (ctx) => {
