@@ -1,8 +1,14 @@
-import type { SearchBuilder } from "convex/server";
 import type { Id } from "../_generated/dataModel";
 
+// Define a local interface for the query builder compatible with q in .withSearchIndex("index", (q) => ...)
+// Since SearchBuilder is not exported from convex/server
+export interface SearchFilterBuilder<T extends string> {
+  search(field: string, query: string): SearchFilterBuilder<T>;
+  eq(field: string, value: any): SearchFilterBuilder<T>;
+}
+
 export function buildIssueSearch(
-  q: SearchBuilder<"issues">,
+  q: SearchFilterBuilder<"issues">,
   args: {
     query: string;
     projectId?: Id<"projects">;
