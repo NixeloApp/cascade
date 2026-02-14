@@ -49,6 +49,44 @@ function isEnrichedIssueArray(data: unknown): data is EnrichedIssue[] {
   return true; // Empty array is valid
 }
 
+// Helper to group additional issues by status
+function groupAdditionalIssues(additionalIssues: EnrichedIssue[]): Record<string, EnrichedIssue[]> {
+  const grouped: Record<string, EnrichedIssue[]> = {};
+  for (const issue of additionalIssues) {
+    if (!grouped[issue.status]) {
+      grouped[issue.status] = [];
+    }
+    grouped[issue.status].push(issue);
+  }
+  return grouped;
+}
+
+// Helper to merge a specific status group efficiently
+function mergeStatusGroup(
+  existingIssues: EnrichedIssue[] | undefined,
+  newIssues: EnrichedIssue[],
+): EnrichedIssue[] {
+  if (!existingIssues || existingIssues.length === 0) {
+    return [...newIssues];
+  }
+
+  const existingIds = new Set(existingIssues.map((i) => i._id));
+  const uniqueNewIssues: EnrichedIssue[] = [];
+
+  for (const issue of newIssues) {
+    if (!existingIds.has(issue._id)) {
+      existingIds.add(issue._id);
+      uniqueNewIssues.push(issue);
+    }
+  }
+
+  if (uniqueNewIssues.length === 0) {
+    return existingIssues;
+  }
+
+  return [...existingIssues, ...uniqueNewIssues];
+}
+
 export function mergeIssuesByStatus(
   smartIssues: Record<string, EnrichedIssue[]> | undefined,
   additionalIssues: EnrichedIssue[],
@@ -58,8 +96,6 @@ export function mergeIssuesByStatus(
   // 1. Start with issues from smart query
   if (smartIssues) {
     for (const [status, issues] of Object.entries(smartIssues)) {
-      // Optimization: Preserve the original array reference initially.
-      // If we merge additional issues, we will create a new array.
       result[status] = issues;
     }
   }
@@ -70,42 +106,11 @@ export function mergeIssuesByStatus(
   }
 
   // 2. Group additional issues by status to batch processing
-  const additionalByStatus: Record<string, EnrichedIssue[]> = {};
-  for (const issue of additionalIssues) {
-    if (!additionalByStatus[issue.status]) {
-      additionalByStatus[issue.status] = [];
-    }
-    additionalByStatus[issue.status].push(issue);
-  }
+  const additionalByStatus = groupAdditionalIssues(additionalIssues);
 
   // 3. Merge grouped issues efficiently
   for (const [status, newIssues] of Object.entries(additionalByStatus)) {
-    const existingIssues = result[status];
-
-    if (!existingIssues || existingIssues.length === 0) {
-      // No existing issues, just use the new ones
-      // Use slice() to ensure we return a new array instance if additionalByStatus reused references (though here we created arrays)
-      result[status] = [...newIssues];
-      continue;
-    }
-
-    // Create a Set of existing IDs for O(1) duplicate checking
-    // This is O(M) where M is existing count, vs O(M*N) original
-    const existingIds = new Set(existingIssues.map((i) => i._id));
-    const uniqueNewIssues: EnrichedIssue[] = [];
-
-    for (const issue of newIssues) {
-      if (!existingIds.has(issue._id)) {
-        existingIds.add(issue._id); // Update Set to catch internal duplicates in newIssues
-        uniqueNewIssues.push(issue);
-      }
-    }
-
-    if (uniqueNewIssues.length > 0) {
-      // Merge unique new issues with existing ones
-      // We always create a new array here, preserving immutability of the source
-      result[status] = [...existingIssues, ...uniqueNewIssues];
-    }
+    result[status] = mergeStatusGroup(result[status], newIssues);
   }
 
   return result;
