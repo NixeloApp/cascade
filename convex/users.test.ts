@@ -157,5 +157,47 @@ describe("Users", () => {
       expect(stats.issuesAssigned).toBe(1);
       expect(stats.comments).toBe(1);
     });
+
+    it("should count completed issues correctly", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const projectId = await createTestProject(t, userId);
+
+      // Create a done issue
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        if (!(project.workspaceId && project.teamId)) {
+          throw new Error("Project missing workspace or team");
+        }
+
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId: project.organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: "P-2",
+          title: "Task 2",
+          status: "done", // Completed
+          priority: "medium",
+          type: "task",
+          reporterId: userId,
+          assigneeId: userId,
+          updatedAt: Date.now(),
+          labels: [],
+          order: 2,
+          linkedDocuments: [],
+          attachments: [],
+          embedding: [],
+        });
+      });
+
+      const stats = await asUser.query(api.users.getUserStats, { userId });
+      expect(stats.issuesCreated).toBe(1);
+      expect(stats.issuesAssigned).toBe(1);
+      expect(stats.issuesCompleted).toBe(1);
+    });
   });
 });
