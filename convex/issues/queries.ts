@@ -388,18 +388,17 @@ export const listProjectIssues = authenticatedQuery({
             .withIndex("by_project_sprint_status", (q) =>
               q.eq("projectId", args.projectId).eq("sprintId", args.sprintId),
             )
-            .order("desc");
+            .order("asc")
+            .filter(notDeleted);
         }
         if (args.status) {
           return db
             .query("issues")
             .withIndex("by_project_status", (q) =>
-              q
-                .eq("projectId", args.projectId)
-                .eq("status", args.status as string)
-                .lt("isDeleted", true),
+              q.eq("projectId", args.projectId).eq("status", args.status as string),
             )
-            .order("desc");
+            .order("asc")
+            .filter(notDeleted);
         }
         return db
           .query("issues")
@@ -468,12 +467,10 @@ export const listTeamIssues = authenticatedQuery({
           return db
             .query("issues")
             .withIndex("by_team_status", (q) =>
-              q
-                .eq("teamId", args.teamId)
-                .eq("status", args.status as string)
-                .lt("isDeleted", true),
+              q.eq("teamId", args.teamId).eq("status", args.status as string),
             )
-            .order("desc");
+            .order("asc")
+            .filter(notDeleted);
         }
         return db
           .query("issues")
@@ -767,13 +764,16 @@ export const listByProjectSmart = projectQuery({
             }
 
             // Batch query: Promise.all handles parallelism
-            return ctx.db.query("issues").withIndex("by_project_sprint_status", (q) =>
-              q
-                .eq("projectId", ctx.project._id)
-                .eq("sprintId", args.sprintId as Id<"sprints">)
-                .eq("status", state.id)
-                .lt("isDeleted", true),
-            );
+            return ctx.db
+              .query("issues")
+              .withIndex("by_project_sprint_status", (q) =>
+                q
+                  .eq("projectId", ctx.project._id)
+                  .eq("sprintId", args.sprintId as Id<"sprints">)
+                  .eq("status", state.id),
+              )
+              .order("asc")
+              .filter(notDeleted);
           }
 
           if (state.category === "done") {
@@ -793,9 +793,10 @@ export const listByProjectSmart = projectQuery({
           return ctx.db
             .query("issues")
             .withIndex("by_project_status", (q) =>
-              q.eq("projectId", ctx.project._id).eq("status", state.id).lt("isDeleted", true),
-            );
-          //.filter(notDeleted); // Optimization: handled by index
+              q.eq("projectId", ctx.project._id).eq("status", state.id),
+            )
+            .order("asc")
+            .filter(notDeleted);
         })();
 
         issuesByColumn[state.id] = await q.take(DEFAULT_PAGE_SIZE);
@@ -876,9 +877,9 @@ export const listByTeamSmart = authenticatedQuery({
           // Batch query: Promise.all handles parallelism
           return ctx.db
             .query("issues")
-            .withIndex("by_team_status", (q) =>
-              q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
-            );
+            .withIndex("by_team_status", (q) => q.eq("teamId", args.teamId).eq("status", state.id))
+            .order("asc")
+            .filter(notDeleted);
         })();
 
         issuesByColumn[state.id] = await q.take(DEFAULT_PAGE_SIZE);
@@ -950,8 +951,9 @@ export const getTeamIssueCounts = authenticatedQuery({
             ctx.db
               .query("issues")
               .withIndex("by_team_status", (q) =>
-                q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
-              ),
+                q.eq("teamId", args.teamId).eq("status", state.id),
+              )
+              .filter(notDeleted),
           );
         } else {
           // Non-done columns
@@ -960,8 +962,9 @@ export const getTeamIssueCounts = authenticatedQuery({
             ctx.db
               .query("issues")
               .withIndex("by_team_status", (q) =>
-                q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
-              ),
+                q.eq("teamId", args.teamId).eq("status", state.id),
+              )
+              .filter(notDeleted),
           );
 
           visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
@@ -1039,8 +1042,9 @@ export const getIssueCounts = authenticatedQuery({
               ctx.db
                 .query("issues")
                 .withIndex("by_project_status", (q) =>
-                  q.eq("projectId", args.projectId).eq("status", state.id).lt("isDeleted", true),
-                ),
+                  q.eq("projectId", args.projectId).eq("status", state.id),
+                )
+                .filter(notDeleted),
             );
           } else {
             // Batch query: Promise.all handles parallelism
@@ -1048,8 +1052,9 @@ export const getIssueCounts = authenticatedQuery({
               ctx.db
                 .query("issues")
                 .withIndex("by_project_status", (q) =>
-                  q.eq("projectId", args.projectId).eq("status", state.id).lt("isDeleted", true),
-                ),
+                  q.eq("projectId", args.projectId).eq("status", state.id),
+                )
+                .filter(notDeleted),
             );
 
             visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
@@ -1151,12 +1156,9 @@ async function getSprintIssueCounts(
           ctx.db
             .query("issues")
             .withIndex("by_project_sprint_status", (q) =>
-              q
-                .eq("projectId", projectId)
-                .eq("sprintId", sprintId)
-                .eq("status", state.id)
-                .lt("isDeleted", true),
-            ),
+              q.eq("projectId", projectId).eq("sprintId", sprintId).eq("status", state.id),
+            )
+            .filter(notDeleted),
         );
       } else {
         // Non-done columns
@@ -1165,12 +1167,9 @@ async function getSprintIssueCounts(
           ctx.db
             .query("issues")
             .withIndex("by_project_sprint_status", (q) =>
-              q
-                .eq("projectId", projectId)
-                .eq("sprintId", sprintId)
-                .eq("status", state.id)
-                .lt("isDeleted", true),
-            ),
+              q.eq("projectId", projectId).eq("sprintId", sprintId).eq("status", state.id),
+            )
+            .filter(notDeleted),
         );
 
         visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
