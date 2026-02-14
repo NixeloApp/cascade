@@ -672,11 +672,30 @@ export const search = authenticatedQuery({
 
     // If query is provided, use search index
     if (args.query) {
+      const singleType =
+        args.type?.length === 1
+          ? (args.type[0] as "task" | "bug" | "story" | "epic" | "subtask")
+          : null;
+      const singleStatus = args.status?.length === 1 ? args.status[0] : null;
+      const singlePriority =
+        args.priority?.length === 1
+          ? (args.priority[0] as "high" | "low" | "lowest" | "medium" | "highest")
+          : null;
+
       // Bounded: search results limited to prevent huge result sets
+      // Optimization: Push down filters to search index to improve relevance and performance
       issues = await safeCollect(
         ctx.db
           .query("issues")
-          .withSearchIndex("search_title", (q) => q.search("searchContent", args.query as string))
+          .withSearchIndex("search_title", (q) => {
+            let searchQ = q.search("searchContent", args.query as string);
+            if (args.projectId) searchQ = searchQ.eq("projectId", args.projectId);
+            if (args.organizationId) searchQ = searchQ.eq("organizationId", args.organizationId);
+            if (singleType) searchQ = searchQ.eq("type", singleType);
+            if (singleStatus) searchQ = searchQ.eq("status", singleStatus);
+            if (singlePriority) searchQ = searchQ.eq("priority", singlePriority);
+            return searchQ;
+          })
           .filter(notDeleted),
         fetchLimit,
         "issue search",
