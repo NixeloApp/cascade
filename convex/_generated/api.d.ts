@@ -63,6 +63,7 @@ import type * as issues from "../issues.js";
 import type * as issues_helpers from "../issues/helpers.js";
 import type * as issues_mutations from "../issues/mutations.js";
 import type * as issues_queries from "../issues/queries.js";
+import type * as issues_searchHelpers from "../issues/searchHelpers.js";
 import type * as labelGroups from "../labelGroups.js";
 import type * as labels from "../labels.js";
 import type * as lib_aiHelpers from "../lib/aiHelpers.js";
@@ -200,6 +201,7 @@ declare const fullApi: ApiFromModules<{
   "issues/helpers": typeof issues_helpers;
   "issues/mutations": typeof issues_mutations;
   "issues/queries": typeof issues_queries;
+  "issues/searchHelpers": typeof issues_searchHelpers;
   labelGroups: typeof labelGroups;
   labels: typeof labels;
   "lib/aiHelpers": typeof lib_aiHelpers;

@@ -80,22 +80,21 @@ function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
   if (prevIssue.updatedAt !== nextIssue.updatedAt) return false;
 
   // Check enriched fields that might change without issue modification time updating
-  // Assignee details
-  if (prevIssue.assignee?._id !== nextIssue.assignee?._id) return false;
-  if (prevIssue.assignee?.name !== nextIssue.assignee?.name) return false;
-  if (prevIssue.assignee?.image !== nextIssue.assignee?.image) return false;
+  const assigneeChanged =
+    prevIssue.assignee?._id !== nextIssue.assignee?._id ||
+    prevIssue.assignee?.name !== nextIssue.assignee?.name ||
+    prevIssue.assignee?.image !== nextIssue.assignee?.image;
+
+  if (assigneeChanged) return false;
 
   // Label details
   if (prevIssue.labels.length !== nextIssue.labels.length) return false;
-  for (let i = 0; i < prevIssue.labels.length; i++) {
-    const prevLabel = prevIssue.labels[i];
+  const labelsChanged = prevIssue.labels.some((prevLabel, i) => {
     const nextLabel = nextIssue.labels[i];
-    if (prevLabel.name !== nextLabel.name) return false;
-    if (prevLabel.color !== nextLabel.color) return false;
-  }
+    return prevLabel.name !== nextLabel.name || prevLabel.color !== nextLabel.color;
+  });
 
-  // If we got here, important fields are effectively equal
-  return true;
+  return !labelsChanged;
 }
 
 export const IssueCard = memo(function IssueCard({

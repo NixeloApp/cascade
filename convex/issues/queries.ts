@@ -679,7 +679,7 @@ export const search = authenticatedQuery({
         ctx.db
           .query("issues")
           .withSearchIndex("search_title", (q) =>
-            // @ts-ignore - The local SearchFilterBuilder matches the runtime behavior but TS complains
+            // @ts-expect-error - The local SearchFilterBuilder matches the runtime behavior but TS complains
             buildIssueSearch(q, { ...args, query: args.query as string }, ctx.userId),
           )
           .filter(notDeleted),

@@ -4,7 +4,7 @@ import type { Id } from "../_generated/dataModel";
 // Since SearchBuilder is not exported from convex/server
 export interface SearchFilterBuilder<T extends string> {
   search(field: string, query: string): SearchFilterBuilder<T>;
-  eq(field: string, value: any): SearchFilterBuilder<T>;
+  eq(field: string, value: string | number | boolean | null | undefined): SearchFilterBuilder<T>;
 }
 
 export function buildIssueSearch(
