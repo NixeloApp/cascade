@@ -42,18 +42,13 @@ function validateE2EApiKey(request: Request): Response | null {
 
   // If no API key is configured, strict environment check
   if (!apiKey) {
-    const env = process.env.NODE_ENV;
-    // FAIL SECURE: Only allow if explicitly in development or test.
-    // We do NOT allow CI environments to bypass this check implicitly, as CI might be running against production.
-    // CI environments MUST configure E2E_API_KEY to run tests safely.
-    if (env === "development" || env === "test") {
-      return null; // Allow in explicitly unsafe environments (local dev/test)
-    }
-
-    // Allow if running locally (localhost/127.0.0.1) - this covers local CI runs
+    // FAIL SECURE: Only allow if running locally (localhost/127.0.0.1).
+    // This covers local development and local CI runs.
+    // We do NOT allow general "development" or "test" environments to bypass this check,
+    // as they might be exposed publicly (e.g. preview deployments).
     try {
       const url = new URL(request.url);
-      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "::1") {
         return null;
       }
     } catch {

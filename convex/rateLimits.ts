@@ -25,7 +25,13 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   apiEndpoint: { kind: "fixed window", rate: 100, period: 60_000 }, // 100/min
 
   // Password Reset: Strict limit to prevent spam/DoS
-  passwordReset: { kind: "token bucket", rate: 3, period: 60_000, capacity: 3 }, // 3 per minute
+  // Increased capacity/rate slightly to accommodate parallel E2E tests
+  passwordReset: {
+    kind: "token bucket",
+    rate: process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? 10 : 3,
+    period: 60_000,
+    capacity: process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? 10 : 3,
+  }, // 3 per minute (higher in dev/test)
 });
 
 /**
