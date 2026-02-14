@@ -694,6 +694,18 @@ export const search = authenticatedQuery({
             if (singleType) searchQ = searchQ.eq("type", singleType);
             if (singleStatus) searchQ = searchQ.eq("status", singleStatus);
             if (singlePriority) searchQ = searchQ.eq("priority", singlePriority);
+
+            // Optimization: Push down assignee and reporter filters to search index
+            if (args.assigneeId === "me") {
+              searchQ = searchQ.eq("assigneeId", ctx.userId);
+            } else if (args.assigneeId && args.assigneeId !== "unassigned") {
+              searchQ = searchQ.eq("assigneeId", args.assigneeId as Id<"users">);
+            }
+
+            if (args.reporterId) {
+              searchQ = searchQ.eq("reporterId", args.reporterId);
+            }
+
             return searchQ;
           })
           .filter(notDeleted),

@@ -256,6 +256,9 @@ export async function createTestIssue(
       .then((issues) => issues.length);
 
     const key = `${project.key}-${issueCount + 1}`;
+    const title = issueData?.title || `Test Issue ${now}`;
+    const description = issueData?.description;
+    const searchContent = `${title} ${description || ""}`.trim();
 
     return await ctx.db.insert("issues", {
       projectId,
@@ -263,8 +266,9 @@ export async function createTestIssue(
       workspaceId: project.workspaceId,
       teamId: project.teamId,
       key,
-      title: issueData?.title || `Test Issue ${now}`,
-      description: issueData?.description,
+      title,
+      description,
+      searchContent,
       type: issueData?.type || "task",
       status: issueData?.status || "todo",
       priority: issueData?.priority || "medium",
