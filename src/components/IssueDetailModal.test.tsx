@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { IssueDetailModal } from "./IssueDetailModal";
 
@@ -222,7 +223,7 @@ describe("IssueDetailModal", () => {
     expect(screen.getByText(/Time Tracking/i)).toBeInTheDocument();
   });
 
-  it("should close modal when close button is clicked", async () => {
+  it("should close modal when X button is clicked", async () => {
     const user = userEvent.setup();
     setupMockQuery();
 
@@ -231,6 +232,33 @@ describe("IssueDetailModal", () => {
     // Radix Dialog provides a close button with "Close" text in sr-only span
     const closeButton = screen.getByRole("button", { name: /^Close$/i });
     await user.click(closeButton);
+
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("should close modal when backdrop is clicked", async () => {
+    const user = userEvent.setup();
+    setupMockQuery();
+
+    renderModal();
+
+    // Click the dialog overlay to close
+    const overlay = screen.getByTestId(TEST_IDS.DIALOG.OVERLAY);
+    await user.click(overlay);
+
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("should close modal when Escape is pressed", async () => {
+    const user = userEvent.setup();
+    setupMockQuery();
+
+    renderModal();
+
+    // Focus within the dialog first, then press Escape
+    const dialog = screen.getByRole("dialog");
+    dialog.focus();
+    await user.keyboard("{Escape}");
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false);
   });

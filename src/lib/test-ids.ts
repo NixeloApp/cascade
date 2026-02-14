@@ -264,6 +264,15 @@ export const TEST_IDS = {
     /** @see src/components/DocumentHeader.tsx */
     TITLE: "document-title",
   },
+
+  // ============================================================
+  // Dialog / Modal
+  // ============================================================
+
+  DIALOG: {
+    /** @see src/components/ui/Dialog.tsx */
+    OVERLAY: "dialog-overlay",
+  },
 } as const;
 
 /** Type helper for accessing TEST_IDS values */
