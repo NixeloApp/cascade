@@ -43,8 +43,8 @@ describe("e2e integration", () => {
         .first();
 
       expect(entry).not.toBeNull();
-      expect(entry!.code).not.toBe(code);
-      expect(entry!.code).toMatch(/^enc:/);
+      expect(entry?.code).not.toBe(code);
+      expect(entry?.code).toMatch(/^enc:/);
     });
 
     // Verify retrieval works

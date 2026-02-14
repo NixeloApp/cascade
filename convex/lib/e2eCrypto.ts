@@ -5,23 +5,15 @@ export async function encryptE2EData(data: string, apiKey: string): Promise<stri
   const keyHash = await crypto.subtle.digest("SHA-256", keyData);
 
   // Import key for AES-GCM
-  const key = await crypto.subtle.importKey(
-    "raw",
-    keyHash,
-    { name: "AES-GCM" },
-    false,
-    ["encrypt"],
-  );
+  const key = await crypto.subtle.importKey("raw", keyHash, { name: "AES-GCM" }, false, [
+    "encrypt",
+  ]);
 
   // Generate random IV (12 bytes)
   const iv = crypto.getRandomValues(new Uint8Array(12));
 
   // Encrypt
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    key,
-    encoder.encode(data),
-  );
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(data));
 
   // Combine IV and ciphertext
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
@@ -50,13 +42,9 @@ export async function decryptE2EData(encryptedData: string, apiKey: string): Pro
   const keyHash = await crypto.subtle.digest("SHA-256", keyData);
 
   // Import key
-  const key = await crypto.subtle.importKey(
-    "raw",
-    keyHash,
-    { name: "AES-GCM" },
-    false,
-    ["decrypt"],
-  );
+  const key = await crypto.subtle.importKey("raw", keyHash, { name: "AES-GCM" }, false, [
+    "decrypt",
+  ]);
 
   // Decrypt
   const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
