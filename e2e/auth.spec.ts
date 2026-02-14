@@ -210,8 +210,8 @@ test.describe("Integration", () => {
     // Sign in with existing user
     await authPage.signIn(email, password);
 
-    // Wait for navigation to complete
-    await page.waitForLoadState("domcontentloaded");
+    // Wait for token injection and redirect
+    await expect(page.locator("body")).toBeVisible();
 
     // If we are still on landing page after a short wait, force navigation to app
     // This handles cases where automatic redirect from login page might be missed or slow

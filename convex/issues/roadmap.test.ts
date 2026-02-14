@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "../testUtils";
@@ -39,7 +40,7 @@ describe("listRoadmapIssues optimization", () => {
     }
 
     // Create 5 issues with due dates
-    const datedIssueIds = [];
+    const datedIssueIds: Id<"issues">[] = [];
     for (let i = 0; i < 5; i++) {
       const id = await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
