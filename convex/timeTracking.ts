@@ -781,7 +781,7 @@ export const getProjectBilling = authenticatedQuery({
     endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+    await assertIsProjectAdmin(ctx, args.projectId, ctx.userId);
 
     // Get time entries for this project
     let entries: Doc<"timeEntries">[];

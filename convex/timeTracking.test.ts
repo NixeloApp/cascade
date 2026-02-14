@@ -591,4 +591,87 @@ describe("Time Tracking", () => {
       await t.finishInProgressScheduledFunctions();
     });
   });
+
+  describe("getProjectBilling", () => {
+    it("should restrict access to admins only", async () => {
+      const t = convexTest(schema, modules);
+      // Create a project and two users: admin (creator) and viewer
+      const adminId = await createTestUser(t, { name: "Admin" });
+      const viewerId = await createTestUser(t, { name: "Viewer" });
+
+      const { organizationId } = await createTestContext(t, {
+        actor: { type: "user", userId: adminId },
+      });
+
+      const projectId = await createProjectInOrganization(t, adminId, organizationId, {
+        name: "Billing Project",
+        key: "BILL",
+      });
+
+      // Add viewer to project
+      await t.run(async (ctx) => {
+        await ctx.db.insert("projectMembers", {
+          projectId,
+          userId: viewerId,
+          role: "viewer",
+          addedBy: adminId,
+          isDeleted: false,
+        });
+      });
+
+      const asViewer = asAuthenticatedUser(t, viewerId);
+
+      // This should fail (it won't throw) currently, verifying the security hole.
+      await expect(
+        asViewer.query(api.timeTracking.getProjectBilling, { projectId }),
+      ).rejects.toThrow(/admin/);
+    });
+
+    it("should calculate billing summary correctly", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      // Set rate for user
+      await asUser.mutation(api.timeTracking.setUserRate, {
+        userId,
+        projectId,
+        hourlyRate: 200,
+        currency: "USD",
+        rateType: "billable",
+      });
+
+      const now = Date.now();
+      // Add billable entry (1 hour)
+      await asUser.mutation(api.timeTracking.createTimeEntry, {
+        projectId,
+        startTime: now - 3600000,
+        endTime: now,
+        billable: true,
+      });
+
+      // Add non-billable entry (1 hour)
+      await asUser.mutation(api.timeTracking.createTimeEntry, {
+        projectId,
+        startTime: now - 7200000,
+        endTime: now - 3600000,
+        billable: false,
+      });
+
+      const billing = await asUser.query(api.timeTracking.getProjectBilling, {
+        projectId,
+      });
+
+      expect(billing?.totalHours).toBeCloseTo(2, 1);
+      expect(billing?.billableHours).toBeCloseTo(1, 1);
+      expect(billing?.nonBillableHours).toBeCloseTo(1, 1);
+      expect(billing?.totalRevenue).toBeCloseTo(200, 0); // 1 hour * 200
+      expect(billing?.entries).toBe(2);
+
+      const userIdStr = userId;
+      expect(billing?.byUser[userIdStr]).toBeDefined();
+      expect(billing?.byUser[userIdStr].revenue).toBeCloseTo(200, 0);
+    });
+  });
 });
