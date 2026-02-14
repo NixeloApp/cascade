@@ -418,40 +418,47 @@ export const bulkUpdateStatus = authenticatedMutation({
 
     const now = Date.now();
 
-    // Fetch projects in bulk to avoid N+1 query in loop
+    // Collect unique project IDs
     const projectIds = new Set<Id<"projects">>();
     for (const issue of issues) {
       if (issue && !issue.isDeleted) {
-        projectIds.add(issue.projectId);
+        projectIds.add(issue.projectId as Id<"projects">);
       }
     }
 
-    const projects = await Promise.all(Array.from(projectIds).map((id) => ctx.db.get(id)));
-    const projectsMap = new Map<string, (typeof projects)[0]>();
-    for (const p of projects) {
-      if (p) {
-        projectsMap.set(p._id, p);
-      }
-    }
+    // Bulk fetch projects and validate permissions
+    const projectsMap = new Map<string, boolean>();
+    const projectWorkflowsMap = new Map<string, boolean>();
+
+    await Promise.all(
+      Array.from(projectIds).map(async (projectId) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) return;
+
+        try {
+          await assertCanEditProject(ctx, projectId, ctx.userId);
+          projectsMap.set(projectId, true);
+
+          // Check if status is valid for this project
+          const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
+          projectWorkflowsMap.set(projectId, isValidStatus);
+        } catch {
+          projectsMap.set(projectId, false);
+        }
+      }),
+    );
 
     const results = await Promise.all(
       issues.map(async (issue) => {
         if (!issue || issue.isDeleted) return 0;
 
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
+        const projectId = issue.projectId as Id<"projects">;
+        const canEdit = projectsMap.get(projectId);
+        const isValidStatus = projectWorkflowsMap.get(projectId);
+
+        if (!canEdit || !isValidStatus) return 0;
 
         const oldStatus = issue.status;
-
-        // Validate that the new status exists in the project's workflow
-        const project = projectsMap.get(issue.projectId);
-        if (!project) return 0;
-
-        const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
-        if (!isValidStatus) return 0;
 
         await ctx.db.patch(issue._id, {
           status: args.newStatus,
