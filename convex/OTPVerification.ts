@@ -34,7 +34,11 @@ async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string
   // and process.env.CI might be missing, BUT explicitly requires E2E_API_KEY to be set.
   if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
     try {
-      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "verification" });
+      await ctx.runMutation(internal.e2e.storeTestOtp, {
+        email,
+        code: token,
+        type: "verification",
+      });
     } catch (e) {
       logger.warn(`[OTPVerification] Failed to store test OTP: ${e}`);
     }

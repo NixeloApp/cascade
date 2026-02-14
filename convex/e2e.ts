@@ -1658,7 +1658,7 @@ export const storeTestOtp = internalMutation({
     // If not, we might overwrite indiscriminately (old behavior).
     // Better: Match by email+type if type is provided.
 
-    let existingOtp;
+    let existingOtp: Doc<"testOtpCodes"> | null;
     if (args.type) {
       existingOtp = await ctx.db
         .query("testOtpCodes")
@@ -1698,7 +1698,7 @@ export const getLatestOTP = internalQuery({
     }
 
     // Get from testOtpCodes table (plaintext for E2E)
-    let otpRecord;
+    let otpRecord: Doc<"testOtpCodes"> | null;
     if (args.type) {
       otpRecord = await ctx.db
         .query("testOtpCodes")
