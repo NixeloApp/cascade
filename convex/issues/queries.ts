@@ -952,8 +952,9 @@ export const getTeamIssueCounts = authenticatedQuery({
             ctx.db
               .query("issues")
               .withIndex("by_team_status", (q) =>
-                q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
-              ),
+                q.eq("teamId", args.teamId).eq("status", state.id),
+              )
+              .filter(notDeleted),
           );
         } else {
           // Non-done columns
