@@ -4,11 +4,11 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addProjectMember,
   asAuthenticatedUser,
+  createProjectInOrganization,
   createTestContext,
   createTestUser,
-  createProjectInOrganization,
-  addProjectMember,
 } from "./testUtils";
 
 describe("Time Tracking Security", () => {
@@ -17,19 +17,21 @@ describe("Time Tracking Security", () => {
 
     // 1. Create Organization and Project
     const { userId: adminId, organizationId } = await createTestContext(t);
-    const projectId = await createProjectInOrganization(t, adminId, organizationId, { name: "Secret Project" });
+    const projectId = await createProjectInOrganization(t, adminId, organizationId, {
+      name: "Secret Project",
+    });
     const asAdmin = asAuthenticatedUser(t, adminId);
 
     // 2. Create a Viewer user
     const viewerId = await createTestUser(t);
     // Add viewer to organization
     await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-            organizationId,
-            userId: viewerId,
-            role: "member",
-            addedBy: adminId
-        });
+      await ctx.db.insert("organizationMembers", {
+        organizationId,
+        userId: viewerId,
+        role: "member",
+        addedBy: adminId,
+      });
     });
     // Add viewer to project
     await addProjectMember(t, projectId, viewerId, "viewer", adminId);
@@ -41,16 +43,18 @@ describe("Time Tracking Security", () => {
       projectId,
       startTime: Date.now() - 3600000,
       endTime: Date.now(),
-      billable: true
+      billable: true,
     });
 
     // 4. Viewer tries to getBurnRate
     // This SHOULD fail if properly secured, but currently it passes because it only checks "access"
-    await expect(asViewer.query(api.timeTracking.getBurnRate, {
-      projectId,
-      startDate: Date.now() - 86400000,
-      endDate: Date.now() + 86400000
-    })).rejects.toThrow(/admin/i);
+    await expect(
+      asViewer.query(api.timeTracking.getBurnRate, {
+        projectId,
+        startDate: Date.now() - 86400000,
+        endDate: Date.now() + 86400000,
+      }),
+    ).rejects.toThrow(/admin/i);
   });
 
   it("should NOT leak global time entries when projectId is missing (Cross-Tenant Leak)", async () => {
@@ -58,7 +62,9 @@ describe("Time Tracking Security", () => {
 
     // 1. User A in Organization A
     const ctxA = await createTestContext(t);
-    const projectA = await createProjectInOrganization(t, ctxA.userId, ctxA.organizationId, { name: "Project A" });
+    const projectA = await createProjectInOrganization(t, ctxA.userId, ctxA.organizationId, {
+      name: "Project A",
+    });
     const asUserA = ctxA.asUser;
 
     // 2. User B in Organization B
@@ -72,14 +78,16 @@ describe("Time Tracking Security", () => {
       startTime: Date.now() - 3600000,
       endTime: Date.now(),
       billable: true,
-      description: "Secret Work A"
+      description: "Secret Work A",
     });
 
     // 4. User B calls getTeamCosts without projectId
     // This SHOULD throw validation error now
-    await expect(asUserB.query(api.timeTracking.getTeamCosts, {
-      startDate: Date.now() - 86400000,
-      endDate: Date.now() + 86400000
-    })).rejects.toThrow(/projectId is required/);
+    await expect(
+      asUserB.query(api.timeTracking.getTeamCosts, {
+        startDate: Date.now() - 86400000,
+        endDate: Date.now() + 86400000,
+      }),
+    ).rejects.toThrow(/projectId is required/);
   });
 });
