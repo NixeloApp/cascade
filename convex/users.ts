@@ -415,6 +415,7 @@ async function countComments(
       .query("issueComments")
       .withIndex("by_author", (q) => q.eq("authorId", userId))
       .filter(notDeleted),
+    MAX_COMMENTS_FOR_STATS,
   );
 }
 
@@ -437,6 +438,7 @@ async function countProjects(
       .query("projectMembers")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter(notDeleted),
+    MAX_PAGE_SIZE,
   );
 }
 
