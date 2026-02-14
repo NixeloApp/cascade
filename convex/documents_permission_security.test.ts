@@ -1,4 +1,3 @@
-
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
@@ -14,13 +13,10 @@ describe("Document Security - Project Viewers", () => {
     const ownerId = await createTestUser(t, { name: "Owner" });
     const asOwner = asAuthenticatedUser(t, ownerId);
 
-    const { organizationId: orgId } = await asOwner.mutation(
-      api.organizations.createOrganization,
-      {
-        name: "Test Org",
-        timezone: "America/New_York",
-      },
-    );
+    const { organizationId: orgId } = await asOwner.mutation(api.organizations.createOrganization, {
+      name: "Test Org",
+      timezone: "America/New_York",
+    });
     // Need a workspace first
     const workspaceId = await asOwner.mutation(api.workspaces.create, {
       name: "Test Workspace",
@@ -57,12 +53,14 @@ describe("Document Security - Project Viewers", () => {
     });
 
     // 3. Attempt to create PUBLIC document in project (Should Fail)
-    await expect(asViewer.mutation(api.documents.create, {
-      title: "Malicious Doc",
-      isPublic: true,
-      organizationId: orgId,
-      projectId: projectId,
-    })).rejects.toThrow(/editor/);
+    await expect(
+      asViewer.mutation(api.documents.create, {
+        title: "Malicious Doc",
+        isPublic: true,
+        organizationId: orgId,
+        projectId: projectId,
+      }),
+    ).rejects.toThrow(/editor/);
 
     // Verify document does NOT exist
     const docs = await t.run(async (ctx) => {
@@ -82,13 +80,10 @@ describe("Document Security - Project Viewers", () => {
     const ownerId = await createTestUser(t, { name: "Owner" });
     const asOwner = asAuthenticatedUser(t, ownerId);
 
-    const { organizationId: orgId } = await asOwner.mutation(
-      api.organizations.createOrganization,
-      {
-        name: "Test Org",
-        timezone: "America/New_York",
-      },
-    );
+    const { organizationId: orgId } = await asOwner.mutation(api.organizations.createOrganization, {
+      name: "Test Org",
+      timezone: "America/New_York",
+    });
     // Need a workspace first
     const workspaceId = await asOwner.mutation(api.workspaces.create, {
       name: "Test Workspace",
@@ -133,9 +128,11 @@ describe("Document Security - Project Viewers", () => {
     });
 
     // 4. Toggle Public (Should Fail)
-    await expect(asViewer.mutation(api.documents.togglePublic, {
-      id: docId,
-    })).rejects.toThrow(/editor/);
+    await expect(
+      asViewer.mutation(api.documents.togglePublic, {
+        id: docId,
+      }),
+    ).rejects.toThrow(/editor/);
 
     const doc = await t.run(async (ctx) => ctx.db.get(docId));
     expect(doc?.isPublic).toBe(false);

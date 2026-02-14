@@ -2,6 +2,7 @@ import { MINUTE } from "@convex-dev/rate-limiter";
 import { v } from "convex/values";
 import { components } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
@@ -27,70 +28,10 @@ export const create = authenticatedMutation({
     projectId: v.optional(v.id("projects")),
   },
   handler: async (ctx, args) => {
-    // Rate limit: 20 documents per minute per user
-    // Skip in test environment (convex-test doesn't support components)
-    // Rate limit: 60 documents per minute per user with burst of 15
-    if (!process.env.IS_TEST_ENV) {
-      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
-        name: `createDocument:${ctx.userId}`,
-        config: {
-          kind: "token bucket",
-          rate: 60,
-          period: MINUTE,
-          capacity: 15,
-        },
-      });
-      if (!rateLimitResult.ok) {
-        throw rateLimited(rateLimitResult.retryAfter);
-      }
-
-      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
-        name: `createDocument:${ctx.userId}`,
-        config: {
-          kind: "token bucket",
-          rate: 60,
-          period: MINUTE,
-          capacity: 15,
-        },
-      });
-    }
-
-    // Validate organization membership
-    const membership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_organization_user", (q) =>
-        q.eq("organizationId", args.organizationId).eq("userId", ctx.userId),
-      )
-      .first();
-
-    if (!membership) {
-      throw forbidden(undefined, "You are not a member of this organization");
-    }
-
-    // Validate integrity: Project must belong to the specified organization
-    if (args.projectId) {
-      const project = await ctx.db.get(args.projectId);
-      if (!project) throw notFound("project", args.projectId);
-      if (project.organizationId !== args.organizationId) {
-        throw validation("projectId", "Project does not belong to the specified organization");
-      }
-
-      // Security Fix: Require EDITOR permission if creating a public document in a project
-      if (args.isPublic) {
-        await assertCanEditProject(ctx, args.projectId, ctx.userId);
-      } else {
-        await assertCanAccessProject(ctx, args.projectId, ctx.userId);
-      }
-    }
-
-    // Validate integrity: Workspace must belong to the specified organization
-    if (args.workspaceId) {
-      const workspace = await ctx.db.get(args.workspaceId);
-      if (!workspace) throw notFound("workspace", args.workspaceId);
-      if (workspace.organizationId !== args.organizationId) {
-        throw validation("workspaceId", "Workspace does not belong to the specified organization");
-      }
-    }
+    await checkRateLimit(ctx);
+    await validateOrganizationMembership(ctx, args.organizationId);
+    await validateProjectIntegrity(ctx, args.projectId, args.organizationId, args.isPublic);
+    await validateWorkspaceIntegrity(ctx, args.workspaceId, args.organizationId);
 
     const now = Date.now();
     return await ctx.db.insert("documents", {
@@ -392,6 +333,84 @@ function hasDocumentAccess(
   if (doc.createdBy === userId) return true;
   if (!doc.isPublic) return false;
   return myOrgIds.has(doc.organizationId);
+}
+
+async function checkRateLimit(ctx: MutationCtx & { userId: Id<"users"> }) {
+  if (!process.env.IS_TEST_ENV) {
+    const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+      name: `createDocument:${ctx.userId}`,
+      config: {
+        kind: "token bucket",
+        rate: 60,
+        period: MINUTE,
+        capacity: 15,
+      },
+    });
+    if (!rateLimitResult.ok) {
+      throw rateLimited(rateLimitResult.retryAfter);
+    }
+
+    await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+      name: `createDocument:${ctx.userId}`,
+      config: {
+        kind: "token bucket",
+        rate: 60,
+        period: MINUTE,
+        capacity: 15,
+      },
+    });
+  }
+}
+
+async function validateOrganizationMembership(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  organizationId: Id<"organizations">,
+) {
+  const membership = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_organization_user", (q) =>
+      q.eq("organizationId", organizationId).eq("userId", ctx.userId),
+    )
+    .first();
+
+  if (!membership) {
+    throw forbidden(undefined, "You are not a member of this organization");
+  }
+}
+
+async function validateProjectIntegrity(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  projectId: Id<"projects"> | undefined,
+  organizationId: Id<"organizations">,
+  isPublic: boolean,
+) {
+  if (projectId) {
+    const project = await ctx.db.get(projectId);
+    if (!project) throw notFound("project", projectId);
+    if (project.organizationId !== organizationId) {
+      throw validation("projectId", "Project does not belong to the specified organization");
+    }
+
+    if (isPublic) {
+      await assertCanEditProject(ctx, projectId, ctx.userId);
+    } else {
+      await assertCanAccessProject(ctx, projectId, ctx.userId);
+    }
+  }
+}
+
+async function validateWorkspaceIntegrity(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  workspaceId: Id<"workspaces"> | undefined,
+  organizationId: Id<"organizations">,
+) {
+  if (workspaceId) {
+    const workspace = await ctx.db.get(workspaceId);
+    if (!workspace) throw notFound("workspace", workspaceId);
+    if (workspace.organizationId !== organizationId) {
+      throw validation("workspaceId", "Workspace does not belong to the specified organization");
+    }
+  }
 }
 
 export const search = authenticatedQuery({
