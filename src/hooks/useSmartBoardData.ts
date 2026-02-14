@@ -66,11 +66,7 @@ function mergeStatusGroup(
   existingIssues: EnrichedIssue[] | undefined,
   newIssues: EnrichedIssue[],
 ): EnrichedIssue[] {
-  if (!existingIssues || existingIssues.length === 0) {
-    return [...newIssues];
-  }
-
-  const existingIds = new Set(existingIssues.map((i) => i._id));
+  const existingIds = new Set((existingIssues || []).map((i) => i._id));
   const uniqueNewIssues: EnrichedIssue[] = [];
 
   for (const issue of newIssues) {
