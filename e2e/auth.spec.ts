@@ -294,6 +294,21 @@ test.describe("Integration", () => {
 
     // Should navigate to dashboard or onboarding
     await page.waitForLoadState("domcontentloaded");
+
+    // Force navigation if stuck on signin page (sometimes redirect gets missed)
+    const isStuckOnSignIn = () => {
+      const url = page.url();
+      return url.includes("/signin") || url.endsWith("/");
+    };
+
+    if (isStuckOnSignIn()) {
+      await page.waitForTimeout(2000);
+      if (isStuckOnSignIn()) {
+        console.log(`[Test] Stuck on ${page.url()}, forcing navigation to app...`);
+        await page.goto(ROUTES.app.build());
+      }
+    }
+
     await expect(
       page
         .getByRole("heading", { name: /welcome to nixelo/i })

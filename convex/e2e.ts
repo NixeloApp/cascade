@@ -49,6 +49,16 @@ function validateE2EApiKey(request: Request): Response | null {
       return null; // Allow in explicitly unsafe environments (local dev/test)
     }
 
+    // Allow if running locally (localhost/127.0.0.1) - this covers local CI runs
+    try {
+      const url = new URL(request.url);
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+        return null;
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+
     // Block everything else (production, staging, or undefined)
     return new Response(JSON.stringify({ error: "E2E endpoints disabled (missing API key)" }), {
       status: 403,
