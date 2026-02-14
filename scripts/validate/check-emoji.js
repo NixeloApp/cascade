@@ -15,6 +15,9 @@ export function run() {
     /\.stories\.tsx?$/,
     /CommentReactions\.tsx$/, // Intentional emoji for reactions
     /DocumentTemplatesManager\.tsx$/, // User input field for template icons
+    /routes\/signin\.tsx$/, // Arrow in link text (Mintlify pattern)
+    /routes\/signup\.tsx$/, // Arrow in link text (Mintlify pattern)
+    /routes\/forgot-password\.tsx$/, // Arrow in link text (Mintlify pattern)
   ];
 
   // Emoji regex - matches most common emoji ranges

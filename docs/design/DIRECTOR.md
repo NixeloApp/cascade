@@ -70,7 +70,9 @@ Generated via `pnpm screenshots`. Four configs:
 ```
 docs/design/specs/pages/
   02-signin/
-    README.md                          # The spec
+    CURRENT.md                         # What we have now (problems, screenshots)
+    TARGET.md                          # What we want (reference, specs)
+    IMPLEMENTATION.md                  # How to get there (code, checklist)
     screenshots/
       desktop-dark.png                 # Current state
       desktop-light.png
@@ -89,49 +91,63 @@ These are the SOURCE OF TRUTH for current state.
 
 ---
 
+## Spec Coverage Summary
+
+| Category | Spec'd | Review | Total |
+|----------|--------|--------|-------|
+| Public Pages | 4 | 3 | 7 |
+| Workspace Pages | 7 | 1 | 8 |
+| Project Pages | 4 | 1 | 5 |
+| Entity Detail | 2 | 0 | 2 |
+| **Total** | **17** | **5** | **22** |
+
+**Legend**: 🟢 SPEC'D = Full 3-doc spec (CURRENT/TARGET/IMPLEMENTATION) | 🟡 REVIEW = Needs assessment | 🔴 SLOP = Identified problems, needs spec
+
+---
+
 ## Page Directory
 
 ### Public Pages
 
-| Route | Status | Verdict |
-|-------|--------|---------|
-| `/` | 🔴 SLOP | Needs product preview, customer logos, tighter hero |
-| `/signin` | 🔴 SLOP | Kill the card, kill back link, minimal |
-| `/signup` | 🔴 SLOP | Same as signin |
-| `/forgot-password` | 🔴 SLOP | Same pattern as signin |
-| `/verify-email` | 🟡 REVIEW | Check for slop patterns |
-| `/invite/:code` | 🟡 REVIEW | Check for slop patterns |
-| `/unsubscribe` | 🟡 REVIEW | Simple page, probably fine |
+| Route | Status | Spec | Verdict |
+|-------|--------|------|---------|
+| `/` | 🟢 SPEC'D | `01-landing/` | Hero screenshot, logo bar, enterprise section |
+| `/signin` | 🟢 SPEC'D | `02-signin/` | Minimal, no card, confident |
+| `/signup` | 🟢 SPEC'D | `03-signup/` | Same pattern as signin |
+| `/forgot-password` | 🟢 SPEC'D | `04-forgot-password/` | Minimal, same pattern as signin |
+| `/verify-email` | 🟡 REVIEW | – | Check for slop patterns |
+| `/invite/:code` | 🟡 REVIEW | – | Check for slop patterns |
+| `/unsubscribe` | 🟡 REVIEW | – | Simple page, probably fine |
 
 ### App Pages - Workspace Level
 
-| Route | Status | Verdict |
-|-------|--------|---------|
-| `/:slug/dashboard` | 🟡 REVIEW | Check card usage, empty states |
-| `/:slug/projects` | 🟡 REVIEW | List view patterns |
-| `/:slug/issues` | 🟡 REVIEW | Table/list patterns |
-| `/:slug/documents` | 🟡 REVIEW | Grid/list patterns |
-| `/:slug/calendar` | 🟡 REVIEW | Calendar-specific patterns |
-| `/:slug/analytics` | 🟡 REVIEW | Chart patterns |
-| `/:slug/settings/*` | 🟡 REVIEW | Form patterns |
-| `/:slug/members` | 🟡 REVIEW | Table patterns |
+| Route | Status | Spec | Verdict |
+|-------|--------|------|---------|
+| `/:slug/dashboard` | 🟢 SPEC'D | `04-dashboard/` | Activity feed, metric cards, quick actions |
+| `/:slug/projects` | 🟢 SPEC'D | `05-projects/` | Project cards, creation wizard |
+| `/:slug/issues` | 🟢 SPEC'D | `07-backlog/` | Issue table, bulk actions |
+| `/:slug/documents` | 🟢 SPEC'D | `09-documents/` | Document tree, breadcrumbs |
+| `/:slug/calendar` | 🟢 SPEC'D | `11-calendar/` | Month/week/day, mini calendar |
+| `/:slug/analytics` | 🟢 SPEC'D | `13-analytics/` | Date range, trend indicators, charts |
+| `/:slug/settings/*` | 🟢 SPEC'D | `12-settings/` | Sidebar nav, danger zones |
+| `/:slug/members` | 🟡 REVIEW | – | Table patterns |
 
 ### App Pages - Project Level
 
-| Route | Status | Verdict |
-|-------|--------|---------|
-| `/:slug/projects/:key` | 🟡 REVIEW | Project overview |
-| `/:slug/projects/:key/board` | 🟡 REVIEW | Kanban patterns |
-| `/:slug/projects/:key/backlog` | 🟡 REVIEW | List patterns |
-| `/:slug/projects/:key/sprints` | 🟡 REVIEW | Sprint planning |
-| `/:slug/projects/:key/settings` | 🟡 REVIEW | Form patterns |
+| Route | Status | Spec | Verdict |
+|-------|--------|------|---------|
+| `/:slug/projects/:key` | 🟢 SPEC'D | `05-projects/` | Project overview |
+| `/:slug/projects/:key/board` | 🟢 SPEC'D | `06-board/` | Kanban columns, drag-drop |
+| `/:slug/projects/:key/backlog` | 🟢 SPEC'D | `07-backlog/` | Issue table, sprint planning |
+| `/:slug/projects/:key/sprints` | 🟡 REVIEW | – | Sprint planning (needs spec) |
+| `/:slug/projects/:key/settings` | 🟢 SPEC'D | `12-settings/` | Form patterns |
 
 ### App Pages - Entity Detail
 
-| Route | Status | Verdict |
-|-------|--------|---------|
-| `/:slug/issues/:key` | 🟡 REVIEW | Detail view patterns |
-| `/:slug/documents/:id` | 🟡 REVIEW | Editor patterns |
+| Route | Status | Spec | Verdict |
+|-------|--------|------|---------|
+| `/:slug/issues/:key` | 🟢 SPEC'D | `08-issue/` | Detail panel, activity timeline |
+| `/:slug/documents/:id` | 🟢 SPEC'D | `10-editor/` | Sidebar nav, callout blocks |
 
 ### Modals & Overlays
 

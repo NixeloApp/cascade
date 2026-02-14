@@ -42,14 +42,29 @@ const SETTLE_MS = 2000;
 // Pages with specs get screenshots in their spec folder
 // Pages without specs go to the fallback directory
 const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
-  // Public auth pages
+  // Public pages
+  "public-landing": "01-landing",
   "public-signin": "02-signin",
   "public-signup": "03-signup",
   "public-forgot-password": "04-forgot-password",
-  // Add more mappings as specs are created:
-  // "public-landing": "01-landing",
-  // "filled-dashboard": "05-dashboard",
-  // etc.
+
+  // Workspace-level pages (empty states)
+  "empty-dashboard": "04-dashboard",
+  "empty-projects": "05-projects",
+  "empty-issues": "07-backlog",
+  "empty-documents": "09-documents",
+  "empty-settings": "12-settings",
+
+  // Workspace-level pages (filled states)
+  "filled-dashboard": "04-dashboard",
+  "filled-projects": "05-projects",
+  "filled-issues": "07-backlog",
+  "filled-documents": "09-documents",
+  "filled-settings": "12-settings",
+
+  // Project sub-pages (filled states) - these use dynamic keys
+  // Pattern: filled-project-{key}-{tab}
+  // We'll handle these with a prefix match below
 };
 
 const VIEWPORTS = {
@@ -96,12 +111,51 @@ function nextIndex(prefix: string): number {
 // Screenshot helpers
 // ---------------------------------------------------------------------------
 
+// Dynamic page patterns that map to spec folders
+// Pattern: [regex to match pageId, spec folder, filename suffix]
+const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
+  // Project board: filled-project-xxx-board → 06-board
+  [/^filled-project-[^-]+-board$/, "06-board", ""],
+  // Project backlog: filled-project-xxx-backlog → 07-backlog
+  [/^filled-project-[^-]+-backlog$/, "07-backlog", ""],
+  // Issue detail: filled-issue-xxx → 08-issue
+  [/^filled-issue-/, "08-issue", ""],
+  // Document editor: filled-document-editor → 10-editor
+  [/^filled-document-editor$/, "10-editor", ""],
+  // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
+  [/^filled-project-[^-]+-calendar$/, "11-calendar", ""],
+  [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
+  [/^filled-calendar-event-modal$/, "11-calendar", "-event-modal"],
+  // Project analytics: filled-project-xxx-analytics → 13-analytics
+  [/^filled-project-[^-]+-analytics$/, "13-analytics", ""],
+  // Project settings: filled-project-xxx-settings → 12-settings
+  [/^filled-project-[^-]+-settings$/, "12-settings", "-project"],
+];
+
 function getScreenshotPath(prefix: string, name: string): string {
   const pageId = `${prefix}-${name}`;
-  const specFolder = PAGE_TO_SPEC_FOLDER[pageId];
 
-  // Filename: viewport-theme.png (e.g., desktop-dark.png)
-  const filename = `${currentConfigPrefix}.png`;
+  // Check static mapping first
+  let specFolder = PAGE_TO_SPEC_FOLDER[pageId];
+  let filenameSuffix = "";
+
+  // Check dynamic patterns if no static match
+  if (!specFolder) {
+    for (const [pattern, folder, suffix] of DYNAMIC_PAGE_PATTERNS) {
+      if (pattern.test(pageId)) {
+        specFolder = folder;
+        // Replace $1 with captured group if present
+        const match = pageId.match(pattern);
+        filenameSuffix = suffix.replace("$1", match?.[1] ?? "");
+        break;
+      }
+    }
+  }
+
+  // Filename: viewport-theme.png or viewport-theme-suffix.png
+  const filename = filenameSuffix
+    ? `${currentConfigPrefix}${filenameSuffix}.png`
+    : `${currentConfigPrefix}.png`;
 
   if (specFolder) {
     // Page has a spec folder - put screenshot there
@@ -236,6 +290,7 @@ async function screenshotPublicPages(page: Page): Promise<void> {
   await takeScreenshot(page, "public", "landing", "/");
   await takeScreenshot(page, "public", "signin", "/signin");
   await takeScreenshot(page, "public", "signup", "/signup");
+  await takeScreenshot(page, "public", "forgot-password", "/forgot-password");
   await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
 }
 
@@ -459,7 +514,7 @@ async function captureForConfig(
       // Filled states
       await screenshotFilledStates(page, orgSlug, seedResult);
     } catch {
-      console.log(`    ⚠️ Auth failed for ${dirName}, skipping authenticated pages`);
+      console.log(`    ⚠️ Auth failed for ${currentConfigPrefix}, skipping authenticated pages`);
     }
   }
 

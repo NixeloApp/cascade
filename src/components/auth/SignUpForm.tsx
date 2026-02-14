@@ -97,18 +97,20 @@ export function SignUpForm() {
 
   return (
     <div className="w-full">
-      {/* Step indicator */}
-      <Flex justify="center" gap="sm" className="mb-6">
-        {[0, 1, 2].map((step) => (
-          <div
-            key={step}
-            className={cn(
-              "h-1.5 rounded-pill transition-all duration-300",
-              step <= currentStep ? "w-8 bg-brand" : "w-4 bg-ui-border",
-            )}
-          />
-        ))}
-      </Flex>
+      {/* Step indicator - only show when step >= 1 */}
+      {currentStep > 0 && (
+        <Flex justify="center" gap="sm" className="mb-6">
+          {[0, 1, 2].map((step) => (
+            <div
+              key={step}
+              className={cn(
+                "h-1.5 rounded-pill transition-all duration-300",
+                step <= currentStep ? "w-8 bg-brand" : "w-4 bg-ui-border",
+              )}
+            />
+          ))}
+        </Flex>
+      )}
 
       <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign up with Google" />
       <Flex align="center" justify="center" className="my-4">

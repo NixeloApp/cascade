@@ -1,11 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/form/Input";
-import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { getConvexSiteUrl } from "@/lib/convex";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -27,6 +25,7 @@ function ForgotPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState("");
   const [showReset, setShowReset] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,7 +35,6 @@ function ForgotPasswordPage() {
     const formEmail = formData.get("email") as string;
 
     try {
-      // Call our secure wrapper - always returns success
       await fetch(`${getConvexSiteUrl()}/auth/request-reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -46,24 +44,25 @@ function ForgotPasswordPage() {
       // Ignore network errors
     }
 
-    // Always show success and proceed to reset form
     setEmail(formEmail);
     setShowReset(true);
     toast.success("If an account exists, you'll receive a reset code");
     setSubmitting(false);
   };
 
-  const navigate = useNavigate();
-
   if (showReset) {
     return (
-      <AuthPageLayout title="Reset password" subtitle="Enter the code from your email">
+      <AuthPageLayout
+        title="Check your email"
+        subtitle={
+          <>
+            We sent a code to <strong>{email}</strong>
+          </>
+        }
+      >
         <ResetPasswordForm
           email={email}
-          onSuccess={() => {
-            // Redirect to /app gateway which handles auth routing
-            navigate({ to: ROUTES.app.path });
-          }}
+          onSuccess={() => navigate({ to: ROUTES.app.path })}
           onRetry={() => {
             setShowReset(false);
             setEmail("");
@@ -75,10 +74,14 @@ function ForgotPasswordPage() {
 
   return (
     <AuthPageLayout
-      title="Forgot password?"
-      subtitle="Enter your email and we'll send you a reset code"
+      title="Reset your password"
+      subtitle={
+        <>
+          Remember your password? <AuthLink to={ROUTES.signin.path}>Sign in →</AuthLink>
+        </>
+      }
     >
-      <form className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <Input
           type="email"
           name="email"
@@ -90,9 +93,6 @@ function ForgotPasswordPage() {
           {submitting ? "Sending..." : "Send reset code"}
         </Button>
       </form>
-      <Typography variant="muted" className="text-center mt-4">
-        <AuthLink to={ROUTES.signin.path}>Back to sign in</AuthLink>
-      </Typography>
     </AuthPageLayout>
   );
 }
