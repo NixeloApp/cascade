@@ -83,10 +83,11 @@ describe("Time Tracking Security", () => {
     // 4. User B calls getTeamCosts without projectId
     // This SHOULD throw validation error now
     await expect(
+      // @ts-expect-error - testing validation failure
       asUserB.query(api.timeTracking.getTeamCosts, {
         startDate: Date.now() - 86400000,
         endDate: Date.now() + 86400000,
       }),
-    ).rejects.toThrow(/projectId is required/);
+    ).rejects.toThrow(/Validator error/);
   });
 });
