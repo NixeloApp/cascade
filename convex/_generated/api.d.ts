@@ -143,14 +143,6 @@ import type {
   FunctionReference,
 } from "convex/server";
 
-/**
- * A utility for referencing Convex functions in your app's public API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
 declare const fullApi: ApiFromModules<{
   OTPPasswordReset: typeof OTPPasswordReset;
   OTPVerification: typeof OTPVerification;
