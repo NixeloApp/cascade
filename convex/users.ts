@@ -384,6 +384,62 @@ async function countIssuesByAssignee(
   ]);
 }
 
+async function countComments(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  allowedProjectIds: Set<string> | null,
+) {
+  if (allowedProjectIds) {
+    const commentsAll = await ctx.db
+      .query("issueComments")
+      .withIndex("by_author", (q) => q.eq("authorId", userId))
+      .filter(notDeleted)
+      .take(MAX_COMMENTS_FOR_STATS);
+
+    // Batch fetch unique issue IDs to check project membership using batchFetchIssues
+    // This avoids unbounded Promise.all calls
+    const issueIds = [...new Set(commentsAll.map((c) => c.issueId))];
+    const issueMap = await batchFetchIssues(ctx, issueIds);
+
+    const allowedIssueIds = new Set<string>();
+    for (const [issueId, issue] of issueMap.entries()) {
+      if (issue.projectId && allowedProjectIds.has(issue.projectId)) {
+        allowedIssueIds.add(issueId);
+      }
+    }
+
+    return commentsAll.filter((c) => allowedIssueIds.has(c.issueId)).length;
+  }
+  return await efficientCount(
+    ctx.db
+      .query("issueComments")
+      .withIndex("by_author", (q) => q.eq("authorId", userId))
+      .filter(notDeleted),
+  );
+}
+
+async function countProjects(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  allowedProjectIds: Set<string> | null,
+) {
+  if (allowedProjectIds) {
+    const projectMembershipsAll = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter(notDeleted)
+      .take(MAX_PAGE_SIZE);
+
+    return projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId)).length;
+  }
+  return await efficientCount(
+    ctx.db
+      .query("projectMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter(notDeleted),
+  );
+}
+
 export const getUserStats = authenticatedQuery({
   args: { userId: v.id("users") },
   returns: v.object({
@@ -405,65 +461,18 @@ export const getUserStats = authenticatedQuery({
       allowedProjectIds = new Set(myMemberships.map((m) => m.projectId));
     }
 
-    // Optimize: Use efficient counting when not filtering by shared projects (own profile)
-    const issuesCreatedCount = await countIssuesByReporter(ctx, args.userId, allowedProjectIds);
-    const [issuesAssignedCount, issuesCompletedCount] = await countIssuesByAssignee(
-      ctx,
-      args.userId,
-      allowedProjectIds,
-    );
-
-    // Get comments
-    let commentsCount = 0;
-    if (allowedProjectIds) {
-      const commentsAll = await ctx.db
-        .query("issueComments")
-        .withIndex("by_author", (q) => q.eq("authorId", args.userId))
-        .filter(notDeleted)
-        .take(MAX_COMMENTS_FOR_STATS);
-
-      // Batch fetch unique issue IDs to check project membership using batchFetchIssues
-      // This avoids unbounded Promise.all calls
-      const issueIds = [...new Set(commentsAll.map((c) => c.issueId))];
-      const issueMap = await batchFetchIssues(ctx, issueIds);
-
-      const allowedIssueIds = new Set<string>();
-      for (const [issueId, issue] of issueMap.entries()) {
-        if (issue.projectId && allowedProjectIds.has(issue.projectId)) {
-          allowedIssueIds.add(issueId);
-        }
-      }
-
-      commentsCount = commentsAll.filter((c) => allowedIssueIds.has(c.issueId)).length;
-    } else {
-      commentsCount = await efficientCount(
-        ctx.db
-          .query("issueComments")
-          .withIndex("by_author", (q) => q.eq("authorId", args.userId))
-          .filter(notDeleted),
-      );
-    }
-
-    // Get projects (as member)
-    let projectsCount = 0;
-    if (allowedProjectIds) {
-      const projectMembershipsAll = await ctx.db
-        .query("projectMembers")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
-        .filter(notDeleted)
-        .take(MAX_PAGE_SIZE);
-
-      projectsCount = projectMembershipsAll.filter((m) =>
-        allowedProjectIds.has(m.projectId),
-      ).length;
-    } else {
-      projectsCount = await efficientCount(
-        ctx.db
-          .query("projectMembers")
-          .withIndex("by_user", (q) => q.eq("userId", args.userId))
-          .filter(notDeleted),
-      );
-    }
+    // Optimize: Parallelize all counting operations
+    const [
+      issuesCreatedCount,
+      [issuesAssignedCount, issuesCompletedCount],
+      commentsCount,
+      projectsCount,
+    ] = await Promise.all([
+      countIssuesByReporter(ctx, args.userId, allowedProjectIds),
+      countIssuesByAssignee(ctx, args.userId, allowedProjectIds),
+      countComments(ctx, args.userId, allowedProjectIds),
+      countProjects(ctx, args.userId, allowedProjectIds),
+    ]);
 
     return {
       issuesCreated: issuesCreatedCount,
