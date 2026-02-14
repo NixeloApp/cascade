@@ -45,8 +45,10 @@ describe("Bookings", () => {
 
     const booking = await t.run(async (ctx) => ctx.db.get(bookingId));
     expect(booking).not.toBeNull();
-    expect(booking?.status).toBe("confirmed");
-    expect(booking?.calendarEventId).toBeDefined();
+    if (!booking) throw new Error("Booking not found");
+
+    expect(booking.status).toBe("confirmed");
+    expect(booking.calendarEventId).toBeDefined();
 
     // Verify calendar event
     // biome-ignore lint/style/noNonNullAssertion: testing convenience
