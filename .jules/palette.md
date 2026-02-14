@@ -53,3 +53,7 @@
 ## 2026-06-16 - Explicit Typing in Tests
 **Learning:** When using empty arrays in TypeScript tests (e.g., `const ids = []`), TS infers `any[]`. This causes build failures when `noImplicitAny` is enabled in strict mode or CI pipelines.
 **Action:** Always explicitly type empty arrays that will be populated later (e.g., `const ids: Id<"issues">[] = []`) to prevent implicit `any` errors and ensure type safety in test files.
+
+## 2024-05-24 - Overlay Button for Clickable Cards
+**Learning:** To make a complex card (like `IssueCard`) fully clickable while containing other interactive elements (checkbox, tooltip triggers), wrapping the content in a button is invalid HTML.
+**Action:** Use a container `div` with `role="article"`. Place a sibling `<button>` with `absolute inset-0` and `z-0` (Overlay Button) to handle the main click action. Ensure other interactive elements in the card have `relative z-10` to remain clickable above the overlay.
