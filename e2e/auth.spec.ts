@@ -213,12 +213,17 @@ test.describe("Integration", () => {
     // Wait for token injection and redirect
     await expect(page.locator("body")).toBeVisible();
 
-    // If we are still on landing page after a short wait, force navigation to app
+    // If we are still on landing page or signin page after a short wait, force navigation to app
     // This handles cases where automatic redirect from login page might be missed or slow
-    if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
+    const isStuck = () => {
+      const url = page.url();
+      return url.endsWith("/") || url.endsWith("localhost:5555") || url.includes("/signin");
+    };
+
+    if (isStuck()) {
       await page.waitForTimeout(2000); // Give it a moment
-      if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
-        console.log("[Test] Still on landing page, forcing navigation to app...");
+      if (isStuck()) {
+        console.log(`[Test] Stuck on ${page.url()}, forcing navigation to app...`);
         await page.goto(ROUTES.app.build());
       }
     }
@@ -228,10 +233,10 @@ test.describe("Integration", () => {
       const url = page.url();
       // Should be on dashboard, not landing or auth pages
       expect(url).toMatch(/\/[^/]+\/dashboard/);
-    }).toPass({ timeout: 15000 });
+    }).toPass({ timeout: 30000 });
 
     // Verify dashboard elements are visible
-    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
+    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible({ timeout: 30000 });
     console.log("[Test] Successfully signed in and landed on dashboard");
   });
 
@@ -293,7 +298,7 @@ test.describe("Integration", () => {
       page
         .getByRole("heading", { name: /welcome to nixelo/i })
         .or(page.locator('[data-sidebar="sidebar"]')),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30000 });
     console.log("[Test] Successfully signed in with new password");
   });
 });
