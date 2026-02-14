@@ -65,6 +65,7 @@ describe("IssueCard", () => {
       { name: "urgent", color: "#EF4444" },
     ],
     storyPoints: 5,
+    updatedAt: Date.now(),
   };
 
   beforeEach(() => {
