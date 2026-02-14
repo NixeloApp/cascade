@@ -30,6 +30,7 @@ interface Issue {
     image?: string;
   } | null;
   labels: LabelInfo[];
+  updatedAt: number;
 }
 
 interface KanbanColumnProps {

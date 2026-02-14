@@ -29,6 +29,7 @@ interface Issue {
   } | null;
   labels: { name: string; color: string }[];
   storyPoints?: number;
+  updatedAt: number;
 }
 
 interface IssueCardProps {
@@ -40,6 +41,61 @@ interface IssueCardProps {
   isFocused?: boolean;
   onToggleSelect?: (issueId: Id<"issues">) => void;
   canEdit?: boolean;
+}
+
+/**
+ * Custom equality check for IssueCard
+ * Optimizes performance by avoiding re-renders when issue data hasn't effectively changed,
+ * even if the object reference is new (common with Convex queries).
+ */
+function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
+  // Check primitive props
+  if (
+    prev.isSelected !== next.isSelected ||
+    prev.isFocused !== next.isFocused ||
+    prev.selectionMode !== next.selectionMode ||
+    prev.canEdit !== next.canEdit
+  ) {
+    return false;
+  }
+
+  // Check callback props to prevent stale closures
+  if (
+    prev.onDragStart !== next.onDragStart ||
+    prev.onClick !== next.onClick ||
+    prev.onToggleSelect !== next.onToggleSelect
+  ) {
+    return false;
+  }
+
+  // Check issue object equality
+  const prevIssue = prev.issue;
+  const nextIssue = next.issue;
+
+  // Reference equality check (fastest)
+  if (prevIssue === nextIssue) return true;
+
+  // ID and modification time check (fast)
+  if (prevIssue._id !== nextIssue._id) return false;
+  if (prevIssue.updatedAt !== nextIssue.updatedAt) return false;
+
+  // Check enriched fields that might change without issue modification time updating
+  // Assignee details
+  if (prevIssue.assignee?._id !== nextIssue.assignee?._id) return false;
+  if (prevIssue.assignee?.name !== nextIssue.assignee?.name) return false;
+  if (prevIssue.assignee?.image !== nextIssue.assignee?.image) return false;
+
+  // Label details
+  if (prevIssue.labels.length !== nextIssue.labels.length) return false;
+  for (let i = 0; i < prevIssue.labels.length; i++) {
+    const prevLabel = prevIssue.labels[i];
+    const nextLabel = nextIssue.labels[i];
+    if (prevLabel.name !== nextLabel.name) return false;
+    if (prevLabel.color !== nextLabel.color) return false;
+  }
+
+  // If we got here, important fields are effectively equal
+  return true;
 }
 
 export const IssueCard = memo(function IssueCard({
@@ -254,4 +310,4 @@ export const IssueCard = memo(function IssueCard({
       </div>
     </div>
   );
-});
+}, areIssuePropsEqual);
