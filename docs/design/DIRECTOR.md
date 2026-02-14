@@ -95,11 +95,11 @@ These are the SOURCE OF TRUTH for current state.
 
 | Category | Spec'd | Review | Total |
 |----------|--------|--------|-------|
-| Public Pages | 4 | 3 | 7 |
-| Workspace Pages | 7 | 1 | 8 |
-| Project Pages | 4 | 1 | 5 |
+| Public Pages | 7 | 0 | 7 |
+| Workspace Pages | 8 | 0 | 8 |
+| Project Pages | 5 | 0 | 5 |
 | Entity Detail | 2 | 0 | 2 |
-| **Total** | **17** | **5** | **22** |
+| **Total** | **22** | **0** | **22** |
 
 **Legend**: 🟢 SPEC'D = Full 3-doc spec (CURRENT/TARGET/IMPLEMENTATION) | 🟡 REVIEW = Needs assessment | 🔴 SLOP = Identified problems, needs spec
 
@@ -115,9 +115,9 @@ These are the SOURCE OF TRUTH for current state.
 | `/signin` | 🟢 SPEC'D | `02-signin/` | Minimal, no card, confident |
 | `/signup` | 🟢 SPEC'D | `03-signup/` | Same pattern as signin |
 | `/forgot-password` | 🟢 SPEC'D | `04-forgot-password/` | Minimal, same pattern as signin |
-| `/verify-email` | 🟡 REVIEW | – | Check for slop patterns |
-| `/invite/:code` | 🟡 REVIEW | – | Check for slop patterns |
-| `/unsubscribe` | 🟡 REVIEW | – | Simple page, probably fine |
+| `/verify-email` | 🟢 SPEC'D | `14-verify-email/` | Check your inbox page, resend countdown |
+| `/invite/:code` | 🟢 SPEC'D | `15-invite/` | Auth-dependent invite acceptance |
+| `/unsubscribe` | 🟢 SPEC'D | `16-unsubscribe/` | One-click unsubscribe, minimal |
 
 ### App Pages - Workspace Level
 
@@ -130,7 +130,7 @@ These are the SOURCE OF TRUTH for current state.
 | `/:slug/calendar` | 🟢 SPEC'D | `11-calendar/` | Month/week/day, mini calendar |
 | `/:slug/analytics` | 🟢 SPEC'D | `13-analytics/` | Date range, trend indicators, charts |
 | `/:slug/settings/*` | 🟢 SPEC'D | `12-settings/` | Sidebar nav, danger zones |
-| `/:slug/members` | 🟡 REVIEW | – | Table patterns |
+| `/:slug/members` | 🟢 SPEC'D | `17-members/` | Embedded in settings, CRUD with roles |
 
 ### App Pages - Project Level
 
@@ -139,7 +139,7 @@ These are the SOURCE OF TRUTH for current state.
 | `/:slug/projects/:key` | 🟢 SPEC'D | `05-projects/` | Project overview |
 | `/:slug/projects/:key/board` | 🟢 SPEC'D | `06-board/` | Kanban columns, drag-drop |
 | `/:slug/projects/:key/backlog` | 🟢 SPEC'D | `07-backlog/` | Issue table, sprint planning |
-| `/:slug/projects/:key/sprints` | 🟡 REVIEW | – | Sprint planning (needs spec) |
+| `/:slug/projects/:key/sprints` | 🟢 SPEC'D | `18-sprints/` | Sprint cards, work-based progress |
 | `/:slug/projects/:key/settings` | 🟢 SPEC'D | `12-settings/` | Form patterns |
 
 ### App Pages - Entity Detail
@@ -151,27 +151,27 @@ These are the SOURCE OF TRUTH for current state.
 
 ### Modals & Overlays
 
-| Component | Status | Verdict |
-|-----------|--------|---------|
-| Create Issue Modal | 🟡 REVIEW | Form in modal |
-| Create Project Modal | 🟡 REVIEW | Form in modal |
-| Create Document Modal | 🟡 REVIEW | Form in modal |
-| Create Event Modal | 🟡 REVIEW | Form in modal |
-| Global Search (⌘K) | 🟡 REVIEW | Command palette |
-| Notification Panel | 🟡 REVIEW | Dropdown panel |
-| User Menu | 🟡 REVIEW | Dropdown menu |
-| Filter Panel | 🟡 REVIEW | Filter UI |
-| Bulk Operations Bar | 🟡 REVIEW | Action bar |
+| Component | Status | Spec | Verdict |
+|-----------|--------|------|---------|
+| Create Issue Modal | 🟢 SPEC'D | `modals/create-issue.md` | Well-implemented, AI integration |
+| Create Event Modal | 🟢 SPEC'D | `modals/create-event.md` | Needs Input component cleanup |
+| Command Palette (⌘K) | 🟢 SPEC'D | `modals/command-palette.md` | Clean cmdk implementation |
+| Create Project Modal | 🟡 REVIEW | – | Form in modal |
+| Create Document Modal | 🟡 REVIEW | – | Form in modal |
+| Notification Panel | 🟡 REVIEW | – | Dropdown panel |
+| User Menu | 🟡 REVIEW | – | Dropdown menu |
+| Filter Panel | 🟡 REVIEW | – | Filter UI |
+| Bulk Operations Bar | 🟡 REVIEW | – | Action bar |
 
 ### Onboarding Flow
 
-| Step | Status | Verdict |
-|------|--------|---------|
-| Welcome Screen | 🟡 REVIEW | First impression |
-| Create Organization | 🟡 REVIEW | Form |
-| Create Workspace | 🟡 REVIEW | Form |
-| Invite Team | 🟡 REVIEW | Form |
-| Create First Project | 🟡 REVIEW | Form |
+| Component | Status | Spec | Verdict |
+|-----------|--------|------|---------|
+| Role Selector | 🟢 SPEC'D | `onboarding/flow.md` | Lead vs Member choice |
+| Lead Onboarding | 🟢 SPEC'D | `onboarding/flow.md` | Features → Org → Project |
+| Member Onboarding | 🟢 SPEC'D | `onboarding/flow.md` | Org → Features |
+| Welcome Tour | 🟡 REVIEW | – | Interactive product tour |
+| Onboarding Checklist | 🟡 REVIEW | – | Progress tracking |
 
 ---
 
