@@ -672,9 +672,15 @@ export const search = authenticatedQuery({
 
     // If query is provided, use search index
     if (args.query) {
-      const singleType = args.type?.length === 1 ? args.type[0] : null;
+      const singleType =
+        args.type?.length === 1
+          ? (args.type[0] as "task" | "bug" | "story" | "epic" | "subtask")
+          : null;
       const singleStatus = args.status?.length === 1 ? args.status[0] : null;
-      const singlePriority = args.priority?.length === 1 ? args.priority[0] : null;
+      const singlePriority =
+        args.priority?.length === 1
+          ? (args.priority[0] as "high" | "low" | "lowest" | "medium" | "highest")
+          : null;
 
       // Bounded: search results limited to prevent huge result sets
       // Optimization: Push down filters to search index to improve relevance and performance
