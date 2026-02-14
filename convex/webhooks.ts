@@ -13,6 +13,7 @@ import { notFound, validation } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { validateDestination } from "./lib/ssrf";
 import { assertIsProjectAdmin } from "./projectAccess";
 import { isTest } from "./testConfig";
 import { webhookResultStatuses } from "./validators";
@@ -29,7 +30,7 @@ export const createWebhook = projectAdminMutation({
   },
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check
-    validateWebhookUrl(args.url);
+    validateDestination(args.url);
 
     const webhookId = await ctx.db.insert("webhooks", {
       projectId: ctx.projectId,
@@ -104,7 +105,7 @@ export const updateWebhook = authenticatedMutation({
     const updates: Partial<typeof webhook> = {};
     if (args.name !== undefined) updates.name = args.name;
     if (args.url !== undefined) {
-      validateWebhookUrl(args.url);
+      validateDestination(args.url);
       updates.url = args.url;
     }
     if (args.events !== undefined) updates.events = args.events;
@@ -579,65 +580,4 @@ async function generateSignature(payload: string, secret: string): Promise<strin
   return Array.from(new Uint8Array(signature))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-}
-
-/** Check if hostname is a loopback address */
-function isLoopbackAddress(hostname: string): boolean {
-  return (
-    hostname === "localhost" ||
-    hostname === "::1" ||
-    hostname === "[::1]" ||
-    hostname.startsWith("127.")
-  );
-}
-
-/** Check if hostname is a private IPv4 address */
-function isPrivateIPv4(hostname: string): boolean {
-  const isIPv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
-  if (!isIPv4) return false;
-
-  // 10.0.0.0/8
-  if (hostname.startsWith("10.")) return true;
-  // 192.168.0.0/16
-  if (hostname.startsWith("192.168.")) return true;
-  // 172.16.0.0/12
-  if (hostname.startsWith("172.")) {
-    const parts = hostname.split(".");
-    const secondOctet = parseInt(parts[1], 10);
-    if (secondOctet >= 16 && secondOctet <= 31) return true;
-  }
-
-  return false;
-}
-
-/** Check if hostname is AWS/cloud metadata endpoint */
-function isMetadataEndpoint(hostname: string): boolean {
-  return hostname === "169.254.169.254";
-}
-
-function validateWebhookUrl(url: string) {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    throw validation("url", "Invalid URL format");
-  }
-
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw validation("url", "Invalid URL protocol. Must be http or https.");
-  }
-
-  const hostname = parsed.hostname.toLowerCase();
-
-  if (isLoopbackAddress(hostname)) {
-    throw validation("url", "Localhost URLs are not allowed.");
-  }
-
-  if (isPrivateIPv4(hostname)) {
-    throw validation("url", "Private IP addresses are not allowed.");
-  }
-
-  if (isMetadataEndpoint(hostname)) {
-    throw validation("url", "Metadata service URLs are not allowed.");
-  }
 }

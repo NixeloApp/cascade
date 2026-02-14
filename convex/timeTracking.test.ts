@@ -5,6 +5,7 @@ import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
   asAuthenticatedUser,
+  createOrganizationAdmin,
   createProjectInOrganization,
   createTestContext,
   createTestIssue,
@@ -599,9 +600,7 @@ describe("Time Tracking", () => {
       const adminId = await createTestUser(t, { name: "Admin" });
       const viewerId = await createTestUser(t, { name: "Viewer" });
 
-      const { organizationId } = await createTestContext(t, {
-        actor: { type: "user", userId: adminId },
-      });
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
 
       const projectId = await createProjectInOrganization(t, adminId, organizationId, {
         name: "Billing Project",

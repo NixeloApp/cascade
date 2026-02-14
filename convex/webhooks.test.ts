@@ -374,6 +374,56 @@ describe("Webhooks", () => {
       }).rejects.toThrow("Webhook not found");
       await t.finishInProgressScheduledFunctions();
     });
+
+    it("should reject invalid URLs (SSRF protection)", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      // Private IP
+      await expect(async () => {
+        await asUser.mutation(api.webhooks.createWebhook, {
+          projectId,
+          name: "Hacker",
+          url: "http://127.0.0.1/hack",
+          events: ["issue.created"],
+        });
+      }).rejects.toThrow("Private IP addresses are not allowed");
+
+      // Ambiguous IP (Integer)
+      await expect(async () => {
+        await asUser.mutation(api.webhooks.createWebhook, {
+          projectId,
+          name: "Hacker 2",
+          url: "http://2130706433/hack",
+          events: ["issue.created"],
+        });
+      }).rejects.toThrow(/Private IP|Ambiguous/);
+
+      // Metadata IP
+      await expect(async () => {
+        await asUser.mutation(api.webhooks.createWebhook, {
+          projectId,
+          name: "Hacker 3",
+          url: "http://169.254.169.254/latest/meta-data",
+          events: ["issue.created"],
+        });
+      }).rejects.toThrow("Private IP addresses are not allowed");
+
+      // Valid URL should work
+      await expect(async () => {
+        await asUser.mutation(api.webhooks.createWebhook, {
+          projectId,
+          name: "Valid",
+          url: "https://example.com/webhook",
+          events: ["issue.created"],
+        });
+      }).not.toThrow();
+
+      await t.finishInProgressScheduledFunctions();
+    });
   });
 
   describe("softDelete", () => {
