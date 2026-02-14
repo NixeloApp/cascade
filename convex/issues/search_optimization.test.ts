@@ -27,10 +27,10 @@ describe("issue search optimization", () => {
     const assignee = await createTestUser(t);
     const issue1 = await createTestIssue(t, projectId, ctx.userId, {
       title: "Assigned Task",
-      assigneeId: assignee
+      assigneeId: assignee,
     });
     const issue2 = await createTestIssue(t, projectId, ctx.userId, {
-      title: "Unassigned Task"
+      title: "Unassigned Task",
     });
 
     // Search with assignee filter
@@ -50,12 +50,12 @@ describe("issue search optimization", () => {
 
     // Issue reported by ctx.userId (default)
     const issue1 = await createTestIssue(t, projectId, ctx.userId, {
-      title: "My Report"
+      title: "My Report",
     });
 
     // Issue reported by reporter2
     const issue2 = await createTestIssue(t, projectId, reporter2, {
-      title: "Other Report"
+      title: "Other Report",
     });
 
     // Search with reporter filter
@@ -73,10 +73,10 @@ describe("issue search optimization", () => {
   it("should handle 'me' as assignee filter", async () => {
     const issue1 = await createTestIssue(t, projectId, ctx.userId, {
       title: "Assigned to Me",
-      assigneeId: ctx.userId
+      assigneeId: ctx.userId,
     });
     const issue2 = await createTestIssue(t, projectId, ctx.userId, {
-      title: "Unassigned"
+      title: "Unassigned",
     });
 
     const result = await ctx.asUser.query(api.issues.queries.search, {
