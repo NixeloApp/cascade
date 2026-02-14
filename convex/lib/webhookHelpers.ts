@@ -66,7 +66,6 @@ export async function deliverWebhook(
       responseStatus: response.status,
       responseBody: responseBody.substring(0, 1000),
     };
-
   } catch (error) {
     const errorMessage =
       error instanceof Error && error.name === "AbortError"

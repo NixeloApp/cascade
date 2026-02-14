@@ -192,12 +192,7 @@ async function triggerSingleWebhook(
     requestPayload,
   });
 
-  const result = await deliverWebhook(
-    webhook.url,
-    requestPayload,
-    event,
-    webhook.secret,
-  );
+  const result = await deliverWebhook(webhook.url, requestPayload, event, webhook.secret);
 
   // Update execution log
   await ctx.runMutation(internal.webhooks.updateExecution, {
@@ -317,12 +312,7 @@ export const deliverTestWebhook = internalAction({
       requestPayload,
     });
 
-    const result = await deliverWebhook(
-      webhook.url,
-      requestPayload,
-      "ping",
-      webhook.secret,
-    );
+    const result = await deliverWebhook(webhook.url, requestPayload, "ping", webhook.secret);
 
     // Update execution log
     await ctx.runMutation(internal.webhooks.updateExecution, {
