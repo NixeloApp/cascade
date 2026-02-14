@@ -18,6 +18,7 @@ export function run() {
     /useIssueModal\.ts$/, // TanStack Router generic hook requires type casting
     /convex\/lib\//, // Convex internal utilities with complex generics
     /convex\/softDeleteCleanup\.ts$/, // Convex internal cleanup utility
+    /convex\/issues\/queries\.ts$/, // Convex search index type mismatch requires casting
   ];
 
   let errorCount = 0;

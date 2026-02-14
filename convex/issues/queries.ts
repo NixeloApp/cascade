@@ -1,4 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
+import type { SearchFilter } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
@@ -24,7 +25,7 @@ import { notDeleted } from "../lib/softDeleteHelpers";
 import { sanitizeUserForAuth } from "../lib/userUtils";
 import { canAccessProject } from "../projectAccess";
 import { matchesSearchFilters, ROOT_ISSUE_TYPES } from "./helpers";
-import { buildIssueSearch } from "./searchHelpers";
+import { buildIssueSearch, type SearchFilterBuilder } from "./searchHelpers";
 
 /**
  * Internal query for API usage that accepts explicit userId
@@ -678,10 +679,16 @@ export const search = authenticatedQuery({
       issues = await safeCollect(
         ctx.db
           .query("issues")
-          .withSearchIndex("search_title", (q) =>
-            // @ts-ignore - The local SearchFilterBuilder matches the runtime behavior but TS complains
-            buildIssueSearch(q, { ...args, query: args.query as string }, ctx.userId),
-          )
+          .withSearchIndex("search_title", (q) => {
+            // Cast to local interface to bypass TS restrictions while maintaining runtime compatibility
+            // @ts-expect-error - The local SearchFilterBuilder matches the runtime behavior but TS complains
+            const builder = q as SearchFilterBuilder<"issues">;
+            return buildIssueSearch(
+              builder,
+              { ...args, query: args.query as string },
+              ctx.userId,
+            ) as unknown as SearchFilter;
+          })
           .filter(notDeleted),
         fetchLimit,
         "issue search",

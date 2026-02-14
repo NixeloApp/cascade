@@ -5,6 +5,8 @@ import type { Id } from "../_generated/dataModel";
 export interface SearchFilterBuilder<T extends string> {
   search(field: string, query: string): SearchFilterBuilder<T>;
   eq(field: string, value: any): SearchFilterBuilder<T>;
+  // This property is required by the Convex runtime type definition
+  _isSearchFilter?: boolean;
 }
 
 export function buildIssueSearch(
