@@ -1243,11 +1243,6 @@ export const listIssuesByDateRange = authenticatedQuery({
   },
 });
 
-type SearchBuilder = {
-  search(field: string, query: string): SearchBuilder;
-  eq(field: string, value: unknown): SearchBuilder;
-};
-
 interface SearchArgs {
   query: string;
   projectId?: Id<"projects">;
@@ -1257,7 +1252,8 @@ interface SearchArgs {
   priority?: string[];
 }
 
-function applySearchFilters(q: SearchBuilder, args: SearchArgs) {
+// biome-ignore lint/suspicious/noExplicitAny: Convex search query types are internal/complex
+function applySearchFilters(q: any, args: SearchArgs) {
   let searchQ = q.search("searchContent", args.query);
   if (args.projectId) {
     searchQ = searchQ.eq("projectId", args.projectId);
