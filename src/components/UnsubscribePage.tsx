@@ -1,13 +1,17 @@
 /**
  * Unsubscribe Page
  *
- * Allows users to unsubscribe from email notifications via one-click link
+ * Allows users to unsubscribe from email notifications via one-click link.
+ * Uses AuthPageLayout for consistent Mintlify-style auth page appearance.
  */
 
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
+import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
@@ -23,19 +27,13 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
   const unsubscribe = useMutation(api.unsubscribe.unsubscribe);
 
   useEffect(() => {
-    // Check if token is valid
-    if (getUserFromToken === undefined) {
-      // Still loading
-      return;
-    }
+    if (getUserFromToken === undefined) return;
 
     if (getUserFromToken === null) {
-      // Invalid or expired token
       setStatus("invalid");
       return;
     }
 
-    // Token is valid, proceed with unsubscribe
     const doUnsubscribe = async () => {
       try {
         await unsubscribe({ token });
@@ -49,127 +47,75 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
     void doUnsubscribe();
   }, [getUserFromToken, token, unsubscribe]);
 
-  return (
-    <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-      <div className="max-w-md w-full bg-ui-bg rounded-lg shadow-lg p-8">
-        {status === "loading" && (
-          <div className="text-center">
-            <LoadingSpinner size="lg" className="mx-auto mb-4" />
-            <Typography variant="h4" as="h2" className="mb-2">
-              Processing...
-            </Typography>
-            <Typography color="secondary">Unsubscribing you from email notifications</Typography>
-          </div>
-        )}
+  if (status === "loading") {
+    return (
+      <AuthPageLayout title="Unsubscribing...">
+        <Flex direction="column" align="center" gap="lg" className="py-8">
+          <LoadingSpinner size="lg" />
+          <Typography color="secondary">Processing your request</Typography>
+        </Flex>
+      </AuthPageLayout>
+    );
+  }
 
-        {status === "success" && (
+  if (status === "success") {
+    return (
+      <AuthPageLayout title="Unsubscribed">
+        <Flex direction="column" align="center" gap="lg" className="py-8">
+          <Flex
+            align="center"
+            justify="center"
+            className="w-12 h-12 rounded-full bg-status-success-bg"
+          >
+            <Icon icon={CheckCircle} size="lg" className="text-status-success" />
+          </Flex>
           <div className="text-center">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-12 h-12 rounded-full bg-status-success-bg mx-auto mb-4"
-            >
-              <svg
-                className="w-6 h-6 text-status-success"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                role="img"
-                aria-label="Success checkmark"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </Flex>
-            <Typography variant="h4" as="h2" className="mb-2">
-              Successfully Unsubscribed
-            </Typography>
-            <Typography color="secondary" className="mb-6">
-              You have been unsubscribed from all email notifications.
-            </Typography>
-            <Typography variant="muted">
-              You can update your notification preferences anytime by logging into your account.
-            </Typography>
-          </div>
-        )}
-
-        {status === "invalid" && (
-          <div className="text-center">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-12 h-12 rounded-full bg-status-warning-bg mx-auto mb-4"
-            >
-              <svg
-                className="w-6 h-6 text-status-warning"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                role="img"
-                aria-label="Warning icon"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </Flex>
-            <Typography variant="h4" as="h2" className="mb-2">
-              Invalid or Expired Link
-            </Typography>
             <Typography color="secondary">
-              This unsubscribe link is invalid or has expired. Links expire after 30 days.
+              You've been unsubscribed from email notifications.
+            </Typography>
+            <Typography variant="muted" className="mt-2">
+              You can update preferences anytime in your account settings.
             </Typography>
           </div>
-        )}
+        </Flex>
+      </AuthPageLayout>
+    );
+  }
 
-        {status === "error" && (
-          <div className="text-center">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-12 h-12 rounded-full bg-status-error-bg mx-auto mb-4"
-            >
-              <svg
-                className="w-6 h-6 text-status-error"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                role="img"
-                aria-label="Error icon"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </Flex>
-            <Typography variant="h4" as="h2" className="mb-2">
-              Something Went Wrong
-            </Typography>
-            <Typography color="secondary" className="mb-2">
-              We couldn't process your unsubscribe request.
-            </Typography>
-            {errorMessage && (
-              <Typography
-                variant="muted"
-                color="error"
-                className="bg-status-error-bg p-3 rounded-md"
-              >
-                {errorMessage}
-              </Typography>
-            )}
-          </div>
+  if (status === "invalid") {
+    return (
+      <AuthPageLayout title="Invalid link">
+        <Flex direction="column" align="center" gap="lg" className="py-8">
+          <Flex
+            align="center"
+            justify="center"
+            className="w-12 h-12 rounded-full bg-status-warning-bg"
+          >
+            <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
+          </Flex>
+          <Typography color="secondary" className="text-center">
+            This unsubscribe link is invalid or has expired.
+          </Typography>
+        </Flex>
+      </AuthPageLayout>
+    );
+  }
+
+  return (
+    <AuthPageLayout title="Something went wrong">
+      <Flex direction="column" align="center" gap="lg" className="py-8">
+        <Flex align="center" justify="center" className="w-12 h-12 rounded-full bg-status-error-bg">
+          <Icon icon={XCircle} size="lg" className="text-status-error" />
+        </Flex>
+        <Typography color="secondary" className="text-center">
+          We couldn't process your unsubscribe request.
+        </Typography>
+        {errorMessage && (
+          <Typography variant="muted" className="text-center">
+            {errorMessage}
+          </Typography>
         )}
-      </div>
-    </Flex>
+      </Flex>
+    </AuthPageLayout>
   );
 }

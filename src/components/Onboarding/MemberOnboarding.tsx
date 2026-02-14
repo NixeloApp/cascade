@@ -157,17 +157,13 @@ export function MemberOnboarding({
       {/* Header */}
       <div className="text-center">
         <Typography variant="h2" className="mb-3 text-3xl">
-          You're All Set!
+          You're ready
         </Typography>
-        <Typography variant="lead">Here's what you can do in your project</Typography>
+        <Typography variant="lead">Here's what you can do in Nixelo</Typography>
       </div>
 
       {/* What you can do */}
       <div className="space-y-4">
-        <Typography variant="h3" className="font-medium text-ui-text">
-          Here's what you can do in Nixelo:
-        </Typography>
-
         <Grid cols={1} colsSm={2} gap="md">
           <Flex
             align="start"

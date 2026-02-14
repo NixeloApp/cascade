@@ -5,15 +5,23 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { z } from "zod";
 import { FormInput, FormTextarea } from "@/lib/form";
-import { Calendar, Clock, LinkIcon, MapPin } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Checkbox } from "../ui/Checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
+import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
+import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
-import { Typography } from "../ui/Typography";
 import {
   COLOR_PICKER_CLASSES,
   EVENT_TYPE_DEFAULT_COLOR,
@@ -125,6 +133,7 @@ export function CreateEventModal({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="tracking-tight">Create Event</DialogTitle>
+          <DialogDescription>Add a new event to your calendar</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={(e) => {
@@ -149,12 +158,7 @@ export function CreateEventModal({
 
                 {/* Event Type */}
                 <div>
-                  <Typography
-                    variant="small"
-                    className="block text-sm font-medium text-ui-text mb-1"
-                  >
-                    Event Type
-                  </Typography>
+                  <Label className="mb-1">Event Type</Label>
                   <Grid cols={4} gap="sm">
                     {eventTypes.map((type) => (
                       <button
@@ -181,12 +185,7 @@ export function CreateEventModal({
 
                 {/* Color */}
                 <div>
-                  <Typography
-                    variant="small"
-                    className="block text-sm font-medium text-ui-text mb-1"
-                  >
-                    Color
-                  </Typography>
+                  <Label className="mb-1">Color</Label>
                   <Flex gap="sm" className="flex-wrap">
                     {PALETTE_COLORS.map((color) => {
                       const isActive =
@@ -216,71 +215,45 @@ export function CreateEventModal({
                   <div className="col-span-3 sm:col-span-1">
                     <form.Field name="startDate">
                       {(field) => (
-                        <div>
-                          <label
-                            htmlFor="event-date"
-                            className="block text-sm font-medium text-ui-text mb-1"
-                          >
-                            <Calendar className="w-4 h-4 inline mr-1" />
-                            Date *
-                          </label>
-                          <input
-                            id="event-date"
-                            type="date"
-                            value={field.state.value as string}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            onBlur={field.handleBlur}
-                            required
-                            className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text"
-                          />
-                        </div>
+                        <Input
+                          id="event-date"
+                          label="Date"
+                          type="date"
+                          value={field.state.value as string}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          required
+                        />
                       )}
                     </form.Field>
                   </div>
                   <div>
                     <form.Field name="startTime">
                       {(field) => (
-                        <div>
-                          <label
-                            htmlFor="event-start-time"
-                            className="block text-sm font-medium text-ui-text mb-1"
-                          >
-                            <Clock className="w-4 h-4 inline mr-1" />
-                            Start Time
-                          </label>
-                          <input
-                            id="event-start-time"
-                            type="time"
-                            value={field.state.value as string}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            onBlur={field.handleBlur}
-                            disabled={allDay as boolean}
-                            className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text disabled:opacity-50"
-                          />
-                        </div>
+                        <Input
+                          id="event-start-time"
+                          label="Start Time"
+                          type="time"
+                          value={field.state.value as string}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          disabled={allDay as boolean}
+                        />
                       )}
                     </form.Field>
                   </div>
                   <div>
                     <form.Field name="endTime">
                       {(field) => (
-                        <div>
-                          <label
-                            htmlFor="event-end-time"
-                            className="block text-sm font-medium text-ui-text mb-1"
-                          >
-                            End Time
-                          </label>
-                          <input
-                            id="event-end-time"
-                            type="time"
-                            value={field.state.value as string}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            onBlur={field.handleBlur}
-                            disabled={allDay as boolean}
-                            className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text disabled:opacity-50"
-                          />
-                        </div>
+                        <Input
+                          id="event-end-time"
+                          label="End Time"
+                          type="time"
+                          value={field.state.value as string}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          disabled={allDay as boolean}
+                        />
                       )}
                     </form.Field>
                   </div>
@@ -289,21 +262,12 @@ export function CreateEventModal({
                 {/* All Day Toggle */}
                 <form.Field name="allDay">
                   {(field) => (
-                    <Flex gap="sm" align="center" className="cursor-pointer">
-                      <input
-                        id="event-all-day"
-                        type="checkbox"
-                        checked={field.state.value as boolean}
-                        onChange={(e) => field.handleChange(e.target.checked)}
-                        className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
-                      />
-                      <label
-                        htmlFor="event-all-day"
-                        className="text-sm text-ui-text cursor-pointer"
-                      >
-                        All day event
-                      </label>
-                    </Flex>
+                    <Checkbox
+                      id="event-all-day"
+                      label="All day event"
+                      checked={field.state.value as boolean}
+                      onCheckedChange={(checked) => field.handleChange(checked === true)}
+                    />
                   )}
                 </form.Field>
 
@@ -311,28 +275,17 @@ export function CreateEventModal({
                 {eventType === "meeting" && (
                   <form.Field name="isRequired">
                     {(field) => (
-                      <div>
-                        <Flex gap="sm" align="center" className="cursor-pointer">
-                          <input
-                            id="event-is-required"
-                            type="checkbox"
-                            checked={field.state.value as boolean}
-                            onChange={(e) => field.handleChange(e.target.checked)}
-                            className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
-                          />
-                          <label
-                            htmlFor="event-is-required"
-                            className="text-sm text-ui-text cursor-pointer"
-                          >
-                            Required attendance (track who attends)
-                          </label>
-                        </Flex>
-                        {isRequired && (
-                          <Typography variant="muted" className="text-xs mt-1 ml-6">
-                            Admins can mark who attended, was tardy, or missed this meeting
-                          </Typography>
-                        )}
-                      </div>
+                      <Checkbox
+                        id="event-is-required"
+                        label="Required attendance"
+                        description={
+                          isRequired
+                            ? "Admins can mark who attended, was tardy, or missed"
+                            : undefined
+                        }
+                        checked={field.state.value as boolean}
+                        onCheckedChange={(checked) => field.handleChange(checked === true)}
+                      />
                     )}
                   </form.Field>
                 )}
@@ -352,24 +305,15 @@ export function CreateEventModal({
                 {/* Location */}
                 <form.Field name="location">
                   {(field) => (
-                    <div>
-                      <label
-                        htmlFor="event-location"
-                        className="block text-sm font-medium text-ui-text mb-1"
-                      >
-                        <MapPin className="w-4 h-4 inline mr-1" />
-                        Location
-                      </label>
-                      <input
-                        id="event-location"
-                        type="text"
-                        value={(field.state.value as string) ?? ""}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text"
-                        placeholder="Office, Zoom, Google Meet, etc."
-                      />
-                    </div>
+                    <Input
+                      id="event-location"
+                      label="Location"
+                      type="text"
+                      value={(field.state.value as string) ?? ""}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      placeholder="Office, Zoom, Google Meet, etc."
+                    />
                   )}
                 </form.Field>
 
@@ -377,36 +321,24 @@ export function CreateEventModal({
                 {eventType === "meeting" && (
                   <form.Field name="meetingUrl">
                     {(field) => (
-                      <div>
-                        <label
-                          htmlFor="event-meeting-url"
-                          className="block text-sm font-medium text-ui-text mb-1"
-                        >
-                          <LinkIcon className="w-4 h-4 inline mr-1" />
-                          Meeting Link
-                        </label>
-                        <input
-                          id="event-meeting-url"
-                          type="url"
-                          value={(field.state.value as string) ?? ""}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
-                          className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text"
-                          placeholder="https://zoom.us/j/..."
-                        />
-                      </div>
+                      <Input
+                        id="event-meeting-url"
+                        label="Meeting Link"
+                        type="url"
+                        value={(field.state.value as string) ?? ""}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        placeholder="https://zoom.us/j/..."
+                      />
                     )}
                   </form.Field>
                 )}
 
                 {/* Link to Project */}
                 <div>
-                  <label
-                    htmlFor="event-project"
-                    className="block text-sm font-medium text-ui-text mb-1"
-                  >
-                    Link to Project (optional)
-                  </label>
+                  <Label htmlFor="event-project" className="mb-1">
+                    Link to Project
+                  </Label>
                   <Select
                     value={selectedWorkspaceId || "none"}
                     onValueChange={(value) =>

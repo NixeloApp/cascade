@@ -21,20 +21,17 @@ interface SprintManagerProps {
 }
 
 interface SprintCardProps {
-  sprint: Doc<"sprints"> & { issueCount: number };
+  sprint: Doc<"sprints"> & { issueCount: number; completedCount: number };
   canEdit: boolean;
   onStartSprint: (sprintId: Id<"sprints">) => Promise<void>;
   onCompleteSprint: (sprintId: Id<"sprints">) => Promise<void>;
 }
 
 function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: SprintCardProps) {
-  // Calculate progress percentage for active sprints
+  // Calculate progress percentage based on completed issues
   const getProgressPercentage = () => {
-    if (!sprint.startDate || !sprint.endDate) return 0;
-    const now = Date.now();
-    const total = sprint.endDate - sprint.startDate;
-    const elapsed = now - sprint.startDate;
-    return Math.min(Math.max((elapsed / total) * 100, 0), 100);
+    if (sprint.issueCount === 0) return 0;
+    return (sprint.completedCount / sprint.issueCount) * 100;
   };
 
   const progress = sprint.status === "active" ? getProgressPercentage() : 0;
@@ -64,11 +61,13 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
             </Typography>
           )}
 
-          {/* Progress bar for active sprints */}
-          {sprint.status === "active" && sprint.startDate && sprint.endDate && (
+          {/* Progress bar for active sprints - issue-based */}
+          {sprint.status === "active" && (
             <div className="mt-3 mb-2">
               <Flex justify="between" className="mb-1">
-                <Typography variant="caption">Sprint progress</Typography>
+                <Typography variant="caption">
+                  {sprint.completedCount} of {sprint.issueCount} completed
+                </Typography>
                 <Typography variant="caption" className="text-brand">
                   {Math.round(progress)}%
                 </Typography>
@@ -251,7 +250,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             }
           />
         ) : (
-          sprints.map((sprint: Doc<"sprints"> & { issueCount: number }) => (
+          sprints.map((sprint: Doc<"sprints"> & { issueCount: number; completedCount: number }) => (
             <SprintCard
               key={sprint._id}
               sprint={sprint}

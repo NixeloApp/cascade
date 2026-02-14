@@ -3,6 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { UnsubscribePage } from "./UnsubscribePage";
 
+// Mock TanStack Router (required for AuthPageLayout's Link)
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children, to, ...props }: { children: React.ReactNode; to: string }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 // Mock Convex hooks
 vi.mock("convex/react", () => ({
   useQuery: vi.fn(),
@@ -28,51 +37,47 @@ describe("UnsubscribePage", () => {
   });
 
   it("renders loading state initially", () => {
-    // useQuery is already mocked to return undefined (loading) in beforeEach
-
     render(<UnsubscribePage token={mockToken} />);
 
-    expect(screen.getByText("Processing...")).toBeInTheDocument();
-    expect(screen.getByText("Unsubscribing you from email notifications")).toBeInTheDocument();
+    expect(screen.getByText("Unsubscribing...")).toBeInTheDocument();
+    expect(screen.getByText("Processing your request")).toBeInTheDocument();
   });
 
   it("renders success state when unsubscribe is successful", async () => {
-    vi.mocked(useQuery).mockReturnValue(mockUser); // Token is valid
-    mockUnsubscribe.mockResolvedValue(undefined); // Unsubscribe successful
+    vi.mocked(useQuery).mockReturnValue(mockUser);
+    mockUnsubscribe.mockResolvedValue(undefined);
 
     render(<UnsubscribePage token={mockToken} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Successfully Unsubscribed")).toBeInTheDocument();
+      expect(screen.getByText("Unsubscribed")).toBeInTheDocument();
       expect(
-        screen.getByText("You have been unsubscribed from all email notifications."),
+        screen.getByText("You've been unsubscribed from email notifications."),
       ).toBeInTheDocument();
     });
   });
 
   it("renders invalid state when token is invalid", async () => {
-    vi.mocked(useQuery).mockReturnValue(null); // Token is invalid
+    vi.mocked(useQuery).mockReturnValue(null);
 
     render(<UnsubscribePage token={mockToken} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Invalid or Expired Link")).toBeInTheDocument();
+      expect(screen.getByText("Invalid link")).toBeInTheDocument();
       expect(
-        screen.getByText(
-          "This unsubscribe link is invalid or has expired. Links expire after 30 days.",
-        ),
+        screen.getByText("This unsubscribe link is invalid or has expired."),
       ).toBeInTheDocument();
     });
   });
 
   it("renders error state when unsubscribe fails", async () => {
-    vi.mocked(useQuery).mockReturnValue(mockUser); // Token is valid
-    mockUnsubscribe.mockRejectedValue(new Error("Network error")); // Unsubscribe failed
+    vi.mocked(useQuery).mockReturnValue(mockUser);
+    mockUnsubscribe.mockRejectedValue(new Error("Network error"));
 
     render(<UnsubscribePage token={mockToken} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Something Went Wrong")).toBeInTheDocument();
+      expect(screen.getByText("Something went wrong")).toBeInTheDocument();
       expect(screen.getByText("We couldn't process your unsubscribe request.")).toBeInTheDocument();
       expect(screen.getByText("Network error")).toBeInTheDocument();
     });
