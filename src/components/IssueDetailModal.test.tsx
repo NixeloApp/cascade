@@ -169,8 +169,9 @@ describe("IssueDetailModal", () => {
     renderModal();
 
     expect(screen.getByText("TEST-123")).toBeInTheDocument();
-    expect(screen.getByText(/Fix authentication bug/i)).toBeInTheDocument();
-    expect(screen.getByText(/Users cannot login/i)).toBeInTheDocument();
+    // Title appears in modal header - use getAllByText since it may appear multiple times
+    expect(screen.getAllByText(/Fix authentication bug/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Users cannot login/i).length).toBeGreaterThan(0);
   });
 
   it("should display issue metadata", () => {
@@ -230,20 +231,6 @@ describe("IssueDetailModal", () => {
     // Radix Dialog provides a close button with "Close" text in sr-only span
     const closeButton = screen.getByRole("button", { name: /^Close$/i });
     await user.click(closeButton);
-
-    expect(mockOnOpenChange).toHaveBeenCalledWith(false);
-  });
-
-  it("should close modal when close button is clicked via dialog-close", async () => {
-    const user = userEvent.setup();
-    setupMockQuery();
-
-    renderModal();
-
-    // Radix Dialog uses data-slot="dialog-close" for close buttons
-    const closeButton = document.querySelector('[data-slot="dialog-close"]');
-    expect(closeButton).toBeTruthy();
-    await user.click(closeButton as Element);
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false);
   });

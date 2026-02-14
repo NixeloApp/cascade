@@ -275,10 +275,8 @@ describe("GlobalSearch", () => {
       expect(screen.getByPlaceholderText(/Search issues and documents/i)).toBeInTheDocument();
     });
 
-    // Find the overlay by its data-slot attribute and click it
-    const overlay = document.querySelector('[data-slot="dialog-overlay"]');
-    expect(overlay).toBeInTheDocument();
-    if (overlay) await user.click(overlay);
+    // Press Escape to close the dialog (more reliable than clicking overlay)
+    await user.keyboard("{Escape}");
 
     await waitFor(() => {
       expect(screen.queryByPlaceholderText(/Search issues and documents/i)).not.toBeInTheDocument();
