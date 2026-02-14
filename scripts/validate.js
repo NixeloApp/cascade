@@ -12,6 +12,7 @@
  *   8. Emoji usage          — finds emoji that should be replaced with Lucide icons
  *   9. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
  *  10. E2E quality          — catches broad selectors, networkidle, waitForSelector
+ *  11. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
  *
  * Exit code 1 if any check fails. No warning levels — everything is an error.
  *
@@ -29,6 +30,7 @@ import { run as runStandardsCheck } from "./validate/check-standards.js";
 import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
 import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
 import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
+import { run as runUIPatternsCheck } from "./validate/check-ui-patterns.js";
 import { c } from "./validate/utils.js";
 
 const checks = [
@@ -42,6 +44,7 @@ const checks = [
   { name: "Emoji usage", fn: runEmojiCheck },
   { name: "Test ID constants", fn: runTestIdsCheck },
   { name: "E2E quality", fn: runE2EQualityCheck },
+  { name: "UI patterns", fn: runUIPatternsCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

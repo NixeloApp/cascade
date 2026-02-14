@@ -6,14 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/Dialog";
+import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -76,58 +69,57 @@ export function CreateTeamModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="tracking-tight">Create Team</DialogTitle>
-          <DialogDescription className="text-ui-text-secondary">
-            Create a new team to organize your projects and members.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <Flex direction="column" gap="md" className="py-2">
-            <Flex direction="column" gap="xs" className="w-full items-center">
-              <Label htmlFor="team-name">Team Name</Label>
-              <Input
-                id="team-name"
-                placeholder="e.g. Frontend, Design..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-                required
-              />
-            </Flex>
-            <Flex direction="column" gap="xs" className="w-full items-center">
-              <Label htmlFor="team-description" className="text-ui-text-secondary">
-                Description (Optional)
-              </Label>
-              <Textarea
-                id="team-description"
-                placeholder="What is this team for?"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </Flex>
-            <Flex align="center" className="space-x-2 pt-2">
-              <Checkbox
-                id="team-private"
-                checked={isPrivate}
-                onCheckedChange={(checked) => setIsPrivate(checked === true)}
-                label="Make this team private"
-                description="Only invited members can view this team"
-              />
-            </Flex>
+    <Dialog
+      open={isOpen}
+      onOpenChange={onClose}
+      title="Create Team"
+      description="Create a new team to organize your projects and members."
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="primary" isLoading={isSubmitting} form="create-team-form">
+            Create Team
+          </Button>
+        </>
+      }
+    >
+      <form id="create-team-form" onSubmit={handleSubmit}>
+        <Flex direction="column" gap="md" className="py-2">
+          <Flex direction="column" gap="xs" className="w-full items-center">
+            <Label htmlFor="team-name">Team Name</Label>
+            <Input
+              id="team-name"
+              placeholder="e.g. Frontend, Design..."
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              required
+            />
           </Flex>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" isLoading={isSubmitting}>
-              Create Team
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+          <Flex direction="column" gap="xs" className="w-full items-center">
+            <Label htmlFor="team-description" className="text-ui-text-secondary">
+              Description (Optional)
+            </Label>
+            <Textarea
+              id="team-description"
+              placeholder="What is this team for?"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Flex>
+          <Flex align="center" className="space-x-2 pt-2">
+            <Checkbox
+              id="team-private"
+              checked={isPrivate}
+              onCheckedChange={(checked) => setIsPrivate(checked === true)}
+              label="Make this team private"
+              description="Only invited members can view this team"
+            />
+          </Flex>
+        </Flex>
+      </form>
     </Dialog>
   );
 }

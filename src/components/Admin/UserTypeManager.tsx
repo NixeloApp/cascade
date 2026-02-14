@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
@@ -575,116 +575,117 @@ export function UserTypeManager() {
       </Card>
 
       {/* Edit Config Modal */}
-      <Dialog open={showConfigModal} onOpenChange={setShowConfigModal}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit {selectedType} Configuration</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSaveConfig} className="p-6">
-            <Flex direction="column" gap="lg">
+      <Dialog
+        open={showConfigModal}
+        onOpenChange={setShowConfigModal}
+        title={`Edit ${selectedType} Configuration`}
+        className="sm:max-w-2xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowConfigModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="config-form" isLoading={isSubmitting}>
+              Save Configuration
+            </Button>
+          </>
+        }
+      >
+        <form id="config-form" onSubmit={handleSaveConfig}>
+          <Flex direction="column" gap="lg">
+            <Input
+              label="Display Name"
+              value={configName}
+              onChange={(e) => setConfigName(e.target.value)}
+              required
+            />
+
+            <Input
+              label="Description"
+              value={configDescription}
+              onChange={(e) => setConfigDescription(e.target.value)}
+            />
+
+            <Grid cols={2} gap="lg">
               <Input
-                label="Display Name"
-                value={configName}
-                onChange={(e) => setConfigName(e.target.value)}
+                label="Max Hours per Week"
+                type="number"
+                value={configMaxWeekly}
+                onChange={(e) => setConfigMaxWeekly(Number(e.target.value))}
+                min={1}
+                max={168}
                 required
               />
 
               <Input
-                label="Description"
-                value={configDescription}
-                onChange={(e) => setConfigDescription(e.target.value)}
+                label="Max Hours per Day"
+                type="number"
+                value={configMaxDaily}
+                onChange={(e) => setConfigMaxDaily(Number(e.target.value))}
+                min={1}
+                max={24}
+                required
               />
+            </Grid>
 
-              <Grid cols={2} gap="lg">
-                <Input
-                  label="Max Hours per Week"
-                  type="number"
-                  value={configMaxWeekly}
-                  onChange={(e) => setConfigMaxWeekly(Number(e.target.value))}
-                  min={1}
-                  max={168}
-                  required
-                />
+            <Flex direction="column" gap="md">
+              <label>
+                <Flex align="center" gap="sm">
+                  <input
+                    type="checkbox"
+                    checked={configRequiresApproval}
+                    onChange={(e) => setConfigRequiresApproval(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <Typography variant="small">
+                    Requires manager approval for time entries
+                  </Typography>
+                </Flex>
+              </label>
 
-                <Input
-                  label="Max Hours per Day"
-                  type="number"
-                  value={configMaxDaily}
-                  onChange={(e) => setConfigMaxDaily(Number(e.target.value))}
-                  min={1}
-                  max={24}
-                  required
-                />
-              </Grid>
+              <label>
+                <Flex align="center" gap="sm">
+                  <input
+                    type="checkbox"
+                    checked={configCanOvertime}
+                    onChange={(e) => setConfigCanOvertime(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <Typography variant="small">Can work overtime hours</Typography>
+                </Flex>
+              </label>
 
-              <Flex direction="column" gap="md">
-                <label>
-                  <Flex align="center" gap="sm">
-                    <input
-                      type="checkbox"
-                      checked={configRequiresApproval}
-                      onChange={(e) => setConfigRequiresApproval(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <Typography variant="small">
-                      Requires manager approval for time entries
-                    </Typography>
-                  </Flex>
-                </label>
+              <label>
+                <Flex align="center" gap="sm">
+                  <input
+                    type="checkbox"
+                    checked={configCanBilling}
+                    onChange={(e) => setConfigCanBilling(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <Typography variant="small">Can access billing information</Typography>
+                </Flex>
+              </label>
 
-                <label>
-                  <Flex align="center" gap="sm">
-                    <input
-                      type="checkbox"
-                      checked={configCanOvertime}
-                      onChange={(e) => setConfigCanOvertime(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <Typography variant="small">Can work overtime hours</Typography>
-                  </Flex>
-                </label>
-
-                <label>
-                  <Flex align="center" gap="sm">
-                    <input
-                      type="checkbox"
-                      checked={configCanBilling}
-                      onChange={(e) => setConfigCanBilling(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <Typography variant="small">Can access billing information</Typography>
-                  </Flex>
-                </label>
-
-                <label>
-                  <Flex align="center" gap="sm">
-                    <input
-                      type="checkbox"
-                      checked={configCanManageProjects}
-                      onChange={(e) => setConfigCanManageProjects(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <Typography variant="small">Can manage projects</Typography>
-                  </Flex>
-                </label>
-              </Flex>
-
-              <DialogFooter className="pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setShowConfigModal(false)}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" isLoading={isSubmitting}>
-                  Save Configuration
-                </Button>
-              </DialogFooter>
+              <label>
+                <Flex align="center" gap="sm">
+                  <input
+                    type="checkbox"
+                    checked={configCanManageProjects}
+                    onChange={(e) => setConfigCanManageProjects(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <Typography variant="small">Can manage projects</Typography>
+                </Flex>
+              </label>
             </Flex>
-          </form>
-        </DialogContent>
+          </Flex>
+        </form>
       </Dialog>
 
       {/* Assign/Edit User Modal */}
@@ -696,224 +697,220 @@ export function UserTypeManager() {
             setSelectedUserId(null);
           }
         }}
+        title={selectedUserId ? "Edit User Employment" : "Assign Employment Type"}
+        className="sm:max-w-2xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setShowAssignModal(false);
+                setSelectedUserId(null);
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="profile-form" isLoading={isSubmitting}>
+              Save Profile
+            </Button>
+          </>
+        }
       >
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedUserId ? "Edit User Employment" : "Assign Employment Type"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSaveProfile} className="p-6">
-            <Flex direction="column" gap="lg">
-              <Select
-                label="Employment Type"
-                value={profileType}
-                onChange={(e) => setProfileType(e.target.value as EmploymentType)}
-                required
-              >
-                <option value="employee">Employee</option>
-                <option value="contractor">Contractor</option>
-                <option value="intern">Intern</option>
-              </Select>
+        <form id="profile-form" onSubmit={handleSaveProfile}>
+          <Flex direction="column" gap="lg">
+            <Select
+              label="Employment Type"
+              value={profileType}
+              onChange={(e) => setProfileType(e.target.value as EmploymentType)}
+              required
+            >
+              <option value="employee">Employee</option>
+              <option value="contractor">Contractor</option>
+              <option value="intern">Intern</option>
+            </Select>
 
+            <Grid cols={2} gap="lg">
+              <Input
+                label="Job Title"
+                value={profileJobTitle}
+                onChange={(e) => setProfileJobTitle(e.target.value)}
+                placeholder="e.g., Senior Developer"
+              />
+
+              <Input
+                label="Department"
+                value={profileDepartment}
+                onChange={(e) => setProfileDepartment(e.target.value)}
+                placeholder="e.g., Engineering"
+              />
+            </Grid>
+
+            <div className="p-4 bg-ui-bg-secondary rounded-lg">
+              <Typography variant="h4" className="font-medium text-sm mb-3 text-ui-text">
+                Hour Overrides (leave empty to use type defaults)
+              </Typography>
               <Grid cols={2} gap="lg">
                 <Input
-                  label="Job Title"
-                  value={profileJobTitle}
-                  onChange={(e) => setProfileJobTitle(e.target.value)}
-                  placeholder="e.g., Senior Developer"
+                  label="Max Hours per Week"
+                  type="number"
+                  value={profileMaxWeekly}
+                  onChange={(e) => setProfileMaxWeekly(e.target.value)}
+                  placeholder="Default"
+                  min={1}
+                  max={168}
                 />
 
                 <Input
-                  label="Department"
-                  value={profileDepartment}
-                  onChange={(e) => setProfileDepartment(e.target.value)}
-                  placeholder="e.g., Engineering"
+                  label="Max Hours per Day"
+                  type="number"
+                  value={profileMaxDaily}
+                  onChange={(e) => setProfileMaxDaily(e.target.value)}
+                  placeholder="Default"
+                  min={1}
+                  max={24}
                 />
               </Grid>
+            </div>
 
-              <div className="p-4 bg-ui-bg-secondary rounded-lg">
-                <Typography variant="h4" className="font-medium text-sm mb-3 text-ui-text">
-                  Hour Overrides (leave empty to use type defaults)
-                </Typography>
-                <Grid cols={2} gap="lg">
-                  <Input
-                    label="Max Hours per Week"
-                    type="number"
-                    value={profileMaxWeekly}
-                    onChange={(e) => setProfileMaxWeekly(e.target.value)}
-                    placeholder="Default"
-                    min={1}
-                    max={168}
-                  />
+            <Grid cols={2} gap="lg">
+              <Input
+                label="Start Date"
+                type="date"
+                value={profileStartDate}
+                onChange={(e) => setProfileStartDate(e.target.value)}
+              />
 
-                  <Input
-                    label="Max Hours per Day"
-                    type="number"
-                    value={profileMaxDaily}
-                    onChange={(e) => setProfileMaxDaily(e.target.value)}
-                    placeholder="Default"
-                    min={1}
-                    max={24}
-                  />
-                </Grid>
-              </div>
+              <Input
+                label="End Date (Optional)"
+                type="date"
+                value={profileEndDate}
+                onChange={(e) => setProfileEndDate(e.target.value)}
+              />
+            </Grid>
 
-              <Grid cols={2} gap="lg">
-                <Input
-                  label="Start Date"
-                  type="date"
-                  value={profileStartDate}
-                  onChange={(e) => setProfileStartDate(e.target.value)}
-                />
-
-                <Input
-                  label="End Date (Optional)"
-                  type="date"
-                  value={profileEndDate}
-                  onChange={(e) => setProfileEndDate(e.target.value)}
-                />
-              </Grid>
-
-              {/* Equity Compensation Section (Employees Only) */}
-              {profileType === "employee" && (
-                <div className="p-4 bg-brand-subtle border border-brand-border rounded-lg">
-                  <Flex justify="between" align="center" className="mb-3">
-                    <Flex align="center" gap="xs">
-                      <Icon icon={Gem} size="sm" className="text-brand-active" />
-                      <Typography variant="h4" className="font-medium text-sm text-brand-active">
-                        Equity Compensation
-                      </Typography>
-                    </Flex>
-                    <label>
-                      <Flex align="center" gap="sm">
-                        <input
-                          type="checkbox"
-                          checked={profileHasEquity}
-                          onChange={(e) => setProfileHasEquity(e.target.checked)}
-                          className="w-4 h-4"
-                        />
-                        <Typography variant="caption" className="font-medium text-brand-active">
-                          Has Equity
-                        </Typography>
-                      </Flex>
-                    </label>
-                  </Flex>
-
-                  {profileHasEquity && (
-                    <Flex direction="column" gap="lg">
-                      <Grid cols={2} gap="lg">
-                        <Input
-                          label="Equity Percentage (%)"
-                          type="number"
-                          value={profileEquityPercentage}
-                          onChange={(e) => setProfileEquityPercentage(e.target.value)}
-                          placeholder="e.g., 0.5 for 0.5%"
-                          step="0.001"
-                          min={0}
-                        />
-
-                        <Input
-                          label="Equity Hour Value ($)"
-                          type="number"
-                          value={profileEquityHourlyValue}
-                          onChange={(e) => setProfileEquityHourlyValue(e.target.value)}
-                          placeholder="Est. value per hour"
-                          step="0.01"
-                          min={0}
-                        />
-                      </Grid>
-
-                      <Grid cols={3} gap="lg">
-                        <Input
-                          label="Required Hours/Week"
-                          type="number"
-                          value={profileRequiredEquityWeekly}
-                          onChange={(e) => setProfileRequiredEquityWeekly(e.target.value)}
-                          placeholder="e.g., 10"
-                          min={0}
-                          max={168}
-                        />
-
-                        <Input
-                          label="Required Hours/Month"
-                          type="number"
-                          value={profileRequiredEquityMonthly}
-                          onChange={(e) => setProfileRequiredEquityMonthly(e.target.value)}
-                          placeholder="e.g., 40"
-                          min={0}
-                        />
-
-                        <Input
-                          label="Max Equity Hours/Week"
-                          type="number"
-                          value={profileMaxEquityWeekly}
-                          onChange={(e) => setProfileMaxEquityWeekly(e.target.value)}
-                          placeholder="e.g., 20"
-                          min={0}
-                          max={168}
-                        />
-                      </Grid>
-
-                      <Textarea
-                        label="Equity Notes"
-                        value={profileEquityNotes}
-                        onChange={(e) => setProfileEquityNotes(e.target.value)}
-                        placeholder="Additional notes about equity arrangement..."
-                        rows={2}
-                      />
-
-                      <Flex
-                        align="start"
-                        gap="sm"
-                        className="text-xs text-brand-hover bg-brand-subtle p-2 rounded"
-                      >
-                        <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
-                        <span>
-                          Tip: Equity hours are non-paid hours compensated with equity. Set required
-                          hours/week OR hours/month (not both). Max hours/week prevents overwork.
-                        </span>
-                      </Flex>
-                    </Flex>
-                  )}
-                </div>
-              )}
-
-              <Flex direction="column" gap="md">
-                <label>
-                  <Flex align="center" gap="sm">
-                    <input
-                      type="checkbox"
-                      checked={profileIsActive}
-                      onChange={(e) => setProfileIsActive(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <Typography variant="small" className="font-medium">
-                      Active Employment
+            {/* Equity Compensation Section (Employees Only) */}
+            {profileType === "employee" && (
+              <div className="p-4 bg-brand-subtle border border-brand-border rounded-lg">
+                <Flex justify="between" align="center" className="mb-3">
+                  <Flex align="center" gap="xs">
+                    <Icon icon={Gem} size="sm" className="text-brand-active" />
+                    <Typography variant="h4" className="font-medium text-sm text-brand-active">
+                      Equity Compensation
                     </Typography>
                   </Flex>
-                </label>
-              </Flex>
+                  <label>
+                    <Flex align="center" gap="sm">
+                      <input
+                        type="checkbox"
+                        checked={profileHasEquity}
+                        onChange={(e) => setProfileHasEquity(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <Typography variant="caption" className="font-medium text-brand-active">
+                        Has Equity
+                      </Typography>
+                    </Flex>
+                  </label>
+                </Flex>
 
-              <DialogFooter className="pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    setShowAssignModal(false);
-                    setSelectedUserId(null);
-                  }}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" isLoading={isSubmitting}>
-                  Save Profile
-                </Button>
-              </DialogFooter>
+                {profileHasEquity && (
+                  <Flex direction="column" gap="lg">
+                    <Grid cols={2} gap="lg">
+                      <Input
+                        label="Equity Percentage (%)"
+                        type="number"
+                        value={profileEquityPercentage}
+                        onChange={(e) => setProfileEquityPercentage(e.target.value)}
+                        placeholder="e.g., 0.5 for 0.5%"
+                        step="0.001"
+                        min={0}
+                      />
+
+                      <Input
+                        label="Equity Hour Value ($)"
+                        type="number"
+                        value={profileEquityHourlyValue}
+                        onChange={(e) => setProfileEquityHourlyValue(e.target.value)}
+                        placeholder="Est. value per hour"
+                        step="0.01"
+                        min={0}
+                      />
+                    </Grid>
+
+                    <Grid cols={3} gap="lg">
+                      <Input
+                        label="Required Hours/Week"
+                        type="number"
+                        value={profileRequiredEquityWeekly}
+                        onChange={(e) => setProfileRequiredEquityWeekly(e.target.value)}
+                        placeholder="e.g., 10"
+                        min={0}
+                        max={168}
+                      />
+
+                      <Input
+                        label="Required Hours/Month"
+                        type="number"
+                        value={profileRequiredEquityMonthly}
+                        onChange={(e) => setProfileRequiredEquityMonthly(e.target.value)}
+                        placeholder="e.g., 40"
+                        min={0}
+                      />
+
+                      <Input
+                        label="Max Equity Hours/Week"
+                        type="number"
+                        value={profileMaxEquityWeekly}
+                        onChange={(e) => setProfileMaxEquityWeekly(e.target.value)}
+                        placeholder="e.g., 20"
+                        min={0}
+                        max={168}
+                      />
+                    </Grid>
+
+                    <Textarea
+                      label="Equity Notes"
+                      value={profileEquityNotes}
+                      onChange={(e) => setProfileEquityNotes(e.target.value)}
+                      placeholder="Additional notes about equity arrangement..."
+                      rows={2}
+                    />
+
+                    <Flex
+                      align="start"
+                      gap="sm"
+                      className="text-xs text-brand-hover bg-brand-subtle p-2 rounded"
+                    >
+                      <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
+                      <span>
+                        Tip: Equity hours are non-paid hours compensated with equity. Set required
+                        hours/week OR hours/month (not both). Max hours/week prevents overwork.
+                      </span>
+                    </Flex>
+                  </Flex>
+                )}
+              </div>
+            )}
+
+            <Flex direction="column" gap="md">
+              <label>
+                <Flex align="center" gap="sm">
+                  <input
+                    type="checkbox"
+                    checked={profileIsActive}
+                    onChange={(e) => setProfileIsActive(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <Typography variant="small" className="font-medium">
+                    Active Employment
+                  </Typography>
+                </Flex>
+              </label>
             </Flex>
-          </form>
-        </DialogContent>
+          </Flex>
+        </form>
       </Dialog>
     </Flex>
   );

@@ -11,7 +11,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
+import { Dialog } from "./ui/Dialog";
 import { Input, Select, Textarea } from "./ui/form";
 import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
@@ -121,12 +121,54 @@ export function CreateProjectFromTemplate({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl" data-testid={TEST_IDS.PROJECT.CREATE_MODAL}>
-        <DialogHeader>
-          <DialogTitle>{step === "select" ? "Choose a Template" : "Configure Project"}</DialogTitle>
-        </DialogHeader>
-
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={step === "select" ? "Choose a Template" : "Configure Project"}
+      className="sm:max-w-4xl"
+      footer={
+        step === "configure" ? (
+          <Flex className="flex-col sm:flex-row sm:justify-between gap-3 w-full">
+            <Button
+              onClick={handleBack}
+              variant="secondary"
+              className="w-full sm:w-auto"
+              disabled={isSubmitting}
+              leftIcon={<Icon icon={ArrowLeft} size="sm" />}
+            >
+              Back to Templates
+            </Button>
+            <Flex gap="md" className="w-full sm:w-auto">
+              <Button
+                onClick={handleClose}
+                variant="secondary"
+                className="flex-1 sm:flex-none"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreate}
+                disabled={
+                  !(projectName.trim() && projectKey.trim() && selectedWorkspaceId) || isSubmitting
+                }
+                className="flex-1 sm:flex-none"
+              >
+                {isSubmitting ? (
+                  <Flex align="center" gap="sm">
+                    <LoadingSpinner size="sm" />
+                    <span>Creating...</span>
+                  </Flex>
+                ) : (
+                  "Create Project"
+                )}
+              </Button>
+            </Flex>
+          </Flex>
+        ) : undefined
+      }
+    >
+      <div data-testid={TEST_IDS.PROJECT.CREATE_MODAL}>
         {step === "select" ? (
           // Template Selection
           <div className="space-y-6">
@@ -303,48 +345,9 @@ export function CreateProjectFromTemplate({
                 </div>
               </div>
             )}
-
-            <DialogFooter className="flex-col sm:flex-row sm:justify-between gap-3">
-              <Button
-                onClick={handleBack}
-                variant="secondary"
-                className="w-full sm:w-auto"
-                disabled={isSubmitting}
-                leftIcon={<Icon icon={ArrowLeft} size="sm" />}
-              >
-                Back to Templates
-              </Button>
-              <Flex gap="md" className="w-full sm:w-auto">
-                <Button
-                  onClick={handleClose}
-                  variant="secondary"
-                  className="flex-1 sm:flex-none"
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreate}
-                  disabled={
-                    !(projectName.trim() && projectKey.trim() && selectedWorkspaceId) ||
-                    isSubmitting
-                  }
-                  className="flex-1 sm:flex-none"
-                >
-                  {isSubmitting ? (
-                    <Flex align="center" gap="sm">
-                      <LoadingSpinner size="sm" />
-                      <span>Creating...</span>
-                    </Flex>
-                  ) : (
-                    "Create Project"
-                  )}
-                </Button>
-              </Flex>
-            </DialogFooter>
           </div>
         )}
-      </DialogContent>
+      </div>
     </Dialog>
   );
 }

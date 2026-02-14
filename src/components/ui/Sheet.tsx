@@ -1,35 +1,16 @@
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 
-const Sheet = SheetPrimitive.Root;
+// =============================================================================
+// Sheet Variants
+// =============================================================================
 
-const SheetTrigger = SheetPrimitive.Trigger;
-
-const SheetClose = SheetPrimitive.Close;
-
-const SheetPortal = SheetPrimitive.Portal;
-
-const SheetOverlay = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Overlay
-    className={cn(
-      "fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out",
-      className,
-    )}
-    {...props}
-    ref={ref}
-  />
-));
-SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
-
-const sheetVariants = cva("fixed z-50 gap-4 bg-ui-bg p-6 shadow-elevated border-ui-border", {
+const sheetVariants = cva("fixed z-50 gap-4 bg-ui-bg shadow-elevated border-ui-border", {
   variants: {
     side: {
       top: "inset-x-0 top-0 border-b data-[state=open]:animate-slide-down data-[state=closed]:animate-slide-up-out",
@@ -45,75 +26,119 @@ const sheetVariants = cva("fixed z-50 gap-4 bg-ui-bg p-6 shadow-elevated border-
   },
 });
 
-interface SheetContentProps
-  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+// =============================================================================
+// Sheet - Clean API with required title/description
+// =============================================================================
 
-const SheetContent = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Content>,
-  SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm text-ui-text-secondary opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 disabled:pointer-events-none">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-      {children}
-    </SheetPrimitive.Content>
-  </SheetPortal>
-));
-SheetContent.displayName = SheetPrimitive.Content.displayName;
+interface SheetProps extends VariantProps<typeof sheetVariants> {
+  /** Controlled open state */
+  open: boolean;
+  /** Callback when open state changes */
+  onOpenChange: (open: boolean) => void;
+  /** Sheet title (required for accessibility) */
+  title: string;
+  /** Sheet description (required for accessibility) */
+  description: string;
+  /** Sheet content */
+  children: React.ReactNode;
+  /** Additional class for the sheet panel */
+  className?: string;
+  /** Footer content (buttons, etc.) */
+  footer?: React.ReactNode;
+  /** Whether to show the close button. Default: true */
+  showCloseButton?: boolean;
+  /** Custom header content (replaces default title/description) */
+  header?: React.ReactNode;
+  /** Test ID for the sheet */
+  "data-testid"?: string;
+}
 
-const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <Flex
-    direction="column"
-    gap="sm"
-    className={cn("text-center sm:text-left", className)}
-    {...props}
-  />
-);
-SheetHeader.displayName = "SheetHeader";
+/**
+ * Sheet (side panel) component with enforced accessibility.
+ *
+ * @example
+ * ```tsx
+ * <Sheet
+ *   open={open}
+ *   onOpenChange={setOpen}
+ *   title="Settings"
+ *   description="Configure your preferences"
+ *   side="right"
+ * >
+ *   <form>...</form>
+ * </Sheet>
+ * ```
+ */
+function Sheet({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  className,
+  side = "right",
+  footer,
+  showCloseButton = true,
+  header,
+  "data-testid": testId,
+}: SheetProps) {
+  return (
+    <SheetPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <SheetPrimitive.Portal>
+        <SheetPrimitive.Overlay className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out" />
+        <SheetPrimitive.Content
+          data-testid={testId}
+          className={cn(sheetVariants({ side }), className)}
+        >
+          {/* Custom header or default */}
+          {header ?? (
+            <Flex direction="column" gap="sm" className="p-6 text-left border-b border-ui-border">
+              <SheetPrimitive.Title className="text-lg font-semibold text-ui-text">
+                {title}
+              </SheetPrimitive.Title>
+              <SheetPrimitive.Description className="text-sm text-ui-text-secondary">
+                {description}
+              </SheetPrimitive.Description>
+            </Flex>
+          )}
 
-const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <Flex className={cn("flex-col-reverse sm:flex-row sm:justify-end gap-2", className)} {...props} />
-);
-SheetFooter.displayName = "SheetFooter";
+          {/* Content */}
+          {children}
 
-const SheetTitle = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Title
-    ref={ref}
-    className={cn("text-lg font-semibold text-ui-text", className)}
-    {...props}
-  />
-));
-SheetTitle.displayName = SheetPrimitive.Title.displayName;
+          {/* Footer */}
+          {footer && (
+            <Flex className="flex-col-reverse sm:flex-row sm:justify-end gap-2 p-6 border-t border-ui-border">
+              {footer}
+            </Flex>
+          )}
 
-const SheetDescription = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-ui-text-secondary", className)}
-    {...props}
-  />
-));
-SheetDescription.displayName = SheetPrimitive.Description.displayName;
+          {/* Close button */}
+          {showCloseButton && (
+            <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm text-ui-text-secondary opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 disabled:pointer-events-none">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </SheetPrimitive.Close>
+          )}
+        </SheetPrimitive.Content>
+      </SheetPrimitive.Portal>
+    </SheetPrimitive.Root>
+  );
+}
 
-export {
-  Sheet,
-  SheetPortal,
-  SheetOverlay,
-  SheetTrigger,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
-  SheetDescription,
-};
+// =============================================================================
+// SheetTrigger - For uncontrolled usage
+// =============================================================================
+
+function SheetTrigger({ ...props }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
+  return <SheetPrimitive.Trigger {...props} />;
+}
+
+// =============================================================================
+// SheetClose - For custom close buttons inside sheet content
+// =============================================================================
+
+function SheetClose({ ...props }: React.ComponentProps<typeof SheetPrimitive.Close>) {
+  return <SheetPrimitive.Close {...props} />;
+}
+
+export { Sheet, SheetClose, SheetTrigger };

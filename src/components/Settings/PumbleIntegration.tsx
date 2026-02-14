@@ -9,7 +9,7 @@ import { FormInput } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Grid } from "../ui/Grid";
@@ -371,119 +371,119 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Add Pumble Webhook</DialogTitle>
-        </DialogHeader>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-          className="space-y-6"
-        >
-          {/* Name */}
-          <form.Field name="name">
-            {(field) => (
-              <FormInput
-                field={field}
-                label="Webhook Name"
-                placeholder="e.g., Team Notifications"
-                required
-              />
-            )}
-          </form.Field>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Add Pumble Webhook"
+      className="sm:max-w-2xl"
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+        className="space-y-6"
+      >
+        {/* Name */}
+        <form.Field name="name">
+          {(field) => (
+            <FormInput
+              field={field}
+              label="Webhook Name"
+              placeholder="e.g., Team Notifications"
+              required
+            />
+          )}
+        </form.Field>
 
-          {/* Webhook URL */}
-          <form.Field name="webhookUrl">
-            {(field) => (
-              <FormInput
-                field={field}
-                label="Webhook URL"
-                type="url"
-                placeholder="https://api.pumble.com/projects/.../..."
-                className="font-mono text-sm"
-                helperText="Get this from Pumble: Channel Settings > Integrations > Incoming Webhooks"
-                required
-              />
-            )}
-          </form.Field>
+        {/* Webhook URL */}
+        <form.Field name="webhookUrl">
+          {(field) => (
+            <FormInput
+              field={field}
+              label="Webhook URL"
+              type="url"
+              placeholder="https://api.pumble.com/projects/.../..."
+              className="font-mono text-sm"
+              helperText="Get this from Pumble: Channel Settings > Integrations > Incoming Webhooks"
+              required
+            />
+          )}
+        </form.Field>
 
-          {/* Project */}
-          <div>
-            <label htmlFor="project-select" className="block text-sm font-medium text-ui-text mb-1">
-              Project (Optional)
-            </label>
-            <select
-              id="project-select"
-              value={projectId || ""}
-              onChange={(e) =>
-                setProjectId(e.target.value ? (e.target.value as Id<"projects">) : undefined)
-              }
-              className="w-full px-3 py-2 border border-ui-border rounded-lg bg-ui-bg text-ui-text"
-            >
-              <option value="">All Projects</option>
-              {projects?.map((project) => (
-                <option key={project._id} value={project._id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-            <Typography variant="muted" className="mt-1">
-              Leave empty to receive notifications from all projects
+        {/* Project */}
+        <div>
+          <label htmlFor="project-select" className="block text-sm font-medium text-ui-text mb-1">
+            Project (Optional)
+          </label>
+          <select
+            id="project-select"
+            value={projectId || ""}
+            onChange={(e) =>
+              setProjectId(e.target.value ? (e.target.value as Id<"projects">) : undefined)
+            }
+            className="w-full px-3 py-2 border border-ui-border rounded-lg bg-ui-bg text-ui-text"
+          >
+            <option value="">All Projects</option>
+            {projects?.map((project) => (
+              <option key={project._id} value={project._id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+          <Typography variant="muted" className="mt-1">
+            Leave empty to receive notifications from all projects
+          </Typography>
+        </div>
+
+        {/* Events */}
+        <div>
+          <Label required className="block mb-3">
+            Events to Send
+          </Label>
+          <Grid cols={2} gap="md">
+            {AVAILABLE_EVENTS.map((event) => (
+              <Checkbox
+                key={event.value}
+                label={event.label}
+                checked={selectedEvents.includes(event.value)}
+                onChange={() => toggleEvent(event.value)}
+              />
+            ))}
+          </Grid>
+          {selectedEvents.length === 0 && (
+            <Typography variant="small" color="error" className="mt-1">
+              Select at least one event
             </Typography>
-          </div>
+          )}
+        </div>
 
-          {/* Events */}
-          <div>
-            <Label required className="block mb-3">
-              Events to Send
-            </Label>
-            <Grid cols={2} gap="md">
-              {AVAILABLE_EVENTS.map((event) => (
-                <Checkbox
-                  key={event.value}
-                  label={event.label}
-                  checked={selectedEvents.includes(event.value)}
-                  onChange={() => toggleEvent(event.value)}
-                />
-              ))}
-            </Grid>
-            {selectedEvents.length === 0 && (
-              <Typography variant="small" color="error" className="mt-1">
-                Select at least one event
-              </Typography>
+        {/* Actions - kept inside form due to form.Subscribe */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-ui-border">
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <>
+                <Button
+                  type="button"
+                  onClick={() => onOpenChange(false)}
+                  variant="secondary"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="bg-accent hover:bg-accent-hover"
+                  isLoading={isSubmitting}
+                >
+                  Add Webhook
+                </Button>
+              </>
             )}
-          </div>
-
-          {/* Actions */}
-          <DialogFooter>
-            <form.Subscribe selector={(state) => state.isSubmitting}>
-              {(isSubmitting) => (
-                <>
-                  <Button
-                    type="button"
-                    onClick={() => onOpenChange(false)}
-                    variant="secondary"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    className="bg-accent hover:bg-accent-hover"
-                    isLoading={isSubmitting}
-                  >
-                    Add Webhook
-                  </Button>
-                </>
-              )}
-            </form.Subscribe>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+          </form.Subscribe>
+        </div>
+      </form>
     </Dialog>
   );
 }
@@ -540,92 +540,87 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Edit Webhook</DialogTitle>
-        </DialogHeader>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-          className="space-y-6"
-        >
-          {/* Name */}
-          <form.Field name="name">
-            {(field) => (
-              <FormInput
-                field={field}
-                label="Webhook Name"
-                placeholder="e.g., Team Notifications"
-                required
+    <Dialog open={open} onOpenChange={onOpenChange} title="Edit Webhook" className="sm:max-w-2xl">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+        className="space-y-6"
+      >
+        {/* Name */}
+        <form.Field name="name">
+          {(field) => (
+            <FormInput
+              field={field}
+              label="Webhook Name"
+              placeholder="e.g., Team Notifications"
+              required
+            />
+          )}
+        </form.Field>
+
+        {/* Webhook URL */}
+        <form.Field name="webhookUrl">
+          {(field) => (
+            <FormInput
+              field={field}
+              label="Webhook URL"
+              type="url"
+              className="font-mono text-sm"
+              required
+            />
+          )}
+        </form.Field>
+
+        {/* Events */}
+        <div>
+          <Label required className="block mb-3">
+            Events to Send
+          </Label>
+          <Grid cols={2} gap="md">
+            {AVAILABLE_EVENTS.map((event) => (
+              <Checkbox
+                key={event.value}
+                label={event.label}
+                checked={selectedEvents.includes(event.value)}
+                onChange={() => toggleEvent(event.value)}
               />
-            )}
-          </form.Field>
+            ))}
+          </Grid>
+          {selectedEvents.length === 0 && (
+            <Typography variant="small" color="error" className="mt-1">
+              Select at least one event
+            </Typography>
+          )}
+        </div>
 
-          {/* Webhook URL */}
-          <form.Field name="webhookUrl">
-            {(field) => (
-              <FormInput
-                field={field}
-                label="Webhook URL"
-                type="url"
-                className="font-mono text-sm"
-                required
-              />
+        {/* Actions - kept inside form due to form.Subscribe */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-ui-border">
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <>
+                <Button
+                  type="button"
+                  onClick={() => onOpenChange(false)}
+                  variant="secondary"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="bg-accent hover:bg-accent-hover"
+                  isLoading={isSubmitting}
+                >
+                  Save Changes
+                </Button>
+              </>
             )}
-          </form.Field>
-
-          {/* Events */}
-          <div>
-            <Label required className="block mb-3">
-              Events to Send
-            </Label>
-            <Grid cols={2} gap="md">
-              {AVAILABLE_EVENTS.map((event) => (
-                <Checkbox
-                  key={event.value}
-                  label={event.label}
-                  checked={selectedEvents.includes(event.value)}
-                  onChange={() => toggleEvent(event.value)}
-                />
-              ))}
-            </Grid>
-            {selectedEvents.length === 0 && (
-              <Typography variant="small" color="error" className="mt-1">
-                Select at least one event
-              </Typography>
-            )}
-          </div>
-
-          {/* Actions */}
-          <DialogFooter>
-            <form.Subscribe selector={(state) => state.isSubmitting}>
-              {(isSubmitting) => (
-                <>
-                  <Button
-                    type="button"
-                    onClick={() => onOpenChange(false)}
-                    variant="secondary"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    className="bg-accent hover:bg-accent-hover"
-                    isLoading={isSubmitting}
-                  >
-                    Save Changes
-                  </Button>
-                </>
-              )}
-            </form.Subscribe>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+          </form.Subscribe>
+        </div>
+      </form>
     </Dialog>
   );
 }

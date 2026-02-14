@@ -103,30 +103,52 @@ All components now follow best practices:
 All automated checks pass:
 
 ```
-[1/10] Standards (AST)............... PASS
-[2/10] Color audit................... PASS
-[3/10] API calls..................... PASS
-[4/10] Query issues.................. PASS
-[5/10] Arbitrary Tailwind............ PASS
-[6/10] Type consistency.............. PASS
-[7/10] Type safety................... PASS
-[8/10] Emoji usage................... PASS
-[9/10] Test ID constants............. PASS
-[10/10] E2E quality................... PASS
+[1/11] Standards (AST)............... PASS
+[2/11] Color audit................... PASS
+[3/11] API calls..................... PASS
+[4/11] Query issues.................. PASS
+[5/11] Arbitrary Tailwind............ PASS
+[6/11] Type consistency.............. PASS
+[7/11] Type safety................... PASS
+[8/11] Emoji usage................... PASS
+[9/11] Test ID constants............. PASS
+[10/11] E2E quality................... PASS
+[11/11] UI patterns................... PASS
 
 RESULT: PASS (0 errors)
 ```
+
+### Accessibility Enforcement
+
+**DialogDescription** — Enforced via **TypeScript**. The `DialogContent`, `AlertDialogContent`, and `SheetContent` components require a `description` prop:
+
+```tsx
+// TypeScript error if description is missing
+<DialogContent description="Create a new project for your team">
+  ...
+</DialogContent>
+
+// Pass null only if using VisuallyHidden or DialogDescription manually
+<DialogContent description={null}>
+  <DialogDescription>...</DialogDescription>
+  ...
+</DialogContent>
+```
+
+**AuthPageLayout** — Enforced via `check-ui-patterns.js` validator. Auth-related pages must use `AuthPageLayout`.
+
+Both are caught at compile/CI time — no way to merge without fixing.
 
 ---
 
 ## Recommendations
 
 ### Immediate Actions
-1. Refactor `UnsubscribePage.tsx` - spec already exists
-2. Refactor `EmailVerificationRequired.tsx` - similar pattern
+None — all identified issues have been fixed.
 
 ### Near-Term
-1. Fix `CreateEventModal.tsx` raw inputs
+1. Fix ~50 dialogs missing `description` prop (enforced by TypeScript — build fails without it)
+
 ### Nice-to-Have
 1. Consider breadcrumbs instead of "Back to X" links (low priority)
 

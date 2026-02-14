@@ -8,7 +8,8 @@ import { toggleInArray } from "@/lib/array-utils";
 import { FormInput } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
+import { Flex } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Label } from "../ui/Label";
 import { Typography } from "../ui/Typography";
@@ -109,96 +110,95 @@ export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookF
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{webhook ? "Edit Webhook" : "Create Webhook"}</DialogTitle>
-        </DialogHeader>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-          className="space-y-4"
-        >
-          <form.Field name="name">
-            {(field) => (
-              <FormInput
-                field={field}
-                label="Webhook Name"
-                placeholder="e.g., Slack Notifications, Discord Bot"
-                required
-                autoFocus
-              />
-            )}
-          </form.Field>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={webhook ? "Edit Webhook" : "Create Webhook"}
+      description="Configure webhook URL and events to trigger notifications"
+      className="sm:max-w-lg"
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+        className="space-y-4"
+      >
+        <form.Field name="name">
+          {(field) => (
+            <FormInput
+              field={field}
+              label="Webhook Name"
+              placeholder="e.g., Slack Notifications, Discord Bot"
+              required
+              autoFocus
+            />
+          )}
+        </form.Field>
 
-          <form.Field name="url">
-            {(field) => (
-              <FormInput
-                field={field}
-                label="Webhook URL"
-                type="url"
-                placeholder="https://your-server.com/webhook"
-                required
-              />
-            )}
-          </form.Field>
+        <form.Field name="url">
+          {(field) => (
+            <FormInput
+              field={field}
+              label="Webhook URL"
+              type="url"
+              placeholder="https://your-server.com/webhook"
+              required
+            />
+          )}
+        </form.Field>
 
-          <form.Field name="secret">
-            {(field) => (
-              <FormInput
-                field={field}
-                label="Secret (Optional)"
-                type="password"
-                placeholder="Used to sign webhook payloads"
-                helperText="If provided, webhook payloads will be signed with HMAC-SHA256"
-              />
-            )}
-          </form.Field>
+        <form.Field name="secret">
+          {(field) => (
+            <FormInput
+              field={field}
+              label="Secret (Optional)"
+              type="password"
+              placeholder="Used to sign webhook payloads"
+              helperText="If provided, webhook payloads will be signed with HMAC-SHA256"
+            />
+          )}
+        </form.Field>
 
-          <div>
-            <Label required className="block mb-2">
-              Events to Subscribe
-            </Label>
-            <div className="space-y-2 p-3 bg-ui-bg-secondary rounded-lg">
-              {AVAILABLE_EVENTS.map((event) => (
-                <Checkbox
-                  key={event.value}
-                  label={event.label}
-                  checked={selectedEvents.includes(event.value)}
-                  onChange={() => toggleEvent(event.value)}
-                />
-              ))}
-            </div>
-            {selectedEvents.length === 0 && (
-              <Typography className="mt-1 text-sm text-status-error">
-                Select at least one event
-              </Typography>
-            )}
+        <div>
+          <Label required className="block mb-2">
+            Events to Subscribe
+          </Label>
+          <div className="space-y-2 p-3 bg-ui-bg-secondary rounded-lg">
+            {AVAILABLE_EVENTS.map((event) => (
+              <Checkbox
+                key={event.value}
+                label={event.label}
+                checked={selectedEvents.includes(event.value)}
+                onChange={() => toggleEvent(event.value)}
+              />
+            ))}
           </div>
+          {selectedEvents.length === 0 && (
+            <Typography className="mt-1 text-sm text-status-error">
+              Select at least one event
+            </Typography>
+          )}
+        </div>
 
-          <DialogFooter>
-            <form.Subscribe selector={(state) => state.isSubmitting}>
-              {(isSubmitting) => (
-                <>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => onOpenChange(false)}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" isLoading={isSubmitting}>
-                    {webhook ? "Update" : "Create"} Webhook
-                  </Button>
-                </>
-              )}
-            </form.Subscribe>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(isSubmitting) => (
+            <Flex justify="end" gap="sm" className="pt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" isLoading={isSubmitting}>
+                {webhook ? "Update" : "Create"} Webhook
+              </Button>
+            </Flex>
+          )}
+        </form.Subscribe>
+      </form>
     </Dialog>
   );
 }

@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 
@@ -33,26 +33,25 @@ export function SampleProjectModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="tracking-tight">Welcome to Nixelo!</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <Typography className="text-ui-text-secondary leading-relaxed">
-            Would you like us to create a sample project with demo issues to help you explore
-            Nixelo?
-          </Typography>
-          <Flex gap="md" className="pt-2">
-            <Button onClick={handleCreateSample} variant="primary" className="flex-1">
-              Yes, show me around!
-            </Button>
-            <Button onClick={onStartFromScratch} variant="secondary" className="flex-1">
-              I'll start from scratch
-            </Button>
-          </Flex>
-        </div>
-      </DialogContent>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Welcome to Nixelo!"
+      className="sm:max-w-md"
+    >
+      <div className="space-y-4">
+        <Typography className="text-ui-text-secondary leading-relaxed">
+          Would you like us to create a sample project with demo issues to help you explore Nixelo?
+        </Typography>
+        <Flex gap="md" className="pt-2">
+          <Button onClick={handleCreateSample} variant="primary" className="flex-1">
+            Yes, show me around!
+          </Button>
+          <Button onClick={onStartFromScratch} variant="secondary" className="flex-1">
+            I'll start from scratch
+          </Button>
+        </Flex>
+      </div>
     </Dialog>
   );
 }

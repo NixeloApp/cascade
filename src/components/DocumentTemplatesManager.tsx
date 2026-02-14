@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
+import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
 import { Typography } from "./ui/Typography";
 
@@ -357,108 +357,108 @@ export function DocumentTemplatesManager({
       </div>
 
       {/* Create/Edit Modal */}
-      <Dialog open={showModal} onOpenChange={(open) => !open && resetForm()}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Template" : "Create Template"}</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
-            }}
-            className="space-y-4"
-          >
-            <Grid cols={1} colsSm={2} gap="lg">
-              <form.Field name="name">
-                {(field) => (
-                  <FormInput
-                    field={field}
-                    label="Template Name"
-                    placeholder="e.g., Weekly Sprint Review"
-                    required
-                    autoFocus
-                  />
-                )}
-              </form.Field>
-
-              <form.Field name="icon">
-                {(field) => (
-                  <FormInput
-                    field={field}
-                    label="Icon (Emoji)"
-                    placeholder="📄"
-                    maxLength={2}
-                    required
-                  />
-                )}
-              </form.Field>
-            </Grid>
-
-            <form.Field name="description">
+      <Dialog
+        open={showModal}
+        onOpenChange={(open) => !open && resetForm()}
+        title={editingId ? "Edit Template" : "Create Template"}
+        className="sm:max-w-2xl"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          className="space-y-4"
+        >
+          <Grid cols={1} colsSm={2} gap="lg">
+            <form.Field name="name">
               {(field) => (
-                <FormTextarea
+                <FormInput
                   field={field}
-                  label="Description"
-                  placeholder="Brief description of what this template is for..."
-                  rows={3}
+                  label="Template Name"
+                  placeholder="e.g., Weekly Sprint Review"
+                  required
+                  autoFocus
                 />
               )}
             </form.Field>
 
-            <Grid cols={1} colsSm={2} gap="lg">
-              <form.Field name="category">
-                {(field) => (
-                  <FormSelect field={field} label="Category" required>
-                    <option value="meeting">Meeting</option>
-                    <option value="planning">Planning</option>
-                    <option value="engineering">Engineering</option>
-                    <option value="design">Design</option>
-                    <option value="other">Other</option>
-                  </FormSelect>
-                )}
-              </form.Field>
+            <form.Field name="icon">
+              {(field) => (
+                <FormInput
+                  field={field}
+                  label="Icon (Emoji)"
+                  placeholder="📄"
+                  maxLength={2}
+                  required
+                />
+              )}
+            </form.Field>
+          </Grid>
 
-              <form.Field name="isPublic">
-                {(field) => (
-                  <Flex align="center" gap="sm" className="pt-7">
-                    <input
-                      type="checkbox"
-                      id="isPublic"
-                      checked={field.state.value as boolean}
-                      onChange={(e) => field.handleChange(e.target.checked)}
-                      onBlur={field.handleBlur}
-                      className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus:ring-brand-ring:ring-brand focus:ring-2"
-                    />
-                    <label htmlFor="isPublic" className="text-sm font-medium text-ui-text">
-                      Make public (visible to all users)
-                    </label>
-                  </Flex>
-                )}
-              </form.Field>
-            </Grid>
+          <form.Field name="description">
+            {(field) => (
+              <FormTextarea
+                field={field}
+                label="Description"
+                placeholder="Brief description of what this template is for..."
+                rows={3}
+              />
+            )}
+          </form.Field>
 
-            <DialogFooter>
-              <form.Subscribe selector={(state) => state.isSubmitting}>
-                {(isSubmitting) => (
-                  <>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={resetForm}
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" isLoading={isSubmitting}>
-                      {editingId ? "Update" : "Create"} Template
-                    </Button>
-                  </>
-                )}
-              </form.Subscribe>
-            </DialogFooter>
-          </form>
-        </DialogContent>
+          <Grid cols={1} colsSm={2} gap="lg">
+            <form.Field name="category">
+              {(field) => (
+                <FormSelect field={field} label="Category" required>
+                  <option value="meeting">Meeting</option>
+                  <option value="planning">Planning</option>
+                  <option value="engineering">Engineering</option>
+                  <option value="design">Design</option>
+                  <option value="other">Other</option>
+                </FormSelect>
+              )}
+            </form.Field>
+
+            <form.Field name="isPublic">
+              {(field) => (
+                <Flex align="center" gap="sm" className="pt-7">
+                  <input
+                    type="checkbox"
+                    id="isPublic"
+                    checked={field.state.value as boolean}
+                    onChange={(e) => field.handleChange(e.target.checked)}
+                    onBlur={field.handleBlur}
+                    className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus:ring-brand-ring:ring-brand focus:ring-2"
+                  />
+                  <label htmlFor="isPublic" className="text-sm font-medium text-ui-text">
+                    Make public (visible to all users)
+                  </label>
+                </Flex>
+              )}
+            </form.Field>
+          </Grid>
+
+          <Flex justify="end" gap="sm" className="pt-4">
+            <form.Subscribe selector={(state) => state.isSubmitting}>
+              {(isSubmitting) => (
+                <>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={resetForm}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" isLoading={isSubmitting}>
+                    {editingId ? "Update" : "Create"} Template
+                  </Button>
+                </>
+              )}
+            </form.Subscribe>
+          </Flex>
+        </form>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}

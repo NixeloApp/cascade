@@ -14,7 +14,7 @@ import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
 import { ColorPicker } from "./ui/ColorPicker";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
+import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { Input, Select } from "./ui/form";
@@ -393,119 +393,121 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
       </Card>
 
       {/* Create/Edit Label Modal */}
-      <Dialog open={labelModal.isOpen} onOpenChange={(open) => !open && handleCloseLabelModal()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{labelForm.editingId ? "Edit Label" : "Create Label"}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleLabelSubmit}>
-            <Flex direction="column" gap="lg" className="p-6">
-              <Input
-                label="Label Name"
-                value={labelForm.formData.name}
-                onChange={(e) => labelForm.updateField("name", e.target.value)}
-                placeholder="e.g., bug, feature, urgent"
-                required
-                autoFocus
-              />
+      <Dialog
+        open={labelModal.isOpen}
+        onOpenChange={(open) => !open && handleCloseLabelModal()}
+        title={labelForm.editingId ? "Edit Label" : "Create Label"}
+        className="sm:max-w-md"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCloseLabelModal}
+              disabled={isLabelSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="label-form" isLoading={isLabelSubmitting}>
+              {labelForm.editingId ? "Update" : "Create"} Label
+            </Button>
+          </>
+        }
+      >
+        <form id="label-form" onSubmit={handleLabelSubmit}>
+          <Flex direction="column" gap="lg">
+            <Input
+              label="Label Name"
+              value={labelForm.formData.name}
+              onChange={(e) => labelForm.updateField("name", e.target.value)}
+              placeholder="e.g., bug, feature, urgent"
+              required
+              autoFocus
+            />
 
-              <ColorPicker
-                value={labelForm.formData.color}
-                onChange={(color) => labelForm.updateField("color", color)}
-                label="Color"
-              />
+            <ColorPicker
+              value={labelForm.formData.color}
+              onChange={(color) => labelForm.updateField("color", color)}
+              label="Color"
+            />
 
-              {realGroups.length > 0 && (
-                <Select
-                  label="Group"
-                  value={labelForm.formData.groupId ?? ""}
-                  onChange={(e) =>
-                    labelForm.updateField(
-                      "groupId",
-                      e.target.value ? (e.target.value as Id<"labelGroups">) : null,
-                    )
-                  }
-                >
-                  <option value="">No group (ungrouped)</option>
-                  {realGroups.map((group) => (
-                    <option key={group._id} value={group._id}>
-                      {group.name}
-                    </option>
-                  ))}
-                </Select>
-              )}
+            {realGroups.length > 0 && (
+              <Select
+                label="Group"
+                value={labelForm.formData.groupId ?? ""}
+                onChange={(e) =>
+                  labelForm.updateField(
+                    "groupId",
+                    e.target.value ? (e.target.value as Id<"labelGroups">) : null,
+                  )
+                }
+              >
+                <option value="">No group (ungrouped)</option>
+                {realGroups.map((group) => (
+                  <option key={group._id} value={group._id}>
+                    {group.name}
+                  </option>
+                ))}
+              </Select>
+            )}
 
-              {/* Preview */}
-              <div>
-                <Typography variant="label" className="block text-ui-text mb-2">
-                  Preview
-                </Typography>
-                <Badge
-                  className="text-brand-foreground"
-                  style={{ backgroundColor: labelForm.formData.color }}
-                >
-                  {labelForm.formData.name || "Label name"}
-                </Badge>
-              </div>
-
-              <DialogFooter className="pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCloseLabelModal}
-                  disabled={isLabelSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" isLoading={isLabelSubmitting}>
-                  {labelForm.editingId ? "Update" : "Create"} Label
-                </Button>
-              </DialogFooter>
-            </Flex>
-          </form>
-        </DialogContent>
+            {/* Preview */}
+            <div>
+              <Typography variant="label" className="block text-ui-text mb-2">
+                Preview
+              </Typography>
+              <Badge
+                className="text-brand-foreground"
+                style={{ backgroundColor: labelForm.formData.color }}
+              >
+                {labelForm.formData.name || "Label name"}
+              </Badge>
+            </div>
+          </Flex>
+        </form>
       </Dialog>
 
       {/* Create/Edit Group Modal */}
-      <Dialog open={groupModal.isOpen} onOpenChange={(open) => !open && handleCloseGroupModal()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{groupForm.editingId ? "Edit Group" : "Create Group"}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleGroupSubmit}>
-            <Flex direction="column" gap="lg" className="p-6">
-              <Input
-                label="Group Name"
-                value={groupForm.formData.name}
-                onChange={(e) => groupForm.updateField("name", e.target.value)}
-                placeholder="e.g., Priority, Component, Area"
-                required
-                autoFocus
-              />
+      <Dialog
+        open={groupModal.isOpen}
+        onOpenChange={(open) => !open && handleCloseGroupModal()}
+        title={groupForm.editingId ? "Edit Group" : "Create Group"}
+        className="sm:max-w-md"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCloseGroupModal}
+              disabled={isGroupSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="group-form" isLoading={isGroupSubmitting}>
+              {groupForm.editingId ? "Update" : "Create"} Group
+            </Button>
+          </>
+        }
+      >
+        <form id="group-form" onSubmit={handleGroupSubmit}>
+          <Flex direction="column" gap="lg">
+            <Input
+              label="Group Name"
+              value={groupForm.formData.name}
+              onChange={(e) => groupForm.updateField("name", e.target.value)}
+              placeholder="e.g., Priority, Component, Area"
+              required
+              autoFocus
+            />
 
-              <Input
-                label="Description (optional)"
-                value={groupForm.formData.description}
-                onChange={(e) => groupForm.updateField("description", e.target.value)}
-                placeholder="e.g., Labels for issue priority levels"
-              />
-
-              <DialogFooter className="pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCloseGroupModal}
-                  disabled={isGroupSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" isLoading={isGroupSubmitting}>
-                  {groupForm.editingId ? "Update" : "Create"} Group
-                </Button>
-              </DialogFooter>
-            </Flex>
-          </form>
-        </DialogContent>
+            <Input
+              label="Description (optional)"
+              value={groupForm.formData.description}
+              onChange={(e) => groupForm.updateField("description", e.target.value)}
+              placeholder="e.g., Labels for issue priority levels"
+            />
+          </Flex>
+        </form>
       </Dialog>
 
       {/* Delete Label Confirmation Dialog */}

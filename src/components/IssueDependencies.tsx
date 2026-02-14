@@ -14,7 +14,7 @@ import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Input, Select } from "./ui/form";
-import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "./ui/Sheet";
+import { Sheet } from "./ui/Sheet";
 import { Typography } from "./ui/Typography";
 
 type IssueLinkWithDetails = FunctionReturnType<
@@ -238,82 +238,79 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
             setSearchQuery("");
           }
         }}
-      >
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Add Dependency</SheetTitle>
-          </SheetHeader>
-          <div className="p-6 space-y-4">
-            {/* Link Type */}
-            <Select
-              label="Relationship Type"
-              value={linkType}
-              onChange={(e) => setLinkType(e.target.value as "blocks" | "relates" | "duplicates")}
+        title="Add Dependency"
+        description="Link this issue to another issue in the project"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowAddDialog(false);
+                setSelectedIssueKey("");
+                setSearchQuery("");
+              }}
             >
-              <option value="blocks">Blocks</option>
-              <option value="relates">Relates to</option>
-              <option value="duplicates">Duplicates</option>
-            </Select>
+              Cancel
+            </Button>
+            <Button onClick={handleAddLink} disabled={!selectedIssueKey}>
+              Add Dependency
+            </Button>
+          </>
+        }
+      >
+        <div className="p-6 space-y-4">
+          {/* Link Type */}
+          <Select
+            label="Relationship Type"
+            value={linkType}
+            onChange={(e) => setLinkType(e.target.value as "blocks" | "relates" | "duplicates")}
+          >
+            <option value="blocks">Blocks</option>
+            <option value="relates">Relates to</option>
+            <option value="duplicates">Duplicates</option>
+          </Select>
 
-            {/* Search Issues */}
-            <Input
-              label="Search Issue"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Type to search..."
-            />
+          {/* Search Issues */}
+          <Input
+            label="Search Issue"
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Type to search..."
+          />
 
-            {/* Search Results - already filtered by backend (excludeIssueId) */}
-            {searchResults?.page && searchResults.page.length > 0 && (
-              <div className="max-h-48 overflow-y-auto border border-ui-border rounded-lg">
-                {searchResults.page.map((issue: Issue) => (
-                  <button
-                    type="button"
-                    key={issue._id}
-                    onClick={() => {
-                      setSelectedIssueKey(issue._id);
-                      setSearchQuery("");
-                    }}
-                    className={cn(
-                      "w-full p-3 text-left hover:bg-ui-bg-tertiary border-b border-ui-border-secondary last:border-0",
-                      selectedIssueKey === issue._id && "bg-brand-subtle",
-                    )}
-                  >
-                    <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* Search Results - already filtered by backend (excludeIssueId) */}
+          {searchResults?.page && searchResults.page.length > 0 && (
+            <div className="max-h-48 overflow-y-auto border border-ui-border rounded-lg">
+              {searchResults.page.map((issue: Issue) => (
+                <button
+                  type="button"
+                  key={issue._id}
+                  onClick={() => {
+                    setSelectedIssueKey(issue._id);
+                    setSearchQuery("");
+                  }}
+                  className={cn(
+                    "w-full p-3 text-left hover:bg-ui-bg-tertiary border-b border-ui-border-secondary last:border-0",
+                    selectedIssueKey === issue._id && "bg-brand-subtle",
+                  )}
+                >
+                  <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
+                </button>
+              ))}
+            </div>
+          )}
 
-            {/* Selected Issue */}
-            {selectedIssueKey && (
-              <Typography variant="caption">
-                Selected:{" "}
-                <Typography variant="label" as="span">
-                  {selectedIssueKey}
-                </Typography>
+          {/* Selected Issue */}
+          {selectedIssueKey && (
+            <Typography variant="caption">
+              Selected:{" "}
+              <Typography variant="label" as="span">
+                {selectedIssueKey}
               </Typography>
-            )}
-
-            {/* Actions */}
-            <SheetFooter className="mt-6">
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setShowAddDialog(false);
-                  setSelectedIssueKey("");
-                  setSearchQuery("");
-                }}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleAddLink} disabled={!selectedIssueKey}>
-                Add Dependency
-              </Button>
-            </SheetFooter>
-          </div>
-        </SheetContent>
+            </Typography>
+          )}
+        </div>
       </Sheet>
 
       {/* Delete Confirmation */}

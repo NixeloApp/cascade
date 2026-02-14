@@ -1,42 +1,54 @@
 "use client";
 
-import type { DialogProps } from "@radix-ui/react-dialog";
 import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
-import * as React from "react";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/Dialog";
+import type * as React from "react";
+import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/utils";
 
-const Command = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive>
->(({ className, ...props }, ref) => (
+const Command = ({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) => (
   <CommandPrimitive
-    ref={ref}
     className={cn(
       "flex h-full w-full flex-col overflow-hidden rounded-md bg-ui-bg text-ui-text",
       className,
     )}
     {...props}
   />
-));
+);
 Command.displayName = CommandPrimitive.displayName;
 
-const CommandDialog = ({ children, ...props }: DialogProps) => {
+interface CommandDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: React.ReactNode;
+  title?: string;
+  description?: string;
+}
+
+/**
+ * CommandDialog - Command palette wrapped in a dialog.
+ */
+function CommandDialog({
+  open,
+  onOpenChange,
+  children,
+  title = "Search",
+  description = "Search for issues, documents, and more",
+}: CommandDialogProps) {
   return (
-    <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 bg-ui-bg-elevated border-ui-border animate-scale-in">
-        <DialogTitle className="sr-only">Search</DialogTitle>
-        <DialogDescription className="sr-only">
-          Search for issues, documents, and more
-        </DialogDescription>
-        <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ui-text-secondary [&_[cmdk-group-heading]]: [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
-          {children}
-        </Command>
-      </DialogContent>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description}
+      className="overflow-hidden p-0 bg-ui-bg-elevated border-ui-border animate-scale-in"
+    >
+      <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ui-text-secondary [&_[cmdk-group-heading]]: [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+        {children}
+      </Command>
     </Dialog>
   );
-};
+}
 
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,

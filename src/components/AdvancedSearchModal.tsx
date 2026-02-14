@@ -8,7 +8,7 @@ import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/Dialog";
+import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
 import { Grid } from "./ui/Grid";
@@ -85,98 +85,96 @@ export function AdvancedSearchModal({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="tracking-tight">Advanced Search</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6">
-          {/* Search Input */}
-          <div>
-            <Input
-              label="Search Issues"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title, key, or description..."
-              autoFocus
-              helperText="Type at least 2 characters to search"
-            />
-          </div>
-
-          {/* Filters */}
-          <Grid cols={1} colsMd={3} gap="lg">
-            <FilterCheckboxGroup
-              label="Type"
-              options={ISSUE_TYPES}
-              selectedValues={selectedType}
-              onToggle={(type) => toggleFilter(type, selectedType, setSelectedType)}
-              renderLabel={(type) => (
-                <Flex align="center" gap="xs">
-                  <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
-                  <span>{type}</span>
-                </Flex>
-              )}
-            />
-
-            <FilterCheckboxGroup
-              label="Priority"
-              options={ISSUE_PRIORITIES}
-              selectedValues={selectedPriority}
-              onToggle={(priority) => toggleFilter(priority, selectedPriority, setSelectedPriority)}
-            />
-
-            <FilterCheckboxGroup
-              label="Status"
-              options={["todo", "in progress", "done", "blocked"]}
-              selectedValues={selectedStatus}
-              onToggle={(status) => toggleFilter(status, selectedStatus, setSelectedStatus)}
-              maxHeight="max-h-40 overflow-y-auto"
-            />
-          </Grid>
-
-          {/* Results */}
-          <div>
-            <Flex align="center" justify="between" className="mb-3">
-              <Typography variant="h3" className="text-sm font-medium text-ui-text">
-                Results {searchQuery.length >= 2 && `(${total} total, showing ${results.length})`}
-              </Typography>
-              {(selectedType.length > 0 ||
-                selectedPriority.length > 0 ||
-                selectedStatus.length > 0) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedType([]);
-                    setSelectedPriority([]);
-                    setSelectedStatus([]);
-                  }}
-                  className="text-sm text-brand hover:underline"
-                >
-                  Clear Filters
-                </button>
-              )}
-            </Flex>
-
-            <div className="border border-ui-border rounded-lg overflow-hidden">
-              <SearchResultsList
-                searchQuery={searchQuery}
-                results={results}
-                total={total}
-                hasMore={hasMore}
-                onSelectIssue={handleSelectIssue}
-                onLoadMore={handleLoadMore}
-              />
-            </div>
-          </div>
-
-          {/* Actions */}
-          <DialogFooter>
-            <Button onClick={() => onOpenChange(false)} variant="secondary">
-              Close
-            </Button>
-          </DialogFooter>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Advanced Search"
+      className="sm:max-w-4xl"
+      footer={
+        <Button onClick={() => onOpenChange(false)} variant="secondary">
+          Close
+        </Button>
+      }
+    >
+      <div className="space-y-6">
+        {/* Search Input */}
+        <div>
+          <Input
+            label="Search Issues"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title, key, or description..."
+            autoFocus
+            helperText="Type at least 2 characters to search"
+          />
         </div>
-      </DialogContent>
+
+        {/* Filters */}
+        <Grid cols={1} colsMd={3} gap="lg">
+          <FilterCheckboxGroup
+            label="Type"
+            options={ISSUE_TYPES}
+            selectedValues={selectedType}
+            onToggle={(type) => toggleFilter(type, selectedType, setSelectedType)}
+            renderLabel={(type) => (
+              <Flex align="center" gap="xs">
+                <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
+                <span>{type}</span>
+              </Flex>
+            )}
+          />
+
+          <FilterCheckboxGroup
+            label="Priority"
+            options={ISSUE_PRIORITIES}
+            selectedValues={selectedPriority}
+            onToggle={(priority) => toggleFilter(priority, selectedPriority, setSelectedPriority)}
+          />
+
+          <FilterCheckboxGroup
+            label="Status"
+            options={["todo", "in progress", "done", "blocked"]}
+            selectedValues={selectedStatus}
+            onToggle={(status) => toggleFilter(status, selectedStatus, setSelectedStatus)}
+            maxHeight="max-h-40 overflow-y-auto"
+          />
+        </Grid>
+
+        {/* Results */}
+        <div>
+          <Flex align="center" justify="between" className="mb-3">
+            <Typography variant="h3" className="text-sm font-medium text-ui-text">
+              Results {searchQuery.length >= 2 && `(${total} total, showing ${results.length})`}
+            </Typography>
+            {(selectedType.length > 0 ||
+              selectedPriority.length > 0 ||
+              selectedStatus.length > 0) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedType([]);
+                  setSelectedPriority([]);
+                  setSelectedStatus([]);
+                }}
+                className="text-sm text-brand hover:underline"
+              >
+                Clear Filters
+              </button>
+            )}
+          </Flex>
+
+          <div className="border border-ui-border rounded-lg overflow-hidden">
+            <SearchResultsList
+              searchQuery={searchQuery}
+              results={results}
+              total={total}
+              hasMore={hasMore}
+              onSelectIssue={handleSelectIssue}
+              onLoadMore={handleLoadMore}
+            />
+          </div>
+        </div>
+      </div>
     </Dialog>
   );
 }
