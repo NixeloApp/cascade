@@ -9,11 +9,8 @@
  * @module
  */
 
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
+import type * as OTPPasswordReset from "../OTPPasswordReset.js";
+import type * as OTPVerification from "../OTPVerification.js";
 import type * as ai_actions from "../ai/actions.js";
 import type * as ai_chat from "../ai/chat.js";
 import type * as ai_config from "../ai/config.js";
@@ -39,9 +36,9 @@ import type * as crons from "../crons.js";
 import type * as customFields from "../customFields.js";
 import type * as customFunctions from "../customFunctions.js";
 import type * as dashboard from "../dashboard.js";
-import type * as documents from "../documents.js";
 import type * as documentTemplates from "../documentTemplates.js";
 import type * as documentVersions from "../documentVersions.js";
+import type * as documents from "../documents.js";
 import type * as e2e from "../e2e.js";
 import type * as email_digests from "../email/digests.js";
 import type * as email_helpers from "../email/helpers.js";
@@ -107,8 +104,8 @@ import type * as organizations from "../organizations.js";
 import type * as presence from "../presence.js";
 import type * as projectAccess from "../projectAccess.js";
 import type * as projectMembers from "../projectMembers.js";
-import type * as projects from "../projects.js";
 import type * as projectTemplates from "../projectTemplates.js";
+import type * as projects from "../projects.js";
 import type * as prosemirror from "../prosemirror.js";
 import type * as pumble from "../pumble.js";
 import type * as purge from "../purge.js";
@@ -132,16 +129,22 @@ import type * as testUtils from "../testUtils.js";
 import type * as timeTracking from "../timeTracking.js";
 import type * as unsubscribe from "../unsubscribe.js";
 import type * as userProfiles from "../userProfiles.js";
-import type * as users from "../users.js";
 import type * as userSettings from "../userSettings.js";
+import type * as users from "../users.js";
 import type * as validators_index from "../validators/index.js";
 import type * as watchers from "../watchers.js";
 import type * as webhooks from "../webhooks.js";
 import type * as workspaces from "../workspaces.js";
 import type * as yjs from "../yjs.js";
 
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
 /**
- * A utility for referencing Convex functions in your app's API.
+ * A utility for referencing Convex functions in your app's public API.
  *
  * Usage:
  * ```js
@@ -149,6 +152,8 @@ import type * as yjs from "../yjs.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  OTPPasswordReset: typeof OTPPasswordReset;
+  OTPVerification: typeof OTPVerification;
   "ai/actions": typeof ai_actions;
   "ai/chat": typeof ai_chat;
   "ai/config": typeof ai_config;
@@ -174,9 +179,9 @@ declare const fullApi: ApiFromModules<{
   customFields: typeof customFields;
   customFunctions: typeof customFunctions;
   dashboard: typeof dashboard;
-  documents: typeof documents;
   documentTemplates: typeof documentTemplates;
   documentVersions: typeof documentVersions;
+  documents: typeof documents;
   e2e: typeof e2e;
   "email/digests": typeof email_digests;
   "email/helpers": typeof email_helpers;
@@ -242,8 +247,8 @@ declare const fullApi: ApiFromModules<{
   presence: typeof presence;
   projectAccess: typeof projectAccess;
   projectMembers: typeof projectMembers;
-  projects: typeof projects;
   projectTemplates: typeof projectTemplates;
+  projects: typeof projects;
   prosemirror: typeof prosemirror;
   pumble: typeof pumble;
   purge: typeof purge;
@@ -267,8 +272,8 @@ declare const fullApi: ApiFromModules<{
   timeTracking: typeof timeTracking;
   unsubscribe: typeof unsubscribe;
   userProfiles: typeof userProfiles;
-  users: typeof users;
   userSettings: typeof userSettings;
+  users: typeof users;
   "validators/index": typeof validators_index;
   watchers: typeof watchers;
   webhooks: typeof webhooks;
