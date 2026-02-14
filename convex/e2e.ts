@@ -1644,6 +1644,7 @@ export const storeTestOtp = internalMutation({
   args: {
     email: v.string(),
     code: v.string(),
+    type: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Only allow test emails
@@ -1651,11 +1652,24 @@ export const storeTestOtp = internalMutation({
       throw new Error("Only test emails allowed");
     }
 
-    // Delete any existing OTP for this email
-    const existingOtp = await ctx.db
-      .query("testOtpCodes")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .first();
+    // Delete any existing OTP for this email AND type
+    // If type is not provided, we might delete any? Or just match by email?
+    // To support migration and mixed usage, if type is provided, we match by it.
+    // If not, we might overwrite indiscriminately (old behavior).
+    // Better: Match by email+type if type is provided.
+
+    let existingOtp: Doc<"testOtpCodes"> | null;
+    if (args.type) {
+      existingOtp = await ctx.db
+        .query("testOtpCodes")
+        .withIndex("by_email_type", (q) => q.eq("email", args.email).eq("type", args.type))
+        .first();
+    } else {
+      existingOtp = await ctx.db
+        .query("testOtpCodes")
+        .withIndex("by_email", (q) => q.eq("email", args.email))
+        .first();
+    }
 
     if (existingOtp) {
       await ctx.db.delete(existingOtp._id);
@@ -1665,6 +1679,7 @@ export const storeTestOtp = internalMutation({
     await ctx.db.insert("testOtpCodes", {
       email: args.email,
       code: args.code,
+      type: args.type,
       expiresAt: Date.now() + 15 * 60 * 1000,
     });
   },
@@ -1675,7 +1690,7 @@ export const storeTestOtp = internalMutation({
  * Reads from testOtpCodes table which stores plaintext codes for E2E testing.
  */
 export const getLatestOTP = internalQuery({
-  args: { email: v.string() },
+  args: { email: v.string(), type: v.optional(v.string()) },
   handler: async (ctx, args) => {
     // Only allow test emails
     if (!isTestEmail(args.email)) {
@@ -1683,10 +1698,18 @@ export const getLatestOTP = internalQuery({
     }
 
     // Get from testOtpCodes table (plaintext for E2E)
-    const otpRecord = await ctx.db
-      .query("testOtpCodes")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .first();
+    let otpRecord: Doc<"testOtpCodes"> | null;
+    if (args.type) {
+      otpRecord = await ctx.db
+        .query("testOtpCodes")
+        .withIndex("by_email_type", (q) => q.eq("email", args.email).eq("type", args.type))
+        .first();
+    } else {
+      otpRecord = await ctx.db
+        .query("testOtpCodes")
+        .withIndex("by_email", (q) => q.eq("email", args.email))
+        .first();
+    }
 
     if (!otpRecord) return null;
 
@@ -2349,7 +2372,7 @@ export const getLatestOTPEndpoint = httpAction(async (ctx: ActionCtx, request: R
 
   try {
     const body = await request.json();
-    const { email } = body;
+    const { email, type } = body;
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Missing email" }), {
@@ -2358,7 +2381,7 @@ export const getLatestOTPEndpoint = httpAction(async (ctx: ActionCtx, request: R
       });
     }
 
-    const code = await ctx.runQuery(internal.e2e.getLatestOTP, { email });
+    const code = await ctx.runQuery(internal.e2e.getLatestOTP, { email, type });
 
     return new Response(JSON.stringify({ code }), {
       status: 200,

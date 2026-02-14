@@ -34,7 +34,11 @@ async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string
   // and process.env.CI might be missing, BUT explicitly requires E2E_API_KEY to be set.
   if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
     try {
-      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
+      await ctx.runMutation(internal.e2e.storeTestOtp, {
+        email,
+        code: token,
+        type: "verification",
+      });
     } catch (e) {
       logger.warn(`[OTPVerification] Failed to store test OTP: ${e}`);
     }
@@ -71,20 +75,6 @@ export const OTPVerification = Resend({
     try {
       // Store test OTP if applicable
       await storeTestOtp(ctx, email, token);
-
-      // Check if user is already verified (e.g., E2E test users)
-      // Safety check: ctx.db might be undefined depending on how the provider is called
-      if (ctx?.db) {
-        const existingUser = await ctx.db
-          .query("users")
-          .withIndex("email", (q) => q.eq("email", email))
-          .first();
-
-        if (existingUser?.emailVerificationTime) {
-          // User already verified - skip sending email
-          return;
-        }
-      }
 
       // Send verification email through the email provider system
       // In dev/E2E (MAILTRAP_MODE=sandbox), emails go to Mailtrap inbox

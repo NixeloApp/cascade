@@ -6,19 +6,19 @@ import { E2E_ENDPOINTS, getE2EHeaders } from "../config";
  */
 export async function waitForMockOTP(
   email: string,
-  options: { timeout?: number; pollInterval?: number } = {},
+  options: { timeout?: number; pollInterval?: number; type?: "verification" | "reset" } = {},
 ): Promise<string> {
-  const { timeout = 40000, pollInterval = 500 } = options;
+  const { timeout = 40000, pollInterval = 500, type } = options;
   const startTime = Date.now();
 
-  console.log(`[MockOTP] Polling for OTP for ${email}...`);
+  console.log(`[MockOTP] Polling for OTP for ${email}${type ? ` (type: ${type})` : ""}...`);
 
   while (Date.now() - startTime < timeout) {
     try {
       const response = await fetch(E2E_ENDPOINTS.getLatestOTP, {
         method: "POST",
         headers: getE2EHeaders(),
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, type }),
       });
 
       if (!response.ok) {

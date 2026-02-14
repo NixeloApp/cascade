@@ -1585,9 +1585,11 @@ const applicationTables = {
   testOtpCodes: defineTable({
     email: v.string(), // Test user email
     code: v.string(), // Plaintext OTP code
+    type: v.optional(v.string()), // "verification" | "reset"
     expiresAt: v.number(), // Expiration timestamp
   })
     .index("by_email", ["email"])
+    .index("by_email_type", ["email", "type"])
     .index("by_expiry", ["expiresAt"]),
 
   // OAuth Health Monitoring: Track health check results for alerting

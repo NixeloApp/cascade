@@ -147,7 +147,7 @@ test.describe("Integration", () => {
     await authPage.expectVerificationForm();
 
     // Get OTP from Mock Backend (fast, free, robust)
-    const otp = await waitForMockOTP(testEmail);
+    const otp = await waitForMockOTP(testEmail, { type: "verification" });
 
     // Enter the OTP
     console.log(`[Test] Entering OTP: ${otp}`);
@@ -252,7 +252,7 @@ test.describe("Integration", () => {
 
     // Wait for verification form and complete verification
     await authPage.expectVerificationForm();
-    const signupOtp = await waitForMockOTP(testEmail);
+    const signupOtp = await waitForMockOTP(testEmail, { type: "verification" });
     await authPage.verifyEmail(signupOtp);
 
     // Wait for navigation away from verification
@@ -275,7 +275,7 @@ test.describe("Integration", () => {
     console.log("[Test] Reset code form appeared");
 
     // Get the reset code from backend
-    const resetCode = await waitForMockOTP(testEmail);
+    const resetCode = await waitForMockOTP(testEmail, { type: "reset" });
     console.log(`[Test] Got reset code: ${resetCode}`);
 
     // Complete password reset
