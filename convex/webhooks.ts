@@ -14,11 +14,10 @@ import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { validateDestination } from "./lib/ssrf";
+import { deliverWebhook } from "./lib/webhookHelpers";
 import { assertIsProjectAdmin } from "./projectAccess";
 import { isTest } from "./testConfig";
 import { webhookResultStatuses } from "./validators";
-
-const WEBHOOK_TIMEOUT_MS = 10000;
 
 /** Create a new webhook for a project. Requires project admin role. */
 export const createWebhook = projectAdminMutation({
@@ -193,54 +192,27 @@ async function triggerSingleWebhook(
     requestPayload,
   });
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
+  const result = await deliverWebhook(
+    webhook.url,
+    requestPayload,
+    event,
+    webhook.secret,
+  );
 
-  try {
-    const response = await fetch(webhook.url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Webhook-Event": event,
-        ...(webhook.secret && {
-          "X-Webhook-Signature": await generateSignature(requestPayload, webhook.secret),
-        }),
-      },
-      body: requestPayload,
-      signal: controller.signal,
-    });
+  // Update execution log
+  await ctx.runMutation(internal.webhooks.updateExecution, {
+    id: executionId,
+    status: result.status,
+    responseStatus: result.responseStatus,
+    responseBody: result.responseBody,
+    error: result.error,
+  });
 
-    const responseBody = await response.text();
-
-    // Update execution log with success
-    await ctx.runMutation(internal.webhooks.updateExecution, {
-      id: executionId,
-      status: response.ok ? "success" : "failed",
-      responseStatus: response.status,
-      responseBody: responseBody.substring(0, 1000), // Limit to 1000 chars
-      error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
-    });
-
-    // Update last triggered time
+  // Update last triggered time if we got a response (even if it was an error response)
+  if (result.responseStatus !== undefined) {
     await ctx.runMutation(internal.webhooks.updateLastTriggered, {
       id: webhook._id,
     });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error
-        ? error.name === "AbortError"
-          ? `Timeout: Webhook delivery exceeded ${WEBHOOK_TIMEOUT_MS}ms`
-          : error.message
-        : "Unknown error";
-
-    // Update execution log with failure
-    await ctx.runMutation(internal.webhooks.updateExecution, {
-      id: executionId,
-      status: "failed",
-      error: errorMessage,
-    });
-  } finally {
-    clearTimeout(timeoutId);
   }
 }
 
@@ -345,49 +317,21 @@ export const deliverTestWebhook = internalAction({
       requestPayload,
     });
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
+    const result = await deliverWebhook(
+      webhook.url,
+      requestPayload,
+      "ping",
+      webhook.secret,
+    );
 
-    try {
-      const response = await fetch(webhook.url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Webhook-Event": "ping",
-          ...(webhook.secret && {
-            "X-Webhook-Signature": await generateSignature(requestPayload, webhook.secret),
-          }),
-        },
-        body: requestPayload,
-        signal: controller.signal,
-      });
-
-      const responseBody = await response.text();
-
-      // Update execution log
-      await ctx.runMutation(internal.webhooks.updateExecution, {
-        id: executionId,
-        status: response.ok ? "success" : "failed",
-        responseStatus: response.status,
-        responseBody: responseBody.substring(0, 1000),
-        error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.name === "AbortError"
-            ? `Timeout: Webhook delivery exceeded ${WEBHOOK_TIMEOUT_MS}ms`
-            : error.message
-          : "Unknown error";
-
-      await ctx.runMutation(internal.webhooks.updateExecution, {
-        id: executionId,
-        status: "failed",
-        error: errorMessage,
-      });
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    // Update execution log
+    await ctx.runMutation(internal.webhooks.updateExecution, {
+      id: executionId,
+      status: result.status,
+      responseStatus: result.responseStatus,
+      responseBody: result.responseBody,
+      error: result.error,
+    });
   },
 });
 
@@ -484,52 +428,21 @@ export const retryWebhookDelivery = internalAction({
     });
     if (!webhook) return;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
+    const result = await deliverWebhook(
+      webhook.url,
+      execution.requestPayload,
+      execution.event,
+      webhook.secret,
+    );
 
-    try {
-      const response = await fetch(webhook.url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Webhook-Event": execution.event,
-          ...(webhook.secret && {
-            "X-Webhook-Signature": await generateSignature(
-              execution.requestPayload,
-              webhook.secret,
-            ),
-          }),
-        },
-        body: execution.requestPayload,
-        signal: controller.signal,
-      });
-
-      const responseBody = await response.text();
-
-      // Update execution log
-      await ctx.runMutation(internal.webhooks.incrementExecutionAttempt, {
-        id: args.executionId,
-        status: response.ok ? "success" : "failed",
-        responseStatus: response.status,
-        responseBody: responseBody.substring(0, 1000),
-        error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.name === "AbortError"
-            ? `Timeout: Webhook delivery exceeded ${WEBHOOK_TIMEOUT_MS}ms`
-            : error.message
-          : "Unknown error";
-
-      await ctx.runMutation(internal.webhooks.incrementExecutionAttempt, {
-        id: args.executionId,
-        status: "failed",
-        error: errorMessage,
-      });
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    // Update execution log
+    await ctx.runMutation(internal.webhooks.incrementExecutionAttempt, {
+      id: args.executionId,
+      status: result.status,
+      responseStatus: result.responseStatus,
+      responseBody: result.responseBody,
+      error: result.error,
+    });
   },
 });
 
@@ -565,19 +478,3 @@ export const incrementExecutionAttempt = internalMutation({
     });
   },
 });
-
-// Helper function to generate HMAC signature
-async function generateSignature(payload: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
-  return Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
