@@ -673,10 +673,11 @@ export const search = authenticatedQuery({
     // If query is provided, use search index
     if (args.query) {
       // Bounded: search results limited to prevent huge result sets
+      // Optimization: Push down filters to search index to improve relevance and performance
       issues = await safeCollect(
         ctx.db
           .query("issues")
-          .withSearchIndex("search_title", (q) => q.search("searchContent", args.query as string))
+          .withSearchIndex("search_title", (q) => applySearchFilters(q, args))
           .filter(notDeleted),
         fetchLimit,
         "issue search",
@@ -1241,3 +1242,37 @@ export const listIssuesByDateRange = authenticatedQuery({
     return issues;
   },
 });
+
+type SearchBuilder = {
+  search(field: string, query: string): SearchBuilder;
+  eq(field: string, value: unknown): SearchBuilder;
+};
+
+interface SearchArgs {
+  query: string;
+  projectId?: Id<"projects">;
+  organizationId?: Id<"organizations">;
+  type?: string[];
+  status?: string[];
+  priority?: string[];
+}
+
+function applySearchFilters(q: SearchBuilder, args: SearchArgs) {
+  let searchQ = q.search("searchContent", args.query);
+  if (args.projectId) {
+    searchQ = searchQ.eq("projectId", args.projectId);
+  }
+  if (args.organizationId) {
+    searchQ = searchQ.eq("organizationId", args.organizationId);
+  }
+  if (args.type && args.type.length === 1) {
+    searchQ = searchQ.eq("type", args.type[0]);
+  }
+  if (args.status && args.status.length === 1) {
+    searchQ = searchQ.eq("status", args.status[0]);
+  }
+  if (args.priority && args.priority.length === 1) {
+    searchQ = searchQ.eq("priority", args.priority[0]);
+  }
+  return searchQ;
+}
