@@ -522,8 +522,8 @@ export const getBurnRate = authenticatedQuery({
     endDate: v.number(),
   },
   handler: async (ctx, args) => {
-    // Check permissions
-    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+    // Check permissions - strictly admin only for financial data
+    await assertIsProjectAdmin(ctx, args.projectId, ctx.userId);
 
     // Get all time entries in date range
     const entries = await ctx.db
@@ -596,27 +596,21 @@ export const getBurnRate = authenticatedQuery({
 
 export const getTeamCosts = authenticatedQuery({
   args: {
-    projectId: v.optional(v.id("projects")),
+    projectId: v.id("projects"),
     startDate: v.number(),
     endDate: v.number(),
   },
   handler: async (ctx, args) => {
+    // Check permissions - strictly admin only for financial data
+    await assertIsProjectAdmin(ctx, args.projectId, ctx.userId);
+
     // Get all time entries in date range
-    let entries: Doc<"timeEntries">[];
-    if (args.projectId) {
-      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
-      entries = await ctx.db
-        .query("timeEntries")
-        .withIndex("by_project_date", (q) =>
-          q.eq("projectId", args.projectId).gte("date", args.startDate).lte("date", args.endDate),
-        )
-        .take(MAX_TIME_ENTRIES);
-    } else {
-      entries = await ctx.db
-        .query("timeEntries")
-        .withIndex("by_date", (q) => q.gte("date", args.startDate).lte("date", args.endDate))
-        .take(MAX_TIME_ENTRIES);
-    }
+    const entries = await ctx.db
+      .query("timeEntries")
+      .withIndex("by_project_date", (q) =>
+        q.eq("projectId", args.projectId).gte("date", args.startDate).lte("date", args.endDate),
+      )
+      .take(MAX_TIME_ENTRIES);
 
     // Batch fetch all users upfront (avoid N+1!)
     const userIds = [...new Set(entries.map((e) => e.userId))];
