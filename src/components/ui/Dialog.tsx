@@ -16,8 +16,8 @@ interface DialogProps {
   onOpenChange: (open: boolean) => void;
   /** Dialog title (required for accessibility) */
   title: string;
-  /** Dialog description (required for accessibility) */
-  description: string;
+  /** Dialog description (required for accessibility). Visually hidden if not provided. */
+  description?: string;
   /** Dialog content */
   children: React.ReactNode;
   /** Additional class for the dialog panel */
@@ -73,8 +73,10 @@ function Dialog({
             <DialogPrimitive.Title className="text-lg leading-none font-semibold tracking-tight text-ui-text">
               {title}
             </DialogPrimitive.Title>
-            <DialogPrimitive.Description className="text-ui-text-secondary text-sm">
-              {description}
+            <DialogPrimitive.Description
+              className={cn("text-sm", description ? "text-ui-text-secondary" : "sr-only")}
+            >
+              {description || title}
             </DialogPrimitive.Description>
           </Flex>
 

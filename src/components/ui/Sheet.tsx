@@ -37,8 +37,8 @@ interface SheetProps extends VariantProps<typeof sheetVariants> {
   onOpenChange: (open: boolean) => void;
   /** Sheet title (required for accessibility) */
   title: string;
-  /** Sheet description (required for accessibility) */
-  description: string;
+  /** Sheet description (required for accessibility). Visually hidden if not provided. */
+  description?: string;
   /** Sheet content */
   children: React.ReactNode;
   /** Additional class for the sheet panel */
@@ -96,8 +96,10 @@ function Sheet({
               <SheetPrimitive.Title className="text-lg font-semibold text-ui-text">
                 {title}
               </SheetPrimitive.Title>
-              <SheetPrimitive.Description className="text-sm text-ui-text-secondary">
-                {description}
+              <SheetPrimitive.Description
+                className={cn("text-sm", description ? "text-ui-text-secondary" : "sr-only")}
+              >
+                {description || title}
               </SheetPrimitive.Description>
             </Flex>
           )}

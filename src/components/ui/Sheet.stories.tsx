@@ -5,6 +5,7 @@ import { Button } from "./Button";
 import { Flex } from "./Flex";
 import { Icon } from "./Icon";
 import { Input } from "./Input";
+import { Label } from "./Label";
 import { Sheet } from "./Sheet";
 
 const meta: Meta<typeof Sheet> = {
@@ -131,8 +132,14 @@ export const WithForm: Story = {
           }
         >
           <form className="p-6 space-y-4">
-            <Input label="Name" placeholder="Enter your name" />
-            <Input label="Email" type="email" placeholder="Enter your email" />
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="sheet-name">Name</Label>
+              <Input id="sheet-name" placeholder="Enter your name" />
+            </Flex>
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="sheet-email">Email</Label>
+              <Input id="sheet-email" type="email" placeholder="Enter your email" />
+            </Flex>
           </form>
         </Sheet>
       </>
@@ -258,9 +265,18 @@ export const SettingsPanel: Story = {
           }
         >
           <Flex direction="column" gap="md" className="p-6">
-            <Input label="Display Name" defaultValue="John Doe" />
-            <Input label="Email" type="email" defaultValue="john@example.com" />
-            <Input label="Timezone" defaultValue="UTC-5" />
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="settings-display-name">Display Name</Label>
+              <Input id="settings-display-name" defaultValue="John Doe" />
+            </Flex>
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="settings-email">Email</Label>
+              <Input id="settings-email" type="email" defaultValue="john@example.com" />
+            </Flex>
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="settings-timezone">Timezone</Label>
+              <Input id="settings-timezone" defaultValue="UTC-5" />
+            </Flex>
           </Flex>
         </Sheet>
       </>

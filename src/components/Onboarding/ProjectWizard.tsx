@@ -107,7 +107,13 @@ export function ProjectWizard({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="sm:max-w-2xl">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Create New Project"
+      description="Set up your project in a few easy steps"
+      className="sm:max-w-2xl"
+    >
       <div className="space-y-6">
         {/* Mintlify-inspired step indicator */}
         <div className="mb-8">

@@ -2,9 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Mail, Settings, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./Button";
-import { Dialog, DialogTrigger } from "./Dialog";
+import { Dialog } from "./Dialog";
 import { Flex } from "./Flex";
 import { Input } from "./Input";
+import { Label } from "./Label";
 
 const meta: Meta<typeof Dialog> = {
   title: "UI/Dialog",
@@ -121,8 +122,14 @@ export const WithForm: Story = {
           }
         >
           <form className="space-y-4">
-            <Input label="Name" placeholder="Enter your name" />
-            <Input label="Email" type="email" placeholder="Enter your email" />
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" placeholder="Enter your name" />
+            </Flex>
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="Enter your email" />
+            </Flex>
           </form>
         </Dialog>
       </>
@@ -256,9 +263,18 @@ export const SettingsDialog: Story = {
           }
         >
           <Flex direction="column" gap="md">
-            <Input label="Display Name" defaultValue="John Doe" />
-            <Input label="Email" type="email" defaultValue="john@example.com" />
-            <Input label="Timezone" defaultValue="UTC-5" />
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="display-name">Display Name</Label>
+              <Input id="display-name" defaultValue="John Doe" />
+            </Flex>
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="settings-email">Email</Label>
+              <Input id="settings-email" type="email" defaultValue="john@example.com" />
+            </Flex>
+            <Flex direction="column" gap="xs">
+              <Label htmlFor="timezone">Timezone</Label>
+              <Input id="timezone" defaultValue="UTC-5" />
+            </Flex>
           </Flex>
         </Dialog>
       </>
@@ -293,11 +309,13 @@ export const InviteUsers: Story = {
             </>
           }
         >
-          <Input
-            label="Email Addresses"
-            placeholder="Enter email addresses, separated by commas"
-            helperText="Team members will receive an email invitation"
-          />
+          <Flex direction="column" gap="xs">
+            <Label htmlFor="invite-emails">Email Addresses</Label>
+            <Input id="invite-emails" placeholder="Enter email addresses, separated by commas" />
+            <span className="text-sm text-ui-text-secondary">
+              Team members will receive an email invitation
+            </span>
+          </Flex>
         </Dialog>
       </>
     );

@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
-import { Clock, History, RotateCcw } from "@/lib/icons";
+import { Clock, RotateCcw } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -94,12 +94,8 @@ export function VersionHistory({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={
-        <Flex align="center" gap="md">
-          <History className="w-5 h-5 text-brand" />
-          <span className="tracking-tight">Version History</span>
-        </Flex>
-      }
+      title="Version History"
+      description="View and restore previous versions of this document"
       className="sm:max-w-2xl max-h-panel flex flex-col bg-ui-bg-soft border-ui-border"
       footer={
         <Typography variant="meta">
