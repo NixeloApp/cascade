@@ -64,3 +64,8 @@
 **Vulnerability:** The webhook delivery logic checked the destination IP against private ranges (SSRF protection) via DNS resolution, but then performed a second DNS resolution during the actual HTTP request. This Time-of-Check to Time-of-Use (TOCTOU) race condition allowed attackers to return a public IP during the check and a private IP during the request (DNS Rebinding), bypassing SSRF protection.
 **Learning:** Validating a hostname's IP is insufficient if the subsequent request re-resolves the hostname. The resolved IP must be "pinned" and used for the connection.
 **Prevention:** Modified `deliverWebhook` to resolve the IP address first, validate it, and then rewrite the HTTP URL to use the resolved IP (while setting the `Host` header to the original hostname). This ensures the checked IP is the same one used for the connection.
+
+## 2025-05-23 - Rate Limit Bypass via IP Spoofing
+**Vulnerability:** The password reset rate limiter relied on `x-forwarded-for` header's first value without validation. This allowed attackers to bypass rate limits by spoofing the header (e.g., `X-Forwarded-For: <fake-ip>`), as many load balancers append the real IP rather than replacing the header.
+**Learning:** Naively trusting `X-Forwarded-For` is dangerous in cloud environments where the trust chain is unknown or variable. The first IP in the list is only trustworthy if the edge platform guarantees stripping of incoming headers.
+**Prevention:** Implemented `getClientIp` helper that prioritizes immutable headers like `CF-Connecting-IP` (Cloudflare) and `True-Client-IP`, and falls back to `X-Forwarded-For` only when necessary. This significantly raises the bar for spoofing.
