@@ -74,3 +74,7 @@
 **Vulnerability:** The `api.users.get` query allowed any authenticated user to fetch the email address of any other user by knowing their user ID. This is an IDOR (Insecure Direct Object Reference) vulnerability leading to PII exposure.
 **Learning:** Default object access patterns (like fetching a user by ID) often return the full object representation. When dealing with sensitive fields like email, context-aware serialization is crucial. You must verify the relationship between the requester and the target resource before returning sensitive data.
 **Prevention:** Implemented a check in `api.users.get` to verify if the requester shares an organization with the target user. If not, the email field is stripped from the response using `sanitizeUserForPublic`.
+
+## 2025-02-23 - SSRF Bypass via IPv4-Mapped IPv6 Hex Notation
+**Learning:** Validation logic for "private IP" must account for all valid representations of an IP address. The standard regex for IPv4-mapped IPv6 (`::ffff:1.2.3.4`) missed the alternative hex notation (`::ffff:7f00:1`), allowing attackers to bypass SSRF protection by encoding private IPs (like 127.0.0.1) in an unexpected format.
+**Action:** When implementing IP allow/block lists, normalize IP addresses to a canonical format (bytes or standard string) before checking, or ensure regex patterns cover all RFC-compliant variations including compressed, expanded, and mapped forms.

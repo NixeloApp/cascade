@@ -99,12 +99,30 @@ export function isPrivateIPv6(ip: string): boolean {
 
   // IPv4-mapped IPv6 ::ffff:0:0/96
   // Check if it's mapped
+
+  // Case 1: Dotted quad ::ffff:1.2.3.4
   if (/^::ffff:\d+\.\d+\.\d+\.\d+$/i.test(ip)) {
     const ipv4 = ip.split(":").pop();
     if (ipv4 && isStrictIPv4(ipv4)) {
       return isPrivateIPv4(ipv4);
     }
     return true; // Malformed mapped is suspicious
+  }
+
+  // Case 2: Hex notation ::ffff:xxxx:xxxx (e.g., ::ffff:7f00:1)
+  if (/^::ffff:[0-9a-f]{1,4}:[0-9a-f]{1,4}$/i.test(ip)) {
+    const parts = ip.split(":");
+    // "::ffff:a:b" -> ["", "", "ffff", "a", "b"]
+    const high = parseInt(parts[parts.length - 2], 16);
+    const low = parseInt(parts[parts.length - 1], 16);
+
+    const p1 = (high >> 8) & 0xff;
+    const p2 = high & 0xff;
+    const p3 = (low >> 8) & 0xff;
+    const p4 = low & 0xff;
+
+    const ipv4 = `${p1}.${p2}.${p3}.${p4}`;
+    if (isPrivateIPv4(ipv4)) return true;
   }
 
   // 2001:db8::/32 (Documentation)
