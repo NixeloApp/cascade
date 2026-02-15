@@ -91,8 +91,13 @@ export const checkPasswordResetRateLimit = internalMutation({
  */
 export const securePasswordReset = httpAction(async (ctx, request) => {
   try {
-    // Check rate limit first
-    const clientIp = getClientIp(request) || "unknown";
+    const clientIp = getClientIp(request);
+    
+    if (!clientIp) {
+      // If we can't determine IP, we can't safely rate limit.
+      // Rejecting the request is safer than allowing a potential bypass or DoS via shared bucket.
+      throw new Error("Could not determine client IP for security-sensitive action");
+    }
 
     try {
       await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimit, { ip: clientIp });

@@ -201,5 +201,15 @@ describe("SSRF Validation", () => {
       });
       expect(getClientIp(req)).toBe("13.13.13.13");
     });
+
+    it("should use Fastly-Client-IP if higher priority headers are missing", () => {
+      const req = new Request("http://localhost", {
+        headers: {
+          "fastly-client-ip": "14.14.14.14",
+          "x-forwarded-for": "15.15.15.15",
+        },
+      });
+      expect(getClientIp(req)).toBe("14.14.14.14");
+    });
   });
 });
