@@ -2,6 +2,7 @@ import { MINUTE } from "@convex-dev/rate-limiter";
 import { components, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { type ActionCtx, httpAction } from "../_generated/server";
+import { getClientIp } from "../lib/clientIp";
 import {
   type ApiAuthContext,
   createErrorResponse,
@@ -106,8 +107,7 @@ async function recordApiUsage(
   const { auth, method, url, response, startTime, request, error } = params;
   try {
     const userAgent = request.headers.get("user-agent") || undefined;
-    const ipAddress =
-      request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined;
+    const ipAddress = getClientIp(request) || undefined;
     const responseTime = Date.now() - startTime;
 
     await ctx.runMutation(internal.apiKeys.recordUsage, {

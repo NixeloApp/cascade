@@ -13,6 +13,7 @@ import {
   internalMutation,
   type MutationCtx,
 } from "./_generated/server";
+import { getClientIp } from "./lib/clientIp";
 import { getConvexSiteUrl } from "./lib/env";
 import { logger } from "./lib/logger";
 import { rateLimit } from "./rateLimits";
@@ -91,7 +92,7 @@ export const checkPasswordResetRateLimit = internalMutation({
 export const securePasswordReset = httpAction(async (ctx, request) => {
   try {
     // Check rate limit first
-    const clientIp = (request.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim();
+    const clientIp = getClientIp(request) || "unknown";
 
     try {
       await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimit, { ip: clientIp });
