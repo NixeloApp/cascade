@@ -13,6 +13,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { TEST_IDS } from "@/lib/test-ids";
 
 export const Route = createFileRoute("/_auth/onboarding")({
   component: OnboardingPage,
@@ -130,6 +131,7 @@ function OnboardingPage() {
             size="sm"
             onClick={handleSkip}
             className="text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-tertiary transition-all"
+            data-testid={TEST_IDS.ONBOARDING.SKIP_BUTTON}
           >
             Skip for now
           </Button>
@@ -152,7 +154,11 @@ function OnboardingPage() {
           {step === "role-select" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="text-center">
-                <Typography variant="h2" className="mb-3">
+                <Typography
+                  variant="h2"
+                  className="mb-3"
+                  data-testid={TEST_IDS.ONBOARDING.WELCOME_HEADING}
+                >
                   Welcome to Nixelo
                 </Typography>
                 <Typography variant="lead" className="text-ui-text-secondary">

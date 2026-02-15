@@ -328,22 +328,31 @@ export const listSelectableIssues = authenticatedQuery({
       return [];
     }
 
-    // Optimization: Use a single query on the project index to fetch recent issues.
-    // We filter out subtasks and deleted items in the query filter.
-    // This is more efficient than firing 4 parallel queries (one per root type) and merging/sorting in memory.
-    // It guarantees we get the absolute newest issues in the project, which is ideal for "Select Issue" dropdowns.
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .order("desc")
-      .filter((q) =>
-        q.and(
-          q.neq(q.field("isDeleted"), true),
-          // Efficiently filter to include only root types (exclude subtasks)
-          q.neq(q.field("type"), "subtask"),
-        ),
-      )
-      .take(BOUNDED_SELECT_LIMIT);
+    // Optimization: Use parallel queries for each root issue type (task, bug, story, epic).
+    // This allows us to use the `by_project_type` index to efficiently skip subtasks and deleted items.
+    // Scanning the `by_project` index would force us to scan through potentially thousands of subtasks
+    // or deleted items to find the most recent selectable issues.
+    // Since we only need the top 50 (BOUNDED_SELECT_LIMIT), fetching 50 of each type and merging is very fast.
+    const issuesByType = await Promise.all(
+      ROOT_ISSUE_TYPES.map((type) =>
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_type", (q) =>
+            q
+              .eq("projectId", args.projectId)
+              .eq("type", type as Doc<"issues">["type"])
+              .lt("isDeleted", true),
+          )
+          .order("desc")
+          .take(BOUNDED_SELECT_LIMIT),
+      ),
+    );
+
+    // Merge all results, sort by creation time (descending), and take the top limit
+    const issues = issuesByType
+      .flat()
+      .sort((a, b) => b._creationTime - a._creationTime) // _id correlates with creation time
+      .slice(0, BOUNDED_SELECT_LIMIT);
 
     return issues.map((i) => ({
       _id: i._id,
@@ -1130,60 +1139,50 @@ async function getSprintIssueCounts(
   doneThreshold: number,
   addCounts: (statusId: string, counts: { total: number; visible: number; hidden: number }) => void,
 ) {
-  await Promise.all(
-    workflowStates.map(async (state: { id: string; category: string }) => {
-      let visibleCount = 0;
-      let totalCount = 0;
+  // Optimization: Fetch all sprint issues in one query instead of N queries (where N is # of workflow states).
+  // Sprints are typically small (< 2000 issues), so fetching all is more efficient
+  // than running parallel queries for each status column, which incurs multiple round trips and overhead.
 
-      if (state.category === "done") {
-        // Optimization: fetch visible items efficiently using index
-        // Batch query: Promise.all handles parallelism
-        const visibleIssues = await ctx.db
-          .query("issues")
-          .withIndex("by_project_sprint_status_updated", (q) =>
-            q
-              .eq("projectId", projectId)
-              .eq("sprintId", sprintId)
-              .eq("status", state.id)
-              .gte("updatedAt", doneThreshold),
-          )
-          .filter(notDeleted)
-          .take(DEFAULT_PAGE_SIZE + 1);
-
-        visibleCount = Math.min(visibleIssues.length, DEFAULT_PAGE_SIZE);
-
-        // Fetch total count efficiently
-        // Batch query: Promise.all handles parallelism
-        totalCount = await efficientCount(
-          ctx.db
-            .query("issues")
-            .withIndex("by_project_sprint_status", (q) =>
-              q.eq("projectId", projectId).eq("sprintId", sprintId).eq("status", state.id),
-            )
-            .filter(notDeleted),
-        );
-      } else {
-        // Non-done columns
-        // Batch query: Promise.all handles parallelism
-        totalCount = await efficientCount(
-          ctx.db
-            .query("issues")
-            .withIndex("by_project_sprint_status", (q) =>
-              q.eq("projectId", projectId).eq("sprintId", sprintId).eq("status", state.id),
-            )
-            .filter(notDeleted),
-        );
-
-        visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
-      }
-
-      addCounts(state.id, {
-        total: totalCount,
-        visible: visibleCount,
-        hidden: Math.max(0, totalCount - DEFAULT_PAGE_SIZE),
-      });
-    }),
+  // Use safeCollect with a limit of 2000 (matching efficientCount default)
+  const allSprintIssues = await safeCollect(
+    ctx.db
+      .query("issues")
+      .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true)),
+    2000,
+    "getSprintIssueCounts",
   );
+
+  // Filter by project (consistency/security check) and group by status
+  const issuesByStatus: Record<string, Doc<"issues">[]> = {};
+  for (const issue of allSprintIssues) {
+    if (issue.projectId !== projectId) continue;
+
+    if (!issuesByStatus[issue.status]) {
+      issuesByStatus[issue.status] = [];
+    }
+    issuesByStatus[issue.status].push(issue);
+  }
+
+  for (const state of workflowStates) {
+    const issues = issuesByStatus[state.id] || [];
+    const totalCount = issues.length;
+    let visibleCount = 0;
+
+    if (state.category === "done") {
+      // Filter for visible items (updated recently)
+      // Note: The original query used .gte("updatedAt", doneThreshold)
+      const visibleIssues = issues.filter((i) => (i.updatedAt ?? 0) >= doneThreshold);
+      visibleCount = Math.min(visibleIssues.length, DEFAULT_PAGE_SIZE);
+    } else {
+      visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
+    }
+
+    addCounts(state.id, {
+      total: totalCount,
+      visible: visibleCount,
+      hidden: Math.max(0, totalCount - DEFAULT_PAGE_SIZE),
+    });
+  }
 }
 
 export const listIssuesByDateRange = authenticatedQuery({

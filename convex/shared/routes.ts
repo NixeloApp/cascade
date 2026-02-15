@@ -36,6 +36,10 @@ export const ROUTES = {
     path: "/onboarding" as const,
     build: () => "/onboarding",
   },
+  verify2FA: {
+    path: "/verify-2fa" as const,
+    build: () => "/verify-2fa",
+  },
   app: {
     path: "/app" as const,
     build: () => "/app",

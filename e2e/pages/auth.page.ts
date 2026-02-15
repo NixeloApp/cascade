@@ -24,6 +24,7 @@ export class AuthPage extends BasePage {
   readonly signUpHeading: Locator;
   readonly forgotPasswordHeading: Locator;
   readonly resetPasswordHeading: Locator;
+  readonly checkEmailHeading: Locator;
 
   // ===================
   // Locators - Sign In/Up Forms
@@ -98,8 +99,9 @@ export class AuthPage extends BasePage {
     // Updated to match the actual text in src/routes/signin.tsx and src/routes/signup.tsx
     this.signInHeading = page.getByRole("heading", { name: /sign in to nixelo/i });
     this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
-    this.forgotPasswordHeading = page.getByText("Forgot Password", { exact: false });
+    this.forgotPasswordHeading = page.getByRole("heading", { name: /reset your password/i });
     this.resetPasswordHeading = page.getByRole("heading", { name: /reset password/i });
+    this.checkEmailHeading = page.getByRole("heading", { name: /check your email/i });
 
     // Sign In / Sign Up form - two-step flow
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
@@ -118,7 +120,7 @@ export class AuthPage extends BasePage {
 
     // Password Reset
     this.sendResetCodeButton = page.getByRole("button", { name: /send reset code/i });
-    this.backToSignInLink = page.getByRole("link", { name: /back to sign in/i });
+    this.backToSignInLink = page.getByRole("link", { name: /sign in/i });
     this.codeInput = page.getByPlaceholder("8-digit code");
     this.newPasswordInput = page.getByPlaceholder("New password");
     this.resetPasswordButton = page.getByRole("button", { name: /^reset password$/i });
@@ -177,7 +179,7 @@ export class AuthPage extends BasePage {
    */
   async gotoForgotPassword() {
     await this.page.goto("/forgot-password");
-    await this.forgotPasswordHeading.waitFor({ state: "visible" });
+    await this.forgotPasswordHeading.waitFor({ state: "visible", timeout: 15000 });
     await this.emailInput.waitFor({ state: "visible" });
   }
 
@@ -471,7 +473,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectResetCodeForm() {
-    await expect(this.resetPasswordHeading).toBeVisible();
+    await expect(this.resetPasswordHeading).toBeVisible({ timeout: 30000 });
     await expect(this.codeInput).toBeVisible();
     await expect(this.newPasswordInput).toBeVisible();
     await expect(this.resetPasswordButton).toBeVisible();

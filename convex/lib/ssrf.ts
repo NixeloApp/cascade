@@ -81,40 +81,79 @@ function check198(b: number, c: number): boolean {
 }
 
 /**
+ * Normalizes an IPv6 address to its full 32-digit hex representation (8 groups of 4).
+ * Handles:
+ * - IPv4-mapped addresses (::ffff:1.2.3.4) -> 0000:0000:0000:0000:0000:ffff:0102:0304
+ * - Compression (::)
+ * - Leading zeros removal
+ * - Case insensitivity
+ */
+export function expandIPv6(ip: string): string {
+  // 1. Handle IPv4-mapped addresses
+  if (ip.includes(".")) {
+    const lastColon = ip.lastIndexOf(":");
+    const ipv4Part = ip.substring(lastColon + 1);
+    const prefix = ip.substring(0, lastColon + 1);
+
+    const parts = ipv4Part.split(".").map((p) => parseInt(p, 10));
+    // If not valid IPv4 parts, return as is (isStrictIPv6 would have caught it usually)
+    if (parts.length !== 4 || parts.some(Number.isNaN)) return ip;
+
+    const hexIPv4 = parts.map((p) => p.toString(16).padStart(2, "0")).join("");
+    // 1.2.3.4 -> 01020304
+    // Split into two groups: 0102 and 0304
+    const group1 = hexIPv4.substring(0, 4);
+    const group2 = hexIPv4.substring(4, 8);
+
+    return expandIPv6(`${prefix}${group1}:${group2}`);
+  }
+
+  // 2. Handle compression (::)
+  let groups: string[];
+
+  if (ip.includes("::")) {
+    const [left, right] = ip.split("::");
+    const leftGroups = left ? left.split(":") : [];
+    const rightGroups = right ? right.split(":") : [];
+    // Standard IPv6 has 8 groups
+    const missingGroups = 8 - (leftGroups.length + rightGroups.length);
+
+    // Safety check: ensure we don't create negative array size if input is malformed
+    const zeros = Array(Math.max(0, missingGroups)).fill("0000");
+    groups = [...leftGroups, ...zeros, ...rightGroups];
+  } else {
+    groups = ip.split(":");
+  }
+
+  // 3. Pad each group to 4 chars and lower case
+  return groups.map((g) => g.padStart(4, "0").toLowerCase()).join(":");
+}
+
+/**
  * Checks if a strict IPv6 address is in a private or reserved range.
  */
 export function isPrivateIPv6(ip: string): boolean {
-  // Normalize: expand ::
-  // ::1/128 (Loopback) -> Ends with ::1 or is ::1
-  if (ip === "::1" || ip.endsWith("::1")) return true;
+  const expanded = expandIPv6(ip);
+
+  // ::1/128 (Loopback)
+  if (expanded === "0000:0000:0000:0000:0000:0000:0000:0001") return true;
 
   // ::/128 (Unspecified)
-  if (ip === "::" || ip === "0:0:0:0:0:0:0:0") return true;
+  if (expanded === "0000:0000:0000:0000:0000:0000:0000:0000") return true;
 
-  // fe80::/10 (Link-local)
-  if (/^fe[89ab]/i.test(ip)) return true;
+  // fe80::/10 (Link-local) -> fe80... to febf...
+  if (/^fe[89ab]/i.test(expanded)) return true;
 
-  // fc00::/7 (Unique Local)
-  if (/^f[cd]/i.test(ip)) return true;
+  // fc00::/7 (Unique Local) -> fc00... to fdff...
+  if (/^f[cd]/i.test(expanded)) return true;
 
   // IPv4-mapped IPv6 ::ffff:0:0/96
-  // Check if it's mapped
-
-  // Case 1: Dotted quad ::ffff:1.2.3.4
-  if (/^::ffff:\d+\.\d+\.\d+\.\d+$/i.test(ip)) {
-    const ipv4 = ip.split(":").pop();
-    if (ipv4 && isStrictIPv4(ipv4)) {
-      return isPrivateIPv4(ipv4);
-    }
-    return true; // Malformed mapped is suspicious
-  }
-
-  // Case 2: Hex notation ::ffff:xxxx:xxxx (e.g., ::ffff:7f00:1)
-  if (/^::ffff:[0-9a-f]{1,4}:[0-9a-f]{1,4}$/i.test(ip)) {
-    const parts = ip.split(":");
-    // "::ffff:a:b" -> ["", "", "ffff", "a", "b"]
-    const high = parseInt(parts[parts.length - 2], 16);
-    const low = parseInt(parts[parts.length - 1], 16);
+  // Prefix: 0000:0000:0000:0000:0000:ffff:
+  if (expanded.startsWith("0000:0000:0000:0000:0000:ffff:")) {
+    const parts = expanded.split(":");
+    // The last two groups contain the IPv4 address
+    const high = parseInt(parts[6], 16);
+    const low = parseInt(parts[7], 16);
 
     const p1 = (high >> 8) & 0xff;
     const p2 = high & 0xff;
@@ -126,7 +165,7 @@ export function isPrivateIPv6(ip: string): boolean {
   }
 
   // 2001:db8::/32 (Documentation)
-  if (ip.toLowerCase().startsWith("2001:db8:")) return true;
+  if (expanded.startsWith("2001:0db8:")) return true;
 
   return false;
 }

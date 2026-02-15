@@ -1,21 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, PageLayout } from "@/components/layout";
-import { Card, CardBody } from "@/components/ui/Card";
-import { Typography } from "@/components/ui/Typography";
+import { SSOSettings } from "@/components/Settings/SSOSettings";
+import { useOrganization } from "@/hooks/useOrgContext";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/authentication")({
   component: AuthenticationPage,
 });
 
 function AuthenticationPage() {
+  const { organizationId } = useOrganization();
+
   return (
     <PageLayout>
       <PageHeader title="Authentication" />
-      <Card>
-        <CardBody>
-          <Typography variant="muted">Authentication settings coming soon.</Typography>
-        </CardBody>
-      </Card>
+      <SSOSettings organizationId={organizationId} />
     </PageLayout>
   );
 }

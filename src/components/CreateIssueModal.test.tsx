@@ -165,4 +165,26 @@ describe("CreateIssueModal", () => {
     expect(bugLabel).toHaveAttribute("aria-pressed", "false");
     expect(featureLabel).toHaveAttribute("aria-pressed", "false");
   });
+
+  it("should group labels with semantic role and label", () => {
+    // Reset mock calls for this test to ensure clean state
+    (useQuery as any).mockReset();
+    (useQuery as any)
+      .mockReturnValueOnce(undefined)
+      .mockReturnValueOnce(mockProject)
+      .mockReturnValueOnce(mockTemplates)
+      .mockReturnValueOnce(mockLabels);
+
+    render(
+      <CreateIssueModal projectId={mockProjectId} open={true} onOpenChange={mockOnOpenChange} />,
+    );
+
+    // Find the group
+    const group = screen.getByRole("group", { name: /labels/i });
+    expect(group).toBeInTheDocument();
+
+    // Verify buttons are inside the group
+    const bugLabel = screen.getByRole("button", { name: /bug/i });
+    expect(group).toContainElement(bugLabel);
+  });
 });

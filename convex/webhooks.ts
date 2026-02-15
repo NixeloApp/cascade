@@ -168,7 +168,12 @@ export const trigger = internalAction({
 
     // Trigger each webhook
     for (const webhook of webhooks) {
-      await triggerSingleWebhook(ctx, webhook, args.event, args.payload);
+      try {
+        await triggerSingleWebhook(ctx, webhook, args.event, args.payload);
+      } catch (error) {
+        console.error(`Webhook delivery failed for ${webhook._id}:`, error);
+        // Continue to next webhook
+      }
     }
   },
 });
@@ -179,35 +184,54 @@ async function triggerSingleWebhook(
   event: string,
   payload: Record<string, unknown>,
 ) {
-  const requestPayload = JSON.stringify({
-    event: event,
-    payload: payload,
-    timestamp: Date.now(),
-  });
+  let executionId: Id<"webhookExecutions"> | null = null;
 
-  // Create execution log
-  const executionId = await ctx.runMutation(internal.webhooks.createExecution, {
-    webhookId: webhook._id,
-    event: event,
-    requestPayload,
-  });
-
-  const result = await deliverWebhook(webhook.url, requestPayload, event, webhook.secret);
-
-  // Update execution log
-  await ctx.runMutation(internal.webhooks.updateExecution, {
-    id: executionId,
-    status: result.status,
-    responseStatus: result.responseStatus,
-    responseBody: result.responseBody,
-    error: result.error,
-  });
-
-  // Update last triggered time if we got a response (even if it was an error response)
-  if (result.responseStatus !== undefined) {
-    await ctx.runMutation(internal.webhooks.updateLastTriggered, {
-      id: webhook._id,
+  try {
+    const requestPayload = JSON.stringify({
+      event: event,
+      payload: payload,
+      timestamp: Date.now(),
     });
+
+    // Create execution log
+    executionId = await ctx.runMutation(internal.webhooks.createExecution, {
+      webhookId: webhook._id,
+      event: event,
+      requestPayload,
+    });
+
+    const result = await deliverWebhook(webhook.url, requestPayload, event, webhook.secret);
+
+    // Update execution log
+    await ctx.runMutation(internal.webhooks.updateExecution, {
+      id: executionId,
+      status: result.status,
+      responseStatus: result.responseStatus,
+      responseBody: result.responseBody,
+      error: result.error,
+    });
+
+    // Update last triggered time if we got a response (even if it was an error response)
+    if (result.responseStatus !== undefined) {
+      await ctx.runMutation(internal.webhooks.updateLastTriggered, {
+        id: webhook._id,
+      });
+    }
+  } catch (error) {
+    // If we have an execution ID, try to update it to failed status
+    if (executionId) {
+      try {
+        await ctx.runMutation(internal.webhooks.updateExecution, {
+          id: executionId,
+          status: "failed",
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      } catch (updateError) {
+        console.error("Failed to update webhook execution status:", updateError);
+      }
+    }
+    // Re-throw to let the caller log it
+    throw error;
   }
 }
 

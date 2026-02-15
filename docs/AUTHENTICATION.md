@@ -4,7 +4,7 @@ This document describes the authentication and user management features in Nixel
 
 ## Authentication Methods
 
-Nixelo supports two authentication methods:
+Nixelo supports multiple authentication methods:
 
 ### 1. Email & Password
 
@@ -56,6 +56,93 @@ To enable Google OAuth, you need to:
 2. Redirected to Google for authentication
 3. User grants permissions
 4. Redirected back to Nixelo and logged in
+
+### 3. SSO (SAML/OIDC)
+
+Organizations can configure Single Sign-On using SAML 2.0 or OpenID Connect.
+
+**Configuration (Organization Admin):**
+
+1. Navigate to **Settings → Organization → SSO**
+2. Click **"Add SSO Connection"**
+3. Choose type: **SAML** or **OIDC**
+4. Configure identity provider settings:
+   - **SAML**: IdP Entity ID, SSO URL, Certificate, Metadata URL
+   - **OIDC**: Issuer URL, Client ID, Client Secret, Scopes
+5. Add verified domains for automatic SSO routing
+6. Enable the connection
+
+**Sign In Flow:**
+
+1. User enters email on sign-in page
+2. System detects SSO-enabled domain
+3. User is redirected to identity provider
+4. After IdP authentication, user is redirected back and logged in
+
+**Domain Routing:**
+
+SSO connections can be associated with email domains. When a user enters an email with a verified domain, they are automatically routed to the correct SSO provider.
+
+## Two-Factor Authentication (2FA)
+
+Users can enable TOTP-based two-factor authentication for additional security.
+
+### Enabling 2FA
+
+1. Navigate to **Settings → Security**
+2. Click **"Enable 2FA"**
+3. Scan QR code with authenticator app (Google Authenticator, Authy, 1Password)
+4. Enter 6-digit verification code
+5. Save backup codes in a secure location
+
+### Sign In with 2FA
+
+1. User signs in with email/password or OAuth
+2. If 2FA is enabled, prompted for verification code
+3. User enters code from authenticator app
+4. User is logged in
+
+### Backup Codes
+
+- 8 backup codes are generated when 2FA is enabled
+- Each code can only be used once
+- Use backup codes if authenticator is unavailable
+- Regenerate backup codes anytime from Settings (requires current TOTP code)
+
+### Disabling 2FA
+
+1. Navigate to **Settings → Security**
+2. Click **"Disable 2FA"**
+3. Enter current TOTP code or backup code
+4. 2FA is disabled
+
+### API Reference (2FA)
+
+```typescript
+// Check 2FA status
+await useQuery(api.twoFactor.getStatus);
+// Returns: { enabled: boolean, hasBackupCodes: boolean }
+
+// Begin 2FA setup
+await useMutation(api.twoFactor.beginSetup);
+// Returns: { secret: string, otpauthUrl: string }
+
+// Complete setup with verification
+await useMutation(api.twoFactor.completeSetup, { code: "123456" });
+// Returns: { success: boolean, backupCodes?: string[], error?: string }
+
+// Verify code (sign-in)
+await useMutation(api.twoFactor.verifyCode, { code: "123456" });
+
+// Verify backup code (consumes it)
+await useMutation(api.twoFactor.verifyBackupCode, { code: "XXXX-XXXX" });
+
+// Regenerate backup codes
+await useMutation(api.twoFactor.regenerateBackupCodes, { totpCode: "123456" });
+
+// Disable 2FA
+await useMutation(api.twoFactor.disable, { code: "123456", isBackupCode: false });
+```
 
 ## User Invitation System
 
@@ -136,10 +223,12 @@ Admins can view all platform users in **Settings → Admin → User Management �
 
 ## Security Best Practices
 
-1. **Regular Audit**: Periodically review active invitations and revoke unused ones
-2. **Role Assignment**: Only grant admin role to trusted users
-3. **Email Verification**: Encourage users to verify their email addresses
-4. **Invite Expiration**: Invitations expire after 7 days for security
+1. **Enable 2FA**: Require two-factor authentication for admin accounts
+2. **Use SSO**: Configure SSO for enterprise organizations
+3. **Regular Audit**: Periodically review active invitations and revoke unused ones
+4. **Role Assignment**: Only grant admin role to trusted users
+5. **Email Verification**: Encourage users to verify their email addresses
+6. **Invite Expiration**: Invitations expire after 7 days for security
 
 ## API Reference
 
@@ -225,4 +314,4 @@ The `/invite/:token` page is implemented. To enable automatic invitation emails:
 
 ---
 
-_Last Updated: 2026-01-10_
+_Last Updated: 2026-02-14_

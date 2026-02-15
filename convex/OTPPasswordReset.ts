@@ -34,10 +34,7 @@ export const OTPPasswordReset = Resend({
     // Check rate limit first
     if (ctx.runMutation) {
       try {
-        // Cast to any to avoid type error until codegen runs
-        await ctx.runMutation((internal.authWrapper as any).checkPasswordResetRateLimitByEmail, {
-          email,
-        });
+        await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimitByEmail, { email });
       } catch (_e) {
         throw new Error("Too many password reset requests. Please try again later.");
       }
