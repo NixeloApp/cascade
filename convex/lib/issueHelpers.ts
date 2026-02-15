@@ -285,23 +285,21 @@ export async function enrichIssues(
   if (issues.length === 0) return [];
 
   // Collect unique IDs
-  const assigneeIds = new Set<Id<"users">>();
-  const reporterIds = new Set<Id<"users">>();
+  const userIds = new Set<Id<"users">>();
   const epicIds = new Set<Id<"issues">>();
   // We only track projects that actually need label fetching to optimize queries
   const projectLabelsNeeded = getProjectLabelsNeeded(issues);
 
   for (const issue of issues) {
-    if (issue.assigneeId) assigneeIds.add(issue.assigneeId);
-    reporterIds.add(issue.reporterId);
+    if (issue.assigneeId) userIds.add(issue.assigneeId);
+    userIds.add(issue.reporterId);
     if (issue.epicId) epicIds.add(issue.epicId);
   }
 
   // Batch fetch all data
   const projectIdList = [...projectLabelsNeeded.keys()];
-  const [assignees, reporters, epics, projectLabelsArrays] = await Promise.all([
-    asyncMap([...assigneeIds], (id) => ctx.db.get(id)),
-    asyncMap([...reporterIds], (id) => ctx.db.get(id)),
+  const [users, epics, projectLabelsArrays] = await Promise.all([
+    asyncMap([...userIds], (id) => ctx.db.get(id)),
     asyncMap([...epicIds], (id) => ctx.db.get(id)),
     asyncMap(projectIdList, async (projectId) => {
       const neededLabels = projectLabelsNeeded.get(projectId);
@@ -311,8 +309,7 @@ export async function enrichIssues(
   ]);
 
   // Build lookup maps
-  const assigneeMap = buildLookupMap(assignees);
-  const reporterMap = buildLookupMap(reporters);
+  const userMap = buildLookupMap(users);
   const epicMap = buildLookupMap(epics);
   const labelsByProject = buildLabelsByProject(
     projectIdList,
@@ -323,9 +320,9 @@ export async function enrichIssues(
   return issues.map((issue) => ({
     ...issue,
     assignee: issue.assigneeId
-      ? toUserInfo(assigneeMap.get(issue.assigneeId.toString()) ?? null)
+      ? toUserInfo(userMap.get(issue.assigneeId.toString()) ?? null)
       : null,
-    reporter: toUserInfo(reporterMap.get(issue.reporterId.toString()) ?? null),
+    reporter: toUserInfo(userMap.get(issue.reporterId.toString()) ?? null),
     epic: issue.epicId ? toEpicInfo(epicMap.get(issue.epicId.toString()) ?? null) : null,
     labels: getLabelInfos(issue, labelsByProject),
   }));
