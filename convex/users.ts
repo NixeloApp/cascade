@@ -14,7 +14,7 @@ import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
-import { sanitizeUserForAuth } from "./lib/userUtils";
+import { sanitizeUserForAuth, sanitizeUserForPublic } from "./lib/userUtils";
 import { digestFrequencies } from "./validators";
 
 // Limits for user stats queries
@@ -49,8 +49,35 @@ export const get = authenticatedQuery({
   ),
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.id);
-    // Return sanitized user - strips sensitive fields beyond email
-    return sanitizeUserForAuth(user);
+    if (!user) return null;
+
+    // Users can always see themselves
+    if (ctx.userId === args.id) {
+      return sanitizeUserForAuth(user);
+    }
+
+    // Check for shared organization
+    const myOrgs = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+      .take(MAX_PAGE_SIZE);
+
+    if (myOrgs.length > 0) {
+      const theirOrgs = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user", (q) => q.eq("userId", args.id))
+        .take(MAX_PAGE_SIZE);
+
+      const myOrgIds = new Set(myOrgs.map((m) => m.organizationId));
+      const hasSharedOrg = theirOrgs.some((m) => myOrgIds.has(m.organizationId));
+
+      if (hasSharedOrg) {
+        return sanitizeUserForAuth(user);
+      }
+    }
+
+    // If no shared context, return public profile (no email)
+    return sanitizeUserForPublic(user);
   },
 });
 
