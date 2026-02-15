@@ -72,7 +72,7 @@ export class OnboardingPage {
     this.setupWorkspaceButton = page.getByRole("button", { name: /let's set up your project/i });
 
     // Team Member flow
-    this.allSetHeading = page.getByRole("heading", { name: /you're all set/i });
+    this.allSetHeading = page.getByRole("heading", { name: /you're ready/i });
     this.goToDashboardButton = page.getByRole("button", { name: /go to dashboard/i });
     this.createProjectButton = page.getByRole("button", { name: /create project/i });
 
