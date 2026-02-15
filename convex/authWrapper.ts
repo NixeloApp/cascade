@@ -13,9 +13,9 @@ import {
   internalMutation,
   type MutationCtx,
 } from "./_generated/server";
-import { getClientIp } from "./lib/_clientIp";
 import { getConvexSiteUrl } from "./lib/env";
 import { logger } from "./lib/logger";
+import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
 
 const RESET_TIMEOUT_MS = 60000;
