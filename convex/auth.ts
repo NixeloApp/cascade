@@ -3,9 +3,9 @@ import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { sanitizeUserForCurrent } from "./lib/userUtils";
 import { OTPPasswordReset } from "./OTPPasswordReset";
 import { OTPVerification } from "./OTPVerification";
-import { sanitizeUserForCurrent } from "./lib/userUtils";
 
 // All OTP emails use the universal email provider system
 // Provider rotation (SendPulse, Mailtrap, Resend, Mailgun) is automatic

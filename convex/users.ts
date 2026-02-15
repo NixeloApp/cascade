@@ -14,7 +14,11 @@ import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
-import { sanitizeUserForAuth, sanitizeUserForCurrent, sanitizeUserForPublic } from "./lib/userUtils";
+import {
+  sanitizeUserForAuth,
+  sanitizeUserForCurrent,
+  sanitizeUserForPublic,
+} from "./lib/userUtils";
 import { digestFrequencies } from "./validators";
 
 // Limits for user stats queries
