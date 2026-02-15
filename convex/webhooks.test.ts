@@ -5,6 +5,19 @@ import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
 
+// Mock DNS resolution
+vi.mock("./lib/dns", () => ({
+  resolveDNS: vi.fn(async (hostname: string) => {
+    if (hostname === "example.com") {
+      return ["93.184.216.34"]; // Public IP
+    }
+    if (hostname === "localtest.me") {
+      return ["127.0.0.1"]; // Private IP
+    }
+    return [];
+  }),
+}));
+
 describe("Webhooks", () => {
   describe("create", () => {
     it("should create a webhook with all fields", async () => {

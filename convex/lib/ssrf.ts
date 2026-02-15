@@ -1,3 +1,4 @@
+import { resolveDNS } from "./dns";
 import { validation } from "./errors";
 
 // Strict IPv4 Regex: 4 decimal octets (0-255), no leading zeros unless single '0'
@@ -193,5 +194,44 @@ export function validateDestination(url: string) {
   // Additional check: Metadata hostname
   if (hostname === "169.254.169.254" || hostname.toLowerCase() === "localhost") {
     throw validation("url", "Restricted hostname.");
+  }
+}
+
+/**
+ * Validates a destination URL to prevent SSRF by resolving DNS.
+ * Enforces strict IP formats and blocks private ranges.
+ * Blocks domains that resolve to private IPs.
+ */
+export async function validateDestinationResolved(url: string) {
+  // 1. Basic syntax and direct IP check
+  validateDestination(url);
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw validation("url", "Invalid URL format");
+  }
+
+  let hostname = parsed.hostname;
+  if (hostname.startsWith("[") && hostname.endsWith("]")) {
+    hostname = hostname.slice(1, -1);
+  }
+
+  // If it's a strict IP, validateDestination already checked it.
+  if (isStrictIPv4(hostname) || isStrictIPv6(hostname)) {
+    return;
+  }
+
+  // If it's a domain name, resolve it and check IPs
+  const ips = await resolveDNS(hostname);
+
+  for (const ip of ips) {
+    if (isStrictIPv4(ip) && isPrivateIPv4(ip)) {
+      throw validation("url", `Domain resolves to private IP address: ${ip}`);
+    }
+    if (isStrictIPv6(ip) && isPrivateIPv6(ip)) {
+      throw validation("url", `Domain resolves to private IP address: ${ip}`);
+    }
   }
 }
