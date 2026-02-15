@@ -132,9 +132,14 @@ export async function enrichIssue(ctx: QueryCtx, issue: Doc<"issues">): Promise<
       issue.labels.map((name) =>
         ctx.db
           .query("labels")
-          .withIndex("by_project_name", (q) =>
-            q.eq("projectId", issue.projectId!).eq("name", name),
-          )
+          .withIndex("by_project_name", (q) => {
+            const projectId = issue.projectId;
+            if (!projectId) {
+              // This should be unreachable due to outer check, but satisfy type checker
+              throw new Error("Unexpected missing projectId");
+            }
+            return q.eq("projectId", projectId).eq("name", name);
+          })
           .first(),
       ),
     );
