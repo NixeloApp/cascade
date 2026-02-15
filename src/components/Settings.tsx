@@ -15,12 +15,14 @@ import { OfflineTab } from "./Settings/OfflineTab";
 import { PreferencesTab } from "./Settings/PreferencesTab";
 import { ProfileTab } from "./Settings/ProfileTab";
 import { PumbleIntegration } from "./Settings/PumbleIntegration";
+import { TwoFactorSettings } from "./Settings/TwoFactorSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 
 const isTestEmail = (email?: string) => email?.endsWith("@inbox.mailtrap.io") ?? false;
 
 const validTabs = [
   "profile",
+  "security",
   "notifications",
   "integrations",
   "apikeys",
@@ -51,6 +53,7 @@ export function Settings() {
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
       <TabsList className="mb-6 sm:mb-8 w-full justify-start overflow-x-auto">
         <TabsTrigger value="profile">Profile</TabsTrigger>
+        <TabsTrigger value="security">Security</TabsTrigger>
         <TabsTrigger value="notifications">Notifications</TabsTrigger>
         <TabsTrigger value="integrations">Integrations</TabsTrigger>
         <TabsTrigger value="apikeys">API Keys</TabsTrigger>
@@ -62,6 +65,9 @@ export function Settings() {
 
       <TabsContent value="profile">
         <ProfileTab />
+      </TabsContent>
+      <TabsContent value="security">
+        <TwoFactorSettings />
       </TabsContent>
       <TabsContent value="notifications">
         <NotificationsTab />

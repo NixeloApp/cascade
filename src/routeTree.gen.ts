@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as Verify2faRouteImport } from './routes/verify-2fa'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -58,6 +59,11 @@ import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRout
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
 
+const Verify2faRoute = Verify2faRouteImport.update({
+  id: '/verify-2fa',
+  path: '/verify-2fa',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -337,6 +343,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/verify-2fa': typeof Verify2faRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
   '/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
@@ -385,6 +392,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/verify-2fa': typeof Verify2faRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
   '/app': typeof AuthAppAppRoute
@@ -431,6 +439,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/verify-2fa': typeof Verify2faRoute
   '/_auth/_app': typeof AuthAppRouteRouteWithChildren
   '/_auth/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -482,6 +491,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/signin'
     | '/signup'
+    | '/verify-2fa'
     | '/onboarding'
     | '/invite/$token'
     | '/$orgSlug'
@@ -530,6 +540,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/signin'
     | '/signup'
+    | '/verify-2fa'
     | '/onboarding'
     | '/invite/$token'
     | '/app'
@@ -575,6 +586,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/signin'
     | '/signup'
+    | '/verify-2fa'
     | '/_auth/_app'
     | '/_auth/onboarding'
     | '/invite/$token'
@@ -626,11 +638,19 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  Verify2faRoute: typeof Verify2faRoute
   InviteTokenRoute: typeof InviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-2fa': {
+      id: '/verify-2fa'
+      path: '/verify-2fa'
+      fullPath: '/verify-2fa'
+      preLoaderRoute: typeof Verify2faRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -1144,6 +1164,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  Verify2faRoute: Verify2faRoute,
   InviteTokenRoute: InviteTokenRoute,
 }
 export const routeTree = rootRouteImport
