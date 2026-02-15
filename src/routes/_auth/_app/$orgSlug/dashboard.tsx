@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Dashboard } from "@/components/Dashboard";
 import { DashboardCustomizeModal } from "@/components/Dashboard/DashboardCustomizeModal";
-import { PageHeader, PageLayout } from "@/components/layout";
+import { PageHeader, PageLayout } from "@/components/Layout";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/dashboard")({
   component: DashboardPage,

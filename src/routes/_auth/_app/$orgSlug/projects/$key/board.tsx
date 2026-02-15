@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ExportButton } from "@/components/ExportButton";
 import { type BoardFilters, FilterBar } from "@/components/FilterBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
-import { PageContent, PageError } from "@/components/layout";
+import { PageContent, PageError } from "@/components/Layout";
 import { Badge } from "@/components/ui/Badge";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import {

@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
-import { PageHeader, PageLayout } from "@/components/layout";
+import { PageHeader, PageLayout } from "@/components/Layout";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { CheckCircle, MapPin, TrendingUp, Zap } from "@/lib/icons";

@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { CreateIssueModal } from "@/components/CreateIssueModal";
 import { IssueCard } from "@/components/IssueCard";
 import { IssueDetailModal } from "@/components/IssueDetailModal";
-import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import { PageContent, PageHeader, PageLayout } from "@/components/Layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
