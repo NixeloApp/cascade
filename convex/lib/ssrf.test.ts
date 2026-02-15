@@ -64,6 +64,14 @@ describe("SSRF Validation", () => {
       expect(isPrivateIPv6("fe80::1")).toBe(true);
       expect(isPrivateIPv6("fc00::1")).toBe(true);
       expect(isPrivateIPv6("::ffff:127.0.0.1")).toBe(true);
+
+      // Expanded loopback
+      expect(isPrivateIPv6("0:0:0:0:0:0:0:1")).toBe(true);
+      // Leading zeros loopback
+      expect(isPrivateIPv6("::0001")).toBe(true);
+      // Unspecified address variations
+      expect(isPrivateIPv6("0::0")).toBe(true);
+      expect(isPrivateIPv6("0:0:0:0:0:0:0:0")).toBe(true);
     });
 
     it("allows public IPs", () => {

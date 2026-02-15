@@ -4,7 +4,7 @@ import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-
 import { useMutation, useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
-import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
+import { SidebarTeamItem } from "@/components/sidebar/SidebarTeamItem";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";

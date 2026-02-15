@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, PageLayout } from "@/components/Layout";
+import { PageHeader, PageLayout } from "@/components/layout";
 import { SSOSettings } from "@/components/Settings/SSOSettings";
 import { useOrganization } from "@/hooks/useOrgContext";
 

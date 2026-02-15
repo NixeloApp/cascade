@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppSplashScreen } from "@/components/Auth/AppSplashScreen";
+import { AppSplashScreen } from "@/components/auth/AppSplashScreen";
 
 export const Route = createFileRoute("/_auth/_app/app")({
   component: AppPage,

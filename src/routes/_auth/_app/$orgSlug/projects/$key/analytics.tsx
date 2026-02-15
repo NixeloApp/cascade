@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { PageContent, PageError } from "@/components/Layout";
+import { PageContent, PageError } from "@/components/layout";
 import { SectionErrorFallback } from "@/components/SectionErrorFallback";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/analytics")({

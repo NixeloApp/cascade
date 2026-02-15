@@ -24,8 +24,8 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { DocumentHeader } from "./DocumentHeader";
 import { ErrorBoundary } from "./ErrorBoundary";
-import { FloatingToolbar } from "./Plate/FloatingToolbar";
-import { SlashMenu } from "./Plate/SlashMenu";
+import { FloatingToolbar } from "./plate/FloatingToolbar";
+import { SlashMenu } from "./plate/SlashMenu";
 import { VersionHistory } from "./VersionHistory";
 
 interface PlateEditorProps {
