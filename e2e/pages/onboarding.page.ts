@@ -58,22 +58,22 @@ export class OnboardingPage {
   constructor(page: Page) {
     this.page = page;
 
-    // Onboarding wizard
-    this.welcomeHeading = page.getByRole("heading", { name: /welcome to nixelo/i });
-    this.teamLeadCard = page.getByRole("button", { name: /team lead/i });
-    this.teamMemberCard = page.getByRole("button", { name: /team member/i });
+    // Onboarding wizard - using TEST_IDS for reliable selectors
+    this.welcomeHeading = page.getByTestId(TEST_IDS.ONBOARDING.WELCOME_HEADING);
+    this.teamLeadCard = page.getByTestId(TEST_IDS.ONBOARDING.TEAM_LEAD_CARD);
+    this.teamMemberCard = page.getByTestId(TEST_IDS.ONBOARDING.TEAM_MEMBER_CARD);
     this.continueButton = page.getByRole("button", { name: /continue/i });
     this.backButton = page.getByRole("button", { name: /back/i });
-    this.skipButton = page.getByRole("button", { name: /skip for now/i });
+    this.skipButton = page.getByTestId(TEST_IDS.ONBOARDING.SKIP_BUTTON);
     this.skipText = page.getByText(/skip for now/i);
 
     // Team Lead flow
-    this.teamLeadHeading = page.getByRole("heading", { name: /perfect for team leads/i });
-    this.setupWorkspaceButton = page.getByRole("button", { name: /let's set up your project/i });
+    this.teamLeadHeading = page.getByTestId(TEST_IDS.ONBOARDING.TEAM_LEAD_HEADING);
+    this.setupWorkspaceButton = page.getByTestId(TEST_IDS.ONBOARDING.SETUP_WORKSPACE_BUTTON);
 
     // Team Member flow
-    this.allSetHeading = page.getByRole("heading", { name: /you're all set/i });
-    this.goToDashboardButton = page.getByRole("button", { name: /go to dashboard/i });
+    this.allSetHeading = page.getByTestId(TEST_IDS.ONBOARDING.ALL_SET_HEADING);
+    this.goToDashboardButton = page.getByTestId(TEST_IDS.ONBOARDING.GO_TO_DASHBOARD_BUTTON);
     this.createProjectButton = page.getByRole("button", { name: /create project/i });
 
     // Feature highlights

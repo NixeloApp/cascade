@@ -7,6 +7,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
 import { KeyboardShortcut } from "@/components/ui/KeyboardShortcut";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Typography } from "../ui/Typography";
 
@@ -92,7 +93,11 @@ export function MemberOnboarding({
           >
             <Building2 className="w-8 h-8 text-brand" />
           </Flex>
-          <Typography variant="h1" className="text-3xl font-bold mb-3">
+          <Typography
+            variant="h1"
+            className="text-3xl font-bold mb-3"
+            data-testid={TEST_IDS.ONBOARDING.NAME_PROJECT_HEADING}
+          >
             Name Your Project
           </Typography>
           <Typography variant="p" color="secondary" className="text-lg">
@@ -156,7 +161,11 @@ export function MemberOnboarding({
 
       {/* Header */}
       <div className="text-center">
-        <Typography variant="h2" className="mb-3 text-3xl">
+        <Typography
+          variant="h2"
+          className="mb-3 text-3xl"
+          data-testid={TEST_IDS.ONBOARDING.ALL_SET_HEADING}
+        >
           You're ready
         </Typography>
         <Typography variant="lead">Here's what you can do in Nixelo</Typography>
@@ -265,7 +274,13 @@ export function MemberOnboarding({
 
       {/* Continue */}
       <Flex justify="center">
-        <Button variant="primary" size="lg" onClick={handleFinish} className="min-w-48">
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={handleFinish}
+          className="min-w-48"
+          data-testid={TEST_IDS.ONBOARDING.GO_TO_DASHBOARD_BUTTON}
+        >
           Go to Dashboard
         </Button>
       </Flex>

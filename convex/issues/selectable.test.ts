@@ -51,6 +51,15 @@ describe("Issues Selectable", () => {
       parentId: task,
     });
 
+    // Create deleted issue (should be excluded)
+    const deletedIssue = await asUser.mutation(api.issues.create, {
+      projectId,
+      title: "Deleted Issue",
+      type: "task",
+      priority: "medium",
+    });
+    await asUser.mutation(api.issues.bulkDelete, { issueIds: [deletedIssue] });
+
     // Create another task to check ordering
     const recentTask = await asUser.mutation(api.issues.create, {
       projectId,
@@ -68,9 +77,10 @@ describe("Issues Selectable", () => {
     // Should NOT include subtask
     expect(issues).toHaveLength(5);
 
-    // Check exclusion of subtask
+    // Check exclusion of subtask and deleted issue
     const titles = issues.map((i) => i.title);
     expect(titles).not.toContain("Subtask 1");
+    expect(titles).not.toContain("Deleted Issue");
     expect(titles).toContain("Task 1");
     expect(titles).toContain("Bug 1");
     expect(titles).toContain("Story 1");

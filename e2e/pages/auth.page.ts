@@ -99,7 +99,7 @@ export class AuthPage extends BasePage {
     // Updated to match the actual text in src/routes/signin.tsx and src/routes/signup.tsx
     this.signInHeading = page.getByRole("heading", { name: /sign in to nixelo/i });
     this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
-    this.forgotPasswordHeading = page.getByText("Forgot Password", { exact: false });
+    this.forgotPasswordHeading = page.getByRole("heading", { name: /reset your password/i });
     this.resetPasswordHeading = page.getByRole("heading", { name: /reset password/i });
     this.checkEmailHeading = page.getByRole("heading", { name: /check your email/i });
 
@@ -179,7 +179,7 @@ export class AuthPage extends BasePage {
    */
   async gotoForgotPassword() {
     await this.page.goto("/forgot-password");
-    await this.forgotPasswordHeading.waitFor({ state: "visible" });
+    await this.forgotPasswordHeading.waitFor({ state: "visible", timeout: 15000 });
     await this.emailInput.waitFor({ state: "visible" });
   }
 
@@ -473,7 +473,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectResetCodeForm() {
-    await expect(this.checkEmailHeading).toBeVisible();
+    await expect(this.resetPasswordHeading).toBeVisible({ timeout: 30000 });
     await expect(this.codeInput).toBeVisible();
     await expect(this.newPasswordInput).toBeVisible();
     await expect(this.resetPasswordButton).toBeVisible();

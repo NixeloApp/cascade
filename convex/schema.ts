@@ -31,16 +31,235 @@ import {
   workflowCategories,
 } from "./validators";
 
+// =============================================================================
+// APPLICATION TABLES
+// Organized by domain/feature area for easier navigation
+// =============================================================================
+
 const applicationTables = {
+  // ===========================================================================
+  // ORGANIZATIONS & ACCESS CONTROL
+  // Multi-tenant support, membership, invites, SSO
+  // ===========================================================================
+
+  organizations: defineTable({
+    name: v.string(),
+    slug: v.string(), // URL-friendly: "acme-corp"
+    timezone: v.string(), // IANA timezone: "America/New_York"
+    settings: v.object({
+      defaultMaxHoursPerWeek: v.number(),
+      defaultMaxHoursPerDay: v.number(),
+      requiresTimeApproval: v.boolean(),
+      billingEnabled: v.boolean(),
+    }),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_creator", ["createdBy"])
+    .searchIndex("search_name", {
+      searchField: "name",
+    }),
+
+  organizationMembers: defineTable({
+    organizationId: v.id("organizations"),
+    userId: v.id("users"),
+    role: v.union(
+      v.literal("owner"), // Full control, can't be removed
+      v.literal("admin"), // Manage members, settings, billing
+      v.literal("member"), // Use organization resources
+    ),
+    addedBy: v.id("users"),
+    joinedAt: v.optional(v.number()),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_user", ["userId"])
+    .index("by_organization_user", ["organizationId", "userId"])
+    .index("by_role", ["role"])
+    .index("by_user_role", ["userId", "role"])
+    .index("by_organization_role", ["organizationId", "role"]),
+
+  ssoConnections: defineTable({
+    organizationId: v.id("organizations"),
+    type: v.union(v.literal("saml"), v.literal("oidc")),
+    name: v.string(), // "Okta", "Azure AD", "Google Workspace"
+    isEnabled: v.boolean(),
+    samlConfig: v.optional(
+      v.object({
+        idpMetadataUrl: v.optional(v.string()),
+        idpMetadataXml: v.optional(v.string()),
+        idpEntityId: v.optional(v.string()),
+        idpSsoUrl: v.optional(v.string()),
+        idpCertificate: v.optional(v.string()),
+        spEntityId: v.optional(v.string()),
+        spAcsUrl: v.optional(v.string()),
+        nameIdFormat: v.optional(v.string()),
+        signRequest: v.optional(v.boolean()),
+      }),
+    ),
+    oidcConfig: v.optional(
+      v.object({
+        issuer: v.optional(v.string()),
+        clientId: v.optional(v.string()),
+        clientSecret: v.optional(v.string()),
+        scopes: v.optional(v.array(v.string())),
+        authorizationUrl: v.optional(v.string()),
+        tokenUrl: v.optional(v.string()),
+        userInfoUrl: v.optional(v.string()),
+      }),
+    ),
+    verifiedDomains: v.optional(v.array(v.string())), // ["acme.com", "acme.io"]
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_organization_enabled", ["organizationId", "isEnabled"])
+    .index("by_type", ["type"]),
+
+  invites: defineTable({
+    email: v.string(),
+    role: inviteRoles, // Platform role
+    organizationId: v.id("organizations"),
+    projectId: v.optional(v.id("projects")),
+    projectRole: v.optional(projectRoles),
+    invitedBy: v.id("users"),
+    token: v.string(),
+    expiresAt: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("revoked"),
+      v.literal("expired"),
+    ),
+    acceptedBy: v.optional(v.id("users")),
+    acceptedAt: v.optional(v.number()),
+    revokedBy: v.optional(v.id("users")),
+    revokedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_token", ["token"])
+    .index("by_status", ["status"])
+    .index("by_invited_by", ["invitedBy"])
+    .index("by_email_status", ["email", "status"])
+    .index("by_organization", ["organizationId"])
+    .index("by_project", ["projectId"])
+    .index("by_organization_status", ["organizationId", "status"]),
+
+  // ===========================================================================
+  // WORKSPACES & TEAMS
+  // Department-level groupings and cross-functional teams
+  // ===========================================================================
+
+  workspaces: defineTable({
+    name: v.string(), // "Engineering", "Marketing", "Product"
+    slug: v.string(),
+    description: v.optional(v.string()),
+    icon: v.optional(v.string()), // Emoji like 🏗️
+    organizationId: v.id("organizations"),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+    settings: v.optional(
+      v.object({
+        defaultProjectVisibility: v.optional(v.boolean()),
+        allowExternalSharing: v.optional(v.boolean()),
+      }),
+    ),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_organization_slug", ["organizationId", "slug"])
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["organizationId"],
+    }),
+
+  workspaceMembers: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    role: v.union(
+      v.literal("admin"), // Manage workspace settings and members
+      v.literal("editor"), // Create/edit workspace-level content
+      v.literal("member"), // View workspace resources
+    ),
+    addedBy: v.id("users"),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_user", ["userId"])
+    .index("by_workspace_user", ["workspaceId", "userId"])
+    .index("by_role", ["role"])
+    .index("by_workspace_role", ["workspaceId", "role"])
+    .index("by_deleted", ["isDeleted"]),
+
+  teams: defineTable({
+    organizationId: v.id("organizations"),
+    workspaceId: v.id("workspaces"),
+    name: v.string(), // "Product Team", "Dev Team"
+    slug: v.string(),
+    description: v.optional(v.string()),
+    icon: v.optional(v.string()),
+    leadId: v.optional(v.id("users")),
+    isPrivate: v.boolean(),
+    settings: v.optional(
+      v.object({
+        defaultIssueType: v.optional(v.string()),
+        cycleLength: v.optional(v.number()),
+        cycleDayOfWeek: v.optional(v.number()),
+        defaultEstimate: v.optional(v.number()),
+      }),
+    ),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_slug", ["workspaceId", "slug"])
+    .index("by_organization_slug", ["organizationId", "slug"])
+    .index("by_creator", ["createdBy"])
+    .index("by_lead", ["leadId"])
+    .index("by_deleted", ["isDeleted"])
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["organizationId", "workspaceId"],
+    }),
+
+  teamMembers: defineTable({
+    teamId: v.id("teams"),
+    userId: v.id("users"),
+    role: v.union(
+      v.literal("admin"), // Manage team members and settings
+      v.literal("member"),
+    ),
+    addedBy: v.id("users"),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
+  })
+    .index("by_team", ["teamId"])
+    .index("by_user", ["userId"])
+    .index("by_team_user", ["teamId", "userId"])
+    .index("by_role", ["role"])
+    .index("by_deleted", ["isDeleted"]),
+
+  // ===========================================================================
+  // DOCUMENTS
+  // Real-time collaborative documents, templates, Y.js state
+  // ===========================================================================
+
   documents: defineTable({
     title: v.string(),
     isPublic: v.boolean(),
     createdBy: v.id("users"),
     updatedAt: v.number(),
     // Hierarchy - every doc belongs to an org, optionally scoped to workspace/project
-    organizationId: v.id("organizations"), // Required - all docs belong to an org
-    workspaceId: v.optional(v.id("workspaces")), // Optional - workspace-level docs
-    projectId: v.optional(v.id("projects")), // Optional - project-level docs
+    organizationId: v.id("organizations"),
+    workspaceId: v.optional(v.id("workspaces")),
+    projectId: v.optional(v.id("projects")),
     // Soft Delete
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
@@ -62,38 +281,31 @@ const applicationTables = {
 
   documentVersions: defineTable({
     documentId: v.id("documents"),
-    version: v.number(), // Version number from ProseMirror
-    snapshot: proseMirrorSnapshot, // ProseMirror snapshot data
-    title: v.string(), // Document title at this version
-    createdBy: v.id("users"), // User who created this version
-    changeDescription: v.optional(v.string()), // Optional description of changes
+    version: v.number(),
+    snapshot: proseMirrorSnapshot,
+    title: v.string(),
+    createdBy: v.id("users"),
+    changeDescription: v.optional(v.string()),
   })
     .index("by_document", ["documentId"])
     .index("by_document_version", ["documentId", "version"]),
 
-  // Y.js document state for real-time collaboration
   yjsDocuments: defineTable({
-    documentId: v.id("documents"), // Link to parent document
-    // Y.js state vector and updates are stored as binary (base64 encoded)
+    documentId: v.id("documents"),
     stateVector: v.string(), // Base64 encoded Y.js state vector
-    updates: v.array(v.string()), // Array of base64 encoded Y.js updates (batched for performance)
-    // Version tracking
-    version: v.number(), // Monotonically increasing version for conflict resolution
-    // Metadata
+    updates: v.array(v.string()), // Batched base64 Y.js updates
+    version: v.number(),
     lastModifiedBy: v.optional(v.id("users")),
     updatedAt: v.number(),
   })
     .index("by_document", ["documentId"])
     .index("by_document_version", ["documentId", "version"]),
 
-  // Y.js awareness state for cursor positions and user presence
   yjsAwareness: defineTable({
     documentId: v.id("documents"),
     userId: v.id("users"),
-    // Awareness data (cursor position, selection, etc.)
-    clientId: v.number(), // Y.js client ID
+    clientId: v.number(),
     awarenessData: v.string(), // JSON string of awareness state
-    // Timestamp for garbage collection
     lastSeenAt: v.number(),
   })
     .index("by_document", ["documentId"])
@@ -101,15 +313,15 @@ const applicationTables = {
     .index("by_last_seen", ["lastSeenAt"]),
 
   documentTemplates: defineTable({
-    name: v.string(), // Template name: "Meeting Notes", "RFC", "Project Brief"
+    name: v.string(),
     description: v.optional(v.string()),
-    category: v.string(), // "meeting", "planning", "design", "engineering", etc.
-    icon: v.string(), // Emoji or icon identifier
-    content: blockNoteContent, // BlockNote/ProseMirror content structure
-    isBuiltIn: v.boolean(), // Built-in templates vs user-created
-    isPublic: v.boolean(), // Public templates visible to all users
-    createdBy: v.optional(v.id("users")), // Creator (null for built-in)
-    projectId: v.optional(v.id("projects")), // Project-specific template (optional)
+    category: v.string(), // "meeting", "planning", "design", "engineering"
+    icon: v.string(),
+    content: blockNoteContent,
+    isBuiltIn: v.boolean(),
+    isPublic: v.boolean(),
+    createdBy: v.optional(v.id("users")),
+    projectId: v.optional(v.id("projects")),
     updatedAt: v.number(),
   })
     .index("by_category", ["category"])
@@ -122,65 +334,24 @@ const applicationTables = {
       filterFields: ["category", "isPublic", "isBuiltIn"],
     }),
 
-  // NEW: Department-level workspaces (Engineering, Marketing, Product, etc.)
-  workspaces: defineTable({
-    name: v.string(), // "Engineering", "Marketing", "Product"
-    slug: v.string(), // "engineering", "marketing", "product"
-    description: v.optional(v.string()),
-    icon: v.optional(v.string()), // Emoji like 🏗️, 📱, 🎨
-    organizationId: v.id("organizations"),
-    createdBy: v.id("users"),
-    updatedAt: v.number(),
-    // Settings
-    settings: v.optional(
-      v.object({
-        defaultProjectVisibility: v.optional(v.boolean()),
-        allowExternalSharing: v.optional(v.boolean()),
-      }),
-    ),
-  })
-    .index("by_organization", ["organizationId"])
-    .index("by_organization_slug", ["organizationId", "slug"])
-    .searchIndex("search_name", {
-      searchField: "name",
-      filterFields: ["organizationId"],
-    }),
-
-  // Workspace Members (User-Workspace relationships - department-level access)
-  workspaceMembers: defineTable({
-    workspaceId: v.id("workspaces"),
-    userId: v.id("users"),
-    role: v.union(
-      v.literal("admin"), // Can manage workspace settings and members
-      v.literal("editor"), // Can create/edit workspace-level content (docs)
-      v.literal("member"), // Can view workspace resources
-    ),
-    addedBy: v.id("users"),
-    // Soft Delete
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
-  })
-    .index("by_workspace", ["workspaceId"])
-    .index("by_user", ["userId"])
-    .index("by_workspace_user", ["workspaceId", "userId"])
-    .index("by_role", ["role"])
-    .index("by_workspace_role", ["workspaceId", "role"])
-    .index("by_deleted", ["isDeleted"]),
+  // ===========================================================================
+  // PROJECTS
+  // Project management, membership, templates
+  // ===========================================================================
 
   projects: defineTable(projectsFields)
     .index("by_creator", ["createdBy"])
     .index("by_key", ["key"])
     .index("by_public", ["isPublic"])
     .index("by_organization", ["organizationId"])
-    .index("by_workspace", ["workspaceId"]) // NEW
+    .index("by_workspace", ["workspaceId"])
     .index("by_team", ["teamId"])
     .index("by_owner", ["ownerId"])
     .index("by_organization_public", ["organizationId", "isPublic"])
     .index("by_deleted", ["isDeleted"])
     .searchIndex("search_name", {
       searchField: "name",
-      filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId"], // Added workspaceId
+      filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId"],
     }),
 
   projectMembers: defineTable({
@@ -188,7 +359,6 @@ const applicationTables = {
     userId: v.id("users"),
     role: projectRoles,
     addedBy: v.id("users"),
-    // Soft Delete
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
@@ -199,12 +369,43 @@ const applicationTables = {
     .index("by_role", ["role"])
     .index("by_deleted", ["isDeleted"]),
 
+  projectTemplates: defineTable({
+    name: v.string(),
+    description: v.string(),
+    category: v.string(), // "software", "marketing", "design"
+    icon: v.string(),
+    boardType: boardTypes,
+    workflowStates: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        category: workflowCategories,
+        order: v.number(),
+      }),
+    ),
+    defaultLabels: v.array(
+      v.object({
+        name: v.string(),
+        color: v.string(),
+      }),
+    ),
+    isBuiltIn: v.boolean(),
+    createdBy: v.optional(v.id("users")),
+  })
+    .index("by_category", ["category"])
+    .index("by_built_in", ["isBuiltIn"]),
+
+  // ===========================================================================
+  // ISSUES & SPRINTS
+  // Issue tracking, comments, links, activity, sprints, labels
+  // ===========================================================================
+
   issues: defineTable(issuesFields)
     .index("by_project", ["projectId"])
-    .index("by_organization", ["organizationId"]) // NEW
+    .index("by_organization", ["organizationId"])
     .index("by_organization_deleted", ["organizationId", "isDeleted"])
-    .index("by_workspace", ["workspaceId"]) // Standardized
-    .index("by_team", ["teamId"]) // NEW
+    .index("by_workspace", ["workspaceId"])
+    .index("by_team", ["teamId"])
     .index("by_team_deleted", ["teamId", "isDeleted"])
     .index("by_key", ["key"])
     .index("by_assignee", ["assigneeId", "isDeleted"])
@@ -216,17 +417,16 @@ const applicationTables = {
     .index("by_parent", ["parentId", "isDeleted"])
     .index("by_project_status", ["projectId", "status", "order", "isDeleted"])
     .index("by_project_status_updated", ["projectId", "status", "updatedAt"])
-    .index("by_project_sprint_status", ["projectId", "sprintId", "status", "order", "isDeleted"]) // Optimized for sprint board counts
-    .index("by_project_sprint_status_updated", ["projectId", "sprintId", "status", "updatedAt"]) // NEW OPTIMIZATION
+    .index("by_project_sprint_status", ["projectId", "sprintId", "status", "order", "isDeleted"])
+    .index("by_project_sprint_status_updated", ["projectId", "sprintId", "status", "updatedAt"])
     .index("by_project_updated", ["projectId", "updatedAt"])
     .index("by_project_due_date", ["projectId", "dueDate"])
     .index("by_project_type_due_date", ["projectId", "type", "dueDate"])
-    .index("by_organization_status", ["organizationId", "status", "isDeleted"]) // NEW
-    .index("by_workspace_status", ["workspaceId", "status", "isDeleted"]) // Standardized
-    .index("by_team_status", ["teamId", "status", "order", "isDeleted"]) // NEW
-    .index("by_team_status_updated", ["teamId", "status", "updatedAt"]) // NEW OPTIMIZATION
-    .index("by_deleted", ["isDeleted"]) // Soft delete index
-    // Project trash view & optimized active listing
+    .index("by_organization_status", ["organizationId", "status", "isDeleted"])
+    .index("by_workspace_status", ["workspaceId", "status", "isDeleted"])
+    .index("by_team_status", ["teamId", "status", "order", "isDeleted"])
+    .index("by_team_status_updated", ["teamId", "status", "updatedAt"])
+    .index("by_deleted", ["isDeleted"])
     .index("by_project_deleted", ["projectId", "isDeleted"])
     .searchIndex("search_title", {
       searchField: "searchContent",
@@ -240,12 +440,12 @@ const applicationTables = {
         "priority",
         "assigneeId",
         "reporterId",
-      ], // Added organizationId, assigneeId, reporterId
+      ],
     })
     .vectorIndex("by_embedding", {
       vectorField: "embedding",
-      dimensions: 512, // Voyage AI voyage-3-lite embedding dimension
-      filterFields: ["projectId", "workspaceId", "teamId"], // Added workspaceId, teamId
+      dimensions: 512,
+      filterFields: ["projectId", "workspaceId", "teamId"],
     })
     .index("by_project_type", ["projectId", "type", "isDeleted"]),
 
@@ -253,9 +453,8 @@ const applicationTables = {
     issueId: v.id("issues"),
     authorId: v.id("users"),
     content: v.string(),
-    mentions: v.array(v.id("users")), // User IDs mentioned in comment
+    mentions: v.array(v.id("users")),
     updatedAt: v.number(),
-    // Soft Delete
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
@@ -282,24 +481,6 @@ const applicationTables = {
     .index("by_from_issue", ["fromIssueId"])
     .index("by_to_issue", ["toIssueId"]),
 
-  sprints: defineTable({
-    projectId: v.id("projects"), // Sprint belongs to project
-    name: v.string(),
-    goal: v.optional(v.string()),
-    startDate: v.optional(v.number()),
-    endDate: v.optional(v.number()),
-    status: sprintStatuses,
-    createdBy: v.id("users"),
-    updatedAt: v.number(),
-    // Soft Delete
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
-  })
-    .index("by_project", ["projectId"])
-    .index("by_status", ["status"])
-    .index("by_deleted", ["isDeleted"]),
-
   issueActivity: defineTable(issueActivityFields)
     .index("by_issue", ["issueId"])
     .index("by_user", ["userId"]),
@@ -312,11 +493,28 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_issue_user", ["issueId", "userId"]),
 
+  sprints: defineTable({
+    projectId: v.id("projects"),
+    name: v.string(),
+    goal: v.optional(v.string()),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+    status: sprintStatuses,
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_status", ["status"])
+    .index("by_deleted", ["isDeleted"]),
+
   labelGroups: defineTable({
-    projectId: v.id("projects"), // Group belongs to project
-    name: v.string(), // e.g., "Priority", "Component", "Area"
+    projectId: v.id("projects"),
+    name: v.string(), // "Priority", "Component", "Area"
     description: v.optional(v.string()),
-    displayOrder: v.number(), // For sorting groups in UI
+    displayOrder: v.number(),
     createdBy: v.id("users"),
   })
     .index("by_project", ["projectId"])
@@ -324,11 +522,11 @@ const applicationTables = {
     .index("by_project_order", ["projectId", "displayOrder"]),
 
   labels: defineTable({
-    projectId: v.id("projects"), // Label belongs to project
-    groupId: v.optional(v.id("labelGroups")), // Optional group assignment
+    projectId: v.id("projects"),
+    groupId: v.optional(v.id("labelGroups")),
     name: v.string(),
-    color: v.string(), // Hex color code like "#3B82F6"
-    displayOrder: v.optional(v.number()), // Order within group
+    color: v.string(), // Hex: "#3B82F6"
+    displayOrder: v.optional(v.number()),
     createdBy: v.id("users"),
   })
     .index("by_project", ["projectId"])
@@ -336,7 +534,7 @@ const applicationTables = {
     .index("by_group", ["groupId"]),
 
   issueTemplates: defineTable({
-    projectId: v.id("projects"), // Template belongs to project
+    projectId: v.id("projects"),
     name: v.string(),
     type: issueTypes,
     titleTemplate: v.string(),
@@ -348,40 +546,8 @@ const applicationTables = {
     .index("by_project", ["projectId"])
     .index("by_project_type", ["projectId", "type"]),
 
-  webhooks: defineTable({
-    projectId: v.id("projects"), // Webhook belongs to project
-    name: v.string(),
-    url: v.string(),
-    events: v.array(v.string()), // e.g., ["issue.created", "issue.updated"]
-    secret: v.optional(v.string()), // For HMAC signature
-    isActive: v.boolean(),
-    createdBy: v.id("users"),
-    lastTriggered: v.optional(v.number()),
-    // Soft Delete
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
-  })
-    .index("by_project", ["projectId"])
-    .index("by_active", ["isActive"])
-    .index("by_deleted", ["isDeleted"]),
-
-  webhookExecutions: defineTable({
-    webhookId: v.id("webhooks"),
-    event: v.string(), // Event that triggered: "issue.created", etc.
-    status: webhookStatuses,
-    requestPayload: v.string(), // JSON string of the request body
-    responseStatus: v.optional(v.number()), // HTTP status code
-    responseBody: v.optional(v.string()), // Response from webhook endpoint
-    error: v.optional(v.string()), // Error message if failed
-    attempts: v.number(), // Number of delivery attempts
-    completedAt: v.optional(v.number()),
-  })
-    .index("by_webhook", ["webhookId"])
-    .index("by_status", ["status"]),
-
   savedFilters: defineTable({
-    projectId: v.id("projects"), // Filter belongs to project
+    projectId: v.id("projects"),
     userId: v.id("users"),
     name: v.string(),
     filters: v.object({
@@ -403,60 +569,17 @@ const applicationTables = {
       sprintId: v.optional(v.id("sprints")),
       epicId: v.optional(v.id("issues")),
     }),
-    isPublic: v.boolean(), // Whether other team members can use this filter
+    isPublic: v.boolean(),
     updatedAt: v.number(),
   })
     .index("by_project", ["projectId"])
     .index("by_user", ["userId"])
     .index("by_project_public", ["projectId", "isPublic"]),
 
-  projectTemplates: defineTable({
-    name: v.string(),
-    description: v.string(),
-    category: v.string(), // "software", "marketing", "design", etc.
-    icon: v.string(), // Emoji or icon identifier
-    boardType: boardTypes,
-    workflowStates: v.array(
-      v.object({
-        id: v.string(),
-        name: v.string(),
-        category: workflowCategories,
-        order: v.number(),
-      }),
-    ),
-    defaultLabels: v.array(
-      v.object({
-        name: v.string(),
-        color: v.string(),
-      }),
-    ),
-    isBuiltIn: v.boolean(), // Built-in templates vs user-created
-    createdBy: v.optional(v.id("users")),
-  })
-    .index("by_category", ["category"])
-    .index("by_built_in", ["isBuiltIn"]),
-
-  automationRules: defineTable({
-    projectId: v.id("projects"), // Automation rule
-    name: v.string(),
-    description: v.optional(v.string()),
-    isActive: v.boolean(),
-    trigger: v.string(), // Trigger type: "status_changed", "assignee_changed", etc.
-    triggerValue: v.optional(v.string()), // Optional trigger value (e.g., specific status)
-    actionType: v.string(), // Action: "set_assignee", "add_label", "send_notification", etc.
-    actionValue: v.string(), // Action value/params as JSON string
-    createdBy: v.id("users"),
-    updatedAt: v.number(),
-    executionCount: v.number(),
-  })
-    .index("by_project", ["projectId"])
-    .index("by_active", ["isActive"])
-    .index("by_project_active", ["projectId", "isActive"]),
-
   customFields: defineTable({
-    projectId: v.id("projects"), // Custom field belongs to project
+    projectId: v.id("projects"),
     name: v.string(),
-    fieldKey: v.string(), // Unique key like "customer_id"
+    fieldKey: v.string(), // "customer_id"
     fieldType: v.union(
       v.literal("text"),
       v.literal("number"),
@@ -466,7 +589,7 @@ const applicationTables = {
       v.literal("checkbox"),
       v.literal("url"),
     ),
-    options: v.optional(v.array(v.string())), // For select/multiselect types
+    options: v.optional(v.array(v.string())), // For select/multiselect
     isRequired: v.boolean(),
     description: v.optional(v.string()),
     createdBy: v.id("users"),
@@ -477,24 +600,81 @@ const applicationTables = {
   customFieldValues: defineTable({
     issueId: v.id("issues"),
     fieldId: v.id("customFields"),
-    value: v.string(), // Stored as string, parsed based on field type
+    value: v.string(),
     updatedAt: v.number(),
   })
     .index("by_issue", ["issueId"])
     .index("by_field", ["fieldId"])
     .index("by_issue_field", ["issueId", "fieldId"]),
 
+  // ===========================================================================
+  // AUTOMATION & WEBHOOKS
+  // Workflow automation rules, webhook delivery
+  // ===========================================================================
+
+  automationRules: defineTable({
+    projectId: v.id("projects"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    isActive: v.boolean(),
+    trigger: v.string(), // "status_changed", "assignee_changed"
+    triggerValue: v.optional(v.string()),
+    actionType: v.string(), // "set_assignee", "add_label", "send_notification"
+    actionValue: v.string(), // JSON string
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+    executionCount: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_active", ["isActive"])
+    .index("by_project_active", ["projectId", "isActive"]),
+
+  webhooks: defineTable({
+    projectId: v.id("projects"),
+    name: v.string(),
+    url: v.string(),
+    events: v.array(v.string()), // ["issue.created", "issue.updated"]
+    secret: v.optional(v.string()), // HMAC signature
+    isActive: v.boolean(),
+    createdBy: v.id("users"),
+    lastTriggered: v.optional(v.number()),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_active", ["isActive"])
+    .index("by_deleted", ["isDeleted"]),
+
+  webhookExecutions: defineTable({
+    webhookId: v.id("webhooks"),
+    event: v.string(),
+    status: webhookStatuses,
+    requestPayload: v.string(),
+    responseStatus: v.optional(v.number()),
+    responseBody: v.optional(v.string()),
+    error: v.optional(v.string()),
+    attempts: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_webhook", ["webhookId"])
+    .index("by_status", ["status"]),
+
+  // ===========================================================================
+  // NOTIFICATIONS
+  // In-app notifications, email preferences, unsubscribe tokens
+  // ===========================================================================
+
   notifications: defineTable({
     userId: v.id("users"),
-    type: v.string(), // "mention", "assigned", "comment", "status_change", etc.
+    type: v.string(), // "mention", "assigned", "comment", "status_change"
     title: v.string(),
     message: v.string(),
     issueId: v.optional(v.id("issues")),
     projectId: v.optional(v.id("projects")),
     documentId: v.optional(v.id("documents")),
-    actorId: v.optional(v.id("users")), // Who triggered the notification
+    actorId: v.optional(v.id("users")),
     isRead: v.boolean(),
-    // Soft Delete
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
@@ -505,18 +685,14 @@ const applicationTables = {
 
   notificationPreferences: defineTable({
     userId: v.id("users"),
-    // Master toggles
-    emailEnabled: v.boolean(), // Master switch for all email notifications
-    // Individual notification type preferences
-    emailMentions: v.boolean(), // Send email when @mentioned
-    emailAssignments: v.boolean(), // Send email when assigned to issue
-    emailComments: v.boolean(), // Send email for comments on my issues
-    emailStatusChanges: v.boolean(), // Send email for status changes on watched issues
-    // Digest preferences
+    emailEnabled: v.boolean(),
+    emailMentions: v.boolean(),
+    emailAssignments: v.boolean(),
+    emailComments: v.boolean(),
+    emailStatusChanges: v.boolean(),
     emailDigest: emailDigests,
-    digestDay: v.optional(v.string()), // "monday", "tuesday", etc. (for weekly digest)
-    digestTime: v.optional(v.string()), // "09:00", "17:00", etc. (24h format)
-    // Metadata
+    digestDay: v.optional(v.string()), // "monday", etc.
+    digestTime: v.optional(v.string()), // "09:00"
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -530,56 +706,36 @@ const applicationTables = {
     .index("by_token", ["token"])
     .index("by_user", ["userId"]),
 
-  userOnboarding: defineTable({
-    userId: v.id("users"),
-    onboardingCompleted: v.boolean(),
-    onboardingStep: v.optional(v.number()), // Current step (0-5)
-    sampleWorkspaceCreated: v.optional(v.boolean()), // Whether sample project was generated (migration-safe)
-    sampleProjectCreated: v.optional(v.boolean()), // Deprecated field name (migration-safe)
-    tourShown: v.boolean(), // Whether welcome tour was shown
-    wizardCompleted: v.boolean(), // Whether project wizard was completed
-    checklistDismissed: v.boolean(), // Whether checklist was dismissed
-    // Persona-based onboarding fields
-    onboardingPersona: v.optional(personas), // User's self-selected persona
-    wasInvited: v.optional(v.boolean()), // Whether user was invited (denormalized)
-    invitedByName: v.optional(v.string()), // Name of person who invited them
-    updatedAt: v.number(),
-  }).index("by_user", ["userId"]),
+  // ===========================================================================
+  // CALENDAR & SCHEDULING
+  // Events, attendance, availability, booking pages
+  // ===========================================================================
 
-  // Calendar & Scheduling (Agency Features)
   calendarEvents: defineTable({
     title: v.string(),
     description: v.optional(v.string()),
-    startTime: v.number(), // Unix timestamp
-    endTime: v.number(), // Unix timestamp
+    startTime: v.number(),
+    endTime: v.number(),
     allDay: v.boolean(),
     location: v.optional(v.string()),
     eventType: v.union(
-      v.literal("meeting"), // Team or client meetings
-      v.literal("deadline"), // Project deadlines
-      v.literal("timeblock"), // Focus time blocks
-      v.literal("personal"), // Personal events
+      v.literal("meeting"),
+      v.literal("deadline"),
+      v.literal("timeblock"),
+      v.literal("personal"),
     ),
-    // Attendees
     organizerId: v.id("users"),
-    attendeeIds: v.array(v.id("users")), // Internal team members
-    externalAttendees: v.optional(v.array(v.string())), // External emails
-    // Links
-    projectId: v.optional(v.id("projects")), // Link to project
-    issueId: v.optional(v.id("issues")), // Link to issue
-    // Status
+    attendeeIds: v.array(v.id("users")),
+    externalAttendees: v.optional(v.array(v.string())),
+    projectId: v.optional(v.id("projects")),
+    issueId: v.optional(v.id("issues")),
     status: calendarStatuses,
-    // Recurrence
     isRecurring: v.boolean(),
-    recurrenceRule: v.optional(v.string()), // RRULE format (e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR")
-    // Meeting details
-    meetingUrl: v.optional(v.string()), // Zoom, Meet, etc.
+    recurrenceRule: v.optional(v.string()), // RRULE format
+    meetingUrl: v.optional(v.string()),
     notes: v.optional(v.string()),
-    // Attendance tracking
-    isRequired: v.optional(v.boolean()), // Required attendance (for tracking who missed)
-    // Display
-    color: v.optional(calendarEventColors), // Optional palette color override
-    // Metadata
+    isRequired: v.optional(v.boolean()),
+    color: v.optional(calendarEventColors),
     updatedAt: v.number(),
   })
     .index("by_organizer", ["organizerId"])
@@ -593,24 +749,18 @@ const applicationTables = {
       filterFields: ["organizerId", "projectId", "status"],
     }),
 
-  // Meeting Attendance Tracking (for required meetings)
   meetingAttendance: defineTable({
     eventId: v.id("calendarEvents"),
     userId: v.id("users"),
-    status: v.union(
-      v.literal("present"), // Attended on time
-      v.literal("tardy"), // Attended but late
-      v.literal("absent"), // Did not attend
-    ),
-    markedBy: v.id("users"), // Admin/organizer who marked attendance
+    status: v.union(v.literal("present"), v.literal("tardy"), v.literal("absent")),
+    markedBy: v.id("users"),
     markedAt: v.number(),
-    notes: v.optional(v.string()), // Optional notes: "Left early", "Technical issues", etc.
+    notes: v.optional(v.string()),
   })
     .index("by_event", ["eventId"])
     .index("by_user", ["userId"])
     .index("by_event_user", ["eventId", "userId"]),
 
-  // User availability for booking (Cal.com-style)
   availabilitySlots: defineTable({
     userId: v.id("users"),
     dayOfWeek: v.union(
@@ -622,28 +772,25 @@ const applicationTables = {
       v.literal("saturday"),
       v.literal("sunday"),
     ),
-    startTime: v.string(), // 24h format like "09:00"
-    endTime: v.string(), // 24h format like "17:00"
+    startTime: v.string(), // "09:00"
+    endTime: v.string(), // "17:00"
     isActive: v.boolean(),
-    timezone: v.string(), // IANA timezone like "America/New_York"
+    timezone: v.string(),
   })
     .index("by_user", ["userId"])
     .index("by_user_day", ["userId", "dayOfWeek"])
     .index("by_active", ["isActive"]),
 
-  // Booking pages (Cal.com-style)
   bookingPages: defineTable({
     userId: v.id("users"),
-    slug: v.string(), // Unique URL slug like "john-doe" or "team-discovery"
-    title: v.string(), // e.g., "30 Minute Discovery Call"
+    slug: v.string(),
+    title: v.string(),
     description: v.optional(v.string()),
-    duration: v.number(), // Duration in minutes
-    // Availability settings
-    bufferTimeBefore: v.number(), // Minutes before meeting
-    bufferTimeAfter: v.number(), // Minutes after meeting
-    minimumNotice: v.number(), // Minimum hours notice required
+    duration: v.number(), // Minutes
+    bufferTimeBefore: v.number(),
+    bufferTimeAfter: v.number(),
+    minimumNotice: v.number(), // Hours
     maxBookingsPerDay: v.optional(v.number()),
-    // Meeting settings
     location: v.union(
       v.literal("phone"),
       v.literal("zoom"),
@@ -652,8 +799,7 @@ const applicationTables = {
       v.literal("in-person"),
       v.literal("custom"),
     ),
-    locationDetails: v.optional(v.string()), // Phone number, Zoom link, address, etc.
-    // Questions for booker
+    locationDetails: v.optional(v.string()),
     questions: v.optional(
       v.array(
         v.object({
@@ -663,46 +809,37 @@ const applicationTables = {
         }),
       ),
     ),
-    // Settings
     isActive: v.boolean(),
-    requiresConfirmation: v.boolean(), // Manual approval
-    color: v.string(), // Calendar color hex
-    // Metadata
+    requiresConfirmation: v.boolean(),
+    color: v.string(),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
     .index("by_slug", ["slug"])
     .index("by_active", ["isActive"]),
 
-  // Scheduled bookings
   bookings: defineTable({
     bookingPageId: v.id("bookingPages"),
-    hostId: v.id("users"), // Person being booked
-    // Booker information
+    hostId: v.id("users"),
     bookerName: v.string(),
     bookerEmail: v.string(),
     bookerPhone: v.optional(v.string()),
-    bookerAnswers: v.optional(v.string()), // JSON string of question answers
-    // Meeting details
-    startTime: v.number(), // Unix timestamp
-    endTime: v.number(), // Unix timestamp
-    timezone: v.string(), // Booker's timezone
+    bookerAnswers: v.optional(v.string()), // JSON
+    startTime: v.number(),
+    endTime: v.number(),
+    timezone: v.string(),
     location: v.string(),
     locationDetails: v.optional(v.string()),
-    // Status
     status: v.union(
-      v.literal("pending"), // Awaiting confirmation
+      v.literal("pending"),
       v.literal("confirmed"),
       v.literal("cancelled"),
       v.literal("completed"),
     ),
     cancelledBy: v.optional(cancelledByOptions),
     cancellationReason: v.optional(v.string()),
-    // Links to created event
     calendarEventId: v.optional(v.id("calendarEvents")),
-    // Reminders
     reminderSent: v.boolean(),
-    // Metadata
     updatedAt: v.number(),
   })
     .index("by_booking_page", ["bookingPageId"])
@@ -712,40 +849,34 @@ const applicationTables = {
     .index("by_status", ["status"])
     .index("by_host_status", ["hostId", "status"]),
 
-  // External calendar connections (Google, Outlook)
   calendarConnections: defineTable({
     userId: v.id("users"),
     provider: calendarProviders,
-    providerAccountId: v.string(), // Email/account ID from provider
-    // OAuth tokens (encrypted in production)
+    providerAccountId: v.string(),
     accessToken: v.string(),
     refreshToken: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
-    // Settings
     syncEnabled: v.boolean(),
-    syncDirection: v.union(
-      v.literal("import"), // Only import from external calendar
-      v.literal("export"), // Only export to external calendar
-      v.literal("bidirectional"), // Two-way sync
-    ),
+    syncDirection: v.union(v.literal("import"), v.literal("export"), v.literal("bidirectional")),
     lastSyncAt: v.optional(v.number()),
-    // Metadata
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
     .index("by_provider", ["provider"])
     .index("by_user_provider", ["userId", "provider"]),
 
-  // GitHub Integration
+  // ===========================================================================
+  // INTEGRATIONS: GITHUB
+  // Repository connections, pull requests, commits
+  // ===========================================================================
+
   githubConnections: defineTable({
     userId: v.id("users"),
-    githubUserId: v.string(), // GitHub user ID
-    githubUsername: v.string(), // GitHub username
-    // OAuth tokens
+    githubUserId: v.string(),
+    githubUsername: v.string(),
     accessToken: v.string(),
     refreshToken: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
-    // Metadata
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -753,15 +884,13 @@ const applicationTables = {
 
   githubRepositories: defineTable({
     projectId: v.id("projects"),
-    repoOwner: v.string(), // Repository owner (org or user)
-    repoName: v.string(), // Repository name
+    repoOwner: v.string(),
+    repoName: v.string(),
     repoFullName: v.string(), // "owner/repo"
-    repoId: v.string(), // GitHub repository ID
-    // Settings
-    syncPRs: v.boolean(), // Sync pull requests
-    syncIssues: v.boolean(), // Sync GitHub issues (optional)
-    autoLinkCommits: v.boolean(), // Auto-link commits that mention issue keys
-    // Metadata
+    repoId: v.string(),
+    syncPRs: v.boolean(),
+    syncIssues: v.boolean(),
+    autoLinkCommits: v.boolean(),
     linkedBy: v.id("users"),
     updatedAt: v.number(),
   })
@@ -770,25 +899,20 @@ const applicationTables = {
     .index("by_repo_full_name", ["repoFullName"]),
 
   githubPullRequests: defineTable({
-    issueId: v.optional(v.id("issues")), // Linked Nixelo issue
+    issueId: v.optional(v.id("issues")),
     projectId: v.id("projects"),
     repositoryId: v.id("githubRepositories"),
-    // GitHub PR data
     prNumber: v.number(),
-    prId: v.string(), // GitHub PR ID
+    prId: v.string(),
     title: v.string(),
     body: v.optional(v.string()),
     state: prStates,
     mergedAt: v.optional(v.number()),
     closedAt: v.optional(v.number()),
-    // Author
     authorUsername: v.string(),
     authorAvatarUrl: v.optional(v.string()),
-    // Links
-    htmlUrl: v.string(), // GitHub PR URL
-    // Status checks
+    htmlUrl: v.string(),
     checksStatus: v.optional(ciStatuses),
-    // Metadata
     updatedAt: v.number(),
   })
     .index("by_issue", ["issueId"])
@@ -798,49 +922,54 @@ const applicationTables = {
     .index("by_repository_pr_number", ["repositoryId", "prNumber"]),
 
   githubCommits: defineTable({
-    issueId: v.optional(v.id("issues")), // Auto-linked via commit message
+    issueId: v.optional(v.id("issues")),
     projectId: v.id("projects"),
     repositoryId: v.id("githubRepositories"),
-    // GitHub commit data
-    sha: v.string(), // Commit SHA
+    sha: v.string(),
     message: v.string(),
     authorUsername: v.string(),
     authorAvatarUrl: v.optional(v.string()),
-    htmlUrl: v.string(), // GitHub commit URL
+    htmlUrl: v.string(),
     committedAt: v.number(),
-    // Metadata
   })
     .index("by_issue", ["issueId"])
     .index("by_project", ["projectId"])
     .index("by_repository", ["repositoryId"])
     .index("by_sha", ["sha"]),
 
-  // Offline sync queue
-  offlineSyncQueue: defineTable({
+  // ===========================================================================
+  // INTEGRATIONS: PUMBLE (Team Chat)
+  // ===========================================================================
+
+  pumbleWebhooks: defineTable({
     userId: v.id("users"),
-    mutationType: v.string(), // e.g., "issues.update", "issues.create"
-    mutationArgs: v.string(), // JSON string of mutation arguments
-    status: v.union(
-      v.literal("pending"), // Waiting to be synced
-      v.literal("syncing"), // Currently syncing
-      v.literal("completed"), // Successfully synced
-      v.literal("failed"), // Failed to sync (will retry)
-    ),
-    attempts: v.number(), // Number of sync attempts
-    lastAttempt: v.optional(v.number()),
-    error: v.optional(v.string()), // Error message if failed
-    // Metadata
+    projectId: v.optional(v.id("projects")),
+    name: v.string(),
+    webhookUrl: v.string(),
+    events: v.array(v.string()),
+    isActive: v.boolean(),
+    sendMentions: v.boolean(),
+    sendAssignments: v.boolean(),
+    sendStatusChanges: v.boolean(),
+    messagesSent: v.number(),
+    lastMessageAt: v.optional(v.number()),
+    lastError: v.optional(v.string()),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_status", ["status"])
-    .index("by_user_status", ["userId", "status"]),
+    .index("by_project", ["projectId"])
+    .index("by_active", ["isActive"])
+    .index("by_user_active", ["userId", "isActive"]),
 
-  // AI Integration
+  // ===========================================================================
+  // AI FEATURES
+  // Chat, suggestions, usage tracking
+  // ===========================================================================
+
   aiChats: defineTable({
     userId: v.id("users"),
-    projectId: v.optional(v.id("projects")), // Link chat to specific project for context
-    title: v.string(), // Auto-generated from first message or user-provided
+    projectId: v.optional(v.id("projects")),
+    title: v.string(),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -850,7 +979,6 @@ const applicationTables = {
     chatId: v.id("aiChats"),
     role: chatRoles,
     content: v.string(),
-    // Context provided to AI (for debugging and transparency)
     contextData: v.optional(
       v.object({
         issueIds: v.optional(v.array(v.id("issues"))),
@@ -858,33 +986,30 @@ const applicationTables = {
         sprintIds: v.optional(v.array(v.id("sprints"))),
       }),
     ),
-    // AI response metadata
-    modelUsed: v.optional(v.string()), // e.g., "claude-3-5-sonnet-20241022"
+    modelUsed: v.optional(v.string()),
     tokensUsed: v.optional(v.number()),
-    responseTime: v.optional(v.number()), // Milliseconds
+    responseTime: v.optional(v.number()),
   }).index("by_chat", ["chatId"]),
 
   aiSuggestions: defineTable({
     userId: v.id("users"),
     projectId: v.id("projects"),
     suggestionType: v.union(
-      v.literal("issue_description"), // AI-generated issue description
-      v.literal("issue_priority"), // AI-suggested priority
-      v.literal("issue_labels"), // AI-suggested labels
-      v.literal("issue_assignee"), // AI-suggested assignee
-      v.literal("sprint_planning"), // AI sprint planning suggestions
-      v.literal("risk_detection"), // AI-detected project risks
-      v.literal("insight"), // General AI insights
+      v.literal("issue_description"),
+      v.literal("issue_priority"),
+      v.literal("issue_labels"),
+      v.literal("issue_assignee"),
+      v.literal("sprint_planning"),
+      v.literal("risk_detection"),
+      v.literal("insight"),
     ),
-    targetId: v.optional(v.string()), // ID of issue/sprint being suggested for
-    suggestion: v.string(), // The AI suggestion content
-    reasoning: v.optional(v.string()), // Why AI made this suggestion
-    // User actions
-    accepted: v.optional(v.boolean()), // Did user accept the suggestion?
+    targetId: v.optional(v.string()),
+    suggestion: v.string(),
+    reasoning: v.optional(v.string()),
+    accepted: v.optional(v.boolean()),
     dismissed: v.optional(v.boolean()),
-    // Metadata
     modelUsed: v.string(),
-    confidence: v.optional(v.number()), // 0-1 confidence score
+    confidence: v.optional(v.number()),
     respondedAt: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
@@ -899,133 +1024,208 @@ const applicationTables = {
     provider: v.literal("anthropic"),
     model: v.string(),
     operation: v.union(
-      v.literal("chat"), // AI chat conversation
-      v.literal("suggestion"), // AI suggestion generation
-      v.literal("automation"), // AI automation task
-      v.literal("analysis"), // AI analytics/insights
+      v.literal("chat"),
+      v.literal("suggestion"),
+      v.literal("automation"),
+      v.literal("analysis"),
     ),
-    // Token usage
     promptTokens: v.number(),
     completionTokens: v.number(),
     totalTokens: v.number(),
-    // Cost estimation (optional, based on provider pricing)
-    estimatedCost: v.optional(v.number()), // In USD cents
-    // Performance
-    responseTime: v.number(), // Milliseconds
+    estimatedCost: v.optional(v.number()), // USD cents
+    responseTime: v.number(),
     success: v.boolean(),
     errorMessage: v.optional(v.string()),
-    // Metadata
   })
     .index("by_user", ["userId"])
     .index("by_project", ["projectId"])
     .index("by_provider", ["provider"])
     .index("by_operation", ["operation"]),
 
-  // REST API Keys (for CLI and external integrations)
-  apiKeys: defineTable({
-    userId: v.id("users"),
-    name: v.string(), // User-friendly name: "My CLI Tool", "GitHub Actions", etc.
-    keyHash: v.string(), // SHA-256 hash of the API key
-    keyPrefix: v.string(), // First 8 chars for display: "sk_casc_AbCdEfGh..."
-    // Permissions & Scopes
-    scopes: v.array(v.string()), // e.g., ["issues:read", "issues:write", "projects:read"]
-    // Optional project restriction
-    projectId: v.optional(v.id("projects")), // If set, key only works for this project
-    // Rate limiting
-    rateLimit: v.number(), // Requests per minute (default: 100)
-    // Status
-    isActive: v.boolean(),
-    lastUsedAt: v.optional(v.number()),
-    usageCount: v.number(), // Total API calls made with this key
-    // Expiration
-    expiresAt: v.optional(v.number()), // Optional expiration timestamp
-    // Rotation tracking
-    rotatedFromId: v.optional(v.id("apiKeys")), // Previous key this was rotated from
-    rotatedAt: v.optional(v.number()), // When old key was rotated (grace period start)
-    // Metadata
-    revokedAt: v.optional(v.number()),
-  })
-    .index("by_user", ["userId"])
-    .index("by_key_hash", ["keyHash"])
-    .index("by_active", ["isActive"])
-    .index("by_user_active", ["userId", "isActive"])
-    .index("by_rotated_from", ["rotatedFromId"])
-    .index("by_expires", ["expiresAt"]),
+  // ===========================================================================
+  // MEETING BOT / AI NOTETAKER
+  // Recordings, transcripts, summaries, participants
+  // ===========================================================================
 
-  // API usage logs (for monitoring and rate limiting)
-  apiUsageLogs: defineTable({
-    apiKeyId: v.id("apiKeys"),
-    userId: v.id("users"),
-    // Request details
-    method: v.string(), // GET, POST, PATCH, DELETE
-    endpoint: v.string(), // e.g., "/api/issues"
-    statusCode: v.number(), // HTTP status code
-    responseTime: v.number(), // Milliseconds
-    // Request metadata
-    userAgent: v.optional(v.string()),
-    ipAddress: v.optional(v.string()),
-    // Errors
-    error: v.optional(v.string()),
-    // Timestamp
-  })
-    .index("by_api_key", ["apiKeyId"])
-    .index("by_user", ["userId"]),
-
-  // Pumble Integration (Team Chat)
-  pumbleWebhooks: defineTable({
-    userId: v.id("users"),
-    projectId: v.optional(v.id("projects")), // Optional: link to specific project
-    name: v.string(), // User-friendly name: "Team Notifications", "Bug Reports Channel"
-    webhookUrl: v.string(), // Pumble incoming webhook URL
-    // Event subscriptions
-    events: v.array(v.string()), // e.g., ["issue.created", "issue.updated", "issue.assigned"]
-    // Settings
-    isActive: v.boolean(),
-    sendMentions: v.boolean(), // Send when user is @mentioned
-    sendAssignments: v.boolean(), // Send when assigned to issue
-    sendStatusChanges: v.boolean(), // Send when issue status changes
-    // Stats
-    messagesSent: v.number(),
-    lastMessageAt: v.optional(v.number()),
-    lastError: v.optional(v.string()),
-    // Metadata
+  meetingRecordings: defineTable({
+    calendarEventId: v.optional(v.id("calendarEvents")),
+    meetingUrl: v.optional(v.string()),
+    meetingPlatform: v.union(
+      v.literal("google_meet"),
+      v.literal("zoom"),
+      v.literal("teams"),
+      v.literal("other"),
+    ),
+    title: v.string(),
+    recordingFileId: v.optional(v.id("_storage")),
+    recordingUrl: v.optional(v.string()),
+    duration: v.optional(v.number()),
+    fileSize: v.optional(v.number()),
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("joining"),
+      v.literal("recording"),
+      v.literal("processing"),
+      v.literal("transcribing"),
+      v.literal("summarizing"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+      v.literal("failed"),
+    ),
+    errorMessage: v.optional(v.string()),
+    scheduledStartTime: v.optional(v.number()),
+    actualStartTime: v.optional(v.number()),
+    actualEndTime: v.optional(v.number()),
+    botName: v.string(),
+    botJoinedAt: v.optional(v.number()),
+    botLeftAt: v.optional(v.number()),
+    createdBy: v.id("users"),
+    projectId: v.optional(v.id("projects")),
+    isPublic: v.boolean(),
     updatedAt: v.number(),
   })
-    .index("by_user", ["userId"])
+    .index("by_calendar_event", ["calendarEventId"])
+    .index("by_creator", ["createdBy"])
     .index("by_project", ["projectId"])
-    .index("by_active", ["isActive"])
-    .index("by_user_active", ["userId", "isActive"]),
+    .index("by_status", ["status"])
+    .index("by_scheduled_time", ["scheduledStartTime"])
+    .index("by_platform", ["meetingPlatform"]),
 
-  // Time Tracking (Native - Kimai-like features)
+  meetingTranscripts: defineTable({
+    recordingId: v.id("meetingRecordings"),
+    fullText: v.string(),
+    segments: v.array(
+      v.object({
+        startTime: v.number(),
+        endTime: v.number(),
+        speaker: v.optional(v.string()),
+        speakerUserId: v.optional(v.id("users")),
+        text: v.string(),
+        confidence: v.optional(v.number()),
+      }),
+    ),
+    language: v.string(),
+    modelUsed: v.string(),
+    processingTime: v.optional(v.number()),
+    wordCount: v.number(),
+    speakerCount: v.optional(v.number()),
+  })
+    .index("by_recording", ["recordingId"])
+    .searchIndex("search_transcript", {
+      searchField: "fullText",
+    }),
+
+  meetingSummaries: defineTable({
+    recordingId: v.id("meetingRecordings"),
+    transcriptId: v.id("meetingTranscripts"),
+    executiveSummary: v.string(),
+    keyPoints: v.array(v.string()),
+    actionItems: v.array(
+      v.object({
+        description: v.string(),
+        assignee: v.optional(v.string()),
+        assigneeUserId: v.optional(v.id("users")),
+        dueDate: v.optional(v.string()),
+        priority: v.optional(simplePriorities),
+        issueCreated: v.optional(v.id("issues")),
+      }),
+    ),
+    decisions: v.array(v.string()),
+    openQuestions: v.array(v.string()),
+    topics: v.array(
+      v.object({
+        title: v.string(),
+        startTime: v.optional(v.number()),
+        endTime: v.optional(v.number()),
+        summary: v.string(),
+      }),
+    ),
+    overallSentiment: v.optional(
+      v.union(
+        v.literal("positive"),
+        v.literal("neutral"),
+        v.literal("negative"),
+        v.literal("mixed"),
+      ),
+    ),
+    modelUsed: v.string(),
+    promptTokens: v.optional(v.number()),
+    completionTokens: v.optional(v.number()),
+    processingTime: v.optional(v.number()),
+    regeneratedAt: v.optional(v.number()),
+  })
+    .index("by_recording", ["recordingId"])
+    .index("by_transcript", ["transcriptId"]),
+
+  meetingParticipants: defineTable({
+    recordingId: v.id("meetingRecordings"),
+    displayName: v.string(),
+    email: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
+    joinedAt: v.optional(v.number()),
+    leftAt: v.optional(v.number()),
+    speakingTime: v.optional(v.number()),
+    speakingPercentage: v.optional(v.number()),
+    isHost: v.boolean(),
+    isExternal: v.boolean(),
+  })
+    .index("by_recording", ["recordingId"])
+    .index("by_user", ["userId"])
+    .index("by_email", ["email"]),
+
+  meetingBotJobs: defineTable({
+    recordingId: v.id("meetingRecordings"),
+    meetingUrl: v.string(),
+    scheduledTime: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("queued"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("cancelled"),
+    ),
+    attempts: v.number(),
+    maxAttempts: v.number(),
+    lastAttemptAt: v.optional(v.number()),
+    nextAttemptAt: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+    botServiceJobId: v.optional(v.string()),
+    updatedAt: v.number(),
+  })
+    .index("by_recording", ["recordingId"])
+    .index("by_status", ["status"])
+    .index("by_scheduled_time", ["scheduledTime"])
+    .index("by_next_attempt", ["nextAttemptAt"]),
+
+  // ===========================================================================
+  // TIME TRACKING
+  // Time entries, rates, profiles, compliance
+  // ===========================================================================
+
   timeEntries: defineTable({
-    userId: v.id("users"), // Who logged the time
-    projectId: v.optional(v.id("projects")), // Project
-    issueId: v.optional(v.id("issues")), // Issue (optional)
-    // Time data
-    startTime: v.number(), // Unix timestamp
-    endTime: v.optional(v.number()), // Unix timestamp (null if timer still running)
-    duration: v.number(), // Duration in seconds
-    date: v.number(), // Date of time entry (for grouping/filtering)
-    // Description & Activity
+    userId: v.id("users"),
+    projectId: v.optional(v.id("projects")),
+    issueId: v.optional(v.id("issues")),
+    startTime: v.number(),
+    endTime: v.optional(v.number()),
+    duration: v.number(), // Seconds
+    date: v.number(),
     description: v.optional(v.string()),
-    activity: v.optional(v.string()), // e.g., "Development", "Meeting", "Code Review", "Design"
-    tags: v.array(v.string()), // Tags for categorization
-    // Billing
-    hourlyRate: v.optional(v.number()), // Hourly rate at time of entry (snapshot)
-    totalCost: v.optional(v.number()), // Calculated cost (duration * hourlyRate)
-    currency: v.string(), // Currency code: "USD", "EUR", etc.
-    billable: v.boolean(), // Is this time billable to client?
-    billed: v.boolean(), // Has this been billed to client?
-    invoiceId: v.optional(v.string()), // Link to invoice if billed
-    // Equity compensation
-    isEquityHour: v.boolean(), // Is this compensated with equity (non-paid)? Default: false
-    equityValue: v.optional(v.number()), // Calculated equity value for this entry
-    // Status
-    isLocked: v.boolean(), // Locked entries can't be edited (for payroll/billing)
-    isApproved: v.boolean(), // Approved by manager
+    activity: v.optional(v.string()), // "Development", "Meeting", etc.
+    tags: v.array(v.string()),
+    hourlyRate: v.optional(v.number()),
+    totalCost: v.optional(v.number()),
+    currency: v.string(),
+    billable: v.boolean(),
+    billed: v.boolean(),
+    invoiceId: v.optional(v.string()),
+    isEquityHour: v.boolean(),
+    equityValue: v.optional(v.number()),
+    isLocked: v.boolean(),
+    isApproved: v.boolean(),
     approvedBy: v.optional(v.id("users")),
     approvedAt: v.optional(v.number()),
-    // Metadata
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -1039,22 +1239,15 @@ const applicationTables = {
     .index("by_user_project", ["userId", "projectId"])
     .index("by_equity", ["isEquityHour"]),
 
-  // User Hourly Rates (for cost calculation)
   userRates: defineTable({
     userId: v.id("users"),
-    projectId: v.optional(v.id("projects")), // Project-specific rate (overrides default)
-    hourlyRate: v.number(), // Rate per hour
-    currency: v.string(), // Currency code: "USD", "EUR", etc.
-    // Effective period
-    effectiveFrom: v.number(), // Start date of this rate
-    effectiveTo: v.optional(v.number()), // End date (null if current rate)
-    // Rate type
-    rateType: v.union(
-      v.literal("internal"), // Internal cost rate
-      v.literal("billable"), // Client billable rate
-    ),
-    // Metadata
-    setBy: v.id("users"), // Who set this rate
+    projectId: v.optional(v.id("projects")),
+    hourlyRate: v.number(),
+    currency: v.string(),
+    effectiveFrom: v.number(),
+    effectiveTo: v.optional(v.number()),
+    rateType: v.union(v.literal("internal"), v.literal("billable")),
+    setBy: v.id("users"),
     notes: v.optional(v.string()),
     updatedAt: v.number(),
   })
@@ -1065,37 +1258,27 @@ const applicationTables = {
     .index("by_effective_to", ["effectiveTo"])
     .index("by_rate_type", ["rateType"]),
 
-  // User Employment Types & Work Hour Configuration
   userProfiles: defineTable({
-    userId: v.id("users"), // One profile per user
-    employmentType: v.union(
-      v.literal("employee"), // Full-time employee
-      v.literal("contractor"), // Independent contractor
-      v.literal("intern"), // Intern/trainee
-    ),
-    // Work hour configuration (can override employment type defaults)
-    maxHoursPerWeek: v.optional(v.number()), // Max billable hours per week (overrides type default)
-    maxHoursPerDay: v.optional(v.number()), // Max hours per day (overrides type default)
-    requiresApproval: v.optional(v.boolean()), // Does time tracking require manager approval?
-    canWorkOvertime: v.optional(v.boolean()), // Can log overtime hours?
-    // Employment details
-    startDate: v.optional(v.number()), // Employment start date
-    endDate: v.optional(v.number()), // Employment end date (for contractors/interns)
+    userId: v.id("users"),
+    employmentType: v.union(v.literal("employee"), v.literal("contractor"), v.literal("intern")),
+    maxHoursPerWeek: v.optional(v.number()),
+    maxHoursPerDay: v.optional(v.number()),
+    requiresApproval: v.optional(v.boolean()),
+    canWorkOvertime: v.optional(v.boolean()),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
     department: v.optional(v.string()),
     jobTitle: v.optional(v.string()),
-    managerId: v.optional(v.id("users")), // Direct manager
-    // Equity compensation (employees only)
-    hasEquity: v.boolean(), // Does employee have equity compensation? Default: false
-    equityPercentage: v.optional(v.number()), // Equity stake percentage (e.g., 0.5 for 0.5%)
-    requiredEquityHoursPerWeek: v.optional(v.number()), // Required non-paid equity hours per week
-    requiredEquityHoursPerMonth: v.optional(v.number()), // Alternative: monthly equity hours requirement
-    maxEquityHoursPerWeek: v.optional(v.number()), // Maximum equity hours allowed per week
-    equityHourlyValue: v.optional(v.number()), // Estimated value per equity hour (for tracking)
-    equityNotes: v.optional(v.string()), // Notes about equity arrangement
-    // Status
-    isActive: v.boolean(), // Is user currently active?
-    // Metadata
-    createdBy: v.id("users"), // Admin who created profile
+    managerId: v.optional(v.id("users")),
+    hasEquity: v.boolean(),
+    equityPercentage: v.optional(v.number()),
+    requiredEquityHoursPerWeek: v.optional(v.number()),
+    requiredEquityHoursPerMonth: v.optional(v.number()),
+    maxEquityHoursPerWeek: v.optional(v.number()),
+    equityHourlyValue: v.optional(v.number()),
+    equityNotes: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdBy: v.id("users"),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -1104,58 +1287,46 @@ const applicationTables = {
     .index("by_active", ["isActive"])
     .index("by_employment_active", ["employmentType", "isActive"]),
 
-  // Employment Type Default Configurations
   employmentTypeConfigs: defineTable({
     type: employmentTypes,
-    name: v.string(), // Display name: "Full-time Employee", "Contractor", "Intern"
+    name: v.string(),
     description: v.optional(v.string()),
-    // Default work hour limits
-    defaultMaxHoursPerWeek: v.number(), // e.g., 40 for employees, 20 for interns
-    defaultMaxHoursPerDay: v.number(), // e.g., 8 for employees, 4 for interns
-    defaultRequiresApproval: v.boolean(), // e.g., true for interns, false for employees
-    defaultCanWorkOvertime: v.boolean(), // e.g., false for interns, true for employees
-    // Permissions & restrictions
-    canAccessBilling: v.boolean(), // Can see billing/rate info
-    canManageProjects: v.boolean(), // Can create/manage projects
-    // Metadata
-    isActive: v.boolean(), // Is this type currently in use?
+    defaultMaxHoursPerWeek: v.number(),
+    defaultMaxHoursPerDay: v.number(),
+    defaultRequiresApproval: v.boolean(),
+    defaultCanWorkOvertime: v.boolean(),
+    canAccessBilling: v.boolean(),
+    canManageProjects: v.boolean(),
+    isActive: v.boolean(),
     updatedAt: v.number(),
   }).index("by_type", ["type"]),
 
-  // Hour Compliance Tracking (for monitoring required hours)
   hourComplianceRecords: defineTable({
     userId: v.id("users"),
-    periodType: periodTypes, // Weekly or monthly tracking
-    periodStart: v.number(), // Start of period (Unix timestamp)
-    periodEnd: v.number(), // End of period (Unix timestamp)
-    // Hours tracked
-    totalHoursWorked: v.number(), // Total hours logged in period
-    totalEquityHours: v.optional(v.number()), // Total equity hours (for employees with equity)
-    // Requirements from user profile at time of record
-    requiredHoursPerWeek: v.optional(v.number()), // Weekly requirement snapshot
-    requiredHoursPerMonth: v.optional(v.number()), // Monthly requirement snapshot
-    requiredEquityHoursPerWeek: v.optional(v.number()), // Equity hours requirement snapshot
+    periodType: periodTypes,
+    periodStart: v.number(),
+    periodEnd: v.number(),
+    totalHoursWorked: v.number(),
+    totalEquityHours: v.optional(v.number()),
+    requiredHoursPerWeek: v.optional(v.number()),
+    requiredHoursPerMonth: v.optional(v.number()),
+    requiredEquityHoursPerWeek: v.optional(v.number()),
     requiredEquityHoursPerMonth: v.optional(v.number()),
-    maxHoursPerWeek: v.optional(v.number()), // Max hours limit snapshot
-    // Compliance status
+    maxHoursPerWeek: v.optional(v.number()),
     status: v.union(
-      v.literal("compliant"), // Met requirements
-      v.literal("under_hours"), // Worked less than required
-      v.literal("over_hours"), // Exceeded maximum hours (warning)
-      v.literal("equity_under"), // Didn't meet equity hour requirements
+      v.literal("compliant"),
+      v.literal("under_hours"),
+      v.literal("over_hours"),
+      v.literal("equity_under"),
     ),
-    // Variance
-    hoursDeficit: v.optional(v.number()), // How many hours short (if under_hours)
-    hoursExcess: v.optional(v.number()), // How many hours over (if over_hours)
-    equityHoursDeficit: v.optional(v.number()), // Equity hours short
-    // Notification
-    notificationSent: v.boolean(), // Was admin/manager notified?
+    hoursDeficit: v.optional(v.number()),
+    hoursExcess: v.optional(v.number()),
+    equityHoursDeficit: v.optional(v.number()),
+    notificationSent: v.boolean(),
     notificationId: v.optional(v.id("notifications")),
-    // Review
-    reviewedBy: v.optional(v.id("users")), // Admin who reviewed this record
+    reviewedBy: v.optional(v.id("users")),
     reviewedAt: v.optional(v.number()),
     reviewNotes: v.optional(v.string()),
-    // Metadata
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -1165,316 +1336,66 @@ const applicationTables = {
     .index("by_user_status", ["userId", "status"])
     .index("by_period_status", ["periodStart", "status"]),
 
-  // User Invitations
-  invites: defineTable({
-    email: v.string(), // Email address to invite
-    role: inviteRoles, // Platform role: superAdmin = full system access
-    organizationId: v.id("organizations"), // organization to invite user to
-    projectId: v.optional(v.id("projects")), // Project to add user to (optional, for project-level invites)
-    projectRole: v.optional(projectRoles), // Role in project if projectId is set
-    invitedBy: v.id("users"), // Admin who sent the invite
-    token: v.string(), // Unique invitation token
-    expiresAt: v.number(), // Expiration timestamp
-    status: v.union(
-      v.literal("pending"), // Not yet accepted
-      v.literal("accepted"), // User accepted and created account
-      v.literal("revoked"), // Admin revoked the invite
-      v.literal("expired"), // Invite expired
-    ),
-    acceptedBy: v.optional(v.id("users")), // User who accepted (if accepted)
-    acceptedAt: v.optional(v.number()), // When accepted
-    revokedBy: v.optional(v.id("users")), // Admin who revoked (if revoked)
-    revokedAt: v.optional(v.number()), // When revoked
-    updatedAt: v.number(),
-  })
-    .index("by_email", ["email"])
-    .index("by_token", ["token"])
-    .index("by_status", ["status"])
-    .index("by_invited_by", ["invitedBy"])
-    .index("by_email_status", ["email", "status"])
-    .index("by_organization", ["organizationId"])
-    .index("by_project", ["projectId"])
-    .index("by_organization_status", ["organizationId", "status"]),
+  // ===========================================================================
+  // API & REST
+  // API keys, usage logs
+  // ===========================================================================
 
-  // Organizations (Multi-tenant support)
-  organizations: defineTable({
-    name: v.string(), // organization name
-    slug: v.string(), // URL-friendly slug: "acme-corp", "example-agency"
-    timezone: v.string(), // organization default timezone (IANA): "America/New_York", "Europe/London"
-    // organization settings (required)
-    settings: v.object({
-      defaultMaxHoursPerWeek: v.number(), // organization-wide default max hours per week
-      defaultMaxHoursPerDay: v.number(), // organization-wide default max hours per day
-      requiresTimeApproval: v.boolean(), // Require time entry approval by default
-      billingEnabled: v.boolean(), // Enable billing features
-    }),
-    // Metadata
-    createdBy: v.id("users"), // organization creator (becomes owner)
-    updatedAt: v.number(),
-  })
-    .index("by_slug", ["slug"])
-    .index("by_creator", ["createdBy"])
-    .searchIndex("search_name", {
-      searchField: "name",
-    }),
-
-  // organization Members (User-organization relationships with roles)
-  organizationMembers: defineTable({
-    organizationId: v.id("organizations"),
+  apiKeys: defineTable({
     userId: v.id("users"),
-    role: v.union(
-      v.literal("owner"), // organization owner (creator, can't be removed, full control)
-      v.literal("admin"), // organization admin (can manage members, settings, billing)
-      v.literal("member"), // Regular member (can use organization resources)
-    ),
-    addedBy: v.id("users"), // Who added this member
-    joinedAt: v.optional(v.number()), // When the user actually joined (accepted invite)
+    name: v.string(),
+    keyHash: v.string(),
+    keyPrefix: v.string(), // "sk_casc_AbCdEfGh..."
+    scopes: v.array(v.string()),
+    projectId: v.optional(v.id("projects")),
+    rateLimit: v.number(), // Requests per minute
+    isActive: v.boolean(),
+    lastUsedAt: v.optional(v.number()),
+    usageCount: v.number(),
+    expiresAt: v.optional(v.number()),
+    rotatedFromId: v.optional(v.id("apiKeys")),
+    rotatedAt: v.optional(v.number()),
+    revokedAt: v.optional(v.number()),
   })
-    .index("by_organization", ["organizationId"])
     .index("by_user", ["userId"])
-    .index("by_organization_user", ["organizationId", "userId"])
-    .index("by_role", ["role"])
-    .index("by_user_role", ["userId", "role"])
-    .index("by_organization_role", ["organizationId", "role"]),
+    .index("by_key_hash", ["keyHash"])
+    .index("by_active", ["isActive"])
+    .index("by_user_active", ["userId", "isActive"])
+    .index("by_rotated_from", ["rotatedFromId"])
+    .index("by_expires", ["expiresAt"]),
 
-  // Teams (within a organization - for data isolation and grouping)
-  teams: defineTable({
-    organizationId: v.id("organizations"), // organization this team belongs to
-    workspaceId: v.id("workspaces"), // Team belongs to workspace
-    name: v.string(), // Team name: "Product Team", "Dev Team", "Design Team"
-    slug: v.string(), // URL-friendly slug: "product-team", "dev-team"
-    description: v.optional(v.string()),
-    icon: v.optional(v.string()), // NEW: Team icon/emoji
-    leadId: v.optional(v.id("users")), // NEW: Team lead
-    // Team settings
-    isPrivate: v.boolean(), // If true, team projects are private by default
-    settings: v.optional(
-      // NEW: Team settings
-      v.object({
-        defaultIssueType: v.optional(v.string()),
-        cycleLength: v.optional(v.number()),
-        cycleDayOfWeek: v.optional(v.number()),
-        defaultEstimate: v.optional(v.number()),
-      }),
-    ),
-    // Metadata
-    createdBy: v.id("users"),
-    updatedAt: v.number(),
-    // Soft Delete
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
-  })
-    .index("by_organization", ["organizationId"])
-    .index("by_workspace", ["workspaceId"]) // NEW
-    .index("by_workspace_slug", ["workspaceId", "slug"]) // NEW - for looking up teams by workspace and slug
-    .index("by_organization_slug", ["organizationId", "slug"])
-    .index("by_creator", ["createdBy"])
-    .index("by_lead", ["leadId"]) // NEW
-    .index("by_deleted", ["isDeleted"]) // Soft delete index
-    .searchIndex("search_name", {
-      searchField: "name",
-      filterFields: ["organizationId", "workspaceId"], // Added workspaceId
-    }),
-
-  // Team Members (User-Team relationships)
-  teamMembers: defineTable({
-    teamId: v.id("teams"),
+  apiUsageLogs: defineTable({
+    apiKeyId: v.id("apiKeys"),
     userId: v.id("users"),
-    role: v.union(
-      v.literal("admin"), // Team admin (can manage team members and settings)
-      v.literal("member"), // Regular team member
-    ),
-    addedBy: v.id("users"),
-    // Soft Delete
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
+    method: v.string(),
+    endpoint: v.string(),
+    statusCode: v.number(),
+    responseTime: v.number(),
+    userAgent: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+    error: v.optional(v.string()),
   })
-    .index("by_team", ["teamId"])
-    .index("by_user", ["userId"])
-    .index("by_team_user", ["teamId", "userId"])
-    .index("by_role", ["role"])
-    .index("by_deleted", ["isDeleted"]),
+    .index("by_api_key", ["apiKeyId"])
+    .index("by_user", ["userId"]),
 
-  // ============================================
-  // Meeting Bot / AI Notetaker (Read.ai-like)
-  // ============================================
+  // ===========================================================================
+  // SERVICE PROVIDERS (Free Tier Rotation)
+  // Track usage across multiple providers
+  // ===========================================================================
 
-  // Meeting recordings - stores the actual audio/video files
-  meetingRecordings: defineTable({
-    calendarEventId: v.optional(v.id("calendarEvents")), // Link to calendar event (if scheduled)
-    // Meeting info (for ad-hoc recordings without calendar event)
-    meetingUrl: v.optional(v.string()), // Google Meet URL, Zoom URL, etc.
-    meetingPlatform: v.union(
-      v.literal("google_meet"),
-      v.literal("zoom"),
-      v.literal("teams"),
-      v.literal("other"),
-    ),
-    title: v.string(), // Meeting title
-    // Recording details
-    recordingFileId: v.optional(v.id("_storage")), // Convex storage for audio file
-    recordingUrl: v.optional(v.string()), // External URL if stored elsewhere
-    duration: v.optional(v.number()), // Duration in seconds
-    fileSize: v.optional(v.number()), // File size in bytes
-    // Status
-    status: v.union(
-      v.literal("scheduled"), // Bot will join at scheduled time
-      v.literal("joining"), // Bot is joining the meeting
-      v.literal("recording"), // Bot is in meeting, recording
-      v.literal("processing"), // Recording finished, processing audio
-      v.literal("transcribing"), // Sending to Whisper
-      v.literal("summarizing"), // Sending to Claude
-      v.literal("completed"), // All done
-      v.literal("cancelled"), // Cancelled by user
-      v.literal("failed"), // Something went wrong
-    ),
-    errorMessage: v.optional(v.string()), // Error details if failed
-    // Timestamps
-    scheduledStartTime: v.optional(v.number()), // When bot should join
-    actualStartTime: v.optional(v.number()), // When recording actually started
-    actualEndTime: v.optional(v.number()), // When recording ended
-    // Bot details
-    botName: v.string(), // Display name: "Nixelo Notetaker"
-    botJoinedAt: v.optional(v.number()),
-    botLeftAt: v.optional(v.number()),
-    // Permissions
-    createdBy: v.id("users"),
-    projectId: v.optional(v.id("projects")), // Link to project for context
-    isPublic: v.boolean(), // Can all project members see this?
-    // Metadata
-    updatedAt: v.number(),
-  })
-    .index("by_calendar_event", ["calendarEventId"])
-    .index("by_creator", ["createdBy"])
-    .index("by_project", ["projectId"])
-    .index("by_status", ["status"])
-    .index("by_scheduled_time", ["scheduledStartTime"])
-    .index("by_platform", ["meetingPlatform"]),
-
-  // Meeting transcripts - the raw transcription from Whisper
-  meetingTranscripts: defineTable({
-    recordingId: v.id("meetingRecordings"),
-    // Full transcript
-    fullText: v.string(), // Complete transcript text
-    // Segmented transcript with timestamps and speakers
-    segments: v.array(
-      v.object({
-        startTime: v.number(), // Seconds from start
-        endTime: v.number(),
-        speaker: v.optional(v.string()), // Speaker name/label if diarization available
-        speakerUserId: v.optional(v.id("users")), // Matched Nixelo user (if identified)
-        text: v.string(),
-        confidence: v.optional(v.number()), // Whisper confidence score
-      }),
-    ),
-    // Processing info
-    language: v.string(), // Detected language: "en", "es", etc.
-    modelUsed: v.string(), // Whisper model: "whisper-1", etc.
-    processingTime: v.optional(v.number()), // How long transcription took (ms)
-    // Word count and stats
-    wordCount: v.number(),
-    speakerCount: v.optional(v.number()), // Number of distinct speakers
-    // Metadata
-  })
-    .index("by_recording", ["recordingId"])
-    .searchIndex("search_transcript", {
-      searchField: "fullText",
-    }),
-
-  // Meeting summaries - AI-generated summaries from Claude
-  meetingSummaries: defineTable({
-    recordingId: v.id("meetingRecordings"),
-    transcriptId: v.id("meetingTranscripts"),
-    // Summary content
-    executiveSummary: v.string(), // 2-3 sentence overview
-    keyPoints: v.array(v.string()), // Bullet points of main topics
-    // Action items extracted
-    actionItems: v.array(
-      v.object({
-        description: v.string(),
-        assignee: v.optional(v.string()), // Name mentioned in meeting
-        assigneeUserId: v.optional(v.id("users")), // Matched Nixelo user
-        dueDate: v.optional(v.string()), // Due date if mentioned
-        priority: v.optional(simplePriorities),
-        issueCreated: v.optional(v.id("issues")), // If converted to Nixelo issue
-      }),
-    ),
-    // Decisions made
-    decisions: v.array(v.string()),
-    // Questions raised (unanswered or for follow-up)
-    openQuestions: v.array(v.string()),
-    // Topics discussed with time ranges
-    topics: v.array(
-      v.object({
-        title: v.string(),
-        startTime: v.optional(v.number()), // When topic started
-        endTime: v.optional(v.number()), // When topic ended
-        summary: v.string(),
-      }),
-    ),
-    // Sentiment/tone analysis (optional)
-    overallSentiment: v.optional(
-      v.union(
-        v.literal("positive"),
-        v.literal("neutral"),
-        v.literal("negative"),
-        v.literal("mixed"),
-      ),
-    ),
-    // Processing info
-    modelUsed: v.string(), // Claude model: "claude-3-5-sonnet", etc.
-    promptTokens: v.optional(v.number()),
-    completionTokens: v.optional(v.number()),
-    processingTime: v.optional(v.number()), // How long summarization took (ms)
-    // Metadata
-    regeneratedAt: v.optional(v.number()), // If user requested regeneration
-  })
-    .index("by_recording", ["recordingId"])
-    .index("by_transcript", ["transcriptId"]),
-
-  // Meeting participants - who was in the meeting
-  meetingParticipants: defineTable({
-    recordingId: v.id("meetingRecordings"),
-    // Participant info
-    displayName: v.string(), // Name as shown in meeting
-    email: v.optional(v.string()), // Email if available
-    userId: v.optional(v.id("users")), // Matched Nixelo user
-    // Participation stats
-    joinedAt: v.optional(v.number()),
-    leftAt: v.optional(v.number()),
-    speakingTime: v.optional(v.number()), // Total seconds speaking
-    speakingPercentage: v.optional(v.number()), // % of meeting they spoke
-    // Role
-    isHost: v.boolean(),
-    isExternal: v.boolean(), // Not a Nixelo user
-  })
-    .index("by_recording", ["recordingId"])
-    .index("by_user", ["userId"])
-    .index("by_email", ["email"]),
-
-  // ============================================
-  // Service Usage Tracking (Free Tier Rotation)
-  // ============================================
-
-  // Track usage per service provider per month
   serviceUsage: defineTable({
     serviceType: v.union(
       v.literal("transcription"),
       v.literal("email"),
       v.literal("sms"),
-      v.literal("ai"), // For future AI provider rotation
+      v.literal("ai"),
     ),
-    provider: v.string(), // "whisper", "speechmatics", "gladia", "resend", "sendpulse", etc.
-    month: v.string(), // "2025-11" format
-    // Usage metrics
-    unitsUsed: v.number(), // Minutes for transcription, emails sent, etc.
-    freeUnitsLimit: v.number(), // Free tier limit for this provider
-    // Cost tracking (when free tier exceeded)
-    paidUnitsUsed: v.number(), // Units beyond free tier
-    estimatedCost: v.number(), // Estimated cost in cents
-    // Metadata
+    provider: v.string(),
+    month: v.string(), // "2025-11"
+    unitsUsed: v.number(),
+    freeUnitsLimit: v.number(),
+    paidUnitsUsed: v.number(),
+    estimatedCost: v.number(), // Cents
     lastUpdatedAt: v.number(),
   })
     .index("by_service_type", ["serviceType"])
@@ -1483,7 +1404,6 @@ const applicationTables = {
     .index("by_service_month", ["serviceType", "month"])
     .index("by_provider_month", ["provider", "month"]),
 
-  // Provider configuration (free tier limits, priority order)
   serviceProviders: defineTable({
     serviceType: v.union(
       v.literal("transcription"),
@@ -1491,23 +1411,15 @@ const applicationTables = {
       v.literal("sms"),
       v.literal("ai"),
     ),
-    provider: v.string(), // "speechmatics", "gladia", "resend", etc.
-    // Free tier info
-    freeUnitsPerMonth: v.number(), // 0 = no free tier
-    freeUnitsType: v.union(
-      v.literal("monthly"), // Resets each month
-      v.literal("one_time"), // One-time credit
-      v.literal("yearly"), // Resets yearly
-    ),
-    oneTimeUnitsRemaining: v.optional(v.number()), // For one-time credits
-    // Pricing after free tier
-    costPerUnit: v.number(), // Cost per unit in cents (e.g., $0.006/min = 0.6 cents)
-    unitType: v.string(), // "minute", "email", "message", "token"
-    // Provider status
+    provider: v.string(),
+    freeUnitsPerMonth: v.number(),
+    freeUnitsType: v.union(v.literal("monthly"), v.literal("one_time"), v.literal("yearly")),
+    oneTimeUnitsRemaining: v.optional(v.number()),
+    costPerUnit: v.number(), // Cents
+    unitType: v.string(), // "minute", "email", etc.
     isEnabled: v.boolean(),
-    isConfigured: v.boolean(), // Has API key set
-    priority: v.number(), // Lower = preferred (1 = first choice)
-    // Metadata
+    isConfigured: v.boolean(),
+    priority: v.number(), // Lower = preferred
     displayName: v.string(),
     notes: v.optional(v.string()),
     updatedAt: v.number(),
@@ -1517,65 +1429,55 @@ const applicationTables = {
     .index("by_service_enabled", ["serviceType", "isEnabled"])
     .index("by_service_priority", ["serviceType", "priority"]),
 
-  // Bot job queue - for scheduling bots to join meetings
-  meetingBotJobs: defineTable({
-    recordingId: v.id("meetingRecordings"),
-    // Job details
-    meetingUrl: v.string(),
-    scheduledTime: v.number(), // When to join
-    // Status
-    status: v.union(
-      v.literal("pending"), // Waiting for scheduled time
-      v.literal("queued"), // Sent to bot service
-      v.literal("running"), // Bot is active
-      v.literal("completed"),
-      v.literal("failed"),
-      v.literal("cancelled"),
-    ),
-    // Retries
-    attempts: v.number(),
-    maxAttempts: v.number(),
-    lastAttemptAt: v.optional(v.number()),
-    nextAttemptAt: v.optional(v.number()),
-    errorMessage: v.optional(v.string()),
-    // Bot service reference
-    botServiceJobId: v.optional(v.string()), // ID from Railway bot service
-    // Metadata
-    updatedAt: v.number(),
-  })
-    .index("by_recording", ["recordingId"])
-    .index("by_status", ["status"])
-    .index("by_scheduled_time", ["scheduledTime"])
-    .index("by_next_attempt", ["nextAttemptAt"]),
+  // ===========================================================================
+  // USER SETTINGS & ONBOARDING
+  // ===========================================================================
 
   userSettings: defineTable({
     userId: v.id("users"),
-    dashboardLayout: v.optional(dashboardLayout), // Dashboard widget preferences
+    dashboardLayout: v.optional(dashboardLayout),
     theme: v.optional(v.string()), // "light", "dark", "system"
     sidebarCollapsed: v.optional(v.boolean()),
-    // Preferences moved from users table
     emailNotifications: v.optional(v.boolean()),
     desktopNotifications: v.optional(v.boolean()),
-    timezone: v.optional(v.string()), // IANA timezone
+    timezone: v.optional(v.string()),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
 
-  // Rate limiter tables (from @convex-dev/rate-limiter)
+  userOnboarding: defineTable({
+    userId: v.id("users"),
+    onboardingCompleted: v.boolean(),
+    onboardingStep: v.optional(v.number()),
+    sampleWorkspaceCreated: v.optional(v.boolean()),
+    sampleProjectCreated: v.optional(v.boolean()), // Deprecated
+    tourShown: v.boolean(),
+    wizardCompleted: v.boolean(),
+    checklistDismissed: v.boolean(),
+    onboardingPersona: v.optional(personas),
+    wasInvited: v.optional(v.boolean()),
+    invitedByName: v.optional(v.string()),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // ===========================================================================
+  // INFRASTRUCTURE & SYSTEM
+  // Rate limiting, auditing, testing, health checks
+  // ===========================================================================
+
   rateLimits: defineTable({
-    key: v.string(), // Rate limit key (e.g., API key ID)
-    value: v.number(), // Current token count
-    expiresAt: v.number(), // Expiration timestamp
+    key: v.string(),
+    value: v.number(),
+    expiresAt: v.number(),
   })
     .index("by_key", ["key"])
     .index("by_expiry", ["expiresAt"]),
 
-  // Audit Logs
   auditLogs: defineTable({
-    action: v.string(), // "team.create", "project.delete", "member.add"
-    actorId: v.optional(v.id("users")), // Who performed the action (optional for system actions)
-    targetId: v.string(), // ID of the affected object (generic string to support mixed types)
-    targetType: v.string(), // "team", "project", "user", "webhook", etc.
-    metadata: v.optional(auditMetadata), // Structured metadata (e.g. old role, new role)
+    action: v.string(), // "team.create", "project.delete"
+    actorId: v.optional(v.id("users")),
+    targetId: v.string(),
+    targetType: v.string(), // "team", "project", "user"
+    metadata: v.optional(auditMetadata),
     timestamp: v.number(),
   })
     .index("by_action", ["action"])
@@ -1583,20 +1485,39 @@ const applicationTables = {
     .index("by_target", ["targetId"])
     .index("by_timestamp", ["timestamp"]),
 
-  // E2E Testing: Plaintext OTP codes for test users only
-  // The authVerificationCodes table stores hashed codes, making them unreadable.
-  // For E2E tests, we store plaintext codes here (only for @inbox.mailtrap.io emails)
+  offlineSyncQueue: defineTable({
+    userId: v.id("users"),
+    mutationType: v.string(),
+    mutationArgs: v.string(), // JSON
+    status: v.union(
+      v.literal("pending"),
+      v.literal("syncing"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    attempts: v.number(),
+    lastAttempt: v.optional(v.number()),
+    error: v.optional(v.string()),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_user_status", ["userId", "status"]),
+
+  // ===========================================================================
+  // E2E TESTING & MONITORING
+  // ===========================================================================
+
   testOtpCodes: defineTable({
-    email: v.string(), // Test user email
-    code: v.string(), // Plaintext OTP code
+    email: v.string(),
+    code: v.string(),
     type: v.optional(v.string()), // "verification" | "reset"
-    expiresAt: v.number(), // Expiration timestamp
+    expiresAt: v.number(),
   })
     .index("by_email", ["email"])
     .index("by_email_type", ["email", "type"])
     .index("by_expiry", ["expiresAt"]),
 
-  // OAuth Health Monitoring: Track health check results for alerting
   oauthHealthChecks: defineTable({
     success: v.boolean(),
     latencyMs: v.number(),
@@ -1606,9 +1527,14 @@ const applicationTables = {
   }).index("by_timestamp", ["timestamp"]),
 };
 
+// =============================================================================
+// SCHEMA EXPORT
+// =============================================================================
+
 export default defineSchema({
   ...authTables,
   ...applicationTables,
+
   // Override users table to add custom fields (must include all auth fields)
   users: defineTable({
     // Required auth fields from @convex-dev/auth
@@ -1624,16 +1550,24 @@ export default defineSchema({
     pendingEmailVerificationToken: v.optional(v.string()),
     pendingEmailVerificationExpires: v.optional(v.number()),
     // Custom fields for Nixelo
-    defaultOrganizationId: v.optional(v.id("organizations")), // User's primary/default organization
-    bio: v.optional(v.string()), // User bio/description
-    timezone: v.optional(v.string()), // User timezone
+    defaultOrganizationId: v.optional(v.id("organizations")),
+    bio: v.optional(v.string()),
+    timezone: v.optional(v.string()),
     emailNotifications: v.optional(v.boolean()),
     desktopNotifications: v.optional(v.boolean()),
     // Invite tracking
-    inviteId: v.optional(v.id("invites")), // Link to original invite (tracks "was invited" vs "self-signup")
+    inviteId: v.optional(v.id("invites")),
     // E2E Testing fields
-    isTestUser: v.optional(v.boolean()), // True if this is an E2E test user
-    testUserCreatedAt: v.optional(v.number()), // When test user was created (for garbage collection)
+    isTestUser: v.optional(v.boolean()),
+    testUserCreatedAt: v.optional(v.number()),
+    // Two-Factor Authentication (2FA)
+    twoFactorEnabled: v.optional(v.boolean()),
+    twoFactorSecret: v.optional(v.string()),
+    twoFactorBackupCodes: v.optional(v.array(v.string())),
+    twoFactorVerifiedAt: v.optional(v.number()),
+    // 2FA rate limiting
+    twoFactorFailedAttempts: v.optional(v.number()),
+    twoFactorLockedUntil: v.optional(v.number()),
   })
     .index("email", ["email"])
     .index("isTestUser", ["isTestUser"])
