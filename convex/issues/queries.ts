@@ -335,27 +335,24 @@ export const listSelectableIssues = authenticatedQuery({
       return [];
     }
 
-    // Optimization: Fetch root issue types in parallel using the by_project_type index.
-    // This avoids fetching subtasks (which can be numerous) and ensures we get a diverse set of selectable issues.
-    // We use BOUNDED_SELECT_LIMIT (50) for performance, as this list is for dropdowns.
-    const outcomes = await Promise.all(
-      ROOT_ISSUE_TYPES.map((type) =>
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_type", (q) =>
-            q.eq("projectId", args.projectId).eq("type", type).lt("isDeleted", true),
-          )
-          .order("desc")
-          .take(BOUNDED_SELECT_LIMIT),
-      ),
-    );
+    // Optimization: Use a single query on the project index to fetch recent issues.
+    // We filter out subtasks and deleted items in the query filter.
+    // This is more efficient than firing 4 parallel queries (one per root type) and merging/sorting in memory.
+    // It guarantees we get the absolute newest issues in the project, which is ideal for "Select Issue" dropdowns.
+    const issues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .order("desc")
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("isDeleted"), true),
+          // Efficiently filter to include only root types (exclude subtasks)
+          q.neq(q.field("type"), "subtask"),
+        ),
+      )
+      .take(BOUNDED_SELECT_LIMIT);
 
-    const issues = outcomes.flat();
-
-    // Sort by creation time descending (newest first)
-    issues.sort((a, b) => b._creationTime - a._creationTime);
-
-    return issues.slice(0, BOUNDED_SELECT_LIMIT).map((i) => ({
+    return issues.map((i) => ({
       _id: i._id,
       key: i.key,
       title: i.title,
