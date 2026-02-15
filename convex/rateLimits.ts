@@ -28,9 +28,19 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   // Increased capacity/rate slightly to accommodate parallel E2E tests
   passwordReset: {
     kind: "token bucket",
-    rate: process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? 10 : 3,
+    rate:
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.E2E_TEST_MODE
+        ? 50
+        : 3,
     period: 60_000,
-    capacity: process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? 10 : 3,
+    capacity:
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.E2E_TEST_MODE
+        ? 50
+        : 3,
   }, // 3 per minute (higher in dev/test)
 });
 
