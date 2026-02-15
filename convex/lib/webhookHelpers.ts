@@ -55,6 +55,9 @@ export async function deliverWebhook(
       targetUrl = parsedUrl.toString();
     }
     // For HTTPS, we must use original URL for certificate validation
+    // NOTE: This means HTTPS is still subject to DNS rebinding between our check
+    // and the fetch call. The risk is partially mitigated because the attacker's
+    // server must present a valid TLS certificate for the original hostname.
 
     const response = await fetch(targetUrl, {
       method: "POST",
