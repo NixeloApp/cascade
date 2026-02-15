@@ -66,6 +66,15 @@ export const getRedirectDestination = query({
       return null;
     }
 
+    // Check if 2FA is enabled and requires verification
+    if (user.twoFactorEnabled && user.twoFactorSecret) {
+      // Consider 2FA verified if it was verified within the last 24 hours
+      const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+      if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
+        return ROUTES.verify2FA.path;
+      }
+    }
+
     // 1. Check onboarding status
     const onboarding = await ctx.db
       .query("userOnboarding")

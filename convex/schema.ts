@@ -1216,6 +1216,54 @@ const applicationTables = {
       searchField: "name",
     }),
 
+  // SSO Connections (SAML/OIDC configuration per organization)
+  ssoConnections: defineTable({
+    organizationId: v.id("organizations"),
+    // Connection type
+    type: v.union(v.literal("saml"), v.literal("oidc")),
+    // Display name for the SSO provider (e.g., "Okta", "Azure AD", "Google Workspace")
+    name: v.string(),
+    // Whether this connection is active
+    isEnabled: v.boolean(),
+    // SAML-specific configuration
+    samlConfig: v.optional(
+      v.object({
+        // Identity Provider (IdP) metadata
+        idpMetadataUrl: v.optional(v.string()), // URL to IdP metadata XML
+        idpMetadataXml: v.optional(v.string()), // Raw IdP metadata XML (if URL not available)
+        idpEntityId: v.optional(v.string()), // IdP Entity ID
+        idpSsoUrl: v.optional(v.string()), // IdP Single Sign-On URL
+        idpCertificate: v.optional(v.string()), // IdP signing certificate (PEM format)
+        // Service Provider (SP) configuration - our side
+        spEntityId: v.optional(v.string()), // Our entity ID (usually our app URL)
+        spAcsUrl: v.optional(v.string()), // Assertion Consumer Service URL
+        // Optional settings
+        nameIdFormat: v.optional(v.string()), // SAML NameID format
+        signRequest: v.optional(v.boolean()), // Whether to sign auth requests
+      }),
+    ),
+    // OIDC-specific configuration
+    oidcConfig: v.optional(
+      v.object({
+        issuer: v.optional(v.string()), // OIDC issuer URL
+        clientId: v.optional(v.string()), // OAuth client ID
+        clientSecret: v.optional(v.string()), // OAuth client secret (encrypted)
+        scopes: v.optional(v.array(v.string())), // OIDC scopes
+        authorizationUrl: v.optional(v.string()), // Authorization endpoint
+        tokenUrl: v.optional(v.string()), // Token endpoint
+        userInfoUrl: v.optional(v.string()), // UserInfo endpoint
+      }),
+    ),
+    // Domain verification for automatic SSO routing
+    verifiedDomains: v.optional(v.array(v.string())), // e.g., ["acme.com", "acme.io"]
+    // Metadata
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_organization_enabled", ["organizationId", "isEnabled"])
+    .index("by_type", ["type"]),
+
   // organization Members (User-organization relationships with roles)
   organizationMembers: defineTable({
     organizationId: v.id("organizations"),
@@ -1632,6 +1680,11 @@ export default defineSchema({
     // E2E Testing fields
     isTestUser: v.optional(v.boolean()), // True if this is an E2E test user
     testUserCreatedAt: v.optional(v.number()), // When test user was created (for garbage collection)
+    // Two-Factor Authentication (2FA)
+    twoFactorEnabled: v.optional(v.boolean()), // Whether 2FA is enabled for this user
+    twoFactorSecret: v.optional(v.string()), // Encrypted TOTP secret
+    twoFactorBackupCodes: v.optional(v.array(v.string())), // Hashed backup codes
+    twoFactorVerifiedAt: v.optional(v.number()), // Last 2FA verification timestamp
   })
     .index("email", ["email"])
     .index("isTestUser", ["isTestUser"])
