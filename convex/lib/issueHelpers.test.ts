@@ -109,11 +109,11 @@ describe("issueHelpers", () => {
 
       expect(enriched).toHaveLength(2);
 
-      const e1 = enriched.find(i => i._id === issue1Id);
+      const e1 = enriched.find((i) => i._id === issue1Id);
       expect(e1?.assignee?._id).toBe(user1);
       expect(e1?.reporter?._id).toBe(user1);
 
-      const e2 = enriched.find(i => i._id === issue2Id);
+      const e2 = enriched.find((i) => i._id === issue2Id);
       expect(e2?.assignee?._id).toBe(user2);
       expect(e2?.reporter?._id).toBe(user1);
     });
