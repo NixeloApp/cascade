@@ -25,6 +25,7 @@ export const addAttachment = issueMutation({
     const currentAttachments = issue.attachments || [];
     await ctx.db.patch(issue._id, {
       attachments: [...currentAttachments, args.storageId],
+      updatedAt: Date.now(),
     });
 
     // Log activity (store storageId in oldValue for reliable lookup)
@@ -49,10 +50,16 @@ export const removeAttachment = issueMutation({
   handler: async (ctx, args) => {
     const issue = ctx.issue;
 
+    // Verify the attachment belongs to this issue
+    if (!(issue.attachments || []).includes(args.storageId)) {
+      throw new Error("Attachment not found on this issue");
+    }
+
     // Remove from issue attachments array
     const updatedAttachments = (issue.attachments || []).filter((id) => id !== args.storageId);
     await ctx.db.patch(issue._id, {
       attachments: updatedAttachments,
+      updatedAt: Date.now(),
     });
 
     // Delete the file from storage
