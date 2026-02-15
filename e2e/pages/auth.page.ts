@@ -148,7 +148,7 @@ export class AuthPage extends BasePage {
    */
   async gotoSignIn() {
     await this.page.goto("/signin", { waitUntil: "commit" });
-    await this.signInHeading.waitFor({ state: "visible" });
+    await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
     // Wait for hydration before expanding
     await this.waitForHydration();
     // Expand form using robust click logic
@@ -162,7 +162,7 @@ export class AuthPage extends BasePage {
    */
   async gotoSignUp() {
     await this.page.goto("/signup", { waitUntil: "commit" });
-    await this.signUpHeading.waitFor({ state: "visible" });
+    await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
     // Wait for hydration before expanding
     await this.waitForHydration();
     // Expand form using robust click logic
