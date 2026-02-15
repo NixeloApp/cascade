@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
+import { Typography } from "../ui/Typography";
 
 export function WhyChooseSection() {
   const stats = [
