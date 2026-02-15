@@ -9,7 +9,7 @@ import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
+import { AuthPageLayout } from "@/components/Auth/AuthPageLayout";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";

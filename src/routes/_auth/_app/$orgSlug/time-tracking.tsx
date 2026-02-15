@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useEffect } from "react";
-import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import { PageContent, PageHeader, PageLayout } from "@/components/Layout";
 import { TimeTrackingPage } from "@/components/TimeTracking/TimeTrackingPage";
 import { ROUTES } from "@/config/routes";
 

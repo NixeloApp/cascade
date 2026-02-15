@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { KanbanBoard } from "@/components/KanbanBoard";
-import { PageContent, PageError } from "@/components/layout";
+import { PageContent, PageError } from "@/components/Layout";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/backlog")({
   component: BacklogPage,
