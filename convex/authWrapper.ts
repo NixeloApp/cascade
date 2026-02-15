@@ -13,7 +13,7 @@ import {
   internalMutation,
   type MutationCtx,
 } from "./_generated/server";
-import { getClientIp } from "./lib/clientIp";
+import { getClientIp } from "./lib/_clientIp";
 import { getConvexSiteUrl } from "./lib/env";
 import { logger } from "./lib/logger";
 import { rateLimit } from "./rateLimits";

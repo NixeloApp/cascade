@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getClientIp } from "./clientIp";
+import { getClientIp } from "./_clientIp";
 
 describe("getClientIp", () => {
   it("should return null if no headers are present", () => {

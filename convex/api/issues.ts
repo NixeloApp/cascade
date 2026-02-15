@@ -2,7 +2,7 @@ import { MINUTE } from "@convex-dev/rate-limiter";
 import { components, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { type ActionCtx, httpAction } from "../_generated/server";
-import { getClientIp } from "../lib/clientIp";
+import { getClientIp } from "../lib/_clientIp";
 import {
   type ApiAuthContext,
   createErrorResponse,
