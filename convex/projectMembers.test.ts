@@ -3,18 +3,13 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createTestContext,
-  createTestUser,
-} from "./testUtils";
+import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
 
 describe("Project Members", () => {
   describe("list", () => {
     it("should list project members with enriched user data", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, workspaceId, teamId, asUser } =
-        await createTestContext(t);
+      const { userId, organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
       const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
@@ -65,8 +60,7 @@ describe("Project Members", () => {
 
     it("should filter out soft-deleted members", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, workspaceId, teamId, asUser } =
-        await createTestContext(t);
+      const { userId, organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
       const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
@@ -103,8 +97,7 @@ describe("Project Members", () => {
 
     it("should filter out members whose user record is missing", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, workspaceId, teamId, asUser } =
-        await createTestContext(t);
+      const { userId, organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
       const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
@@ -141,8 +134,7 @@ describe("Project Members", () => {
 
     it("should deny access to non-members", async () => {
       const t = convexTest(schema, modules);
-      const { organizationId, workspaceId, teamId, asUser } =
-        await createTestContext(t);
+      const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
       const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Private Project",
@@ -157,9 +149,9 @@ describe("Project Members", () => {
       const nonMemberUserId = await createTestUser(t);
       const asNonMember = asAuthenticatedUser(t, nonMemberUserId);
 
-      await expect(
-        asNonMember.query(api.projectMembers.list, { projectId }),
-      ).rejects.toThrow(/Not authorized/);
+      await expect(asNonMember.query(api.projectMembers.list, { projectId })).rejects.toThrow(
+        /Not authorized/,
+      );
     });
   });
 });
