@@ -5,6 +5,8 @@ import { mutation, query } from "./_generated/server";
 const APP_NAME = "Nixelo";
 const TOTP_WINDOW = 1; // Allow 1 step before/after for clock drift
 const TOTP_PERIOD = 30; // 30 second periods
+const MAX_VERIFICATION_ATTEMPTS = 5; // Max attempts before lockout
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
 
 // Base32 alphabet for secret generation and decoding
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -137,14 +139,19 @@ function generateOtpauthUrl(email: string, secret: string): string {
 
 /**
  * Generate backup codes (8 codes, 8 chars each)
+ * Uses crypto.getRandomValues for cryptographically secure random generation
  */
 function generateBackupCodes(): string[] {
   const codes: string[] = [];
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude ambiguous chars
   for (let i = 0; i < 8; i++) {
     let code = "";
+    // Use crypto.getRandomValues for secure random bytes
+    const randomBytes = new Uint8Array(8);
+    crypto.getRandomValues(randomBytes);
     for (let j = 0; j < 8; j++) {
-      code += chars[Math.floor(Math.random() * chars.length)];
+      // Use modulo with random byte to select character
+      code += chars[randomBytes[j] % chars.length];
     }
     // Format as XXXX-XXXX for readability
     codes.push(`${code.slice(0, 4)}-${code.slice(4)}`);
@@ -153,13 +160,19 @@ function generateBackupCodes(): string[] {
 }
 
 /**
- * Hash a backup code for storage (simple hash, not for passwords)
+ * Hash a backup code for storage using SHA-256
+ * Converts to hex string for consistent storage
  */
-function hashBackupCode(code: string): string {
+async function hashBackupCode(code: string): Promise<string> {
   // Remove dashes and uppercase for comparison
   const normalized = code.replace(/-/g, "").toUpperCase();
-  // Simple hash using btoa - in production, use a proper hash
-  return btoa(normalized);
+  // Hash using SHA-256 via Web Crypto API
+  const encoder = new TextEncoder();
+  const data = encoder.encode(normalized);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  // Convert to hex string
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 // =============================================================================
@@ -279,7 +292,7 @@ export const completeSetup = mutation({
 
     // Generate backup codes
     const backupCodes = generateBackupCodes();
-    const hashedCodes = backupCodes.map(hashBackupCode);
+    const hashedCodes = await Promise.all(backupCodes.map(hashBackupCode));
 
     // Enable 2FA
     await ctx.db.patch(userId, {
@@ -297,6 +310,7 @@ export const completeSetup = mutation({
 
 /**
  * Verify a TOTP code (for sign-in)
+ * Includes rate limiting to prevent brute-force attacks
  */
 export const verifyCode = mutation({
   args: {
@@ -305,6 +319,7 @@ export const verifyCode = mutation({
   returns: v.object({
     success: v.boolean(),
     error: v.optional(v.string()),
+    lockedUntil: v.optional(v.number()),
   }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -321,15 +336,47 @@ export const verifyCode = mutation({
       return { success: false, error: "2FA is not enabled" };
     }
 
+    // Check if account is locked
+    const now = Date.now();
+    if (user.twoFactorLockedUntil && user.twoFactorLockedUntil > now) {
+      return {
+        success: false,
+        error: "Too many failed attempts. Please try again later.",
+        lockedUntil: user.twoFactorLockedUntil,
+      };
+    }
+
     // Verify the code
     const isValid = await verifyTOTP(user.twoFactorSecret, args.code);
     if (!isValid) {
+      // Increment failed attempts
+      const failedAttempts = (user.twoFactorFailedAttempts ?? 0) + 1;
+
+      if (failedAttempts >= MAX_VERIFICATION_ATTEMPTS) {
+        // Lock the account
+        const lockedUntil = now + LOCKOUT_DURATION_MS;
+        await ctx.db.patch(userId, {
+          twoFactorFailedAttempts: failedAttempts,
+          twoFactorLockedUntil: lockedUntil,
+        });
+        return {
+          success: false,
+          error: "Too many failed attempts. Account temporarily locked.",
+          lockedUntil,
+        };
+      }
+
+      await ctx.db.patch(userId, {
+        twoFactorFailedAttempts: failedAttempts,
+      });
       return { success: false, error: "Invalid verification code" };
     }
 
-    // Update last verified timestamp
+    // Success - reset failed attempts and update verified timestamp
     await ctx.db.patch(userId, {
-      twoFactorVerifiedAt: Date.now(),
+      twoFactorVerifiedAt: now,
+      twoFactorFailedAttempts: 0,
+      twoFactorLockedUntil: undefined,
     });
 
     return { success: true };
@@ -369,7 +416,7 @@ export const verifyBackupCode = mutation({
     }
 
     // Hash the provided code and check against stored hashes
-    const hashedInput = hashBackupCode(args.code);
+    const hashedInput = await hashBackupCode(args.code);
     const codeIndex = backupCodes.indexOf(hashedInput);
 
     if (codeIndex === -1) {
@@ -427,7 +474,7 @@ export const regenerateBackupCodes = mutation({
 
     // Generate new backup codes
     const backupCodes = generateBackupCodes();
-    const hashedCodes = backupCodes.map(hashBackupCode);
+    const hashedCodes = await Promise.all(backupCodes.map(hashBackupCode));
 
     await ctx.db.patch(userId, {
       twoFactorBackupCodes: hashedCodes,
@@ -472,7 +519,7 @@ export const disable = mutation({
     if (args.isBackupCode) {
       // Verify backup code
       const backupCodes = user.twoFactorBackupCodes ?? [];
-      const hashedInput = hashBackupCode(args.code);
+      const hashedInput = await hashBackupCode(args.code);
       isValid = backupCodes.includes(hashedInput);
     } else {
       // Verify TOTP code

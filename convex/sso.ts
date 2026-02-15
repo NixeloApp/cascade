@@ -402,6 +402,29 @@ export const updateDomains = mutation({
       .map((d) => d.toLowerCase().trim())
       .filter((d) => d.length > 0);
 
+    // Check for domain uniqueness across all organizations
+    // This prevents ambiguous SSO routing when users enter their email
+    if (normalizedDomains.length > 0) {
+      // Query all SSO connections to check for domain conflicts
+      // Note: We use a simple query here since there are typically few SSO connections
+      const allConnections = await ctx.db.query("ssoConnections").take(BOUNDED_LIST_LIMIT);
+
+      for (const existingConn of allConnections) {
+        // Skip the current connection
+        if (existingConn._id === args.connectionId) continue;
+
+        const existingDomains = existingConn.verifiedDomains ?? [];
+        const conflictingDomain = normalizedDomains.find((d) => existingDomains.includes(d));
+
+        if (conflictingDomain) {
+          return {
+            success: false,
+            error: `Domain "${conflictingDomain}" is already configured for another organization's SSO connection.`,
+          };
+        }
+      }
+    }
+
     await ctx.db.patch(args.connectionId, {
       verifiedDomains: normalizedDomains,
       updatedAt: Date.now(),

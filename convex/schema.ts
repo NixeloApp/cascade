@@ -1565,6 +1565,9 @@ export default defineSchema({
     twoFactorSecret: v.optional(v.string()),
     twoFactorBackupCodes: v.optional(v.array(v.string())),
     twoFactorVerifiedAt: v.optional(v.number()),
+    // 2FA rate limiting
+    twoFactorFailedAttempts: v.optional(v.number()),
+    twoFactorLockedUntil: v.optional(v.number()),
   })
     .index("email", ["email"])
     .index("isTestUser", ["isTestUser"])

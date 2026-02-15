@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -306,7 +306,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   const [domains, setDomains] = useState("");
 
   // Initialize fields when connection loads
-  useState(() => {
+  useEffect(() => {
     if (connection) {
       if (connection.type === "saml" && connection.samlConfig) {
         setIdpEntityId(connection.samlConfig.idpEntityId || "");
@@ -318,7 +318,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
       }
       setDomains(connection.verifiedDomains?.join(", ") || "");
     }
-  });
+  }, [connection]);
 
   const handleSave = useCallback(async () => {
     if (!connection) return;
