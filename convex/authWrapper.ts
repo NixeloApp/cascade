@@ -92,7 +92,7 @@ export const checkPasswordResetRateLimit = internalMutation({
 export const securePasswordReset = httpAction(async (ctx, request) => {
   try {
     const clientIp = getClientIp(request);
-    
+
     if (!clientIp) {
       // If we can't determine IP, we can't safely rate limit.
       // Rejecting the request is safer than allowing a potential bypass or DoS via shared bucket.
