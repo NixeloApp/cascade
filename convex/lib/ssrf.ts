@@ -97,7 +97,7 @@ export function expandIPv6(ip: string): string {
 
     const parts = ipv4Part.split(".").map((p) => parseInt(p, 10));
     // If not valid IPv4 parts, return as is (isStrictIPv6 would have caught it usually)
-    if (parts.length !== 4 || parts.some(isNaN)) return ip;
+    if (parts.length !== 4 || parts.some(Number.isNaN)) return ip;
 
     const hexIPv4 = parts.map((p) => p.toString(16).padStart(2, "0")).join("");
     // 1.2.3.4 -> 01020304
