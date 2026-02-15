@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
-import { cn } from "@/lib/utils";
 
 export function WhyChooseSection() {
   const stats = [
