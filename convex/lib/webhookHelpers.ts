@@ -1,5 +1,5 @@
 import { getErrorMessage } from "./errors";
-import { validateDestination } from "./ssrf";
+import { validateDestinationResolved } from "./ssrf";
 
 const WEBHOOK_TIMEOUT_MS = 10000;
 
@@ -21,7 +21,7 @@ export async function deliverWebhook(
 ): Promise<WebhookDeliveryResult> {
   // 1. Validate destination URL (SSRF protection)
   try {
-    validateDestination(url);
+    await validateDestinationResolved(url);
   } catch (e) {
     // If validation fails, return failed status immediately
     return {
@@ -48,6 +48,7 @@ export async function deliverWebhook(
       headers,
       body: payload,
       signal: controller.signal,
+      redirect: "error", // Prevent following redirects
     });
 
     const responseBody = await response.text();
