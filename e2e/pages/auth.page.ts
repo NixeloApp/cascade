@@ -376,8 +376,17 @@ export class AuthPage extends BasePage {
   }
 
   async goBackToSignIn() {
-    await this.backToSignInLink.waitFor({ state: "visible" });
-    await this.backToSignInLink.click();
+    // When on the "reset code" view (second step), the link is "Back to sign in"
+    // When on the "forgot password" view (first step), the link is "Sign in →" inside the subtitle
+    // We try the dedicated link first (reset code view), then the subtitle link (forgot password view)
+
+    if (await this.backToSignInLink.isVisible()) {
+      await this.backToSignInLink.click();
+    } else {
+      // In AuthPageLayout subtitle: "Remember your password? Sign in →"
+      await this.page.getByRole("link", { name: /sign in/i }).click();
+    }
+
     await this.signInHeading.waitFor({ state: "visible" });
     // Expand the form after navigation
     await this.expandEmailForm();
@@ -471,7 +480,10 @@ export class AuthPage extends BasePage {
   }
 
   async expectResetCodeForm() {
-    await expect(this.resetPasswordHeading).toBeVisible();
+    // The heading in AuthPageLayout is "Check your email"
+    await expect(this.page.getByRole("heading", { name: /check your email/i })).toBeVisible();
+    // The ResetPasswordForm also has a heading "Enter reset code"
+    await expect(this.page.getByRole("heading", { name: /enter reset code/i })).toBeVisible();
     await expect(this.codeInput).toBeVisible();
     await expect(this.newPasswordInput).toBeVisible();
     await expect(this.resetPasswordButton).toBeVisible();
