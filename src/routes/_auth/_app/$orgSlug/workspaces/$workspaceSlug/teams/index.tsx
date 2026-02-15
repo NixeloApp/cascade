@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePaginatedQuery, useQuery } from "convex/react";
-import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import { PageContent, PageHeader, PageLayout } from "@/components/Layout";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";

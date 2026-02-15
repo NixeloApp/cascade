@@ -1,5 +1,5 @@
 import { Flex } from "@/components/ui/Flex";
-import { NixeloLogo } from "../landing/icons";
+import { NixeloLogo } from "../Landing/icons";
 import { Typography } from "../ui/Typography";
 
 export function AppSplashScreen({ message }: { message?: string }) {
