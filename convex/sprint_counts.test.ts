@@ -50,10 +50,10 @@ describe("Sprint Issue Counts", () => {
 
     // Create 1 Todo issue NOT in sprint
     await asUser.mutation(api.issues.create, {
-        projectId,
-        title: "Todo Not In Sprint",
-        type: "task",
-        priority: "medium",
+      projectId,
+      title: "Todo Not In Sprint",
+      type: "task",
+      priority: "medium",
     });
 
     const counts = await asUser.query(api.issues.getIssueCounts, { projectId, sprintId });
