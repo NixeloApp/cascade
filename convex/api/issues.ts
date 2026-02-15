@@ -11,8 +11,8 @@ import {
   hasScope,
   verifyProjectAccess,
 } from "../lib/apiAuth";
-import { getClientIp } from "../lib/ssrf";
 import { logger } from "../lib/logger";
+import { getClientIp } from "../lib/ssrf";
 
 /**
  * REST API for Issues
