@@ -8,6 +8,7 @@ import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, rateLimited, validation } from "./lib/errors";
+import { isOrganizationAdmin } from "./lib/organizationAccess";
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_SEARCH_PAGE_SIZE,
@@ -17,6 +18,7 @@ import {
 } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { isWorkspaceEditor } from "./lib/workspaceAccess";
 import { assertCanAccessProject, assertCanEditProject } from "./projectAccess";
 
 export const create = authenticatedMutation({
@@ -409,6 +411,14 @@ async function validateWorkspaceIntegrity(
     if (!workspace) throw notFound("workspace", workspaceId);
     if (workspace.organizationId !== organizationId) {
       throw validation("workspaceId", "Workspace does not belong to the specified organization");
+    }
+
+    const isOrgAdmin = await isOrganizationAdmin(ctx, organizationId, ctx.userId);
+    if (isOrgAdmin) return;
+
+    const isEditor = await isWorkspaceEditor(ctx, workspaceId, ctx.userId);
+    if (!isEditor) {
+      throw forbidden(undefined, "You must be a workspace member to perform this action");
     }
   }
 }

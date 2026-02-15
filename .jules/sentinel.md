@@ -78,3 +78,8 @@
 ## 2025-02-23 - SSRF Bypass via IPv4-Mapped IPv6 Hex Notation
 **Learning:** Validation logic for "private IP" must account for all valid representations of an IP address. The standard regex for IPv4-mapped IPv6 (`::ffff:1.2.3.4`) missed the alternative hex notation (`::ffff:7f00:1`), allowing attackers to bypass SSRF protection by encoding private IPs (like 127.0.0.1) in an unexpected format.
 **Action:** When implementing IP allow/block lists, normalize IP addresses to a canonical format (bytes or standard string) before checking, or ensure regex patterns cover all RFC-compliant variations including compressed, expanded, and mapped forms.
+
+## 2026-02-24 - Workspace Authorization Gap in Document Creation
+**Vulnerability:** Document creation allowed any organization member to create documents in any workspace within that organization, bypassing workspace membership checks. This occurred because `validateWorkspaceIntegrity` only verified that the workspace belonged to the organization, not that the user belonged to the workspace.
+**Learning:** When resources (like Documents) can be parented by multiple container types (Project OR Workspace), you must explicitly validate membership for the specific container being used. Implicit organization-level checks are insufficient for workspace-scoped resources.
+**Action:** Enforce strict membership checks (e.g., `isWorkspaceEditor`) whenever a resource is linked to a specific container ID, even if a higher-level container (Organization) check has passed.
