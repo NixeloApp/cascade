@@ -1,3 +1,4 @@
+import { resolveDNS } from "./dns";
 import { validation } from "./errors";
 
 // Strict IPv4 Regex: 4 decimal octets (0-255), no leading zeros unless single '0'
@@ -98,12 +99,30 @@ export function isPrivateIPv6(ip: string): boolean {
 
   // IPv4-mapped IPv6 ::ffff:0:0/96
   // Check if it's mapped
+
+  // Case 1: Dotted quad ::ffff:1.2.3.4
   if (/^::ffff:\d+\.\d+\.\d+\.\d+$/i.test(ip)) {
     const ipv4 = ip.split(":").pop();
     if (ipv4 && isStrictIPv4(ipv4)) {
       return isPrivateIPv4(ipv4);
     }
     return true; // Malformed mapped is suspicious
+  }
+
+  // Case 2: Hex notation ::ffff:xxxx:xxxx (e.g., ::ffff:7f00:1)
+  if (/^::ffff:[0-9a-f]{1,4}:[0-9a-f]{1,4}$/i.test(ip)) {
+    const parts = ip.split(":");
+    // "::ffff:a:b" -> ["", "", "ffff", "a", "b"]
+    const high = parseInt(parts[parts.length - 2], 16);
+    const low = parseInt(parts[parts.length - 1], 16);
+
+    const p1 = (high >> 8) & 0xff;
+    const p2 = high & 0xff;
+    const p3 = (low >> 8) & 0xff;
+    const p4 = low & 0xff;
+
+    const ipv4 = `${p1}.${p2}.${p3}.${p4}`;
+    if (isPrivateIPv4(ipv4)) return true;
   }
 
   // 2001:db8::/32 (Documentation)
@@ -194,4 +213,107 @@ export function validateDestination(url: string) {
   if (hostname === "169.254.169.254" || hostname.toLowerCase() === "localhost") {
     throw validation("url", "Restricted hostname.");
   }
+}
+
+/**
+ * Validates a destination URL to prevent SSRF by resolving DNS.
+ * Enforces strict IP formats and blocks private ranges.
+ * Blocks domains that resolve to private IPs.
+ * Returns the resolved IP address to be used for the connection.
+ */
+export async function validateDestinationResolved(url: string): Promise<string> {
+  // 1. Basic syntax and direct IP check
+  validateDestination(url);
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw validation("url", "Invalid URL format");
+  }
+
+  let hostname = parsed.hostname;
+  if (hostname.startsWith("[") && hostname.endsWith("]")) {
+    hostname = hostname.slice(1, -1);
+  }
+
+  // If it's a strict IP, validateDestination already checked it.
+  if (isStrictIPv4(hostname)) {
+    return hostname;
+  }
+  if (isStrictIPv6(hostname)) {
+    return `[${hostname}]`;
+  }
+
+  // If it's a domain name, resolve it and check IPs
+  const ips = await resolveDNS(hostname);
+
+  if (ips.length === 0) {
+    throw validation("url", `Could not resolve hostname: ${hostname}`);
+  }
+
+  for (const ip of ips) {
+    if (isStrictIPv4(ip) && isPrivateIPv4(ip)) {
+      throw validation("url", `Domain resolves to private IP address: ${ip}`);
+    }
+    if (isStrictIPv6(ip) && isPrivateIPv6(ip)) {
+      throw validation("url", `Domain resolves to private IP address: ${ip}`);
+    }
+  }
+
+  // Use the first resolved IP
+  const firstIp = ips[0];
+  if (isStrictIPv6(firstIp)) {
+    return `[${firstIp}]`;
+  }
+  return firstIp;
+}
+
+/**
+ * Safe Client IP Extraction Helper
+ *
+ * This utility provides a consistent way to extract the client's IP address
+ * from request headers, prioritizing headers set by trusted proxies/CDNs
+ * (Cloudflare, Vercel, Fastly, etc.) over the easily spoofable X-Forwarded-For.
+ */
+export function getClientIp(request: Request): string | null {
+  const headers = request.headers;
+
+  // 1. Cloudflare (Highest priority as it's our primary CDN)
+  // This header is set by Cloudflare and cannot be spoofed if the request comes through them.
+  const cfIp = headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp;
+
+  // 2. True-Client-IP (Cloudflare Enterprise / Akamai)
+  const trueClientIp = headers.get("true-client-ip");
+  if (trueClientIp) return trueClientIp;
+
+  // 3. Vercel / Nginx Real IP (Standard for many reverse proxies)
+  const realIp = headers.get("x-real-ip");
+  if (realIp) return realIp;
+
+  // 4. X-Client-IP (Common alternative)
+  const clientIp = headers.get("x-client-ip");
+  if (clientIp) return clientIp;
+
+  // 5. Fastly Client IP
+  const fastlyIp = headers.get("fastly-client-ip");
+  if (fastlyIp) return fastlyIp;
+
+  // 6. X-Forwarded-For (Standard but spoofable)
+  // We prioritize the first IP in the list, assuming standard behavior where
+  // the client's IP is the first entry.
+  // Warning: If the platform does not strip this header from external requests,
+  // the first IP could be spoofed by the client.
+  // However, without platform-specific knowledge of trusted proxy count,
+  // this is the standard fallback.
+  const forwardedFor = headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    // Split by comma and take the first one
+    const ips = forwardedFor.split(",").map((ip) => ip.trim());
+    const firstIp = ips[0];
+    if (firstIp) return firstIp;
+  }
+
+  return null;
 }

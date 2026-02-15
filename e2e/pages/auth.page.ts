@@ -95,9 +95,10 @@ export class AuthPage extends BasePage {
     super(page, orgSlug);
 
     // Page headings
-    this.signInHeading = page.getByRole("heading", { name: /welcome back/i });
-    this.signUpHeading = page.getByRole("heading", { name: /create an account/i });
-    this.forgotPasswordHeading = page.getByText("Forgot Password", { exact: false });
+    // Updated to match the actual text in src/routes/signin.tsx and src/routes/signup.tsx
+    this.signInHeading = page.getByRole("heading", { name: /sign in to nixelo/i });
+    this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
+    this.forgotPasswordHeading = page.getByRole("heading", { name: /reset your password/i });
     this.resetPasswordHeading = page.getByRole("heading", { name: /reset password/i });
 
     // Sign In / Sign Up form - two-step flow
@@ -147,8 +148,8 @@ export class AuthPage extends BasePage {
    * Navigate to sign in page and expand email form
    */
   async gotoSignIn() {
-    await this.page.goto("/signin", { waitUntil: "commit" });
-    await this.signInHeading.waitFor({ state: "visible" });
+    await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
+    await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
     // Wait for hydration before expanding
     await this.waitForHydration();
     // Expand form using robust click logic
@@ -161,8 +162,8 @@ export class AuthPage extends BasePage {
    * Navigate to sign up page and expand email form
    */
   async gotoSignUp() {
-    await this.page.goto("/signup", { waitUntil: "commit" });
-    await this.signUpHeading.waitFor({ state: "visible" });
+    await this.page.goto("/signup", { waitUntil: "domcontentloaded" });
+    await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
     // Wait for hydration before expanding
     await this.waitForHydration();
     // Expand form using robust click logic
@@ -176,7 +177,7 @@ export class AuthPage extends BasePage {
    */
   async gotoForgotPassword() {
     await this.page.goto("/forgot-password");
-    await this.forgotPasswordHeading.waitFor({ state: "visible" });
+    await this.forgotPasswordHeading.waitFor({ state: "visible", timeout: 15000 });
     await this.emailInput.waitFor({ state: "visible" });
   }
 

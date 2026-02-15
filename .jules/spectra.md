@@ -7,3 +7,7 @@
 ## 2025-02-17 - Biome Linting in Tests
 **Learning:** `biome` is strict about non-null assertions (`!`), even in tests.
 **Action:** Use `// biome-ignore lint/style/noNonNullAssertion: testing convenience` when asserting non-null values for convenience in test files.
+
+## 2025-02-24 - Testing Date-Dependent Logic in Convex
+**Learning:** `vi.useFakeTimers()` and `vi.setSystemTime()` effectively control `Date` and `Date.now()` within `convex-test` execution, allowing deterministic testing of time-based logic like monthly rotations.
+**Action:** Use `vi.useFakeTimers()` in `beforeEach` to set a specific date when testing time-sensitive business logic.

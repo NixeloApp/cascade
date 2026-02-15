@@ -109,8 +109,9 @@ export class LandingPage extends BasePage {
     this.footerCopyright = page.getByText(/© 2026 nixelo/i);
 
     // Auth page headings (separate routes now)
-    this.signInHeading = page.getByRole("heading", { name: /welcome back/i });
-    this.signUpHeading = page.getByRole("heading", { name: /create an account/i });
+    // Updated to match the actual text in src/routes/signin.tsx and src/routes/signup.tsx
+    this.signInHeading = page.getByRole("heading", { name: /sign in to nixelo/i });
+    this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
   }
 
   // ===================
@@ -146,7 +147,8 @@ export class LandingPage extends BasePage {
     await this.navLoginButton.click();
     // Wait for signin page to load
     await this.page.waitForURL("**/signin");
-    await this.signInHeading.waitFor({ state: "visible" });
+    // Wait for heading with increased timeout for CI
+    await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
   }
 
   async clickNavGetStarted() {
@@ -154,7 +156,8 @@ export class LandingPage extends BasePage {
     await this.navGetStartedButton.click();
     // Wait for signup page to load
     await this.page.waitForURL("**/signup");
-    await this.signUpHeading.waitFor({ state: "visible" });
+    // Wait for heading with increased timeout for CI
+    await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
   }
 
   /**

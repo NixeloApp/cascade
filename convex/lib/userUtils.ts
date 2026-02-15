@@ -15,13 +15,14 @@ export type PublicUser = {
   _id: Doc<"users">["_id"];
   name?: string;
   image?: string;
+  email?: undefined;
 };
 
 /**
  * User fields for authenticated contexts
  * Includes email but still excludes highly sensitive data
  */
-export type AuthenticatedUser = PublicUser & {
+export type AuthenticatedUser = Omit<PublicUser, "email"> & {
   email?: string;
 };
 

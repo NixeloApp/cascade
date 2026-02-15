@@ -14,7 +14,7 @@ import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
-import { sanitizeUserForAuth } from "./lib/userUtils";
+import { sanitizeUserForAuth, sanitizeUserForPublic } from "./lib/userUtils";
 import { digestFrequencies } from "./validators";
 
 // Limits for user stats queries
@@ -49,8 +49,35 @@ export const get = authenticatedQuery({
   ),
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.id);
-    // Return sanitized user - strips sensitive fields beyond email
-    return sanitizeUserForAuth(user);
+    if (!user) return null;
+
+    // Users can always see themselves
+    if (ctx.userId === args.id) {
+      return sanitizeUserForAuth(user);
+    }
+
+    // Check for shared organization
+    const myOrgs = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+      .take(MAX_PAGE_SIZE);
+
+    if (myOrgs.length > 0) {
+      const theirOrgs = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user", (q) => q.eq("userId", args.id))
+        .take(MAX_PAGE_SIZE);
+
+      const myOrgIds = new Set(myOrgs.map((m) => m.organizationId));
+      const hasSharedOrg = theirOrgs.some((m) => myOrgIds.has(m.organizationId));
+
+      if (hasSharedOrg) {
+        return sanitizeUserForAuth(user);
+      }
+    }
+
+    // If no shared context, return public profile (no email)
+    return sanitizeUserForPublic(user);
   },
 });
 
@@ -328,16 +355,15 @@ async function countIssuesByReporter(
     return await efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
-        .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+        .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true))
+        .filter((q) => isAllowedProject(q, projectIds)),
       MAX_ISSUES_FOR_STATS,
     );
   }
   return await efficientCount(
     ctx.db
       .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
-      .filter(notDeleted),
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true)),
   );
 }
 
@@ -353,17 +379,17 @@ async function countIssuesByAssignee(
       efficientCount(
         ctx.db
           .query("issues")
-          .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
-          .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+          .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true))
+          .filter((q) => isAllowedProject(q, projectIds)),
         MAX_ISSUES_FOR_STATS,
       ),
       efficientCount(
         ctx.db
           .query("issues")
           .withIndex("by_assignee_status", (q) =>
-            q.eq("assigneeId", assigneeId).eq("status", "done"),
+            q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
           )
-          .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+          .filter((q) => isAllowedProject(q, projectIds)),
         MAX_ISSUES_FOR_STATS,
       ),
     ]);
@@ -372,14 +398,14 @@ async function countIssuesByAssignee(
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
-        .filter(notDeleted),
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true)),
     ),
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee_status", (q) => q.eq("assigneeId", assigneeId).eq("status", "done"))
-        .filter(notDeleted),
+        .withIndex("by_assignee_status", (q) =>
+          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+        ),
     ),
   ]);
 }
@@ -501,15 +527,14 @@ export const listWithDigestPreference = internalQuery({
     }),
   ),
   handler: async (ctx, args) => {
-    // Bounded query for notification preferences (all prefs are loaded, then filtered in JS below)
-    const prefs = await ctx.db.query("notificationPreferences").take(1000);
-
-    // Filter in-memory for active email preferences matching the requested digest frequency.
-    // Only include users who have email enabled and match the requested frequency.
-    // This is a JS array filter on pre-fetched results, not a DB-level filter.
-    const filtered = prefs.filter(
-      (pref) => pref.emailEnabled && pref.emailDigest === args.frequency,
-    );
+    // Optimized query: Use by_digest_frequency index to find matching users directly
+    // This avoids scanning irrelevant records and fixes the bug where users beyond the first 1000 were ignored
+    const filtered = await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_digest_frequency", (q) =>
+        q.eq("emailEnabled", true).eq("emailDigest", args.frequency),
+      )
+      .take(1000); // Bounded limit to capture users efficiently
 
     // Batch fetch users to avoid N+1 queries
     const userIds = filtered.map((pref) => pref.userId);

@@ -23,7 +23,7 @@ test.describe("Board Drag-Drop", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("issue cards have drag handle and are draggable", async ({ projectsPage, page }) => {
+  test("issue cards have drag handle and are draggable", async ({ projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `DRAG${timestamp.toString().slice(-4)}`;
     const issueTitle = `Draggable Issue ${timestamp}`;
@@ -46,9 +46,11 @@ test.describe("Board Drag-Drop", () => {
     const issueCard = projectsPage.getIssueCard(issueTitle);
     await expect(issueCard).toBeVisible();
 
-    // Verify the card has draggable attribute (cards are draggable when canEdit=true)
-    const draggable = await issueCard.getAttribute("draggable");
-    expect(draggable).toBe("true");
+    // Verify the card container has draggable attribute (cards are draggable when canEdit=true)
+    // getIssueCard returns the overlay button, so we need to check the parent container
+    const issueCardContainer = issueCard.locator("xpath=..");
+    // Use toHaveAttribute to enable retries as permissions might load asynchronously
+    await expect(issueCardContainer).toHaveAttribute("draggable", "true");
     console.log("✓ Issue card is draggable");
   });
 

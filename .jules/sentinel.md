@@ -59,3 +59,22 @@
 **Vulnerability:** The system stored plaintext OTPs for test emails (@inbox.mailtrap.io) in the `testOtpCodes` table whenever `E2E_API_KEY` was present in the environment (e.g. production). If the database was compromised, these OTPs were readable.
 **Learning:** Even conditional storage for testing purposes should be encrypted at rest if the environment contains the necessary keys. Relying on "it's just for testing" often leaks into production configurations where testing tools are enabled.
 **Prevention:** Implemented AES-GCM encryption for stored test OTPs using the `E2E_API_KEY` as the encryption key. OTPs are only decryptable when the key is present and verified.
+
+## 2026-02-15 - SSRF via DNS Rebinding in Webhooks
+**Vulnerability:** The webhook delivery logic checked the destination IP against private ranges (SSRF protection) via DNS resolution, but then performed a second DNS resolution during the actual HTTP request. This Time-of-Check to Time-of-Use (TOCTOU) race condition allowed attackers to return a public IP during the check and a private IP during the request (DNS Rebinding), bypassing SSRF protection.
+**Learning:** Validating a hostname's IP is insufficient if the subsequent request re-resolves the hostname. The resolved IP must be "pinned" and used for the connection.
+**Prevention:** Modified `deliverWebhook` to resolve the IP address first, validate it, and then rewrite the HTTP URL to use the resolved IP (while setting the `Host` header to the original hostname). This ensures the checked IP is the same one used for the connection.
+
+## 2025-05-23 - Rate Limit Bypass via IP Spoofing
+**Vulnerability:** The password reset rate limiter relied on `x-forwarded-for` header's first value without validation. This allowed attackers to bypass rate limits by spoofing the header (e.g., `X-Forwarded-For: <fake-ip>`), as many load balancers append the real IP rather than replacing the header.
+**Learning:** Naively trusting `X-Forwarded-For` is dangerous in cloud environments where the trust chain is unknown or variable. The first IP in the list is only trustworthy if the edge platform guarantees stripping of incoming headers.
+**Prevention:** Implemented `getClientIp` helper that prioritizes immutable headers like `CF-Connecting-IP` (Cloudflare) and `True-Client-IP`, and falls back to `X-Forwarded-For` only when necessary. This significantly raises the bar for spoofing.
+
+## 2025-05-24 - User Email Exposure via IDOR
+**Vulnerability:** The `api.users.get` query allowed any authenticated user to fetch the email address of any other user by knowing their user ID. This is an IDOR (Insecure Direct Object Reference) vulnerability leading to PII exposure.
+**Learning:** Default object access patterns (like fetching a user by ID) often return the full object representation. When dealing with sensitive fields like email, context-aware serialization is crucial. You must verify the relationship between the requester and the target resource before returning sensitive data.
+**Prevention:** Implemented a check in `api.users.get` to verify if the requester shares an organization with the target user. If not, the email field is stripped from the response using `sanitizeUserForPublic`.
+
+## 2025-02-23 - SSRF Bypass via IPv4-Mapped IPv6 Hex Notation
+**Learning:** Validation logic for "private IP" must account for all valid representations of an IP address. The standard regex for IPv4-mapped IPv6 (`::ffff:1.2.3.4`) missed the alternative hex notation (`::ffff:7f00:1`), allowing attackers to bypass SSRF protection by encoding private IPs (like 127.0.0.1) in an unexpected format.
+**Action:** When implementing IP allow/block lists, normalize IP addresses to a canonical format (bytes or standard string) before checking, or ensure regex patterns cover all RFC-compliant variations including compressed, expanded, and mapped forms.

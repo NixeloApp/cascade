@@ -9,8 +9,8 @@ import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { EmptyState } from "./ui/EmptyState";
-import { WebhookCard } from "./webhooks/WebhookCard";
-import { WebhookForm } from "./webhooks/WebhookForm";
+import { WebhookCard } from "./Webhooks/WebhookCard";
+import { WebhookForm } from "./Webhooks/WebhookForm";
 
 interface WebhooksManagerProps {
   projectId: Id<"projects">;

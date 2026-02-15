@@ -694,7 +694,9 @@ const applicationTables = {
     digestDay: v.optional(v.string()), // "monday", etc.
     digestTime: v.optional(v.string()), // "09:00"
     updatedAt: v.number(),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_digest_frequency", ["emailEnabled", "emailDigest"]),
 
   unsubscribeTokens: defineTable({
     userId: v.id("users"),

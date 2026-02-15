@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
+import { Grid } from "../ui/Grid";
+import { Typography } from "../ui/Typography";
 
 export function WhyChooseSection() {
   const stats = [
@@ -26,11 +27,11 @@ export function WhyChooseSection() {
             </Typography>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
+          <Grid cols={1} colsSm={2} colsLg={4} className="gap-12">
             {stats.map((stat, index) => (
               <StatItem key={stat.label} {...stat} delay={index * 150} />
             ))}
-          </div>
+          </Grid>
         </div>
       </div>
     </section>

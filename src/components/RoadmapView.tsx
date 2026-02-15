@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
-import { PageLayout } from "@/components/layout";
+import { PageLayout } from "@/components/Layout";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";

@@ -12,7 +12,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "./boundedQueries";
 import { notFound, validation } from "./errors";
 import { fetchPaginatedQuery } from "./queryHelpers";
-import { MAX_LABELS_PER_PROJECT, MAX_PAGE_SIZE } from "./queryLimits";
+import { MAX_LABELS_PER_PROJECT } from "./queryLimits";
 
 /**
  * Get an issue and validate it has a projectId (for migration safety)
@@ -125,12 +125,32 @@ export async function enrichIssue(ctx: QueryCtx, issue: Doc<"issues">): Promise<
   // Fetch label metadata if issue has labels and projectId
   let labelInfos: LabelInfo[] = [];
   if (issue.labels && issue.labels.length > 0 && issue.projectId) {
-    const projectLabels = await ctx.db
-      .query("labels")
-      .withIndex("by_project", (q) => q.eq("projectId", issue.projectId))
-      .take(MAX_PAGE_SIZE);
+    // Optimization: Fetch only the specific labels used by this issue.
+    // This avoids fetching potentially hundreds of unused labels for the project
+    // and fixes a bug where labels beyond the page size limit were not found.
+    const labels = await Promise.all(
+      issue.labels.map((name) =>
+        ctx.db
+          .query("labels")
+          .withIndex("by_project_name", (q) => {
+            const projectId = issue.projectId;
+            if (!projectId) {
+              // This should be unreachable due to outer check, but satisfy type checker
+              throw new Error("Unexpected missing projectId");
+            }
+            return q.eq("projectId", projectId).eq("name", name);
+          })
+          .first(),
+      ),
+    );
 
-    const labelMap = new Map(projectLabels.map((l) => [l.name, l.color]));
+    const labelMap = new Map<string, string>();
+    for (const label of labels) {
+      if (label) {
+        labelMap.set(label.name, label.color);
+      }
+    }
+
     labelInfos = issue.labels.map((name) => ({
       name,
       color: labelMap.get(name) ?? "#6b7280", // Default gray if not found
@@ -193,6 +213,67 @@ function getLabelInfos(
   }));
 }
 
+function getProjectLabelsNeeded(issues: Doc<"issues">[]) {
+  const projectLabelsNeeded = new Map<Id<"projects">, Set<string>>();
+  for (const issue of issues) {
+    if (issue.projectId && issue.labels && issue.labels.length > 0) {
+      if (!projectLabelsNeeded.has(issue.projectId)) {
+        projectLabelsNeeded.set(issue.projectId, new Set());
+      }
+      const set = projectLabelsNeeded.get(issue.projectId);
+      if (set) {
+        for (const l of issue.labels) {
+          set.add(l);
+        }
+      }
+    }
+  }
+  return projectLabelsNeeded;
+}
+
+async function fetchLabelsForProject(
+  ctx: QueryCtx,
+  projectId: Id<"projects">,
+  neededLabels: Set<string>,
+): Promise<Doc<"labels">[]> {
+  // If we need few labels, fetch them individually (faster/cheaper than scanning 200 items)
+  if (neededLabels.size <= 20) {
+    const labels = await Promise.all(
+      [...neededLabels].map((name) =>
+        ctx.db
+          .query("labels")
+          .withIndex("by_project_name", (q) => q.eq("projectId", projectId).eq("name", name))
+          .first(),
+      ),
+    );
+    return labels.filter((l): l is Doc<"labels"> => l !== null);
+  }
+
+  // If we need many labels, fetch the first batch (up to 200) efficiently
+  const batchLabels = await ctx.db
+    .query("labels")
+    .withIndex("by_project", (q) => q.eq("projectId", projectId))
+    .take(MAX_LABELS_PER_PROJECT);
+
+  // Check if we are missing any needed labels
+  const foundNames = new Set(batchLabels.map((l) => l.name));
+  const missingLabels = [...neededLabels].filter((name) => !foundNames.has(name));
+
+  if (missingLabels.length > 0) {
+    // Fetch missing labels individually
+    const extraLabels = await Promise.all(
+      missingLabels.map((name) =>
+        ctx.db
+          .query("labels")
+          .withIndex("by_project_name", (q) => q.eq("projectId", projectId).eq("name", name))
+          .first(),
+      ),
+    );
+    batchLabels.push(...extraLabels.filter((l): l is Doc<"labels"> => l !== null));
+  }
+  return batchLabels;
+}
+
 /**
  * Enrich multiple issues with assignee, reporter, epic, and label info
  * Uses batching to avoid N+1 queries
@@ -204,39 +285,31 @@ export async function enrichIssues(
   if (issues.length === 0) return [];
 
   // Collect unique IDs
-  const assigneeIds = new Set<Id<"users">>();
-  const reporterIds = new Set<Id<"users">>();
+  const userIds = new Set<Id<"users">>();
   const epicIds = new Set<Id<"issues">>();
   // We only track projects that actually need label fetching to optimize queries
-  const projectIdsWithLabels = new Set<Id<"projects">>();
+  const projectLabelsNeeded = getProjectLabelsNeeded(issues);
 
   for (const issue of issues) {
-    if (issue.assigneeId) assigneeIds.add(issue.assigneeId);
-    reporterIds.add(issue.reporterId);
+    if (issue.assigneeId) userIds.add(issue.assigneeId);
+    userIds.add(issue.reporterId);
     if (issue.epicId) epicIds.add(issue.epicId);
-    // Optimization: Only fetch labels for projects where at least one issue has labels
-    if (issue.projectId && issue.labels && issue.labels.length > 0) {
-      projectIdsWithLabels.add(issue.projectId);
-    }
   }
 
   // Batch fetch all data
-  const projectIdList = [...projectIdsWithLabels];
-  const [assignees, reporters, epics, projectLabelsArrays] = await Promise.all([
-    asyncMap([...assigneeIds], (id) => ctx.db.get(id)),
-    asyncMap([...reporterIds], (id) => ctx.db.get(id)),
+  const projectIdList = [...projectLabelsNeeded.keys()];
+  const [users, epics, projectLabelsArrays] = await Promise.all([
+    asyncMap([...userIds], (id) => ctx.db.get(id)),
     asyncMap([...epicIds], (id) => ctx.db.get(id)),
-    asyncMap(projectIdList, (projectId) =>
-      ctx.db
-        .query("labels")
-        .withIndex("by_project", (q) => q.eq("projectId", projectId))
-        .take(MAX_LABELS_PER_PROJECT),
-    ),
+    asyncMap(projectIdList, async (projectId) => {
+      const neededLabels = projectLabelsNeeded.get(projectId);
+      if (!neededLabels) return [];
+      return await fetchLabelsForProject(ctx, projectId, neededLabels);
+    }),
   ]);
 
   // Build lookup maps
-  const assigneeMap = buildLookupMap(assignees);
-  const reporterMap = buildLookupMap(reporters);
+  const userMap = buildLookupMap(users);
   const epicMap = buildLookupMap(epics);
   const labelsByProject = buildLabelsByProject(
     projectIdList,
@@ -247,9 +320,9 @@ export async function enrichIssues(
   return issues.map((issue) => ({
     ...issue,
     assignee: issue.assigneeId
-      ? toUserInfo(assigneeMap.get(issue.assigneeId.toString()) ?? null)
+      ? toUserInfo(userMap.get(issue.assigneeId.toString()) ?? null)
       : null,
-    reporter: toUserInfo(reporterMap.get(issue.reporterId.toString()) ?? null),
+    reporter: toUserInfo(userMap.get(issue.reporterId.toString()) ?? null),
     epic: issue.epicId ? toEpicInfo(epicMap.get(issue.epicId.toString()) ?? null) : null,
     labels: getLabelInfos(issue, labelsByProject),
   }));

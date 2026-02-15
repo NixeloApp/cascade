@@ -16,7 +16,7 @@ export function HeroSection() {
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99, 102, 241, 0.15), transparent)",
+              "radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--color-landing-accent), transparent 85%), transparent)",
           }}
         />
         {/* Subtle grid pattern overlay */}
@@ -24,7 +24,7 @@ export function HeroSection() {
           className="absolute inset-0 opacity-5"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+              "linear-gradient(color-mix(in srgb, var(--color-ui-text-inverse), transparent 97%) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--color-ui-text-inverse), transparent 97%) 1px, transparent 1px)",
             backgroundSize: "64px 64px",
           }}
         />
