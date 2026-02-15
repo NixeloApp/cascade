@@ -5,6 +5,7 @@ import { ArrowLeft, Building2, FolderPlus, Sparkles, UserPlus } from "lucide-rea
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -108,7 +109,11 @@ export function LeadOnboarding({
 
         {/* Header */}
         <div className="text-center">
-          <Typography variant="h1" className="text-3xl font-bold text-ui-text mb-3">
+          <Typography
+            variant="h1"
+            className="text-3xl font-bold text-ui-text mb-3"
+            data-testid={TEST_IDS.ONBOARDING.TEAM_LEAD_HEADING}
+          >
             Perfect for Team Leads
           </Typography>
           <Typography className="text-ui-text-secondary text-lg">
@@ -142,7 +147,12 @@ export function LeadOnboarding({
 
         {/* Continue */}
         <Flex justify="center">
-          <Button variant="primary" size="lg" onClick={() => setStep("project")}>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => setStep("project")}
+            data-testid={TEST_IDS.ONBOARDING.SETUP_WORKSPACE_BUTTON}
+          >
             Let's set up your project
           </Button>
         </Flex>
