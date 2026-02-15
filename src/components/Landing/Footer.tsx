@@ -1,4 +1,5 @@
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 import { NixeloLogo } from "./icons";
 
@@ -6,7 +7,7 @@ export function Footer() {
   return (
     <footer className="px-6 py-16 border-t border-ui-border/20 bg-transparent transition-colors">
       <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-5 gap-8 mb-12">
+        <Grid cols={1} colsMd={5} className="gap-8 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
             <Flex align="center" gap="sm" className="mb-4">
@@ -75,7 +76,7 @@ export function Footer() {
               ))}
             </ul>
           </div>
-        </div>
+        </Grid>
 
         <Flex
           direction="column"

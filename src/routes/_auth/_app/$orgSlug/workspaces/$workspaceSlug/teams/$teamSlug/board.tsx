@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { KanbanBoard } from "@/components/KanbanBoard";
-import { PageContent } from "@/components/layout";
+import { PageContent } from "@/components/Layout";
 import { useOrganization } from "@/hooks/useOrgContext";
 
 export const Route = createFileRoute(

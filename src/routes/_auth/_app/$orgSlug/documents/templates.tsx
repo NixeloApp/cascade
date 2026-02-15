@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { DocumentTemplatesManager } from "@/components/DocumentTemplatesManager";
-import { PageHeader, PageLayout } from "@/components/layout";
+import { PageHeader, PageLayout } from "@/components/Layout";
 import { Button } from "@/components/ui/Button";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/documents/templates")({

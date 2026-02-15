@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, PageLayout } from "@/components/layout";
+import { PageHeader, PageLayout } from "@/components/Layout";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Typography } from "@/components/ui/Typography";
 
