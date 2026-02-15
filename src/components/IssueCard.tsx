@@ -1,3 +1,4 @@
+import { draggable } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import type { Id } from "@convex/_generated/dataModel";
 import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
@@ -9,6 +10,7 @@ import {
   ISSUE_TYPE_ICONS,
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
+import { createIssueCardData } from "@/lib/kanban-dnd";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -22,6 +24,7 @@ interface Issue {
   title: string;
   type: IssueType;
   priority: IssuePriority;
+  order: number;
   assignee?: {
     _id: Id<"users">;
     name: string;
@@ -34,13 +37,16 @@ interface Issue {
 
 interface IssueCardProps {
   issue: Issue;
-  onDragStart: (e: React.DragEvent, issueId: Id<"issues">) => void;
+  /** Status of the issue (for DnD payload) */
+  status: string;
   onClick?: (issueId: Id<"issues">) => void;
   selectionMode?: boolean;
   isSelected?: boolean;
   isFocused?: boolean;
   onToggleSelect?: (issueId: Id<"issues">) => void;
   canEdit?: boolean;
+  /** Callback when drag starts (for parent state management) */
+  onDragStateChange?: (isDragging: boolean) => void;
 }
 
 /**
@@ -54,16 +60,17 @@ function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
     prev.isSelected !== next.isSelected ||
     prev.isFocused !== next.isFocused ||
     prev.selectionMode !== next.selectionMode ||
-    prev.canEdit !== next.canEdit
+    prev.canEdit !== next.canEdit ||
+    prev.status !== next.status
   ) {
     return false;
   }
 
   // Check callback props to prevent stale closures
   if (
-    prev.onDragStart !== next.onDragStart ||
     prev.onClick !== next.onClick ||
-    prev.onToggleSelect !== next.onToggleSelect
+    prev.onToggleSelect !== next.onToggleSelect ||
+    prev.onDragStateChange !== next.onDragStateChange
   ) {
     return false;
   }
@@ -100,31 +107,49 @@ function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
 
 export const IssueCard = memo(function IssueCard({
   issue,
-  onDragStart,
+  status,
   onClick,
   selectionMode = false,
   isSelected = false,
   isFocused = false,
   onToggleSelect,
   canEdit = true,
+  onDragStateChange,
 }: IssueCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const dragHandleRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Scroll into view when focused
   useEffect(() => {
     if (isFocused && cardRef.current) {
       cardRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [isFocused]);
 
-  const handleDragStart = (e: React.DragEvent) => {
-    setIsDragging(true);
-    onDragStart(e, issue._id);
-  };
+  // Set up Pragmatic DnD draggable
+  useEffect(() => {
+    const element = cardRef.current;
+    const dragHandle = dragHandleRef.current;
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
+    if (!element || !canEdit || selectionMode) {
+      return;
+    }
+
+    return draggable({
+      element,
+      dragHandle: dragHandle ?? undefined,
+      getInitialData: () => createIssueCardData(issue._id, status, issue.order),
+      onDragStart: () => {
+        setIsDragging(true);
+        onDragStateChange?.(true);
+      },
+      onDrop: () => {
+        setIsDragging(false);
+        onDragStateChange?.(false);
+      },
+    });
+  }, [issue._id, issue.order, status, canEdit, selectionMode, onDragStateChange]);
 
   const handleClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     if (selectionMode && onToggleSelect) {
@@ -147,9 +172,6 @@ export const IssueCard = memo(function IssueCard({
       ref={cardRef}
       role="article"
       data-testid={TEST_IDS.ISSUE.CARD}
-      draggable={canEdit && !selectionMode}
-      onDragStart={canEdit && !selectionMode ? handleDragStart : undefined}
-      onDragEnd={handleDragEnd}
       className={cn(
         "group relative w-full text-left bg-ui-bg-soft p-2 sm:p-3 rounded-container",
         "border transition-default",
@@ -178,10 +200,15 @@ export const IssueCard = memo(function IssueCard({
           <Flex align="center" className="space-x-2">
             {/* Drag handle */}
             {canEdit && !selectionMode && (
-              <GripVertical
-                className="w-3 h-3 text-ui-text-tertiary opacity-0 group-hover:opacity-40 transition-fast cursor-grab -ml-0.5 shrink-0 pointer-events-auto"
-                aria-hidden="true"
-              />
+              <div
+                ref={dragHandleRef}
+                className="cursor-grab active:cursor-grabbing pointer-events-auto"
+              >
+                <GripVertical
+                  className="w-3 h-3 text-ui-text-tertiary opacity-0 group-hover:opacity-40 transition-fast -ml-0.5 shrink-0"
+                  aria-hidden="true"
+                />
+              </div>
             )}
             {/* Checkbox */}
             {selectionMode && (

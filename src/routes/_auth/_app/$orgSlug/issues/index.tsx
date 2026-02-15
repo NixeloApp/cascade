@@ -109,10 +109,9 @@ function AllIssuesPage() {
             <IssueCard
               key={issue._id}
               issue={issue as Parameters<typeof IssueCard>[0]["issue"]}
-              onDragStart={() => {
-                /* Dragging not supported in global view */
-              }}
+              status={issue.status}
               onClick={handleIssueClick}
+              canEdit={false} // Disable dragging in global view
             />
           ))}
         </Grid>

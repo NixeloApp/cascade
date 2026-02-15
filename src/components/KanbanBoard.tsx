@@ -1,9 +1,10 @@
+import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { useQuery } from "convex/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
@@ -73,9 +74,24 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIssueIds, setSelectedIssueIds] = useState<Set<Id<"issues">>>(new Set());
+  const boardContainerRef = useRef<HTMLDivElement>(null);
 
   const isTeamMode = !!teamId;
   const isProjectMode = !!projectId;
+
+  // Set up auto-scroll for the board container during drag
+  useEffect(() => {
+    const element = boardContainerRef.current;
+    if (!element) return;
+
+    return autoScrollForElements({
+      element,
+      // Scroll faster when dragging near edges
+      getConfiguration: () => ({
+        maxScrollSpeed: "fast",
+      }),
+    });
+  }, []);
 
   const project = useQuery(
     api.projects.getProject,
@@ -124,7 +140,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
     [projectId, teamId, sprintId],
   );
 
-  const { handleDragStart, handleDragOver, handleDrop } = useBoardDragAndDrop({
+  const { handleIssueDrop } = useBoardDragAndDrop({
     allIssues,
     issuesByStatus,
     isTeamMode,
@@ -224,6 +240,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
       />
 
       <Flex
+        ref={boardContainerRef}
         direction="column"
         className="lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6 px-4 lg:px-6 pb-6 lg:overflow-x-auto -webkit-overflow-scrolling-touch"
       >
@@ -243,9 +260,6 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
               selectedIssueIds={selectedIssueIds}
               focusedIssueId={focusedIssueId}
               canEdit={canEdit}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onDragStart={handleDragStart}
               onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
               onIssueClick={setSelectedIssue}
               onToggleSelect={handleToggleSelect}
@@ -253,6 +267,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
               totalCount={counts.total}
               onLoadMore={loadMoreDone}
               isLoadingMore={isLoadingMore}
+              onIssueDrop={handleIssueDrop}
             />
           );
         })}

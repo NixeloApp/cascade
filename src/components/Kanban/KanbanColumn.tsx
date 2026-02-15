@@ -1,13 +1,15 @@
+import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
 import { Plus } from "lucide-react";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ANIMATION } from "@/lib/constants";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { getWorkflowCategoryColor } from "@/lib/issue-utils";
+import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kanban-dnd";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
@@ -40,9 +42,6 @@ interface KanbanColumnProps {
   selectionMode: boolean;
   selectedIssueIds: Set<Id<"issues">>;
   canEdit: boolean;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent, stateId: string) => void;
-  onDragStart: (e: React.DragEvent, issueId: Id<"issues">) => void;
   onCreateIssue?: (stateId: string) => void;
   onIssueClick: (issueId: Id<"issues">) => void;
   onToggleSelect: (issueId: Id<"issues">) => void;
@@ -52,6 +51,8 @@ interface KanbanColumnProps {
   totalCount?: number;
   onLoadMore?: (statusId: string) => void;
   isLoadingMore?: boolean;
+  /** Callback when an issue is dropped on this column */
+  onIssueDrop?: (issueId: Id<"issues">, sourceStatus: string, targetStatus: string) => void;
 }
 
 /**
@@ -59,7 +60,8 @@ interface KanbanColumnProps {
  * Optimizes performance by checking if selectedIssueIds actually affects this column
  */
 function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
-  // Check shallow equality for all props except selectedIssueIds
+  // Check shallow equality for all props except selectedIssueIds and callbacks
+  const skipKeys = new Set(["selectedIssueIds", "onIssueDrop"]);
   const prevKeys = Object.keys(prev) as (keyof KanbanColumnProps)[];
   const nextKeys = Object.keys(next) as (keyof KanbanColumnProps)[];
 
@@ -68,7 +70,7 @@ function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
   }
 
   for (const key of prevKeys) {
-    if (key === "selectedIssueIds") continue;
+    if (skipKeys.has(key)) continue;
     if (prev[key] !== next[key]) return false;
   }
 
@@ -102,9 +104,6 @@ const KanbanColumnComponent = function KanbanColumn({
   selectedIssueIds,
   focusedIssueId,
   canEdit,
-  onDragOver,
-  onDrop,
-  onDragStart,
   onCreateIssue,
   onIssueClick,
   onToggleSelect,
@@ -113,14 +112,39 @@ const KanbanColumnComponent = function KanbanColumn({
   totalCount = 0,
   onLoadMore,
   isLoadingMore = false,
+  onIssueDrop,
 }: KanbanColumnProps) {
+  const columnRef = useRef<HTMLElement>(null);
+  const [isDraggedOver, setIsDraggedOver] = useState(false);
+
   // Issues are now pre-filtered by status from parent - memoize sorting
   const stateIssues = useMemo(() => {
     return [...issues].sort((a, b) => a.order - b.order);
   }, [issues]);
 
-  // Memoize handlers that use state.id to preserve memo() benefits
-  const handleDrop = useCallback((e: React.DragEvent) => onDrop(e, state.id), [onDrop, state.id]);
+  // Set up Pragmatic DnD drop target
+  useEffect(() => {
+    const element = columnRef.current;
+    if (!element) return;
+
+    return dropTargetForElements({
+      element,
+      getData: () => createColumnData(state.id, state.id),
+      canDrop: ({ source }) => {
+        // Only accept issue cards
+        return isIssueCardData(source.data as Record<string, unknown>);
+      },
+      onDragEnter: () => setIsDraggedOver(true),
+      onDragLeave: () => setIsDraggedOver(false),
+      onDrop: ({ source }) => {
+        setIsDraggedOver(false);
+        const data = source.data as IssueCardData;
+        if (isIssueCardData(source.data as Record<string, unknown>)) {
+          onIssueDrop?.(data.issueId, data.status, state.id);
+        }
+      },
+    });
+  }, [state.id, onIssueDrop]);
 
   const handleCreateIssue = useCallback(() => onCreateIssue?.(state.id), [onCreateIssue, state.id]);
 
@@ -128,18 +152,18 @@ const KanbanColumnComponent = function KanbanColumn({
 
   return (
     <section
+      ref={columnRef}
       aria-label={`${state.name} column`}
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
         "flex-shrink-0 w-full lg:w-80 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default",
         getWorkflowCategoryColor(state.category),
+        isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
       )}
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
       }}
-      onDragOver={onDragOver}
-      onDrop={handleDrop}
     >
       {/* Column Header */}
       <div
@@ -217,7 +241,7 @@ const KanbanColumnComponent = function KanbanColumn({
               >
                 <IssueCard
                   issue={issue}
-                  onDragStart={onDragStart}
+                  status={state.id}
                   onClick={onIssueClick}
                   selectionMode={selectionMode}
                   isSelected={selectedIssueIds.has(issue._id)}
