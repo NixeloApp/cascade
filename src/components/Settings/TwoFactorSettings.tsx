@@ -128,10 +128,15 @@ export function TwoFactorSettings() {
     }
   }, [regenerateBackupCodes, regenerateCode]);
 
-  const copyBackupCodes = useCallback(() => {
+  const copyBackupCodes = useCallback(async () => {
     const codesText = backupCodes.join("\n");
-    navigator.clipboard.writeText(codesText);
-    showSuccess("Backup codes copied to clipboard");
+    try {
+      await navigator.clipboard.writeText(codesText);
+      showSuccess("Backup codes copied to clipboard");
+    } catch (error) {
+      console.error("Failed to copy backup codes:", error);
+      showError(error, "Failed to copy to clipboard");
+    }
   }, [backupCodes]);
 
   const handleFinish = useCallback(() => {

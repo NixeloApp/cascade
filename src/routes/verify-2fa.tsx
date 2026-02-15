@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -31,9 +31,11 @@ function Verify2FARoute() {
 
   // If redirect path changes to something other than /verify-2fa, navigate there
   // This happens after successful 2FA verification
-  if (redirectPath && redirectPath !== ROUTES.verify2FA.path) {
-    navigate({ to: redirectPath, replace: true });
-  }
+  useEffect(() => {
+    if (redirectPath && redirectPath !== ROUTES.verify2FA.path) {
+      navigate({ to: redirectPath, replace: true });
+    }
+  }, [redirectPath, navigate]);
 
   const handleVerify = useCallback(async () => {
     if (code.length < 6) {

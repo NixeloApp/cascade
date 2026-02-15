@@ -74,8 +74,8 @@ export { spinnerVariants };
 
 export function LoadingOverlay({ message }: { message?: string }) {
   return (
-    <div className="absolute inset-0 bg-ui-bg bg-opacity-90 z-10 rounded-lg flex items-center justify-center">
+    <Flex align="center" justify="center" className="absolute inset-0 bg-ui-bg/90 z-10 rounded-lg">
       <LoadingSpinner size="lg" message={message} />
-    </div>
+    </Flex>
   );
 }
