@@ -136,4 +136,41 @@ describe("Users Security", () => {
       expect(authAccount?.emailVerified).toBeUndefined();
     });
   });
+
+  describe("getCurrent", () => {
+    it("should not leak pendingEmailVerificationToken", async () => {
+      const t = convexTest(schema, modules);
+      // Create a user
+      const userId = await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Test User",
+          email: "test@example.com",
+          emailVerificationTime: Date.now(),
+        });
+      });
+
+      const user = t.withIdentity({ subject: userId });
+
+      // Update email to trigger pending verification
+      await user.mutation(api.users.updateProfile, {
+        email: "new@example.com",
+      });
+
+      // Get current user profile via getCurrent
+      const profile: any = await user.query(api.users.getCurrent);
+
+      // Check if sensitive fields are leaked
+      expect(profile.pendingEmail).toBeUndefined();
+      expect(profile.pendingEmailVerificationToken).toBeUndefined();
+      expect(profile.pendingEmailVerificationExpires).toBeUndefined();
+
+      // Get logged in user via loggedInUser
+      const loggedIn: any = await user.query(api.auth.loggedInUser);
+
+      // Check if sensitive fields are leaked
+      expect(loggedIn.pendingEmail).toBeUndefined();
+      expect(loggedIn.pendingEmailVerificationToken).toBeUndefined();
+      expect(loggedIn.pendingEmailVerificationExpires).toBeUndefined();
+    });
+  });
 });

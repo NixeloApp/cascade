@@ -31,6 +31,7 @@ export const OTPPasswordReset = Resend({
     { identifier: email, token }: { identifier: string; token: string },
     ctx: ConvexAuthContext,
   ) => {
+    // Check rate limit first
     if (ctx.runMutation) {
       try {
         await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimitByEmail, { email });
