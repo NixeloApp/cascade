@@ -60,13 +60,13 @@ export const get = authenticatedQuery({
     const myOrgs = await ctx.db
       .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .collect();
+      .take(MAX_PAGE_SIZE);
 
     if (myOrgs.length > 0) {
       const theirOrgs = await ctx.db
         .query("organizationMembers")
         .withIndex("by_user", (q) => q.eq("userId", args.id))
-        .collect();
+        .take(MAX_PAGE_SIZE);
 
       const myOrgIds = new Set(myOrgs.map((m) => m.organizationId));
       const hasSharedOrg = theirOrgs.some((m) => myOrgIds.has(m.organizationId));
