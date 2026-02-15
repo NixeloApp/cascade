@@ -38,6 +38,37 @@ export const PRIORITY_ICONS: Record<IssuePriority, typeof ChevronUp> = {
 };
 
 /**
+ * Priority colors configuration
+ */
+const PRIORITY_COLORS = {
+  highest: {
+    text: "text-priority-highest",
+    bg: "bg-status-error-bg text-status-error-text",
+    badge: "text-priority-highest bg-status-error-bg",
+  },
+  high: {
+    text: "text-priority-high",
+    bg: "bg-status-warning-bg text-status-warning-text",
+    badge: "text-priority-high bg-status-warning-bg",
+  },
+  medium: {
+    text: "text-priority-medium",
+    bg: "bg-status-warning-bg text-status-warning-text",
+    badge: "text-priority-medium bg-status-warning-bg",
+  },
+  low: {
+    text: "text-priority-low",
+    bg: "bg-status-info-bg text-status-info-text",
+    badge: "text-priority-low bg-status-info-bg",
+  },
+  lowest: {
+    text: "text-priority-lowest",
+    bg: "bg-ui-bg-tertiary text-ui-text-secondary",
+    badge: "text-priority-lowest bg-ui-bg-tertiary",
+  },
+} as const;
+
+/**
  * Get the color classes for an issue priority
  * Uses semantic theme tokens with full dark mode support
  * @param variant - The style variant: 'text', 'bg', or 'badge'
@@ -46,35 +77,10 @@ export function getPriorityColor(
   priority: string,
   variant: "text" | "bg" | "badge" = "text",
 ): string {
-  const colors = {
-    highest: {
-      text: "text-priority-highest",
-      bg: "bg-status-error-bg text-status-error-text",
-      badge: "text-priority-highest bg-status-error-bg",
-    },
-    high: {
-      text: "text-priority-high",
-      bg: "bg-status-warning-bg text-status-warning-text",
-      badge: "text-priority-high bg-status-warning-bg",
-    },
-    medium: {
-      text: "text-priority-medium",
-      bg: "bg-status-warning-bg text-status-warning-text",
-      badge: "text-priority-medium bg-status-warning-bg",
-    },
-    low: {
-      text: "text-priority-low",
-      bg: "bg-status-info-bg text-status-info-text",
-      badge: "text-priority-low bg-status-info-bg",
-    },
-    lowest: {
-      text: "text-priority-lowest",
-      bg: "bg-ui-bg-tertiary text-ui-text-secondary",
-      badge: "text-priority-lowest bg-ui-bg-tertiary",
-    },
-  };
-
-  return colors[priority as keyof typeof colors]?.[variant] || colors.lowest[variant];
+  return (
+    PRIORITY_COLORS[priority as keyof typeof PRIORITY_COLORS]?.[variant] ||
+    PRIORITY_COLORS.lowest[variant]
+  );
 }
 
 /**
@@ -118,6 +124,27 @@ export function getStatusColor(status: string): string {
 }
 
 /**
+ * Workflow category colors configuration
+ */
+const WORKFLOW_CATEGORY_COLORS = {
+  todo: {
+    border: "border-t-ui-border",
+    text: "text-ui-text-tertiary",
+    bg: "bg-ui-bg-tertiary",
+  },
+  inprogress: {
+    border: "border-t-status-info",
+    text: "text-status-info-text",
+    bg: "bg-status-info-bg",
+  },
+  done: {
+    border: "border-t-status-success",
+    text: "text-status-success-text",
+    bg: "bg-status-success-bg",
+  },
+} as const;
+
+/**
  * Get the color classes for a workflow category
  * Uses semantic theme tokens with full dark mode support
  */
@@ -126,23 +153,9 @@ export function getWorkflowCategoryColor(
   variant: "border" | "text" | "bg" = "border",
 ): string {
   const normalizedCategory = category.toLowerCase();
-  const colors = {
-    todo: {
-      border: "border-t-ui-border",
-      text: "text-ui-text-tertiary",
-      bg: "bg-ui-bg-tertiary",
-    },
-    inprogress: {
-      border: "border-t-status-info",
-      text: "text-status-info-text",
-      bg: "bg-status-info-bg",
-    },
-    done: {
-      border: "border-t-status-success",
-      text: "text-status-success-text",
-      bg: "bg-status-success-bg",
-    },
-  };
-
-  return colors[normalizedCategory as keyof typeof colors]?.[variant] || colors.todo[variant];
+  return (
+    WORKFLOW_CATEGORY_COLORS[normalizedCategory as keyof typeof WORKFLOW_CATEGORY_COLORS]?.[
+      variant
+    ] || WORKFLOW_CATEGORY_COLORS.todo[variant]
+  );
 }
