@@ -69,3 +69,8 @@
 **Vulnerability:** The password reset rate limiter relied on `x-forwarded-for` header's first value without validation. This allowed attackers to bypass rate limits by spoofing the header (e.g., `X-Forwarded-For: <fake-ip>`), as many load balancers append the real IP rather than replacing the header.
 **Learning:** Naively trusting `X-Forwarded-For` is dangerous in cloud environments where the trust chain is unknown or variable. The first IP in the list is only trustworthy if the edge platform guarantees stripping of incoming headers.
 **Prevention:** Implemented `getClientIp` helper that prioritizes immutable headers like `CF-Connecting-IP` (Cloudflare) and `True-Client-IP`, and falls back to `X-Forwarded-For` only when necessary. This significantly raises the bar for spoofing.
+
+## 2025-05-24 - User Email Exposure via IDOR
+**Vulnerability:** The `api.users.get` query allowed any authenticated user to fetch the email address of any other user by knowing their user ID. This is an IDOR (Insecure Direct Object Reference) vulnerability leading to PII exposure.
+**Learning:** Default object access patterns (like fetching a user by ID) often return the full object representation. When dealing with sensitive fields like email, context-aware serialization is crucial. You must verify the relationship between the requester and the target resource before returning sensitive data.
+**Prevention:** Implemented a check in `api.users.get` to verify if the requester shares an organization with the target user. If not, the email field is stripped from the response using `sanitizeUserForPublic`.
