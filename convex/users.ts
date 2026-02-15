@@ -501,15 +501,14 @@ export const listWithDigestPreference = internalQuery({
     }),
   ),
   handler: async (ctx, args) => {
-    // Bounded query for notification preferences (all prefs are loaded, then filtered in JS below)
-    const prefs = await ctx.db.query("notificationPreferences").take(1000);
-
-    // Filter in-memory for active email preferences matching the requested digest frequency.
-    // Only include users who have email enabled and match the requested frequency.
-    // This is a JS array filter on pre-fetched results, not a DB-level filter.
-    const filtered = prefs.filter(
-      (pref) => pref.emailEnabled && pref.emailDigest === args.frequency,
-    );
+    // Optimized query: Use by_digest_frequency index to find matching users directly
+    // This avoids scanning irrelevant records and fixes the bug where users beyond the first 1000 were ignored
+    const filtered = await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_digest_frequency", (q) =>
+        q.eq("emailEnabled", true).eq("emailDigest", args.frequency),
+      )
+      .take(1000); // Bounded limit to capture users efficiently
 
     // Batch fetch users to avoid N+1 queries
     const userIds = filtered.map((pref) => pref.userId);

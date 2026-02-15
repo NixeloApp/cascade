@@ -69,9 +69,10 @@ function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
   }
 
   // Check issue object equality
-  const prevIssue = prev.issue;
-  const nextIssue = next.issue;
+  return areIssuesEqual(prev.issue, next.issue);
+}
 
+function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
   // Reference equality check (fastest)
   if (prevIssue === nextIssue) return true;
 
@@ -94,7 +95,6 @@ function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
     if (prevLabel.color !== nextLabel.color) return false;
   }
 
-  // If we got here, important fields are effectively equal
   return true;
 }
 
