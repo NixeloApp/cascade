@@ -1,7 +1,6 @@
 import { v } from "convex/values";
-import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { authenticatedMutation, issueMutation, issueQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
-import { notFound } from "./lib/errors";
 
 // Generate upload URL for files
 export const generateUploadUrl = authenticatedMutation({
@@ -12,29 +11,25 @@ export const generateUploadUrl = authenticatedMutation({
 });
 
 // Add attachment to an issue
-export const addAttachment = authenticatedMutation({
+export const addAttachment = issueMutation({
   args: {
-    issueId: v.id("issues"),
     storageId: v.id("_storage"),
     filename: v.string(),
     contentType: v.string(),
     size: v.number(),
   },
   handler: async (ctx, args) => {
-    const issue = await ctx.db.get(args.issueId);
-    if (!issue) {
-      throw notFound("issue", args.issueId);
-    }
+    const issue = ctx.issue;
 
     // Add to issue attachments array
     const currentAttachments = issue.attachments || [];
-    await ctx.db.patch(args.issueId, {
+    await ctx.db.patch(issue._id, {
       attachments: [...currentAttachments, args.storageId],
     });
 
     // Log activity (store storageId in oldValue for reliable lookup)
     await ctx.db.insert("issueActivity", {
-      issueId: args.issueId,
+      issueId: issue._id,
       userId: ctx.userId,
       action: "attached",
       field: "attachment",
@@ -47,20 +42,16 @@ export const addAttachment = authenticatedMutation({
 });
 
 // Remove attachment from an issue
-export const removeAttachment = authenticatedMutation({
+export const removeAttachment = issueMutation({
   args: {
-    issueId: v.id("issues"),
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
-    const issue = await ctx.db.get(args.issueId);
-    if (!issue) {
-      throw notFound("issue", args.issueId);
-    }
+    const issue = ctx.issue;
 
     // Remove from issue attachments array
     const updatedAttachments = (issue.attachments || []).filter((id) => id !== args.storageId);
-    await ctx.db.patch(args.issueId, {
+    await ctx.db.patch(issue._id, {
       attachments: updatedAttachments,
     });
 
@@ -69,7 +60,7 @@ export const removeAttachment = authenticatedMutation({
 
     // Log activity
     await ctx.db.insert("issueActivity", {
-      issueId: args.issueId,
+      issueId: issue._id,
       userId: ctx.userId,
       action: "removed",
       field: "attachment",
@@ -79,19 +70,11 @@ export const removeAttachment = authenticatedMutation({
   },
 });
 
-// Get attachment URL
-export const getAttachmentUrl = authenticatedQuery({
-  args: { storageId: v.id("_storage") },
-  handler: async (ctx, args) => {
-    return await ctx.storage.getUrl(args.storageId);
-  },
-});
-
 // Get all attachments for an issue with metadata
-export const getIssueAttachments = authenticatedQuery({
-  args: { issueId: v.id("issues") },
+export const getIssueAttachments = issueQuery({
+  args: {},
   handler: async (ctx, args) => {
-    const issue = await ctx.db.get(args.issueId);
+    const issue = ctx.issue;
     if (!issue?.attachments) {
       return [];
     }
@@ -99,7 +82,7 @@ export const getIssueAttachments = authenticatedQuery({
     // Query activity log ONCE to avoid N+1 queries
     const attachActivities = await ctx.db
       .query("issueActivity")
-      .withIndex("by_issue", (q) => q.eq("issueId", args.issueId))
+      .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
       .filter((q) => q.eq(q.field("action"), "attached"))
       .take(BOUNDED_LIST_LIMIT);
 
