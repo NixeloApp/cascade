@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { IssueDetailHeader, IssueDetailLayout, useIssueDetail } from "@/components/IssueDetailView";
-import { PageContent, PageError } from "@/components/Layout";
+import { PageContent, PageError } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";

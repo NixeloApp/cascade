@@ -273,6 +273,35 @@ export const TEST_IDS = {
     /** @see src/components/ui/Dialog.tsx */
     OVERLAY: "dialog-overlay",
   },
+
+  // ============================================================
+  // Onboarding
+  // ============================================================
+
+  ONBOARDING: {
+    /** @see src/routes/_auth/onboarding.tsx - Welcome heading on role select */
+    WELCOME_HEADING: "onboarding-welcome-heading",
+    /** @see src/components/Onboarding/RoleSelector.tsx - Team Lead role card */
+    TEAM_LEAD_CARD: "onboarding-team-lead-card",
+    /** @see src/components/Onboarding/RoleSelector.tsx - Team Member role card */
+    TEAM_MEMBER_CARD: "onboarding-team-member-card",
+    /** @see src/routes/_auth/onboarding.tsx - Skip button in header */
+    SKIP_BUTTON: "onboarding-skip-button",
+    /** @see src/components/Onboarding/LeadOnboarding.tsx - "Perfect for Team Leads" heading */
+    TEAM_LEAD_HEADING: "onboarding-team-lead-heading",
+    /** @see src/components/Onboarding/LeadOnboarding.tsx - Setup workspace button */
+    SETUP_WORKSPACE_BUTTON: "onboarding-setup-workspace-button",
+    /** @see src/components/Onboarding/MemberOnboarding.tsx - "You're ready" heading */
+    ALL_SET_HEADING: "onboarding-all-set-heading",
+    /** @see src/components/Onboarding/MemberOnboarding.tsx - Go to dashboard button */
+    GO_TO_DASHBOARD_BUTTON: "onboarding-go-to-dashboard-button",
+    /** @see src/components/Onboarding/LeadOnboarding.tsx - Create project button */
+    CREATE_PROJECT_BUTTON: "onboarding-create-project-button",
+    /** @see src/components/Onboarding/MemberOnboarding.tsx - Back button */
+    BACK_BUTTON: "onboarding-back-button",
+    /** @see src/components/Onboarding/MemberOnboarding.tsx - Name your project heading */
+    NAME_PROJECT_HEADING: "onboarding-name-project-heading",
+  },
 } as const;
 
 /** Type helper for accessing TEST_IDS values */

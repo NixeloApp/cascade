@@ -1,3 +1,4 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import {
   ArrowDown,
   ArrowLeft,
@@ -11,27 +12,31 @@ import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 import { Icon } from "./Icon";
 
-interface KeyboardShortcutProps {
+const keyVariants = cva("inline-flex items-center justify-center font-mono rounded", {
+  variants: {
+    size: {
+      sm: "text-xs px-1.5 py-0.5 min-w-5",
+      md: "text-sm px-2 py-1 min-w-6",
+    },
+    variant: {
+      default: "bg-ui-bg border border-ui-border text-ui-text shadow-sm",
+      subtle: "bg-ui-bg-secondary text-ui-text-secondary",
+    },
+  },
+  defaultVariants: {
+    size: "sm",
+    variant: "default",
+  },
+});
+
+interface KeyboardShortcutProps extends VariantProps<typeof keyVariants> {
   /**
    * The keyboard shortcut to display
    * Can be a single key or multiple keys separated by +
    * Examples: "Ctrl+K", "⌘+Shift+P", "Enter"
    */
   shortcut: string;
-
-  /**
-   * Size variant
-   */
-  size?: "sm" | "md";
-
-  /**
-   * Visual variant
-   */
-  variant?: "default" | "subtle";
-
-  /**
-   * Additional CSS classes
-   */
+  /** Additional CSS classes */
   className?: string;
 }
 
@@ -52,19 +57,9 @@ export function KeyboardShortcut({
   shortcut,
   size = "sm",
   variant = "default",
-  className = "",
+  className,
 }: KeyboardShortcutProps) {
   const keys = shortcut.split("+").map((key) => key.trim());
-
-  const sizeClasses = {
-    sm: "text-xs px-1.5 py-0.5 min-w-5",
-    md: "text-sm px-2 py-1 min-w-6",
-  };
-
-  const variantClasses = {
-    default: "bg-ui-bg border border-ui-border text-ui-text shadow-sm",
-    subtle: "bg-ui-bg-secondary text-ui-text-secondary",
-  };
 
   // Create keys with unique identifiers for stable rendering
   const keysWithIds = keys.map((key, idx) => ({
@@ -76,15 +71,7 @@ export function KeyboardShortcut({
     <Flex as="span" inline align="center" gap="xs" className={className}>
       {keysWithIds.map(({ key, id }, index) => (
         <span key={id} className="contents">
-          <kbd
-            className={cn(
-              "inline-flex items-center justify-center font-mono rounded",
-              sizeClasses[size],
-              variantClasses[variant],
-            )}
-          >
-            {formatKey(key, size)}
-          </kbd>
+          <kbd className={cn(keyVariants({ size, variant }))}>{formatKey(key, size ?? "sm")}</kbd>
           {index < keysWithIds.length - 1 && (
             <span className="text-ui-text-tertiary mx-0.5">+</span>
           )}
@@ -186,6 +173,8 @@ interface ShortcutHintProps {
   /** Additional CSS classes */
   className?: string;
 }
+
+export { keyVariants };
 
 export function ShortcutHint({
   keys,

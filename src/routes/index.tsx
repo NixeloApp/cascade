@@ -6,7 +6,7 @@ import {
   HeroSection,
   NavHeader,
   WhyChooseSection,
-} from "@/components/Landing";
+} from "@/components/landing";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,

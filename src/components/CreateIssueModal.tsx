@@ -372,8 +372,8 @@ export function CreateIssueModal({
 
         {/* Labels (outside form - array state) */}
         {labels && labels.length > 0 && (
-          <div>
-            <Typography variant="label" className="block text-ui-text mb-2">
+          <fieldset className="space-y-2">
+            <Typography as="legend" variant="label" className="block text-ui-text">
               Labels
             </Typography>
             <Flex wrap gap="sm">
@@ -398,7 +398,7 @@ export function CreateIssueModal({
                 </button>
               ))}
             </Flex>
-          </div>
+          </fieldset>
         )}
 
         {/* Footer - form.Subscribe needs to stay inside the form */}

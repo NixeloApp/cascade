@@ -3,8 +3,11 @@ import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { DAY } from "./lib/timeUtils";
+import { sanitizeUserForCurrent } from "./lib/userUtils";
 import { OTPPasswordReset } from "./OTPPasswordReset";
 import { OTPVerification } from "./OTPVerification";
+import { ROUTES } from "./shared/routes";
 
 // All OTP emails use the universal email provider system
 // Provider rotation (SendPulse, Mailtrap, Resend, Mailgun) is automatic
@@ -42,11 +45,9 @@ export const loggedInUser = query({
     if (!user) {
       return null;
     }
-    return user;
+    return sanitizeUserForCurrent(user);
   },
 });
-
-import { ROUTES } from "./shared/routes";
 
 /**
  * Get the recommended destination for a user after they authenticate.
@@ -64,6 +65,15 @@ export const getRedirectDestination = query({
     // This allows them to stay on the signup/signin page to complete verification.
     if (!user || (user.email && !user.emailVerificationTime)) {
       return null;
+    }
+
+    // Check if 2FA is enabled and requires verification
+    if (user.twoFactorEnabled && user.twoFactorSecret) {
+      // Consider 2FA verified if it was verified within the last 24 hours
+      const twentyFourHoursAgo = Date.now() - DAY;
+      if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
+        return ROUTES.verify2FA.path;
+      }
     }
 
     // 1. Check onboarding status

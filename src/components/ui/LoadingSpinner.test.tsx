@@ -252,8 +252,7 @@ describe("LoadingOverlay", () => {
       const overlay = container.querySelector(".absolute");
       expect(overlay).toBeInTheDocument();
       expect(overlay).toHaveClass("inset-0");
-      expect(overlay).toHaveClass("bg-ui-bg");
-      expect(overlay).toHaveClass("bg-opacity-90");
+      expect(overlay).toHaveClass("bg-ui-bg/90");
     });
 
     it("should render LoadingSpinner with large size", () => {

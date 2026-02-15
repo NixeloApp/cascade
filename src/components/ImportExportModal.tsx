@@ -4,8 +4,8 @@ import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Download, Upload } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { ExportPanel } from "./ImportExport/ExportPanel";
-import { ImportPanel } from "./ImportExport/ImportPanel";
+import { ExportPanel } from "./import-export/ExportPanel";
+import { ImportPanel } from "./import-export/ImportPanel";
 import { Dialog } from "./ui/Dialog";
 
 interface ImportExportModalProps {

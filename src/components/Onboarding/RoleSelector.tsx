@@ -2,6 +2,7 @@ import { Check, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 
@@ -16,15 +17,25 @@ interface RoleCardProps {
   selected: boolean;
   disabled?: boolean;
   onClick: () => void;
+  "data-testid"?: string;
 }
 
-function RoleCard({ icon, title, description, selected, disabled, onClick }: RoleCardProps) {
+function RoleCard({
+  icon,
+  title,
+  description,
+  selected,
+  disabled,
+  onClick,
+  "data-testid": testId,
+}: RoleCardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-pressed={selected}
+      data-testid={testId}
       className={cn(
         "relative p-8 rounded-container border-2 text-left transition-all duration-default cursor-pointer overflow-hidden group w-full",
         "hover:shadow-card-hover hover:-translate-y-1 active:scale-98",
@@ -111,6 +122,7 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
         selected={localSelected === "team_lead"}
         disabled={isPending}
         onClick={() => handleSelect("team_lead")}
+        data-testid={TEST_IDS.ONBOARDING.TEAM_LEAD_CARD}
       />
       <RoleCard
         icon={<User className="w-10 h-10" />}
@@ -119,6 +131,7 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
         selected={localSelected === "team_member"}
         disabled={isPending}
         onClick={() => handleSelect("team_member")}
+        data-testid={TEST_IDS.ONBOARDING.TEAM_MEMBER_CARD}
       />
     </Grid>
   );

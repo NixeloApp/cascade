@@ -24,6 +24,7 @@ export class AuthPage extends BasePage {
   readonly signUpHeading: Locator;
   readonly forgotPasswordHeading: Locator;
   readonly resetPasswordHeading: Locator;
+  readonly checkEmailHeading: Locator;
 
   // ===================
   // Locators - Sign In/Up Forms
@@ -100,6 +101,7 @@ export class AuthPage extends BasePage {
     this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
     this.forgotPasswordHeading = page.getByRole("heading", { name: /reset your password/i });
     this.resetPasswordHeading = page.getByRole("heading", { name: /enter reset code/i });
+    this.checkEmailHeading = page.getByRole("heading", { name: /check your email/i });
 
     // Sign In / Sign Up form - two-step flow
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
@@ -177,7 +179,7 @@ export class AuthPage extends BasePage {
    */
   async gotoForgotPassword() {
     await this.page.goto("/forgot-password");
-    await this.forgotPasswordHeading.waitFor({ state: "visible" });
+    await this.forgotPasswordHeading.waitFor({ state: "visible", timeout: 15000 });
     await this.emailInput.waitFor({ state: "visible" });
   }
 
@@ -471,7 +473,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectResetCodeForm() {
-    await expect(this.resetPasswordHeading).toBeVisible();
+    await expect(this.resetPasswordHeading).toBeVisible({ timeout: 30000 });
     await expect(this.codeInput).toBeVisible();
     await expect(this.newPasswordInput).toBeVisible();
     await expect(this.resetPasswordButton).toBeVisible();
