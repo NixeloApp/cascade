@@ -5,6 +5,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { OTPPasswordReset } from "./OTPPasswordReset";
 import { OTPVerification } from "./OTPVerification";
+import { sanitizeUserForCurrent } from "./lib/userUtils";
 
 // All OTP emails use the universal email provider system
 // Provider rotation (SendPulse, Mailtrap, Resend, Mailgun) is automatic
@@ -42,7 +43,7 @@ export const loggedInUser = query({
     if (!user) {
       return null;
     }
-    return user;
+    return sanitizeUserForCurrent(user);
   },
 });
 
