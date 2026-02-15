@@ -59,3 +59,8 @@
 **Vulnerability:** The system stored plaintext OTPs for test emails (@inbox.mailtrap.io) in the `testOtpCodes` table whenever `E2E_API_KEY` was present in the environment (e.g. production). If the database was compromised, these OTPs were readable.
 **Learning:** Even conditional storage for testing purposes should be encrypted at rest if the environment contains the necessary keys. Relying on "it's just for testing" often leaks into production configurations where testing tools are enabled.
 **Prevention:** Implemented AES-GCM encryption for stored test OTPs using the `E2E_API_KEY` as the encryption key. OTPs are only decryptable when the key is present and verified.
+
+## 2025-05-23 - Rate Limit Bypass via IP Spoofing
+**Vulnerability:** The password reset rate limiter relied on `x-forwarded-for` header's first value without validation. This allowed attackers to bypass rate limits by spoofing the header (e.g., `X-Forwarded-For: <fake-ip>`), as many load balancers append the real IP rather than replacing the header.
+**Learning:** Naively trusting `X-Forwarded-For` is dangerous in cloud environments where the trust chain is unknown or variable. The first IP in the list is only trustworthy if the edge platform guarantees stripping of incoming headers.
+**Prevention:** Implemented `getClientIp` helper that prioritizes immutable headers like `CF-Connecting-IP` (Cloudflare) and `True-Client-IP`, and falls back to `X-Forwarded-For` only when necessary. This significantly raises the bar for spoofing.

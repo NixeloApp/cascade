@@ -12,6 +12,7 @@ import {
   verifyProjectAccess,
 } from "../lib/apiAuth";
 import { logger } from "../lib/logger";
+import { getClientIp } from "../lib/ssrf";
 
 /**
  * REST API for Issues
@@ -106,8 +107,7 @@ async function recordApiUsage(
   const { auth, method, url, response, startTime, request, error } = params;
   try {
     const userAgent = request.headers.get("user-agent") || undefined;
-    const ipAddress =
-      request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined;
+    const ipAddress = getClientIp(request) || undefined;
     const responseTime = Date.now() - startTime;
 
     await ctx.runMutation(internal.apiKeys.recordUsage, {
