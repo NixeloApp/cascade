@@ -4,6 +4,7 @@ import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { DAY } from "./lib/timeUtils";
+import { sanitizeUserForCurrent } from "./lib/userUtils";
 import { OTPPasswordReset } from "./OTPPasswordReset";
 import { OTPVerification } from "./OTPVerification";
 import { ROUTES } from "./shared/routes";
@@ -44,7 +45,7 @@ export const loggedInUser = query({
     if (!user) {
       return null;
     }
-    return user;
+    return sanitizeUserForCurrent(user);
   },
 });
 

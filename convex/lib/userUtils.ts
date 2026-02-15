@@ -64,6 +64,35 @@ export function sanitizeUserForAuth(
 }
 
 /**
+ * Sanitize user object for the current user (self-view)
+ * Includes all profile fields but excludes sensitive internal fields
+ * like pending email verification tokens.
+ */
+export function sanitizeUserForCurrent(user: Doc<"users"> | null | undefined) {
+  if (!user) return null;
+
+  return {
+    _id: user._id,
+    _creationTime: user._creationTime,
+    name: user.name,
+    email: user.email,
+    image: user.image,
+    emailVerificationTime: user.emailVerificationTime,
+    phone: user.phone,
+    phoneVerificationTime: user.phoneVerificationTime,
+    isAnonymous: user.isAnonymous,
+    defaultOrganizationId: user.defaultOrganizationId,
+    bio: user.bio,
+    timezone: user.timezone,
+    emailNotifications: user.emailNotifications,
+    desktopNotifications: user.desktopNotifications,
+    inviteId: user.inviteId,
+    isTestUser: user.isTestUser,
+    testUserCreatedAt: user.testUserCreatedAt,
+  };
+}
+
+/**
  * Sanitize multiple users for public contexts
  */
 export function sanitizeUsersForPublic(

@@ -100,7 +100,7 @@ export class AuthPage extends BasePage {
     this.signInHeading = page.getByRole("heading", { name: /sign in to nixelo/i });
     this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
     this.forgotPasswordHeading = page.getByRole("heading", { name: /reset your password/i });
-    this.resetPasswordHeading = page.getByRole("heading", { name: /reset password/i });
+    this.resetPasswordHeading = page.getByRole("heading", { name: /enter reset code/i });
     this.checkEmailHeading = page.getByRole("heading", { name: /check your email/i });
 
     // Sign In / Sign Up form - two-step flow
