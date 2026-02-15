@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
@@ -35,7 +36,7 @@ describe("issueHelpers", () => {
       title: "Test Issue",
       type: "task",
       priority: "medium",
-      labels: [label104Id],
+      labels: [label104Id as Id<"labels">],
     });
 
     // Get the issue
