@@ -31,6 +31,18 @@ export const OTPPasswordReset = Resend({
     { identifier: email, token }: { identifier: string; token: string },
     ctx: ConvexAuthContext,
   ) => {
+    // Check rate limit first
+    if (ctx.runMutation) {
+      try {
+        // Cast to any to avoid type error until codegen runs
+        await ctx.runMutation((internal.authWrapper as any).checkPasswordResetRateLimitByEmail, {
+          email,
+        });
+      } catch (_e) {
+        throw new Error("Too many password reset requests. Please try again later.");
+      }
+    }
+
     const isTestEmail = email.endsWith("@inbox.mailtrap.io");
     const isSafeEnvironment =
       process.env.NODE_ENV === "development" ||
