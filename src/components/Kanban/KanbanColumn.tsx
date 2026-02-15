@@ -55,6 +55,59 @@ interface KanbanColumnProps {
 }
 
 /**
+ * Wrapper component for IssueCard to memoize the wrapper div and animation style.
+ * This prevents the wrapper div from re-rendering when parent renders but issue props are stable.
+ */
+const KanbanIssueItem = memo(
+  ({
+    issue,
+    columnIndex,
+    index,
+    onDragStart,
+    onClick,
+    selectionMode,
+    isSelected,
+    isFocused,
+    onToggleSelect,
+    canEdit,
+  }: {
+    issue: Issue;
+    columnIndex: number;
+    index: number;
+    onDragStart: (e: React.DragEvent, issueId: Id<"issues">) => void;
+    onClick: (issueId: Id<"issues">) => void;
+    selectionMode: boolean;
+    isSelected: boolean;
+    isFocused: boolean;
+    onToggleSelect: (issueId: Id<"issues">) => void;
+    canEdit: boolean;
+  }) => {
+    const style = useMemo(
+      () => ({
+        animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + index * ANIMATION.STAGGER_DELAY}ms`,
+      }),
+      [columnIndex, index],
+    );
+
+    return (
+      <div className="animate-scale-in" style={style}>
+        <IssueCard
+          issue={issue}
+          onDragStart={onDragStart}
+          onClick={onClick}
+          selectionMode={selectionMode}
+          isSelected={isSelected}
+          isFocused={isFocused}
+          onToggleSelect={onToggleSelect}
+          canEdit={canEdit}
+        />
+      </div>
+    );
+  },
+);
+KanbanIssueItem.displayName = "KanbanIssueItem";
+
+/**
  * Custom equality check for KanbanColumn props
  * Optimizes performance by checking if selectedIssueIds actually affects this column
  */
@@ -208,24 +261,19 @@ const KanbanColumnComponent = function KanbanColumn({
         ) : (
           <>
             {stateIssues.map((issue, issueIndex) => (
-              <div
+              <KanbanIssueItem
                 key={issue._id}
-                className="animate-scale-in"
-                style={{
-                  animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + issueIndex * ANIMATION.STAGGER_DELAY}ms`,
-                }}
-              >
-                <IssueCard
-                  issue={issue}
-                  onDragStart={onDragStart}
-                  onClick={onIssueClick}
-                  selectionMode={selectionMode}
-                  isSelected={selectedIssueIds.has(issue._id)}
-                  isFocused={issue._id === focusedIssueId}
-                  onToggleSelect={onToggleSelect}
-                  canEdit={canEdit}
-                />
-              </div>
+                issue={issue}
+                columnIndex={columnIndex}
+                index={issueIndex}
+                onDragStart={onDragStart}
+                onClick={onIssueClick}
+                selectionMode={selectionMode}
+                isSelected={selectedIssueIds.has(issue._id)}
+                isFocused={issue._id === focusedIssueId}
+                onToggleSelect={onToggleSelect}
+                canEdit={canEdit}
+              />
             ))}
 
             {/* Load More Button for done columns with hidden items */}

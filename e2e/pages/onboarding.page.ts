@@ -72,7 +72,7 @@ export class OnboardingPage {
     this.setupWorkspaceButton = page.getByTestId(TEST_IDS.ONBOARDING.SETUP_WORKSPACE_BUTTON);
 
     // Team Member flow
-    this.allSetHeading = page.getByTestId(TEST_IDS.ONBOARDING.ALL_SET_HEADING);
+    this.allSetHeading = page.getByRole("heading", { name: /you're ready/i });
     this.goToDashboardButton = page.getByTestId(TEST_IDS.ONBOARDING.GO_TO_DASHBOARD_BUTTON);
     this.createProjectButton = page.getByRole("button", { name: /create project/i });
 
