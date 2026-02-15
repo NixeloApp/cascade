@@ -5,6 +5,11 @@
 
 const DOH_TIMEOUT_MS = 5000;
 
+interface DnsAnswer {
+  type: number;
+  data: string;
+}
+
 export async function resolveDNS(hostname: string): Promise<string[]> {
   const ips: string[] = [];
 
@@ -40,7 +45,7 @@ async function queryDoH(name: string, type: "A" | "AAAA"): Promise<string[]> {
 
   try {
     const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${name}&type=${type}`, {
-      headers: { "Accept": "application/dns-json" },
+      headers: { Accept: "application/dns-json" },
       signal: controller.signal,
     });
 
@@ -59,7 +64,7 @@ async function queryDoH(name: string, type: "A" | "AAAA"): Promise<string[]> {
 
     // Filter for Answer records of the correct type (1 for A, 28 for AAAA)
     const typeId = type === "A" ? 1 : 28;
-    return data.Answer?.filter((a: any) => a.type === typeId).map((a: any) => a.data) || [];
+    return (data.Answer as DnsAnswer[])?.filter((a) => a.type === typeId).map((a) => a.data) || [];
   } finally {
     clearTimeout(timeoutId);
   }

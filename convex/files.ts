@@ -80,7 +80,7 @@ export const removeAttachment = issueMutation({
 // Get all attachments for an issue with metadata
 export const getIssueAttachments = issueQuery({
   args: {},
-  handler: async (ctx, args) => {
+  handler: async (ctx, _args) => {
     const issue = ctx.issue;
     if (!issue?.attachments) {
       return [];

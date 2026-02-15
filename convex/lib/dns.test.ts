@@ -1,4 +1,3 @@
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveDNS } from "./dns";
 
@@ -16,21 +15,25 @@ describe("resolveDNS", () => {
 
   it("should resolve A records", async () => {
     // Mock A record response
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [{ type: 1, data: "1.2.3.4" }],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [{ type: 1, data: "1.2.3.4" }],
+        }),
       }),
-    }));
+    );
     // Mock AAAA record response (empty)
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [],
+        }),
       }),
-    }));
+    );
 
     const ips = await resolveDNS("example.com");
     expect(ips).toContain("1.2.3.4");
@@ -39,21 +42,25 @@ describe("resolveDNS", () => {
 
   it("should resolve AAAA records", async () => {
     // Mock A record response (empty)
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [],
+        }),
       }),
-    }));
+    );
     // Mock AAAA record response
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [{ type: 28, data: "2001:db8::1" }],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [{ type: 28, data: "2001:db8::1" }],
+        }),
       }),
-    }));
+    );
 
     const ips = await resolveDNS("example.com");
     expect(ips).toContain("2001:db8::1");
@@ -62,21 +69,25 @@ describe("resolveDNS", () => {
 
   it("should resolve both A and AAAA records", async () => {
     // Mock A record response
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [{ type: 1, data: "1.2.3.4" }],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [{ type: 1, data: "1.2.3.4" }],
+        }),
       }),
-    }));
+    );
     // Mock AAAA record response
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [{ type: 28, data: "2001:db8::1" }],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [{ type: 28, data: "2001:db8::1" }],
+        }),
       }),
-    }));
+    );
 
     const ips = await resolveDNS("example.com");
     expect(ips).toContain("1.2.3.4");
@@ -86,21 +97,25 @@ describe("resolveDNS", () => {
 
   it("should throw if no records found", async () => {
     // Mock A record response (empty)
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [],
+        }),
       }),
-    }));
+    );
     // Mock AAAA record response (empty)
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [],
+        }),
       }),
-    }));
+    );
 
     await expect(resolveDNS("example.com")).rejects.toThrow("Could not resolve hostname");
   });
@@ -109,13 +124,15 @@ describe("resolveDNS", () => {
     // Mock A record failure
     (global.fetch as any).mockImplementationOnce(() => Promise.reject(new Error("Network error")));
     // Mock AAAA record success
-    (global.fetch as any).mockImplementationOnce(() => Promise.resolve({
-      ok: true,
-      json: async () => ({
-        Status: 0,
-        Answer: [{ type: 28, data: "2001:db8::1" }],
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [{ type: 28, data: "2001:db8::1" }],
+        }),
       }),
-    }));
+    );
 
     const ips = await resolveDNS("example.com");
     expect(ips).toContain("2001:db8::1");
