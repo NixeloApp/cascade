@@ -109,8 +109,9 @@ export class LandingPage extends BasePage {
     this.footerCopyright = page.getByText(/© 2026 nixelo/i);
 
     // Auth page headings (separate routes now)
-    this.signInHeading = page.getByRole("heading", { name: /welcome back/i });
-    this.signUpHeading = page.getByRole("heading", { name: /create an account/i });
+    // Updated to match the actual text in src/routes/signin.tsx and src/routes/signup.tsx
+    this.signInHeading = page.getByRole("heading", { name: /sign in to nixelo/i });
+    this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
   }
 
   // ===================
