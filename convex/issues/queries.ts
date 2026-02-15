@@ -351,7 +351,7 @@ export const listSelectableIssues = authenticatedQuery({
     // Merge all results, sort by creation time (descending), and take the top limit
     const issues = issuesByType
       .flat()
-      .sort((a, b) => (a._id > b._id ? -1 : 1)) // _id correlates with creation time
+      .sort((a, b) => b._creationTime - a._creationTime) // _id correlates with creation time
       .slice(0, BOUNDED_SELECT_LIMIT);
 
     return issues.map((i) => ({
