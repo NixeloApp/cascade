@@ -47,8 +47,8 @@ test.describe("Board Drag-Drop", () => {
     await expect(issueCard).toBeVisible();
 
     // Verify the card has draggable attribute (cards are draggable when canEdit=true)
-    const draggable = await issueCard.getAttribute("draggable");
-    expect(draggable).toBe("true");
+    // Use toHaveAttribute to enable retries as permissions might load asynchronously
+    await expect(issueCard).toHaveAttribute("draggable", "true");
     console.log("✓ Issue card is draggable");
   });
 

@@ -147,7 +147,7 @@ export class AuthPage extends BasePage {
    * Navigate to sign in page and expand email form
    */
   async gotoSignIn() {
-    await this.page.goto("/signin", { waitUntil: "commit" });
+    await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
     // Wait for hydration before expanding
     await this.waitForHydration();
@@ -161,7 +161,7 @@ export class AuthPage extends BasePage {
    * Navigate to sign up page and expand email form
    */
   async gotoSignUp() {
-    await this.page.goto("/signup", { waitUntil: "commit" });
+    await this.page.goto("/signup", { waitUntil: "domcontentloaded" });
     await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
     // Wait for hydration before expanding
     await this.waitForHydration();
