@@ -1,26 +1,28 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 import { api, internal } from "./_generated/api";
+import { deliverWebhook } from "./lib/webhookHelpers"; // Import the mocked function
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
-import { deliverWebhook } from "./lib/webhookHelpers"; // Import the mocked function
 
 // Mock deliverWebhook to throw for a specific URL
 vi.mock("./lib/webhookHelpers", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./lib/webhookHelpers")>();
   return {
     ...actual,
-    deliverWebhook: vi.fn(async (url: string, payload: string, event: string, secret?: string) => {
-      if (url === "https://crash.me") {
-        throw new Error("Simulated crash");
-      }
-      return {
-        status: "success",
-        responseStatus: 200,
-        responseBody: "OK",
-      };
-    }),
+    deliverWebhook: vi.fn(
+      async (url: string, _payload: string, _event: string, _secret?: string) => {
+        if (url === "https://crash.me") {
+          throw new Error("Simulated crash");
+        }
+        return {
+          status: "success",
+          responseStatus: 200,
+          responseBody: "OK",
+        };
+      },
+    ),
   };
 });
 
@@ -66,19 +68,19 @@ describe("Webhooks Crash Reproduction", () => {
       "https://crash.me",
       expect.any(String),
       "test.event",
-      undefined
+      undefined,
     );
     expect(deliverWebhook).toHaveBeenCalledWith(
       "https://success.me",
       expect.any(String),
       "test.event",
-      undefined
+      undefined,
     );
 
     // Verify that the error was logged
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining("Webhook delivery failed for"),
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleSpy.mockRestore();
