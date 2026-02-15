@@ -12,7 +12,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { BOUNDED_LIST_LIMIT } from "./boundedQueries";
 import { notFound, validation } from "./errors";
 import { fetchPaginatedQuery } from "./queryHelpers";
-import { MAX_LABELS_PER_PROJECT, MAX_PAGE_SIZE } from "./queryLimits";
+import { MAX_LABELS_PER_PROJECT } from "./queryLimits";
 
 /**
  * Get an issue and validate it has a projectId (for migration safety)
@@ -125,12 +125,27 @@ export async function enrichIssue(ctx: QueryCtx, issue: Doc<"issues">): Promise<
   // Fetch label metadata if issue has labels and projectId
   let labelInfos: LabelInfo[] = [];
   if (issue.labels && issue.labels.length > 0 && issue.projectId) {
-    const projectLabels = await ctx.db
-      .query("labels")
-      .withIndex("by_project", (q) => q.eq("projectId", issue.projectId))
-      .take(MAX_PAGE_SIZE);
+    // Optimization: Fetch only the specific labels used by this issue.
+    // This avoids fetching potentially hundreds of unused labels for the project
+    // and fixes a bug where labels beyond the page size limit were not found.
+    const labels = await Promise.all(
+      issue.labels.map((name) =>
+        ctx.db
+          .query("labels")
+          .withIndex("by_project_name", (q) =>
+            q.eq("projectId", issue.projectId!).eq("name", name),
+          )
+          .first(),
+      ),
+    );
 
-    const labelMap = new Map(projectLabels.map((l) => [l.name, l.color]));
+    const labelMap = new Map<string, string>();
+    for (const label of labels) {
+      if (label) {
+        labelMap.set(label.name, label.color);
+      }
+    }
+
     labelInfos = issue.labels.map((name) => ({
       name,
       color: labelMap.get(name) ?? "#6b7280", // Default gray if not found
