@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
-import { action, mutation } from "./_generated/server";
+import { action, internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
@@ -227,7 +227,7 @@ export const sendMessage = action({
       }
 
       // Update webhook stats
-      await ctx.runMutation(api.pumble.updateWebhookStats, {
+      await ctx.runMutation(internal.pumble.updateWebhookStats, {
         webhookId: args.webhookId,
         success: true,
       });
@@ -235,7 +235,7 @@ export const sendMessage = action({
       return { success: true };
     } catch (error) {
       // Update webhook stats with error
-      await ctx.runMutation(api.pumble.updateWebhookStats, {
+      await ctx.runMutation(internal.pumble.updateWebhookStats, {
         webhookId: args.webhookId,
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -249,7 +249,7 @@ export const sendMessage = action({
 /**
  * Update webhook statistics (internal mutation)
  */
-export const updateWebhookStats = mutation({
+export const updateWebhookStats = internalMutation({
   args: {
     webhookId: v.id("pumbleWebhooks"),
     success: v.boolean(),
