@@ -328,16 +328,15 @@ async function countIssuesByReporter(
     return await efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
-        .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+        .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true))
+        .filter((q) => isAllowedProject(q, projectIds)),
       MAX_ISSUES_FOR_STATS,
     );
   }
   return await efficientCount(
     ctx.db
       .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
-      .filter(notDeleted),
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true)),
   );
 }
 
@@ -353,17 +352,17 @@ async function countIssuesByAssignee(
       efficientCount(
         ctx.db
           .query("issues")
-          .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
-          .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+          .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true))
+          .filter((q) => isAllowedProject(q, projectIds)),
         MAX_ISSUES_FOR_STATS,
       ),
       efficientCount(
         ctx.db
           .query("issues")
           .withIndex("by_assignee_status", (q) =>
-            q.eq("assigneeId", assigneeId).eq("status", "done"),
+            q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
           )
-          .filter((q) => q.and(notDeleted(q), isAllowedProject(q, projectIds))),
+          .filter((q) => isAllowedProject(q, projectIds)),
         MAX_ISSUES_FOR_STATS,
       ),
     ]);
@@ -372,14 +371,14 @@ async function countIssuesByAssignee(
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
-        .filter(notDeleted),
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true)),
     ),
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee_status", (q) => q.eq("assigneeId", assigneeId).eq("status", "done"))
-        .filter(notDeleted),
+        .withIndex("by_assignee_status", (q) =>
+          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+        ),
     ),
   ]);
 }
