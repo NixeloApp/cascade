@@ -328,22 +328,31 @@ export const listSelectableIssues = authenticatedQuery({
       return [];
     }
 
-    // Optimization: Use a single query on the project index to fetch recent issues.
-    // We filter out subtasks and deleted items in the query filter.
-    // This is more efficient than firing 4 parallel queries (one per root type) and merging/sorting in memory.
-    // It guarantees we get the absolute newest issues in the project, which is ideal for "Select Issue" dropdowns.
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .order("desc")
-      .filter((q) =>
-        q.and(
-          q.neq(q.field("isDeleted"), true),
-          // Efficiently filter to include only root types (exclude subtasks)
-          q.neq(q.field("type"), "subtask"),
-        ),
-      )
-      .take(BOUNDED_SELECT_LIMIT);
+    // Optimization: Use parallel queries for each root issue type (task, bug, story, epic).
+    // This allows us to use the `by_project_type` index to efficiently skip subtasks and deleted items.
+    // Scanning the `by_project` index would force us to scan through potentially thousands of subtasks
+    // or deleted items to find the most recent selectable issues.
+    // Since we only need the top 50 (BOUNDED_SELECT_LIMIT), fetching 50 of each type and merging is very fast.
+    const issuesByType = await Promise.all(
+      ROOT_ISSUE_TYPES.map((type) =>
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_type", (q) =>
+            q
+              .eq("projectId", args.projectId)
+              .eq("type", type as Doc<"issues">["type"])
+              .lt("isDeleted", true),
+          )
+          .order("desc")
+          .take(BOUNDED_SELECT_LIMIT),
+      ),
+    );
+
+    // Merge all results, sort by creation time (descending), and take the top limit
+    const issues = issuesByType
+      .flat()
+      .sort((a, b) => b._creationTime - a._creationTime) // _id correlates with creation time
+      .slice(0, BOUNDED_SELECT_LIMIT);
 
     return issues.map((i) => ({
       _id: i._id,
