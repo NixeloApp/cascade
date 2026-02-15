@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import { useMutation } from "convex/react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { showError } from "@/lib/toast";
 import type { BoardAction } from "./useBoardHistory";
 import type { UseSmartBoardDataOptions } from "./useSmartBoardData";
@@ -25,17 +25,27 @@ export function useBoardDragAndDrop({
   pushHistoryAction,
   boardOptions,
 }: UseBoardDragAndDropOptions) {
-  const [draggedIssue, setDraggedIssue] = useState<Id<"issues"> | null>(null);
+  // Use ref instead of state to avoid re-renders during drag
+  // This stabilizes handleDrop and prevents KanbanColumn from re-rendering
+  const draggedIssueRef = useRef<Id<"issues"> | null>(null);
 
-  const updateIssueStatus = useMutation(api.issues.updateStatus).withOptimisticUpdate(
-    optimisticBoardUpdate(boardOptions, isTeamMode),
+  const rawUpdateStatus = useMutation(api.issues.updateStatus);
+
+  const optimisticUpdate = useMemo(
+    () => optimisticBoardUpdate(boardOptions, isTeamMode),
+    [boardOptions, isTeamMode],
+  );
+
+  const updateIssueStatus = useMemo(
+    () => rawUpdateStatus.withOptimisticUpdate(optimisticUpdate),
+    [rawUpdateStatus, optimisticUpdate],
   );
 
   const updateStatusByCategory = useMutation(api.issues.updateStatusByCategory);
   // TODO: Add optimistic update for team mode if needed
 
   const handleDragStart = useCallback((e: React.DragEvent, issueId: Id<"issues">) => {
-    setDraggedIssue(issueId);
+    draggedIssueRef.current = issueId;
     e.dataTransfer.effectAllowed = "move";
   }, []);
 
@@ -48,13 +58,15 @@ export function useBoardDragAndDrop({
     async (e: React.DragEvent, newStatus: string) => {
       e.preventDefault();
 
-      if (!(draggedIssue && allIssues.length > 0)) return;
+      const draggedIssueId = draggedIssueRef.current;
 
-      const issue = allIssues.find((i) => i._id === draggedIssue);
+      if (!(draggedIssueId && allIssues.length > 0)) return;
+
+      const issue = allIssues.find((i) => i._id === draggedIssueId);
       if (!issue) return;
 
       if (issue.status === newStatus) {
-        setDraggedIssue(null);
+        draggedIssueRef.current = null;
         return;
       }
 
@@ -64,7 +76,7 @@ export function useBoardDragAndDrop({
 
       // Action for history
       const action: BoardAction = {
-        issueId: draggedIssue,
+        issueId: draggedIssueId,
         oldStatus: issue.status,
         newStatus,
         oldOrder: issue.order,
@@ -76,14 +88,14 @@ export function useBoardDragAndDrop({
       try {
         if (isTeamMode) {
           await updateStatusByCategory({
-            issueId: draggedIssue,
+            issueId: draggedIssueId,
             category: newStatus as "todo" | "inprogress" | "done",
             newOrder,
           });
           // Note: History not supported for team mode yet
         } else {
           await updateIssueStatus({
-            issueId: draggedIssue,
+            issueId: draggedIssueId,
             newStatus,
             newOrder,
           });
@@ -93,10 +105,9 @@ export function useBoardDragAndDrop({
         showError(error, "Failed to update issue status");
       }
 
-      setDraggedIssue(null);
+      draggedIssueRef.current = null;
     },
     [
-      draggedIssue,
       allIssues,
       issuesByStatus,
       updateIssueStatus,
@@ -107,7 +118,7 @@ export function useBoardDragAndDrop({
   );
 
   return {
-    draggedIssue,
+    draggedIssue: draggedIssueRef.current,
     handleDragStart,
     handleDragOver,
     handleDrop,
