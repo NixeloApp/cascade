@@ -31,14 +31,16 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
     rate:
       process.env.NODE_ENV === "test" ||
       process.env.NODE_ENV === "development" ||
-      process.env.E2E_TEST_MODE
+      process.env.E2E_TEST_MODE ||
+      process.env.CI
         ? 50
         : 3,
     period: 60_000,
     capacity:
       process.env.NODE_ENV === "test" ||
       process.env.NODE_ENV === "development" ||
-      process.env.E2E_TEST_MODE
+      process.env.E2E_TEST_MODE ||
+      process.env.CI
         ? 50
         : 3,
   }, // 3 per minute (higher in dev/test)
