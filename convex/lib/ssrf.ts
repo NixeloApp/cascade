@@ -201,8 +201,9 @@ export function validateDestination(url: string) {
  * Validates a destination URL to prevent SSRF by resolving DNS.
  * Enforces strict IP formats and blocks private ranges.
  * Blocks domains that resolve to private IPs.
+ * Returns the resolved IP address to be used for the connection.
  */
-export async function validateDestinationResolved(url: string) {
+export async function validateDestinationResolved(url: string): Promise<string> {
   // 1. Basic syntax and direct IP check
   validateDestination(url);
 
@@ -219,12 +220,19 @@ export async function validateDestinationResolved(url: string) {
   }
 
   // If it's a strict IP, validateDestination already checked it.
-  if (isStrictIPv4(hostname) || isStrictIPv6(hostname)) {
-    return;
+  if (isStrictIPv4(hostname)) {
+    return hostname;
+  }
+  if (isStrictIPv6(hostname)) {
+    return `[${hostname}]`;
   }
 
   // If it's a domain name, resolve it and check IPs
   const ips = await resolveDNS(hostname);
+
+  if (ips.length === 0) {
+    throw validation("url", `Could not resolve hostname: ${hostname}`);
+  }
 
   for (const ip of ips) {
     if (isStrictIPv4(ip) && isPrivateIPv4(ip)) {
@@ -234,4 +242,11 @@ export async function validateDestinationResolved(url: string) {
       throw validation("url", `Domain resolves to private IP address: ${ip}`);
     }
   }
+
+  // Use the first resolved IP
+  const firstIp = ips[0];
+  if (isStrictIPv6(firstIp)) {
+    return `[${firstIp}]`;
+  }
+  return firstIp;
 }

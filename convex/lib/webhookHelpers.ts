@@ -19,9 +19,10 @@ export async function deliverWebhook(
   event: string,
   secret?: string,
 ): Promise<WebhookDeliveryResult> {
-  // 1. Validate destination URL (SSRF protection)
+  // 1. Validate destination URL (SSRF protection) and get safe IP
+  let resolvedIp: string;
   try {
-    await validateDestinationResolved(url);
+    resolvedIp = await validateDestinationResolved(url);
   } catch (e) {
     // If validation fails, return failed status immediately
     return {
@@ -43,7 +44,19 @@ export async function deliverWebhook(
       headers["X-Webhook-Signature"] = await generateSignature(payload, secret);
     }
 
-    const response = await fetch(url, {
+    // Determine target URL and headers
+    let targetUrl = url;
+    const parsedUrl = new URL(url);
+
+    // For HTTP, rewrite URL to use resolved IP to prevent DNS rebinding
+    if (parsedUrl.protocol === "http:") {
+      headers.Host = parsedUrl.host; // includes port if present
+      parsedUrl.hostname = resolvedIp;
+      targetUrl = parsedUrl.toString();
+    }
+    // For HTTPS, we must use original URL for certificate validation
+
+    const response = await fetch(targetUrl, {
       method: "POST",
       headers,
       body: payload,
