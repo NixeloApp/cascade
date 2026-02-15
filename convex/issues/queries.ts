@@ -201,32 +201,25 @@ export const listRoadmapIssues = authenticatedQuery({
           (ROOT_ISSUE_TYPES as readonly string[]).includes(i.type),
       );
     } else if (args.hasDueDate) {
-      // Optimization: Use by_project_type_due_date to fetch only relevant types.
-      // This avoids scanning subtasks (which may be numerous) and deleted items.
-      const typesToFetch = args.excludeEpics
-        ? ROOT_ISSUE_TYPES.filter((t) => t !== "epic")
-        : ROOT_ISSUE_TYPES;
-
-      const outcomes = await Promise.all(
-        typesToFetch.map((type) =>
-          safeCollect(
-            ctx.db
-              .query("issues")
-              .withIndex("by_project_type_due_date", (q) =>
-                q
-                  .eq("projectId", args.projectId)
-                  .eq("type", type as Doc<"issues">["type"])
-                  .gt("dueDate", 0),
-              )
-              .filter(notDeleted),
-            BOUNDED_LIST_LIMIT, // Limit per type, arguably better than global limit for roadmap
-            `roadmap dated issues type=${type}`,
+      // Optimization: Use by_project_due_date to fetch issues in due date order.
+      // We filter out subtasks and deleted items.
+      // This is more efficient than parallel queries and guarantees global sort order.
+      issues = await safeCollect(
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_due_date", (q) =>
+            q.eq("projectId", args.projectId).gt("dueDate", 0),
+          )
+          .filter((q) =>
+            q.and(
+              q.neq(q.field("isDeleted"), true),
+              q.neq(q.field("type"), "subtask"),
+              ...(args.excludeEpics ? [q.neq(q.field("type"), "epic")] : []),
+            ),
           ),
-        ),
+        BOUNDED_LIST_LIMIT * 4, // Increase limit to match previous volume (4 parallel queries)
+        "roadmap dated issues",
       );
-      issues = outcomes.flat();
-      // Resort by due date as parallel fetches may disrupt global order
-      issues.sort((a, b) => (a.dueDate ?? 0) - (b.dueDate ?? 0));
     } else {
       // Bounded: fetch by type with limits
       // Optimization: Skip fetching epics if they will be excluded anyway
