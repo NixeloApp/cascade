@@ -146,7 +146,8 @@ export class LandingPage extends BasePage {
     await this.navLoginButton.click();
     // Wait for signin page to load
     await this.page.waitForURL("**/signin");
-    await this.signInHeading.waitFor({ state: "visible" });
+    // Wait for heading with increased timeout for CI
+    await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
   }
 
   async clickNavGetStarted() {
@@ -154,7 +155,8 @@ export class LandingPage extends BasePage {
     await this.navGetStartedButton.click();
     // Wait for signup page to load
     await this.page.waitForURL("**/signup");
-    await this.signUpHeading.waitFor({ state: "visible" });
+    // Wait for heading with increased timeout for CI
+    await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
   }
 
   /**

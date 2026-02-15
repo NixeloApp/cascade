@@ -219,7 +219,9 @@ export class ProjectsPage extends BasePage {
         await template.click();
 
         // Verify we proceeded to configuration step
-        await expect(this.createProjectForm.getByText("Configure Project")).toBeVisible();
+        await expect(
+          this.createProjectForm.getByRole("heading", { name: "Configure Project" }),
+        ).toBeVisible();
       }).toPass();
 
       // Step 2: Fill in project details
