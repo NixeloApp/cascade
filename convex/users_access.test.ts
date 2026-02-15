@@ -1,4 +1,3 @@
-
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
@@ -14,7 +13,7 @@ describe("Users Access Control", () => {
       const u = await ctx.db.insert("users", {
         name: "User 1",
         email: "user1@example.com",
-        emailVerificationTime: Date.now()
+        emailVerificationTime: Date.now(),
       });
       const org = await ctx.db.insert("organizations", {
         name: "Org A",
@@ -24,10 +23,10 @@ describe("Users Access Control", () => {
           defaultMaxHoursPerWeek: 40,
           defaultMaxHoursPerDay: 8,
           requiresTimeApproval: false,
-          billingEnabled: false
+          billingEnabled: false,
         },
         createdBy: u,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       });
       await ctx.db.insert("organizationMembers", {
         organizationId: org,
@@ -43,7 +42,7 @@ describe("Users Access Control", () => {
       const u = await ctx.db.insert("users", {
         name: "User 2",
         email: "user2@example.com",
-        emailVerificationTime: Date.now()
+        emailVerificationTime: Date.now(),
       });
       const org = await ctx.db.insert("organizations", {
         name: "Org B",
@@ -53,10 +52,10 @@ describe("Users Access Control", () => {
           defaultMaxHoursPerWeek: 40,
           defaultMaxHoursPerDay: 8,
           requiresTimeApproval: false,
-          billingEnabled: false
+          billingEnabled: false,
         },
         createdBy: u,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       });
       await ctx.db.insert("organizationMembers", {
         organizationId: org,
@@ -72,10 +71,13 @@ describe("Users Access Control", () => {
       const u = await ctx.db.insert("users", {
         name: "User 3",
         email: "user3@example.com",
-        emailVerificationTime: Date.now()
+        emailVerificationTime: Date.now(),
       });
       // Find Org A
-      const orgMember1 = await ctx.db.query("organizationMembers").withIndex("by_user", q => q.eq("userId", user1)).first();
+      const orgMember1 = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user", (q) => q.eq("userId", user1))
+        .first();
       if (!orgMember1) throw new Error("User 1 has no org");
 
       await ctx.db.insert("organizationMembers", {
@@ -88,12 +90,16 @@ describe("Users Access Control", () => {
     });
 
     // User 1 fetches User 2 (Different Org) - Should NOT see email
-    const user2SeenByUser1 = await t.withIdentity({ subject: user1 }).query(api.users.get, { id: user2 });
+    const user2SeenByUser1 = await t
+      .withIdentity({ subject: user1 })
+      .query(api.users.get, { id: user2 });
     expect(user2SeenByUser1?.name).toBe("User 2");
     expect(user2SeenByUser1?.email).toBeUndefined();
 
     // User 1 fetches User 3 (Same Org) - Should see email
-    const user3SeenByUser1 = await t.withIdentity({ subject: user1 }).query(api.users.get, { id: user3 });
+    const user3SeenByUser1 = await t
+      .withIdentity({ subject: user1 })
+      .query(api.users.get, { id: user3 });
     expect(user3SeenByUser1?.name).toBe("User 3");
     expect(user3SeenByUser1?.email).toBe("user3@example.com");
   });
