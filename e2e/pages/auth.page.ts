@@ -98,7 +98,7 @@ export class AuthPage extends BasePage {
     // Updated to match the actual text in src/routes/signin.tsx and src/routes/signup.tsx
     this.signInHeading = page.getByRole("heading", { name: /sign in to nixelo/i });
     this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
-    this.forgotPasswordHeading = page.getByText("Forgot Password", { exact: false });
+    this.forgotPasswordHeading = page.getByRole("heading", { name: /reset your password/i });
     this.resetPasswordHeading = page.getByRole("heading", { name: /reset password/i });
 
     // Sign In / Sign Up form - two-step flow
