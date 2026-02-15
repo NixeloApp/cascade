@@ -78,3 +78,8 @@
 ## 2025-02-23 - SSRF Bypass via IPv4-Mapped IPv6 Hex Notation
 **Learning:** Validation logic for "private IP" must account for all valid representations of an IP address. The standard regex for IPv4-mapped IPv6 (`::ffff:1.2.3.4`) missed the alternative hex notation (`::ffff:7f00:1`), allowing attackers to bypass SSRF protection by encoding private IPs (like 127.0.0.1) in an unexpected format.
 **Action:** When implementing IP allow/block lists, normalize IP addresses to a canonical format (bytes or standard string) before checking, or ensure regex patterns cover all RFC-compliant variations including compressed, expanded, and mapped forms.
+
+## 2025-02-23 - SSRF Bypass via IPv6 Normalization
+**Vulnerability:** The `isPrivateIPv6` check relied on simple string matching (e.g. `ip === "::1"`) which failed to catch alternative representations like expanded loopback `0:0:0:0:0:0:0:1` or `::0001`.
+**Learning:** Security checks on IPv6 addresses must operate on a canonical/normalized form because there are too many valid string representations for the same address. Relying on regex or string equality on raw input is prone to bypasses.
+**Action:** Implemented `expandIPv6` to normalize all IPv6 addresses to a 32-digit hex string before validation. Future IP checks should always normalize first.
