@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { ProjectCalendar } from "@/components/Calendar/ProjectCalendar";
-import { PageContent, PageError } from "@/components/Layout";
+import { PageContent, PageError } from "@/components/layout";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/calendar")({
   component: CalendarPage,

@@ -2,28 +2,27 @@ import { FileText, PanelsTopLeft, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
-import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 import { ArrowIcon } from "./icons";
 
 export function FeaturesSection() {
   const features = [
     {
-      icon: <FileText className="w-6 h-6 text-brand-cyan-text" />,
+      icon: <FileText className="w-6 h-6 text-cyan-600" />,
       title: "Docs and issues, finally together",
       description:
         "No more tab-switching between your wiki and your task board. Link specs to tickets, discussions to sprints. All in one place.",
       gradient: "cyan" as const,
     },
     {
-      icon: <Users className="w-6 h-6 text-brand-teal-text" />,
+      icon: <Users className="w-6 h-6 text-teal-600" />,
       title: "Edit together, in real-time",
       description:
         "See who's typing, where they are, what changed. Collaborate like you're in the same room, even when you're not.",
       gradient: "teal" as const,
     },
     {
-      icon: <PanelsTopLeft className="w-6 h-6 text-palette-purple-text" />,
+      icon: <PanelsTopLeft className="w-6 h-6 text-purple-600" />,
       title: "See everything. Miss nothing.",
       description:
         "One dashboard that actually makes sense. No more digging through 5 different tools to find what you need.",
@@ -43,11 +42,11 @@ export function FeaturesSection() {
           </Typography>
         </div>
 
-        <Grid cols={1} colsMd={3} gap="xl">
+        <div className="grid md:grid-cols-3 gap-6">
           {features.map((feature) => (
             <FeatureCard key={feature.title} {...feature} />
           ))}
-        </Grid>
+        </div>
       </div>
     </section>
   );
@@ -65,21 +64,21 @@ function FeatureCard({
   gradient: "cyan" | "teal" | "purple";
 }) {
   const gradients = {
-    cyan: "from-brand-cyan-text to-brand-teal-text",
-    teal: "from-brand-teal-text to-brand-emerald-text",
-    purple: "from-palette-purple-text to-palette-pink-text",
+    cyan: "from-cyan-500 to-teal-500",
+    teal: "from-teal-500 to-emerald-500",
+    purple: "from-purple-500 to-pink-500",
   };
 
   const glows = {
-    cyan: "hover:shadow-brand-cyan-text/20 hover:border-brand-cyan-text/40",
-    teal: "hover:shadow-brand-teal-text/20 hover:border-brand-teal-text/40",
-    purple: "hover:shadow-palette-purple-text/20 hover:border-palette-purple-text/40",
+    cyan: "hover:shadow-cyan-500/20 hover:border-cyan-500/40",
+    teal: "hover:shadow-teal-500/20 hover:border-teal-500/40",
+    purple: "hover:shadow-purple-500/20 hover:border-purple-500/40",
   };
 
   const linkColors = {
-    cyan: "text-brand-cyan-text hover:text-brand-cyan-text",
-    teal: "text-brand-teal-text hover:text-brand-teal-text",
-    purple: "text-palette-purple-text hover:text-palette-purple-text",
+    cyan: "text-cyan-500 hover:text-cyan-600",
+    teal: "text-teal-500 hover:text-teal-600",
+    purple: "text-purple-500 hover:text-purple-600",
   };
 
   return (

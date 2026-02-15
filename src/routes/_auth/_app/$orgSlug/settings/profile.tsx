@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
-import { PageContent, PageHeader, PageLayout } from "@/components/Layout";
+import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 
 // Lazy load Settings component
 const Settings = lazy(() => import("@/components/Settings").then((m) => ({ default: m.Settings })));

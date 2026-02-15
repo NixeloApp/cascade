@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { ActivityFeed } from "@/components/ActivityFeed";
-import { PageContent, PageError, PageHeader, PageLayout } from "@/components/Layout";
+import { PageContent, PageError, PageHeader, PageLayout } from "@/components/layout";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/activity")({
   component: ActivityPage,

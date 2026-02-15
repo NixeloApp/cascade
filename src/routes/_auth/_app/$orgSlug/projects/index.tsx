@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { CreateProjectFromTemplate } from "@/components/CreateProjectFromTemplate";
-import { PageHeader, PageLayout } from "@/components/Layout";
+import { PageHeader, PageLayout } from "@/components/layout";
 import { ProjectsList } from "@/components/ProjectsList";
 import { Button } from "@/components/ui/Button";
 import { ROUTES } from "@/config/routes";

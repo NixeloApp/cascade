@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { PageContent, PageError } from "@/components/Layout";
+import { PageContent, PageError } from "@/components/layout";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { ROUTES } from "@/config/routes";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
