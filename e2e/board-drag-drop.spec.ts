@@ -23,7 +23,7 @@ test.describe("Board Drag-Drop", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("issue cards have drag handle and are draggable", async ({ projectsPage, page }) => {
+  test("issue cards have drag handle and are draggable", async ({ projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `DRAG${timestamp.toString().slice(-4)}`;
     const issueTitle = `Draggable Issue ${timestamp}`;

@@ -508,7 +508,7 @@ export const listWithDigestPreference = internalQuery({
       .withIndex("by_digest_frequency", (q) =>
         q.eq("emailEnabled", true).eq("emailDigest", args.frequency),
       )
-      .take(2000); // Increased limit to capture more users, but still bounded
+      .take(1000); // Bounded limit to capture users efficiently
 
     // Batch fetch users to avoid N+1 queries
     const userIds = filtered.map((pref) => pref.userId);
