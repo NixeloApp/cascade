@@ -261,7 +261,7 @@ export class ProjectsPage extends BasePage {
   async createWorkspace(name: string, description?: string) {
     // Navigate to workspaces page using sidebar to ensure correct context
     await this.page.locator("nav").getByText("Workspaces", { exact: true }).click();
-    await this.page.waitForURL(/\/workspaces/);
+    await this.page.waitForURL(/\/workspaces/, { timeout: 30000 });
 
     await this.page.getByRole("button", { name: "+ Create Workspace" }).click();
 

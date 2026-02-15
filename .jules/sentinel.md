@@ -83,3 +83,8 @@
 **Vulnerability:** Document creation allowed any organization member to create documents in any workspace within that organization, bypassing workspace membership checks. This occurred because `validateWorkspaceIntegrity` only verified that the workspace belonged to the organization, not that the user belonged to the workspace.
 **Learning:** When resources (like Documents) can be parented by multiple container types (Project OR Workspace), you must explicitly validate membership for the specific container being used. Implicit organization-level checks are insufficient for workspace-scoped resources.
 **Action:** Enforce strict membership checks (e.g., `isWorkspaceEditor`) whenever a resource is linked to a specific container ID, even if a higher-level container (Organization) check has passed.
+
+## 2025-02-23 - SSRF Bypass via IPv6 Normalization
+**Vulnerability:** The `isPrivateIPv6` check relied on simple string matching (e.g. `ip === "::1"`) which failed to catch alternative representations like expanded loopback `0:0:0:0:0:0:0:1` or `::0001`.
+**Learning:** Security checks on IPv6 addresses must operate on a canonical/normalized form because there are too many valid string representations for the same address. Relying on regex or string equality on raw input is prone to bypasses.
+**Action:** Implemented `expandIPv6` to normalize all IPv6 addresses to a 32-digit hex string before validation. Future IP checks should always normalize first.
