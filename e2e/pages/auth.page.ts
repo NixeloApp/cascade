@@ -95,8 +95,9 @@ export class AuthPage extends BasePage {
     super(page, orgSlug);
 
     // Page headings
-    this.signInHeading = page.getByRole("heading", { name: /welcome back/i });
-    this.signUpHeading = page.getByRole("heading", { name: /create an account/i });
+    // Updated to match the actual text in src/routes/signin.tsx and src/routes/signup.tsx
+    this.signInHeading = page.getByRole("heading", { name: /sign in to nixelo/i });
+    this.signUpHeading = page.getByRole("heading", { name: /create your account/i });
     this.forgotPasswordHeading = page.getByText("Forgot Password", { exact: false });
     this.resetPasswordHeading = page.getByRole("heading", { name: /reset password/i });
 

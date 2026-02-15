@@ -46,9 +46,11 @@ test.describe("Board Drag-Drop", () => {
     const issueCard = projectsPage.getIssueCard(issueTitle);
     await expect(issueCard).toBeVisible();
 
-    // Verify the card has draggable attribute (cards are draggable when canEdit=true)
+    // Verify the card container has draggable attribute (cards are draggable when canEdit=true)
+    // getIssueCard returns the overlay button, so we need to check the parent container
+    const issueCardContainer = issueCard.locator("xpath=..");
     // Use toHaveAttribute to enable retries as permissions might load asynchronously
-    await expect(issueCard).toHaveAttribute("draggable", "true");
+    await expect(issueCardContainer).toHaveAttribute("draggable", "true");
     console.log("✓ Issue card is draggable");
   });
 
