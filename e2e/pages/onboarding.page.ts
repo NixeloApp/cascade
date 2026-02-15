@@ -2,9 +2,6 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 
-// Re-export for convenience in tests
-export { TEST_IDS };
-
 const TRANSITION_TIMEOUT = 15000;
 
 /**
