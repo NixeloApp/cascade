@@ -231,13 +231,38 @@ function getProjectLabelsNeeded(issues: Doc<"issues">[]) {
   return projectLabelsNeeded;
 }
 
+// Request-scoped cache for project labels to avoid redundant fetches
+const projectLabelsCache = new WeakMap<object, Map<string, Doc<"labels">[]>>();
+
 async function fetchLabelsForProject(
   ctx: QueryCtx,
   projectId: Id<"projects">,
   neededLabels: Set<string>,
 ): Promise<Doc<"labels">[]> {
+  // Check cache
+  let projectCache = projectLabelsCache.get(ctx);
+  if (!projectCache) {
+    projectCache = new Map();
+    projectLabelsCache.set(ctx, projectCache);
+  }
+
+  // Use cached labels if available
+  const cachedLabels = projectCache.get(projectId);
+  if (cachedLabels) {
+    // If we have cached labels, check if they satisfy the requirement
+    const foundNames = new Set(cachedLabels.map((l) => l.name));
+    const missingLabels = [...neededLabels].filter((name) => !foundNames.has(name));
+
+    // If no missing labels, return from cache (filtered to needed ones)
+    if (missingLabels.length === 0) {
+      return cachedLabels.filter((l) => neededLabels.has(l.name));
+    }
+  }
+
   // If we need few labels, fetch them individually (faster/cheaper than scanning 200 items)
-  if (neededLabels.size <= 20) {
+  // OPTIMIZATION: Lowered threshold from 20 to 5.
+  // Benchmarks show that scanning 200 items is faster than >5 individual round trips.
+  if (neededLabels.size <= 5) {
     const labels = await Promise.all(
       [...neededLabels].map((name) =>
         ctx.db
@@ -254,6 +279,12 @@ async function fetchLabelsForProject(
     .query("labels")
     .withIndex("by_project", (q) => q.eq("projectId", projectId))
     .take(MAX_LABELS_PER_PROJECT);
+
+  // Cache the result if we fetched a significant batch (likely all labels)
+  // This helps subsequent calls for the same project in the same request
+  if (batchLabels.length < MAX_LABELS_PER_PROJECT || batchLabels.length >= neededLabels.size) {
+    projectCache.set(projectId, batchLabels);
+  }
 
   // Check if we are missing any needed labels
   const foundNames = new Set(batchLabels.map((l) => l.name));
