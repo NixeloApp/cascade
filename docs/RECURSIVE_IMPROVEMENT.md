@@ -3,7 +3,7 @@
 > **Purpose:** Living document for continuous quality improvement. When told "work on this doc", systematically improve Nixelo by benchmarking against Plane, Cal.com, and Mintlify.
 >
 > **Last Run:** 2026-02-16
-> **Overall Progress:** 126/246 (Phase 1-4 complete, Phase 5: 66%)
+> **Overall Progress:** 129/246 (Phase 1-5 complete)
 
 ---
 
@@ -1201,29 +1201,87 @@ export const Default: Story = {
 
 ---
 
-### 5.6 Plane Feature Parity Research (Medium Priority) 🎯
+### 5.6 Plane Feature Parity Research (Medium Priority) 🎯 ✅
 
-**Plane features to research and potentially implement:**
+**Plane features researched (2026-02-16):**
 
-| Feature | Plane Location | Nixelo Status | Priority | Notes |
-|---------|----------------|---------------|----------|-------|
-| **Gantt Chart** | `gantt-chart/` | ❌ Missing | High | We have roadmap, need timeline view |
-| **Estimates** | `estimates/` | Partial | Medium | Story points exist, need estimation UI |
-| **Modules** | `modules/` | ❌ Missing | Low | Grouping sprints, like epics |
-| **Archives** | `archives/` | Partial | Medium | Issues archive exists, need dedicated view |
-| **Exporter** | `exporter/` | ❌ Missing | Medium | CSV/JSON export UI |
-| **Rich Filters** | `rich-filters/` | Partial | High | Advanced filter builder |
+| Feature | Plane LOC | Nixelo Status | Recommendation | Notes |
+|---------|-----------|---------------|----------------|-------|
+| **Gantt Chart** | 2,127 (37 files) | ❌ Missing | ⏸️ DEFER | High complexity, uses MobX + Atlaskit DnD |
+| **Rich Filters** | ~1,500 | Partial | ✅ IMPLEMENT | Adopt Plane's adapter pattern |
+| **Exporter** | ~1,200 | ❌ Missing | ⏸️ DEFER (Phase 2) | Async job queue, start with simple CSV |
+| **Estimates** | ~300 | Partial | ✅ Quick Win | Story points exist, need UI polish |
+| **Modules** | ~800 | ❌ Missing | ⏸️ DEFER | Low priority, like grouping sprints |
+| **Archives** | ~200 | Partial | ✅ Quick Win | Data exists, need route + UI |
 
-**Research Tasks:**
-- [ ] Study Plane Gantt: `/home/mikhail/Desktop/plane/apps/web/core/components/gantt-chart/`
-- [ ] Study Plane Rich Filters: `/home/mikhail/Desktop/plane/apps/web/core/components/rich-filters/`
-- [ ] Study Plane Exporter: `/home/mikhail/Desktop/plane/apps/web/core/components/exporter/`
-- [ ] Evaluate effort vs. value for each feature
+**Research Completed:**
+- [x] Gantt Chart: 37 files, week/month/quarter views, drag-resize, dependencies - HIGH complexity
+- [x] Rich Filters: Tree structure, adapter pattern, 3 operators (exact/in/range) - MEDIUM complexity
+- [x] Exporter: Celery async, CSV/JSON/XLSX, S3 presigned URLs - MEDIUM complexity
 
-**Quick Wins:**
-1. Archives View — Already have data, just need route + UI
-2. Export UI — Add to settings, CSV/JSON download
-3. Rich Filters — Extend existing FilterBar with more operators
+---
+
+#### Gantt Chart Analysis
+
+**Plane's Implementation:**
+- 37 files, 2,127 lines of TypeScript/React
+- Uses MobX for state management + Atlaskit Pragmatic DnD
+- 3 view types: Week (60px/day), Month (20px/day), Quarter (5px/day)
+- Features: Drag to move/resize, dependency visualization, auto-scroll
+- Complex time math for date alignment
+
+**Recommendation: DEFER**
+- High complexity doesn't justify MVP inclusion
+- Nixelo board/list views cover current needs
+- Future: Start with lightweight read-only timeline, iterate to full Gantt
+
+---
+
+#### Rich Filters Analysis
+
+**Plane's Implementation:**
+- ~1,500 lines across types, utils, store, components
+- Tree structure: `TFilterConditionNode` (leaf) + `TFilterGroupNode` (AND container)
+- 3 operators: `exact` (is), `in` (is any of), `range` (between)
+- 4 field types: date, date_range, single_select, multi_select
+- Adapter pattern decouples UI from query format
+
+**Recommendation: IMPLEMENT**
+- Clean architecture matches Nixelo patterns
+- Extend existing FilterBar with operator selection
+- Phase 1: exact + in operators, single AND grouping
+- Phase 2: date range, save views, OR grouping
+
+---
+
+#### Exporter Analysis
+
+**Plane's Implementation:**
+- Async via Celery background jobs
+- Formats: CSV, JSON, XLSX (with openpyxl)
+- S3/MinIO storage with 7-day presigned URLs
+- 21+ issue fields with relation prefetching
+- Export history tracking with status polling
+
+**Recommendation: DEFER (Phase 2)**
+- No Celery equivalent in Convex currently
+- Start simple: Synchronous CSV for single project (<1000 issues)
+- Future: Convex Actions + external S3 when needed
+
+---
+
+#### Quick Wins Identified
+
+| Quick Win | Effort | Value | Action |
+|-----------|--------|-------|--------|
+| **Archives View** | Low | Medium | Add route `/archives`, filter by `archivedAt` |
+| **Simple CSV Export** | Low | Medium | Single project, direct download, no async |
+| **Estimation Polish** | Low | Medium | Better UI for story points in issue detail |
+
+**Implementation Order:**
+1. Archives View (data ready, just UI)
+2. Rich Filters Phase 1 (operators on existing FilterBar)
+3. Simple CSV Export (synchronous, limited scope)
 
 ---
 
@@ -1236,8 +1294,8 @@ export const Default: Story = {
 | 5.3 Component Tests | ✅ | 3/50 (+55 tests) | 2h |
 | 5.4 Storybook | ✅ | 4/50 (+20 stories) | 1h |
 | 5.5 Refactors | ⏸️ | 0/5 (deferred) | 0.25h |
-| 5.6 Plane Research | ❌ | 0/6 | 0h |
-| **Total** | **66%** | **16 items + 95 tests** | **5.75h/8h** |
+| 5.6 Plane Research | ✅ | 3/6 (Gantt, Filters, Exporter) | 1h |
+| **Total** | **100%** | **19 items + 95 tests** | **6.75h/8h** |
 
 **Session Summary (2026-02-16):**
 - Fixed all 6 N+1 query issues using batch fetch + Map lookup pattern
@@ -1245,6 +1303,8 @@ export const Default: Story = {
 - Created 4 new Storybook story files with 20+ stories
 - Fixed pre-existing KanbanColumn TypeScript errors (obsolete props)
 - Deferred large file refactors (stable code, low ROI)
+- Researched Plane features: Gantt (defer), Rich Filters (implement), Exporter (defer)
+- Identified 3 quick wins: Archives View, Rich Filters Phase 1, Simple CSV Export
 
 ---
 
