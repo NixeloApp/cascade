@@ -41,7 +41,7 @@ export const performPasswordReset = internalAction({
     } catch (error) {
       // Silently ignore to client - don't leak any info
       // But log to server for debugging (e.g. timeout in CI)
-      logger.error("Password reset request failed", { error: String(error) });
+      logger.error("Password reset request failed", { error });
     }
   },
 });
@@ -131,7 +131,8 @@ export const securePasswordReset = httpAction(async (ctx, request) => {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch {
+  } catch (error) {
+    logger.error("Secure password reset failed", { error });
     // Even on unexpected errors, return success
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

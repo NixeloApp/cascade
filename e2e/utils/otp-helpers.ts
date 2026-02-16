@@ -8,8 +8,8 @@ export async function waitForMockOTP(
   email: string,
   options: { timeout?: number; pollInterval?: number; type?: "verification" | "reset" } = {},
 ): Promise<string> {
-  // Use global OTP wait timeout as default - increased to 90s for CI stability
-  const { timeout = 90000, pollInterval = 2000, type } = options;
+  // Use global OTP wait timeout as default
+  const { timeout = 60000, pollInterval = 2000, type } = options;
   const startTime = Date.now();
 
   console.log(`[MockOTP] Polling for OTP for ${email}${type ? ` (type: ${type})` : ""}...`);

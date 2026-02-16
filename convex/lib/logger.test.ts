@@ -54,4 +54,14 @@ describe("logger", () => {
     expect(spy).toHaveBeenCalledWith("[INFO] empty data");
     spy.mockRestore();
   });
+
+  test("should log error objects correctly", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const error = new Error("test error");
+    error.stack = "test stack";
+    logger.error("error with object", { error });
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('"message":"test error"'));
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('"stack":"test stack"'));
+    spy.mockRestore();
+  });
 });

@@ -15,3 +15,7 @@
 ## 2024-05-22 - Testing Internal Side Effects
 **Learning:** Some internal mutations (like `createExecution`) are explicitly skipped in test mode (`isTestEnv`), making it impossible to verify DB side effects directly in tests.
 **Action:** When testing internal mutations that have side effects disabled in tests, spy on the underlying logic or mock dependencies to verify execution flow instead of relying on DB state.
+
+## 2024-05-22 - Silent Security Wrappers
+**Learning:** Security wrappers like `securePasswordReset` (which return generic success to prevent enumeration) must still log internal errors server-side. Swallowing exceptions completely creates a black hole for debugging critical auth failures.
+**Action:** Always include server-side logging (e.g., `logger.error`) in the catch block of security-sensitive endpoints that return generic client responses.
