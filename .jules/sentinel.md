@@ -99,7 +99,7 @@
 **Learning:** Security checks (uniqueness, permissions) must never rely on bounded queries or pagination limits unless the dataset is guaranteed to be small. Relying on "most deployments have <100 items" is a security flaw in multi-tenant systems.
 **Prevention:** Implemented a dedicated `ssoDomains` table with a unique index on `domain`. This allows O(1) uniqueness checks and lookups regardless of the number of connections, ensuring scalability and security.
 
-## 2026-02-27 - 2FA Enforcement Gap in Backend
-**Vulnerability:** Although the frontend redirected users to a 2FA verification page if their session was unverified, the backend `authenticatedQuery` and `authenticatedMutation` wrappers did not enforce this check. This allowed an attacker with a valid primary session (e.g. stolen cookie) to bypass 2FA by directly calling API endpoints.
-**Learning:** Frontend redirects are for UX, not security. Any security policy (like "2FA required") must be enforced deep in the backend middleware layer (e.g., `requireAuth`), ensuring that no data access is possible unless the policy is satisfied.
-**Prevention:** Modified `requireAuth` in `convex/customFunctions.ts` to explicitly check `twoFactorVerifiedAt` for users with 2FA enabled. If the verification is missing or older than 24 hours, the request is rejected with a `FORBIDDEN` error.
+## 2026-03-01 - SSRF Prevention via Reusable Safe Fetch
+**Vulnerability:** The Pumble integration used a custom `fetch` implementation with weak validation (`.includes("pumble.com")`) that could be bypassed for SSRF. It also did not prevent DNS rebinding or private IP access, unlike the main webhook delivery system.
+**Learning:** Ad-hoc implementation of security-critical logic (like safe HTTP fetching) often leads to vulnerabilities. Security features like SSRF protection should be encapsulated in reusable helpers and used consistently across the codebase.
+**Prevention:** Extracted the robust SSRF protection logic from `webhookHelpers.ts` into a reusable `safeFetch` helper and applied it to the Pumble integration, ensuring consistent protection against SSRF, DNS rebinding, and private IP access.

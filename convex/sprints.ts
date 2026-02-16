@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { projectEditorMutation, projectQuery, sprintMutation } from "./customFunctions";
+import { efficientCount } from "./lib/boundedQueries";
 import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
@@ -60,13 +61,27 @@ export const listByProject = projectQuery({
     // Fetch issues per sprint using index (more efficient than loading all issues)
     const sprintIds = sprints.map((s) => s._id);
     const issueStatsPromises = sprintIds.map(async (sprintId) => {
-      const issues = await ctx.db
-        .query("issues")
-        .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
-        .filter(notDeleted)
-        .take(MAX_SPRINT_ISSUES);
-      const completedCount = issues.filter((i) => i.status === "done").length;
-      return { sprintId, count: issues.length, completedCount };
+      const [count, completedCount] = await Promise.all([
+        efficientCount(
+          ctx.db
+            .query("issues")
+            .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true)),
+          MAX_SPRINT_ISSUES,
+        ),
+        efficientCount(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_sprint_status", (q) =>
+              q
+                .eq("projectId", ctx.projectId)
+                .eq("sprintId", sprintId)
+                .eq("status", "done")
+                .lt("isDeleted", true),
+            ),
+          MAX_SPRINT_ISSUES,
+        ),
+      ]);
+      return { sprintId, count, completedCount };
     });
     const issueStats = await Promise.all(issueStatsPromises);
 
