@@ -6,49 +6,35 @@
  */
 
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import {
   httpAction,
   internalAction,
   internalMutation,
   type MutationCtx,
 } from "./_generated/server";
-import { getConvexSiteUrl } from "./lib/env";
 import { logger } from "./lib/logger";
 import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
-
-const RESET_TIMEOUT_MS = 60000;
 
 /**
  * Internal action to perform the actual password reset request (can be slow)
  */
 export const performPasswordReset = internalAction({
   args: { email: v.string() },
-  handler: async (_ctx, args) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), RESET_TIMEOUT_MS);
-
+  handler: async (ctx, args) => {
     try {
-      const formData = new URLSearchParams();
-      formData.set("email", args.email);
-      formData.set("flow", "reset");
-
-      // The auth endpoint is at /api/auth/signin/password
-      await fetch(`${getConvexSiteUrl()}/api/auth/signin/password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+      await ctx.runAction(api.auth.signIn, {
+        provider: "password",
+        params: {
+          email: args.email,
+          flow: "reset",
         },
-        body: formData.toString(),
-        signal: controller.signal,
       });
     } catch (error) {
       // Silently ignore to client - don't leak any info
       // But log to server for debugging (e.g. timeout in CI)
       logger.error("Password reset request failed", { error: String(error) });
-    } finally {
-      clearTimeout(timeoutId);
     }
   },
 });
