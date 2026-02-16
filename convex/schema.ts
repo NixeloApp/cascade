@@ -255,7 +255,7 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_team", ["teamId"])
+    .index("by_team", ["teamId", "isDeleted"])
     .index("by_user", ["userId"])
     .index("by_team_user", ["teamId", "userId"])
     .index("by_role", ["role"])
@@ -383,7 +383,7 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_project", ["projectId"])
+    .index("by_project", ["projectId", "isDeleted"])
     .index("by_user", ["userId"])
     .index("by_project_user", ["projectId", "userId"])
     .index("by_role", ["role"])

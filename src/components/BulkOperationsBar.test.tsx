@@ -8,16 +8,8 @@ import { BulkOperationsBar } from "./BulkOperationsBar";
 
 // Mock Radix Select to use native select for testability
 vi.mock("./ui/Select", () => ({
-  Select: ({
-    children,
-    onValueChange,
-  }: {
-    children: React.ReactNode;
-    onValueChange: (value: string) => void;
-  }) => (
-    <div data-testid="select-root" data-onvaluechange={onValueChange}>
-      {children}
-    </div>
+  Select: ({ children }: { children: React.ReactNode; onValueChange: (value: string) => void }) => (
+    <div data-testid="select-root">{children}</div>
   ),
   SelectTrigger: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <button type="button" className={className} data-testid="select-trigger">
@@ -64,7 +56,10 @@ describe("BulkOperationsBar - Component Behavior", () => {
   const mockBulkUpdatePriority = vi.fn();
   const mockBulkAssign = vi.fn();
   const mockBulkMoveToSprint = vi.fn();
+  const mockBulkArchive = vi.fn();
   const mockBulkDelete = vi.fn();
+  const mockBulkUpdateStartDate = vi.fn();
+  const mockBulkUpdateDueDate = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -84,9 +79,12 @@ describe("BulkOperationsBar - Component Behavior", () => {
         mockBulkUpdatePriority,
         mockBulkAssign,
         mockBulkMoveToSprint,
+        mockBulkArchive,
         mockBulkDelete,
+        mockBulkUpdateStartDate,
+        mockBulkUpdateDueDate,
       ];
-      return mocks[mutationCallCount++ % 5];
+      return mocks[mutationCallCount++ % 8];
     });
   });
 

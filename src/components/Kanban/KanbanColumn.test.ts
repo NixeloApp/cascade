@@ -29,6 +29,8 @@ describe("KanbanColumn arePropsEqual", () => {
     selectionMode: false,
     selectedIssueIds: new Set(),
     canEdit: true,
+    onIssueDrop: vi.fn(),
+    onIssueReorder: vi.fn(),
     onIssueClick: vi.fn(),
     onToggleSelect: vi.fn(),
     focusedIssueId: null,
