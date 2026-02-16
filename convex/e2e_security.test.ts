@@ -1,6 +1,5 @@
-
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestUserHandler } from "./e2e";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { getConvexSiteUrl } from "./lib/env";
 
 // Mock internal dependencies
@@ -14,7 +13,9 @@ vi.mock("./_generated/api", () => ({
 
 vi.mock("lucia", () => ({
   Scrypt: class {
-    async hash(password: string) { return "hashed_password"; }
+    async hash(_password: string) {
+      return "hashed_password";
+    }
   },
 }));
 
