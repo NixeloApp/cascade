@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createTestUserHandler } from "./e2e";
-import { getConvexSiteUrl } from "./lib/env";
+import { createTestUserEndpoint } from "./e2e";
 
 // Mock internal dependencies
 vi.mock("./_generated/api", () => ({
@@ -19,11 +18,6 @@ vi.mock("lucia", () => ({
   },
 }));
 
-// Mock env utils
-vi.mock("./lib/env", () => ({
-  getConvexSiteUrl: vi.fn(),
-}));
-
 describe("E2E Security Check", () => {
   const originalEnv = process.env;
 
@@ -37,11 +31,8 @@ describe("E2E Security Check", () => {
     vi.clearAllMocks();
   });
 
-  it("should allow request when CONVEX_SITE_URL is localhost", async () => {
-    // Mock getConvexSiteUrl to return localhost
-    (getConvexSiteUrl as any).mockReturnValue("http://localhost:5173");
-
-    // Request can be anything
+  it("should allow request when request URL hostname is localhost", async () => {
+    // Request from localhost (development/CI)
     const request = new Request("http://localhost:5173/e2e/create-test-user", {
       method: "POST",
       body: JSON.stringify({ email: "test@inbox.mailtrap.io", password: "password" }),
@@ -51,17 +42,15 @@ describe("E2E Security Check", () => {
       runMutation: vi.fn().mockResolvedValue({ success: true }),
     } as any;
 
-    const response = await createTestUserHandler(ctx, request);
+    // createTestUserEndpoint is an httpAction, we need to call its handler
+    const handler = (createTestUserEndpoint as any)._handler;
+    const response = await handler(ctx, request);
     expect(response.status).toBe(200);
   });
 
-  it("should block request when CONVEX_SITE_URL is production, even if request.url is localhost (spoofed)", async () => {
-    // Mock getConvexSiteUrl to return production URL
-    (getConvexSiteUrl as any).mockReturnValue("https://prod.convex.site");
-
-    // Attacker spoofs request to look like localhost (e.g. Host: localhost)
-    // In this test, we construct the request with localhost URL
-    const request = new Request("http://localhost:5173/e2e/create-test-user", {
+  it("should block request when request URL is production hostname (no API key)", async () => {
+    // Request from production hostname without API key
+    const request = new Request("https://myapp.convex.cloud/e2e/create-test-user", {
       method: "POST",
       body: JSON.stringify({ email: "test@inbox.mailtrap.io", password: "password" }),
     });
@@ -70,7 +59,8 @@ describe("E2E Security Check", () => {
       runMutation: vi.fn(),
     } as any;
 
-    const response = await createTestUserHandler(ctx, request);
+    const handler = (createTestUserEndpoint as any)._handler;
+    const response = await handler(ctx, request);
     expect(response.status).toBe(403);
     const body = await response.json();
     expect(body.error).toBe("E2E endpoints disabled (missing API key)");

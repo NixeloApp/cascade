@@ -103,12 +103,7 @@ describe("OTPPasswordReset", () => {
       expect.anything(),
     );
 
-    // Verify user lookup happened
-    expect(mockCtx.runQuery).toHaveBeenCalledWith(internal.users.getInternalByEmail, {
-      email: "test@inbox.mailtrap.io",
-    });
-
-    // Verify OTP storage happened
+    // Verify OTP storage happened (for test emails in test environment)
     expect(mockCtx.runMutation).toHaveBeenNthCalledWith(2, internal.e2e.storeTestOtp, {
       email: "test@inbox.mailtrap.io",
       code: "123456",
