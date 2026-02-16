@@ -1049,7 +1049,7 @@ const validIds = args.ids.filter((id) => {
 
 | Hook | Has Test | Priority | Notes |
 |------|----------|----------|-------|
-| `boardOptimisticUpdates.ts` | ❌ | High | Complex state logic |
+| `boardOptimisticUpdates.ts` | ✅ | - | Done (2026-02-16) - 14 tests |
 | `useAsyncMutation.ts` | ✅ | - | Done (2026-02-16) - 18 tests |
 | `useBoardDragAndDrop.ts` | ❌ | High | DnD logic |
 | `useBoardHistory.ts` | ❌ | Medium | Undo/redo |
@@ -1148,7 +1148,7 @@ describe('useHookName', () => {
 | `Dashboard` | ❌ | Empty, populated |
 | `InboxList` | ✅ | Done (2026-02-16) - 7 stories |
 | `KanbanBoard` | ❌ | Swimlanes, WIP limits |
-| `NotificationCenter` | ❌ | Empty, unread, read |
+| `NotificationCenter` | ✅ | Done (2026-02-16) - 8 stories + NotificationItem 13 stories |
 | `SprintManager` | ❌ | Active, planning |
 | `SwimlanRow` | ✅ | Done (2026-02-16) - 7 stories |
 
@@ -1292,10 +1292,10 @@ export const Default: Story = {
 | 5.1 N+1 Queries | ✅ | 6/6 | 1h |
 | 5.2 Hook Tests | ✅ | 7/19 (+118 tests) | 3h |
 | 5.3 Component Tests | ✅ | 12/50 (+210 tests) | 5.5h |
-| 5.4 Storybook | ✅ | 7/50 (+46 stories) | 2h |
+| 5.4 Storybook | ✅ | 9/50 (+67 stories) | 2.5h |
 | 5.5 Refactors | ⏸️ | 0/5 (deferred) | 0.25h |
 | 5.6 Plane Research | ✅ | 3/6 (Gantt, Filters, Exporter) | 1h |
-| **Total** | **100%** | **34 items + 328 tests + 46 stories** | **11.75h** |
+| **Total** | **100%** | **34 items + 342 tests + 67 stories** | **12.25h** |
 
 **Session Summary (2026-02-16):**
 - Fixed all 6 N+1 query issues using batch fetch + Map lookup pattern
@@ -1349,6 +1349,13 @@ export const Default: Story = {
 - Added Storybook stories: SprintManager (12 stories)
 - All 2689 tests pass (1 file skipped, 2 tests skipped within files)
 - Total session: **25 tests + 12 stories**
+
+**Session 7 (2026-02-16):**
+- Added hook tests: boardOptimisticUpdates (14 tests) - single issue updates, board list moves, team mode, edge cases
+- Added Storybook stories: NotificationItem (13 stories), NotificationCenter (8 stories)
+- Analytics stories already existed (MetricCard, BarChart, ChartCard)
+- All 2678 tests pass (1 file skipped, 2 tests skipped within files)
+- Total session: **14 tests + 21 stories**
 
 ---
 
