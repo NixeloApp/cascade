@@ -41,6 +41,7 @@ export function IssueDetailHeader({
                 variant="ghost"
                 size="sm"
                 onClick={onCopyKey}
+                aria-label={hasCopied ? "Copied" : "Copy issue key"}
                 className="h-6 w-6 p-0 transition-colors duration-default hover:bg-ui-bg-hover"
               >
                 {hasCopied ? (

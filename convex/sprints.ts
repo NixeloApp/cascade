@@ -41,7 +41,8 @@ export const listByProject = projectQuery({
   },
   handler: async (ctx, args) => {
     // Sprints per project are typically few (10-50), add reasonable limit
-    const MAX_SPRINTS = 100;
+    // OPTIMIZATION: Reduced from 100 to 50 to improve performance and reduce DB load
+    const MAX_SPRINTS = 50;
     let sprints = await ctx.db
       .query("sprints")
       .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
@@ -58,29 +59,43 @@ export const listByProject = projectQuery({
       return [];
     }
 
+    // Get project workflow states to correctly identify "done" statuses
+    // This fixes a bug where only issues with status ID "done" were counted as completed
+    // and optimizes by fetching project once
+    const project = await ctx.db.get(ctx.projectId);
+    const doneStatusIds =
+      project?.workflowStates.filter((s) => s.category === "done").map((s) => s.id) || [];
+
     // Fetch issues per sprint using index (more efficient than loading all issues)
     const sprintIds = sprints.map((s) => s._id);
     const issueStatsPromises = sprintIds.map(async (sprintId) => {
-      const [count, completedCount] = await Promise.all([
-        efficientCount(
-          ctx.db
-            .query("issues")
-            .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true)),
-          MAX_SPRINT_ISSUES,
+      const totalPromise = efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true)),
+        MAX_SPRINT_ISSUES,
+      );
+
+      // Count completed issues by summing counts for all "done" category statuses
+      // We use Promise.all to query counts in parallel for each status
+      const completedPromise = Promise.all(
+        doneStatusIds.map((status) =>
+          efficientCount(
+            ctx.db
+              .query("issues")
+              .withIndex("by_project_sprint_status", (q) =>
+                q
+                  .eq("projectId", ctx.projectId)
+                  .eq("sprintId", sprintId)
+                  .eq("status", status)
+                  .lt("isDeleted", true),
+              ),
+            MAX_SPRINT_ISSUES,
+          ),
         ),
-        efficientCount(
-          ctx.db
-            .query("issues")
-            .withIndex("by_project_sprint_status", (q) =>
-              q
-                .eq("projectId", ctx.projectId)
-                .eq("sprintId", sprintId)
-                .eq("status", "done")
-                .lt("isDeleted", true),
-            ),
-          MAX_SPRINT_ISSUES,
-        ),
-      ]);
+      ).then((counts) => counts.reduce((a, b) => a + b, 0));
+
+      const [count, completedCount] = await Promise.all([totalPromise, completedPromise]);
       return { sprintId, count, completedCount };
     });
     const issueStats = await Promise.all(issueStatsPromises);

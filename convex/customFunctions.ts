@@ -54,6 +54,7 @@ import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/s
 import { forbidden, notFound, unauthenticated } from "./lib/errors";
 import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAccess";
 import { getTeamRole } from "./lib/teamAccess";
+import { DAY } from "./lib/timeUtils";
 import { getWorkspaceRole } from "./lib/workspaceAccess";
 import { getProjectRole } from "./projectAccess";
 
@@ -70,6 +71,16 @@ async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<"users">> {
   if (!userId) {
     throw unauthenticated();
   }
+
+  // Enforce 2FA verification if enabled
+  const user = await ctx.db.get(userId);
+  if (user?.twoFactorEnabled && user.twoFactorSecret) {
+    const twentyFourHoursAgo = Date.now() - DAY;
+    if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
+      throw forbidden(undefined, "Two-factor authentication required");
+    }
+  }
+
   return userId;
 }
 
