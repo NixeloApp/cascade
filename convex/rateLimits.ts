@@ -44,6 +44,10 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
         ? 50
         : 3,
   }, // 3 per minute (higher in dev/test)
+
+  // Email Change Verification: Strict limit to prevent OTP brute-forcing
+  // User-based (authenticated), so low limit is safe even for parallel tests
+  emailChange: { kind: "token bucket", rate: 5, period: 60_000, capacity: 5 },
 });
 
 /**
