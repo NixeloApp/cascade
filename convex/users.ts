@@ -36,6 +36,19 @@ export const getInternal = internalQuery({
 });
 
 /**
+ * Internal query to get user by email (system use only)
+ */
+export const getInternalByEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .first();
+  },
+});
+
+/**
  * Get a user by ID (sanitized for authenticated users)
  * Note: Does not check if requester should see this user.
  * For team contexts, ensure proper access checks.
@@ -175,7 +188,7 @@ export const updateProfile = authenticatedMutation({
         updates.pendingEmailVerificationExpires = expiresAt;
 
         // Send verification email
-        await sendVerificationEmail(ctx, args.email, token);
+        await sendVerificationEmail(ctx, args.email, token, currentUser?.isTestUser);
       }
     }
 
@@ -202,7 +215,12 @@ export const updateProfile = authenticatedMutation({
 /**
  * Helper to send verification email for profile updates
  */
-async function sendVerificationEmail(ctx: MutationCtx, email: string, token: string) {
+async function sendVerificationEmail(
+  ctx: MutationCtx,
+  email: string,
+  token: string,
+  isTestUser?: boolean,
+) {
   const isTestEmail = email.endsWith("@inbox.mailtrap.io");
   const isSafeEnvironment =
     process.env.NODE_ENV === "development" ||
@@ -210,8 +228,8 @@ async function sendVerificationEmail(ctx: MutationCtx, email: string, token: str
     !!process.env.CI ||
     !!process.env.E2E_API_KEY;
 
-  // Store OTPs for test emails
-  if (isTestEmail && isSafeEnvironment) {
+  // Store OTPs for test emails ONLY if they are test users
+  if (isTestEmail && isSafeEnvironment && isTestUser) {
     try {
       await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
     } catch (e) {

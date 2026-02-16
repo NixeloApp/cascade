@@ -18,4 +18,4 @@ import type { ActionCtx, QueryCtx } from "../_generated/server";
  * The Convex Auth library passes this context to sendVerificationRequest,
  * but the @auth/core types don't include it in the function signature.
  */
-export type ConvexAuthContext = QueryCtx & Partial<Pick<ActionCtx, "runMutation">>;
+export type ConvexAuthContext = QueryCtx & Partial<Pick<ActionCtx, "runMutation" | "runQuery">>;
