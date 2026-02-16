@@ -88,3 +88,8 @@
 **Vulnerability:** The `isPrivateIPv6` check relied on simple string matching (e.g. `ip === "::1"`) which failed to catch alternative representations like expanded loopback `0:0:0:0:0:0:0:1` or `::0001`.
 **Learning:** Security checks on IPv6 addresses must operate on a canonical/normalized form because there are too many valid string representations for the same address. Relying on regex or string equality on raw input is prone to bypasses.
 **Action:** Implemented `expandIPv6` to normalize all IPv6 addresses to a 32-digit hex string before validation. Future IP checks should always normalize first.
+
+## 2026-02-25 - Authentication Bypass via Request URL Spoofing
+**Vulnerability:** The E2E endpoint authentication relied on `request.url` to detect if the request was coming from `localhost` to allow bypassing the API key check. This could be exploited by spoofing the Host header or URL construction in certain environments, tricking the backend into believing it was running locally.
+**Learning:** `request.url` in serverless/cloud functions is often constructed from headers that can be manipulated by the client (Host header injection). It should not be used as a trusted source for determining the deployment environment.
+**Prevention:** Modified `validateE2EApiKey` to check `process.env.CONVEX_SITE_URL` (via `getConvexSiteUrl()`) instead of `request.url`. This relies on the immutable server configuration to determine if the environment is local or production.
