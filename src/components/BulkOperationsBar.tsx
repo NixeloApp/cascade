@@ -2,11 +2,14 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { Archive } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
 import { Grid } from "./ui/Grid";
+import { Icon } from "./ui/Icon";
+import { Input } from "./ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { Typography } from "./ui/Typography";
 
@@ -25,6 +28,7 @@ export function BulkOperationsBar({
 }: BulkOperationsBarProps) {
   const [showActions, setShowActions] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [archiveConfirm, setArchiveConfirm] = useState(false);
 
   const _project = useQuery(api.projects.getProject, { id: projectId });
   const sprints = useQuery(api.sprints.listByProject, { projectId });
@@ -34,7 +38,10 @@ export function BulkOperationsBar({
   const bulkUpdatePriority = useMutation(api.issues.bulkUpdatePriority);
   const bulkAssign = useMutation(api.issues.bulkAssign);
   const bulkMoveToSprint = useMutation(api.issues.bulkMoveToSprint);
+  const bulkArchive = useMutation(api.issues.bulkArchive);
   const bulkDelete = useMutation(api.issues.bulkDelete);
+  const bulkUpdateStartDate = useMutation(api.issues.bulkUpdateStartDate);
+  const bulkUpdateDueDate = useMutation(api.issues.bulkUpdateDueDate);
 
   const issueIds = Array.from(selectedIssueIds);
   const count = issueIds.length;
@@ -88,6 +95,74 @@ export function BulkOperationsBar({
     }
   };
 
+  const handleUpdateStartDate = async (dateStr: string) => {
+    if (!dateStr) return;
+    try {
+      const startDate = new Date(dateStr).getTime();
+      const result = await bulkUpdateStartDate({ issueIds, startDate });
+      if (result.updated > 0) {
+        showSuccess(`Updated start date for ${result.updated} issue(s)`);
+      } else {
+        showError("No issues were updated. Start date cannot be after due date.");
+      }
+      onClearSelection();
+    } catch (error) {
+      showError(error, "Failed to update start date");
+    }
+  };
+
+  const handleUpdateDueDate = async (dateStr: string) => {
+    if (!dateStr) return;
+    try {
+      const dueDate = new Date(dateStr).getTime();
+      const result = await bulkUpdateDueDate({ issueIds, dueDate });
+      if (result.updated > 0) {
+        showSuccess(`Updated due date for ${result.updated} issue(s)`);
+      } else {
+        showError("No issues were updated. Due date cannot be before start date.");
+      }
+      onClearSelection();
+    } catch (error) {
+      showError(error, "Failed to update due date");
+    }
+  };
+
+  const handleClearStartDate = async () => {
+    try {
+      const result = await bulkUpdateStartDate({ issueIds, startDate: null });
+      showSuccess(`Cleared start date for ${result.updated} issue(s)`);
+      onClearSelection();
+    } catch (error) {
+      showError(error, "Failed to clear start date");
+    }
+  };
+
+  const handleClearDueDate = async () => {
+    try {
+      const result = await bulkUpdateDueDate({ issueIds, dueDate: null });
+      showSuccess(`Cleared due date for ${result.updated} issue(s)`);
+      onClearSelection();
+    } catch (error) {
+      showError(error, "Failed to clear due date");
+    }
+  };
+
+  const handleArchive = async () => {
+    try {
+      const result = await bulkArchive({ issueIds });
+      if (result.archived > 0) {
+        showSuccess(`Archived ${result.archived} issue(s)`);
+      } else {
+        showError("No issues were archived. Only completed issues can be archived.");
+      }
+      onClearSelection();
+    } catch (error) {
+      showError(error, "Failed to archive issues");
+    } finally {
+      setArchiveConfirm(false);
+    }
+  };
+
   const handleDelete = async () => {
     try {
       const result = await bulkDelete({ issueIds });
@@ -128,6 +203,11 @@ export function BulkOperationsBar({
                 {showActions ? "Hide" : "Actions"}
               </Button>
 
+              <Button variant="secondary" size="sm" onClick={() => setArchiveConfirm(true)}>
+                <Icon icon={Archive} size="sm" className="mr-1" />
+                Archive
+              </Button>
+
               <Button variant="danger" size="sm" onClick={() => setDeleteConfirm(true)}>
                 Delete
               </Button>
@@ -137,7 +217,7 @@ export function BulkOperationsBar({
           {/* Expanded Actions */}
           {showActions && (
             <div className="mt-3 pt-3 border-t border-ui-border">
-              <Grid cols={1} colsSm={2} colsLg={4} gap="md">
+              <Grid cols={1} colsSm={2} colsMd={3} colsLg={6} gap="md">
                 {/* Status */}
                 <div>
                   <Typography
@@ -227,11 +307,72 @@ export function BulkOperationsBar({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Start Date */}
+                <div>
+                  <Typography
+                    variant="small"
+                    className="block font-medium text-ui-text-secondary mb-1.5"
+                  >
+                    Start Date
+                  </Typography>
+                  <Flex gap="sm">
+                    <Input
+                      type="date"
+                      className="flex-1"
+                      onChange={(e) => handleUpdateStartDate(e.target.value)}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearStartDate}
+                      className="text-ui-text-secondary hover:text-ui-text"
+                    >
+                      Clear
+                    </Button>
+                  </Flex>
+                </div>
+
+                {/* Due Date */}
+                <div>
+                  <Typography
+                    variant="small"
+                    className="block font-medium text-ui-text-secondary mb-1.5"
+                  >
+                    Due Date
+                  </Typography>
+                  <Flex gap="sm">
+                    <Input
+                      type="date"
+                      className="flex-1"
+                      onChange={(e) => handleUpdateDueDate(e.target.value)}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearDueDate}
+                      className="text-ui-text-secondary hover:text-ui-text"
+                    >
+                      Clear
+                    </Button>
+                  </Flex>
+                </div>
               </Grid>
             </div>
           )}
         </div>
       </div>
+
+      {/* Archive Confirmation */}
+      <ConfirmDialog
+        isOpen={archiveConfirm}
+        onClose={() => setArchiveConfirm(false)}
+        onConfirm={handleArchive}
+        title="Archive Issues"
+        message={`Archive ${count} issue${count !== 1 ? "s" : ""}? Only completed issues will be archived. Archived issues can be restored later.`}
+        variant="default"
+        confirmLabel="Archive"
+      />
 
       {/* Delete Confirmation */}
       <ConfirmDialog

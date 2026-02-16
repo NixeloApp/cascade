@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { forbidden, notFound, validation } from "./lib/errors";
@@ -385,5 +386,13 @@ export const getUpcoming = authenticatedQuery({
     });
 
     return enrichedEvents.sort((a, b) => a.startTime - b.startTime);
+  },
+});
+
+// Internal query for getting event details (used by email notifications)
+export const getInternal = internalQuery({
+  args: { id: v.id("calendarEvents") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });

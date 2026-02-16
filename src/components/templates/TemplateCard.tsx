@@ -1,9 +1,11 @@
 import type { Id } from "@convex/_generated/dataModel";
+import { Star } from "lucide-react";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 
 interface TemplateCardProps {
@@ -15,6 +17,8 @@ interface TemplateCardProps {
     descriptionTemplate: string;
     defaultPriority: IssuePriority;
     defaultLabels?: string[];
+    defaultStoryPoints?: number;
+    isDefault?: boolean;
   };
   onEdit: () => void;
   onDelete: () => void;
@@ -34,12 +38,25 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
             <Typography variant="h4" className="font-medium text-ui-text">
               {template.name}
             </Typography>
+            {template.isDefault && (
+              <Tooltip content="Default template">
+                <Badge variant="brand" size="sm" className="gap-1">
+                  <Star className="w-3 h-3" />
+                  Default
+                </Badge>
+              </Tooltip>
+            )}
             <Badge variant="neutral" size="sm" className="capitalize">
               {template.type}
             </Badge>
             <Badge variant="brand" size="sm" className="capitalize">
               {template.defaultPriority}
             </Badge>
+            {template.defaultStoryPoints !== undefined && (
+              <Badge variant="outline" size="sm">
+                {template.defaultStoryPoints} pts
+              </Badge>
+            )}
           </Flex>
           <Typography className="text-sm text-ui-text-secondary mb-1">
             <Typography variant="label" as="span">

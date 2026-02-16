@@ -11,12 +11,19 @@ import { useBoardHistory } from "@/hooks/useBoardHistory";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
 import type { IssueType } from "@/lib/issue-utils";
+import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
+import {
+  type CollapsedSwimlanes,
+  getSwimlanConfigs,
+  groupIssuesBySwimlane,
+} from "@/lib/swimlane-utils";
 import { BulkOperationsBar } from "./BulkOperationsBar";
 import { CreateIssueModal } from "./CreateIssueModal";
 import type { BoardFilters } from "./FilterBar";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { BoardToolbar } from "./Kanban/BoardToolbar";
 import { KanbanColumn } from "./Kanban/KanbanColumn";
+import { SwimlanRow } from "./Kanban/SwimlanRow";
 import { SkeletonKanbanCard, SkeletonText } from "./ui/Skeleton";
 
 interface KanbanBoardProps {
@@ -74,6 +81,9 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIssueIds, setSelectedIssueIds] = useState<Set<Id<"issues">>>(new Set());
+  const [swimlaneGroupBy, setSwimlanGroupBy] = useState<SwimlanGroupBy>("none");
+  const [collapsedSwimlanes, setCollapsedSwimlanes] = useState<CollapsedSwimlanes>(new Set());
+  const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set());
   const boardContainerRef = useRef<HTMLDivElement>(null);
 
   const isTeamMode = !!teamId;
@@ -140,7 +150,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
     [projectId, teamId, sprintId],
   );
 
-  const { handleIssueDrop } = useBoardDragAndDrop({
+  const { handleIssueDrop, handleIssueReorder } = useBoardDragAndDrop({
     allIssues,
     issuesByStatus,
     isTeamMode,
@@ -176,6 +186,39 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
       return !prev;
     });
   }, []);
+
+  const handleToggleSwimlanCollapse = useCallback((swimlanId: string) => {
+    setCollapsedSwimlanes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(swimlanId)) {
+        newSet.delete(swimlanId);
+      } else {
+        newSet.add(swimlanId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleToggleColumnCollapse = useCallback((columnId: string) => {
+    setCollapsedColumns((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(columnId)) {
+        newSet.delete(columnId);
+      } else {
+        newSet.add(columnId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Swimlane grouping
+  const swimlaneIssues = useMemo(() => {
+    return groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy);
+  }, [filteredIssuesByStatus, swimlaneGroupBy]);
+
+  const swimlaneConfigs = useMemo(() => {
+    return getSwimlanConfigs(swimlaneGroupBy, allIssues);
+  }, [swimlaneGroupBy, allIssues]);
 
   // Loading State
   const isLoading = isLoadingIssues || (isProjectMode && !project);
@@ -237,25 +280,59 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
         onRedo={handleRedo}
         onToggleSelectionMode={handleToggleSelectionMode}
         showControls={!isTeamMode}
+        swimlaneGroupBy={swimlaneGroupBy}
+        onSwimlanGroupByChange={isTeamMode ? undefined : setSwimlanGroupBy}
       />
 
-      <Flex
-        ref={boardContainerRef}
-        direction="column"
-        className="lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6 px-4 lg:px-6 pb-6 lg:overflow-x-auto -webkit-overflow-scrolling-touch"
-      >
-        {workflowStates.map((state, columnIndex: number) => {
-          const counts = statusCounts[state.id] || {
-            total: 0,
-            loaded: 0,
-            hidden: 0,
-          };
-          return (
-            <KanbanColumn
-              key={state.id}
-              state={state}
-              issues={filteredIssuesByStatus[state.id] || []}
-              columnIndex={columnIndex}
+      {swimlaneGroupBy === "none" ? (
+        /* Standard board view without swimlanes */
+        <Flex
+          ref={boardContainerRef}
+          direction="column"
+          className="lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6 px-4 lg:px-6 pb-6 lg:overflow-x-auto -webkit-overflow-scrolling-touch"
+        >
+          {workflowStates.map((state, columnIndex: number) => {
+            const counts = statusCounts[state.id] || {
+              total: 0,
+              loaded: 0,
+              hidden: 0,
+            };
+            return (
+              <KanbanColumn
+                key={state.id}
+                state={state}
+                issues={filteredIssuesByStatus[state.id] || []}
+                columnIndex={columnIndex}
+                selectionMode={selectionMode}
+                selectedIssueIds={selectedIssueIds}
+                focusedIssueId={focusedIssueId}
+                canEdit={canEdit}
+                onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
+                onIssueClick={setSelectedIssue}
+                onToggleSelect={handleToggleSelect}
+                hiddenCount={counts.hidden}
+                totalCount={counts.total}
+                onLoadMore={loadMoreDone}
+                isLoadingMore={isLoadingMore}
+                onIssueDrop={handleIssueDrop}
+                onIssueReorder={handleIssueReorder}
+                isCollapsed={collapsedColumns.has(state.id)}
+                onToggleCollapse={handleToggleColumnCollapse}
+              />
+            );
+          })}
+        </Flex>
+      ) : (
+        /* Swimlane view */
+        <div ref={boardContainerRef} className="px-4 lg:px-6 pb-6">
+          {swimlaneConfigs.map((config) => (
+            <SwimlanRow
+              key={config.id}
+              config={config}
+              issuesByStatus={swimlaneIssues[config.id] || {}}
+              workflowStates={workflowStates}
+              isCollapsed={collapsedSwimlanes.has(config.id)}
+              onToggleCollapse={handleToggleSwimlanCollapse}
               selectionMode={selectionMode}
               selectedIssueIds={selectedIssueIds}
               focusedIssueId={focusedIssueId}
@@ -263,15 +340,15 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
               onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
               onIssueClick={setSelectedIssue}
               onToggleSelect={handleToggleSelect}
-              hiddenCount={counts.hidden}
-              totalCount={counts.total}
+              statusCounts={statusCounts}
               onLoadMore={loadMoreDone}
               isLoadingMore={isLoadingMore}
               onIssueDrop={handleIssueDrop}
+              onIssueReorder={handleIssueReorder}
             />
-          );
-        })}
-      </Flex>
+          ))}
+        </div>
+      )}
 
       {isProjectMode && (
         <CreateIssueModal

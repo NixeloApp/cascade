@@ -1,5 +1,5 @@
 // Nixelo Service Worker
-const CACHE_NAME = "nixelo-v1";
+const CACHE_NAME = "nixelo-v2"; // Bump version for push notification support
 const OFFLINE_URL = "/offline.html";
 
 // Assets to cache on install
@@ -7,12 +7,103 @@ const STATIC_ASSETS = ["/", "/offline.html", "/manifest.json"];
 
 // Install event - cache static assets
 self.addEventListener("install", (event) => {
+  console.log("Nixelo Service Worker installing...");
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
     }),
   );
   self.skipWaiting();
+});
+
+// ============================================================================
+// PUSH NOTIFICATIONS
+// ============================================================================
+
+// Handle incoming push notifications
+self.addEventListener("push", async (event) => {
+  console.log("Push notification received");
+
+  if (!event.data) {
+    console.log("Push event but no data");
+    return;
+  }
+
+  let notificationData;
+  try {
+    notificationData = event.data.json();
+  } catch (e) {
+    console.error("Failed to parse push data:", e);
+    return;
+  }
+
+  const { title, body, icon, data, tag, actions, requireInteraction } = notificationData;
+
+  const options = {
+    body: body || "You have a new notification",
+    icon: icon || "/icons/icon-192x192.png",
+    badge: "/icons/icon-72x72.png",
+    data: data || {},
+    tag: tag || `nixelo-${Date.now()}`,
+    renotify: true,
+    requireInteraction: requireInteraction ?? false,
+    actions: actions || [],
+    vibrate: [200, 100, 200],
+  };
+
+  event.waitUntil(self.registration.showNotification(title || "Nixelo", options));
+});
+
+// Handle notification click
+self.addEventListener("notificationclick", (event) => {
+  console.log("Notification clicked:", event.notification.tag);
+
+  event.notification.close();
+
+  const url = event.notification.data?.url || "/";
+
+  // Handle action buttons
+  if (event.action) {
+    switch (event.action) {
+      case "view":
+        // Default: open the URL
+        break;
+      case "dismiss":
+        // Just close the notification (already done above)
+        return;
+      default:
+        // Unknown action, open URL
+        break;
+    }
+  }
+
+  // Focus existing window or open new one
+  event.waitUntil(
+    self.clients
+      .matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      })
+      .then((clientList) => {
+        // Try to focus an existing window
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            client.focus();
+            client.navigate(url);
+            return;
+          }
+        }
+        // Open new window if no existing window found
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(url);
+        }
+      }),
+  );
+});
+
+// Handle notification close (dismissed without clicking)
+self.addEventListener("notificationclose", (event) => {
+  console.log("Notification dismissed:", event.notification.tag);
 });
 
 // Activate event - clean up old caches

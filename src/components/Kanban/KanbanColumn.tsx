@@ -1,7 +1,7 @@
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
-import { Plus } from "lucide-react";
+import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -51,8 +51,20 @@ interface KanbanColumnProps {
   totalCount?: number;
   onLoadMore?: (statusId: string) => void;
   isLoadingMore?: boolean;
-  /** Callback when an issue is dropped on this column */
+  /** Callback when an issue is dropped on this column (column-level drop) */
   onIssueDrop?: (issueId: Id<"issues">, sourceStatus: string, targetStatus: string) => void;
+  /** Callback when an issue is dropped on another issue (for reordering) */
+  onIssueReorder?: (
+    draggedIssueId: Id<"issues">,
+    sourceStatus: string,
+    targetIssueId: Id<"issues">,
+    targetStatus: string,
+    edge: "top" | "bottom",
+  ) => void;
+  /** Whether this column is collapsed */
+  isCollapsed?: boolean;
+  /** Callback to toggle collapse state */
+  onToggleCollapse?: (stateId: string) => void;
 }
 
 /**
@@ -61,7 +73,12 @@ interface KanbanColumnProps {
  */
 function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
   // Check shallow equality for all props except selectedIssueIds and callbacks
-  const skipKeys = new Set(["selectedIssueIds", "onIssueDrop"]);
+  const skipKeys = new Set([
+    "selectedIssueIds",
+    "onIssueDrop",
+    "onIssueReorder",
+    "onToggleCollapse",
+  ]);
   const prevKeys = Object.keys(prev) as (keyof KanbanColumnProps)[];
   const nextKeys = Object.keys(next) as (keyof KanbanColumnProps)[];
 
@@ -113,6 +130,9 @@ const KanbanColumnComponent = function KanbanColumn({
   onLoadMore,
   isLoadingMore = false,
   onIssueDrop,
+  onIssueReorder,
+  isCollapsed = false,
+  onToggleCollapse,
 }: KanbanColumnProps) {
   const columnRef = useRef<HTMLElement>(null);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
@@ -121,6 +141,12 @@ const KanbanColumnComponent = function KanbanColumn({
   const stateIssues = useMemo(() => {
     return [...issues].sort((a, b) => a.order - b.order);
   }, [issues]);
+
+  // WIP limit checks
+  const wipLimit = state.wipLimit ?? 0;
+  const hasWipLimit = wipLimit > 0;
+  const isAtWipLimit = hasWipLimit && stateIssues.length === wipLimit;
+  const isOverWipLimit = hasWipLimit && stateIssues.length > wipLimit;
 
   // Set up Pragmatic DnD drop target
   useEffect(() => {
@@ -150,6 +176,66 @@ const KanbanColumnComponent = function KanbanColumn({
 
   const handleLoadMore = useCallback(() => onLoadMore?.(state.id), [onLoadMore, state.id]);
 
+  const handleToggleCollapse = useCallback(
+    () => onToggleCollapse?.(state.id),
+    [onToggleCollapse, state.id],
+  );
+
+  // Render collapsed column view
+  if (isCollapsed) {
+    return (
+      <section
+        ref={columnRef}
+        aria-label={`${state.name} column (collapsed)`}
+        data-testid={TEST_IDS.BOARD.COLUMN}
+        data-board-column
+        className={cn(
+          "flex-shrink-0 w-11 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default flex flex-col items-center",
+          getWorkflowCategoryColor(state.category),
+          isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
+        )}
+        style={{
+          animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
+        }}
+      >
+        {/* Collapse toggle button */}
+        <Tooltip content={`Expand ${state.name}`}>
+          <button
+            type="button"
+            onClick={handleToggleCollapse}
+            className="p-2 text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover rounded-secondary transition-fast mt-2"
+            aria-label={`Expand ${state.name} column`}
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
+        </Tooltip>
+
+        {/* Vertical column name */}
+        <div
+          className="flex-1 flex items-center justify-center py-4"
+          style={{ writingMode: "vertical-lr" }}
+        >
+          <Typography
+            variant="h3"
+            className="font-medium text-ui-text-secondary tracking-tight text-sm transform rotate-180"
+          >
+            {state.name}
+          </Typography>
+        </div>
+
+        {/* Issue count badge */}
+        <Badge
+          variant={isOverWipLimit ? "danger" : isAtWipLimit ? "warning" : "neutral"}
+          shape="pill"
+          className="mb-3"
+        >
+          {stateIssues.length}
+          {state.wipLimit ? `/${state.wipLimit}` : ""}
+        </Badge>
+      </section>
+    );
+  }
+
   return (
     <section
       ref={columnRef}
@@ -160,6 +246,8 @@ const KanbanColumnComponent = function KanbanColumn({
         "flex-shrink-0 w-full lg:w-80 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
+        isOverWipLimit && "border-status-error/50 bg-status-error/5",
+        isAtWipLimit && !isOverWipLimit && "border-status-warning/50",
       )}
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
@@ -180,26 +268,48 @@ const KanbanColumnComponent = function KanbanColumn({
             </Typography>
             <Badge
               data-testid={TEST_IDS.BOARD.COLUMN_COUNT}
-              variant="neutral"
+              variant={isOverWipLimit ? "danger" : isAtWipLimit ? "warning" : "neutral"}
               shape="pill"
               className="shrink-0"
             >
               {hiddenCount > 0 ? `${stateIssues.length}/${totalCount}` : stateIssues.length}
+              {state.wipLimit ? `/${state.wipLimit}` : ""}
             </Badge>
+            {isOverWipLimit && (
+              <Tooltip content={`WIP limit exceeded (max ${state.wipLimit})`}>
+                <Badge variant="danger" size="sm">
+                  Over limit
+                </Badge>
+              </Tooltip>
+            )}
           </Flex>
-          {canEdit && (
-            <Tooltip content="Create issue">
-              <button
-                type="button"
-                onClick={handleCreateIssue}
-                className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2.5 sm:p-3 shrink-0 rounded-secondary transition-fast"
-                aria-label={`Add issue to ${state.name}`}
-                {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </Tooltip>
-          )}
+          <Flex align="center" gap="xs">
+            {onToggleCollapse && (
+              <Tooltip content={`Collapse ${state.name}`}>
+                <button
+                  type="button"
+                  onClick={handleToggleCollapse}
+                  className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2 shrink-0 rounded-secondary transition-fast"
+                  aria-label={`Collapse ${state.name} column`}
+                >
+                  <Minimize2 className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
+            )}
+            {canEdit && (
+              <Tooltip content="Create issue">
+                <button
+                  type="button"
+                  onClick={handleCreateIssue}
+                  className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2.5 sm:p-3 shrink-0 rounded-secondary transition-fast"
+                  aria-label={`Add issue to ${state.name}`}
+                  {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </Tooltip>
+            )}
+          </Flex>
         </Flex>
       </div>
 
@@ -248,6 +358,7 @@ const KanbanColumnComponent = function KanbanColumn({
                   isFocused={issue._id === focusedIssueId}
                   onToggleSelect={onToggleSelect}
                   canEdit={canEdit}
+                  onIssueDrop={onIssueReorder}
                 />
               </div>
             ))}

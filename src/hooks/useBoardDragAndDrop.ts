@@ -8,6 +8,32 @@ import { optimisticBoardUpdate } from "./boardOptimisticUpdates";
 import type { BoardAction } from "./useBoardHistory";
 import type { UseSmartBoardDataOptions } from "./useSmartBoardData";
 
+/**
+ * Calculate the new order value for an issue being inserted between others.
+ * Uses fractional ordering (midpoint between neighbors) for efficiency.
+ */
+function calculateReorderPosition(
+  sortedIssues: EnrichedIssue[],
+  targetIndex: number,
+  targetOrder: number,
+  edge: "top" | "bottom",
+): number {
+  if (edge === "top") {
+    // Insert before target
+    if (targetIndex === 0) {
+      return targetOrder - 1;
+    }
+    const prevOrder = sortedIssues[targetIndex - 1].order;
+    return (prevOrder + targetOrder) / 2;
+  }
+  // Insert after target (bottom edge)
+  if (targetIndex === sortedIssues.length - 1) {
+    return targetOrder + 1;
+  }
+  const nextOrder = sortedIssues[targetIndex + 1].order;
+  return (targetOrder + nextOrder) / 2;
+}
+
 interface UseBoardDragAndDropOptions {
   allIssues: EnrichedIssue[];
   issuesByStatus: Record<string, EnrichedIssue[]>;
@@ -112,9 +138,73 @@ export function useBoardDragAndDrop({
     ],
   );
 
+  /**
+   * Handle issue drop on another issue (for reordering within/across columns)
+   * Called by IssueCard when a valid drop occurs on another card
+   */
+  const handleIssueReorder = useCallback(
+    async (
+      draggedIssueId: Id<"issues">,
+      sourceStatus: string,
+      targetIssueId: Id<"issues">,
+      targetStatus: string,
+      edge: "top" | "bottom",
+    ) => {
+      const draggedIssue = allIssues.find((i) => i._id === draggedIssueId);
+      const targetIssue = allIssues.find((i) => i._id === targetIssueId);
+      if (!draggedIssue || !targetIssue) return;
+
+      const issuesInTargetStatus = issuesByStatus[targetStatus] || [];
+      const sortedIssues = [...issuesInTargetStatus].sort((a, b) => a.order - b.order);
+      const targetIndex = sortedIssues.findIndex((i) => i._id === targetIssueId);
+
+      // Calculate new order based on edge
+      const newOrder = calculateReorderPosition(sortedIssues, targetIndex, targetIssue.order, edge);
+
+      // Action for history (undo/redo)
+      const action: BoardAction = {
+        issueId: draggedIssueId,
+        oldStatus: sourceStatus,
+        newStatus: targetStatus,
+        oldOrder: draggedIssue.order,
+        newOrder,
+        issueTitle: draggedIssue.title,
+        isTeamMode,
+      };
+
+      try {
+        if (isTeamMode) {
+          await updateStatusByCategory({
+            issueId: draggedIssueId,
+            category: targetStatus as "todo" | "inprogress" | "done",
+            newOrder,
+          });
+        } else {
+          await updateIssueStatus({
+            issueId: draggedIssueId,
+            newStatus: targetStatus,
+            newOrder,
+          });
+          pushHistoryAction(action);
+        }
+      } catch (error) {
+        showError(error, "Failed to reorder issue");
+      }
+    },
+    [
+      allIssues,
+      issuesByStatus,
+      updateIssueStatus,
+      updateStatusByCategory,
+      isTeamMode,
+      pushHistoryAction,
+    ],
+  );
+
   return {
     isDragging,
     handleDragStateChange,
     handleIssueDrop,
+    handleIssueReorder,
   };
 }

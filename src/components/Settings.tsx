@@ -3,6 +3,7 @@ import { useSearch } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { HourComplianceDashboard } from "./Admin/HourComplianceDashboard";
+import { IpRestrictionsSettings } from "./Admin/IpRestrictionsSettings";
 import { OrganizationSettings } from "./Admin/OrganizationSettings";
 import { UserManagement } from "./Admin/UserManagement";
 import { UserTypeManager } from "./Admin/UserTypeManager";
@@ -112,6 +113,7 @@ function AdminTab() {
   return (
     <div className="space-y-8">
       <OrganizationSettings />
+      <IpRestrictionsSettings />
       <UserManagement />
       <UserTypeManager />
       <HourComplianceDashboard />
