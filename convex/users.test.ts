@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
@@ -10,6 +10,15 @@ import {
   createTestProject,
   createTestUser,
 } from "./testUtils";
+
+// Mock rateLimit to avoid component registration issues
+vi.mock("./rateLimits", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./rateLimits")>();
+  return {
+    ...actual,
+    rateLimit: vi.fn(),
+  };
+});
 
 describe("Users", () => {
   describe("updateProfile", () => {

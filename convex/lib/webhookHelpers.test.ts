@@ -47,12 +47,13 @@ describe("deliverWebhook", () => {
 
     // Verify URL rewriting for HTTP (SSRF protection against DNS rebinding)
     expect(targetUrl).toBe("http://1.2.3.4/webhook");
-    expect(options.headers.Host).toBe("example.com");
-    expect(options.headers["X-Webhook-Event"]).toBe(event);
-    expect(options.headers["Content-Type"]).toBe("application/json");
+    const headers = options.headers as Headers;
+    expect(headers.get("Host")).toBe("example.com");
+    expect(headers.get("X-Webhook-Event")).toBe(event);
+    expect(headers.get("Content-Type")).toBe("application/json");
 
     // Verify signature format (hex string)
-    expect(options.headers["X-Webhook-Signature"]).toMatch(/^[0-9a-f]{64}$/);
+    expect(headers.get("X-Webhook-Signature")).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it("should fail if DNS validation fails (SSRF)", async () => {
@@ -109,7 +110,8 @@ describe("deliverWebhook", () => {
     // HTTPS URLs should be used as-is for certificate validation
     expect(callArgs[0]).toBe(httpsUrl);
     // Host header should not be manually set for HTTPS fetch (browser/fetch handles it)
-    expect(callArgs[1].headers.Host).toBeUndefined();
+    const headers = callArgs[1].headers as Headers;
+    expect(headers.get("Host")).toBeNull();
   });
 
   it("should generate correct HMAC signature", async () => {
@@ -119,7 +121,8 @@ describe("deliverWebhook", () => {
     await deliverWebhook(url, payload, event, secret);
 
     const callArgs = (global.fetch as any).mock.calls[0];
-    const signature = callArgs[1].headers["X-Webhook-Signature"];
+    const headers = callArgs[1].headers as Headers;
+    const signature = headers.get("X-Webhook-Signature");
 
     // Verify signature manually
     const encoder = new TextEncoder();
