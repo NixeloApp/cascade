@@ -13,8 +13,8 @@ export function run() {
 
   // Allowlists
   const ALLOWLIST_RAW_TAILWIND = [
-    "src/components/landing/",
-    "src/components/auth/AppSplashScreen.tsx",
+    "src/components/Landing/",
+    "src/components/Auth/AppSplashScreen.tsx",
     "src/components/AI/AIChat.tsx",
     "src/components/Settings/PumbleIntegration.tsx",
     "*.test.ts",
@@ -23,11 +23,11 @@ export function run() {
   ];
 
   const ALLOWLIST_HARDCODED_HEX = [
-    "src/components/auth/GoogleAuthButton.tsx",
+    "src/components/Auth/GoogleAuthButton.tsx",
     "src/components/ui/ColorPicker.tsx",
     "src/components/ui/ColorPicker.test.tsx",
     "src/index.css",
-    "src/components/landing/",
+    "src/components/Landing/",
     "convex/http/",
     "convex/pumble.ts",
     "convex/invites.ts",

@@ -18,7 +18,7 @@ import {
   MoreHorizontal,
   XCircle,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -307,7 +307,7 @@ export function InboxList({ projectId }: InboxListProps) {
 // Issue List
 // =============================================================================
 
-function InboxIssueList({
+const InboxIssueList = memo(function InboxIssueList({
   items,
   projectId,
   selectedIds,
@@ -326,18 +326,18 @@ function InboxIssueList({
           item={item}
           projectId={projectId}
           isSelected={selectedIds.has(item._id)}
-          onToggleSelect={() => onToggleSelect(item._id)}
+          onToggleSelect={onToggleSelect}
         />
       ))}
     </Flex>
   );
-}
+});
 
 // =============================================================================
 // Issue Row
 // =============================================================================
 
-function InboxIssueRow({
+const InboxIssueRow = memo(function InboxIssueRow({
   item,
   projectId,
   isSelected,
@@ -346,7 +346,7 @@ function InboxIssueRow({
   item: InboxIssueWithDetails;
   projectId: Id<"projects">;
   isSelected: boolean;
-  onToggleSelect: () => void;
+  onToggleSelect: (id: Id<"inboxIssues">) => void;
 }) {
   const accept = useMutation(api.inbox.accept);
   const decline = useMutation(api.inbox.decline);
@@ -429,7 +429,7 @@ function InboxIssueRow({
       {isOpen && (
         <Checkbox
           checked={isSelected}
-          onCheckedChange={() => onToggleSelect()}
+          onCheckedChange={() => onToggleSelect(item._id)}
           aria-label={`Select ${item.issue.title}`}
         />
       )}
@@ -493,7 +493,7 @@ function InboxIssueRow({
       {/* More Actions */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="ghost">
+          <Button size="sm" variant="ghost" aria-label="More actions">
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -532,4 +532,4 @@ function InboxIssueRow({
       </DropdownMenu>
     </Flex>
   );
-}
+});

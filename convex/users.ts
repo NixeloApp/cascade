@@ -19,6 +19,7 @@ import {
   sanitizeUserForCurrent,
   sanitizeUserForPublic,
 } from "./lib/userUtils";
+import { rateLimit } from "./rateLimits";
 import { digestFrequencies } from "./validators";
 
 // Limits for user stats queries
@@ -255,6 +256,9 @@ export const verifyEmailChange = authenticatedMutation({
   args: { token: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
+    // Rate limit verification attempts to prevent brute-forcing
+    await rateLimit(ctx, "emailChange", { key: ctx.userId });
+
     const user = await ctx.db.get(ctx.userId);
     if (!user) {
       throw validation("user", "User not found");

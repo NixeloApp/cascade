@@ -1,5 +1,5 @@
 import { getErrorMessage } from "./errors";
-import { validateDestinationResolved } from "./ssrf";
+import { safeFetch } from "./safeFetch";
 
 const WEBHOOK_TIMEOUT_MS = 10000;
 
@@ -19,18 +19,6 @@ export async function deliverWebhook(
   event: string,
   secret?: string,
 ): Promise<WebhookDeliveryResult> {
-  // 1. Validate destination URL (SSRF protection) and get safe IP
-  let resolvedIp: string;
-  try {
-    resolvedIp = await validateDestinationResolved(url);
-  } catch (e) {
-    // If validation fails, return failed status immediately
-    return {
-      status: "failed",
-      error: getErrorMessage(e),
-    };
-  }
-
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
 
@@ -44,27 +32,11 @@ export async function deliverWebhook(
       headers["X-Webhook-Signature"] = await generateSignature(payload, secret);
     }
 
-    // Determine target URL and headers
-    let targetUrl = url;
-    const parsedUrl = new URL(url);
-
-    // For HTTP, rewrite URL to use resolved IP to prevent DNS rebinding
-    if (parsedUrl.protocol === "http:") {
-      headers.Host = parsedUrl.host; // includes port if present
-      parsedUrl.hostname = resolvedIp;
-      targetUrl = parsedUrl.toString();
-    }
-    // For HTTPS, we must use original URL for certificate validation
-    // NOTE: This means HTTPS is still subject to DNS rebinding between our check
-    // and the fetch call. The risk is partially mitigated because the attacker's
-    // server must present a valid TLS certificate for the original hostname.
-
-    const response = await fetch(targetUrl, {
+    const response = await safeFetch(url, {
       method: "POST",
       headers,
       body: payload,
       signal: controller.signal,
-      redirect: "error", // Prevent following redirects
     });
 
     const responseBody = await response.text();

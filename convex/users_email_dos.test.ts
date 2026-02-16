@@ -1,3 +1,4 @@
+import { register } from "@convex-dev/rate-limiter/test";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
@@ -8,6 +9,7 @@ import { asAuthenticatedUser, createTestUser } from "./testUtils";
 describe("Email Claim Vulnerability Fix", () => {
   it("should prevent claiming an email immediately and require verification", async () => {
     const t = convexTest(schema, modules);
+    register(t);
 
     // 1. Create Attacker
     const attackerId = await createTestUser(t, { name: "Attacker", email: "attacker@example.com" });
@@ -55,6 +57,7 @@ describe("Email Claim Vulnerability Fix", () => {
 
   it("should allow legitimate email change with verification", async () => {
     const t = convexTest(schema, modules);
+    register(t);
     const userId = await createTestUser(t, { email: "old@example.com" });
     const asUser = asAuthenticatedUser(t, userId);
     const newEmail = "new@example.com";
