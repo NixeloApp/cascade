@@ -33,7 +33,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 50
+        ? 100
         : 20,
     period: 60_000,
     capacity:
@@ -41,7 +41,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 50
+        ? 100
         : 20,
   }, // 20 per minute default to prevent blocking legit users/tests if env detection fails
 
@@ -58,7 +58,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 50
+        ? 100
         : 20,
     period: 60_000,
     capacity:
@@ -66,7 +66,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 50
+        ? 100
         : 20,
   },
 });
