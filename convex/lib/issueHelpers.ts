@@ -282,10 +282,7 @@ async function fetchLabelsForProject(
 
   // Cache the result if we fetched a significant batch (likely all labels)
   // This helps subsequent calls for the same project in the same request
-  if (
-    batchLabels.length < MAX_LABELS_PER_PROJECT ||
-    batchLabels.length >= neededLabels.size
-  ) {
+  if (batchLabels.length < MAX_LABELS_PER_PROJECT || batchLabels.length >= neededLabels.size) {
     projectCache.set(projectId, batchLabels);
   }
 

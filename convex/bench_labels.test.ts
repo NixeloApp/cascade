@@ -1,10 +1,8 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
-import type { Id } from "./_generated/dataModel";
+import { createTestProject, createTestUser } from "./testUtils";
 
 describe("Label Fetching Benchmark", () => {
   it("measure fetching strategies", async () => {
@@ -58,7 +56,9 @@ describe("Label Fetching Benchmark", () => {
       const timeIndividual = endIndividual - startIndividual;
       const timeScan = endScan - startScan;
 
-      console.log(`[Benchmark] Count ${count}: Individual=${timeIndividual.toFixed(2)}ms, Scan=${timeScan.toFixed(2)}ms`);
+      console.log(
+        `[Benchmark] Count ${count}: Individual=${timeIndividual.toFixed(2)}ms, Scan=${timeScan.toFixed(2)}ms`,
+      );
       return { individual: timeIndividual, scan: timeScan };
     };
 
