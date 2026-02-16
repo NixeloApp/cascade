@@ -6,8 +6,8 @@ import { useCallback, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { CommandPalette, useCommands } from "@/components/CommandPalette";
-import { OfflineBanner } from "@/components/OfflineBanner";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
@@ -193,7 +193,12 @@ function OrganizationLayoutInner() {
           />
 
           {/* Page content */}
-          <FlexItem as="main" flex="1" id="main-content" className="overflow-auto bg-ui-bg scrollbar-subtle">
+          <FlexItem
+            as="main"
+            flex="1"
+            id="main-content"
+            className="overflow-auto bg-ui-bg scrollbar-subtle"
+          >
             <Outlet />
           </FlexItem>
         </Flex>

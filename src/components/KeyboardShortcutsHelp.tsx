@@ -200,8 +200,7 @@ function KeySequenceBadge({ sequence }: { sequence: string }) {
   return (
     <Flex gap="xs" align="center">
       {chars.map((char, charIndex) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static key sequence chars, index needed for separator
-        <Flex key={charIndex} gap="xs" align="center">
+        <Flex key={`${char}-${charIndex}`} gap="xs" align="center">
           <KeyBadge>{char.toUpperCase()}</KeyBadge>
           {charIndex < chars.length - 1 && (
             <Typography variant="muted" className="text-xs">
