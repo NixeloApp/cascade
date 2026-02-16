@@ -64,9 +64,7 @@ export const listByProject = projectQuery({
     // and optimizes by fetching project once
     const project = await ctx.db.get(ctx.projectId);
     const doneStatusIds =
-      project?.workflowStates
-        .filter((s) => s.category === "done")
-        .map((s) => s.id) || [];
+      project?.workflowStates.filter((s) => s.category === "done").map((s) => s.id) || [];
 
     // Fetch issues per sprint using index (more efficient than loading all issues)
     const sprintIds = sprints.map((s) => s._id);
