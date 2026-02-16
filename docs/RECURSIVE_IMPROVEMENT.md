@@ -1313,6 +1313,12 @@ export const Default: Story = {
 - Fixed TypeScript errors in test files (type parameters, mock setup)
 - Total session: **95 tests + 14 stories**
 
+**Session 3 (2026-02-16):**
+- Added hook tests: useBoardHistory (25 tests)
+- Added component tests: NotificationItem (20 tests), IssueWatchers (16 tests) = **36 tests**
+- Added Storybook stories: IssueCard (25 stories covering types, priorities, states, layouts)
+- Total session: **61 tests + 25 stories**
+
 ---
 
 ## Commands
