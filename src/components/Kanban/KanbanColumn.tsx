@@ -13,7 +13,7 @@ import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kan
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
-import { IssueCard } from "../IssueCard";
+import { IssueCard, areIssuesEqual } from "../IssueCard";
 import { Badge } from "../ui/Badge";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { PaginationInfo } from "../ui/PaginationInfo";
@@ -68,6 +68,55 @@ export interface KanbanColumnProps {
 }
 
 /**
+ * Custom equality check for KanbanIssueItem
+ * Optimizes performance by using areIssuesEqual for the issue prop
+ */
+export function areKanbanIssueItemPropsEqual(
+  prev: {
+    issue: Issue;
+    columnIndex: number;
+    index: number;
+    onClick: (issueId: Id<"issues">) => void;
+    selectionMode: boolean;
+    isSelected: boolean;
+    isFocused: boolean;
+    onToggleSelect: (issueId: Id<"issues">) => void;
+    canEdit: boolean;
+  },
+  next: {
+    issue: Issue;
+    columnIndex: number;
+    index: number;
+    onClick: (issueId: Id<"issues">) => void;
+    selectionMode: boolean;
+    isSelected: boolean;
+    isFocused: boolean;
+    onToggleSelect: (issueId: Id<"issues">) => void;
+    canEdit: boolean;
+  },
+) {
+  // Check primitive props
+  if (
+    prev.columnIndex !== next.columnIndex ||
+    prev.index !== next.index ||
+    prev.selectionMode !== next.selectionMode ||
+    prev.isSelected !== next.isSelected ||
+    prev.isFocused !== next.isFocused ||
+    prev.canEdit !== next.canEdit
+  ) {
+    return false;
+  }
+
+  // Check callback props (reference equality)
+  if (prev.onClick !== next.onClick || prev.onToggleSelect !== next.onToggleSelect) {
+    return false;
+  }
+
+  // Check issue object equality
+  return areIssuesEqual(prev.issue, next.issue);
+}
+
+/**
  * Wrapper component for IssueCard to memoize the wrapper div and animation style.
  * This prevents the wrapper div from re-rendering when parent renders but issue props are stable.
  */
@@ -76,7 +125,6 @@ const KanbanIssueItem = memo(
     issue,
     columnIndex,
     index,
-    onDragStart,
     onClick,
     selectionMode,
     isSelected,
@@ -87,7 +135,6 @@ const KanbanIssueItem = memo(
     issue: Issue;
     columnIndex: number;
     index: number;
-    onDragStart: (e: React.DragEvent, issueId: Id<"issues">) => void;
     onClick: (issueId: Id<"issues">) => void;
     selectionMode: boolean;
     isSelected: boolean;
@@ -106,17 +153,18 @@ const KanbanIssueItem = memo(
       <div className="animate-scale-in" style={style}>
         <IssueCard
           issue={issue}
-          onDragStart={onDragStart}
           onClick={onClick}
           selectionMode={selectionMode}
           isSelected={isSelected}
           isFocused={isFocused}
           onToggleSelect={onToggleSelect}
           canEdit={canEdit}
+          status={issue.status}
         />
       </div>
     );
   },
+  areKanbanIssueItemPropsEqual,
 );
 KanbanIssueItem.displayName = "KanbanIssueItem";
 
@@ -406,7 +454,6 @@ const KanbanColumnComponent = function KanbanColumn({
                 issue={issue}
                 columnIndex={columnIndex}
                 index={issueIndex}
-                onDragStart={onDragStart}
                 onClick={onIssueClick}
                 selectionMode={selectionMode}
                 isSelected={selectedIssueIds.has(issue._id)}
