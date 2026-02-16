@@ -112,6 +112,80 @@ function toEpicInfo(epic: Doc<"issues"> | null): EpicInfo | null {
   };
 }
 
+// Request-scoped cache for project labels to avoid redundant fetches
+const projectLabelsCache = new WeakMap<object, Map<string, Doc<"labels">[]>>();
+
+async function fetchLabelsForProject(
+  ctx: QueryCtx,
+  projectId: Id<"projects">,
+  neededLabels: Set<string>,
+): Promise<Doc<"labels">[]> {
+  // Check cache
+  let projectCache = projectLabelsCache.get(ctx);
+  if (!projectCache) {
+    projectCache = new Map();
+    projectLabelsCache.set(ctx, projectCache);
+  }
+
+  // Use cached labels if available
+  const cachedLabels = projectCache.get(projectId);
+  if (cachedLabels) {
+    // If we have cached labels, check if they satisfy the requirement
+    const foundNames = new Set(cachedLabels.map((l) => l.name));
+    const missingLabels = [...neededLabels].filter((name) => !foundNames.has(name));
+
+    // If no missing labels, return from cache (filtered to needed ones)
+    if (missingLabels.length === 0) {
+      return cachedLabels.filter((l) => neededLabels.has(l.name));
+    }
+  }
+
+  // If we need few labels, fetch them individually (faster/cheaper than scanning 200 items)
+  // OPTIMIZATION: Lowered threshold from 20 to 5.
+  // Benchmarks show that scanning 200 items is faster than >5 individual round trips.
+  if (neededLabels.size <= 5) {
+    const labels = await Promise.all(
+      [...neededLabels].map((name) =>
+        ctx.db
+          .query("labels")
+          .withIndex("by_project_name", (q) => q.eq("projectId", projectId).eq("name", name))
+          .first(),
+      ),
+    );
+    return labels.filter((l): l is Doc<"labels"> => l !== null);
+  }
+
+  // If we need many labels, fetch the first batch (up to 200) efficiently
+  const batchLabels = await ctx.db
+    .query("labels")
+    .withIndex("by_project", (q) => q.eq("projectId", projectId))
+    .take(MAX_LABELS_PER_PROJECT);
+
+  // Cache the result if we fetched a significant batch (likely all labels)
+  // This helps subsequent calls for the same project in the same request
+  if (batchLabels.length < MAX_LABELS_PER_PROJECT || batchLabels.length >= neededLabels.size) {
+    projectCache.set(projectId, batchLabels);
+  }
+
+  // Check if we are missing any needed labels
+  const foundNames = new Set(batchLabels.map((l) => l.name));
+  const missingLabels = [...neededLabels].filter((name) => !foundNames.has(name));
+
+  if (missingLabels.length > 0) {
+    // Fetch missing labels individually
+    const extraLabels = await Promise.all(
+      missingLabels.map((name) =>
+        ctx.db
+          .query("labels")
+          .withIndex("by_project_name", (q) => q.eq("projectId", projectId).eq("name", name))
+          .first(),
+      ),
+    );
+    batchLabels.push(...extraLabels.filter((l): l is Doc<"labels"> => l !== null));
+  }
+  return batchLabels;
+}
+
 /**
  * Enrich a single issue with assignee, reporter, epic, and label info
  */
@@ -125,30 +199,15 @@ export async function enrichIssue(ctx: QueryCtx, issue: Doc<"issues">): Promise<
   // Fetch label metadata if issue has labels and projectId
   let labelInfos: LabelInfo[] = [];
   if (issue.labels && issue.labels.length > 0 && issue.projectId) {
-    // Optimization: Fetch only the specific labels used by this issue.
-    // This avoids fetching potentially hundreds of unused labels for the project
-    // and fixes a bug where labels beyond the page size limit were not found.
-    const labels = await Promise.all(
-      issue.labels.map((name) =>
-        ctx.db
-          .query("labels")
-          .withIndex("by_project_name", (q) => {
-            const projectId = issue.projectId;
-            if (!projectId) {
-              // This should be unreachable due to outer check, but satisfy type checker
-              throw new Error("Unexpected missing projectId");
-            }
-            return q.eq("projectId", projectId).eq("name", name);
-          })
-          .first(),
-      ),
-    );
+    // Optimization: Use fetchLabelsForProject to efficiently batch label lookups.
+    // This handles both small cases (individual lookups) and large cases (batch scan)
+    // while caching results for subsequent calls in the same request.
+    const neededLabels = new Set(issue.labels);
+    const labels = await fetchLabelsForProject(ctx, issue.projectId, neededLabels);
 
     const labelMap = new Map<string, string>();
     for (const label of labels) {
-      if (label) {
-        labelMap.set(label.name, label.color);
-      }
+      labelMap.set(label.name, label.color);
     }
 
     labelInfos = issue.labels.map((name) => ({
@@ -229,80 +288,6 @@ function getProjectLabelsNeeded(issues: Doc<"issues">[]) {
     }
   }
   return projectLabelsNeeded;
-}
-
-// Request-scoped cache for project labels to avoid redundant fetches
-const projectLabelsCache = new WeakMap<object, Map<string, Doc<"labels">[]>>();
-
-async function fetchLabelsForProject(
-  ctx: QueryCtx,
-  projectId: Id<"projects">,
-  neededLabels: Set<string>,
-): Promise<Doc<"labels">[]> {
-  // Check cache
-  let projectCache = projectLabelsCache.get(ctx);
-  if (!projectCache) {
-    projectCache = new Map();
-    projectLabelsCache.set(ctx, projectCache);
-  }
-
-  // Use cached labels if available
-  const cachedLabels = projectCache.get(projectId);
-  if (cachedLabels) {
-    // If we have cached labels, check if they satisfy the requirement
-    const foundNames = new Set(cachedLabels.map((l) => l.name));
-    const missingLabels = [...neededLabels].filter((name) => !foundNames.has(name));
-
-    // If no missing labels, return from cache (filtered to needed ones)
-    if (missingLabels.length === 0) {
-      return cachedLabels.filter((l) => neededLabels.has(l.name));
-    }
-  }
-
-  // If we need few labels, fetch them individually (faster/cheaper than scanning 200 items)
-  // OPTIMIZATION: Lowered threshold from 20 to 5.
-  // Benchmarks show that scanning 200 items is faster than >5 individual round trips.
-  if (neededLabels.size <= 5) {
-    const labels = await Promise.all(
-      [...neededLabels].map((name) =>
-        ctx.db
-          .query("labels")
-          .withIndex("by_project_name", (q) => q.eq("projectId", projectId).eq("name", name))
-          .first(),
-      ),
-    );
-    return labels.filter((l): l is Doc<"labels"> => l !== null);
-  }
-
-  // If we need many labels, fetch the first batch (up to 200) efficiently
-  const batchLabels = await ctx.db
-    .query("labels")
-    .withIndex("by_project", (q) => q.eq("projectId", projectId))
-    .take(MAX_LABELS_PER_PROJECT);
-
-  // Cache the result if we fetched a significant batch (likely all labels)
-  // This helps subsequent calls for the same project in the same request
-  if (batchLabels.length < MAX_LABELS_PER_PROJECT || batchLabels.length >= neededLabels.size) {
-    projectCache.set(projectId, batchLabels);
-  }
-
-  // Check if we are missing any needed labels
-  const foundNames = new Set(batchLabels.map((l) => l.name));
-  const missingLabels = [...neededLabels].filter((name) => !foundNames.has(name));
-
-  if (missingLabels.length > 0) {
-    // Fetch missing labels individually
-    const extraLabels = await Promise.all(
-      missingLabels.map((name) =>
-        ctx.db
-          .query("labels")
-          .withIndex("by_project_name", (q) => q.eq("projectId", projectId).eq("name", name))
-          .first(),
-      ),
-    );
-    batchLabels.push(...extraLabels.filter((l): l is Doc<"labels"> => l !== null));
-  }
-  return batchLabels;
 }
 
 /**

@@ -1,6 +1,5 @@
-
-import { createTestUserEndpoint } from "./e2e";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createTestUserHandler } from "./e2e";
 import { getConvexSiteUrl } from "./lib/env";
 
 // Mock internal dependencies
@@ -14,7 +13,9 @@ vi.mock("./_generated/api", () => ({
 
 vi.mock("lucia", () => ({
   Scrypt: class {
-    async hash(password: string) { return "hashed_password"; }
+    async hash(_password: string) {
+      return "hashed_password";
+    }
   },
 }));
 
@@ -50,7 +51,7 @@ describe("E2E Security Check", () => {
       runMutation: vi.fn().mockResolvedValue({ success: true }),
     } as any;
 
-    const response = await createTestUserEndpoint(ctx, request);
+    const response = await createTestUserHandler(ctx, request);
     expect(response.status).toBe(200);
   });
 
@@ -69,7 +70,7 @@ describe("E2E Security Check", () => {
       runMutation: vi.fn(),
     } as any;
 
-    const response = await createTestUserEndpoint(ctx, request);
+    const response = await createTestUserHandler(ctx, request);
     expect(response.status).toBe(403);
     const body = await response.json();
     expect(body.error).toBe("E2E endpoints disabled (missing API key)");

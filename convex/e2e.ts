@@ -83,7 +83,7 @@ function validateE2EApiKey(request: Request): Response | null {
  * This creates a user with email already verified, optionally completing onboarding.
  * Only works for test emails (@inbox.mailtrap.io).
  */
-export const createTestUserEndpoint = httpAction(async (ctx, request) => {
+export const createTestUserHandler = async (ctx: ActionCtx, request: Request) => {
   // Validate API key
   const authError = validateE2EApiKey(request);
   if (authError) return authError;
@@ -129,7 +129,9 @@ export const createTestUserEndpoint = httpAction(async (ctx, request) => {
       headers: { "Content-Type": "application/json" },
     });
   }
-});
+};
+
+export const createTestUserEndpoint = httpAction(createTestUserHandler);
 
 /**
  * Log in a test user via API and return tokens
