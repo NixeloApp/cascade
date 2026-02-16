@@ -87,6 +87,16 @@ export const checkPasswordResetRateLimitByEmail = internalMutation({
 });
 
 /**
+ * Check rate limit for email verification (for OTPVerification provider)
+ */
+export const checkEmailVerificationRateLimit = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    await rateLimit(ctx, "emailVerification", { key: args.email });
+  },
+});
+
+/**
  * Secure password reset request
  *
  * Calls the actual auth endpoint internally but always returns success.

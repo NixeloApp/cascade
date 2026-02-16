@@ -69,6 +69,19 @@ export const OTPVerification = Resend({
     ctx: ConvexAuthContext,
   ) => {
     try {
+      // Check rate limit first
+      if (ctx.runMutation) {
+        try {
+          // Type assertion needed because codegen hasn't run to update the type definition
+          // biome-ignore lint/suspicious/noExplicitAny: codegen not run
+          await ctx.runMutation((internal.authWrapper as any).checkEmailVerificationRateLimit, {
+            email,
+          });
+        } catch (_e) {
+          throw new Error("Too many verification requests. Please try again later.");
+        }
+      }
+
       // Store test OTP if applicable
       await storeTestOtp(ctx, email, token);
 
