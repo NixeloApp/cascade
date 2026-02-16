@@ -406,7 +406,7 @@ export const updateDomains = mutation({
     const currentDomains = await ctx.db
       .query("ssoDomains")
       .withIndex("by_connection", (q) => q.eq("connectionId", args.connectionId))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     const currentDomainSet = new Set(currentDomains.map((d) => d.domain));
     const newDomainSet = new Set(normalizedDomains);
@@ -415,12 +415,17 @@ export const updateDomains = mutation({
     const domainsToRemove = currentDomains.filter((d) => !newDomainSet.has(d.domain));
 
     // Check for conflicts for added domains
-    for (const domain of domainsToAdd) {
-      const existing = await ctx.db
-        .query("ssoDomains")
-        .withIndex("by_domain", (q) => q.eq("domain", domain))
-        .first();
+    const existingChecks = await Promise.all(
+      domainsToAdd.map(async (domain) => {
+        const existing = await ctx.db
+          .query("ssoDomains")
+          .withIndex("by_domain", (q) => q.eq("domain", domain))
+          .first();
+        return { domain, existing };
+      }),
+    );
 
+    for (const { domain, existing } of existingChecks) {
       if (existing) {
         return {
           success: false,
@@ -430,17 +435,17 @@ export const updateDomains = mutation({
     }
 
     // Apply changes
-    for (const d of domainsToRemove) {
-      await ctx.db.delete(d._id);
-    }
+    await Promise.all(domainsToRemove.map((d) => ctx.db.delete(d._id)));
 
-    for (const domain of domainsToAdd) {
-      await ctx.db.insert("ssoDomains", {
-        domain,
-        connectionId: args.connectionId,
-        organizationId: connection.organizationId,
-      });
-    }
+    await Promise.all(
+      domainsToAdd.map((domain) =>
+        ctx.db.insert("ssoDomains", {
+          domain,
+          connectionId: args.connectionId,
+          organizationId: connection.organizationId,
+        }),
+      ),
+    );
 
     await ctx.db.patch(args.connectionId, {
       verifiedDomains: normalizedDomains,
@@ -483,11 +488,9 @@ export const remove = mutation({
     const domains = await ctx.db
       .query("ssoDomains")
       .withIndex("by_connection", (q) => q.eq("connectionId", args.connectionId))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
-    for (const d of domains) {
-      await ctx.db.delete(d._id);
-    }
+    await Promise.all(domains.map((d) => ctx.db.delete(d._id)));
 
     await ctx.db.delete(args.connectionId);
 
@@ -595,21 +598,23 @@ export const migrateSSODomains = internalMutation({
     for (const connection of page) {
       if (!connection.verifiedDomains) continue;
 
-      for (const domain of connection.verifiedDomains) {
-        // Check if already exists to be idempotent
-        const existing = await ctx.db
-          .query("ssoDomains")
-          .withIndex("by_domain", (q) => q.eq("domain", domain))
-          .first();
+      await Promise.all(
+        connection.verifiedDomains.map(async (domain) => {
+          // Check if already exists to be idempotent
+          const existing = await ctx.db
+            .query("ssoDomains")
+            .withIndex("by_domain", (q) => q.eq("domain", domain))
+            .first();
 
-        if (!existing) {
-          await ctx.db.insert("ssoDomains", {
-            domain,
-            connectionId: connection._id,
-            organizationId: connection.organizationId,
-          });
-        }
-      }
+          if (!existing) {
+            await ctx.db.insert("ssoDomains", {
+              domain,
+              connectionId: connection._id,
+              organizationId: connection.organizationId,
+            });
+          }
+        }),
+      );
       processed++;
     }
 
