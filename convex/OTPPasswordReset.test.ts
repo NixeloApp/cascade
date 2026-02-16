@@ -104,21 +104,16 @@ describe("OTPPasswordReset", () => {
     );
 
     // Verify user lookup happened
-    expect(mockCtx.runQuery).toHaveBeenCalledWith(
-      internal.users.getInternalByEmail,
-      { email: "test@inbox.mailtrap.io" },
-    );
+    expect(mockCtx.runQuery).toHaveBeenCalledWith(internal.users.getInternalByEmail, {
+      email: "test@inbox.mailtrap.io",
+    });
 
     // Verify OTP storage happened
-    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(
-      2,
-      internal.e2e.storeTestOtp,
-      {
-        email: "test@inbox.mailtrap.io",
-        code: "123456",
-        type: "reset",
-      },
-    );
+    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(2, internal.e2e.storeTestOtp, {
+      email: "test@inbox.mailtrap.io",
+      code: "123456",
+      type: "reset",
+    });
   });
 
   it("should not store OTP for normal emails", async () => {

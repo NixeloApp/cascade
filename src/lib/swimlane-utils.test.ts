@@ -15,7 +15,6 @@ import {
 const createMockIssue = (overrides: Partial<EnrichedIssue> = {}): EnrichedIssue => ({
   _id: "issue1" as Id<"issues">,
   _creationTime: Date.now(),
-  updatedAt: Date.now(),
   organizationId: "org1" as Id<"organizations">,
   workspaceId: "ws1" as Id<"workspaces">,
   teamId: "team1" as Id<"teams">,
@@ -37,6 +36,7 @@ const createMockIssue = (overrides: Partial<EnrichedIssue> = {}): EnrichedIssue 
   },
   epic: null,
   isDeleted: false,
+  updatedAt: Date.now(),
   order: 0,
   linkedDocuments: [],
   attachments: [],
