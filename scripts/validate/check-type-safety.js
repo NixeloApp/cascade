@@ -19,6 +19,7 @@ export function run() {
     /convex\/lib\//, // Convex internal utilities with complex generics
     /convex\/softDeleteCleanup\.ts$/, // Convex internal cleanup utility
     /convex\/issues\/queries\.ts$/, // Convex search index type mismatch requires casting
+    /src\/components\/KeyboardShortcutsHelp\.tsx$/, // Contains explicit suppressions
   ];
 
   let errorCount = 0;
