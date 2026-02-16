@@ -49,7 +49,12 @@ export const OTPPasswordReset = Resend({
 
     // For test emails, store plaintext OTP in testOtpCodes table if environment permits
     if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
-      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "reset" });
+      try {
+        await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "reset" });
+      } catch (e) {
+        // Log but don't fail, attempt to send email anyway
+        logger.error(`[OTPPasswordReset] Failed to store test OTP: ${e}`);
+      }
     }
 
     const result = await sendEmail(ctx, {
