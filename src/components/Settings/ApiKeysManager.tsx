@@ -11,11 +11,11 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
-import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
@@ -68,23 +68,16 @@ export function ApiKeysManager() {
 
         {/* API Keys List */}
         {!apiKeys || apiKeys.length === 0 ? (
-          <div className="text-center py-12 bg-ui-bg-secondary rounded-lg border-2 border-dashed border-ui-border">
-            <Key className="h-12 w-12 text-ui-text-tertiary mx-auto mb-3" />
-            <Typography variant="h4" className="text-sm font-medium text-ui-text mb-1">
-              No API keys yet
-            </Typography>
-            <Typography className="text-sm text-ui-text-secondary mb-4">
-              Generate your first API key to access Nixelo programmatically
-            </Typography>
-            <Flex justify="center">
-              <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
-                <Flex gap="sm" align="center">
-                  <Plus className="h-4 w-4" />
-                  Generate Your First Key
-                </Flex>
-              </Button>
-            </Flex>
-          </div>
+          <EmptyState
+            icon={Key}
+            title="No API keys yet"
+            description="Generate your first API key to access Nixelo programmatically"
+            action={{
+              label: "Generate Your First Key",
+              onClick: () => setShowGenerateModal(true),
+            }}
+            className="bg-ui-bg-secondary rounded-lg border-2 border-dashed border-ui-border"
+          />
         ) : (
           <Flex direction="column" gap="lg">
             {apiKeys.map((key) => (

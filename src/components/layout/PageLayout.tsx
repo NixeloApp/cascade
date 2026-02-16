@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { cn } from "@/lib/utils";
 
 type MaxWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "full";
@@ -26,15 +27,17 @@ export function PageLayout({
   className,
 }: PageLayoutProps): ReactNode {
   return (
-    <div
-      className={cn(
-        "p-6 bg-ui-bg animate-fade-in",
-        maxWidthClasses[maxWidth],
-        fullHeight && "h-full overflow-y-auto",
-        className,
-      )}
-    >
-      {children}
-    </div>
+    <ErrorBoundary>
+      <div
+        className={cn(
+          "p-6 bg-ui-bg animate-fade-in",
+          maxWidthClasses[maxWidth],
+          fullHeight && "h-full overflow-y-auto",
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </ErrorBoundary>
   );
 }

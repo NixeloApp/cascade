@@ -76,7 +76,7 @@ function formatModifierShortcut(shortcut: string): string[] {
         return "Shift";
       case "delete":
       case "backspace":
-        return "⌫";
+        return "Del";
       case "enter":
       case "return":
         return "Enter";
@@ -88,13 +88,13 @@ function formatModifierShortcut(shortcut: string): string[] {
       case "tab":
         return "Tab";
       case "up":
-        return "↑";
+        return "Up";
       case "down":
-        return "↓";
+        return "Down";
       case "left":
-        return "←";
+        return "Left";
       case "right":
-        return "→";
+        return "Right";
       default:
         return part.toUpperCase();
     }
@@ -128,6 +128,8 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
       { id: "go-documents", description: "Go to documents", keySequence: "gd" },
       { id: "go-projects", description: "Go to projects", keySequence: "gp" },
       { id: "go-issues", description: "Go to issues", keySequence: "gi" },
+      { id: "go-analytics", description: "Go to analytics", keySequence: "ga" },
+      { id: "go-settings", description: "Go to settings", keySequence: "gs" },
       { id: "nav-1", description: "Go to dashboard", modifierShortcut: "cmd+1" },
       { id: "nav-2", description: "Go to documents", modifierShortcut: "cmd+2" },
       { id: "nav-3", description: "Go to workspaces", modifierShortcut: "cmd+3" },

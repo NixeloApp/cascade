@@ -270,8 +270,9 @@ const KanbanColumnComponent = function KanbanColumn({
         </Tooltip>
 
         {/* Vertical column name */}
-        <div
-          className="flex-1 flex items-center justify-center py-4"
+        <FlexItem
+          flex="1"
+          className="flex items-center justify-center py-4"
           style={{ writingMode: "vertical-lr" }}
         >
           <Typography
@@ -280,7 +281,7 @@ const KanbanColumnComponent = function KanbanColumn({
           >
             {state.name}
           </Typography>
-        </div>
+        </FlexItem>
 
         {/* Issue count badge */}
         <Badge
