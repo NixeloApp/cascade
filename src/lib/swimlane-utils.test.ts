@@ -15,12 +15,11 @@ import {
 const createMockIssue = (overrides: Partial<EnrichedIssue> = {}): EnrichedIssue => ({
   _id: "issue1" as Id<"issues">,
   _creationTime: Date.now(),
-  projectId: "project1" as Id<"projects">,
   organizationId: "org1" as Id<"organizations">,
-  workspaceId: "workspace1" as Id<"workspaces">,
+  workspaceId: "ws1" as Id<"workspaces">,
+  teamId: "team1" as Id<"teams">,
+  projectId: "project1" as Id<"projects">,
   key: "TEST-1",
-  linkedDocuments: [],
-  attachments: [],
   title: "Test Issue",
   description: "Test description",
   status: "todo",
@@ -39,6 +38,9 @@ const createMockIssue = (overrides: Partial<EnrichedIssue> = {}): EnrichedIssue 
   isDeleted: false,
   updatedAt: Date.now(),
   order: 0,
+  linkedDocuments: [],
+  attachments: [],
+  version: 1,
   ...overrides,
 });
 
