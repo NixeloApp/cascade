@@ -13,14 +13,26 @@ vi.mock("convex/react", () => ({
 
 // Mock TanStack Router Link
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to, params, onClick }: { children: React.ReactNode; to: string; params?: Record<string, string>; onClick?: () => void }) => (
+  Link: ({
+    children,
+    to,
+    params,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    params?: Record<string, string>;
+    onClick?: () => void;
+  }) => (
     <a href={to} data-params={JSON.stringify(params)} onClick={onClick}>
       {children}
     </a>
   ),
 }));
 
-const createMockNotification = (overrides: Partial<NotificationWithActor> = {}): NotificationWithActor => ({
+const createMockNotification = (
+  overrides: Partial<NotificationWithActor> = {},
+): NotificationWithActor => ({
   _id: "notification-123" as Id<"notifications">,
   _creationTime: Date.now() - 3600000, // 1 hour ago
   userId: "user-123" as Id<"users">,

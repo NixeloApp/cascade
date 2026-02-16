@@ -20,7 +20,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Typography } from "@/components/ui/Typography";
 import { getEditorPlugins, getInitialValue } from "@/lib/plate/editor";
-import { handleMarkdownExport, handleMarkdownImport, markdownToValue } from "@/lib/plate/markdown";
+import { handleMarkdownExport, handleMarkdownImport } from "@/lib/plate/markdown";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { DocumentHeader } from "./DocumentHeader";

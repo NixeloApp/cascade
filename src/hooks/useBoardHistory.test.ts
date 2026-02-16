@@ -101,7 +101,9 @@ describe("useBoardHistory", () => {
         }
       });
 
-      expect(result.current.historyStack.length).toBeLessThanOrEqual(DISPLAY_LIMITS.MAX_HISTORY_SIZE);
+      expect(result.current.historyStack.length).toBeLessThanOrEqual(
+        DISPLAY_LIMITS.MAX_HISTORY_SIZE,
+      );
     });
 
     it("should preserve action properties", () => {

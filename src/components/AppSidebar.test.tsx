@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { OrgContext, type OrgContextType } from "@/hooks/useOrgContext";
-import { fireEvent, render, screen } from "@/test/custom-render";
+import { render, screen } from "@/test/custom-render";
 import { AppSidebar } from "./AppSidebar";
 
 // Mock Convex hooks

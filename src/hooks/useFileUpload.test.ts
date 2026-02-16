@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { useFileUpload } from "./useFileUpload";
 
 // Mock Convex
@@ -59,8 +59,8 @@ describe("useFileUpload", () => {
 
   describe("file validation", () => {
     it("should reject files exceeding max size", async () => {
-      const { result } = renderHook(() =>
-        useFileUpload({ maxSize: 1024 }), // 1KB limit
+      const { result } = renderHook(
+        () => useFileUpload({ maxSize: 1024 }), // 1KB limit
       );
 
       const largeFile = new File(["x".repeat(2048)], "large.txt", { type: "text/plain" });
@@ -110,9 +110,7 @@ describe("useFileUpload", () => {
     });
 
     it("should accept files with allowed types", async () => {
-      const { result } = renderHook(() =>
-        useFileUpload({ allowedTypes: ["image/png"] }),
-      );
+      const { result } = renderHook(() => useFileUpload({ allowedTypes: ["image/png"] }));
 
       const pngFile = new File(["fake png"], "image.png", { type: "image/png" });
       const event = {
@@ -175,7 +173,7 @@ describe("useFileUpload", () => {
 
       // Resolve upload
       await act(async () => {
-        resolveUpload!();
+        resolveUpload?.();
         await uploadPromise;
       });
 
@@ -210,9 +208,7 @@ describe("useFileUpload", () => {
         await result.current.handleFileSelect(event);
       });
 
-      expect(showSuccess).toHaveBeenCalledWith(
-        expect.stringContaining("report.pdf"),
-      );
+      expect(showSuccess).toHaveBeenCalledWith(expect.stringContaining("report.pdf"));
     });
 
     it("should use custom success message", async () => {
@@ -308,9 +304,7 @@ describe("useFileUpload", () => {
 
     it("should use custom error message", async () => {
       mockFetch.mockResolvedValue({ ok: false });
-      const { result } = renderHook(() =>
-        useFileUpload({ errorMessage: "Custom upload error" }),
-      );
+      const { result } = renderHook(() => useFileUpload({ errorMessage: "Custom upload error" }));
 
       const file = new File(["content"], "test.txt", { type: "text/plain" });
       const event = {

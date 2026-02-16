@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@/test/custom-render";
 import { useOnlineStatus } from "@/hooks/useOffline";
+import { render, screen } from "@/test/custom-render";
 import { OfflineBanner } from "./OfflineBanner";
 
 // Mock the useOnlineStatus hook

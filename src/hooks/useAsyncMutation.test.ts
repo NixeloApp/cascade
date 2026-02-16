@@ -1,5 +1,5 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAsyncMutation } from "./useAsyncMutation";
 
 // Mock the toast module
@@ -64,7 +64,7 @@ describe("useAsyncMutation", () => {
 
       // Resolve the promise
       await act(async () => {
-        resolvePromise!("success");
+        resolvePromise?.("success");
         await mutatePromise;
       });
 
@@ -295,7 +295,7 @@ describe("useAsyncMutation", () => {
 
       // Resolve first
       await act(async () => {
-        resolveFirst!("first");
+        resolveFirst?.("first");
         await firstPromise;
       });
       expect(result.current.isLoading).toBe(false);
@@ -309,7 +309,7 @@ describe("useAsyncMutation", () => {
 
       // Resolve second
       await act(async () => {
-        resolveSecond!("second");
+        resolveSecond?.("second");
         await secondPromise;
       });
       expect(result.current.isLoading).toBe(false);
