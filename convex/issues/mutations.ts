@@ -786,7 +786,8 @@ export const bulkArchive = authenticatedMutation({
 
     // Filter valid issues first
     const validIssues = issues.filter(
-      (issue): issue is NonNullable<typeof issue> => !!issue && !issue.isDeleted && !issue.archivedAt,
+      (issue): issue is NonNullable<typeof issue> =>
+        !!issue && !issue.isDeleted && !issue.archivedAt,
     );
 
     if (validIssues.length === 0) {

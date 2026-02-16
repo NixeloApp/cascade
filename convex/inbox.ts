@@ -541,8 +541,10 @@ export const bulkAccept = projectEditorMutation({
     const inboxMap = new Map(args.ids.map((id, i) => [id, inboxIssues[i]]));
 
     // Filter valid items and collect issue IDs to fetch
-    const validItems: Array<{ id: (typeof args.ids)[number]; inboxIssue: NonNullable<(typeof inboxIssues)[number]> }> =
-      [];
+    const validItems: Array<{
+      id: (typeof args.ids)[number];
+      inboxIssue: NonNullable<(typeof inboxIssues)[number]>;
+    }> = [];
     for (const id of args.ids) {
       const inboxIssue = inboxMap.get(id);
       if (!inboxIssue) continue;
@@ -606,8 +608,10 @@ export const bulkDecline = projectEditorMutation({
     const inboxMap = new Map(args.ids.map((id, i) => [id, inboxIssues[i]]));
 
     // Filter valid items and collect issue IDs to fetch
-    const validItems: Array<{ id: (typeof args.ids)[number]; inboxIssue: NonNullable<(typeof inboxIssues)[number]> }> =
-      [];
+    const validItems: Array<{
+      id: (typeof args.ids)[number];
+      inboxIssue: NonNullable<(typeof inboxIssues)[number]>;
+    }> = [];
     for (const id of args.ids) {
       const inboxIssue = inboxMap.get(id);
       if (!inboxIssue) continue;

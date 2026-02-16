@@ -1,6 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
-import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { act, renderHook, waitFor } from "@/test/custom-render";
 import { usePaginatedIssues } from "./usePaginatedIssues";
 

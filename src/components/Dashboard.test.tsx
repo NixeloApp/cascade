@@ -1,9 +1,9 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { ReactNode } from "react";
-import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@/test/custom-render";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { OrgContext, type OrgContextType } from "@/hooks/useOrgContext";
+import { render, screen } from "@/test/custom-render";
 import { Dashboard } from "./Dashboard";
 
 // Mock Convex hooks

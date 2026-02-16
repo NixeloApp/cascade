@@ -2,7 +2,12 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { renderHook } from "@/test/custom-render";
-import { OrgContext, type OrgContextType, useOrganization, useOrganizationOptional } from "./useOrgContext";
+import {
+  OrgContext,
+  type OrgContextType,
+  useOrganization,
+  useOrganizationOptional,
+} from "./useOrgContext";
 
 const mockOrgContext: OrgContextType = {
   organizationId: "org123" as Id<"organizations">,

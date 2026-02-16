@@ -1,9 +1,9 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import type { ReactNode } from "react";
-import { type Mock, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
+import { beforeAll, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { OrgContext, type OrgContextType } from "@/hooks/useOrgContext";
+import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
 import { type CommandAction, CommandPalette } from "./CommandPalette";
 
 // Mock scrollIntoView for cmdk
@@ -19,7 +19,7 @@ vi.mock("convex/react", () => ({
 // Mock API
 vi.mock("@convex/_generated/api", () => ({
   api: {
-    issues: { searchGlobal: "api.issues.searchGlobal" },
+    issues: { search: "api.issues.search" },
     documents: { search: "api.documents.search" },
     projects: { getCurrentUserProjects: "api.projects.getCurrentUserProjects" },
   },

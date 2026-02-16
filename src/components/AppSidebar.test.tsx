@@ -1,9 +1,9 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
-import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@/test/custom-render";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { OrgContext, type OrgContextType } from "@/hooks/useOrgContext";
+import { fireEvent, render, screen } from "@/test/custom-render";
 import { AppSidebar } from "./AppSidebar";
 
 // Mock Convex hooks
@@ -251,7 +251,9 @@ describe("AppSidebar", () => {
 
       // There should be a collapse button with PanelLeftClose icon
       const buttons = screen.getAllByRole("button");
-      expect(buttons.some((btn) => btn.getAttribute("aria-label")?.includes("Collapse"))).toBe(true);
+      expect(buttons.some((btn) => btn.getAttribute("aria-label")?.includes("Collapse"))).toBe(
+        true,
+      );
     });
   });
 

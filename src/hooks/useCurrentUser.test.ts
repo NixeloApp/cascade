@@ -1,5 +1,5 @@
 import { useQuery } from "convex/react";
-import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { renderHook } from "@/test/custom-render";
 import { useCurrentUser } from "./useCurrentUser";
 
