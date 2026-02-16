@@ -1,171 +1,102 @@
 import type { Id } from "@convex/_generated/dataModel";
+import { renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
-import { renderHook } from "@/test/custom-render";
-import {
-  OrgContext,
-  type OrgContextType,
-  useOrganization,
-  useOrganizationOptional,
-} from "./useOrgContext";
+import { OrgContext, type OrgContextType, useOrganization, useOrganizationOptional } from "./useOrgContext";
 
 const mockOrgContext: OrgContextType = {
-  organizationId: "org123" as Id<"organizations">,
-  orgSlug: "acme-corp",
-  organizationName: "Acme Corporation",
+  organizationId: "test-org-id" as Id<"organizations">,
+  orgSlug: "test-org",
+  organizationName: "Test Organization",
   userRole: "admin",
   billingEnabled: true,
 };
 
-const createWrapper =
-  (contextValue: OrgContextType | null) =>
-  ({ children }: { children: ReactNode }) => (
-    <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
-  );
+function createWrapper(contextValue: OrgContextType | null) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>;
+  };
+}
 
 describe("useOrganization", () => {
-  describe("With Context", () => {
-    it("should return organization context when provided", () => {
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(mockOrgContext),
-      });
-
-      expect(result.current).toEqual(mockOrgContext);
+  it("should return organization context when available", () => {
+    const { result } = renderHook(() => useOrganization(), {
+      wrapper: createWrapper(mockOrgContext),
     });
 
-    it("should provide access to organizationId", () => {
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(mockOrgContext),
-      });
-
-      expect(result.current.organizationId).toBe("org123");
-    });
-
-    it("should provide access to orgSlug", () => {
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(mockOrgContext),
-      });
-
-      expect(result.current.orgSlug).toBe("acme-corp");
-    });
-
-    it("should provide access to organizationName", () => {
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(mockOrgContext),
-      });
-
-      expect(result.current.organizationName).toBe("Acme Corporation");
-    });
-
-    it("should provide access to userRole", () => {
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(mockOrgContext),
-      });
-
-      expect(result.current.userRole).toBe("admin");
-    });
-
-    it("should provide access to billingEnabled", () => {
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(mockOrgContext),
-      });
-
-      expect(result.current.billingEnabled).toBe(true);
-    });
+    expect(result.current.organizationId).toBe("test-org-id");
+    expect(result.current.orgSlug).toBe("test-org");
+    expect(result.current.organizationName).toBe("Test Organization");
+    expect(result.current.userRole).toBe("admin");
+    expect(result.current.billingEnabled).toBe(true);
   });
 
-  describe("Without Context", () => {
-    it("should throw error when used outside organization route", () => {
-      expect(() => {
-        renderHook(() => useOrganization());
-      }).toThrow("useOrganization must be used within an organization route");
-    });
+  it("should throw error when used outside context", () => {
+    expect(() => {
+      renderHook(() => useOrganization(), {
+        wrapper: createWrapper(null),
+      });
+    }).toThrow("useOrganization must be used within an organization route");
   });
 
-  describe("Different User Roles", () => {
-    it("should return owner role", () => {
-      const ownerContext = { ...mockOrgContext, userRole: "owner" as const };
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(ownerContext),
-      });
-
-      expect(result.current.userRole).toBe("owner");
+  it("should return different user roles", () => {
+    const ownerContext: OrgContextType = { ...mockOrgContext, userRole: "owner" };
+    const { result: ownerResult } = renderHook(() => useOrganization(), {
+      wrapper: createWrapper(ownerContext),
     });
+    expect(ownerResult.current.userRole).toBe("owner");
 
-    it("should return member role", () => {
-      const memberContext = { ...mockOrgContext, userRole: "member" as const };
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(memberContext),
-      });
-
-      expect(result.current.userRole).toBe("member");
+    const memberContext: OrgContextType = { ...mockOrgContext, userRole: "member" };
+    const { result: memberResult } = renderHook(() => useOrganization(), {
+      wrapper: createWrapper(memberContext),
     });
+    expect(memberResult.current.userRole).toBe("member");
   });
 
-  describe("Billing States", () => {
-    it("should handle billingEnabled=false", () => {
-      const noBillingContext = { ...mockOrgContext, billingEnabled: false };
-      const { result } = renderHook(() => useOrganization(), {
-        wrapper: createWrapper(noBillingContext),
-      });
-
-      expect(result.current.billingEnabled).toBe(false);
+  it("should return billingEnabled false", () => {
+    const noBillingContext: OrgContextType = { ...mockOrgContext, billingEnabled: false };
+    const { result } = renderHook(() => useOrganization(), {
+      wrapper: createWrapper(noBillingContext),
     });
+    expect(result.current.billingEnabled).toBe(false);
   });
 });
 
 describe("useOrganizationOptional", () => {
-  describe("With Context", () => {
-    it("should return organization context when provided", () => {
-      const { result } = renderHook(() => useOrganizationOptional(), {
-        wrapper: createWrapper(mockOrgContext),
-      });
-
-      expect(result.current).toEqual(mockOrgContext);
+  it("should return organization context when available", () => {
+    const { result } = renderHook(() => useOrganizationOptional(), {
+      wrapper: createWrapper(mockOrgContext),
     });
 
-    it("should provide access to all properties", () => {
-      const { result } = renderHook(() => useOrganizationOptional(), {
-        wrapper: createWrapper(mockOrgContext),
-      });
-
-      expect(result.current?.organizationId).toBe("org123");
-      expect(result.current?.orgSlug).toBe("acme-corp");
-      expect(result.current?.organizationName).toBe("Acme Corporation");
-      expect(result.current?.userRole).toBe("admin");
-      expect(result.current?.billingEnabled).toBe(true);
-    });
+    expect(result.current).not.toBeNull();
+    expect(result.current?.organizationId).toBe("test-org-id");
+    expect(result.current?.orgSlug).toBe("test-org");
   });
 
-  describe("Without Context", () => {
-    it("should return null when used outside organization route", () => {
-      const { result } = renderHook(() => useOrganizationOptional());
-
-      expect(result.current).toBeNull();
+  it("should return null when used outside context", () => {
+    const { result } = renderHook(() => useOrganizationOptional(), {
+      wrapper: createWrapper(null),
     });
 
-    it("should not throw error when context is missing", () => {
-      expect(() => {
-        renderHook(() => useOrganizationOptional());
-      }).not.toThrow();
-    });
+    expect(result.current).toBeNull();
   });
 
-  describe("Null Context Provider", () => {
-    it("should return null when context value is explicitly null", () => {
+  it("should not throw when context is missing", () => {
+    expect(() => {
       const { result } = renderHook(() => useOrganizationOptional(), {
         wrapper: createWrapper(null),
       });
-
-      expect(result.current).toBeNull();
-    });
+      // Access result to ensure no error
+      return result.current;
+    }).not.toThrow();
   });
 });
 
 describe("OrgContext", () => {
-  it("should have default value of null", () => {
-    // Verify the context exists and can be used
+  it("should have correct default value (null)", () => {
+    // Render without a provider to verify default
     const { result } = renderHook(() => useOrganizationOptional());
+
     expect(result.current).toBeNull();
   });
 });
