@@ -120,10 +120,10 @@ describe("resolveDNS", () => {
     await expect(resolveDNS("example.com")).rejects.toThrow("Could not resolve hostname");
   });
 
-  it("should handle fetch errors gracefully and try other record type", async () => {
+  it("should fail if one lookup fails (Fail Closed)", async () => {
     // Mock A record failure
     (global.fetch as any).mockImplementationOnce(() => Promise.reject(new Error("Network error")));
-    // Mock AAAA record success
+    // Mock AAAA record success (should not be returned)
     (global.fetch as any).mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
@@ -134,8 +134,7 @@ describe("resolveDNS", () => {
       }),
     );
 
-    const ips = await resolveDNS("example.com");
-    expect(ips).toContain("2001:db8::1");
+    await expect(resolveDNS("example.com")).rejects.toThrow("Network error");
   });
 
   it("should throw if all lookups fail", async () => {
@@ -144,6 +143,6 @@ describe("resolveDNS", () => {
     // Mock AAAA record failure
     (global.fetch as any).mockImplementationOnce(() => Promise.reject(new Error("Network error")));
 
-    await expect(resolveDNS("example.com")).rejects.toThrow("Could not resolve hostname");
+    await expect(resolveDNS("example.com")).rejects.toThrow("Network error");
   });
 });
