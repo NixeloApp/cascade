@@ -17,7 +17,17 @@ type LogData = Record<string, unknown>;
  */
 function safeStringify(data: LogData): string {
   try {
-    return JSON.stringify(data);
+    return JSON.stringify(data, (_key, value) => {
+      if (value instanceof Error) {
+        return {
+          name: value.name,
+          message: value.message,
+          stack: value.stack,
+          cause: value.cause,
+        };
+      }
+      return value;
+    });
   } catch {
     // Handle circular references or other stringify errors
     return "[Unable to serialize data]";
