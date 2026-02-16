@@ -33,7 +33,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 50
+        ? 100
         : 20,
     period: 60_000,
     capacity:
@@ -41,13 +41,34 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 50
+        ? 100
         : 20,
   }, // 20 per minute default to prevent blocking legit users/tests if env detection fails
 
   // Email Change Verification: Strict limit to prevent OTP brute-forcing
   // User-based (authenticated), so low limit is safe even for parallel tests
   emailChange: { kind: "token bucket", rate: 5, period: 60_000, capacity: 5 },
+
+  // Email Verification: Strict limit to prevent spam/DoS
+  // Similar to password reset
+  emailVerification: {
+    kind: "token bucket",
+    rate:
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.E2E_TEST_MODE ||
+      process.env.CI
+        ? 100
+        : 20,
+    period: 60_000,
+    capacity:
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.E2E_TEST_MODE ||
+      process.env.CI
+        ? 100
+        : 20,
+  },
 });
 
 /**
