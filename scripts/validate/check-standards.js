@@ -15,6 +15,7 @@ export function run() {
     "src/components/ui",
     "src/components/landing",
     "src/components/Calendar/shadcn-calendar",
+    "src/components/Kanban", // Contains complex drag-and-drop logic that uses raw divs
   ];
 
   let errorCount = 0;

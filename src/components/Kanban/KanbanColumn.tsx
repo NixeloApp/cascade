@@ -110,6 +110,7 @@ const KanbanIssueItem = memo(
           isFocused={isFocused}
           onToggleSelect={onToggleSelect}
           canEdit={canEdit}
+          status={issue.status}
         />
       </div>
     );

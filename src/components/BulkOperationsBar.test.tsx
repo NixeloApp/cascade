@@ -8,16 +8,8 @@ import { BulkOperationsBar } from "./BulkOperationsBar";
 
 // Mock Radix Select to use native select for testability
 vi.mock("./ui/Select", () => ({
-  Select: ({
-    children,
-    onValueChange,
-  }: {
-    children: React.ReactNode;
-    onValueChange: (value: string) => void;
-  }) => (
-    <div data-testid="select-root" data-onvaluechange={onValueChange}>
-      {children}
-    </div>
+  Select: ({ children }: { children: React.ReactNode; onValueChange: (value: string) => void }) => (
+    <div data-testid="select-root">{children}</div>
   ),
   SelectTrigger: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <button type="button" className={className} data-testid="select-trigger">
