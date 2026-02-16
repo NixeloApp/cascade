@@ -93,3 +93,8 @@
 **Vulnerability:** The E2E endpoint authentication relied on `request.url` to detect if the request was coming from `localhost` to allow bypassing the API key check. This could be exploited by spoofing the Host header or URL construction in certain environments, tricking the backend into believing it was running locally.
 **Learning:** `request.url` in serverless/cloud functions is often constructed from headers that can be manipulated by the client (Host header injection). It should not be used as a trusted source for determining the deployment environment.
 **Prevention:** Modified `validateE2EApiKey` to check `process.env.CONVEX_SITE_URL` (via `getConvexSiteUrl()`) instead of `request.url`. This relies on the immutable server configuration to determine if the environment is local or production.
+
+## 2025-05-25 - SSO Domain Hijacking via Bounded Query Limitation
+**Vulnerability:** The SSO domain verification logic relied on `ctx.db.query("ssoConnections").take(BOUNDED_LIST_LIMIT)` (100 items) to check for duplicate domains. If more than 100 SSO connections existed, a new connection could claim a domain already owned by an existing connection (if it was outside the returned page), allowing authentication hijacking.
+**Learning:** Security checks (uniqueness, permissions) must never rely on bounded queries or pagination limits unless the dataset is guaranteed to be small. Relying on "most deployments have <100 items" is a security flaw in multi-tenant systems.
+**Prevention:** Implemented a dedicated `ssoDomains` table with a unique index on `domain`. This allows O(1) uniqueness checks and lookups regardless of the number of connections, ensuring scalability and security.

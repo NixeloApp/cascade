@@ -131,6 +131,15 @@ const applicationTables = {
     .index("by_organization_enabled", ["organizationId", "isEnabled"])
     .index("by_type", ["type"]),
 
+  ssoDomains: defineTable({
+    domain: v.string(), // "acme.com"
+    connectionId: v.id("ssoConnections"),
+    organizationId: v.id("organizations"),
+  })
+    .index("by_domain", ["domain"])
+    .index("by_connection", ["connectionId"])
+    .index("by_organization", ["organizationId"]),
+
   invites: defineTable({
     email: v.string(),
     role: inviteRoles, // Platform role
