@@ -197,6 +197,11 @@ export const ROUTES = {
     },
   },
 
+  archives: {
+    path: "/$orgSlug/archives" as const,
+    build: (orgSlug: string) => `/${orgSlug}/archives`,
+  },
+
   settings: {
     profile: {
       path: "/$orgSlug/settings/profile" as const,
