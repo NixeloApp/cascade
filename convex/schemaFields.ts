@@ -31,6 +31,8 @@ export const projectsFields = {
       name: v.string(),
       category: workflowCategories,
       order: v.number(),
+      // WIP limit: max issues allowed in this column (0 = no limit)
+      wipLimit: v.optional(v.number()),
     }),
   ),
   // Agency features
@@ -57,7 +59,8 @@ export const issuesFields = {
   assigneeId: v.optional(v.id("users")),
   reporterId: v.id("users"),
   updatedAt: v.number(),
-  dueDate: v.optional(v.number()),
+  startDate: v.optional(v.number()), // When work should begin
+  dueDate: v.optional(v.number()), // Target completion date
   estimatedHours: v.optional(v.number()),
   loggedHours: v.optional(v.number()),
   storyPoints: v.optional(v.number()),
@@ -73,6 +76,9 @@ export const issuesFields = {
   // AI/Semantic Search
   embedding: v.optional(v.array(v.float64())), // Vector embedding for semantic search
   searchContent: v.optional(v.string()), // Combined title and description for search
+  // Archive (for completed/cancelled issues)
+  archivedAt: v.optional(v.number()), // Timestamp when archived (null = active)
+  archivedBy: v.optional(v.id("users")), // User who archived this issue
   // Soft Delete
   isDeleted: v.optional(v.boolean()), // Soft delete flag (undefined = not deleted)
   deletedAt: v.optional(v.number()), // Timestamp when deleted

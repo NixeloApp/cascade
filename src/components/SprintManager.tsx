@@ -6,12 +6,19 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { formatDate } from "@/lib/dates";
 import { Trophy } from "@/lib/icons";
 import { getStatusColor } from "@/lib/issue-utils";
+import {
+  calculateEndDate,
+  DEFAULT_SPRINT_PRESET,
+  SPRINT_DURATION_PRESETS,
+} from "@/lib/sprint-presets";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { EmptyState } from "./ui/EmptyState";
 import { Input } from "./ui/form/Input";
 import { Textarea } from "./ui/form/Textarea";
+import { Grid } from "./ui/Grid";
 import { SkeletonProjectCard } from "./ui/Skeleton";
 import { Typography } from "./ui/Typography";
 
@@ -23,7 +30,7 @@ interface SprintManagerProps {
 interface SprintCardProps {
   sprint: Doc<"sprints"> & { issueCount: number; completedCount: number };
   canEdit: boolean;
-  onStartSprint: (sprintId: Id<"sprints">) => Promise<void>;
+  onStartSprint: (sprintId: Id<"sprints">) => void;
   onCompleteSprint: (sprintId: Id<"sprints">) => Promise<void>;
 }
 
@@ -114,6 +121,15 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newSprintName, setNewSprintName] = useState("");
   const [newSprintGoal, setNewSprintGoal] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState(DEFAULT_SPRINT_PRESET);
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+
+  // Sprint start modal state
+  const [startingSprintId, setStartingSprintId] = useState<Id<"sprints"> | null>(null);
+  const [startPreset, setStartPreset] = useState(DEFAULT_SPRINT_PRESET);
+  const [startCustomStart, setStartCustomStart] = useState("");
+  const [startCustomEnd, setStartCustomEnd] = useState("");
 
   const sprints = useQuery(api.sprints.listByProject, { projectId });
   const createSprint = useMutation(api.sprints.create);
@@ -124,15 +140,34 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
     e.preventDefault();
     if (!newSprintName.trim()) return;
 
+    // Calculate dates based on preset selection
+    let startDate: number | undefined;
+    let endDate: number | undefined;
+
+    if (selectedPreset === "custom") {
+      if (customStartDate && customEndDate) {
+        startDate = new Date(customStartDate).getTime();
+        endDate = new Date(customEndDate).getTime();
+      }
+    } else {
+      // For preset durations, we'll set dates when starting the sprint
+      // but store the intended duration preference
+    }
+
     try {
       await createSprint({
         projectId,
         name: newSprintName.trim(),
         goal: newSprintGoal.trim() || undefined,
+        startDate,
+        endDate,
       });
 
       setNewSprintName("");
       setNewSprintGoal("");
+      setSelectedPreset(DEFAULT_SPRINT_PRESET);
+      setCustomStartDate("");
+      setCustomEndDate("");
       setShowCreateForm(false);
       showSuccess("Sprint created successfully");
     } catch (error) {
@@ -140,17 +175,46 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
     }
   };
 
-  const handleStartSprint = async (sprintId: Id<"sprints">) => {
-    const startDate = Date.now();
-    const endDate = startDate + 14 * 24 * 60 * 60 * 1000; // 2 weeks
+  const openStartSprintModal = (sprintId: Id<"sprints">) => {
+    setStartingSprintId(sprintId);
+    setStartPreset(DEFAULT_SPRINT_PRESET);
+    setStartCustomStart("");
+    setStartCustomEnd("");
+  };
+
+  const closeStartSprintModal = () => {
+    setStartingSprintId(null);
+    setStartPreset(DEFAULT_SPRINT_PRESET);
+    setStartCustomStart("");
+    setStartCustomEnd("");
+  };
+
+  const handleStartSprint = async () => {
+    if (!startingSprintId) return;
+
+    let startDate: number;
+    let endDate: number;
+
+    if (startPreset === "custom") {
+      if (!startCustomStart || !startCustomEnd) {
+        showError(new Error("Please select start and end dates"), "Invalid dates");
+        return;
+      }
+      startDate = new Date(startCustomStart).getTime();
+      endDate = new Date(startCustomEnd).getTime();
+    } else {
+      startDate = Date.now();
+      endDate = calculateEndDate(startDate, startPreset).getTime();
+    }
 
     try {
       await startSprint({
-        sprintId,
+        sprintId: startingSprintId,
         startDate,
         endDate,
       });
       showSuccess("Sprint started successfully");
+      closeStartSprintModal();
     } catch (error) {
       showError(error, "Failed to start sprint");
     }
@@ -216,6 +280,60 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
               placeholder="What do you want to achieve in this sprint?"
               rows={2}
             />
+
+            {/* Duration Presets */}
+            <div className="space-y-2">
+              <Typography variant="label" className="block text-ui-text">
+                Sprint Duration
+              </Typography>
+              <Grid cols={2} colsSm={5} gap="sm">
+                {SPRINT_DURATION_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => setSelectedPreset(preset.id)}
+                    className={cn(
+                      "p-3 rounded-lg border text-left transition-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
+                      selectedPreset === preset.id
+                        ? "border-brand bg-ui-bg-secondary"
+                        : "border-ui-border-secondary bg-ui-bg hover:border-ui-border-hover",
+                    )}
+                  >
+                    <Typography variant="label" className="block">
+                      {preset.label}
+                    </Typography>
+                    <Typography variant="caption" className="text-ui-text-secondary">
+                      {preset.description}
+                    </Typography>
+                  </button>
+                ))}
+              </Grid>
+            </div>
+
+            {/* Custom date inputs (shown when "Custom" is selected) */}
+            {selectedPreset === "custom" && (
+              <Flex direction="column" gap="md" className="sm:flex-row">
+                <FlexItem flex="1">
+                  <Input
+                    label="Start Date"
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    required={selectedPreset === "custom"}
+                  />
+                </FlexItem>
+                <FlexItem flex="1">
+                  <Input
+                    label="End Date"
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    required={selectedPreset === "custom"}
+                  />
+                </FlexItem>
+              </Flex>
+            )}
+
             <Flex direction="column" gap="sm" className="sm:flex-row">
               <Button type="submit" variant="primary">
                 Create Sprint
@@ -227,6 +345,9 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                   setShowCreateForm(false);
                   setNewSprintName("");
                   setNewSprintGoal("");
+                  setSelectedPreset(DEFAULT_SPRINT_PRESET);
+                  setCustomStartDate("");
+                  setCustomEndDate("");
                 }}
               >
                 Cancel
@@ -255,12 +376,86 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
               key={sprint._id}
               sprint={sprint}
               canEdit={canEdit}
-              onStartSprint={handleStartSprint}
+              onStartSprint={openStartSprintModal}
               onCompleteSprint={handleCompleteSprint}
             />
           ))
         )}
       </div>
+
+      {/* Start Sprint Modal */}
+      {startingSprintId && (
+        <Flex align="center" justify="center" className="fixed inset-0 z-modal bg-overlay p-4">
+          <div className="card p-6 max-w-lg w-full animate-scale-in">
+            <Typography variant="h4" className="mb-4">
+              Start Sprint
+            </Typography>
+            <Typography variant="muted" className="mb-6">
+              Choose how long this sprint should run.
+            </Typography>
+
+            {/* Duration Presets */}
+            <div className="space-y-2 mb-6">
+              <Typography variant="label" className="block text-ui-text">
+                Sprint Duration
+              </Typography>
+              <Grid cols={2} colsSm={3} gap="sm">
+                {SPRINT_DURATION_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => setStartPreset(preset.id)}
+                    className={cn(
+                      "p-3 rounded-lg border text-left transition-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
+                      startPreset === preset.id
+                        ? "border-brand bg-ui-bg-secondary"
+                        : "border-ui-border-secondary bg-ui-bg hover:border-ui-border-hover",
+                    )}
+                  >
+                    <Typography variant="label" className="block">
+                      {preset.label}
+                    </Typography>
+                    <Typography variant="caption" className="text-ui-text-secondary">
+                      {preset.description}
+                    </Typography>
+                  </button>
+                ))}
+              </Grid>
+            </div>
+
+            {/* Custom date inputs */}
+            {startPreset === "custom" && (
+              <Flex direction="column" gap="md" className="sm:flex-row mb-6">
+                <FlexItem flex="1">
+                  <Input
+                    label="Start Date"
+                    type="date"
+                    value={startCustomStart}
+                    onChange={(e) => setStartCustomStart(e.target.value)}
+                  />
+                </FlexItem>
+                <FlexItem flex="1">
+                  <Input
+                    label="End Date"
+                    type="date"
+                    value={startCustomEnd}
+                    onChange={(e) => setStartCustomEnd(e.target.value)}
+                  />
+                </FlexItem>
+              </Flex>
+            )}
+
+            <Flex gap="sm" justify="end">
+              <Button variant="secondary" onClick={closeStartSprintModal}>
+                Cancel
+              </Button>
+              <Button variant="success" onClick={() => void handleStartSprint()}>
+                Start Sprint
+              </Button>
+            </Flex>
+          </div>
+        </Flex>
+      )}
     </div>
   );
 }

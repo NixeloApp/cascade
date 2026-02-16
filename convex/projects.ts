@@ -30,6 +30,7 @@ export const createProject = authenticatedMutation({
           name: v.string(),
           category: workflowCategories,
           order: v.number(),
+          wipLimit: v.optional(v.number()),
         }),
       ),
     ),
@@ -541,6 +542,8 @@ export const updateWorkflow = projectAdminMutation({
         name: v.string(),
         category: workflowCategories,
         order: v.number(),
+        // WIP limit: max issues allowed in this column (0 or undefined = no limit)
+        wipLimit: v.optional(v.number()),
       }),
     ),
   },

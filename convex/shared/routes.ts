@@ -148,6 +148,10 @@ export const ROUTES = {
       path: "/$orgSlug/projects/$key/backlog" as const,
       build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/backlog`,
     },
+    inbox: {
+      path: "/$orgSlug/projects/$key/inbox" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/inbox`,
+    },
     sprints: {
       path: "/$orgSlug/projects/$key/sprints" as const,
       build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/sprints`,

@@ -37,6 +37,14 @@ export const chatRoles = literals("user", "assistant", "system");
 
 // Statuses
 export const sprintStatuses = literals("future", "active", "completed");
+export const inboxIssueStatuses = literals(
+  "pending",
+  "accepted",
+  "declined",
+  "snoozed",
+  "duplicate",
+);
+export const inboxIssueSources = literals("in_app", "form", "email", "api");
 export const webhookStatuses = literals("success", "failed", "retrying");
 export const webhookResultStatuses = literals("success", "failed"); // For execution results
 export const calendarStatuses = literals("confirmed", "tentative", "cancelled");
@@ -275,3 +283,5 @@ export type DashboardLayout = Infer<typeof dashboardLayout>;
 export type AuditMetadata = Infer<typeof auditMetadata>;
 export type CalendarEventColor = Infer<typeof calendarEventColors>;
 export type GoogleCalendarEvent = Infer<typeof googleCalendarEvent>;
+export type InboxIssueStatus = Infer<typeof inboxIssueStatuses>;
+export type InboxIssueSource = Infer<typeof inboxIssueSources>;

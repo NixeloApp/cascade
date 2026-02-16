@@ -11,7 +11,8 @@ import { testUserService } from "./utils/test-user-service";
  *
  * Uses serial mode to prevent auth token rotation issues between tests.
  *
- * Note: Uses Playwright's drag-and-drop support for HTML5 native drag events.
+ * Note: Uses Playwright's drag-and-drop support with Atlaskit Pragmatic DnD.
+ * Pragmatic DnD manages drag state internally without HTML5 draggable attribute.
  */
 
 test.describe("Board Drag-Drop", () => {
@@ -46,12 +47,17 @@ test.describe("Board Drag-Drop", () => {
     const issueCard = projectsPage.getIssueCard(issueTitle);
     await expect(issueCard).toBeVisible();
 
-    // Verify the card container has draggable attribute (cards are draggable when canEdit=true)
-    // getIssueCard returns the overlay button, so we need to check the parent container
+    // With Pragmatic DnD, the card is draggable via the library's internal setup
+    // The drag handle should be visible on hover. Verify the card structure exists.
+    // getIssueCard returns the overlay button, so we check the parent container
     const issueCardContainer = issueCard.locator("xpath=..");
-    // Use toHaveAttribute to enable retries as permissions might load asynchronously
-    await expect(issueCardContainer).toHaveAttribute("draggable", "true");
-    console.log("✓ Issue card is draggable");
+    await expect(issueCardContainer).toBeVisible();
+
+    // Verify there's a drag handle element (GripVertical icon wrapper)
+    // The drag handle is only visible on hover, but should exist in DOM
+    const dragHandle = issueCardContainer.locator("[class*='cursor-grab']");
+    await expect(dragHandle).toBeAttached();
+    console.log("✓ Issue card has drag handle (Pragmatic DnD)");
   });
 
   test("board columns are valid drop targets", async ({ projectsPage, page }) => {

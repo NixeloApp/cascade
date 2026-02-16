@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Toaster } from "@/components/ui/Sonner";
+import { getVapidPublicKey, WebPushProvider } from "@/lib/webPush";
 import { LazyPostHog } from "../components/LazyPostHog";
 import { NotFoundPage } from "../components/NotFoundPage";
 import { TooltipProvider } from "../components/ui/Tooltip";
@@ -58,7 +59,9 @@ function RootComponent() {
         <TooltipProvider delayDuration={200}>
           {convex ? (
             <ConvexAuthProvider client={convex}>
-              <Outlet />
+              <WebPushProvider vapidPublicKey={getVapidPublicKey()}>
+                <Outlet />
+              </WebPushProvider>
             </ConvexAuthProvider>
           ) : (
             <Flex

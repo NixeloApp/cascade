@@ -4,15 +4,39 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
-import { AtSign, Info, MessageSquare, RefreshCw, User } from "@/lib/icons";
+import {
+  AtSign,
+  Bell,
+  BellOff,
+  Info,
+  MessageSquare,
+  RefreshCw,
+  Smartphone,
+  User,
+} from "@/lib/icons";
+import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
+import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
 
 export function NotificationsTab() {
   const preferences = useQuery(api.notificationPreferences.get);
+  const pushPreferences = useQuery(api.pushNotifications.getPreferences);
   const updatePreferences = useMutation(api.notificationPreferences.update);
+  const updatePushPreferences = useMutation(api.pushNotifications.updatePreferences);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Web Push hook
+  const vapidKey = getVapidPublicKey();
+  const {
+    isSupported,
+    isSubscribed,
+    isLoading: isPushLoading,
+    subscribe,
+    unsubscribe,
+  } = useWebPush();
 
   if (!preferences) {
     return (
@@ -56,8 +80,144 @@ export function NotificationsTab() {
     }
   };
 
+  const handlePushToggle = async (field: string, value: boolean) => {
+    setIsSaving(true);
+    try {
+      await updatePushPreferences({ [field]: value });
+      toast.success("Push preferences updated");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update preferences");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Push Notifications */}
+      <Card>
+        <div className="p-6">
+          <Flex align="center" gap="sm" className="mb-4">
+            <Icon icon={Smartphone} size="lg" className="text-brand" />
+            <Typography variant="h5">Push Notifications</Typography>
+            <Badge variant="info" size="sm">
+              PWA
+            </Badge>
+          </Flex>
+
+          {!isSupported ? (
+            <div className="p-4 bg-ui-bg-tertiary rounded-lg">
+              <Flex align="center" gap="sm">
+                <Icon icon={BellOff} size="md" className="text-ui-text-tertiary" />
+                <Typography variant="caption">
+                  Push notifications are not supported in this browser. Try using Chrome, Edge, or
+                  Firefox.
+                </Typography>
+              </Flex>
+            </div>
+          ) : !vapidKey ? (
+            <div className="p-4 bg-ui-bg-tertiary rounded-lg">
+              <Flex align="center" gap="sm">
+                <Icon icon={Info} size="md" className="text-ui-text-tertiary" />
+                <Typography variant="caption">
+                  Push notifications require server configuration. Contact your administrator.
+                </Typography>
+              </Flex>
+            </div>
+          ) : (
+            <>
+              <Flex align="start" justify="between" className="mb-4">
+                <FlexItem flex="1">
+                  <Typography variant="label">Browser Notifications</Typography>
+                  <Typography variant="caption" className="mt-1">
+                    Receive real-time notifications in your browser, even when Nixelo isn't open.
+                  </Typography>
+                </FlexItem>
+                <Button
+                  variant={isSubscribed ? "secondary" : "primary"}
+                  size="sm"
+                  onClick={isSubscribed ? unsubscribe : subscribe}
+                  isLoading={isPushLoading}
+                  className="ml-4"
+                >
+                  {isSubscribed ? (
+                    <>
+                      <BellOff className="w-4 h-4 mr-1" />
+                      Disable
+                    </>
+                  ) : (
+                    <>
+                      <Bell className="w-4 h-4 mr-1" />
+                      Enable
+                    </>
+                  )}
+                </Button>
+              </Flex>
+
+              {isSubscribed && pushPreferences && (
+                <div className="space-y-3 pt-4 border-t border-ui-border-secondary">
+                  <Typography variant="small" className="text-ui-text-secondary mb-2">
+                    Choose which notifications you want to receive:
+                  </Typography>
+
+                  {/* Push Mentions */}
+                  <Flex align="center" justify="between" className="py-2">
+                    <Flex align="center" gap="sm">
+                      <Icon icon={AtSign} size="sm" />
+                      <Typography variant="small">Mentions</Typography>
+                    </Flex>
+                    <Switch
+                      checked={pushPreferences.pushMentions}
+                      onCheckedChange={(value) => handlePushToggle("pushMentions", value)}
+                      disabled={isSaving}
+                    />
+                  </Flex>
+
+                  {/* Push Assignments */}
+                  <Flex align="center" justify="between" className="py-2">
+                    <Flex align="center" gap="sm">
+                      <Icon icon={User} size="sm" />
+                      <Typography variant="small">Assignments</Typography>
+                    </Flex>
+                    <Switch
+                      checked={pushPreferences.pushAssignments}
+                      onCheckedChange={(value) => handlePushToggle("pushAssignments", value)}
+                      disabled={isSaving}
+                    />
+                  </Flex>
+
+                  {/* Push Comments */}
+                  <Flex align="center" justify="between" className="py-2">
+                    <Flex align="center" gap="sm">
+                      <Icon icon={MessageSquare} size="sm" />
+                      <Typography variant="small">Comments</Typography>
+                    </Flex>
+                    <Switch
+                      checked={pushPreferences.pushComments}
+                      onCheckedChange={(value) => handlePushToggle("pushComments", value)}
+                      disabled={isSaving}
+                    />
+                  </Flex>
+
+                  {/* Push Status Changes */}
+                  <Flex align="center" justify="between" className="py-2">
+                    <Flex align="center" gap="sm">
+                      <Icon icon={RefreshCw} size="sm" />
+                      <Typography variant="small">Status Changes</Typography>
+                    </Flex>
+                    <Switch
+                      checked={pushPreferences.pushStatusChanges}
+                      onCheckedChange={(value) => handlePushToggle("pushStatusChanges", value)}
+                      disabled={isSaving}
+                    />
+                  </Flex>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </Card>
+
       {/* Master Toggle */}
       <Card>
         <div className="p-6">

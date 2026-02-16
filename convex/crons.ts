@@ -84,4 +84,15 @@ crons.interval(
   internal.oauthHealthCheck.checkGoogleOAuthHealth,
 );
 
+/**
+ * Process Event Reminders
+ * Runs every 5 minutes to send due calendar event reminders
+ * Sends email/push/in-app notifications based on user preferences
+ */
+crons.interval(
+  "process event reminders",
+  { minutes: 5 },
+  internal.eventReminders.processDueReminders,
+);
+
 export default crons;

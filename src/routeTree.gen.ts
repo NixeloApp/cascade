@@ -46,6 +46,7 @@ import { Route as AuthAppOrgSlugProjectsKeyTimesheetRouteImport } from './routes
 import { Route as AuthAppOrgSlugProjectsKeySprintsRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/sprints'
 import { Route as AuthAppOrgSlugProjectsKeySettingsRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/settings'
 import { Route as AuthAppOrgSlugProjectsKeyRoadmapRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/roadmap'
+import { Route as AuthAppOrgSlugProjectsKeyInboxRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/inbox'
 import { Route as AuthAppOrgSlugProjectsKeyCalendarRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/calendar'
 import { Route as AuthAppOrgSlugProjectsKeyBoardRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/board'
 import { Route as AuthAppOrgSlugProjectsKeyBillingRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/billing'
@@ -261,6 +262,12 @@ const AuthAppOrgSlugProjectsKeyRoadmapRoute =
     path: '/roadmap',
     getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
   } as any)
+const AuthAppOrgSlugProjectsKeyInboxRoute =
+  AuthAppOrgSlugProjectsKeyInboxRouteImport.update({
+    id: '/inbox',
+    path: '/inbox',
+    getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
+  } as any)
 const AuthAppOrgSlugProjectsKeyCalendarRoute =
   AuthAppOrgSlugProjectsKeyCalendarRouteImport.update({
     id: '/calendar',
@@ -373,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/projects/$key/billing': typeof AuthAppOrgSlugProjectsKeyBillingRoute
   '/$orgSlug/projects/$key/board': typeof AuthAppOrgSlugProjectsKeyBoardRoute
   '/$orgSlug/projects/$key/calendar': typeof AuthAppOrgSlugProjectsKeyCalendarRoute
+  '/$orgSlug/projects/$key/inbox': typeof AuthAppOrgSlugProjectsKeyInboxRoute
   '/$orgSlug/projects/$key/roadmap': typeof AuthAppOrgSlugProjectsKeyRoadmapRoute
   '/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
   '/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
@@ -419,6 +427,7 @@ export interface FileRoutesByTo {
   '/$orgSlug/projects/$key/billing': typeof AuthAppOrgSlugProjectsKeyBillingRoute
   '/$orgSlug/projects/$key/board': typeof AuthAppOrgSlugProjectsKeyBoardRoute
   '/$orgSlug/projects/$key/calendar': typeof AuthAppOrgSlugProjectsKeyCalendarRoute
+  '/$orgSlug/projects/$key/inbox': typeof AuthAppOrgSlugProjectsKeyInboxRoute
   '/$orgSlug/projects/$key/roadmap': typeof AuthAppOrgSlugProjectsKeyRoadmapRoute
   '/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
   '/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
@@ -470,6 +479,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/projects/$key/billing': typeof AuthAppOrgSlugProjectsKeyBillingRoute
   '/_auth/_app/$orgSlug/projects/$key/board': typeof AuthAppOrgSlugProjectsKeyBoardRoute
   '/_auth/_app/$orgSlug/projects/$key/calendar': typeof AuthAppOrgSlugProjectsKeyCalendarRoute
+  '/_auth/_app/$orgSlug/projects/$key/inbox': typeof AuthAppOrgSlugProjectsKeyInboxRoute
   '/_auth/_app/$orgSlug/projects/$key/roadmap': typeof AuthAppOrgSlugProjectsKeyRoadmapRoute
   '/_auth/_app/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
   '/_auth/_app/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
@@ -521,6 +531,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/billing'
     | '/$orgSlug/projects/$key/board'
     | '/$orgSlug/projects/$key/calendar'
+    | '/$orgSlug/projects/$key/inbox'
     | '/$orgSlug/projects/$key/roadmap'
     | '/$orgSlug/projects/$key/settings'
     | '/$orgSlug/projects/$key/sprints'
@@ -567,6 +578,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/billing'
     | '/$orgSlug/projects/$key/board'
     | '/$orgSlug/projects/$key/calendar'
+    | '/$orgSlug/projects/$key/inbox'
     | '/$orgSlug/projects/$key/roadmap'
     | '/$orgSlug/projects/$key/settings'
     | '/$orgSlug/projects/$key/sprints'
@@ -617,6 +629,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/projects/$key/billing'
     | '/_auth/_app/$orgSlug/projects/$key/board'
     | '/_auth/_app/$orgSlug/projects/$key/calendar'
+    | '/_auth/_app/$orgSlug/projects/$key/inbox'
     | '/_auth/_app/$orgSlug/projects/$key/roadmap'
     | '/_auth/_app/$orgSlug/projects/$key/settings'
     | '/_auth/_app/$orgSlug/projects/$key/sprints'
@@ -903,6 +916,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyRoadmapRouteImport
       parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
     }
+    '/_auth/_app/$orgSlug/projects/$key/inbox': {
+      id: '/_auth/_app/$orgSlug/projects/$key/inbox'
+      path: '/inbox'
+      fullPath: '/$orgSlug/projects/$key/inbox'
+      preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyInboxRouteImport
+      parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
+    }
     '/_auth/_app/$orgSlug/projects/$key/calendar': {
       id: '/_auth/_app/$orgSlug/projects/$key/calendar'
       path: '/calendar'
@@ -997,6 +1017,7 @@ interface AuthAppOrgSlugProjectsKeyRouteRouteChildren {
   AuthAppOrgSlugProjectsKeyBillingRoute: typeof AuthAppOrgSlugProjectsKeyBillingRoute
   AuthAppOrgSlugProjectsKeyBoardRoute: typeof AuthAppOrgSlugProjectsKeyBoardRoute
   AuthAppOrgSlugProjectsKeyCalendarRoute: typeof AuthAppOrgSlugProjectsKeyCalendarRoute
+  AuthAppOrgSlugProjectsKeyInboxRoute: typeof AuthAppOrgSlugProjectsKeyInboxRoute
   AuthAppOrgSlugProjectsKeyRoadmapRoute: typeof AuthAppOrgSlugProjectsKeyRoadmapRoute
   AuthAppOrgSlugProjectsKeySettingsRoute: typeof AuthAppOrgSlugProjectsKeySettingsRoute
   AuthAppOrgSlugProjectsKeySprintsRoute: typeof AuthAppOrgSlugProjectsKeySprintsRoute
@@ -1017,6 +1038,7 @@ const AuthAppOrgSlugProjectsKeyRouteRouteChildren: AuthAppOrgSlugProjectsKeyRout
     AuthAppOrgSlugProjectsKeyBoardRoute: AuthAppOrgSlugProjectsKeyBoardRoute,
     AuthAppOrgSlugProjectsKeyCalendarRoute:
       AuthAppOrgSlugProjectsKeyCalendarRoute,
+    AuthAppOrgSlugProjectsKeyInboxRoute: AuthAppOrgSlugProjectsKeyInboxRoute,
     AuthAppOrgSlugProjectsKeyRoadmapRoute:
       AuthAppOrgSlugProjectsKeyRoadmapRoute,
     AuthAppOrgSlugProjectsKeySettingsRoute:

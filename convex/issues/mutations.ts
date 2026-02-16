@@ -693,3 +693,279 @@ export const bulkDelete = authenticatedMutation({
     return { deleted: results.reduce((a: number, b) => a + b, 0) };
   },
 });
+
+// =============================================================================
+// ARCHIVE OPERATIONS (Plane parity)
+// =============================================================================
+
+/**
+ * Archive a single issue
+ * Only issues in "done" category can be archived
+ */
+export const archive = issueMutation({
+  args: {},
+  handler: async (ctx) => {
+    const issue = ctx.issue;
+
+    // Already archived
+    if (issue.archivedAt) {
+      return { success: false, error: "Issue is already archived" };
+    }
+
+    // Check if issue is in "done" category
+    const project = await ctx.db.get(issue.projectId);
+    if (!project) {
+      return { success: false, error: "Project not found" };
+    }
+
+    const state = project.workflowStates.find((s) => s.id === issue.status);
+    if (!state || state.category !== "done") {
+      return { success: false, error: "Only completed issues can be archived" };
+    }
+
+    // Archive the issue
+    await ctx.db.patch(issue._id, {
+      archivedAt: Date.now(),
+      archivedBy: ctx.userId,
+      updatedAt: Date.now(),
+    });
+
+    // Log activity
+    await ctx.db.insert("issueActivity", {
+      issueId: issue._id,
+      userId: ctx.userId,
+      action: "archived",
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Restore (unarchive) a single issue
+ */
+export const restore = issueMutation({
+  args: {},
+  handler: async (ctx) => {
+    const issue = ctx.issue;
+
+    // Not archived
+    if (!issue.archivedAt) {
+      return { success: false, error: "Issue is not archived" };
+    }
+
+    // Restore the issue
+    await ctx.db.patch(issue._id, {
+      archivedAt: undefined,
+      archivedBy: undefined,
+      updatedAt: Date.now(),
+    });
+
+    // Log activity
+    await ctx.db.insert("issueActivity", {
+      issueId: issue._id,
+      userId: ctx.userId,
+      action: "restored",
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Bulk archive issues
+ * Only issues in "done" category can be archived
+ */
+export const bulkArchive = authenticatedMutation({
+  args: {
+    issueIds: v.array(v.id("issues")),
+  },
+  handler: async (ctx, args) => {
+    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+    const now = Date.now();
+
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted || issue.archivedAt) return 0;
+
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
+
+        // Check if issue is in "done" category
+        const project = await ctx.db.get(issue.projectId);
+        if (!project) return 0;
+
+        const state = project.workflowStates.find((s) => s.id === issue.status);
+        if (!state || state.category !== "done") return 0;
+
+        // Archive the issue
+        await ctx.db.patch(issue._id, {
+          archivedAt: now,
+          archivedBy: ctx.userId,
+          updatedAt: now,
+        });
+
+        // Log activity
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "archived",
+        });
+
+        return 1;
+      }),
+    );
+
+    return { archived: results.reduce((a: number, b) => a + b, 0) };
+  },
+});
+
+/**
+ * Bulk restore (unarchive) issues
+ */
+export const bulkRestore = authenticatedMutation({
+  args: {
+    issueIds: v.array(v.id("issues")),
+  },
+  handler: async (ctx, args) => {
+    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+    const now = Date.now();
+
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted || !issue.archivedAt) return 0;
+
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
+
+        // Restore the issue
+        await ctx.db.patch(issue._id, {
+          archivedAt: undefined,
+          archivedBy: undefined,
+          updatedAt: now,
+        });
+
+        // Log activity
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "restored",
+        });
+
+        return 1;
+      }),
+    );
+
+    return { restored: results.reduce((a: number, b) => a + b, 0) };
+  },
+});
+
+/**
+ * Bulk update due date for multiple issues
+ * Validates date is not before start date if both are set
+ */
+export const bulkUpdateDueDate = authenticatedMutation({
+  args: {
+    issueIds: v.array(v.id("issues")),
+    dueDate: v.union(v.number(), v.null()), // null to clear
+  },
+  handler: async (ctx, args) => {
+    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+    const now = Date.now();
+
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
+
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
+
+        // Validate: due date should not be before start date
+        if (args.dueDate !== null && issue.startDate && args.dueDate < issue.startDate) {
+          return 0; // Skip issues where due date would be before start date
+        }
+
+        await ctx.db.patch(issue._id, {
+          dueDate: args.dueDate ?? undefined,
+          updatedAt: now,
+          version: (issue.version ?? 1) + 1,
+        });
+
+        // Log activity
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "updated",
+          field: "dueDate",
+          oldValue: issue.dueDate ? new Date(issue.dueDate).toISOString() : undefined,
+          newValue: args.dueDate ? new Date(args.dueDate).toISOString() : undefined,
+        });
+
+        return 1;
+      }),
+    );
+
+    return { updated: results.reduce((a: number, b) => a + b, 0) };
+  },
+});
+
+/**
+ * Bulk update start date for multiple issues
+ * Validates date is not after due date if both are set
+ */
+export const bulkUpdateStartDate = authenticatedMutation({
+  args: {
+    issueIds: v.array(v.id("issues")),
+    startDate: v.union(v.number(), v.null()), // null to clear
+  },
+  handler: async (ctx, args) => {
+    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+    const now = Date.now();
+
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
+
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
+
+        // Validate: start date should not be after due date
+        if (args.startDate !== null && issue.dueDate && args.startDate > issue.dueDate) {
+          return 0; // Skip issues where start date would be after due date
+        }
+
+        await ctx.db.patch(issue._id, {
+          startDate: args.startDate ?? undefined,
+          updatedAt: now,
+          version: (issue.version ?? 1) + 1,
+        });
+
+        // Log activity
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "updated",
+          field: "startDate",
+          oldValue: issue.startDate ? new Date(issue.startDate).toISOString() : undefined,
+          newValue: args.startDate ? new Date(args.startDate).toISOString() : undefined,
+        });
+
+        return 1;
+      }),
+    );
+
+    return { updated: results.reduce((a: number, b) => a + b, 0) };
+  },
+});

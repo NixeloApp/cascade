@@ -354,3 +354,85 @@ export const sendDigestEmail = internalAction({
     return result;
   },
 });
+
+/**
+ * Send an event reminder email
+ */
+export const sendEventReminder = internalAction({
+  args: {
+    userId: v.id("users"),
+    eventId: v.id("calendarEvents"),
+    minutesBefore: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { userId, eventId, minutesBefore } = args;
+
+    // Get user details
+    const user = await ctx.runQuery(internal.users.getInternal, { id: userId });
+    if (!user?.email) {
+      return { success: false, error: "No email found" };
+    }
+
+    // Get event details
+    const event = await ctx.runQuery(internal.calendarEvents.getInternal, { id: eventId });
+    if (!event) {
+      return { success: false, error: "Event not found" };
+    }
+
+    const appUrl = getSiteUrl();
+    const eventUrl = `${appUrl}/calendar/${eventId}`;
+
+    // Generate unsubscribe token
+    const token = await ctx.runMutation(internal.unsubscribe.generateTokenInternal, { userId });
+    const unsubscribeUrl = `${appUrl}/unsubscribe?token=${token}`;
+
+    // Format time
+    const startTime = new Date(event.startTime);
+    const formattedTime = startTime.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    // Format reminder time
+    let reminderText: string;
+    if (minutesBefore < 60) {
+      reminderText = `${minutesBefore} minute${minutesBefore !== 1 ? "s" : ""}`;
+    } else if (minutesBefore < 1440) {
+      const hours = Math.round(minutesBefore / 60);
+      reminderText = `${hours} hour${hours !== 1 ? "s" : ""}`;
+    } else {
+      const days = Math.round(minutesBefore / 1440);
+      reminderText = `${days} day${days !== 1 ? "s" : ""}`;
+    }
+
+    // Import the email template dynamically
+    const { EventReminderEmail } = await import("../../emails/EventReminderEmail");
+
+    // Render email to HTML
+    const html = await render(
+      EventReminderEmail({
+        userName: user.name || "there",
+        eventTitle: event.title,
+        eventTime: formattedTime,
+        reminderText,
+        location: event.location,
+        meetingUrl: event.meetingUrl,
+        eventUrl,
+        unsubscribeUrl,
+      }),
+    );
+
+    // Send email
+    const result = await sendEmail(null, {
+      to: user.email,
+      subject: `Reminder: ${event.title} in ${reminderText}`,
+      html,
+      text: `Reminder: ${event.title}\n\nStarting in ${reminderText} at ${formattedTime}\n\n${event.meetingUrl ? `Join: ${event.meetingUrl}\n\n` : ""}View: ${eventUrl}\n\nUnsubscribe: ${unsubscribeUrl}`,
+    });
+
+    return result;
+  },
+});
