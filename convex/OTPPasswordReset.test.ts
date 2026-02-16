@@ -8,6 +8,9 @@ vi.mock("./_generated/api", () => ({
     authWrapper: {
       checkPasswordResetRateLimitByEmail: "checkPasswordResetRateLimitByEmail",
     },
+    users: {
+      getInternalByEmail: "getInternalByEmail",
+    },
     e2e: {
       storeTestOtp: "storeTestOtp",
     },
@@ -27,12 +30,14 @@ describe("OTPPasswordReset", () => {
 
   const mockCtx = {
     runMutation: vi.fn(),
+    runQuery: vi.fn(),
     scheduler: { runAfter: vi.fn() },
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockSendEmail.mockResolvedValue({ success: true, id: "msg-id" });
+    mockCtx.runQuery.mockResolvedValue({ isTestUser: true });
   });
 
   afterEach(() => {
@@ -91,11 +96,29 @@ describe("OTPPasswordReset", () => {
     const params = { identifier: "test@inbox.mailtrap.io", token: "123456" };
     await sendVerificationRequest(params, mockCtx);
 
-    expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.e2e.storeTestOtp, {
-      email: "test@inbox.mailtrap.io",
-      code: "123456",
-      type: "reset",
-    });
+    // Verify rate limit check happened first
+    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(
+      1,
+      internal.authWrapper.checkPasswordResetRateLimitByEmail,
+      expect.anything(),
+    );
+
+    // Verify user lookup happened
+    expect(mockCtx.runQuery).toHaveBeenCalledWith(
+      internal.users.getInternalByEmail,
+      { email: "test@inbox.mailtrap.io" },
+    );
+
+    // Verify OTP storage happened
+    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(
+      2,
+      internal.e2e.storeTestOtp,
+      {
+        email: "test@inbox.mailtrap.io",
+        code: "123456",
+        type: "reset",
+      },
+    );
   });
 
   it("should not store OTP for normal emails", async () => {

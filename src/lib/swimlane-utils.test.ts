@@ -15,16 +15,20 @@ import {
 const createMockIssue = (overrides: Partial<EnrichedIssue> = {}): EnrichedIssue => ({
   _id: "issue1" as Id<"issues">,
   _creationTime: Date.now(),
+  updatedAt: Date.now(),
+  organizationId: "org1" as Id<"organizations">,
+  workspaceId: "ws1" as Id<"workspaces">,
+  teamId: "team1" as Id<"teams">,
   projectId: "project1" as Id<"projects">,
+  key: "TEST-1",
   title: "Test Issue",
-  number: 1,
   description: "Test description",
   status: "todo",
   priority: "medium",
   type: "task",
-  assigneeId: null,
+  assigneeId: undefined,
   reporterId: "user1" as Id<"users">,
-  epicId: null,
+  epicId: undefined,
   labels: [],
   assignee: null,
   reporter: {
@@ -34,6 +38,9 @@ const createMockIssue = (overrides: Partial<EnrichedIssue> = {}): EnrichedIssue 
   epic: null,
   isDeleted: false,
   order: 0,
+  linkedDocuments: [],
+  attachments: [],
+  version: 1,
   ...overrides,
 });
 
@@ -50,7 +57,7 @@ describe("swimlane-utils", () => {
     });
 
     it("returns 'unassigned' for assignee grouping when unassigned", () => {
-      const issue = createMockIssue({ assigneeId: null });
+      const issue = createMockIssue({ assigneeId: undefined });
       expect(getSwimlanId(issue, "assignee")).toBe("unassigned");
     });
 
@@ -90,7 +97,7 @@ describe("swimlane-utils", () => {
       const issues = [
         createMockIssue({ assigneeId: "user1" as Id<"users"> }),
         createMockIssue({ assigneeId: "user2" as Id<"users"> }),
-        createMockIssue({ assigneeId: null }),
+        createMockIssue({ assigneeId: undefined }),
       ];
       const assignees = new Map<Id<"users">, { name?: string; image?: string }>([
         ["user1" as Id<"users">, { name: "User 1" }],
