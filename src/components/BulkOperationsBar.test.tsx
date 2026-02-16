@@ -72,6 +72,15 @@ describe("BulkOperationsBar - Component Behavior", () => {
     });
 
     // Setup mutations - each useMutation call gets the corresponding mock
+    // Order in component:
+    // 1. bulkUpdateStatus
+    // 2. bulkUpdatePriority
+    // 3. bulkAssign
+    // 4. bulkMoveToSprint
+    // 5. bulkArchive
+    // 6. bulkDelete
+    // 7. bulkUpdateStartDate
+    // 8. bulkUpdateDueDate
     let mutationCallCount = 0;
     (useMutation as any).mockImplementation(() => {
       const mocks = [
@@ -408,23 +417,11 @@ describe("BulkOperationsBar - Component Behavior", () => {
       const toggleButton = screen.getByRole("button", { name: "Actions" });
       expect(toggleButton).toBeInTheDocument();
 
-      // Click to show actions (it toggles visibility of action items)
+      // Click to show actions
       await user.click(toggleButton);
-      // Assuming it stays "Actions" or changes, but typically "Actions" is static label for menu trigger or collapse
-      // If the label changes, we should update. Based on logs, we only see "Actions".
-      // Let's assume it stays "Actions" for now, or check if "Hide Actions" is still relevant.
-      // If the component changed to a non-toggling label or just "Actions", the tests expecting "Hide Actions" will fail.
-      // Given the log shows "Actions", let's update expectations.
-      // But wait, if it toggles, maybe aria-expanded changes?
-      // For now, I will comment out the toggle label assertions if I can't be sure,
-      // but let's assume "Show Actions" -> "Actions" is the change.
 
-      // If the test expects "Hide Actions" next, and that fails, I'll know.
-      // Let's try replacing "Show Actions" with "Actions" first.
-      // And removing "Hide Actions" checks if they are no longer applicable or updated.
-
-      // Wait, if it toggles, maybe I should just check for content visibility?
-      // "should show action dropdowns when actions are visible"
+      // Should show the action section labels
+      expect(screen.getByText("Status")).toBeInTheDocument();
     });
 
     it("should show action dropdowns when actions are visible", async () => {

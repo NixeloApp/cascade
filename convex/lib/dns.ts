@@ -52,10 +52,15 @@ async function queryDoH(name: string, type: "A" | "AAAA"): Promise<string[]> {
     const data = await response.json();
 
     if (data.Status !== 0) {
-      // Status 0 is NOERROR. Other codes indicate failure (e.g. NXDOMAIN).
-      // We return empty array if domain not found or other DNS error, but don't throw yet.
-      // The caller decides if empty result is fatal.
-      return [];
+      // Status 0 is NOERROR.
+      // Status 3 is NXDOMAIN (domain not found) - return empty array.
+      if (data.Status === 3) {
+        return [];
+      }
+
+      // For other errors (e.g. SERVFAIL=2, REFUSED=5), fail closed.
+      // We cannot be sure if a private IP exists but was missed due to DNS failure.
+      throw new Error(`DNS resolution failed with status ${data.Status}`);
     }
 
     // Filter for Answer records of the correct type (1 for A, 28 for AAAA)
