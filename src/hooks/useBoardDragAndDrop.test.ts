@@ -23,8 +23,10 @@ vi.mock("./boardOptimisticUpdates", () => ({
 const mockUpdateStatus = vi.fn();
 const mockUpdateStatusByCategory = vi.fn();
 
-// Add withOptimisticUpdate method
-mockUpdateStatus.withOptimisticUpdate = vi.fn(() => mockUpdateStatus);
+// Add withOptimisticUpdate method with proper typing
+(mockUpdateStatus as Mock & { withOptimisticUpdate: Mock }).withOptimisticUpdate = vi.fn(
+  () => mockUpdateStatus,
+);
 
 const createMockIssue = (overrides: Partial<EnrichedIssue> = {}): EnrichedIssue => ({
   _id: `issue-${Math.random().toString(36).slice(2)}` as Id<"issues">,
@@ -36,7 +38,16 @@ const createMockIssue = (overrides: Partial<EnrichedIssue> = {}): EnrichedIssue 
   priority: "medium",
   order: 1,
   projectId: "project-1" as Id<"projects">,
-  createdBy: "user-1" as Id<"users">,
+  organizationId: "org-1" as Id<"organizations">,
+  workspaceId: "workspace-1" as Id<"workspaces">,
+  reporterId: "user-1" as Id<"users">,
+  labels: [],
+  linkedDocuments: [],
+  attachments: [],
+  updatedAt: Date.now(),
+  assignee: null,
+  reporter: null,
+  epic: null,
   ...overrides,
 });
 
@@ -53,7 +64,7 @@ describe("useBoardDragAndDrop", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Use mockReturnValue (not Once) so it returns the same value every time
-    (useMutation as Mock).mockImplementation((api) => {
+    (useMutation as Mock).mockImplementation(() => {
       // Return appropriate mock based on which API is being used
       // First call is updateStatus, second is updateStatusByCategory
       return mockUpdateStatus;
@@ -134,11 +145,7 @@ describe("useBoardDragAndDrop", () => {
       );
 
       await act(async () => {
-        await result.current.handleIssueDrop(
-          "nonexistent" as Id<"issues">,
-          "todo",
-          "in-progress",
-        );
+        await result.current.handleIssueDrop("nonexistent" as Id<"issues">, "todo", "in-progress");
       });
 
       expect(mockUpdateStatus).not.toHaveBeenCalled();
@@ -159,11 +166,7 @@ describe("useBoardDragAndDrop", () => {
       );
 
       await act(async () => {
-        await result.current.handleIssueDrop(
-          "issue-1" as Id<"issues">,
-          "todo",
-          "in-progress",
-        );
+        await result.current.handleIssueDrop("issue-1" as Id<"issues">, "todo", "in-progress");
       });
 
       expect(mockUpdateStatus).toHaveBeenCalledWith({
@@ -190,11 +193,7 @@ describe("useBoardDragAndDrop", () => {
       );
 
       await act(async () => {
-        await result.current.handleIssueDrop(
-          "issue-1" as Id<"issues">,
-          "todo",
-          "in-progress",
-        );
+        await result.current.handleIssueDrop("issue-1" as Id<"issues">, "todo", "in-progress");
       });
 
       expect(mockPushHistoryAction).toHaveBeenCalledWith({
@@ -224,11 +223,7 @@ describe("useBoardDragAndDrop", () => {
       );
 
       await act(async () => {
-        await result.current.handleIssueDrop(
-          "issue-1" as Id<"issues">,
-          "todo",
-          "inprogress",
-        );
+        await result.current.handleIssueDrop("issue-1" as Id<"issues">, "todo", "inprogress");
       });
 
       expect(mockUpdateStatusByCategory).toHaveBeenCalledWith({
@@ -254,11 +249,7 @@ describe("useBoardDragAndDrop", () => {
       );
 
       await act(async () => {
-        await result.current.handleIssueDrop(
-          "issue-1" as Id<"issues">,
-          "todo",
-          "inprogress",
-        );
+        await result.current.handleIssueDrop("issue-1" as Id<"issues">, "todo", "inprogress");
       });
 
       expect(mockPushHistoryAction).not.toHaveBeenCalled();
@@ -282,11 +273,7 @@ describe("useBoardDragAndDrop", () => {
       );
 
       await act(async () => {
-        await result.current.handleIssueDrop(
-          "issue-1" as Id<"issues">,
-          "todo",
-          "in-progress",
-        );
+        await result.current.handleIssueDrop("issue-1" as Id<"issues">, "todo", "in-progress");
       });
 
       expect(showError).toHaveBeenCalledWith(error, "Failed to update issue status");
@@ -312,11 +299,7 @@ describe("useBoardDragAndDrop", () => {
       );
 
       await act(async () => {
-        await result.current.handleIssueDrop(
-          "issue-1" as Id<"issues">,
-          "todo",
-          "in-progress",
-        );
+        await result.current.handleIssueDrop("issue-1" as Id<"issues">, "todo", "in-progress");
       });
 
       // Should be max order + 1 = 6

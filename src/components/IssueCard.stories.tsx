@@ -51,7 +51,7 @@ const mockIssueWithLabels = {
   _id: "issue-4" as Id<"issues">,
   key: "PROJ-126",
   title: "Add dark mode support",
-  type: "feature" as const,
+  type: "story" as const,
   priority: "low" as const,
   labels: [
     { name: "frontend", color: "#3B82F6" },
@@ -66,7 +66,7 @@ const mockIssueWithManyLabels = {
   _id: "issue-5" as Id<"issues">,
   key: "PROJ-127",
   title: "Refactor API endpoints for better performance",
-  type: "improvement" as const,
+  type: "task" as const,
   priority: "medium" as const,
   labels: [
     { name: "backend", color: "#8B5CF6" },
@@ -264,16 +264,16 @@ export const BugType: Story = {
   },
 };
 
-export const FeatureType: Story = {
+export const StoryType: Story = {
   args: {
-    issue: { ...mockIssue, type: "feature" as const, title: "Add OAuth2 integration" },
+    issue: { ...mockIssue, type: "story" as const, title: "Add OAuth2 integration" },
     status: "todo",
     canEdit: true,
   },
   parameters: {
     docs: {
       description: {
-        story: "Feature type issue with plus icon.",
+        story: "Story type issue with book icon.",
       },
     },
   },
@@ -579,8 +579,8 @@ export const AllTypes: Story = {
         issue={{
           ...mockIssue,
           _id: "t2" as Id<"issues">,
-          type: "feature" as const,
-          title: "Feature: OAuth2 Login",
+          type: "story" as const,
+          title: "Story: OAuth2 Login",
         }}
         status="todo"
         canEdit={true}
@@ -589,8 +589,8 @@ export const AllTypes: Story = {
         issue={{
           ...mockIssue,
           _id: "t3" as Id<"issues">,
-          type: "improvement" as const,
-          title: "Improvement: Better error messages",
+          type: "task" as const,
+          title: "Task: Better error messages",
         }}
         status="todo"
         canEdit={true}
