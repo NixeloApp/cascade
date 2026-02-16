@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { useEntityForm } from "./useEntityForm";
 
-interface TestEntity {
+interface TestEntity extends Record<string, unknown> {
   name: string;
   description: string;
   priority: number;

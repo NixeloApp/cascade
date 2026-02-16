@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { useAsyncMutation } from "./useAsyncMutation";
 
 // Mock the toast module
@@ -74,7 +74,9 @@ describe("useAsyncMutation", () => {
 
     it("should return the mutation result", async () => {
       const mockMutation = vi.fn().mockResolvedValue({ id: "123", name: "Test" });
-      const { result } = renderHook(() => useAsyncMutation(mockMutation));
+      const { result } = renderHook(() =>
+        useAsyncMutation<[], { id: string; name: string }>(mockMutation),
+      );
 
       let mutationResult: { id: string; name: string } | undefined;
       await act(async () => {
@@ -243,12 +245,9 @@ describe("useAsyncMutation", () => {
 
   describe("multiple mutations", () => {
     it("should handle sequential mutations", async () => {
-      const mockMutation = vi
-        .fn()
-        .mockResolvedValueOnce("first")
-        .mockResolvedValueOnce("second");
+      const mockMutation = vi.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
 
-      const { result } = renderHook(() => useAsyncMutation(mockMutation));
+      const { result } = renderHook(() => useAsyncMutation<[], string>(mockMutation));
 
       let firstResult: string | undefined;
       let secondResult: string | undefined;
@@ -285,7 +284,7 @@ describe("useAsyncMutation", () => {
             }),
         );
 
-      const { result } = renderHook(() => useAsyncMutation(mockMutation));
+      const { result } = renderHook(() => useAsyncMutation<[], string>(mockMutation));
 
       // Start first mutation
       let firstPromise: Promise<string | undefined>;

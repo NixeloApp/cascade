@@ -1,7 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
-import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { BulkOperationsBar } from "./BulkOperationsBar";
@@ -41,12 +40,12 @@ vi.mock("convex/react", () => ({
   useMutation: vi.fn(),
 }));
 
-vi.mock("sonner", () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
+vi.mock("../lib/toast", () => ({
+  showError: vi.fn(),
+  showSuccess: vi.fn(),
 }));
+
+import { showError, showSuccess } from "../lib/toast";
 
 describe("BulkOperationsBar - Component Behavior", () => {
   const mockProjectId = "project123" as Id<"projects">;
@@ -64,7 +63,10 @@ describe("BulkOperationsBar - Component Behavior", () => {
   const mockBulkUpdatePriority = vi.fn();
   const mockBulkAssign = vi.fn();
   const mockBulkMoveToSprint = vi.fn();
+  const mockBulkArchive = vi.fn();
   const mockBulkDelete = vi.fn();
+  const mockBulkUpdateStartDate = vi.fn();
+  const mockBulkUpdateDueDate = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -77,16 +79,20 @@ describe("BulkOperationsBar - Component Behavior", () => {
     });
 
     // Setup mutations - each useMutation call gets the corresponding mock
+    // Order must match the order in the component
     let mutationCallCount = 0;
     (useMutation as any).mockImplementation(() => {
       const mocks = [
-        mockBulkUpdateStatus,
-        mockBulkUpdatePriority,
-        mockBulkAssign,
-        mockBulkMoveToSprint,
-        mockBulkDelete,
+        mockBulkUpdateStatus, // 0
+        mockBulkUpdatePriority, // 1
+        mockBulkAssign, // 2
+        mockBulkMoveToSprint, // 3
+        mockBulkArchive, // 4
+        mockBulkDelete, // 5
+        mockBulkUpdateStartDate, // 6
+        mockBulkUpdateDueDate, // 7
       ];
-      return mocks[mutationCallCount++ % 5];
+      return mocks[mutationCallCount++ % 8];
     });
   });
 
@@ -329,7 +335,7 @@ describe("BulkOperationsBar - Component Behavior", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith("Deleted 1 issue(s)");
+        expect(showSuccess).toHaveBeenCalledWith("Deleted 1 issue(s)");
       });
     });
 
@@ -357,7 +363,7 @@ describe("BulkOperationsBar - Component Behavior", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Delete failed");
+        expect(showError).toHaveBeenCalled();
       });
     });
 
@@ -385,7 +391,7 @@ describe("BulkOperationsBar - Component Behavior", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalled();
+        expect(showError).toHaveBeenCalled();
       });
 
       expect(mockOnClearSelection).not.toHaveBeenCalled();
