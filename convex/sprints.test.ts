@@ -205,6 +205,73 @@ describe("Sprints", () => {
       expect(sprints[0]?.issueCount).toBe(2);
     });
 
+    it("should include completed issue count for each sprint", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const sprintId = await asUser.mutation(api.sprints.create, {
+        projectId,
+        name: "Sprint 1",
+      });
+
+      // Create done issues in the sprint
+      const doneIssue1 = await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "Done Issue 1",
+        type: "task",
+        priority: "medium",
+        sprintId,
+      });
+      await asUser.mutation(api.issues.updateStatus, {
+        issueId: doneIssue1,
+        newStatus: "done",
+        newOrder: 0,
+      });
+
+      const doneIssue2 = await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "Done Issue 2",
+        type: "task",
+        priority: "medium",
+        sprintId,
+      });
+      await asUser.mutation(api.issues.updateStatus, {
+        issueId: doneIssue2,
+        newStatus: "done",
+        newOrder: 0,
+      });
+
+      // Create todo issue in the sprint
+      await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "Todo Issue 1",
+        type: "task",
+        priority: "medium",
+        sprintId,
+      });
+
+      // Create done issue NOT in the sprint
+      const otherIssue = await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "Done Issue Other",
+        type: "task",
+        priority: "medium",
+      });
+      await asUser.mutation(api.issues.updateStatus, {
+        issueId: otherIssue,
+        newStatus: "done",
+        newOrder: 0,
+      });
+
+      const sprints = await asUser.query(api.sprints.listByProject, { projectId });
+
+      expect(sprints).toHaveLength(1);
+      expect(sprints[0]?.issueCount).toBe(3);
+      expect(sprints[0]?.completedCount).toBe(2);
+    });
+
     it("should deny non-members of private project", async () => {
       const t = convexTest(schema, modules);
       const owner = await createTestUser(t, { name: "Owner" });
