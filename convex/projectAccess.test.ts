@@ -136,4 +136,125 @@ describe("Project Access", () => {
     expect(access.role).toBe("viewer");
     expect(access.isAdmin).toBe(false);
   });
+
+  it("should prioritize explicit project membership over owning team membership", async () => {
+    const t = convexTest(schema, modules);
+
+    // Create an organization admin
+    const adminId = await createTestUser(t, { name: "Admin" });
+    const { organizationId, workspaceId } = await createOrganizationAdmin(t, adminId);
+
+    // Create "Owning Team"
+    const owningTeamId = await t.run(async (ctx) => {
+      return await ctx.db.insert("teams", {
+        organizationId,
+        workspaceId,
+        name: "Owning Team",
+        slug: "owning-team",
+        isPrivate: false,
+        createdBy: adminId,
+        updatedAt: Date.now(),
+      });
+    });
+
+    // Create a regular user who is a member of this team (not admin)
+    const memberId = await createTestUser(t, { name: "Team Member" });
+    await t.run(async (ctx) => {
+      await ctx.db.insert("teamMembers", {
+        teamId: owningTeamId,
+        userId: memberId,
+        role: "member", // This would normally grant "editor" access
+        addedBy: adminId,
+      });
+    });
+
+    // Create a project assigned to Owning Team
+    const projectId = await t.run(async (ctx) => {
+      return await ctx.db.insert("projects", {
+        name: "Team Project",
+        key: "TEAMPROJ",
+        organizationId,
+        workspaceId,
+        teamId: owningTeamId,
+        ownerId: adminId,
+        createdBy: adminId,
+        updatedAt: Date.now(),
+        boardType: "kanban",
+        workflowStates: [],
+      });
+    });
+
+    // Add member explicitly to the project as "viewer"
+    await t.run(async (ctx) => {
+      await ctx.db.insert("projectMembers", {
+        projectId,
+        userId: memberId,
+        role: "viewer", // Should override team access (editor)
+        addedBy: adminId,
+      });
+    });
+
+    // Verify access
+    const access = await t.run(async (ctx) => {
+      return await computeProjectAccess(ctx, projectId, memberId);
+    });
+
+    expect(access.canAccess).toBe(true);
+    expect(access.canEdit).toBe(false); // Explicit viewer overrides team editor
+    expect(access.role).toBe("viewer");
+    expect(access.reason).toBe("project_member"); // Ensure it was matched via project membership
+  });
+
+  it("should prioritize organization admin over explicit project membership", async () => {
+    const t = convexTest(schema, modules);
+
+    const ownerId = await createTestUser(t, { name: "Owner" });
+    const { organizationId, workspaceId } = await createOrganizationAdmin(t, ownerId);
+
+    const secondAdminId = await createTestUser(t, { name: "Second Admin" });
+    // Make secondAdminId an Org Admin
+    await t.run(async (ctx) => {
+      await ctx.db.insert("organizationMembers", {
+        organizationId,
+        userId: secondAdminId,
+        role: "admin", // or owner
+        addedBy: ownerId,
+      });
+    });
+
+    // Create a project owned by Owner
+    const projectId = await t.run(async (ctx) => {
+      return await ctx.db.insert("projects", {
+        name: "Org Project",
+        key: "ORGPROJ",
+        organizationId,
+        workspaceId,
+        ownerId: ownerId,
+        createdBy: ownerId,
+        updatedAt: Date.now(),
+        boardType: "kanban",
+        workflowStates: [],
+      });
+    });
+
+    // Add secondAdmin explicitly as "viewer"
+    await t.run(async (ctx) => {
+      await ctx.db.insert("projectMembers", {
+        projectId,
+        userId: secondAdminId,
+        role: "viewer",
+        addedBy: ownerId,
+      });
+    });
+
+    // Verify access
+    const access = await t.run(async (ctx) => {
+      return await computeProjectAccess(ctx, projectId, secondAdminId);
+    });
+
+    expect(access.canAccess).toBe(true);
+    expect(access.canEdit).toBe(true);
+    expect(access.role).toBe("admin");
+    expect(access.reason).toBe("organization_admin");
+  });
 });
