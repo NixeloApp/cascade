@@ -1050,14 +1050,14 @@ const validIds = args.ids.filter((id) => {
 | Hook | Has Test | Priority | Notes |
 |------|----------|----------|-------|
 | `boardOptimisticUpdates.ts` | ❌ | High | Complex state logic |
-| `useAsyncMutation.ts` | ❌ | High | Error handling |
+| `useAsyncMutation.ts` | ✅ | - | Done (2026-02-16) - 18 tests |
 | `useBoardDragAndDrop.ts` | ❌ | High | DnD logic |
 | `useBoardHistory.ts` | ❌ | Medium | Undo/redo |
 | `useConfirmDialog.ts` | ❌ | Low | Simple UI |
 | `useCurrentUser.ts` | ✅ | - | Done (2026-02-16) |
 | `useDeleteConfirmation.ts` | ✅ | - | Done |
-| `useEntityForm.ts` | ❌ | High | Form logic |
-| `useFileUpload.ts` | ❌ | Medium | File handling |
+| `useEntityForm.ts` | ✅ | - | Done (2026-02-16) - 21 tests |
+| `useFileUpload.ts` | ✅ | - | Done (2026-02-16) - 20 tests |
 | `useFuzzySearch.ts` | ✅ | - | Done |
 | `useGlobalSearch.ts` | ❌ | Medium | Search state |
 | `useIssueModal.ts` | ❌ | Medium | Modal state |
@@ -1106,16 +1106,16 @@ describe('useHookName', () => {
 | `AppSidebar.tsx` | ✅ | Done (2026-02-16) - 18 tests |
 | `CommandPalette.tsx` | ✅ | Done (2026-02-16) - 15 tests |
 | `CreateIssueModal.tsx` | ❌ | Issue creation |
-| `BulkOperationsBar.tsx` | ❌ | Bulk actions |
+| `BulkOperationsBar.tsx` | ✅ | Done (2026-02-16) - 16 tests |
 | `AnalyticsDashboard.tsx` | ❌ | Charts |
-| `ActivityFeed.tsx` | ❌ | Activity stream |
+| `ActivityFeed.tsx` | ✅ | Done (2026-02-16) - 20 tests |
 | `NotificationCenter.tsx` | ❌ | Notifications |
 
 **Priority 2 - Feature Components:**
 | Component | Has Test | Notes |
 |-----------|----------|-------|
-| `SwimlanRow.tsx` | ❌ | Kanban grouping |
-| `InboxList.tsx` | ❌ | Triage UI |
+| `SwimlanRow.tsx` | ✅ | Done (2026-02-16) - Storybook stories |
+| `InboxList.tsx` | ✅ | Done (2026-02-16) - Storybook stories |
 | `DocumentTree.tsx` | ❌ | Nested pages |
 | `SprintManager.tsx` | ❌ | Sprint CRUD |
 | `IssueCard.tsx` | ✅ | Done |
@@ -1146,11 +1146,11 @@ describe('useHookName', () => {
 | `CommandPalette` | ❌ | Open, with results |
 | `CreateIssueModal` | ❌ | Form states |
 | `Dashboard` | ❌ | Empty, populated |
-| `InboxList` | ❌ | Empty, items, selection |
+| `InboxList` | ✅ | Done (2026-02-16) - 7 stories |
 | `KanbanBoard` | ❌ | Swimlanes, WIP limits |
 | `NotificationCenter` | ❌ | Empty, unread, read |
 | `SprintManager` | ❌ | Active, planning |
-| `SwimlanRow` | ❌ | Collapsed, expanded |
+| `SwimlanRow` | ✅ | Done (2026-02-16) - 7 stories |
 
 **Stories Added (2026-02-16):**
 - `ActivityFeed.stories.tsx` - Presentational wrapper to bypass Convex hooks, 8 stories
@@ -1290,12 +1290,12 @@ export const Default: Story = {
 | Section | Status | Items Fixed | Time Spent |
 |---------|--------|-------------|------------|
 | 5.1 N+1 Queries | ✅ | 6/6 | 1h |
-| 5.2 Hook Tests | ✅ | 3/19 (+40 tests) | 1.5h |
-| 5.3 Component Tests | ✅ | 3/50 (+55 tests) | 2h |
-| 5.4 Storybook | ✅ | 4/50 (+20 stories) | 1h |
+| 5.2 Hook Tests | ✅ | 6/19 (+99 tests) | 2.5h |
+| 5.3 Component Tests | ✅ | 5/50 (+91 tests) | 3h |
+| 5.4 Storybook | ✅ | 6/50 (+34 stories) | 1.5h |
 | 5.5 Refactors | ⏸️ | 0/5 (deferred) | 0.25h |
 | 5.6 Plane Research | ✅ | 3/6 (Gantt, Filters, Exporter) | 1h |
-| **Total** | **100%** | **19 items + 95 tests** | **6.75h/8h** |
+| **Total** | **100%** | **25 items + 190 tests + 34 stories** | **8.25h** |
 
 **Session Summary (2026-02-16):**
 - Fixed all 6 N+1 query issues using batch fetch + Map lookup pattern
@@ -1305,6 +1305,13 @@ export const Default: Story = {
 - Deferred large file refactors (stable code, low ROI)
 - Researched Plane features: Gantt (defer), Rich Filters (implement), Exporter (defer)
 - Identified 3 quick wins: Archives View, Rich Filters Phase 1, Simple CSV Export
+
+**Session 2 (2026-02-16):**
+- Added hook tests: useAsyncMutation (18 tests), useEntityForm (21 tests), useFileUpload (20 tests) = **59 tests**
+- Added component tests: ActivityFeed (20 tests), BulkOperationsBar (16 tests) = **36 tests**
+- Added Storybook stories: SwimlanRow (7 stories), InboxList (7 stories) = **14 stories**
+- Fixed TypeScript errors in test files (type parameters, mock setup)
+- Total session: **95 tests + 14 stories**
 
 ---
 
