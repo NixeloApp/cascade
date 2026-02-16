@@ -493,7 +493,7 @@ const InboxIssueRow = memo(function InboxIssueRow({
       {/* More Actions */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="ghost">
+          <Button size="sm" variant="ghost" aria-label="More actions">
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </DropdownMenuTrigger>
