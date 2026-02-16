@@ -10,6 +10,7 @@
  * The authVerificationCodes table stores hashed codes, making them unreadable.
  */
 import Resend from "@auth/core/providers/resend";
+import type { FunctionReference } from "convex/server";
 import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
 import type { ConvexAuthContext } from "./lib/authTypes";
@@ -73,8 +74,13 @@ export const OTPVerification = Resend({
       if (ctx.runMutation) {
         try {
           // Type assertion needed because codegen hasn't run to update the type definition
-          // biome-ignore lint/suspicious/noExplicitAny: codegen not run
-          await ctx.runMutation((internal.authWrapper as any).checkEmailVerificationRateLimit, {
+          // Cast internal.authWrapper to a type that includes the new mutation
+          // This avoids 'any' and Biome suppression
+          const authWrapper = internal.authWrapper as unknown as {
+            checkEmailVerificationRateLimit: FunctionReference<"mutation">;
+          };
+
+          await ctx.runMutation(authWrapper.checkEmailVerificationRateLimit, {
             email,
           });
         } catch (_e) {
