@@ -6,13 +6,14 @@
  */
 
 import { v } from "convex/values";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import {
   httpAction,
   internalAction,
   internalMutation,
   type MutationCtx,
 } from "./_generated/server";
+import { getConvexSiteUrl } from "./lib/env";
 import { logger } from "./lib/logger";
 import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
@@ -22,14 +23,20 @@ import { rateLimit } from "./rateLimits";
  */
 export const performPasswordReset = internalAction({
   args: { email: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     try {
-      await ctx.runAction(api.auth.signIn, {
-        provider: "password",
-        params: {
-          email: args.email,
-          flow: "reset",
+      const formData = new URLSearchParams();
+      formData.set("email", args.email);
+      formData.set("flow", "reset");
+
+      // Use the backend URL (CONVEX_SITE_URL) directly to avoid frontend proxy issues
+      // and circular dependencies with api.auth
+      await fetch(`${getConvexSiteUrl()}/api/auth/signin/password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
         },
+        body: formData.toString(),
       });
     } catch (error) {
       // Silently ignore to client - don't leak any info
