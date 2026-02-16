@@ -72,10 +72,21 @@ describe("SSRF Validation", () => {
       // Unspecified address variations
       expect(isPrivateIPv6("0::0")).toBe(true);
       expect(isPrivateIPv6("0:0:0:0:0:0:0:0")).toBe(true);
+
+      // IPv4-compatible
+      expect(isPrivateIPv6("::127.0.0.1")).toBe(true);
+      // Site-Local
+      expect(isPrivateIPv6("fec0::1")).toBe(true);
+      // NAT64 private
+      expect(isPrivateIPv6("64:ff9b::127.0.0.1")).toBe(true);
     });
 
     it("allows public IPs", () => {
       expect(isPrivateIPv6("2001:4860:4860::8888")).toBe(false);
+      // IPv4-compatible public
+      expect(isPrivateIPv6("::1.2.3.4")).toBe(false);
+      // NAT64 public
+      expect(isPrivateIPv6("64:ff9b::1.2.3.4")).toBe(false);
     });
   });
 
