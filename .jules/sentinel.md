@@ -98,3 +98,8 @@
 **Vulnerability:** The SSO domain verification logic relied on `ctx.db.query("ssoConnections").take(BOUNDED_LIST_LIMIT)` (100 items) to check for duplicate domains. If more than 100 SSO connections existed, a new connection could claim a domain already owned by an existing connection (if it was outside the returned page), allowing authentication hijacking.
 **Learning:** Security checks (uniqueness, permissions) must never rely on bounded queries or pagination limits unless the dataset is guaranteed to be small. Relying on "most deployments have <100 items" is a security flaw in multi-tenant systems.
 **Prevention:** Implemented a dedicated `ssoDomains` table with a unique index on `domain`. This allows O(1) uniqueness checks and lookups regardless of the number of connections, ensuring scalability and security.
+
+## 2026-02-27 - 2FA Enforcement Gap in Backend
+**Vulnerability:** Although the frontend redirected users to a 2FA verification page if their session was unverified, the backend `authenticatedQuery` and `authenticatedMutation` wrappers did not enforce this check. This allowed an attacker with a valid primary session (e.g. stolen cookie) to bypass 2FA by directly calling API endpoints.
+**Learning:** Frontend redirects are for UX, not security. Any security policy (like "2FA required") must be enforced deep in the backend middleware layer (e.g., `requireAuth`), ensuring that no data access is possible unless the policy is satisfied.
+**Prevention:** Modified `requireAuth` in `convex/customFunctions.ts` to explicitly check `twoFactorVerifiedAt` for users with 2FA enabled. If the verification is missing or older than 24 hours, the request is rejected with a `FORBIDDEN` error.
