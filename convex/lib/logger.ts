@@ -23,7 +23,8 @@ function safeStringify(data: LogData): string {
           name: value.name,
           message: value.message,
           stack: value.stack,
-          cause: value.cause,
+          // biome-ignore lint/suspicious/noExplicitAny: Error.cause is standard in newer JS but TS may not know it yet depending on lib config
+          cause: (value as any).cause,
         };
       }
       return value;
