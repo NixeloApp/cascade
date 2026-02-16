@@ -196,13 +196,18 @@ function ModifierShortcutBadge({ shortcut }: { shortcut: string }) {
 }
 
 function KeySequenceBadge({ sequence }: { sequence: string }) {
-  const chars = sequence.split("");
+  // Pre-compute items with stable keys based on sequence + position
+  const items = sequence.split("").map((char, idx) => ({
+    key: `${sequence}-${idx}`,
+    char,
+    isLast: idx === sequence.length - 1,
+  }));
   return (
     <Flex gap="xs" align="center">
-      {chars.map((char, charIndex) => (
-        <Flex key={`${char}-${charIndex}`} gap="xs" align="center">
-          <KeyBadge>{char.toUpperCase()}</KeyBadge>
-          {charIndex < chars.length - 1 && (
+      {items.map((item) => (
+        <Flex key={item.key} gap="xs" align="center">
+          <KeyBadge>{item.char.toUpperCase()}</KeyBadge>
+          {!item.isLast && (
             <Typography variant="muted" className="text-xs">
               then
             </Typography>

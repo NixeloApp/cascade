@@ -115,7 +115,11 @@ function ArchivesPage() {
                 canEdit={false}
               />
               {/* Restore button overlay */}
-              <div className="absolute inset-0 bg-ui-bg/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+              <Flex
+                align="center"
+                justify="center"
+                className="absolute inset-0 bg-ui-bg/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
+              >
                 <Flex direction="column" align="center" gap="sm">
                   <Button
                     variant="secondary"
@@ -133,7 +137,7 @@ function ArchivesPage() {
                     Move back to project
                   </Typography>
                 </Flex>
-              </div>
+              </Flex>
             </div>
           ))}
         </Grid>
