@@ -76,7 +76,6 @@ const KanbanIssueItem = memo(
     issue,
     columnIndex,
     index,
-    onDragStart,
     onClick,
     selectionMode,
     isSelected,
@@ -87,7 +86,6 @@ const KanbanIssueItem = memo(
     issue: Issue;
     columnIndex: number;
     index: number;
-    onDragStart: (e: React.DragEvent, issueId: Id<"issues">) => void;
     onClick: (issueId: Id<"issues">) => void;
     selectionMode: boolean;
     isSelected: boolean;
@@ -106,7 +104,7 @@ const KanbanIssueItem = memo(
       <div className="animate-scale-in" style={style}>
         <IssueCard
           issue={issue}
-          onDragStart={onDragStart}
+          status={issue.status}
           onClick={onClick}
           selectionMode={selectionMode}
           isSelected={isSelected}
@@ -406,7 +404,6 @@ const KanbanColumnComponent = function KanbanColumn({
                 issue={issue}
                 columnIndex={columnIndex}
                 index={issueIndex}
-                onDragStart={onDragStart}
                 onClick={onIssueClick}
                 selectionMode={selectionMode}
                 isSelected={selectedIssueIds.has(issue._id)}

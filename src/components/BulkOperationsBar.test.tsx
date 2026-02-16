@@ -64,7 +64,10 @@ describe("BulkOperationsBar - Component Behavior", () => {
   const mockBulkUpdatePriority = vi.fn();
   const mockBulkAssign = vi.fn();
   const mockBulkMoveToSprint = vi.fn();
+  const mockBulkArchive = vi.fn();
   const mockBulkDelete = vi.fn();
+  const mockBulkUpdateStartDate = vi.fn();
+  const mockBulkUpdateDueDate = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -84,9 +87,12 @@ describe("BulkOperationsBar - Component Behavior", () => {
         mockBulkUpdatePriority,
         mockBulkAssign,
         mockBulkMoveToSprint,
+        mockBulkArchive,
         mockBulkDelete,
+        mockBulkUpdateStartDate,
+        mockBulkUpdateDueDate,
       ];
-      return mocks[mutationCallCount++ % 5];
+      return mocks[mutationCallCount++ % 8];
     });
   });
 
