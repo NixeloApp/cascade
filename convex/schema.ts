@@ -16,6 +16,8 @@ import {
   dashboardLayout,
   emailDigests,
   employmentTypes,
+  inboxIssueSources,
+  inboxIssueStatuses,
   inviteRoles,
   issuePriorities,
   issueTypes,
@@ -52,6 +54,8 @@ const applicationTables = {
       requiresTimeApproval: v.boolean(),
       billingEnabled: v.boolean(),
     }),
+    // IP Restrictions (Nixelo advantage - Cal.com/Plane don't have org-level IP restrictions!)
+    ipRestrictionsEnabled: v.optional(v.boolean()),
     createdBy: v.id("users"),
     updatedAt: v.number(),
   })
@@ -60,6 +64,17 @@ const applicationTables = {
     .searchIndex("search_name", {
       searchField: "name",
     }),
+
+  // Organization IP allowlist (Nixelo advantage - enterprise security feature)
+  organizationIpAllowlist: defineTable({
+    organizationId: v.id("organizations"),
+    ipRange: v.string(), // CIDR notation: "192.168.1.0/24" or single IP: "203.0.113.50"
+    description: v.optional(v.string()), // "Office network", "VPN exit", etc.
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_organization_ip", ["organizationId", "ipRange"]),
 
   organizationMembers: defineTable({
     organizationId: v.id("organizations"),
@@ -240,7 +255,7 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_team", ["teamId"])
+    .index("by_team", ["teamId", "isDeleted"])
     .index("by_user", ["userId"])
     .index("by_team_user", ["teamId", "userId"])
     .index("by_role", ["role"])
@@ -260,6 +275,9 @@ const applicationTables = {
     organizationId: v.id("organizations"),
     workspaceId: v.optional(v.id("workspaces")),
     projectId: v.optional(v.id("projects")),
+    // Nested pages - parent document and sibling order
+    parentId: v.optional(v.id("documents")),
+    order: v.optional(v.number()),
     // Soft Delete
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
@@ -274,6 +292,8 @@ const applicationTables = {
     .index("by_deleted", ["isDeleted"])
     .index("by_organization_deleted", ["organizationId", "isDeleted"])
     .index("by_organization_public", ["organizationId", "isPublic"])
+    .index("by_parent", ["parentId"])
+    .index("by_organization_parent", ["organizationId", "parentId"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId", "projectId"],
@@ -363,7 +383,7 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_project", ["projectId"])
+    .index("by_project", ["projectId", "isDeleted"])
     .index("by_user", ["userId"])
     .index("by_project_user", ["projectId", "userId"])
     .index("by_role", ["role"])
@@ -381,6 +401,8 @@ const applicationTables = {
         name: v.string(),
         category: workflowCategories,
         order: v.number(),
+        // WIP limit: max issues allowed in this column (0 = no limit)
+        wipLimit: v.optional(v.number()),
       }),
     ),
     defaultLabels: v.array(
@@ -415,16 +437,16 @@ const applicationTables = {
     .index("by_sprint", ["sprintId", "isDeleted"])
     .index("by_epic", ["epicId", "isDeleted"])
     .index("by_parent", ["parentId", "isDeleted"])
-    .index("by_project_status", ["projectId", "status", "order", "isDeleted"])
+    .index("by_project_status", ["projectId", "status", "isDeleted", "order"])
     .index("by_project_status_updated", ["projectId", "status", "updatedAt"])
-    .index("by_project_sprint_status", ["projectId", "sprintId", "status", "order", "isDeleted"])
+    .index("by_project_sprint_status", ["projectId", "sprintId", "status", "isDeleted", "order"])
     .index("by_project_sprint_status_updated", ["projectId", "sprintId", "status", "updatedAt"])
     .index("by_project_updated", ["projectId", "updatedAt"])
     .index("by_project_due_date", ["projectId", "dueDate"])
     .index("by_project_type_due_date", ["projectId", "type", "dueDate"])
     .index("by_organization_status", ["organizationId", "status", "isDeleted"])
     .index("by_workspace_status", ["workspaceId", "status", "isDeleted"])
-    .index("by_team_status", ["teamId", "status", "order", "isDeleted"])
+    .index("by_team_status", ["teamId", "status", "isDeleted", "order"])
     .index("by_team_status_updated", ["teamId", "status", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_project_deleted", ["projectId", "isDeleted"])
@@ -465,6 +487,32 @@ const applicationTables = {
 
   issueCommentReactions: defineTable({
     commentId: v.id("issueComments"),
+    userId: v.id("users"),
+    emoji: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_comment", ["commentId"])
+    .index("by_comment_user_emoji", ["commentId", "userId", "emoji"]),
+
+  // Document comments (Nixelo advantage - Plane has no page comments!)
+  documentComments: defineTable({
+    documentId: v.id("documents"),
+    authorId: v.id("users"),
+    content: v.string(),
+    mentions: v.array(v.id("users")),
+    updatedAt: v.number(),
+    // Thread support - comments can be replies
+    parentId: v.optional(v.id("documentComments")),
+    // Soft delete
+    isDeleted: v.optional(v.boolean()),
+  })
+    .index("by_document", ["documentId"])
+    .index("by_author", ["authorId"])
+    .index("by_parent", ["parentId"])
+    .index("by_deleted", ["isDeleted"]),
+
+  documentCommentReactions: defineTable({
+    commentId: v.id("documentComments"),
     userId: v.id("users"),
     emoji: v.string(),
     createdAt: v.number(),
@@ -541,10 +589,45 @@ const applicationTables = {
     descriptionTemplate: v.string(),
     defaultPriority: issuePriorities,
     defaultLabels: v.array(v.string()),
+    // New fields for Plane parity
+    defaultAssigneeId: v.optional(v.id("users")), // Pre-assign to specific user
+    defaultStatus: v.optional(v.string()), // Pre-select workflow state
+    defaultStoryPoints: v.optional(v.number()), // Pre-fill story points
+    isDefault: v.optional(v.boolean()), // Mark as project's default template
     createdBy: v.id("users"),
   })
     .index("by_project", ["projectId"])
-    .index("by_project_type", ["projectId", "type"]),
+    .index("by_project_type", ["projectId", "type"])
+    .index("by_project_default", ["projectId", "isDefault"]),
+
+  // ===========================================================================
+  // INBOX / TRIAGE
+  // Issues that need to be triaged before entering the backlog
+  // ===========================================================================
+
+  inboxIssues: defineTable({
+    projectId: v.id("projects"),
+    issueId: v.id("issues"),
+    status: inboxIssueStatuses, // pending, accepted, declined, snoozed, duplicate
+    source: inboxIssueSources, // in_app, form, email, api
+    sourceEmail: v.optional(v.string()), // For email-sourced issues
+    snoozedUntil: v.optional(v.number()), // Timestamp for snoozed issues
+    duplicateOfId: v.optional(v.id("issues")), // For duplicate marking
+    declineReason: v.optional(v.string()), // Reason for declining
+    triageNotes: v.optional(v.string()), // Internal notes during triage
+    triagedBy: v.optional(v.id("users")), // Who accepted/declined/etc.
+    triagedAt: v.optional(v.number()), // When the action was taken
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_issue", ["issueId"])
+    .index("by_project_status", ["projectId", "status"])
+    .index("by_status", ["status"])
+    .index("by_snoozed_until", ["snoozedUntil"])
+    .index("by_source", ["source"])
+    .index("by_created_by", ["createdBy"]),
 
   savedFilters: defineTable({
     projectId: v.id("projects"),
@@ -693,6 +776,12 @@ const applicationTables = {
     emailDigest: emailDigests,
     digestDay: v.optional(v.string()), // "monday", etc.
     digestTime: v.optional(v.string()), // "09:00"
+    // Push notification preferences (Cal.com parity)
+    pushEnabled: v.optional(v.boolean()), // Master toggle for push notifications
+    pushMentions: v.optional(v.boolean()),
+    pushAssignments: v.optional(v.boolean()),
+    pushComments: v.optional(v.boolean()),
+    pushStatusChanges: v.optional(v.boolean()),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -705,6 +794,20 @@ const applicationTables = {
   })
     .index("by_token", ["token"])
     .index("by_user", ["userId"]),
+
+  // Push notification subscriptions (Web Push API - Cal.com parity)
+  pushSubscriptions: defineTable({
+    userId: v.id("users"),
+    // PushSubscription JSON contains: endpoint, expirationTime, keys.p256dh, keys.auth
+    endpoint: v.string(), // Push service endpoint URL
+    p256dh: v.string(), // ECDH public key for encryption
+    auth: v.string(), // Auth secret for HMAC
+    expirationTime: v.optional(v.number()), // Optional expiration
+    userAgent: v.optional(v.string()), // Browser/device info
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
 
   // ===========================================================================
   // CALENDAR & SCHEDULING
@@ -760,6 +863,21 @@ const applicationTables = {
     .index("by_event", ["eventId"])
     .index("by_user", ["userId"])
     .index("by_event_user", ["eventId", "userId"]),
+
+  // Event reminders - scheduled notifications before calendar events
+  eventReminders: defineTable({
+    eventId: v.id("calendarEvents"),
+    userId: v.id("users"), // User to remind
+    reminderType: v.union(v.literal("email"), v.literal("push"), v.literal("in_app")),
+    minutesBefore: v.number(), // e.g., 15, 30, 60, 1440 (1 day)
+    scheduledFor: v.number(), // Computed: event.startTime - minutesBefore * 60 * 1000
+    sent: v.boolean(), // Has reminder been sent?
+    sentAt: v.optional(v.number()), // When reminder was sent
+  })
+    .index("by_event", ["eventId"])
+    .index("by_user", ["userId"])
+    .index("by_scheduled_unsent", ["sent", "scheduledFor"]) // For cron job
+    .index("by_event_user_type", ["eventId", "userId", "reminderType"]),
 
   availabilitySlots: defineTable({
     userId: v.id("users"),

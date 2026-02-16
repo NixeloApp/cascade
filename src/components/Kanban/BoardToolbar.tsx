@@ -1,3 +1,10 @@
+import { Flex } from "@/components/ui/Flex";
+import { Tooltip } from "@/components/ui/Tooltip";
+import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
+import { cn } from "@/lib/utils";
+import { Typography } from "../ui/Typography";
+import { SwimlanSelector } from "./SwimlanSelector";
+
 interface BoardToolbarProps {
   sprintId?: string;
   selectionMode: boolean;
@@ -7,12 +14,11 @@ interface BoardToolbarProps {
   onRedo: () => void;
   onToggleSelectionMode: () => void;
   showControls?: boolean;
+  /** Swimlane grouping option */
+  swimlaneGroupBy?: SwimlanGroupBy;
+  /** Callback when swimlane grouping changes */
+  onSwimlanGroupByChange?: (value: SwimlanGroupBy) => void;
 }
-
-import { Flex } from "@/components/ui/Flex";
-import { Tooltip } from "@/components/ui/Tooltip";
-import { cn } from "@/lib/utils";
-import { Typography } from "../ui/Typography";
 
 /**
  * Kanban board toolbar with title, undo/redo buttons, and selection mode toggle
@@ -27,6 +33,8 @@ export function BoardToolbar({
   onRedo,
   onToggleSelectionMode,
   showControls = true,
+  swimlaneGroupBy = "none",
+  onSwimlanGroupByChange,
 }: BoardToolbarProps) {
   return (
     <Flex align="center" justify="between" gap="sm" className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3">
@@ -86,6 +94,11 @@ export function BoardToolbar({
               </button>
             </Tooltip>
           </Flex>
+
+          {/* Swimlane selector */}
+          {onSwimlanGroupByChange && (
+            <SwimlanSelector value={swimlaneGroupBy} onChange={onSwimlanGroupByChange} />
+          )}
 
           {/* Selection mode toggle */}
           <button

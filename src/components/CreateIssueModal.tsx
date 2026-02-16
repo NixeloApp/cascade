@@ -142,6 +142,15 @@ export function CreateIssueModal({
     },
   });
 
+  // Auto-select default template when modal opens
+  useEffect(() => {
+    if (!templates || selectedTemplate) return;
+    const defaultTemplate = templates.find((t: Doc<"issueTemplates">) => t.isDefault);
+    if (defaultTemplate) {
+      setSelectedTemplate(defaultTemplate._id);
+    }
+  }, [templates, selectedTemplate]);
+
   // Apply template when selected
   useEffect(() => {
     if (!(selectedTemplate && templates)) return;
@@ -160,6 +169,14 @@ export function CreateIssueModal({
         .filter((label: Doc<"labels">) => template.defaultLabels?.includes(label.name))
         .map((label: Doc<"labels">) => label._id);
       setSelectedLabels(labelIds);
+    }
+
+    // Apply new Plane-parity fields
+    if (template.defaultAssigneeId) {
+      form.setFieldValue("assigneeId", template.defaultAssigneeId);
+    }
+    if (template.defaultStoryPoints !== undefined) {
+      form.setFieldValue("storyPoints", template.defaultStoryPoints.toString());
     }
   }, [selectedTemplate, templates, labels, form]);
 

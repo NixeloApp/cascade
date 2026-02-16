@@ -1,3 +1,13 @@
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import {
+  draggable,
+  dropTargetForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import {
+  attachClosestEdge,
+  type Edge,
+  extractClosestEdge,
+} from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import type { Id } from "@convex/_generated/dataModel";
 import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
@@ -9,6 +19,7 @@ import {
   ISSUE_TYPE_ICONS,
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
+import { createIssueCardData, isIssueCardData } from "@/lib/kanban-dnd";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -22,6 +33,7 @@ interface Issue {
   title: string;
   type: IssueType;
   priority: IssuePriority;
+  order: number;
   assignee?: {
     _id: Id<"users">;
     name: string;
@@ -34,13 +46,24 @@ interface Issue {
 
 interface IssueCardProps {
   issue: Issue;
-  onDragStart: (e: React.DragEvent, issueId: Id<"issues">) => void;
+  /** Status of the issue (for DnD payload) */
+  status: string;
   onClick?: (issueId: Id<"issues">) => void;
   selectionMode?: boolean;
   isSelected?: boolean;
   isFocused?: boolean;
   onToggleSelect?: (issueId: Id<"issues">) => void;
   canEdit?: boolean;
+  /** Callback when drag starts (for parent state management) */
+  onDragStateChange?: (isDragging: boolean) => void;
+  /** Callback when an issue is dropped on this card */
+  onIssueDrop?: (
+    draggedIssueId: Id<"issues">,
+    sourceStatus: string,
+    targetIssueId: Id<"issues">,
+    targetStatus: string,
+    edge: "top" | "bottom",
+  ) => void;
 }
 
 /**
@@ -54,25 +77,27 @@ function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
     prev.isSelected !== next.isSelected ||
     prev.isFocused !== next.isFocused ||
     prev.selectionMode !== next.selectionMode ||
-    prev.canEdit !== next.canEdit
+    prev.canEdit !== next.canEdit ||
+    prev.status !== next.status
   ) {
     return false;
   }
 
   // Check callback props to prevent stale closures
   if (
-    prev.onDragStart !== next.onDragStart ||
     prev.onClick !== next.onClick ||
-    prev.onToggleSelect !== next.onToggleSelect
+    prev.onToggleSelect !== next.onToggleSelect ||
+    prev.onDragStateChange !== next.onDragStateChange ||
+    prev.onIssueDrop !== next.onIssueDrop
   ) {
     return false;
   }
 
   // Check issue object equality
-  return areIssuesEqual(prev.issue, next.issue);
+  return true;
 }
 
-function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
+export function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
   // Reference equality check (fastest)
   if (prevIssue === nextIssue) return true;
 
@@ -100,31 +125,96 @@ function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
 
 export const IssueCard = memo(function IssueCard({
   issue,
-  onDragStart,
+  status,
   onClick,
   selectionMode = false,
   isSelected = false,
   isFocused = false,
   onToggleSelect,
   canEdit = true,
+  onDragStateChange,
+  onIssueDrop,
 }: IssueCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const dragHandleRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
 
+  // Scroll into view when focused
   useEffect(() => {
     if (isFocused && cardRef.current) {
       cardRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [isFocused]);
 
-  const handleDragStart = (e: React.DragEvent) => {
-    setIsDragging(true);
-    onDragStart(e, issue._id);
-  };
+  // Set up Pragmatic DnD draggable + drop target
+  useEffect(() => {
+    const element = cardRef.current;
+    const dragHandle = dragHandleRef.current;
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
+    if (!element || !canEdit || selectionMode) {
+      return;
+    }
+
+    return combine(
+      // Make the card draggable
+      draggable({
+        element,
+        dragHandle: dragHandle ?? undefined,
+        getInitialData: () => createIssueCardData(issue._id, status, issue.order),
+        onDragStart: () => {
+          setIsDragging(true);
+          onDragStateChange?.(true);
+        },
+        onDrop: () => {
+          setIsDragging(false);
+          onDragStateChange?.(false);
+        },
+      }),
+      // Make the card a drop target for reordering
+      dropTargetForElements({
+        element,
+        canDrop: ({ source }) => {
+          // Only accept other issue cards (not self)
+          const data = source.data as Record<string, unknown>;
+          return isIssueCardData(data) && data.issueId !== issue._id;
+        },
+        getData: ({ input }) =>
+          attachClosestEdge(createIssueCardData(issue._id, status, issue.order), {
+            element,
+            input,
+            allowedEdges: ["top", "bottom"],
+          }),
+        onDragEnter: ({ self }) => {
+          const edge = extractClosestEdge(self.data);
+          setClosestEdge(edge);
+        },
+        onDrag: ({ self }) => {
+          const edge = extractClosestEdge(self.data);
+          setClosestEdge(edge);
+        },
+        onDragLeave: () => {
+          setClosestEdge(null);
+        },
+        onDrop: ({ source, self }) => {
+          setClosestEdge(null);
+          const sourceData = source.data as Record<string, unknown>;
+          if (!isIssueCardData(sourceData)) return;
+
+          const edge = extractClosestEdge(self.data);
+          if (!edge || (edge !== "top" && edge !== "bottom")) return;
+
+          onIssueDrop?.(
+            sourceData.issueId as Id<"issues">,
+            sourceData.status as string,
+            issue._id,
+            status,
+            edge,
+          );
+        },
+      }),
+    );
+  }, [issue._id, issue.order, status, canEdit, selectionMode, onDragStateChange, onIssueDrop]);
 
   const handleClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     if (selectionMode && onToggleSelect) {
@@ -147,9 +237,6 @@ export const IssueCard = memo(function IssueCard({
       ref={cardRef}
       role="article"
       data-testid={TEST_IDS.ISSUE.CARD}
-      draggable={canEdit && !selectionMode}
-      onDragStart={canEdit && !selectionMode ? handleDragStart : undefined}
-      onDragEnd={handleDragEnd}
       className={cn(
         "group relative w-full text-left bg-ui-bg-soft p-2 sm:p-3 rounded-container",
         "border transition-default",
@@ -161,6 +248,11 @@ export const IssueCard = memo(function IssueCard({
           : isFocused
             ? "border-ui-border-focus/50 ring-1 ring-ui-border-focus/20 bg-ui-bg-hover"
             : "border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-hover",
+        // Drop indicator edges
+        closestEdge === "top" &&
+          "before:absolute before:left-0 before:right-0 before:-top-1 before:h-0.5 before:bg-brand before:rounded-full",
+        closestEdge === "bottom" &&
+          "after:absolute after:left-0 after:right-0 after:-bottom-1 after:h-0.5 after:bg-brand after:rounded-full",
       )}
     >
       {/* Primary Action Overlay Button */}
@@ -178,10 +270,15 @@ export const IssueCard = memo(function IssueCard({
           <Flex align="center" className="space-x-2">
             {/* Drag handle */}
             {canEdit && !selectionMode && (
-              <GripVertical
-                className="w-3 h-3 text-ui-text-tertiary opacity-0 group-hover:opacity-40 transition-fast cursor-grab -ml-0.5 shrink-0 pointer-events-auto"
-                aria-hidden="true"
-              />
+              <div
+                ref={dragHandleRef}
+                className="cursor-grab active:cursor-grabbing pointer-events-auto"
+              >
+                <GripVertical
+                  className="w-3 h-3 text-ui-text-tertiary opacity-0 group-hover:opacity-40 transition-fast -ml-0.5 shrink-0"
+                  aria-hidden="true"
+                />
+              </div>
             )}
             {/* Checkbox */}
             {selectionMode && (

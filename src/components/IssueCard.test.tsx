@@ -47,14 +47,13 @@ vi.mock("@/lib/issue-utils", () => ({
 }));
 
 describe("IssueCard", () => {
-  const mockOnDragStart = vi.fn();
-
   const mockIssue = {
     _id: "issue-1" as Id<"issues">,
     key: "TEST-123",
     title: "Fix critical bug in authentication",
     type: "bug" as const,
     priority: "high" as const,
+    order: 0,
     assignee: {
       _id: "user-1" as Id<"users">,
       name: "Alice Johnson",
@@ -73,7 +72,7 @@ describe("IssueCard", () => {
   });
 
   it("should display story points when present", () => {
-    render(<IssueCard issue={mockIssue} onDragStart={mockOnDragStart} />);
+    render(<IssueCard issue={mockIssue} status="todo" />);
 
     // Story points badge contains "5 pts" - use regex to handle whitespace
     expect(screen.getByText(/5\s*pts/)).toBeInTheDocument();
@@ -81,14 +80,14 @@ describe("IssueCard", () => {
 
   it("should not display story points when undefined", () => {
     const issueWithoutPoints = { ...mockIssue, storyPoints: undefined };
-    render(<IssueCard issue={issueWithoutPoints} onDragStart={mockOnDragStart} />);
+    render(<IssueCard issue={issueWithoutPoints} status="todo" />);
 
     expect(screen.queryByText(/pts/)).not.toBeInTheDocument();
   });
 
   it("should display decimal story points", () => {
     const issueWithDecimalPoints = { ...mockIssue, storyPoints: 3.5 };
-    render(<IssueCard issue={issueWithDecimalPoints} onDragStart={mockOnDragStart} />);
+    render(<IssueCard issue={issueWithDecimalPoints} status="todo" />);
 
     // Story points badge contains "3.5 pts" - use regex to handle whitespace
     expect(screen.getByText(/3\.5\s*pts/)).toBeInTheDocument();
@@ -96,7 +95,7 @@ describe("IssueCard", () => {
 
   it("should display tooltip with assignee name on hover", async () => {
     const user = userEvent.setup();
-    render(<IssueCard issue={mockIssue} onDragStart={mockOnDragStart} />);
+    render(<IssueCard issue={mockIssue} status="todo" />);
 
     const avatar = screen.getByAltText("Alice Johnson");
     expect(avatar).toBeInTheDocument();
@@ -119,7 +118,7 @@ describe("IssueCard", () => {
         { name: "Hidden2", color: "purple" },
       ],
     };
-    render(<IssueCard issue={issueWithManyLabels} onDragStart={mockOnDragStart} />);
+    render(<IssueCard issue={issueWithManyLabels} status="todo" />);
 
     // The text "+2" should be present
     const hiddenCount = screen.getByText("+2");

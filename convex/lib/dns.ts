@@ -13,23 +13,19 @@ interface DnsAnswer {
 export async function resolveDNS(hostname: string): Promise<string[]> {
   const ips: string[] = [];
 
-  // Query A records (IPv4)
-  try {
-    const aRecords = await queryDoH(hostname, "A");
-    ips.push(...aRecords);
-  } catch (e) {
-    // If A record lookup fails, we still try AAAA.
-    // However, if it's a timeout or network error, AAAA might fail too.
-    console.error(`DNS lookup failed for A record of ${hostname}: ${e}`);
-  }
+  // Query A and AAAA records in parallel.
+  // We use Promise.all to ensure that if EITHER lookup fails (network error, timeout),
+  // the entire resolution fails. This is a "Fail Closed" security policy.
+  // If we allowed partial success, we might miss a private IP (e.g. AAAA ::1) due to a transient error,
+  // while the public IP (A 1.2.3.4) succeeds. The attacker could then exploit the race condition
+  // where the system resolver later finds the private IP.
+  const [aRecords, aaaaRecords] = await Promise.all([
+    queryDoH(hostname, "A"),
+    queryDoH(hostname, "AAAA"),
+  ]);
 
-  // Query AAAA records (IPv6)
-  try {
-    const aaaaRecords = await queryDoH(hostname, "AAAA");
-    ips.push(...aaaaRecords);
-  } catch (e) {
-    console.error(`DNS lookup failed for AAAA record of ${hostname}: ${e}`);
-  }
+  ips.push(...aRecords);
+  ips.push(...aaaaRecords);
 
   // If no IPs found at all, throw error to be safe (fail secure)
   if (ips.length === 0) {

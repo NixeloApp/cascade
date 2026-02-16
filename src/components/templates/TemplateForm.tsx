@@ -2,10 +2,10 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { z } from "zod";
-import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
+import { FormCheckbox, FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -24,6 +24,11 @@ const templateSchema = z.object({
   descriptionTemplate: z.string(),
   defaultPriority: z.enum(ISSUE_PRIORITIES),
   defaultLabels: z.string(),
+  // New fields for Plane parity
+  defaultAssigneeId: z.string(),
+  defaultStatus: z.string(),
+  defaultStoryPoints: z.string(),
+  isDefault: z.boolean(),
 });
 
 // =============================================================================
@@ -40,6 +45,10 @@ interface TemplateFormProps {
     descriptionTemplate: string;
     defaultPriority: IssuePriority;
     defaultLabels?: string[];
+    defaultAssigneeId?: Id<"users">;
+    defaultStatus?: string;
+    defaultStoryPoints?: number;
+    isDefault?: boolean;
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,6 +58,9 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
   const createTemplate = useMutation(api.templates.create);
   const updateTemplate = useMutation(api.templates.update);
 
+  // Fetch project data for members and workflow states
+  const project = useQuery(api.projects.getProject, { id: projectId });
+
   const form = useForm({
     defaultValues: {
       name: "",
@@ -57,6 +69,10 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
       descriptionTemplate: "",
       defaultPriority: "medium" satisfies IssuePriority,
       defaultLabels: "",
+      defaultAssigneeId: "",
+      defaultStatus: "",
+      defaultStoryPoints: "",
+      isDefault: false,
     },
     validators: { onChange: templateSchema },
     onSubmit: async ({ value }: { value: z.infer<typeof templateSchema> }) => {
@@ -72,6 +88,14 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
               ?.split(",")
               .map((l: string) => l.trim())
               .filter(Boolean) || [],
+          defaultAssigneeId: value.defaultAssigneeId
+            ? (value.defaultAssigneeId as Id<"users">)
+            : undefined,
+          defaultStatus: value.defaultStatus || undefined,
+          defaultStoryPoints: value.defaultStoryPoints
+            ? Number.parseFloat(value.defaultStoryPoints)
+            : undefined,
+          isDefault: value.isDefault,
         };
 
         if (template) {
@@ -97,6 +121,10 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
       form.setFieldValue("descriptionTemplate", template.descriptionTemplate);
       form.setFieldValue("defaultPriority", template.defaultPriority);
       form.setFieldValue("defaultLabels", template.defaultLabels?.join(", ") || "");
+      form.setFieldValue("defaultAssigneeId", template.defaultAssigneeId || "");
+      form.setFieldValue("defaultStatus", template.defaultStatus || "");
+      form.setFieldValue("defaultStoryPoints", template.defaultStoryPoints?.toString() || "");
+      form.setFieldValue("isDefault", template.isDefault || false);
     } else {
       form.reset();
     }
@@ -184,6 +212,60 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
                 field={field}
                 label="Default Labels (comma separated)"
                 placeholder="bug, frontend, urgent"
+              />
+            )}
+          </form.Field>
+        </Grid>
+
+        {/* Advanced defaults */}
+        <Grid cols={1} colsSm={2} gap="lg">
+          <form.Field name="defaultAssigneeId">
+            {(field) => (
+              <FormSelect field={field} label="Default Assignee">
+                <option value="">Unassigned</option>
+                {project?.members?.map((member) => (
+                  <option key={member._id} value={member._id}>
+                    {member.name}
+                  </option>
+                ))}
+              </FormSelect>
+            )}
+          </form.Field>
+
+          <form.Field name="defaultStatus">
+            {(field) => (
+              <FormSelect field={field} label="Default Status">
+                <option value="">Use project default</option>
+                {project?.workflowStates?.map((state: { id: string; name: string }) => (
+                  <option key={state.id} value={state.id}>
+                    {state.name}
+                  </option>
+                ))}
+              </FormSelect>
+            )}
+          </form.Field>
+        </Grid>
+
+        <Grid cols={1} colsSm={2} gap="lg">
+          <form.Field name="defaultStoryPoints">
+            {(field) => (
+              <FormInput
+                field={field}
+                label="Default Story Points"
+                type="number"
+                placeholder="e.g., 3"
+                min="0"
+                step="0.5"
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="isDefault">
+            {(field) => (
+              <FormCheckbox
+                field={field}
+                label="Set as default template"
+                helperText="Automatically selected when creating new issues"
               />
             )}
           </form.Field>

@@ -1,12 +1,12 @@
 import { MINUTE } from "@convex-dev/rate-limiter";
 import { v } from "convex/values";
 import { components } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
-import type { MutationCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
-import { BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
+import { BOUNDED_LIST_LIMIT, BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, rateLimited, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import {
@@ -28,12 +28,32 @@ export const create = authenticatedMutation({
     organizationId: v.id("organizations"),
     workspaceId: v.optional(v.id("workspaces")),
     projectId: v.optional(v.id("projects")),
+    parentId: v.optional(v.id("documents")),
   },
   handler: async (ctx, args) => {
     await checkRateLimit(ctx);
     await validateOrganizationMembership(ctx, args.organizationId);
     await validateProjectIntegrity(ctx, args.projectId, args.organizationId, args.isPublic);
     await validateWorkspaceIntegrity(ctx, args.workspaceId, args.organizationId);
+
+    // Validate parent document if provided
+    let order = 0;
+    if (args.parentId) {
+      const parent = await ctx.db.get(args.parentId);
+      if (!parent || parent.isDeleted) {
+        throw notFound("parent document", args.parentId);
+      }
+      if (parent.organizationId !== args.organizationId) {
+        throw validation("parentId", "Parent document must be in the same organization");
+      }
+      // Get max order among siblings (bounded)
+      const siblings = await ctx.db
+        .query("documents")
+        .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
+        .filter(notDeleted)
+        .take(BOUNDED_RELATION_LIMIT);
+      order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order ?? 0)) + 1 : 0;
+    }
 
     const now = Date.now();
     return await ctx.db.insert("documents", {
@@ -44,6 +64,8 @@ export const create = authenticatedMutation({
       organizationId: args.organizationId,
       workspaceId: args.workspaceId,
       projectId: args.projectId,
+      parentId: args.parentId,
+      order,
     });
   },
 });
@@ -522,3 +544,587 @@ export const search = authenticatedQuery({
     };
   },
 });
+
+// =============================================================================
+// NESTED PAGES
+// =============================================================================
+
+/** List child documents of a parent (or root documents if parentId is null) */
+export const listChildren = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    parentId: v.optional(v.id("documents")),
+  },
+  handler: async (ctx, args) => {
+    // Verify membership
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", args.organizationId).eq("userId", ctx.userId),
+      )
+      .first();
+
+    if (!membership) {
+      throw forbidden(undefined, "You are not a member of this organization");
+    }
+
+    // Get documents at this level (bounded)
+    const documents = await ctx.db
+      .query("documents")
+      .withIndex("by_organization_parent", (q) =>
+        q.eq("organizationId", args.organizationId).eq("parentId", args.parentId),
+      )
+      .filter(notDeleted)
+      .take(BOUNDED_RELATION_LIMIT);
+
+    // Filter by access: user's own docs OR public docs
+    const accessible = documents.filter((doc) => doc.createdBy === ctx.userId || doc.isPublic);
+
+    // Sort by order
+    accessible.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    // Batch fetch all children counts to avoid N+1
+    // Get all children in one query
+    const parentIds = accessible.map((doc) => doc._id);
+    const allChildren = await ctx.db
+      .query("documents")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .filter((q) => q.and(notDeleted(q), q.neq(q.field("parentId"), undefined)))
+      .take(BOUNDED_RELATION_LIMIT);
+
+    // Count children per parent
+    const childCountMap = new Map<Id<"documents">, number>();
+    for (const child of allChildren) {
+      if (child.parentId && parentIds.includes(child.parentId)) {
+        if (child.createdBy === ctx.userId || child.isPublic) {
+          childCountMap.set(child.parentId, (childCountMap.get(child.parentId) ?? 0) + 1);
+        }
+      }
+    }
+
+    const withChildInfo = accessible.map((doc) => {
+      const accessibleChildCount = childCountMap.get(doc._id) ?? 0;
+      return {
+        ...doc,
+        hasChildren: accessibleChildCount > 0,
+        childCount: accessibleChildCount,
+        isOwner: doc.createdBy === ctx.userId,
+      };
+    });
+
+    return withChildInfo;
+  },
+});
+
+/** Get document tree (all documents with hierarchy info) */
+export const getTree = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    // Verify membership
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", args.organizationId).eq("userId", ctx.userId),
+      )
+      .first();
+
+    if (!membership) {
+      throw forbidden(undefined, "You are not a member of this organization");
+    }
+
+    // Get all documents in org (bounded - most orgs won't have more than this)
+    const allDocs = await ctx.db
+      .query("documents")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .filter(notDeleted)
+      .take(BOUNDED_RELATION_LIMIT);
+
+    // Filter by access
+    const accessible = allDocs.filter((doc) => doc.createdBy === ctx.userId || doc.isPublic);
+
+    // Build tree structure
+    const childrenByParent = new Map<Id<"documents"> | undefined, typeof accessible>();
+
+    for (const doc of accessible) {
+      const parentId = doc.parentId;
+      if (!childrenByParent.has(parentId)) {
+        childrenByParent.set(parentId, []);
+      }
+      childrenByParent.get(parentId)?.push(doc);
+    }
+
+    // Sort children by order
+    for (const children of childrenByParent.values()) {
+      children.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    }
+
+    // Build tree nodes
+    type TreeNode = (typeof accessible)[0] & {
+      children: TreeNode[];
+      depth: number;
+      isOwner: boolean;
+    };
+
+    const buildTree = (parentId: Id<"documents"> | undefined, depth: number): TreeNode[] => {
+      const children = childrenByParent.get(parentId) || [];
+      return children.map((doc) => ({
+        ...doc,
+        children: buildTree(doc._id, depth + 1),
+        depth,
+        isOwner: doc.createdBy === ctx.userId,
+      }));
+    };
+
+    return buildTree(undefined, 0);
+  },
+});
+
+/** Check if targetId is a descendant of ancestorId */
+async function isDescendant(
+  db: QueryCtx["db"],
+  targetId: Id<"documents">,
+  ancestorId: Id<"documents">,
+): Promise<boolean> {
+  let current = await db.get(targetId);
+  while (current?.parentId) {
+    if (current.parentId === ancestorId) return true;
+    current = await db.get(current.parentId);
+  }
+  return false;
+}
+
+/** Validate new parent for document move */
+async function validateNewParent(
+  db: QueryCtx["db"],
+  docId: Id<"documents">,
+  newParentId: Id<"documents">,
+  organizationId: Id<"organizations">,
+): Promise<void> {
+  if (newParentId === docId) {
+    throw validation("newParentId", "Cannot move document to itself");
+  }
+  if (await isDescendant(db, newParentId, docId)) {
+    throw validation("newParentId", "Cannot move document to its own descendant");
+  }
+  const newParent = await db.get(newParentId);
+  if (!newParent || newParent.isDeleted) {
+    throw notFound("new parent document", newParentId);
+  }
+  if (newParent.organizationId !== organizationId) {
+    throw validation("newParentId", "Cannot move document to different organization");
+  }
+}
+
+/** Move a document to a new parent */
+export const moveDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+    newParentId: v.optional(v.id("documents")),
+    newOrder: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document || document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    if (document.createdBy !== ctx.userId) {
+      throw forbidden(undefined, "Not authorized to move this document");
+    }
+
+    // Validate new parent if provided
+    if (args.newParentId) {
+      await validateNewParent(ctx.db, args.id, args.newParentId, document.organizationId);
+    }
+
+    // Calculate new order if not provided
+    let newOrder = args.newOrder;
+    if (newOrder === undefined) {
+      const siblings = await ctx.db
+        .query("documents")
+        .withIndex("by_parent", (q) => q.eq("parentId", args.newParentId))
+        .filter(notDeleted)
+        .take(BOUNDED_RELATION_LIMIT);
+      newOrder = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order ?? 0)) + 1 : 0;
+    }
+
+    await ctx.db.patch(args.id, {
+      parentId: args.newParentId,
+      order: newOrder,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/** Reorder documents within the same parent */
+export const reorderDocuments = authenticatedMutation({
+  args: {
+    documentIds: v.array(v.id("documents")),
+    parentId: v.optional(v.id("documents")),
+  },
+  handler: async (ctx, args) => {
+    // Batch fetch all documents at once to avoid N+1
+    const docs = await Promise.all(args.documentIds.map((id) => ctx.db.get(id)));
+
+    // Validate all documents exist and user owns them
+    for (let i = 0; i < docs.length; i++) {
+      const doc = docs[i];
+      if (!doc || doc.isDeleted) {
+        throw notFound("document", args.documentIds[i]);
+      }
+      if (doc.createdBy !== ctx.userId) {
+        throw forbidden(undefined, "Not authorized to reorder this document");
+      }
+      if (doc.parentId !== args.parentId) {
+        throw validation("documentIds", "All documents must have the same parent");
+      }
+    }
+
+    // Update order for each document
+    const now = Date.now();
+    await Promise.all(
+      args.documentIds.map((id, index) => ctx.db.patch(id, { order: index, updatedAt: now })),
+    );
+  },
+});
+
+/** Get breadcrumb path for a document */
+export const getBreadcrumbs = authenticatedQuery({
+  args: {
+    id: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document || document.isDeleted) {
+      return [];
+    }
+
+    // Check access
+    const isCreator = document.createdBy === ctx.userId;
+    if (!isCreator && !document.isPublic) {
+      throw forbidden(undefined, "Not authorized to access this document");
+    }
+
+    // Build path by collecting all ancestor IDs first, then batch fetch
+    const ancestorIds: Id<"documents">[] = [];
+    let currentId: Id<"documents"> | undefined = document.parentId;
+    const MAX_DEPTH = 20;
+
+    // Collect ancestor IDs (this is bounded by MAX_DEPTH)
+    while (currentId && ancestorIds.length < MAX_DEPTH) {
+      ancestorIds.push(currentId);
+      const parent = await ctx.db.get(currentId);
+      if (!parent || parent.isDeleted) break;
+      currentId = parent.parentId;
+    }
+
+    // Batch fetch all ancestors
+    const ancestors = await Promise.all(ancestorIds.map((id) => ctx.db.get(id)));
+
+    // Build path from root to current document
+    const path: Array<{ _id: Id<"documents">; title: string }> = [];
+
+    // Add ancestors (in reverse order, from root to parent)
+    for (let i = ancestors.length - 1; i >= 0; i--) {
+      const ancestor = ancestors[i];
+      if (ancestor && !ancestor.isDeleted) {
+        path.push({ _id: ancestor._id, title: ancestor.title });
+      }
+    }
+
+    // Add the current document
+    path.push({ _id: document._id, title: document.title });
+
+    return path;
+  },
+});
+
+// =============================================================================
+// DOCUMENT COMMENTS (Nixelo advantage - Plane has no page comments!)
+// =============================================================================
+
+/** Add a comment to a document */
+export const addComment = authenticatedMutation({
+  args: {
+    documentId: v.id("documents"),
+    content: v.string(),
+    mentions: v.optional(v.array(v.id("users"))),
+    parentId: v.optional(v.id("documentComments")),
+  },
+  handler: async (ctx, args) => {
+    // Rate limit: 60 comments per minute per user
+    if (!process.env.IS_TEST_ENV) {
+      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+        name: `addDocumentComment:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 60,
+          period: MINUTE,
+          capacity: 10,
+        },
+      });
+      if (!rateLimitResult.ok) {
+        throw rateLimited(rateLimitResult.retryAfter);
+      }
+
+      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+        name: `addDocumentComment:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 60,
+          period: MINUTE,
+          capacity: 10,
+        },
+      });
+    }
+
+    // Verify document exists and user has access
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.isDeleted) {
+      throw notFound("document", args.documentId);
+    }
+
+    await assertDocumentAccess(ctx, document);
+
+    // If replying, verify parent comment exists
+    if (args.parentId) {
+      const parentComment = await ctx.db.get(args.parentId);
+      if (!parentComment || parentComment.isDeleted) {
+        throw notFound("parent comment", args.parentId);
+      }
+      if (parentComment.documentId !== args.documentId) {
+        throw validation("parentId", "Parent comment must be on the same document");
+      }
+    }
+
+    const now = Date.now();
+    const mentions = args.mentions || [];
+
+    const commentId = await ctx.db.insert("documentComments", {
+      documentId: args.documentId,
+      authorId: ctx.userId,
+      content: args.content,
+      mentions,
+      updatedAt: now,
+      parentId: args.parentId,
+    });
+
+    return commentId;
+  },
+});
+
+/** List comments for a document */
+export const listComments = authenticatedQuery({
+  args: {
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    // Verify document exists and user has access
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.isDeleted) {
+      throw notFound("document", args.documentId);
+    }
+
+    await assertDocumentAccess(ctx, document);
+
+    // Get all comments for this document (bounded)
+    const comments = await ctx.db
+      .query("documentComments")
+      .withIndex("by_document", (q) => q.eq("documentId", args.documentId))
+      .filter((q) => q.neq(q.field("isDeleted"), true))
+      .take(BOUNDED_LIST_LIMIT);
+
+    // Batch fetch authors to avoid N+1
+    const authorIds = [...new Set(comments.map((c) => c.authorId))];
+    const authorMap = await batchFetchUsers(ctx, authorIds);
+
+    // Enrich comments with author info
+    const enrichedComments = comments.map((comment) => {
+      const author = authorMap.get(comment.authorId);
+      return {
+        ...comment,
+        authorName: getUserName(author),
+        authorImage: author?.image,
+      };
+    });
+
+    // Sort by creation time (oldest first for threaded view)
+    enrichedComments.sort((a, b) => a._creationTime - b._creationTime);
+
+    return enrichedComments;
+  },
+});
+
+/** Update a comment */
+export const updateComment = authenticatedMutation({
+  args: {
+    commentId: v.id("documentComments"),
+    content: v.string(),
+    mentions: v.optional(v.array(v.id("users"))),
+  },
+  handler: async (ctx, args) => {
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.isDeleted) {
+      throw notFound("comment", args.commentId);
+    }
+
+    // Only author can edit
+    if (comment.authorId !== ctx.userId) {
+      throw forbidden(undefined, "You can only edit your own comments");
+    }
+
+    await ctx.db.patch(args.commentId, {
+      content: args.content,
+      mentions: args.mentions ?? comment.mentions,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/** Delete a comment (soft delete) */
+export const deleteComment = authenticatedMutation({
+  args: {
+    commentId: v.id("documentComments"),
+  },
+  handler: async (ctx, args) => {
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.isDeleted) {
+      throw notFound("comment", args.commentId);
+    }
+
+    // Only author can delete
+    if (comment.authorId !== ctx.userId) {
+      throw forbidden(undefined, "You can only delete your own comments");
+    }
+
+    await ctx.db.patch(args.commentId, {
+      isDeleted: true,
+    });
+  },
+});
+
+/** Add a reaction to a comment */
+export const addCommentReaction = authenticatedMutation({
+  args: {
+    commentId: v.id("documentComments"),
+    emoji: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.isDeleted) {
+      throw notFound("comment", args.commentId);
+    }
+
+    // Check if reaction already exists
+    const existing = await ctx.db
+      .query("documentCommentReactions")
+      .withIndex("by_comment_user_emoji", (q) =>
+        q.eq("commentId", args.commentId).eq("userId", ctx.userId).eq("emoji", args.emoji),
+      )
+      .first();
+
+    if (existing) {
+      throw conflict("You have already reacted with this emoji");
+    }
+
+    await ctx.db.insert("documentCommentReactions", {
+      commentId: args.commentId,
+      userId: ctx.userId,
+      emoji: args.emoji,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+/** Remove a reaction from a comment */
+export const removeCommentReaction = authenticatedMutation({
+  args: {
+    commentId: v.id("documentComments"),
+    emoji: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const reaction = await ctx.db
+      .query("documentCommentReactions")
+      .withIndex("by_comment_user_emoji", (q) =>
+        q.eq("commentId", args.commentId).eq("userId", ctx.userId).eq("emoji", args.emoji),
+      )
+      .first();
+
+    if (!reaction) {
+      throw notFound("reaction", args.commentId);
+    }
+
+    await ctx.db.delete(reaction._id);
+  },
+});
+
+/** Get reactions for comments (batch) */
+export const getCommentReactions = authenticatedQuery({
+  args: {
+    commentIds: v.array(v.id("documentComments")),
+  },
+  handler: async (ctx, args) => {
+    // Fetch reactions for all comments at once
+    const reactionsByComment = new Map<Id<"documentComments">, Doc<"documentCommentReactions">[]>();
+
+    for (const commentId of args.commentIds) {
+      const reactions = await ctx.db
+        .query("documentCommentReactions")
+        .withIndex("by_comment", (q) => q.eq("commentId", commentId))
+        .take(BOUNDED_LIST_LIMIT);
+      reactionsByComment.set(commentId, reactions);
+    }
+
+    // Transform to summary format
+    const result: Record<string, Array<{ emoji: string; count: number; hasReacted: boolean }>> = {};
+
+    for (const [commentId, reactions] of reactionsByComment) {
+      const emojiCounts = new Map<string, { count: number; hasReacted: boolean }>();
+
+      for (const reaction of reactions) {
+        const existing = emojiCounts.get(reaction.emoji) ?? { count: 0, hasReacted: false };
+        existing.count++;
+        if (reaction.userId === ctx.userId) {
+          existing.hasReacted = true;
+        }
+        emojiCounts.set(reaction.emoji, existing);
+      }
+
+      result[commentId] = Array.from(emojiCounts.entries()).map(([emoji, data]) => ({
+        emoji,
+        count: data.count,
+        hasReacted: data.hasReacted,
+      }));
+    }
+
+    return result;
+  },
+});
+
+// Helper: Check if user can access document
+async function assertDocumentAccess(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  document: Doc<"documents">,
+) {
+  const isCreator = document.createdBy === ctx.userId;
+
+  if (!isCreator) {
+    if (!document.isPublic) {
+      throw forbidden(undefined, "Not authorized to access this document");
+    }
+
+    // If public, user MUST be a member of the organization
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", document.organizationId).eq("userId", ctx.userId),
+      )
+      .first();
+
+    if (!membership) {
+      throw forbidden(undefined, "You are not a member of this organization");
+    }
+  }
+}

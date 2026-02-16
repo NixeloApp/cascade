@@ -64,6 +64,9 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",
+    "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
+    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.5",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
     "@auth/core": "^0.41.1",
     "@boxyhq/saml-jackson": "^1.52.2",
     "@convex-dev/action-cache": "^0.3.0",

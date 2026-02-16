@@ -24,6 +24,10 @@ type IssueTemplate = {
   descriptionTemplate: string;
   defaultPriority: IssuePriority;
   defaultLabels?: string[];
+  defaultAssigneeId?: Id<"users">;
+  defaultStatus?: string;
+  defaultStoryPoints?: number;
+  isDefault?: boolean;
 };
 
 /**

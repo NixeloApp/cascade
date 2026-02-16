@@ -47,6 +47,7 @@ function ProjectLayout() {
   const tabs = [
     { name: "Board", to: ROUTES.projects.board.path, params: { orgSlug, key } },
     { name: "Backlog", to: ROUTES.projects.backlog.path, params: { orgSlug, key } },
+    { name: "Inbox", to: ROUTES.projects.inbox.path, params: { orgSlug, key } },
     ...(isScrum
       ? [{ name: "Sprints", to: ROUTES.projects.sprints.path, params: { orgSlug, key } }]
       : []),
