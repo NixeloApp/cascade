@@ -145,4 +145,56 @@ describe("resolveDNS", () => {
 
     await expect(resolveDNS("example.com")).rejects.toThrow("Network error");
   });
+
+  it("should throw on SERVFAIL (Fail Closed)", async () => {
+    // Mock A record success
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [{ type: 1, data: "1.2.3.4" }],
+        }),
+      }),
+    );
+    // Mock AAAA record SERVFAIL (Status 2)
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 2, // SERVFAIL
+          Answer: [],
+        }),
+      }),
+    );
+
+    await expect(resolveDNS("example.com")).rejects.toThrow("DNS resolution failed with status 2");
+  });
+
+  it("should handle NXDOMAIN (Status 3) as empty result", async () => {
+    // Mock A record success
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: [{ type: 1, data: "1.2.3.4" }],
+        }),
+      }),
+    );
+    // Mock AAAA record NXDOMAIN (Status 3)
+    (global.fetch as any).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({
+          Status: 3, // NXDOMAIN
+          Answer: [],
+        }),
+      }),
+    );
+
+    const ips = await resolveDNS("example.com");
+    expect(ips).toContain("1.2.3.4");
+    expect(ips).toHaveLength(1);
+  });
 });
