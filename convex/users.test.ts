@@ -1,5 +1,6 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { register } from "@convex-dev/rate-limiter/test";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
@@ -11,19 +12,11 @@ import {
   createTestUser,
 } from "./testUtils";
 
-// Mock rateLimit to avoid component registration issues
-vi.mock("./rateLimits", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("./rateLimits")>();
-  return {
-    ...actual,
-    rateLimit: vi.fn(),
-  };
-});
-
 describe("Users", () => {
   describe("updateProfile", () => {
     it("should update user fields", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
@@ -41,6 +34,7 @@ describe("Users", () => {
 
     it("should allow updating email to a valid unused email", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
@@ -67,6 +61,7 @@ describe("Users", () => {
 
     it("should reject invalid email format", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
@@ -79,6 +74,7 @@ describe("Users", () => {
 
     it("should reject email already in use by another user", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       const user1Id = await createTestUser(t);
       const user2Id = await createTestUser(t); // Automatically gets a different email if testUtils handles it, or we set it
 
@@ -98,6 +94,7 @@ describe("Users", () => {
 
     it("should allow updating to own email (no-op but valid)", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       const userId = await createTestUser(t);
 
       // Get current email

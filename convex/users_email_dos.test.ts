@@ -1,22 +1,15 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { register } from "@convex-dev/rate-limiter/test";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
 
-// Mock rateLimit to avoid component registration issues in existing tests
-vi.mock("./rateLimits", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("./rateLimits")>();
-  return {
-    ...actual,
-    rateLimit: vi.fn(),
-  };
-});
-
 describe("Email Claim Vulnerability Fix", () => {
   it("should prevent claiming an email immediately and require verification", async () => {
     const t = convexTest(schema, modules);
+    register(t);
 
     // 1. Create Attacker
     const attackerId = await createTestUser(t, { name: "Attacker", email: "attacker@example.com" });
@@ -64,6 +57,7 @@ describe("Email Claim Vulnerability Fix", () => {
 
   it("should allow legitimate email change with verification", async () => {
     const t = convexTest(schema, modules);
+    register(t);
     const userId = await createTestUser(t, { email: "old@example.com" });
     const asUser = asAuthenticatedUser(t, userId);
     const newEmail = "new@example.com";

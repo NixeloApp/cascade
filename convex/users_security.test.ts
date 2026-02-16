@@ -1,23 +1,16 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { register } from "@convex-dev/rate-limiter/test";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
 
-// Mock rateLimit to avoid component registration issues
-vi.mock("./rateLimits", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("./rateLimits")>();
-  return {
-    ...actual,
-    rateLimit: vi.fn(),
-  };
-});
-
 describe("Users Security", () => {
   describe("updateProfile", () => {
     it("should require verification when email is changed", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       const userId = await createTestUser(t);
 
       // Manually verify the user
@@ -59,6 +52,7 @@ describe("Users Security", () => {
 
     it("should NOT revoke verification when email is unchanged", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       const userId = await createTestUser(t);
 
       const verifiedTime = Date.now();
@@ -83,6 +77,7 @@ describe("Users Security", () => {
 
     it("should synchronize email change to authAccounts after verification", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       const userId = await createTestUser(t);
       const oldEmail = "old@example.com";
       const newEmail = "new@example.com";
@@ -149,6 +144,7 @@ describe("Users Security", () => {
   describe("getCurrent", () => {
     it("should not leak pendingEmailVerificationToken", async () => {
       const t = convexTest(schema, modules);
+      register(t);
       // Create a user
       const userId = await t.run(async (ctx) => {
         return await ctx.db.insert("users", {

@@ -34,7 +34,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.E2E_TEST_MODE ||
       process.env.CI
         ? 50
-        : 3,
+        : 20,
     period: 60_000,
     capacity:
       process.env.NODE_ENV === "test" ||
@@ -42,8 +42,8 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.E2E_TEST_MODE ||
       process.env.CI
         ? 50
-        : 3,
-  }, // 3 per minute (higher in dev/test)
+        : 20,
+  }, // 20 per minute default to prevent blocking legit users/tests if env detection fails
 
   // Email Change Verification: Strict limit to prevent OTP brute-forcing
   // User-based (authenticated), so low limit is safe even for parallel tests
