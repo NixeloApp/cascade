@@ -98,3 +98,8 @@
 **Vulnerability:** The SSO domain verification logic relied on `ctx.db.query("ssoConnections").take(BOUNDED_LIST_LIMIT)` (100 items) to check for duplicate domains. If more than 100 SSO connections existed, a new connection could claim a domain already owned by an existing connection (if it was outside the returned page), allowing authentication hijacking.
 **Learning:** Security checks (uniqueness, permissions) must never rely on bounded queries or pagination limits unless the dataset is guaranteed to be small. Relying on "most deployments have <100 items" is a security flaw in multi-tenant systems.
 **Prevention:** Implemented a dedicated `ssoDomains` table with a unique index on `domain`. This allows O(1) uniqueness checks and lookups regardless of the number of connections, ensuring scalability and security.
+
+## 2026-03-01 - SSRF Prevention via Reusable Safe Fetch
+**Vulnerability:** The Pumble integration used a custom `fetch` implementation with weak validation (`.includes("pumble.com")`) that could be bypassed for SSRF. It also did not prevent DNS rebinding or private IP access, unlike the main webhook delivery system.
+**Learning:** Ad-hoc implementation of security-critical logic (like safe HTTP fetching) often leads to vulnerabilities. Security features like SSRF protection should be encapsulated in reusable helpers and used consistently across the codebase.
+**Prevention:** Extracted the robust SSRF protection logic from `webhookHelpers.ts` into a reusable `safeFetch` helper and applied it to the Pumble integration, ensuring consistent protection against SSRF, DNS rebinding, and private IP access.
