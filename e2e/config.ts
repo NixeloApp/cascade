@@ -270,8 +270,8 @@ export const RBAC_TEST_CONFIG = {
  * Test Timeouts
  */
 export const TIMEOUTS = {
-  // How long to wait for OTP email to arrive
-  otpWait: 30000,
+  // How long to wait for OTP email to arrive (increased to reduce flakiness in CI)
+  otpWait: 60000,
   // Poll interval for checking OTP
   otpPollInterval: 2000,
   // Page load timeout

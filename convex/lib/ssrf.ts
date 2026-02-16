@@ -80,6 +80,20 @@ function check198(b: number, c: number): boolean {
   return false;
 }
 
+function getEmbeddedIPv4(expanded: string): string {
+  const parts = expanded.split(":");
+  // The last two groups contain the IPv4 address
+  const high = parseInt(parts[6], 16);
+  const low = parseInt(parts[7], 16);
+
+  const p1 = (high >> 8) & 0xff;
+  const p2 = high & 0xff;
+  const p3 = (low >> 8) & 0xff;
+  const p4 = low & 0xff;
+
+  return `${p1}.${p2}.${p3}.${p4}`;
+}
+
 /**
  * Normalizes an IPv6 address to its full 32-digit hex representation (8 groups of 4).
  * Handles:
@@ -144,23 +158,30 @@ export function isPrivateIPv6(ip: string): boolean {
   // fe80::/10 (Link-local) -> fe80... to febf...
   if (/^fe[89ab]/i.test(expanded)) return true;
 
+  // fec0::/10 (Site-Local, deprecated) -> fec0... to feff...
+  if (/^fe[c-f]/i.test(expanded)) return true;
+
   // fc00::/7 (Unique Local) -> fc00... to fdff...
   if (/^f[cd]/i.test(expanded)) return true;
 
   // IPv4-mapped IPv6 ::ffff:0:0/96
   // Prefix: 0000:0000:0000:0000:0000:ffff:
   if (expanded.startsWith("0000:0000:0000:0000:0000:ffff:")) {
-    const parts = expanded.split(":");
-    // The last two groups contain the IPv4 address
-    const high = parseInt(parts[6], 16);
-    const low = parseInt(parts[7], 16);
+    const ipv4 = getEmbeddedIPv4(expanded);
+    if (isPrivateIPv4(ipv4)) return true;
+  }
 
-    const p1 = (high >> 8) & 0xff;
-    const p2 = high & 0xff;
-    const p3 = (low >> 8) & 0xff;
-    const p4 = low & 0xff;
+  // IPv4-compatible IPv6 ::/96 (Deprecated but dangerous)
+  // Prefix: 0000:0000:0000:0000:0000:0000:
+  if (expanded.startsWith("0000:0000:0000:0000:0000:0000:")) {
+    const ipv4 = getEmbeddedIPv4(expanded);
+    if (isPrivateIPv4(ipv4)) return true;
+  }
 
-    const ipv4 = `${p1}.${p2}.${p3}.${p4}`;
+  // NAT64 64:ff9b::/96
+  // Prefix: 0064:ff9b:0000:0000:0000:0000:
+  if (expanded.startsWith("0064:ff9b:0000:0000:0000:0000:")) {
+    const ipv4 = getEmbeddedIPv4(expanded);
     if (isPrivateIPv4(ipv4)) return true;
   }
 

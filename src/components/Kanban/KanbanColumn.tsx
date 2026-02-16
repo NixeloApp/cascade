@@ -35,7 +35,7 @@ interface Issue {
   updatedAt: number;
 }
 
-interface KanbanColumnProps {
+export interface KanbanColumnProps {
   state: WorkflowState;
   issues: Issue[];
   columnIndex: number;
@@ -68,17 +68,87 @@ interface KanbanColumnProps {
 }
 
 /**
+ * Wrapper component for IssueCard to memoize the wrapper div and animation style.
+ * This prevents the wrapper div from re-rendering when parent renders but issue props are stable.
+ */
+const KanbanIssueItem = memo(
+  ({
+    issue,
+    columnIndex,
+    index,
+    onDragStart,
+    onClick,
+    selectionMode,
+    isSelected,
+    isFocused,
+    onToggleSelect,
+    canEdit,
+  }: {
+    issue: Issue;
+    columnIndex: number;
+    index: number;
+    onDragStart: (e: React.DragEvent, issueId: Id<"issues">) => void;
+    onClick: (issueId: Id<"issues">) => void;
+    selectionMode: boolean;
+    isSelected: boolean;
+    isFocused: boolean;
+    onToggleSelect: (issueId: Id<"issues">) => void;
+    canEdit: boolean;
+  }) => {
+    const style = useMemo(
+      () => ({
+        animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + index * ANIMATION.STAGGER_DELAY}ms`,
+      }),
+      [columnIndex, index],
+    );
+
+    return (
+      <div className="animate-scale-in" style={style}>
+        <IssueCard
+          issue={issue}
+          onDragStart={onDragStart}
+          onClick={onClick}
+          selectionMode={selectionMode}
+          isSelected={isSelected}
+          isFocused={isFocused}
+          onToggleSelect={onToggleSelect}
+          canEdit={canEdit}
+        />
+      </div>
+    );
+  },
+);
+KanbanIssueItem.displayName = "KanbanIssueItem";
+
+function areSelectedIssuesEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
+  if (prev.selectedIssueIds === next.selectedIssueIds) {
+    return true;
+  }
+  for (const issue of next.issues) {
+    if (prev.selectedIssueIds.has(issue._id) !== next.selectedIssueIds.has(issue._id)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function areFocusedIssuesEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
+  if (prev.focusedIssueId === next.focusedIssueId) return true;
+
+  const wasFocusedInColumn =
+    prev.focusedIssueId && prev.issues.some((i) => i._id === prev.focusedIssueId);
+  const isFocusedInColumn =
+    next.focusedIssueId && next.issues.some((i) => i._id === next.focusedIssueId);
+
+  return !(wasFocusedInColumn || isFocusedInColumn);
+}
+
+/**
  * Custom equality check for KanbanColumn props
  * Optimizes performance by checking if selectedIssueIds actually affects this column
  */
-function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
-  // Check shallow equality for all props except selectedIssueIds and callbacks
-  const skipKeys = new Set([
-    "selectedIssueIds",
-    "onIssueDrop",
-    "onIssueReorder",
-    "onToggleCollapse",
-  ]);
+export function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
+  // Check shallow equality for all props except selectedIssueIds
   const prevKeys = Object.keys(prev) as (keyof KanbanColumnProps)[];
   const nextKeys = Object.keys(next) as (keyof KanbanColumnProps)[];
 
@@ -87,25 +157,14 @@ function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
   }
 
   for (const key of prevKeys) {
-    if (skipKeys.has(key)) continue;
+    if (key === "selectedIssueIds" || key === "focusedIssueId") continue;
     if (prev[key] !== next[key]) return false;
   }
 
-  // If selectedIssueIds is the same reference, no change
-  if (prev.selectedIssueIds === next.selectedIssueIds) {
-    return true;
-  }
+  if (!areFocusedIssuesEqual(prev, next)) return false;
+  if (!areSelectedIssuesEqual(prev, next)) return false;
 
-  // If selectedIssueIds changed, check if it affects any issue in this column
-  // We assume issues are stable if step 1 passed (prev.issues === next.issues)
-  // If issues changed reference but same content, step 1 failed so we re-render anyway (safe)
-  for (const issue of next.issues) {
-    if (prev.selectedIssueIds.has(issue._id) !== next.selectedIssueIds.has(issue._id)) {
-      return false; // Selection state changed for an issue in this column
-    }
-  }
-
-  return true; // No relevant change
+  return true;
 }
 
 /**
@@ -342,25 +401,19 @@ const KanbanColumnComponent = function KanbanColumn({
         ) : (
           <>
             {stateIssues.map((issue, issueIndex) => (
-              <div
+              <KanbanIssueItem
                 key={issue._id}
-                className="animate-scale-in"
-                style={{
-                  animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + issueIndex * ANIMATION.STAGGER_DELAY}ms`,
-                }}
-              >
-                <IssueCard
-                  issue={issue}
-                  status={state.id}
-                  onClick={onIssueClick}
-                  selectionMode={selectionMode}
-                  isSelected={selectedIssueIds.has(issue._id)}
-                  isFocused={issue._id === focusedIssueId}
-                  onToggleSelect={onToggleSelect}
-                  canEdit={canEdit}
-                  onIssueDrop={onIssueReorder}
-                />
-              </div>
+                issue={issue}
+                columnIndex={columnIndex}
+                index={issueIndex}
+                onDragStart={onDragStart}
+                onClick={onIssueClick}
+                selectionMode={selectionMode}
+                isSelected={selectedIssueIds.has(issue._id)}
+                isFocused={issue._id === focusedIssueId}
+                onToggleSelect={onToggleSelect}
+                canEdit={canEdit}
+              />
             ))}
 
             {/* Load More Button for done columns with hidden items */}
