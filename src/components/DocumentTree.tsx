@@ -39,11 +39,9 @@ interface TreeNode {
   isPublic: boolean;
   parentId?: Id<"documents">;
   order?: number;
-  hasChildren: boolean;
-  childCount: number;
   isOwner: boolean;
-  children?: TreeNode[];
-  depth?: number;
+  children: TreeNode[];
+  depth: number;
 }
 
 export function DocumentTree({

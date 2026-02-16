@@ -274,9 +274,7 @@ export const processDueReminders = internalMutation({
           type: "calendar_reminder",
           title: `Upcoming: ${event.title}`,
           message: `Starting in ${reminder.minutesBefore} minutes`,
-          link: `/calendar/${reminder.eventId}`,
-          read: false,
-          createdAt: now,
+          isRead: false,
         });
       }
       // Push notifications would be handled separately via web push API

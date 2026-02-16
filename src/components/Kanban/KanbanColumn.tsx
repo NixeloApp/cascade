@@ -225,7 +225,7 @@ const KanbanColumnComponent = function KanbanColumn({
 
         {/* Issue count badge */}
         <Badge
-          variant={isOverWipLimit ? "danger" : isAtWipLimit ? "warning" : "neutral"}
+          variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
           shape="pill"
           className="mb-3"
         >
@@ -268,7 +268,7 @@ const KanbanColumnComponent = function KanbanColumn({
             </Typography>
             <Badge
               data-testid={TEST_IDS.BOARD.COLUMN_COUNT}
-              variant={isOverWipLimit ? "danger" : isAtWipLimit ? "warning" : "neutral"}
+              variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
               shape="pill"
               className="shrink-0"
             >
@@ -277,7 +277,7 @@ const KanbanColumnComponent = function KanbanColumn({
             </Badge>
             {isOverWipLimit && (
               <Tooltip content={`WIP limit exceeded (max ${state.wipLimit})`}>
-                <Badge variant="danger" size="sm">
+                <Badge variant="error" size="sm">
                   Over limit
                 </Badge>
               </Tooltip>

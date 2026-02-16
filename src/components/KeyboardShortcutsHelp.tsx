@@ -9,10 +9,9 @@
  * - Empty search state
  */
 
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Button } from "./ui/Button";
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "./ui/Dialog";
+import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/Input";
 import { ScrollArea } from "./ui/ScrollArea";
@@ -257,83 +256,73 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 gap-0">
-        <DialogHeader className="p-4 pb-0">
-          <Flex justify="between" align="center">
-            <DialogTitle className="text-base font-medium">Keyboard Shortcuts</DialogTitle>
-            <DialogClose asChild>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
-            </DialogClose>
-          </Flex>
-        </DialogHeader>
+    <Dialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Keyboard Shortcuts"
+      description="Available keyboard shortcuts for navigation and actions"
+      className="sm:max-w-md"
+    >
+      {/* Search Input */}
+      <div className="relative mb-4">
+        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
+        <Input
+          type="text"
+          placeholder="Search shortcuts..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-8 pl-8 text-sm"
+          autoFocus
+        />
+      </div>
 
-        {/* Search Input */}
-        <div className="px-4 py-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
-            <Input
-              type="text"
-              placeholder="Search shortcuts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 text-sm"
-              autoFocus
-            />
-          </div>
-        </div>
-
-        {/* Shortcuts List */}
-        <ScrollArea className="max-h-panel-md px-4 pb-4">
-          {hasResults ? (
-            <Flex direction="column" gap="md">
-              {filteredCategories.map((category) => (
-                <div key={category.id}>
-                  <Typography
-                    variant="label"
-                    className="text-xs font-medium text-ui-text-secondary uppercase tracking-wider mb-2"
-                  >
-                    {category.title}
-                  </Typography>
-                  <Flex direction="column" gap="xs">
-                    {category.items.map((item) => (
-                      <Flex key={item.id} align="center" justify="between" className="py-1.5">
-                        <Typography variant="small" className="text-ui-text-secondary">
-                          {item.description}
-                        </Typography>
-                        <ShortcutBadge item={item} />
-                      </Flex>
-                    ))}
-                  </Flex>
-                </div>
-              ))}
-            </Flex>
-          ) : (
-            <Flex direction="column" align="center" justify="center" className="py-8 text-center">
-              <Typography variant="small" className="text-ui-text-secondary">
-                No shortcuts found for{" "}
-                <Typography as="span" variant="small" className="font-medium italic">
-                  "{searchQuery}"
+      {/* Shortcuts List */}
+      <ScrollArea className="max-h-panel-md">
+        {hasResults ? (
+          <Flex direction="column" gap="md">
+            {filteredCategories.map((category) => (
+              <div key={category.id}>
+                <Typography
+                  variant="label"
+                  className="text-xs font-medium text-ui-text-secondary uppercase tracking-wider mb-2"
+                >
+                  {category.title}
                 </Typography>
+                <Flex direction="column" gap="xs">
+                  {category.items.map((item) => (
+                    <Flex key={item.id} align="center" justify="between" className="py-1.5">
+                      <Typography variant="small" className="text-ui-text-secondary">
+                        {item.description}
+                      </Typography>
+                      <ShortcutBadge item={item} />
+                    </Flex>
+                  ))}
+                </Flex>
+              </div>
+            ))}
+          </Flex>
+        ) : (
+          <Flex direction="column" align="center" justify="center" className="py-8 text-center">
+            <Typography variant="small" className="text-ui-text-secondary">
+              No shortcuts found for{" "}
+              <Typography as="span" variant="small" className="font-medium italic">
+                "{searchQuery}"
               </Typography>
-            </Flex>
-          )}
-        </ScrollArea>
+            </Typography>
+          </Flex>
+        )}
+      </ScrollArea>
 
-        {/* Footer Tip */}
-        <div className="px-4 py-3 border-t border-ui-border bg-ui-bg-secondary">
-          <Typography variant="muted" className="text-xs text-center">
-            Press{" "}
-            <kbd className="px-1 py-0.5 rounded border border-ui-border bg-ui-bg text-xs font-mono">
-              {isMacPlatform() ? "⌘" : "Ctrl"}+K
-            </kbd>{" "}
-            to open command palette
-          </Typography>
-        </div>
-      </DialogContent>
+      {/* Footer Tip */}
+      <div className="mt-4 pt-4 border-t border-ui-border">
+        <Typography variant="muted" className="text-xs text-center">
+          Press{" "}
+          <kbd className="px-1 py-0.5 rounded border border-ui-border bg-ui-bg text-xs font-mono">
+            {isMacPlatform() ? "⌘" : "Ctrl"}+K
+          </kbd>{" "}
+          to open command palette
+        </Typography>
+      </div>
     </Dialog>
   );
 }

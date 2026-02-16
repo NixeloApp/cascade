@@ -14,15 +14,10 @@
 
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import {
-  authenticatedMutation,
-  authenticatedQuery,
-  projectEditorMutation,
-  projectQuery,
-} from "./customFunctions";
+import { authenticatedQuery, projectEditorMutation, projectQuery } from "./customFunctions";
+import { BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
-import { BOUNDED_RELATION_LIMIT, notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
-import { type InboxIssueStatus, inboxIssueSources, inboxIssueStatuses } from "./validators";
+import { inboxIssueSources, inboxIssueStatuses } from "./validators";
 
 // =============================================================================
 // Types
@@ -55,10 +50,11 @@ export const list = projectQuery({
 
     // Filter by specific status or tab
     if (args.status) {
+      const statusValue = args.status;
       query = ctx.db
         .query("inboxIssues")
         .withIndex("by_project_status", (q) =>
-          q.eq("projectId", ctx.projectId).eq("status", args.status!),
+          q.eq("projectId", ctx.projectId).eq("status", statusValue),
         );
     }
 
@@ -90,15 +86,17 @@ export const list = projectQuery({
       Promise.all(duplicateIds.map((id) => ctx.db.get(id))),
     ]);
 
-    // Create lookup maps
-    const issueMap = new Map(issues.filter(Boolean).map((i) => [i!._id, i!]));
+    // Create lookup maps - use type-safe filtering
+    const validIssues = issues.filter((i): i is NonNullable<typeof i> => i !== null);
+    const validUsers = users.filter((u): u is NonNullable<typeof u> => u !== null);
+    const validDuplicates = duplicates.filter((i): i is NonNullable<typeof i> => i !== null);
+
+    const issueMap = new Map(validIssues.map((i) => [i._id, i]));
     const userMap = new Map(
-      users.filter(Boolean).map((u) => [u!._id, { _id: u!._id, name: u!.name, image: u!.image }]),
+      validUsers.map((u) => [u._id, { _id: u._id, name: u.name, image: u.image }]),
     );
     const duplicateMap = new Map(
-      duplicates
-        .filter(Boolean)
-        .map((i) => [i!._id, { _id: i!._id, key: i!.key, title: i!.title }]),
+      validDuplicates.map((i) => [i._id, { _id: i._id, key: i.key, title: i.title }]),
     );
 
     // Assemble results

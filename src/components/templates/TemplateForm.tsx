@@ -1,5 +1,5 @@
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
@@ -223,7 +223,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
             {(field) => (
               <FormSelect field={field} label="Default Assignee">
                 <option value="">Unassigned</option>
-                {project?.members?.map((member: Doc<"users">) => (
+                {project?.members?.map((member) => (
                   <option key={member._id} value={member._id}>
                     {member.name}
                   </option>
@@ -265,7 +265,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
               <FormCheckbox
                 field={field}
                 label="Set as default template"
-                description="Automatically selected when creating new issues"
+                helperText="Automatically selected when creating new issues"
               />
             )}
           </form.Field>

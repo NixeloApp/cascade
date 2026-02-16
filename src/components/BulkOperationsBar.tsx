@@ -370,7 +370,7 @@ export function BulkOperationsBar({
         onConfirm={handleArchive}
         title="Archive Issues"
         message={`Archive ${count} issue${count !== 1 ? "s" : ""}? Only completed issues will be archived. Archived issues can be restored later.`}
-        variant="default"
+        variant="info"
         confirmLabel="Archive"
       />
 

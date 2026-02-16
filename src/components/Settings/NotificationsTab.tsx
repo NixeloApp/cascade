@@ -170,7 +170,6 @@ export function NotificationsTab() {
                       checked={pushPreferences.pushMentions}
                       onCheckedChange={(value) => handlePushToggle("pushMentions", value)}
                       disabled={isSaving}
-                      size="sm"
                     />
                   </Flex>
 
@@ -184,7 +183,6 @@ export function NotificationsTab() {
                       checked={pushPreferences.pushAssignments}
                       onCheckedChange={(value) => handlePushToggle("pushAssignments", value)}
                       disabled={isSaving}
-                      size="sm"
                     />
                   </Flex>
 
@@ -198,7 +196,6 @@ export function NotificationsTab() {
                       checked={pushPreferences.pushComments}
                       onCheckedChange={(value) => handlePushToggle("pushComments", value)}
                       disabled={isSaving}
-                      size="sm"
                     />
                   </Flex>
 
@@ -212,7 +209,6 @@ export function NotificationsTab() {
                       checked={pushPreferences.pushStatusChanges}
                       onCheckedChange={(value) => handlePushToggle("pushStatusChanges", value)}
                       disabled={isSaving}
-                      size="sm"
                     />
                   </Flex>
                 </div>

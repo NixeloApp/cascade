@@ -15,17 +15,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
-import {
-  Dialog,
-  DialogBody,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/Dialog";
+import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Input, Textarea } from "../ui/form";
@@ -168,60 +158,20 @@ export function IpRestrictionsSettings() {
               <Typography variant="h3" className="text-base font-medium">
                 IP Allowlist
               </Typography>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="secondary" size="sm">
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add IP
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add IP to Allowlist</DialogTitle>
-                    <DialogDescription>
-                      Add an IP address or CIDR range to allow access from.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogBody>
-                    <Flex direction="column" gap="md">
-                      <div>
-                        <label
-                          htmlFor="ipRange"
-                          className="block text-sm font-medium text-ui-text mb-2"
-                        >
-                          IP Address or CIDR Range
-                        </label>
-                        <Input
-                          id="ipRange"
-                          value={newIpRange}
-                          onChange={(e) => setNewIpRange(e.target.value)}
-                          placeholder="192.168.1.0/24 or 203.0.113.50"
-                        />
-                        <Typography variant="muted" className="mt-1 text-sm">
-                          Examples: 192.168.1.100 (single IP), 10.0.0.0/8 (CIDR range)
-                        </Typography>
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="description"
-                          className="block text-sm font-medium text-ui-text mb-2"
-                        >
-                          Description (optional)
-                        </label>
-                        <Textarea
-                          id="description"
-                          value={newDescription}
-                          onChange={(e) => setNewDescription(e.target.value)}
-                          placeholder="Office network, VPN exit node, etc."
-                          rows={2}
-                        />
-                      </div>
-                    </Flex>
-                  </DialogBody>
-                  <DialogFooter>
-                    <DialogClose asChild>
-                      <Button variant="secondary">Cancel</Button>
-                    </DialogClose>
+              <Button variant="secondary" size="sm" onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add IP
+              </Button>
+              <Dialog
+                open={isAddDialogOpen}
+                onOpenChange={setIsAddDialogOpen}
+                title="Add IP to Allowlist"
+                description="Add an IP address or CIDR range to allow access from."
+                footer={
+                  <>
+                    <Button variant="secondary" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancel
+                    </Button>
                     <Button
                       onClick={handleAddIp}
                       isLoading={isSubmitting}
@@ -229,8 +179,43 @@ export function IpRestrictionsSettings() {
                     >
                       Add to Allowlist
                     </Button>
-                  </DialogFooter>
-                </DialogContent>
+                  </>
+                }
+              >
+                <Flex direction="column" gap="md">
+                  <div>
+                    <label
+                      htmlFor="ipRange"
+                      className="block text-sm font-medium text-ui-text mb-2"
+                    >
+                      IP Address or CIDR Range
+                    </label>
+                    <Input
+                      id="ipRange"
+                      value={newIpRange}
+                      onChange={(e) => setNewIpRange(e.target.value)}
+                      placeholder="192.168.1.0/24 or 203.0.113.50"
+                    />
+                    <Typography variant="muted" className="mt-1 text-sm">
+                      Examples: 192.168.1.100 (single IP), 10.0.0.0/8 (CIDR range)
+                    </Typography>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-ui-text mb-2"
+                    >
+                      Description (optional)
+                    </label>
+                    <Textarea
+                      id="description"
+                      value={newDescription}
+                      onChange={(e) => setNewDescription(e.target.value)}
+                      placeholder="Office network, VPN exit node, etc."
+                      rows={2}
+                    />
+                  </div>
+                </Flex>
               </Dialog>
             </Flex>
 
@@ -252,7 +237,7 @@ export function IpRestrictionsSettings() {
                   >
                     <Flex direction="column" gap="xs">
                       <Flex align="center" gap="sm">
-                        <Typography variant="code" className="text-sm">
+                        <Typography variant="mono" className="text-sm">
                           {entry.ipRange}
                         </Typography>
                         {entry.description && (

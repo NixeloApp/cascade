@@ -128,9 +128,10 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
       }
 
       // Subscribe to push manager
+      const keyArray = urlBase64ToUint8Array(vapidPublicKey);
       const subscription = await pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: keyArray.buffer as ArrayBuffer,
       });
 
       setCurrentSubscription(subscription);
