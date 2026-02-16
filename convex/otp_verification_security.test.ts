@@ -25,7 +25,7 @@ describe("OTP Verification Rate Limit", () => {
     const token = "123456";
 
     // Mock successful email send
-    vi.mocked(sendEmail).mockResolvedValue({ success: true });
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, id: "test-id" });
 
     await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
