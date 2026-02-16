@@ -784,42 +784,54 @@ export const bulkArchive = authenticatedMutation({
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
     const now = Date.now();
 
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted || issue.archivedAt) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Check if issue is in "done" category
-        const project = await ctx.db.get(issue.projectId);
-        if (!project) return 0;
-
-        const state = project.workflowStates.find((s) => s.id === issue.status);
-        if (!state || state.category !== "done") return 0;
-
-        // Archive the issue
-        await ctx.db.patch(issue._id, {
-          archivedAt: now,
-          archivedBy: ctx.userId,
-          updatedAt: now,
-        });
-
-        // Log activity
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
-          action: "archived",
-        });
-
-        return 1;
-      }),
+    // Filter valid issues first
+    const validIssues = issues.filter(
+      (issue): issue is NonNullable<typeof issue> => !!issue && !issue.isDeleted && !issue.archivedAt,
     );
 
-    return { archived: results.reduce((a: number, b) => a + b, 0) };
+    if (validIssues.length === 0) {
+      return { archived: 0 };
+    }
+
+    // Batch fetch all projects upfront (N+1 fix)
+    const projectIds = [...new Set(validIssues.map((issue) => issue.projectId))];
+    const projects = await Promise.all(projectIds.map((id) => ctx.db.get(id)));
+    const projectMap = new Map(projectIds.map((id, i) => [id, projects[i]]));
+
+    let archived = 0;
+
+    for (const issue of validIssues) {
+      try {
+        await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+      } catch {
+        continue;
+      }
+
+      // Check if issue is in "done" category (using cached project)
+      const project = projectMap.get(issue.projectId);
+      if (!project) continue;
+
+      const state = project.workflowStates.find((s) => s.id === issue.status);
+      if (!state || state.category !== "done") continue;
+
+      // Archive the issue
+      await ctx.db.patch(issue._id, {
+        archivedAt: now,
+        archivedBy: ctx.userId,
+        updatedAt: now,
+      });
+
+      // Log activity
+      await ctx.db.insert("issueActivity", {
+        issueId: issue._id,
+        userId: ctx.userId,
+        action: "archived",
+      });
+
+      archived++;
+    }
+
+    return { archived };
   },
 });
 
