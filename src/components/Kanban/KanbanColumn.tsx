@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ANIMATION } from "@/lib/constants";
@@ -13,7 +13,7 @@ import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kan
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
-import { IssueCard } from "../IssueCard";
+import { areIssuesEqual, IssueCard } from "../IssueCard";
 import { Badge } from "../ui/Badge";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { PaginationInfo } from "../ui/PaginationInfo";
@@ -65,6 +65,73 @@ export interface KanbanColumnProps {
   isCollapsed?: boolean;
   /** Callback to toggle collapse state */
   onToggleCollapse?: (stateId: string) => void;
+}
+
+/**
+ * Custom equality check for KanbanIssueItem
+ * Optimizes performance by using areIssuesEqual for the issue prop
+ */
+export function areKanbanIssueItemPropsEqual(
+  prev: {
+    issue: Issue;
+    columnIndex: number;
+    index: number;
+    onClick: (issueId: Id<"issues">) => void;
+    selectionMode: boolean;
+    isSelected: boolean;
+    isFocused: boolean;
+    onToggleSelect: (issueId: Id<"issues">) => void;
+    canEdit: boolean;
+    onIssueDrop?: (
+      draggedIssueId: Id<"issues">,
+      sourceStatus: string,
+      targetIssueId: Id<"issues">,
+      targetStatus: string,
+      edge: "top" | "bottom",
+    ) => void;
+  },
+  next: {
+    issue: Issue;
+    columnIndex: number;
+    index: number;
+    onClick: (issueId: Id<"issues">) => void;
+    selectionMode: boolean;
+    isSelected: boolean;
+    isFocused: boolean;
+    onToggleSelect: (issueId: Id<"issues">) => void;
+    canEdit: boolean;
+    onIssueDrop?: (
+      draggedIssueId: Id<"issues">,
+      sourceStatus: string,
+      targetIssueId: Id<"issues">,
+      targetStatus: string,
+      edge: "top" | "bottom",
+    ) => void;
+  },
+) {
+  // Check primitive props
+  if (
+    prev.columnIndex !== next.columnIndex ||
+    prev.index !== next.index ||
+    prev.selectionMode !== next.selectionMode ||
+    prev.isSelected !== next.isSelected ||
+    prev.isFocused !== next.isFocused ||
+    prev.canEdit !== next.canEdit
+  ) {
+    return false;
+  }
+
+  // Check callback props (reference equality)
+  if (
+    prev.onClick !== next.onClick ||
+    prev.onToggleSelect !== next.onToggleSelect ||
+    prev.onIssueDrop !== next.onIssueDrop
+  ) {
+    return false;
+  }
+
+  // Check issue object equality
+  return areIssuesEqual(prev.issue, next.issue);
 }
 
 /**
@@ -124,6 +191,7 @@ const KanbanIssueItem = memo(
       </div>
     );
   },
+  areKanbanIssueItemPropsEqual,
 );
 KanbanIssueItem.displayName = "KanbanIssueItem";
 
@@ -220,8 +288,8 @@ const CollapsedColumn = ({
     </Tooltip>
 
     {/* Vertical column name */}
-    <div
-      className="flex-1 flex items-center justify-center py-4"
+    <FlexItem
+      className="flex items-center justify-center py-4"
       style={{ writingMode: "vertical-lr" }}
     >
       <Typography
@@ -230,7 +298,7 @@ const CollapsedColumn = ({
       >
         {state.name}
       </Typography>
-    </div>
+    </FlexItem>
 
     {/* Issue count badge */}
     <Badge

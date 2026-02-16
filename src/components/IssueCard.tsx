@@ -94,10 +94,10 @@ function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
   }
 
   // Check issue object equality
-  return areIssuesEqual(prev.issue, next.issue);
+  return true;
 }
 
-function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
+export function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
   // Reference equality check (fastest)
   if (prevIssue === nextIssue) return true;
 
