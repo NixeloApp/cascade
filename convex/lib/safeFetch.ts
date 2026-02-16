@@ -8,10 +8,7 @@ import { validateDestinationResolved } from "./ssrf";
  * @param init Fetch options (headers, body, etc.).
  * @returns The response from the fetch request.
  */
-export async function safeFetch(
-  url: string,
-  init?: RequestInit,
-): Promise<Response> {
+export async function safeFetch(url: string, init?: RequestInit): Promise<Response> {
   // 1. Validate destination URL (SSRF protection) and get safe IP
   const resolvedIp = await validateDestinationResolved(url);
 

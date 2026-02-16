@@ -1,10 +1,10 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
+import { safeFetch } from "./lib/safeFetch";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
-import { safeFetch } from "./lib/safeFetch";
 
 vi.mock("./lib/safeFetch", () => ({
   safeFetch: vi.fn(async (url: string) => {
