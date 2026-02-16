@@ -1,7 +1,6 @@
-import { render, screen } from "@/test/custom-render";
 import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@/test/custom-render";
 import { IssueDetailHeader } from "./IssueDetailHeader";
-import userEvent from "@testing-library/user-event";
 
 // Mock Tooltip to verify content
 vi.mock("@/components/ui/Tooltip", async (importOriginal) => {
