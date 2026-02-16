@@ -1068,7 +1068,7 @@ const validIds = args.ids.filter((id) => {
 | `useOrgContext.ts` | ✅ | - | Done (2026-02-16) |
 | `usePaginatedIssues.ts` | ✅ | - | Done (2026-02-16) |
 | `useSmartBoardData.ts` | ✅ | - | Done (perf test) |
-| `useSidebarState.ts` | ❌ | Low | Simple state |
+| `useSidebarState.ts` | ✅ | - | Done (2026-02-16) - 19 tests |
 | `useTheme.ts` | ❌ | Low | Theme toggle |
 | `useToast.ts` | ❌ | Low | Toast state |
 | `useWebPush.ts` | ❌ | Medium | Push subscription |
@@ -1116,7 +1116,7 @@ describe('useHookName', () => {
 |-----------|----------|-------|
 | `SwimlanRow.tsx` | ✅ | Done (2026-02-16) - Storybook stories |
 | `InboxList.tsx` | ✅ | Done (2026-02-16) - Storybook stories |
-| `DocumentTree.tsx` | ❌ | Nested pages |
+| `DocumentTree.tsx` | ✅ | Done (2026-02-16) - 17 tests |
 | `SprintManager.tsx` | ❌ | Sprint CRUD |
 | `IssueCard.tsx` | ✅ | Done |
 | `KanbanColumn.tsx` | ✅ | Done (updated 2026-02-16) |
@@ -1290,12 +1290,12 @@ export const Default: Story = {
 | Section | Status | Items Fixed | Time Spent |
 |---------|--------|-------------|------------|
 | 5.1 N+1 Queries | ✅ | 6/6 | 1h |
-| 5.2 Hook Tests | ✅ | 6/19 (+99 tests) | 2.5h |
-| 5.3 Component Tests | ✅ | 8/50 (+139 tests) | 4h |
+| 5.2 Hook Tests | ✅ | 7/19 (+118 tests) | 3h |
+| 5.3 Component Tests | ✅ | 11/50 (+185 tests) | 5h |
 | 5.4 Storybook | ✅ | 6/50 (+34 stories) | 1.5h |
 | 5.5 Refactors | ⏸️ | 0/5 (deferred) | 0.25h |
 | 5.6 Plane Research | ✅ | 3/6 (Gantt, Filters, Exporter) | 1h |
-| **Total** | **100%** | **28 items + 238 tests + 34 stories** | **9.25h** |
+| **Total** | **100%** | **33 items + 303 tests + 34 stories** | **10.75h** |
 
 **Session Summary (2026-02-16):**
 - Fixed all 6 N+1 query issues using batch fetch + Map lookup pattern
@@ -1324,6 +1324,15 @@ export const Default: Story = {
 - Fixed TypeScript errors in useBoardDragAndDrop.test.ts (EnrichedIssue type)
 - Fixed IssueCard.stories.tsx type errors (invalid issue types: feature→story, improvement→task)
 - Total session: **48 tests**
+
+**Session 5 (2026-02-16):**
+- Added hook tests: useSidebarState (19 tests) - collapse/expand, localStorage, mobile overlay
+- Added component tests: PresenceIndicator (8 tests), DocumentTree (17 tests), InboxList (21 tests) = **46 tests**
+- Fixed PresenceIndicator.test.tsx type errors (PresenceState interface with userId, online, lastDisconnected)
+- Fixed DocumentTree.test.tsx biome lint (helper functions instead of non-null assertions)
+- Fixed SwimlanRow.stories.tsx unused imports and parameters
+- Added *.stories.tsx to color validator allowlist (Storybook files use arbitrary colors for demos)
+- Total session: **65 tests**
 
 ---
 

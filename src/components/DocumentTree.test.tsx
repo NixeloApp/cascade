@@ -48,6 +48,20 @@ const createMockDocument = (overrides: Partial<TreeNode> = {}): TreeNode => ({
   ...overrides,
 });
 
+// Helper to get menu trigger button from a document row
+function getMenuTrigger(docTitle: string) {
+  const link = screen.getByText(docTitle).closest("a");
+  if (!link) throw new Error(`Could not find link for "${docTitle}"`);
+  return within(link).getAllByRole("button")[1]; // Second button is menu trigger
+}
+
+// Helper to get expand button from a document row
+function getExpandButton(docTitle: string) {
+  const link = screen.getByText(docTitle).closest("a");
+  if (!link) throw new Error(`Could not find link for "${docTitle}"`);
+  return within(link).getAllByRole("button")[0]; // First button is expand toggle
+}
+
 describe("DocumentTree", () => {
   const defaultProps = {
     organizationId: "org-1" as Id<"organizations">,
@@ -184,9 +198,8 @@ describe("DocumentTree", () => {
       // Child should not be visible initially
       expect(screen.queryByText("Child Document")).not.toBeInTheDocument();
 
-      // Click expand button (the first button without aria-haspopup)
-      const link = screen.getByText("Parent Document").closest("a");
-      const expandButton = within(link!).getAllByRole("button")[0];
+      // Click expand button
+      const expandButton = getExpandButton("Parent Document");
       await user.click(expandButton);
 
       // Child should now be visible
@@ -210,8 +223,7 @@ describe("DocumentTree", () => {
 
       render(<DocumentTree {...defaultProps} />);
 
-      const link = screen.getByText("Parent Document").closest("a");
-      const expandButton = within(link!).getAllByRole("button")[0];
+      const expandButton = getExpandButton("Parent Document");
 
       // Expand
       await user.click(expandButton);
@@ -245,8 +257,7 @@ describe("DocumentTree", () => {
       render(<DocumentTree {...defaultProps} onCreateDocument={mockCreate} />);
 
       // Find and click the more menu button
-      const link = screen.getByText("Test Doc").closest("a");
-      const menuTrigger = within(link!).getAllByRole("button")[1]; // Second button is menu trigger
+      const menuTrigger = getMenuTrigger("Test Doc");
       await user.click(menuTrigger);
 
       expect(screen.getByText("Add subpage")).toBeInTheDocument();
@@ -261,8 +272,7 @@ describe("DocumentTree", () => {
       render(<DocumentTree {...defaultProps} onCreateDocument={mockCreate} />);
 
       // Open menu and click Add subpage
-      const link = screen.getByText("Parent Doc").closest("a");
-      const menuTrigger = within(link!).getAllByRole("button")[1];
+      const menuTrigger = getMenuTrigger("Parent Doc");
       await user.click(menuTrigger);
       await user.click(screen.getByText("Add subpage"));
 
@@ -281,8 +291,7 @@ describe("DocumentTree", () => {
 
       render(<DocumentTree {...defaultProps} onCreateDocument={vi.fn()} />);
 
-      const link = screen.getByText("Nested Doc").closest("a");
-      const menuTrigger = within(link!).getAllByRole("button")[1];
+      const menuTrigger = getMenuTrigger("Nested Doc");
       await user.click(menuTrigger);
 
       expect(screen.getByText("Move to root")).toBeInTheDocument();
@@ -300,8 +309,7 @@ describe("DocumentTree", () => {
 
       render(<DocumentTree {...defaultProps} onCreateDocument={vi.fn()} />);
 
-      const link = screen.getByText("Root Doc").closest("a");
-      const menuTrigger = within(link!).getAllByRole("button")[1];
+      const menuTrigger = getMenuTrigger("Root Doc");
       await user.click(menuTrigger);
 
       expect(screen.queryByText("Move to root")).not.toBeInTheDocument();
@@ -319,8 +327,7 @@ describe("DocumentTree", () => {
 
       render(<DocumentTree {...defaultProps} onCreateDocument={vi.fn()} />);
 
-      const link = screen.getByText("Others Doc").closest("a");
-      const menuTrigger = within(link!).getAllByRole("button")[1];
+      const menuTrigger = getMenuTrigger("Others Doc");
       await user.click(menuTrigger);
 
       expect(screen.queryByText("Move to root")).not.toBeInTheDocument();

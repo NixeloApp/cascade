@@ -1,4 +1,3 @@
-import type { Id } from "@convex/_generated/dataModel";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -202,7 +201,7 @@ function SwimlanRowInteractive({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
 
-  const handleToggle = useCallback((id: string) => {
+  const handleToggle = useCallback((_id: string) => {
     setIsCollapsed((prev) => !prev);
   }, []);
 

@@ -187,7 +187,7 @@ const KanbanColumnComponent = function KanbanColumn({
   onLoadMore,
   isLoadingMore = false,
   onIssueDrop,
-  onIssueReorder,
+  onIssueReorder: _onIssueReorder,
   isCollapsed = false,
   onToggleCollapse,
 }: KanbanColumnProps) {

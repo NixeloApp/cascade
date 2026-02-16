@@ -8,10 +8,10 @@ vi.mock("@convex-dev/presence/react", () => ({
 }));
 
 vi.mock("@convex-dev/presence/facepile", () => ({
-  default: ({ presenceState }: { presenceState: unknown[] }) => (
+  default: ({ presenceState }: { presenceState: Array<{ userId: string }> }) => (
     <div data-testid="facepile">
-      {presenceState.map((_, i) => (
-        <div key={i} data-testid="facepile-avatar" />
+      {presenceState.map((p) => (
+        <div key={p.userId} data-testid="facepile-avatar" />
       ))}
     </div>
   ),
@@ -27,9 +27,9 @@ describe("PresenceIndicator", () => {
     userId: "user-456",
   };
 
-  describe("when presence state is null", () => {
+  describe("when presence state is undefined", () => {
     it("should render nothing", () => {
-      mockUsePresence.mockReturnValue(null);
+      mockUsePresence.mockReturnValue(undefined);
 
       const { container } = render(<PresenceIndicator {...defaultProps} />);
 
@@ -50,7 +50,13 @@ describe("PresenceIndicator", () => {
   describe("when one person is present", () => {
     it("should show singular 'person' text", () => {
       mockUsePresence.mockReturnValue([
-        { oderId: "user-1", name: "Alice", image: "https://example.com/alice.jpg" },
+        {
+          userId: "user-1",
+          online: true,
+          lastDisconnected: 0,
+          name: "Alice",
+          image: "https://example.com/alice.jpg",
+        },
       ]);
 
       render(<PresenceIndicator {...defaultProps} />);
@@ -60,7 +66,13 @@ describe("PresenceIndicator", () => {
 
     it("should render FacePile with one avatar", () => {
       mockUsePresence.mockReturnValue([
-        { oderId: "user-1", name: "Alice", image: "https://example.com/alice.jpg" },
+        {
+          userId: "user-1",
+          online: true,
+          lastDisconnected: 0,
+          name: "Alice",
+          image: "https://example.com/alice.jpg",
+        },
       ]);
 
       render(<PresenceIndicator {...defaultProps} />);
@@ -72,8 +84,20 @@ describe("PresenceIndicator", () => {
   describe("when multiple people are present", () => {
     it("should show plural 'people' text for 2 people", () => {
       mockUsePresence.mockReturnValue([
-        { oderId: "user-1", name: "Alice", image: "https://example.com/alice.jpg" },
-        { oderId: "user-2", name: "Bob", image: "https://example.com/bob.jpg" },
+        {
+          userId: "user-1",
+          online: true,
+          lastDisconnected: 0,
+          name: "Alice",
+          image: "https://example.com/alice.jpg",
+        },
+        {
+          userId: "user-2",
+          online: true,
+          lastDisconnected: 0,
+          name: "Bob",
+          image: "https://example.com/bob.jpg",
+        },
       ]);
 
       render(<PresenceIndicator {...defaultProps} />);
@@ -83,11 +107,41 @@ describe("PresenceIndicator", () => {
 
     it("should show plural 'people' text for many people", () => {
       mockUsePresence.mockReturnValue([
-        { oderId: "user-1", name: "Alice", image: "https://example.com/alice.jpg" },
-        { oderId: "user-2", name: "Bob", image: "https://example.com/bob.jpg" },
-        { oderId: "user-3", name: "Charlie", image: "https://example.com/charlie.jpg" },
-        { oderId: "user-4", name: "Diana", image: "https://example.com/diana.jpg" },
-        { oderId: "user-5", name: "Eve", image: "https://example.com/eve.jpg" },
+        {
+          userId: "user-1",
+          online: true,
+          lastDisconnected: 0,
+          name: "Alice",
+          image: "https://example.com/alice.jpg",
+        },
+        {
+          userId: "user-2",
+          online: true,
+          lastDisconnected: 0,
+          name: "Bob",
+          image: "https://example.com/bob.jpg",
+        },
+        {
+          userId: "user-3",
+          online: true,
+          lastDisconnected: 0,
+          name: "Charlie",
+          image: "https://example.com/charlie.jpg",
+        },
+        {
+          userId: "user-4",
+          online: true,
+          lastDisconnected: 0,
+          name: "Diana",
+          image: "https://example.com/diana.jpg",
+        },
+        {
+          userId: "user-5",
+          online: true,
+          lastDisconnected: 0,
+          name: "Eve",
+          image: "https://example.com/eve.jpg",
+        },
       ]);
 
       render(<PresenceIndicator {...defaultProps} />);
@@ -97,9 +151,27 @@ describe("PresenceIndicator", () => {
 
     it("should render FacePile with correct number of avatars", () => {
       mockUsePresence.mockReturnValue([
-        { oderId: "user-1", name: "Alice", image: "https://example.com/alice.jpg" },
-        { oderId: "user-2", name: "Bob", image: "https://example.com/bob.jpg" },
-        { oderId: "user-3", name: "Charlie", image: "https://example.com/charlie.jpg" },
+        {
+          userId: "user-1",
+          online: true,
+          lastDisconnected: 0,
+          name: "Alice",
+          image: "https://example.com/alice.jpg",
+        },
+        {
+          userId: "user-2",
+          online: true,
+          lastDisconnected: 0,
+          name: "Bob",
+          image: "https://example.com/bob.jpg",
+        },
+        {
+          userId: "user-3",
+          online: true,
+          lastDisconnected: 0,
+          name: "Charlie",
+          image: "https://example.com/charlie.jpg",
+        },
       ]);
 
       render(<PresenceIndicator {...defaultProps} />);
