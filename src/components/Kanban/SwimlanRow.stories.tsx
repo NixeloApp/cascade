@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import type { SwimlanConfig } from "@/lib/swimlane-utils";
 import { cn } from "@/lib/utils";
@@ -29,10 +29,17 @@ interface StoryIssue {
 // Mock Data
 // ============================================================================
 
+// Using CSS variable references for semantic colors
+const STATUS_COLORS = {
+  todo: "var(--color-ui-text-tertiary)",
+  inprogress: "var(--color-status-info)",
+  done: "var(--color-status-success)",
+};
+
 const mockWorkflowStates: StoryWorkflowState[] = [
-  { id: "todo", name: "To Do", color: "#94a3b8" },
-  { id: "inprogress", name: "In Progress", color: "#3b82f6" },
-  { id: "done", name: "Done", color: "#22c55e" },
+  { id: "todo", name: "To Do", color: STATUS_COLORS.todo },
+  { id: "inprogress", name: "In Progress", color: STATUS_COLORS.inprogress },
+  { id: "done", name: "Done", color: STATUS_COLORS.done },
 ];
 
 const createMockIssue = (overrides: Partial<StoryIssue> = {}): StoryIssue => ({
@@ -87,11 +94,11 @@ function SimpleKanbanColumn({
   issues: StoryIssue[];
 }) {
   return (
-    <div className="flex-1 min-w-[280px] max-w-[350px]">
+    <FlexItem flex="1" className="min-w-[280px] max-w-[350px]">
       <Flex align="center" gap="sm" className="mb-2 px-2">
         <div
           className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: state.color || "#94a3b8" }}
+          style={{ backgroundColor: state.color || STATUS_COLORS.todo }}
         />
         <Typography variant="label" className="text-ui-text-secondary">
           {state.name}
@@ -120,7 +127,7 @@ function SimpleKanbanColumn({
           </Typography>
         )}
       </Flex>
-    </div>
+    </FlexItem>
   );
 }
 
