@@ -175,11 +175,15 @@ describe("Two Factor Authentication", () => {
     // Setup 2FA
     const { secret } = await asUser.mutation(api.twoFactor.beginSetup);
     const setupCode = await generateTestTOTP(secret, FIXED_TIME);
-    const { backupCodes: oldCodes } = await asUser.mutation(api.twoFactor.completeSetup, { code: setupCode });
+    const { backupCodes: oldCodes } = await asUser.mutation(api.twoFactor.completeSetup, {
+      code: setupCode,
+    });
 
     // Regenerate
     const validCode = await generateTestTOTP(secret, FIXED_TIME);
-    const result = await asUser.mutation(api.twoFactor.regenerateBackupCodes, { totpCode: validCode });
+    const result = await asUser.mutation(api.twoFactor.regenerateBackupCodes, {
+      totpCode: validCode,
+    });
 
     expect(result.success).toBe(true);
     expect(result.backupCodes).toHaveLength(8);
@@ -219,7 +223,10 @@ describe("Two Factor Authentication", () => {
     const codeToUse = backupCodes![0];
 
     // Disable with backup code
-    const result = await asUser.mutation(api.twoFactor.disable, { code: codeToUse, isBackupCode: true });
+    const result = await asUser.mutation(api.twoFactor.disable, {
+      code: codeToUse,
+      isBackupCode: true,
+    });
     expect(result.success).toBe(true);
 
     const status = await asUser.query(api.twoFactor.getStatus);
@@ -270,7 +277,9 @@ describe("Two Factor Authentication", () => {
     }
 
     // Attempt immediately (should still be locked)
-    const lockedResult = await asUser.mutation(api.twoFactor.verifyCode, { code: await generateTestTOTP(secret, FIXED_TIME) });
+    const lockedResult = await asUser.mutation(api.twoFactor.verifyCode, {
+      code: await generateTestTOTP(secret, FIXED_TIME),
+    });
     expect(lockedResult.success).toBe(false);
     expect(lockedResult.error).toContain("Too many failed attempts");
 
@@ -278,7 +287,9 @@ describe("Two Factor Authentication", () => {
     vi.setSystemTime(FIXED_TIME + 901000);
 
     // Attempt with valid code (should succeed)
-    const unlockedResult = await asUser.mutation(api.twoFactor.verifyCode, { code: await generateTestTOTP(secret, FIXED_TIME + 901000) });
+    const unlockedResult = await asUser.mutation(api.twoFactor.verifyCode, {
+      code: await generateTestTOTP(secret, FIXED_TIME + 901000),
+    });
     expect(unlockedResult.success).toBe(true);
   });
 });
