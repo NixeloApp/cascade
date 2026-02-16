@@ -7,7 +7,7 @@ import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
 
 vi.mock("./lib/safeFetch", () => ({
-  safeFetch: vi.fn(async (url: string) => {
+  safeFetch: vi.fn(async (_url: string) => {
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   }),
 }));
