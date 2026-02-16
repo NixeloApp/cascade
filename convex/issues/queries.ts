@@ -396,10 +396,12 @@ export const listProjectIssues = authenticatedQuery({
           return db
             .query("issues")
             .withIndex("by_project_status", (q) =>
-              q.eq("projectId", args.projectId).eq("status", args.status as string),
+              q
+                .eq("projectId", args.projectId)
+                .eq("status", args.status as string)
+                .lt("isDeleted", true),
             )
-            .order("asc")
-            .filter(notDeleted);
+            .order("asc");
         }
         return db
           .query("issues")
@@ -468,10 +470,12 @@ export const listTeamIssues = authenticatedQuery({
           return db
             .query("issues")
             .withIndex("by_team_status", (q) =>
-              q.eq("teamId", args.teamId).eq("status", args.status as string),
+              q
+                .eq("teamId", args.teamId)
+                .eq("status", args.status as string)
+                .lt("isDeleted", true),
             )
-            .order("asc")
-            .filter(notDeleted);
+            .order("asc");
         }
         return db
           .query("issues")
@@ -781,10 +785,10 @@ export const listByProjectSmart = projectQuery({
                 q
                   .eq("projectId", ctx.project._id)
                   .eq("sprintId", args.sprintId as Id<"sprints">)
-                  .eq("status", state.id),
+                  .eq("status", state.id)
+                  .lt("isDeleted", true),
               )
-              .order("asc")
-              .filter(notDeleted);
+              .order("asc");
           }
 
           if (state.category === "done") {
@@ -804,10 +808,9 @@ export const listByProjectSmart = projectQuery({
           return ctx.db
             .query("issues")
             .withIndex("by_project_status", (q) =>
-              q.eq("projectId", ctx.project._id).eq("status", state.id),
+              q.eq("projectId", ctx.project._id).eq("status", state.id).lt("isDeleted", true),
             )
-            .order("asc")
-            .filter(notDeleted);
+            .order("asc");
         })();
 
         issuesByColumn[state.id] = await q.take(DEFAULT_PAGE_SIZE);
@@ -888,9 +891,10 @@ export const listByTeamSmart = authenticatedQuery({
           // Batch query: Promise.all handles parallelism
           return ctx.db
             .query("issues")
-            .withIndex("by_team_status", (q) => q.eq("teamId", args.teamId).eq("status", state.id))
-            .order("asc")
-            .filter(notDeleted);
+            .withIndex("by_team_status", (q) =>
+              q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
+            )
+            .order("asc");
         })();
 
         issuesByColumn[state.id] = await q.take(DEFAULT_PAGE_SIZE);
@@ -962,9 +966,8 @@ export const getTeamIssueCounts = authenticatedQuery({
             ctx.db
               .query("issues")
               .withIndex("by_team_status", (q) =>
-                q.eq("teamId", args.teamId).eq("status", state.id),
-              )
-              .filter(notDeleted),
+                q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
+              ),
           );
         } else {
           // Non-done columns
@@ -973,9 +976,8 @@ export const getTeamIssueCounts = authenticatedQuery({
             ctx.db
               .query("issues")
               .withIndex("by_team_status", (q) =>
-                q.eq("teamId", args.teamId).eq("status", state.id),
-              )
-              .filter(notDeleted),
+                q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
+              ),
           );
 
           visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
@@ -1053,9 +1055,8 @@ export const getIssueCounts = authenticatedQuery({
               ctx.db
                 .query("issues")
                 .withIndex("by_project_status", (q) =>
-                  q.eq("projectId", args.projectId).eq("status", state.id),
-                )
-                .filter(notDeleted),
+                  q.eq("projectId", args.projectId).eq("status", state.id).lt("isDeleted", true),
+                ),
             );
           } else {
             // Batch query: Promise.all handles parallelism
@@ -1063,9 +1064,8 @@ export const getIssueCounts = authenticatedQuery({
               ctx.db
                 .query("issues")
                 .withIndex("by_project_status", (q) =>
-                  q.eq("projectId", args.projectId).eq("status", state.id),
-                )
-                .filter(notDeleted),
+                  q.eq("projectId", args.projectId).eq("status", state.id).lt("isDeleted", true),
+                ),
             );
 
             visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
@@ -1211,10 +1211,9 @@ export const listIssuesByDateRange = authenticatedQuery({
       const sprintIssues = await safeCollect(
         ctx.db
           .query("issues")
-          .withIndex("by_project_sprint_status", (q) =>
-            q.eq("projectId", args.projectId).eq("sprintId", args.sprintId as Id<"sprints">),
-          )
-          .filter(notDeleted),
+          .withIndex("by_sprint", (q) =>
+            q.eq("sprintId", args.sprintId as Id<"sprints">).lt("isDeleted", true),
+          ),
         BOUNDED_LIST_LIMIT,
         "sprint issues by date",
       );
