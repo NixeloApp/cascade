@@ -1,7 +1,7 @@
 import type { GenericActionCtx, RouteSpec } from "convex/server";
 import { internal } from "./_generated/api";
-import { httpAction } from "./_generated/server";
 import type { DataModel } from "./_generated/dataModel";
+import { httpAction } from "./_generated/server";
 import { auth } from "./auth";
 import { getClientIp } from "./lib/ssrf";
 import router from "./router";
