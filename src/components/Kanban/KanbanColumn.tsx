@@ -3,6 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { areIssuesEqual, IssueCard } from "@/components/IssueCard";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -13,7 +14,6 @@ import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kan
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
-import { areIssuesEqual, IssueCard } from "../IssueCard";
 import { Badge } from "../ui/Badge";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { PaginationInfo } from "../ui/PaginationInfo";
@@ -75,6 +75,44 @@ interface WipStatus {
 // Subcomponents
 // ============================================================================
 
+interface KanbanIssueItemProps {
+  issue: Issue;
+  columnIndex: number;
+  index: number;
+  onClick: (issueId: Id<"issues">) => void;
+  selectionMode: boolean;
+  isSelected: boolean;
+  isFocused: boolean;
+  onToggleSelect: (issueId: Id<"issues">) => void;
+  canEdit: boolean;
+}
+
+function areKanbanIssueItemPropsEqual(prev: KanbanIssueItemProps, next: KanbanIssueItemProps) {
+  // Check primitive and simple props first
+  if (
+    prev.columnIndex !== next.columnIndex ||
+    prev.index !== next.index ||
+    prev.selectionMode !== next.selectionMode ||
+    prev.isSelected !== next.isSelected ||
+    prev.isFocused !== next.isFocused ||
+    prev.canEdit !== next.canEdit ||
+    prev.onClick !== next.onClick ||
+    prev.onToggleSelect !== next.onToggleSelect
+  ) {
+    return false;
+  }
+
+  // Check issue status explicitly as it's passed as a separate prop to IssueCard
+  if (prev.issue.status !== next.issue.status) {
+    return false;
+  }
+
+  // Use shared equality check for the rest of the issue properties
+  // Note: We cast to any because the Issue types are slightly different between files
+  // but compatible for the properties checked by areIssuesEqual
+  return areIssuesEqual(prev.issue, next.issue);
+}
+
 /**
  * Wrapper component for IssueCard with memoized animation style
  */
@@ -89,17 +127,7 @@ const KanbanIssueItem = memo(
     isFocused,
     onToggleSelect,
     canEdit,
-  }: {
-    issue: Issue;
-    columnIndex: number;
-    index: number;
-    onClick: (issueId: Id<"issues">) => void;
-    selectionMode: boolean;
-    isSelected: boolean;
-    isFocused: boolean;
-    onToggleSelect: (issueId: Id<"issues">) => void;
-    canEdit: boolean;
-  }) => {
+  }: KanbanIssueItemProps) => {
     const style = useMemo(
       () => ({
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + index * ANIMATION.STAGGER_DELAY}ms`,
@@ -122,24 +150,7 @@ const KanbanIssueItem = memo(
       </div>
     );
   },
-  (prev, next) => {
-    // Check primitive props and callbacks
-    if (
-      prev.index !== next.index ||
-      prev.columnIndex !== next.columnIndex ||
-      prev.isSelected !== next.isSelected ||
-      prev.isFocused !== next.isFocused ||
-      prev.selectionMode !== next.selectionMode ||
-      prev.canEdit !== next.canEdit ||
-      prev.onClick !== next.onClick ||
-      prev.onToggleSelect !== next.onToggleSelect
-    ) {
-      return false;
-    }
-
-    // Check issue content equality using custom comparator
-    return areIssuesEqual(prev.issue, next.issue);
-  },
+  areKanbanIssueItemPropsEqual,
 );
 KanbanIssueItem.displayName = "KanbanIssueItem";
 
