@@ -43,3 +43,7 @@ Modified `convex/projectAccess.ts` to wrap the `computeProjectAccess` logic with
 ## 2025-05-24 - Merging Paginated Lists
 **Learning:** Naive array merging using `.some()` to check duplicates for paginated results (load more) becomes O(N*M) which blocks the UI thread for ~400ms when merging ~5000 items. This is especially problematic in hooks like `useSmartBoardData` that run on every data update.
 **Action:** Use `Set` for O(1) duplicate checks and bulk array construction `[...existing, ...new]` instead of iterative `push`, reducing merge time to <10ms for large datasets.
+
+## 2025-05-25 - Stable Time Thresholds for Caching
+**Learning:** Using precise `Date.now()` in Convex queries (e.g., for "recent" items) invalidates internal query caches on every execution because the query arguments change every millisecond.
+**Action:** Round timestamps to a stable interval (e.g., `roundToHour(now)`) when precision is not critical. This ensures multiple queries within the same window use identical arguments, maximizing cache hit rates and reducing database load.

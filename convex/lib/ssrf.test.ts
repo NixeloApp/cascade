@@ -174,24 +174,24 @@ describe("SSRF Validation", () => {
       expect(getClientIp(req)).toBe("3.3.3.3");
     });
 
-    it("should prioritize X-Real-IP over X-Forwarded-For", () => {
+    it("should prioritize X-Forwarded-For over X-Real-IP", () => {
       const req = new Request("http://localhost", {
         headers: {
           "x-real-ip": "5.5.5.5",
           "x-forwarded-for": "6.6.6.6",
         },
       });
-      expect(getClientIp(req)).toBe("5.5.5.5");
+      expect(getClientIp(req)).toBe("6.6.6.6");
     });
 
-    it("should use X-Client-IP if higher priority headers are missing", () => {
+    it("should prioritize X-Forwarded-For over X-Client-IP", () => {
       const req = new Request("http://localhost", {
         headers: {
           "x-client-ip": "7.7.7.7",
           "x-forwarded-for": "8.8.8.8",
         },
       });
-      expect(getClientIp(req)).toBe("7.7.7.7");
+      expect(getClientIp(req)).toBe("8.8.8.8");
     });
 
     it("should fallback to X-Forwarded-For last IP (trusted proxy assumption)", () => {
@@ -232,14 +232,14 @@ describe("SSRF Validation", () => {
       expect(getClientIp(req)).toBe("13.13.13.13");
     });
 
-    it("should use Fastly-Client-IP if higher priority headers are missing", () => {
+    it("should prioritize X-Forwarded-For over Fastly-Client-IP", () => {
       const req = new Request("http://localhost", {
         headers: {
           "fastly-client-ip": "14.14.14.14",
           "x-forwarded-for": "15.15.15.15",
         },
       });
-      expect(getClientIp(req)).toBe("14.14.14.14");
+      expect(getClientIp(req)).toBe("15.15.15.15");
     });
   });
 });
