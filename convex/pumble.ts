@@ -5,6 +5,7 @@ import { action, internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
+import { safeFetch } from "./lib/safeFetch";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
 /**
@@ -29,8 +30,14 @@ export const addWebhook = authenticatedMutation({
   },
   handler: async (ctx, args) => {
     // Validate webhook URL
-    if (!args.webhookUrl.includes("pumble.com")) {
-      throw validation("webhookUrl", "Invalid Pumble webhook URL");
+    try {
+      const url = new URL(args.webhookUrl);
+      // Ensure the host is exactly pumble.com or a subdomain of pumble.com
+      if (url.hostname !== "pumble.com" && !url.hostname.endsWith(".pumble.com")) {
+        throw new Error();
+      }
+    } catch {
+      throw validation("webhookUrl", "Invalid Pumble webhook URL. Must be a valid pumble.com URL.");
     }
 
     // If project is specified, verify access
@@ -127,7 +134,21 @@ export const updateWebhook = authenticatedMutation({
       sendStatusChanges?: boolean;
     } = { updatedAt: Date.now() };
     if (args.name !== undefined) updates.name = args.name;
-    if (args.webhookUrl !== undefined) updates.webhookUrl = args.webhookUrl;
+    if (args.webhookUrl !== undefined) {
+      try {
+        const url = new URL(args.webhookUrl);
+        // Ensure the host is exactly pumble.com or a subdomain of pumble.com
+        if (url.hostname !== "pumble.com" && !url.hostname.endsWith(".pumble.com")) {
+          throw new Error();
+        }
+      } catch {
+        throw validation(
+          "webhookUrl",
+          "Invalid Pumble webhook URL. Must be a valid pumble.com URL.",
+        );
+      }
+      updates.webhookUrl = args.webhookUrl;
+    }
     if (args.events !== undefined) updates.events = args.events;
     if (args.isActive !== undefined) updates.isActive = args.isActive;
     if (args.sendMentions !== undefined) updates.sendMentions = args.sendMentions;
@@ -213,7 +234,8 @@ export const sendMessage = action({
 
     try {
       // Send message to Pumble
-      const response = await fetch(webhook.webhookUrl, {
+      // Use safeFetch to prevent SSRF
+      const response = await safeFetch(webhook.webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

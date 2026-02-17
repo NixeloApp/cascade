@@ -131,6 +131,15 @@ const applicationTables = {
     .index("by_organization_enabled", ["organizationId", "isEnabled"])
     .index("by_type", ["type"]),
 
+  ssoDomains: defineTable({
+    domain: v.string(), // "acme.com"
+    connectionId: v.id("ssoConnections"),
+    organizationId: v.id("organizations"),
+  })
+    .index("by_domain", ["domain"])
+    .index("by_connection", ["connectionId"])
+    .index("by_organization", ["organizationId"]),
+
   invites: defineTable({
     email: v.string(),
     role: inviteRoles, // Platform role
@@ -255,7 +264,7 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_team", ["teamId"])
+    .index("by_team", ["teamId", "isDeleted"])
     .index("by_user", ["userId"])
     .index("by_team_user", ["teamId", "userId"])
     .index("by_role", ["role"])
@@ -383,7 +392,7 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_project", ["projectId"])
+    .index("by_project", ["projectId", "isDeleted"])
     .index("by_user", ["userId"])
     .index("by_project_user", ["projectId", "userId"])
     .index("by_role", ["role"])
@@ -437,16 +446,16 @@ const applicationTables = {
     .index("by_sprint", ["sprintId", "isDeleted"])
     .index("by_epic", ["epicId", "isDeleted"])
     .index("by_parent", ["parentId", "isDeleted"])
-    .index("by_project_status", ["projectId", "status", "order", "isDeleted"])
+    .index("by_project_status", ["projectId", "status", "isDeleted", "order"])
     .index("by_project_status_updated", ["projectId", "status", "updatedAt"])
-    .index("by_project_sprint_status", ["projectId", "sprintId", "status", "order", "isDeleted"])
+    .index("by_project_sprint_status", ["projectId", "sprintId", "status", "isDeleted", "order"])
     .index("by_project_sprint_status_updated", ["projectId", "sprintId", "status", "updatedAt"])
     .index("by_project_updated", ["projectId", "updatedAt"])
     .index("by_project_due_date", ["projectId", "dueDate"])
     .index("by_project_type_due_date", ["projectId", "type", "dueDate"])
     .index("by_organization_status", ["organizationId", "status", "isDeleted"])
     .index("by_workspace_status", ["workspaceId", "status", "isDeleted"])
-    .index("by_team_status", ["teamId", "status", "order", "isDeleted"])
+    .index("by_team_status", ["teamId", "status", "isDeleted", "order"])
     .index("by_team_status_updated", ["teamId", "status", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_project_deleted", ["projectId", "isDeleted"])

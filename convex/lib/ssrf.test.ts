@@ -194,13 +194,24 @@ describe("SSRF Validation", () => {
       expect(getClientIp(req)).toBe("7.7.7.7");
     });
 
-    it("should fallback to X-Forwarded-For first IP", () => {
+    it("should fallback to X-Forwarded-For last IP (trusted proxy assumption)", () => {
       const req = new Request("http://localhost", {
         headers: {
           "x-forwarded-for": "9.9.9.9, 10.10.10.10",
         },
       });
-      expect(getClientIp(req)).toBe("9.9.9.9");
+      expect(getClientIp(req)).toBe("10.10.10.10");
+    });
+
+    it("should resist spoofing via prepended X-Forwarded-For", () => {
+      // Attacker sends X-Forwarded-For: 127.0.0.1
+      // Load balancer appends real client IP, resulting in: "127.0.0.1, 203.0.113.50"
+      const req = new Request("http://localhost", {
+        headers: {
+          "x-forwarded-for": "127.0.0.1, 203.0.113.50",
+        },
+      });
+      expect(getClientIp(req)).toBe("203.0.113.50");
     });
 
     it("should handle X-Forwarded-For with spaces", () => {
@@ -209,7 +220,7 @@ describe("SSRF Validation", () => {
           "x-forwarded-for": " 11.11.11.11 , 12.12.12.12 ",
         },
       });
-      expect(getClientIp(req)).toBe("11.11.11.11");
+      expect(getClientIp(req)).toBe("12.12.12.12");
     });
 
     it("should handle mixed case headers", () => {

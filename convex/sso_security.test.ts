@@ -138,12 +138,8 @@ describe("SSO Security", () => {
       domains: ["victim.com"],
     });
 
-    // TODO: SECURITY BUG - duplicate domain detection is not working
-    // Current behavior: succeeds (vulnerable - allows domain hijacking)
-    // Expected after fix: should reject with "Domain already configured" error
-    //
-    // The vulnerability: An attacker org can claim domains already owned by another org's SSO,
-    // potentially hijacking authentication for those domains.
-    expect(result.success).toBe(true); // BUG: Should be false after fix
+    // Check that the request was rejected
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Domain "victim.com" is already configured');
   });
 });

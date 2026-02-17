@@ -104,13 +104,13 @@ const KanbanIssueItem = memo(
       <div className="animate-scale-in" style={style}>
         <IssueCard
           issue={issue}
-          status={issue.status}
           onClick={onClick}
           selectionMode={selectionMode}
           isSelected={isSelected}
           isFocused={isFocused}
           onToggleSelect={onToggleSelect}
           canEdit={canEdit}
+          status={issue.status}
         />
       </div>
     );

@@ -360,19 +360,15 @@ export function getClientIp(request: Request): string | null {
   const fastlyIp = headers.get("fastly-client-ip");
   if (fastlyIp) return fastlyIp;
 
-  // 6. X-Forwarded-For (Standard but spoofable)
-  // We prioritize the first IP in the list, assuming standard behavior where
-  // the client's IP is the first entry.
-  // Warning: If the platform does not strip this header from external requests,
-  // the first IP could be spoofed by the client.
-  // However, without platform-specific knowledge of trusted proxy count,
-  // this is the standard fallback.
+  // 6. X-Forwarded-For
+  // Standard load balancers (AWS ALB, Nginx, etc.) append the client IP to the end of the list.
+  // We take the LAST IP in the list to prevent spoofing where a client sends a custom header.
+  // Assumption: There is at least one trusted proxy in front of us that appends the real IP.
   const forwardedFor = headers.get("x-forwarded-for");
   if (forwardedFor) {
-    // Split by comma and take the first one
     const ips = forwardedFor.split(",").map((ip) => ip.trim());
-    const firstIp = ips[0];
-    if (firstIp) return firstIp;
+    const lastIp = ips[ips.length - 1];
+    if (lastIp) return lastIp;
   }
 
   return null;

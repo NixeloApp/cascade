@@ -10,6 +10,7 @@
  * The authVerificationCodes table stores hashed codes, making them unreadable.
  */
 import Resend from "@auth/core/providers/resend";
+import type { FunctionReference } from "convex/server";
 import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
 import type { ConvexAuthContext } from "./lib/authTypes";
@@ -69,6 +70,24 @@ export const OTPVerification = Resend({
     ctx: ConvexAuthContext,
   ) => {
     try {
+      // Check rate limit first
+      if (ctx.runMutation) {
+        try {
+          // Type assertion needed because codegen hasn't run to update the type definition
+          // Cast internal.authWrapper to a type that includes the new mutation
+          // This avoids 'any' and Biome suppression
+          const authWrapper = internal.authWrapper as unknown as {
+            checkEmailVerificationRateLimit: FunctionReference<"mutation">;
+          };
+
+          await ctx.runMutation(authWrapper.checkEmailVerificationRateLimit, {
+            email,
+          });
+        } catch (_e) {
+          throw new Error("Too many verification requests. Please try again later.");
+        }
+      }
+
       // Store test OTP if applicable
       await storeTestOtp(ctx, email, token);
 

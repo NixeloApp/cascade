@@ -19,6 +19,7 @@ import {
   sanitizeUserForCurrent,
   sanitizeUserForPublic,
 } from "./lib/userUtils";
+import { rateLimit } from "./rateLimits";
 import { digestFrequencies } from "./validators";
 
 // Limits for user stats queries
@@ -32,6 +33,19 @@ export const getInternal = internalQuery({
   args: { id: v.id("users") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
+  },
+});
+
+/**
+ * Internal query to get user by email (system use only)
+ */
+export const getInternalByEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .first();
   },
 });
 
@@ -175,7 +189,7 @@ export const updateProfile = authenticatedMutation({
         updates.pendingEmailVerificationExpires = expiresAt;
 
         // Send verification email
-        await sendVerificationEmail(ctx, args.email, token);
+        await sendVerificationEmail(ctx, args.email, token, currentUser?.isTestUser);
       }
     }
 
@@ -202,7 +216,12 @@ export const updateProfile = authenticatedMutation({
 /**
  * Helper to send verification email for profile updates
  */
-async function sendVerificationEmail(ctx: MutationCtx, email: string, token: string) {
+async function sendVerificationEmail(
+  ctx: MutationCtx,
+  email: string,
+  token: string,
+  isTestUser?: boolean,
+) {
   const isTestEmail = email.endsWith("@inbox.mailtrap.io");
   const isSafeEnvironment =
     process.env.NODE_ENV === "development" ||
@@ -210,8 +229,8 @@ async function sendVerificationEmail(ctx: MutationCtx, email: string, token: str
     !!process.env.CI ||
     !!process.env.E2E_API_KEY;
 
-  // Store OTPs for test emails
-  if (isTestEmail && isSafeEnvironment) {
+  // Store OTPs for test emails ONLY if they are test users
+  if (isTestEmail && isSafeEnvironment && isTestUser) {
     try {
       await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
     } catch (e) {
@@ -237,6 +256,9 @@ export const verifyEmailChange = authenticatedMutation({
   args: { token: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
+    // Rate limit verification attempts to prevent brute-forcing
+    await rateLimit(ctx, "emailChange", { key: ctx.userId });
+
     const user = await ctx.db.get(ctx.userId);
     if (!user) {
       throw validation("user", "User not found");

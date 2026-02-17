@@ -2,7 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { BOUNDED_LIST_LIMIT, BOUNDED_SELECT_LIMIT } from "./lib/boundedQueries";
 
 // =============================================================================
@@ -402,28 +402,50 @@ export const updateDomains = mutation({
       .map((d) => d.toLowerCase().trim())
       .filter((d) => d.length > 0);
 
-    // Check for domain uniqueness across all organizations
-    // This prevents ambiguous SSO routing when users enter their email
-    if (normalizedDomains.length > 0) {
-      // Query all SSO connections to check for domain conflicts
-      // Note: We use a simple query here since there are typically few SSO connections
-      const allConnections = await ctx.db.query("ssoConnections").take(BOUNDED_LIST_LIMIT);
+    // Get current domains for this connection
+    const currentDomains = await ctx.db
+      .query("ssoDomains")
+      .withIndex("by_connection", (q) => q.eq("connectionId", args.connectionId))
+      .take(BOUNDED_LIST_LIMIT);
 
-      for (const existingConn of allConnections) {
-        // Skip the current connection
-        if (existingConn._id === args.connectionId) continue;
+    const currentDomainSet = new Set(currentDomains.map((d) => d.domain));
+    const newDomainSet = new Set(normalizedDomains);
 
-        const existingDomains = existingConn.verifiedDomains ?? [];
-        const conflictingDomain = normalizedDomains.find((d) => existingDomains.includes(d));
+    const domainsToAdd = normalizedDomains.filter((d) => !currentDomainSet.has(d));
+    const domainsToRemove = currentDomains.filter((d) => !newDomainSet.has(d.domain));
 
-        if (conflictingDomain) {
-          return {
-            success: false,
-            error: `Domain "${conflictingDomain}" is already configured for another organization's SSO connection.`,
-          };
-        }
+    // Check for conflicts for added domains
+    const existingChecks = await Promise.all(
+      domainsToAdd.map(async (domain) => {
+        const existing = await ctx.db
+          .query("ssoDomains")
+          .withIndex("by_domain", (q) => q.eq("domain", domain))
+          .first();
+        return { domain, existing };
+      }),
+    );
+
+    for (const { domain, existing } of existingChecks) {
+      if (existing) {
+        return {
+          success: false,
+          error: `Domain "${domain}" is already configured for another organization's SSO connection.`,
+        };
       }
     }
+
+    // Apply changes
+    await Promise.all(domainsToRemove.map((d) => ctx.db.delete(d._id)));
+
+    await Promise.all(
+      domainsToAdd.map((domain) =>
+        ctx.db.insert("ssoDomains", {
+          domain,
+          connectionId: args.connectionId,
+          organizationId: connection.organizationId,
+        }),
+      ),
+    );
 
     await ctx.db.patch(args.connectionId, {
       verifiedDomains: normalizedDomains,
@@ -462,6 +484,14 @@ export const remove = mutation({
       return { success: false, error: "Admin access required" };
     }
 
+    // Delete associated domains
+    const domains = await ctx.db
+      .query("ssoDomains")
+      .withIndex("by_connection", (q) => q.eq("connectionId", args.connectionId))
+      .take(BOUNDED_LIST_LIMIT);
+
+    await Promise.all(domains.map((d) => ctx.db.delete(d._id)));
+
     await ctx.db.delete(args.connectionId);
 
     return { success: true };
@@ -488,7 +518,29 @@ export const getForDomain = query({
   handler: async (ctx, args) => {
     const normalizedDomain = args.domain.toLowerCase().trim();
 
-    // Find enabled connections with bounded query
+    // Look up domain directly
+    const ssoDomain = await ctx.db
+      .query("ssoDomains")
+      .withIndex("by_domain", (q) => q.eq("domain", normalizedDomain))
+      .first();
+
+    if (ssoDomain) {
+      const connection = await ctx.db.get(ssoDomain.connectionId);
+      if (connection?.isEnabled) {
+        const org = await ctx.db.get(connection.organizationId);
+        if (org) {
+          return {
+            connectionId: connection._id,
+            organizationId: connection.organizationId,
+            organizationName: org.name,
+            type: connection.type,
+            name: connection.name,
+          };
+        }
+      }
+    }
+
+    // Fallback: Find enabled connections with bounded query
     // Most deployments have <100 SSO connections total
     const connections = await ctx.db
       .query("ssoConnections")
@@ -517,6 +569,58 @@ export const getForDomain = query({
       organizationName: org.name,
       type: matchingConn.type,
       name: matchingConn.name,
+    };
+  },
+});
+
+/**
+ * Migration: Populate ssoDomains table from ssoConnections.
+ * Should be run once.
+ */
+export const migrateSSODomains = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+    batchSize: v.optional(v.number()),
+  },
+  returns: v.object({
+    cursor: v.union(v.string(), v.null()),
+    processed: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const batchSize = args.batchSize ?? 100;
+
+    const { page, continueCursor, isDone } = await ctx.db
+      .query("ssoConnections")
+      .paginate({ cursor: args.cursor ?? null, numItems: batchSize });
+
+    let processed = 0;
+
+    for (const connection of page) {
+      if (!connection.verifiedDomains) continue;
+
+      await Promise.all(
+        connection.verifiedDomains.map(async (domain) => {
+          // Check if already exists to be idempotent
+          const existing = await ctx.db
+            .query("ssoDomains")
+            .withIndex("by_domain", (q) => q.eq("domain", domain))
+            .first();
+
+          if (!existing) {
+            await ctx.db.insert("ssoDomains", {
+              domain,
+              connectionId: connection._id,
+              organizationId: connection.organizationId,
+            });
+          }
+        }),
+      );
+      processed++;
+    }
+
+    return {
+      cursor: isDone ? null : continueCursor,
+      processed,
     };
   },
 });
