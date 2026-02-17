@@ -1506,18 +1506,23 @@ describe("createIssue", () => {
 
 | Route | Current | Target | Status |
 |-------|---------|--------|--------|
-| `/settings/*` | Eager | Lazy | ⬜ |
-| `/analytics` | Eager | Lazy | ⬜ |
-| `/admin/*` | Eager | Lazy | ⬜ |
-| `/documents/*` | Eager | Lazy | ⬜ |
-| Heavy components (PlateEditor) | Eager | Lazy | ⬜ |
+| `/settings/*` | Lazy | Lazy | ✅ Already using React.lazy |
+| `/analytics` | Lazy | Lazy | ✅ AnalyticsDashboard lazy loaded |
+| `/time-tracking` | Lazy | Lazy | ✅ TimeTrackingPage lazy loaded |
+| `/documents/*` | Lazy | Lazy | ✅ PlateEditor lazy loaded |
+| Heavy components (PlateEditor) | Lazy | Lazy | ✅ Wrapped in lazy() |
 
-**Implementation:**
+**Implementation Pattern:**
 ```typescript
-// TanStack Router lazy loading
-const SettingsRoute = createFileRoute('/settings')({
-  component: () => import('./settings').then(m => m.Settings),
-});
+// React.lazy with Suspense (used in all routes)
+const PlateEditor = lazy(() =>
+  import("@/components/PlateEditor").then((m) => ({ default: m.PlateEditor }))
+);
+
+// In component:
+<Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
+  <PlateEditor documentId={id} />
+</Suspense>
 ```
 
 ---
@@ -1540,9 +1545,9 @@ const SettingsRoute = createFileRoute('/settings')({
 | 6.1 E2E Stability | ✅ | 2/4 | Critical |
 | 6.2 Bundle Analysis | ✅ | 3/5 | High |
 | 6.3 Convex Tests | ✅ | 10/10 | High |
-| 6.4 Code Splitting | ⬜ | 0/5 | Medium |
+| 6.4 Code Splitting | ✅ | 5/5 | Medium |
 | 6.5 CI Performance | 🔄 | 1/4 | Low |
-| **Total** | **57%** | **16/28** | - |
+| **Total** | **75%** | **21/28** | - |
 
 ---
 

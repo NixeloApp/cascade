@@ -1,10 +1,15 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
+import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PageContent, PageError } from "@/components/layout";
 import { SectionErrorFallback } from "@/components/SectionErrorFallback";
+
+// Lazy load AnalyticsDashboard (heavy charts/recharts dependency)
+const AnalyticsDashboard = lazy(() =>
+  import("@/components/AnalyticsDashboard").then((m) => ({ default: m.AnalyticsDashboard })),
+);
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/analytics")({
   component: AnalyticsPage,
@@ -29,7 +34,9 @@ function AnalyticsPage() {
 
   return (
     <ErrorBoundary fallback={<SectionErrorFallback title="Analytics Error" />}>
-      <AnalyticsDashboard projectId={project._id} />
+      <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
+        <AnalyticsDashboard projectId={project._id} />
+      </Suspense>
     </ErrorBoundary>
   );
 }
