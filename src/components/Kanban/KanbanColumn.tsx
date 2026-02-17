@@ -353,6 +353,26 @@ function areFocusedIssuesEqual(prev: KanbanColumnProps, next: KanbanColumnProps)
   return !(wasFocusedInColumn || isFocusedInColumn);
 }
 
+function areIssuesListEqual(
+  prevIssues: KanbanColumnProps["issues"],
+  nextIssues: KanbanColumnProps["issues"],
+) {
+  if (prevIssues === nextIssues) return true;
+  if (prevIssues.length !== nextIssues.length) return false;
+
+  for (let i = 0; i < prevIssues.length; i++) {
+    if (
+      !areIssuesEqual(
+        prevIssues[i] as Parameters<typeof areIssuesEqual>[0],
+        nextIssues[i] as Parameters<typeof areIssuesEqual>[1],
+      )
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
   const prevKeys = Object.keys(prev) as (keyof KanbanColumnProps)[];
   const nextKeys = Object.keys(next) as (keyof KanbanColumnProps)[];
@@ -361,6 +381,12 @@ export function arePropsEqual(prev: KanbanColumnProps, next: KanbanColumnProps) 
 
   for (const key of prevKeys) {
     if (key === "selectedIssueIds" || key === "focusedIssueId") continue;
+
+    if (key === "issues") {
+      if (!areIssuesListEqual(prev.issues, next.issues)) return false;
+      continue;
+    }
+
     if (prev[key] !== next[key]) return false;
   }
 
