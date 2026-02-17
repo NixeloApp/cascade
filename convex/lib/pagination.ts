@@ -6,7 +6,7 @@
 
 import type { WorkflowCategory } from "../validators";
 import { validation } from "./errors";
-import { DAY } from "./timeUtils";
+import { DAY, roundToHour } from "./timeUtils";
 
 // Default pagination settings
 export const DEFAULT_PAGE_SIZE = 50;
@@ -53,11 +53,16 @@ export function decodeCursor(cursor: string): { timestamp: number; id: string } 
  * Calculate the threshold date for "done" column items
  * Returns timestamp for (now - days)
  *
+ * OPTIMIZATION: We round 'now' to the nearest hour to stabilize the query window.
+ * This ensures that multiple queries within the same hour use the exact same
+ * timestamp threshold, allowing Convex to better cache the underlying range scan
+ * and improving consistency across different components/clients.
+ *
  * @param now - Current timestamp (required - pass from client)
  * @param days - Number of days to look back
  */
 export function getDoneColumnThreshold(now: number, days: number = DONE_COLUMN_DAYS): number {
-  return now - days * DAY;
+  return roundToHour(now) - days * DAY;
 }
 
 /**
