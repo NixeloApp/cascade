@@ -144,6 +144,20 @@ export const securePasswordReset = httpAction(async (ctx, request) => {
       });
     }
 
+    // Check rate limit by email to prevent spam/DoS on a single target
+    // If limit exceeded, return success (silent drop) to prevent enumeration or feedback to attacker
+    try {
+      await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimitByEmail, { email });
+    } catch {
+      // Rate limit exceeded for email
+      // We return success to the client so they don't know the email is valid or rate limited,
+      // but we do NOT schedule the reset email.
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     // Schedule the reset asynchronously via internal mutation
     // This returns immediately, preventing timing attacks on email existence
     await ctx.runMutation(internal.authWrapper.schedulePasswordReset, { email });
