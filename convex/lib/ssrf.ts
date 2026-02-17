@@ -333,8 +333,10 @@ export async function validateDestinationResolved(url: string): Promise<string> 
  * Safe Client IP Extraction Helper
  *
  * This utility provides a consistent way to extract the client's IP address
- * from request headers, prioritizing headers set by trusted proxies/CDNs
- * (Cloudflare, Vercel, Fastly, etc.) over the easily spoofable X-Forwarded-For.
+ * from request headers. It first checks immutable CDN headers (Cloudflare,
+ * Akamai), then uses the last IP in X-Forwarded-For (appended by the trusted
+ * proxy), and only falls back to single-value headers (Fastly, X-Real-IP,
+ * X-Client-IP) when XFF is absent.
  */
 export function getClientIp(request: Request): string | null {
   const headers = request.headers;
