@@ -1478,6 +1478,10 @@ pnpm vite build --mode analyze
 | `validateProjectAccess` | `projects.ts` | High | ✅ (43 tests) |
 | `savedFilters.*` | `savedFilters.ts` | Medium | ✅ (17 tests) |
 | `watchers.*` | `watchers.ts` | Medium | ✅ (18 tests) |
+| `labelGroups.*` | `labelGroups.ts` | Medium | ✅ (15 tests) |
+| `documentVersions.*` | `documentVersions.ts` | Medium | ✅ (17 tests) |
+| `calendarEventsAttendance.*` | `calendarEventsAttendance.ts` | Medium | ✅ (17 tests) |
+| `attachments.*` | `attachments.ts` | Low | ✅ (3 tests) |
 
 **Test Pattern (convex-test):**
 ```typescript
@@ -1552,10 +1556,10 @@ const PlateEditor = lazy(() =>
 |---------|--------|-------|----------|
 | 6.1 E2E Stability | ✅ | 2/4 | Critical |
 | 6.2 Bundle Analysis | ✅ | 5/5 | High |
-| 6.3 Convex Tests | ✅ | 12/12 | High |
+| 6.3 Convex Tests | ✅ | 16/16 | High |
 | 6.4 Code Splitting | ✅ | 5/5 | Medium |
 | 6.5 CI Performance | ✅ | 4/4 | Low |
-| **Total** | **93%** | **28/30** | - |
+| **Total** | **94%** | **32/34** | - |
 
 ---
 
