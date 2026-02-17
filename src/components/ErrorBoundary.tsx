@@ -78,10 +78,19 @@ export class ErrorBoundary extends Component<Props, State> {
               </details>
             )}
 
-            {/* Reload button */}
-            <Button onClick={() => window.location.reload()} size="lg" className="mt-8">
-              Reload page
-            </Button>
+            {/* Action buttons */}
+            <Flex gap="md" className="mt-8">
+              <Button
+                variant="secondary"
+                onClick={() => this.setState({ hasError: false, error: null })}
+                size="lg"
+              >
+                Try again
+              </Button>
+              <Button onClick={() => window.location.reload()} size="lg">
+                Reload page
+              </Button>
+            </Flex>
           </Flex>
         </Flex>
       );

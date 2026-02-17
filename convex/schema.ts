@@ -459,6 +459,8 @@ const applicationTables = {
     .index("by_team_status_updated", ["teamId", "status", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_project_deleted", ["projectId", "isDeleted"])
+    .index("by_organization_archived", ["organizationId", "archivedAt"])
+    .index("by_project_archived", ["projectId", "archivedAt"])
     .searchIndex("search_title", {
       searchField: "searchContent",
       filterFields: [

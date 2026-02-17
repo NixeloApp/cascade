@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Dialog } from "./ui/Dialog";
+import { EmptyState } from "./ui/EmptyState";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "./ui/Metadata";
 import { Typography } from "./ui/Typography";
@@ -110,16 +111,11 @@ export function VersionHistory({
             <LoadingSpinner size="lg" />
           </Flex>
         ) : versions.length === 0 ? (
-          <div className="text-center py-12">
-            <Clock className="w-12 h-12 text-ui-text-tertiary mx-auto mb-4" />
-            <Typography variant="h5" className="mb-2">
-              No version history yet
-            </Typography>
-            <Typography variant="caption">
-              Versions are automatically saved as you edit. Make some changes to create the first
-              version.
-            </Typography>
-          </div>
+          <EmptyState
+            icon={Clock}
+            title="No version history yet"
+            description="Versions are automatically saved as you edit. Make some changes to create the first version."
+          />
         ) : (
           <div className="space-y-2 py-2">
             {versions.map((version: DocumentVersion, index: number) => {

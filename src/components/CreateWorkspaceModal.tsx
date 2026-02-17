@@ -2,7 +2,6 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
@@ -10,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { showCreated, showError } from "@/lib/toast";
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
@@ -43,13 +43,13 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
         organizationId: organizationId as Id<"organizations">,
       });
 
-      toast.success("Workspace created successfully");
+      showCreated("Workspace");
       onCreated?.(workspaceId, slug);
       onClose();
       setName("");
       setDescription("");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create workspace");
+      showError(error, "Failed to create workspace");
     } finally {
       setIsSubmitting(false);
     }

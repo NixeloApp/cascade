@@ -48,13 +48,11 @@ export const OTPPasswordReset = Resend({
       !!process.env.E2E_API_KEY;
 
     // For test emails, store plaintext OTP in testOtpCodes table if environment permits
-    if (isTestEmail && isSafeEnvironment && ctx?.runMutation && ctx?.runQuery) {
+    // We rely on the email domain and environment check rather than the user's DB flag
+    // to prevent race conditions during E2E tests where the user might not be flagged yet.
+    if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
       try {
-        // Only store OTP if the user is explicitly marked as a test user
-        const user = await ctx.runQuery(internal.users.getInternalByEmail, { email });
-        if (user?.isTestUser) {
-          await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "reset" });
-        }
+        await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "reset" });
       } catch (e) {
         // Log but don't fail, attempt to send email anyway
         logger.error(`[OTPPasswordReset] Failed to store test OTP: ${e}`);
