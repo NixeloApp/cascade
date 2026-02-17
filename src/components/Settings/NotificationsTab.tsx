@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { getVapidPublicKey, useWebPush } from "@/contexts/WebPushContext";
 import {
   AtSign,
   Bell,
@@ -16,7 +17,6 @@ import {
   User,
 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";

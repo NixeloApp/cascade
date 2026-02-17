@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import { useMutation } from "convex/react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { showError } from "@/lib/toast";
 import { optimisticBoardUpdate } from "./boardOptimisticUpdates";
 import type { BoardAction } from "./useBoardHistory";
@@ -58,9 +58,11 @@ export function useBoardDragAndDrop({
 }: UseBoardDragAndDropOptions) {
   const [isDragging, setIsDragging] = useState(false);
 
-  // Store latest data in refs to avoid recreating handlers
+  // Store data in a ref to keep callbacks stable even when data changes
   const dataRef = useRef({ allIssues, issuesByStatus, isTeamMode });
-  dataRef.current = { allIssues, issuesByStatus, isTeamMode };
+  useEffect(() => {
+    dataRef.current = { allIssues, issuesByStatus, isTeamMode };
+  }, [allIssues, issuesByStatus, isTeamMode]);
 
   const rawUpdateStatus = useMutation(api.issues.updateStatus);
 
@@ -89,14 +91,13 @@ export function useBoardDragAndDrop({
    */
   const handleIssueDrop = useCallback(
     async (issueId: Id<"issues">, sourceStatus: string, targetStatus: string) => {
-      // Access latest data from ref
-      const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
-
       // Skip if dropped on same column
       if (sourceStatus === targetStatus) {
         return;
       }
 
+      // Access latest data from ref
+      const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
       const issue = allIssues.find((i) => i._id === issueId);
       if (!issue) return;
 
@@ -135,13 +136,7 @@ export function useBoardDragAndDrop({
         showError(error, "Failed to update issue status");
       }
     },
-    [
-      // Dependencies that are stable or relevant for recreation
-      updateIssueStatus,
-      updateStatusByCategory,
-      pushHistoryAction,
-      // allIssues, issuesByStatus, isTeamMode are accessed via ref
-    ],
+    [updateIssueStatus, updateStatusByCategory, pushHistoryAction],
   );
 
   /**
@@ -158,7 +153,6 @@ export function useBoardDragAndDrop({
     ) => {
       // Access latest data from ref
       const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
-
       const draggedIssue = allIssues.find((i) => i._id === draggedIssueId);
       const targetIssue = allIssues.find((i) => i._id === targetIssueId);
       if (!draggedIssue || !targetIssue) return;
@@ -200,12 +194,7 @@ export function useBoardDragAndDrop({
         showError(error, "Failed to reorder issue");
       }
     },
-    [
-      updateIssueStatus,
-      updateStatusByCategory,
-      pushHistoryAction,
-      // allIssues, issuesByStatus, isTeamMode are accessed via ref
-    ],
+    [updateIssueStatus, updateStatusByCategory, pushHistoryAction],
   );
 
   return {
