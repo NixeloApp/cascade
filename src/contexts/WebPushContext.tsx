@@ -8,7 +8,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { showError, showSuccess } from "./toast";
+import { showError, showSuccess } from "@/lib/toast";
 
 // ============================================================================
 // Types
