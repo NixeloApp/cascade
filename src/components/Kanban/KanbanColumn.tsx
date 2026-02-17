@@ -13,7 +13,7 @@ import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kan
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
-import { IssueCard } from "../IssueCard";
+import { areIssuesEqual, IssueCard } from "../IssueCard";
 import { Badge } from "../ui/Badge";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { PaginationInfo } from "../ui/PaginationInfo";
@@ -121,6 +121,24 @@ const KanbanIssueItem = memo(
         />
       </div>
     );
+  },
+  (prev, next) => {
+    // Check primitive props and callbacks
+    if (
+      prev.index !== next.index ||
+      prev.columnIndex !== next.columnIndex ||
+      prev.isSelected !== next.isSelected ||
+      prev.isFocused !== next.isFocused ||
+      prev.selectionMode !== next.selectionMode ||
+      prev.canEdit !== next.canEdit ||
+      prev.onClick !== next.onClick ||
+      prev.onToggleSelect !== next.onToggleSelect
+    ) {
+      return false;
+    }
+
+    // Check issue content equality using custom comparator
+    return areIssuesEqual(prev.issue, next.issue);
   },
 );
 KanbanIssueItem.displayName = "KanbanIssueItem";

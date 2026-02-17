@@ -32,6 +32,11 @@ function ipv4ToInt(ip: string): number {
 
   let result = 0;
   for (const part of parts) {
+    // Strict validation: must be only digits and not empty
+    if (!/^\d+$/.test(part)) {
+      throw new Error("Invalid IPv4 address");
+    }
+
     const num = Number.parseInt(part, 10);
     if (Number.isNaN(num) || num < 0 || num > 255) {
       throw new Error("Invalid IPv4 address");
