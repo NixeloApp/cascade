@@ -3,7 +3,7 @@
 > **Purpose:** Living document for continuous quality improvement. When told "work on this doc", systematically improve Nixelo by benchmarking against Plane, Cal.com, and Mintlify.
 >
 > **Last Run:** 2026-02-16
-> **Overall Progress:** 129/246 (Phase 1-5 complete)
+> **Overall Progress:** 129/276 (Phase 1-5 complete, Phase 6 ready)
 
 ---
 
@@ -1383,6 +1383,140 @@ export const Default: Story = {
 - IssueWatchers: Watching states, multiple watchers, sidebar context
 - All 2678 tests pass, validator passes with 0 errors
 - Total session: **25 stories**
+
+---
+
+## Phase 6: Performance & Backend Testing
+
+**Goal:** Optimize bundle size, add Convex function tests, improve CI reliability.
+**Approach:** Quick wins first (bundle analysis), then high-value backend tests.
+
+---
+
+### 6.1 E2E Test Stability (Critical) 🔥
+
+**Problem:** E2E shard 1/4 consistently failing across all PRs, blocking merges.
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Identify flaky tests in shard 1 | ⬜ | Check CI logs for failure patterns |
+| Fix or quarantine flaky tests | ⬜ | `test.skip()` with TODO if needed |
+| Add retry logic to flaky assertions | ⬜ | `expect.poll()` or `toPass()` |
+| Verify all 4 shards pass on main | ⬜ | Baseline health check |
+
+**Commands:**
+```bash
+# Run E2E locally for shard 1
+pnpm exec playwright test --shard=1/4
+
+# List tests in shard 1
+pnpm exec playwright test --shard=1/4 --list
+```
+
+---
+
+### 6.2 Bundle Analysis (Quick Win) 📦
+
+**Current:** Never analyzed. Unknown bundle size/composition.
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Install bundle analyzer | ⬜ | `pnpm add -D rollup-plugin-visualizer` |
+| Generate bundle report | ⬜ | Add to vite.config.ts |
+| Identify large dependencies | ⬜ | Target >100KB chunks |
+| Lazy load heavy routes | ⬜ | Settings, Analytics, Admin |
+| Document bundle budget | ⬜ | Set limits in CI |
+
+**Target:** <500KB initial JS, <1MB total.
+
+---
+
+### 6.3 Convex Function Tests (High Value) 🧪
+
+**Current:** 0 Convex function unit tests. All backend logic tested via E2E only.
+**Risk:** E2E is slow, flaky, and misses edge cases.
+
+**Priority Functions to Test:**
+
+| Function | File | Complexity | Status |
+|----------|------|------------|--------|
+| `createIssue` | `issues/mutations.ts` | High | ⬜ |
+| `updateIssue` | `issues/mutations.ts` | High | ⬜ |
+| `bulkUpdateIssues` | `issues/mutations.ts` | High | ⬜ |
+| `moveIssue` | `issues/mutations.ts` | Medium | ⬜ |
+| `createSprint` | `sprints.ts` | Medium | ⬜ |
+| `completeSprint` | `sprints.ts` | Medium | ⬜ |
+| `acceptInboxIssue` | `inbox.ts` | Medium | ⬜ |
+| `bulkAccept` | `inbox.ts` | Medium | ⬜ |
+| `sendEventReminders` | `eventReminders.ts` | High | ⬜ |
+| `validateProjectAccess` | `projects.ts` | High | ⬜ |
+
+**Test Pattern (convex-test):**
+```typescript
+import { convexTest } from "convex-test";
+import { describe, it, expect } from "vitest";
+import schema from "./schema";
+import { api } from "./_generated/api";
+
+describe("createIssue", () => {
+  it("should create issue with required fields", async () => {
+    const t = convexTest(schema);
+    await t.run(async (ctx) => {
+      const issueId = await ctx.mutation(api.issues.mutations.createIssue, {
+        title: "Test Issue",
+        projectId: mockProjectId,
+      });
+      expect(issueId).toBeDefined();
+    });
+  });
+});
+```
+
+---
+
+### 6.4 Code Splitting (Medium Priority) ✂️
+
+**Goal:** Lazy load non-critical routes to reduce initial bundle.
+
+| Route | Current | Target | Status |
+|-------|---------|--------|--------|
+| `/settings/*` | Eager | Lazy | ⬜ |
+| `/analytics` | Eager | Lazy | ⬜ |
+| `/admin/*` | Eager | Lazy | ⬜ |
+| `/documents/*` | Eager | Lazy | ⬜ |
+| Heavy components (PlateEditor) | Eager | Lazy | ⬜ |
+
+**Implementation:**
+```typescript
+// TanStack Router lazy loading
+const SettingsRoute = createFileRoute('/settings')({
+  component: () => import('./settings').then(m => m.Settings),
+});
+```
+
+---
+
+### 6.5 CI Performance (Low Priority) ⚡
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Cache node_modules in CI | ⬜ | pnpm store caching |
+| Parallelize lint/type/test | ⬜ | Already sharded for E2E |
+| Skip unchanged packages | ⬜ | Turborepo or nx |
+| Add bundle size check to CI | ⬜ | Fail if >budget |
+
+---
+
+### Phase 6 Progress
+
+| Section | Status | Items | Priority |
+|---------|--------|-------|----------|
+| 6.1 E2E Stability | ⬜ | 0/4 | Critical |
+| 6.2 Bundle Analysis | ⬜ | 0/5 | High |
+| 6.3 Convex Tests | ⬜ | 0/10 | High |
+| 6.4 Code Splitting | ⬜ | 0/5 | Medium |
+| 6.5 CI Performance | ⬜ | 0/4 | Low |
+| **Total** | **0%** | **0/28** | - |
 
 ---
 
