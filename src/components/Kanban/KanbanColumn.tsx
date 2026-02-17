@@ -3,6 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { areIssuesEqual, IssueCard } from "@/components/IssueCard";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -13,7 +14,6 @@ import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kan
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
-import { IssueCard, areIssuesEqual } from "@/components/IssueCard";
 import { Badge } from "../ui/Badge";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { PaginationInfo } from "../ui/PaginationInfo";
@@ -110,7 +110,7 @@ function areKanbanIssueItemPropsEqual(prev: KanbanIssueItemProps, next: KanbanIs
   // Use shared equality check for the rest of the issue properties
   // Note: We cast to any because the Issue types are slightly different between files
   // but compatible for the properties checked by areIssuesEqual
-  // @ts-ignore - Types are compatible for checked fields
+  // @ts-expect-error - Types are compatible for checked fields
   return areIssuesEqual(prev.issue, next.issue);
 }
 

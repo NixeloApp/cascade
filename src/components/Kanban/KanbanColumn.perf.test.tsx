@@ -1,7 +1,7 @@
-import { render } from "@/test/custom-render";
 import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "@/test/custom-render";
 import { KanbanColumn } from "./KanbanColumn";
 
 // Mock dependencies
@@ -47,9 +47,9 @@ describe("KanbanColumn Performance", () => {
 
   const createIssue = (id: string) => ({
     _id: id as Id<"issues">,
-    title: "Issue " + id,
+    title: `Issue ${id}`,
     order: 1,
-    key: "ISSUE-" + id,
+    key: `ISSUE-${id}`,
     status: "todo",
     priority: "medium" as const,
     type: "task" as const,
