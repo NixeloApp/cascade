@@ -21,11 +21,10 @@ describe("GitHub OAuth Security", () => {
 
     // Mock crypto.randomUUID
     if (!global.crypto) {
-      // @ts-expect-error
-      global.crypto = {};
+      global.crypto = {} as Crypto;
     }
-    // @ts-expect-error
-    global.crypto.randomUUID = () => "mock-uuid-state";
+    (global.crypto as Crypto).randomUUID = () =>
+      "mock-uuid-state" as `${string}-${string}-${string}-${string}-${string}`;
 
     // Mock fetch
     global.fetch = vi.fn().mockImplementation((url: string) => {

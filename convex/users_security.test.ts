@@ -40,9 +40,8 @@ describe("Users Security", () => {
 
       // Verify
       const token = user?.pendingEmailVerificationToken;
-      expect(token).toBeDefined();
-      // biome-ignore lint/style/noNonNullAssertion: test
-      await asUser.mutation(api.users.verifyEmailChange, { token: token! });
+      if (!token) throw new Error("Expected token to be defined");
+      await asUser.mutation(api.users.verifyEmailChange, { token });
 
       // Now it should be changed and verified
       user = await t.run(async (ctx) => ctx.db.get(userId));

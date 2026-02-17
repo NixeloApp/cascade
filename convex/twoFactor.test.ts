@@ -153,8 +153,8 @@ describe("Two Factor Authentication", () => {
     const setupCode = await generateTestTOTP(secret, FIXED_TIME);
     const { backupCodes } = await asUser.mutation(api.twoFactor.completeSetup, { code: setupCode });
 
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    const codeToUse = backupCodes![0];
+    if (!backupCodes || backupCodes.length === 0) throw new Error("Expected backup codes");
+    const codeToUse = backupCodes[0];
 
     // Verify valid backup code
     const result1 = await asUser.mutation(api.twoFactor.verifyBackupCode, { code: codeToUse });
@@ -219,8 +219,8 @@ describe("Two Factor Authentication", () => {
     const setupCode = await generateTestTOTP(secret, FIXED_TIME);
     const { backupCodes } = await asUser.mutation(api.twoFactor.completeSetup, { code: setupCode });
 
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    const codeToUse = backupCodes![0];
+    if (!backupCodes || backupCodes.length === 0) throw new Error("Expected backup codes");
+    const codeToUse = backupCodes[0];
 
     // Disable with backup code
     const result = await asUser.mutation(api.twoFactor.disable, {

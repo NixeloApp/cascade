@@ -15,13 +15,12 @@ describe("listRoadmapIssues pagination issue", () => {
     // Create a parent task
     const parentId = await t.run(async (ctx) => {
       const project = await ctx.db.get(projectId);
+      if (!project) throw new Error("Project not found");
       return await ctx.db.insert("issues", {
         projectId,
         organizationId,
-        // biome-ignore lint/style/noNonNullAssertion: testing convenience
-        workspaceId: project!.workspaceId,
-        // biome-ignore lint/style/noNonNullAssertion: testing convenience
-        teamId: project!.teamId,
+        workspaceId: project.workspaceId,
+        teamId: project.teamId,
         key: `PARENT-1`,
         title: `Parent`,
         type: "task",
@@ -42,14 +41,13 @@ describe("listRoadmapIssues pagination issue", () => {
     for (let i = 0; i < 450; i += 50) {
       await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
         for (let j = 0; j < 50; j++) {
           await ctx.db.insert("issues", {
             projectId,
             organizationId,
-            // biome-ignore lint/style/noNonNullAssertion: testing convenience
-            workspaceId: project!.workspaceId,
-            // biome-ignore lint/style/noNonNullAssertion: testing convenience
-            teamId: project!.teamId,
+            workspaceId: project.workspaceId,
+            teamId: project.teamId,
             key: `SUB-${i + j}`,
             title: `Subtask ${i + j}`,
             type: "subtask",
@@ -74,13 +72,12 @@ describe("listRoadmapIssues pagination issue", () => {
     for (let i = 0; i < 10; i++) {
       const id = await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
         return await ctx.db.insert("issues", {
           projectId,
           organizationId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          workspaceId: project!.workspaceId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          teamId: project!.teamId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
           key: `TASK-${i + 1}`,
           title: `Dated Task ${i}`,
           type: "task",

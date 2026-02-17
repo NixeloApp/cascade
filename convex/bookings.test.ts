@@ -51,8 +51,8 @@ describe("Bookings", () => {
     expect(booking.calendarEventId).toBeDefined();
 
     // Verify calendar event
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    const event = await t.run(async (ctx) => ctx.db.get(booking.calendarEventId!));
+    if (!booking.calendarEventId) throw new Error("Expected calendarEventId to be defined");
+    const event = await t.run(async (ctx) => ctx.db.get(booking.calendarEventId));
     expect(event).not.toBeNull();
     expect(event?.title).toContain("Test Page with Guest");
   });

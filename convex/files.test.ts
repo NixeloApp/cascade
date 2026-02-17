@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -162,10 +163,9 @@ describe("Files", () => {
       // Generate a valid upload URL to get storage format right - but we can't actually
       // create a real storage ID without convex-test storage support, so we just test auth
       await expect(
-        // @ts-expect-error Testing invalid input
         t.mutation(api.files.addAttachment, {
           issueId,
-          storageId: null,
+          storageId: "kg2abc123def456ghi789jkl012mno34" as Id<"_storage">,
           filename: "test.pdf",
           contentType: "application/pdf",
           size: 1024,
@@ -178,10 +178,9 @@ describe("Files", () => {
       const { issueId } = await createTestContextWithIssue(t);
 
       await expect(
-        // @ts-expect-error Testing invalid input
         t.mutation(api.files.removeAttachment, {
           issueId,
-          storageId: null,
+          storageId: "kg2abc123def456ghi789jkl012mno34" as Id<"_storage">,
         }),
       ).rejects.toThrow();
     });
@@ -197,10 +196,9 @@ describe("Files", () => {
 
       // Even with invalid storage ID, role check should happen first
       await expect(
-        // @ts-expect-error Testing invalid input
         asViewer.mutation(api.files.addAttachment, {
           issueId,
-          storageId: null,
+          storageId: "kg2abc123def456ghi789jkl012mno34" as Id<"_storage">,
           filename: "test.pdf",
           contentType: "application/pdf",
           size: 1024,
@@ -218,10 +216,9 @@ describe("Files", () => {
       const asViewer = asAuthenticatedUser(t, viewerId);
 
       await expect(
-        // @ts-expect-error Testing invalid input
         asViewer.mutation(api.files.removeAttachment, {
           issueId,
-          storageId: null,
+          storageId: "kg2abc123def456ghi789jkl012mno34" as Id<"_storage">,
         }),
       ).rejects.toThrow();
     });
@@ -234,10 +231,9 @@ describe("Files", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Use a valid-format but non-existent issue ID
-      const fakeIssueId = "j57bhd2rvp0w0qb8t1s1zrh17h6yggn1";
+      const fakeIssueId = "j57bhd2rvp0w0qb8t1s1zrh17h6yggn1" as Id<"issues">;
 
       await expect(
-        // @ts-expect-error Testing with string that looks like ID
         asUser.query(api.files.getIssueAttachments, { issueId: fakeIssueId }),
       ).rejects.toThrow();
     });

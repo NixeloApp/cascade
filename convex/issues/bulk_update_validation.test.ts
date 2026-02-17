@@ -21,8 +21,8 @@ describe("Bulk Update Validation", () => {
     });
 
     const initialIssue = await t.run(async (ctx) => ctx.db.get(issueId));
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    const initialStatus = initialIssue!.status;
+    if (!initialIssue) throw new Error("Expected issue to exist");
+    const initialStatus = initialIssue.status;
 
     // Attempt to bulk update to a non-existent status
     const invalidStatus = "non-existent-status-id";
@@ -40,8 +40,8 @@ describe("Bulk Update Validation", () => {
 
     const updatedIssue = await t.run(async (ctx) => ctx.db.get(issueId));
     // Status should remain unchanged
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    expect(updatedIssue!.status).toBe(initialStatus);
+    if (!updatedIssue) throw new Error("Expected issue to exist");
+    expect(updatedIssue.status).toBe(initialStatus);
     await t.finishInProgressScheduledFunctions();
   });
 });

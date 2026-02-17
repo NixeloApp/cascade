@@ -574,17 +574,17 @@ describe("IP Restrictions", () => {
       const officeEntry = list.find((e) => e.ipRange === "10.0.0.0/24");
 
       expect(list).toHaveLength(2);
+      if (!homeEntry) throw new Error("Expected homeEntry to exist");
+      if (!officeEntry) throw new Error("Expected officeEntry to exist");
 
       await asUser.mutation(api.ipRestrictions.removeIpFromAllowlist, {
-        // biome-ignore lint/style/noNonNullAssertion: testing convenience
-        id: homeEntry!._id,
+        id: homeEntry._id,
       });
 
       // Fail removing last IP while enabled
       await expect(
         asUser.mutation(api.ipRestrictions.removeIpFromAllowlist, {
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          id: officeEntry!._id,
+          id: officeEntry._id,
         }),
       ).rejects.toThrow(/cannot remove/i);
 
@@ -594,8 +594,7 @@ describe("IP Restrictions", () => {
         enabled: false,
       });
       await asUser.mutation(api.ipRestrictions.removeIpFromAllowlist, {
-        // biome-ignore lint/style/noNonNullAssertion: testing convenience
-        id: officeEntry!._id,
+        id: officeEntry._id,
       });
 
       const finalStatus = await asUser.query(api.ipRestrictions.getIpRestrictionsStatus, {

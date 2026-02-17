@@ -16,11 +16,10 @@ describe("arrayToCSV", () => {
       { name: "Alice", age: 30, role: "Admin" },
       { name: "Bob", age: 25, role: "User" },
     ];
-    const columns = [
+    const columns: { key: "name" | "role"; label: string }[] = [
       { key: "name", label: "Full Name" },
       { key: "role", label: "Role" },
     ];
-    // @ts-expect-error -- testing dynamic usage or just matching the type
     const result = arrayToCSV(data, columns);
     expect(result).toBe("Full Name,Role\nAlice,Admin\nBob,User");
   });
