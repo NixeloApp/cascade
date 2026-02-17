@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
+import type { ActionCtx } from "./_generated/server";
 import { securePasswordResetHandler } from "./authWrapper";
 import { getClientIp } from "./lib/ssrf";
 
@@ -25,7 +26,7 @@ vi.mock("./lib/ssrf", () => ({
 describe("securePasswordResetHandler", () => {
   const mockCtx = {
     runMutation: vi.fn(),
-  };
+  } as unknown as ActionCtx & { runMutation: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,7 +47,7 @@ describe("securePasswordResetHandler", () => {
       body: JSON.stringify({ email: "test@example.com" }),
     });
 
-    const response = await securePasswordResetHandler(mockCtx as any, request);
+    const response = await securePasswordResetHandler(mockCtx, request);
     const body = await response.json();
 
     expect(response.status).toBe(429);
@@ -69,10 +70,10 @@ describe("securePasswordResetHandler", () => {
 
     const request = new Request("http://localhost", {
       method: "POST",
-      body: JSON.stringify({ email: "spammed@example.com" }),
+      body: JSON.stringify({ email: "Spammed@Example.com" }),
     });
 
-    const response = await securePasswordResetHandler(mockCtx as any, request);
+    const response = await securePasswordResetHandler(mockCtx, request);
     const body = await response.json();
 
     // Should return success: true (silent fail)
@@ -85,7 +86,7 @@ describe("securePasswordResetHandler", () => {
       { ip: "127.0.0.1" },
     );
 
-    // Verify Email check WAS called
+    // Verify Email check WAS called with normalized email
     expect(mockCtx.runMutation).toHaveBeenCalledWith(
       internal.authWrapper.checkPasswordResetRateLimitByEmail,
       { email: "spammed@example.com" },
@@ -96,5 +97,38 @@ describe("securePasswordResetHandler", () => {
       internal.authWrapper.schedulePasswordReset,
       expect.anything(),
     );
+  });
+
+  it("should schedule password reset when rate limits pass", async () => {
+    vi.mocked(getClientIp).mockReturnValue("127.0.0.1");
+    mockCtx.runMutation.mockResolvedValue(undefined);
+
+    const request = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ email: "  Valid@Example.com  " }),
+    });
+
+    const response = await securePasswordResetHandler(mockCtx, request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+
+    // Verify IP check was called
+    expect(mockCtx.runMutation).toHaveBeenCalledWith(
+      internal.authWrapper.checkPasswordResetRateLimit,
+      { ip: "127.0.0.1" },
+    );
+
+    // Verify Email check was called with normalized email
+    expect(mockCtx.runMutation).toHaveBeenCalledWith(
+      internal.authWrapper.checkPasswordResetRateLimitByEmail,
+      { email: "valid@example.com" },
+    );
+
+    // Verify schedule was called with normalized email
+    expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.authWrapper.schedulePasswordReset, {
+      email: "valid@example.com",
+    });
   });
 });

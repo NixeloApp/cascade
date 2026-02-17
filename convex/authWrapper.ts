@@ -79,11 +79,12 @@ export const checkPasswordResetRateLimit = internalMutation({
 
 /**
  * Check rate limit for password reset by email (for OTPPasswordReset provider)
+ * Uses distinct bucket from IP-based rate limiting for independent thresholds
  */
 export const checkPasswordResetRateLimitByEmail = internalMutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    await rateLimit(ctx, "passwordReset", { key: args.email });
+    await rateLimit(ctx, "passwordResetByEmail", { key: args.email });
   },
 });
 
@@ -134,14 +135,17 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
     }
 
     const body = await request.json();
-    const { email } = body;
+    const { email: rawEmail } = body;
 
-    if (!email || typeof email !== "string") {
+    if (!rawEmail || typeof rawEmail !== "string") {
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
+
+    // Normalize email to prevent bypass via casing/whitespace
+    const email = rawEmail.trim().toLowerCase();
 
     // Check rate limit by email to prevent spam/DoS on a single target
     // If limit exceeded, return success (silent drop) to prevent enumeration or feedback to attacker
