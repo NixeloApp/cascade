@@ -62,4 +62,20 @@ describe("KanbanColumn arePropsEqual", () => {
 
     expect(arePropsEqual(prev, next)).toBe(false);
   });
+
+  it("should return true when issues array reference changes but content is identical", () => {
+    // Different array references containing same issue objects
+    const prev = { ...baseProps, issues: [mockIssue] };
+    const next = { ...baseProps, issues: [mockIssue] };
+
+    expect(arePropsEqual(prev, next)).toBe(true);
+  });
+
+  it("should return true when issues are deeply equal", () => {
+    // Different array references containing different issue objects with same content
+    const prev = { ...baseProps, issues: [{ ...mockIssue }] };
+    const next = { ...baseProps, issues: [{ ...mockIssue }] };
+
+    expect(arePropsEqual(prev, next)).toBe(true);
+  });
 });
