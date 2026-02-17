@@ -1,16 +1,11 @@
-import type { Id } from "../_generated/dataModel";
+import type { SearchFilterBuilder, SearchFilterFinalizer } from "convex/server";
+import type { DataModel, Doc, Id } from "../_generated/dataModel";
 
-// Define a local interface for the query builder compatible with q in .withSearchIndex("index", (q) => ...)
-// Since SearchBuilder is not exported from convex/server
-export interface SearchFilterBuilder<T extends string> {
-  search(field: string, query: string): SearchFilterBuilder<T>;
-  eq(field: string, value: unknown): SearchFilterBuilder<T>;
-  // This property is required by the Convex runtime type definition
-  _isSearchFilter?: boolean;
-}
+// Get the search index config type for issues table
+type IssuesSearchIndex = DataModel["issues"]["searchIndexes"]["search_title"];
 
 export function buildIssueSearch(
-  q: SearchFilterBuilder<"issues">,
+  q: SearchFilterBuilder<Doc<"issues">, IssuesSearchIndex>,
   args: {
     query: string;
     projectId?: Id<"projects">;
@@ -22,7 +17,7 @@ export function buildIssueSearch(
     priority?: string[];
   },
   userId: Id<"users">,
-) {
+): SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex> {
   let searchQ = q.search("searchContent", args.query);
 
   if (args.projectId) {
