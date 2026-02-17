@@ -43,6 +43,26 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.CI
         ? 1000
         : 20,
+  },
+
+  // Auth Attempts: Strict limit per IP to prevent credential stuffing/spam
+  authAttempt: {
+    kind: "token bucket",
+    rate:
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.E2E_TEST_MODE ||
+      process.env.CI
+        ? 1000
+        : 20,
+    period: 60_000,
+    capacity:
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.E2E_TEST_MODE ||
+      process.env.CI
+        ? 1000
+        : 20,
   }, // 20 per minute default to prevent blocking legit users/tests if env detection fails
 
   // Email Change Verification: Strict limit to prevent OTP brute-forcing
