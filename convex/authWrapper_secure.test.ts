@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { internal } from "./_generated/api";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { securePasswordResetHandler } from "./authWrapper";
+import { internal } from "./_generated/api";
 import { getClientIp } from "./lib/ssrf";
 
 // Mock rateLimits to prevent top-level execution requiring components
@@ -35,10 +35,10 @@ describe("securePasswordResetHandler", () => {
     vi.mocked(getClientIp).mockReturnValue("127.0.0.1");
     // Mock the IP rate limit check to fail
     mockCtx.runMutation.mockImplementation((mutation) => {
-      if (mutation === internal.authWrapper.checkPasswordResetRateLimit) {
-        return Promise.reject(new Error("Rate limit exceeded"));
-      }
-      return Promise.resolve();
+        if (mutation === internal.authWrapper.checkPasswordResetRateLimit) {
+            return Promise.reject(new Error("Rate limit exceeded"));
+        }
+        return Promise.resolve();
     });
 
     const request = new Request("http://localhost", {
@@ -52,49 +52,49 @@ describe("securePasswordResetHandler", () => {
     expect(response.status).toBe(429);
     expect(body.error).toBe("Rate limit exceeded");
     expect(mockCtx.runMutation).toHaveBeenCalledWith(
-      internal.authWrapper.checkPasswordResetRateLimit,
-      { ip: "127.0.0.1" },
+        internal.authWrapper.checkPasswordResetRateLimit,
+        { ip: "127.0.0.1" }
     );
   });
 
   it("should enforce email rate limit", async () => {
-    vi.mocked(getClientIp).mockReturnValue("127.0.0.1");
+      vi.mocked(getClientIp).mockReturnValue("127.0.0.1");
 
-    mockCtx.runMutation.mockImplementation((mutation) => {
-      if (mutation === internal.authWrapper.checkPasswordResetRateLimitByEmail) {
-        return Promise.reject(new Error("Rate limit exceeded"));
-      }
-      return Promise.resolve();
-    });
+      mockCtx.runMutation.mockImplementation((mutation) => {
+          if (mutation === internal.authWrapper.checkPasswordResetRateLimitByEmail) {
+              return Promise.reject(new Error("Rate limit exceeded"));
+          }
+          return Promise.resolve();
+      });
 
-    const request = new Request("http://localhost", {
-      method: "POST",
-      body: JSON.stringify({ email: "spammed@example.com" }),
-    });
+      const request = new Request("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({ email: "spammed@example.com" }),
+      });
 
-    const response = await securePasswordResetHandler(mockCtx as any, request);
-    const body = await response.json();
+      const response = await securePasswordResetHandler(mockCtx as any, request);
+      const body = await response.json();
 
-    // Should return success: true (silent fail)
-    expect(response.status).toBe(200);
-    expect(body.success).toBe(true);
+      // Should return success: true (silent fail)
+      expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
 
-    // Verify IP check was called
-    expect(mockCtx.runMutation).toHaveBeenCalledWith(
-      internal.authWrapper.checkPasswordResetRateLimit,
-      { ip: "127.0.0.1" },
-    );
+      // Verify IP check was called
+      expect(mockCtx.runMutation).toHaveBeenCalledWith(
+        internal.authWrapper.checkPasswordResetRateLimit,
+        { ip: "127.0.0.1" }
+      );
 
-    // Verify Email check WAS called
-    expect(mockCtx.runMutation).toHaveBeenCalledWith(
-      internal.authWrapper.checkPasswordResetRateLimitByEmail,
-      { email: "spammed@example.com" },
-    );
+      // Verify Email check WAS called
+      expect(mockCtx.runMutation).toHaveBeenCalledWith(
+        internal.authWrapper.checkPasswordResetRateLimitByEmail,
+        { email: "spammed@example.com" }
+      );
 
-    // Verify schedule was NOT called
-    expect(mockCtx.runMutation).not.toHaveBeenCalledWith(
-      internal.authWrapper.schedulePasswordReset,
-      expect.anything(),
-    );
+      // Verify schedule was NOT called
+      expect(mockCtx.runMutation).not.toHaveBeenCalledWith(
+        internal.authWrapper.schedulePasswordReset,
+        expect.anything()
+      );
   });
 });
