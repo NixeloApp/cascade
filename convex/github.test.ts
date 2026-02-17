@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
@@ -130,7 +130,7 @@ describe("GitHub Integration", () => {
       });
 
       // Creates new PR
-      const prId = await t.mutation(api.github.upsertPullRequest, {
+      const prId = await t.mutation(internal.github.upsertPullRequest, {
         repositoryId,
         prNumber: 1,
         prId: "pr_1",
@@ -141,7 +141,7 @@ describe("GitHub Integration", () => {
       });
 
       // Updates PR
-      await t.mutation(api.github.upsertPullRequest, {
+      await t.mutation(internal.github.upsertPullRequest, {
         repositoryId,
         prNumber: 1,
         prId: "pr_1",
@@ -199,7 +199,7 @@ describe("GitHub Integration", () => {
       });
 
       // Upsert commit with issue key
-      const commitId = await t.mutation(api.github.upsertCommit, {
+      const commitId = await t.mutation(internal.github.upsertCommit, {
         repositoryId,
         sha: "sha123",
         message: "Fixes PROJ-1: bugs",

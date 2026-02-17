@@ -1393,8 +1393,10 @@ export const Default: Story = {
 
 ---
 
-### 6.1 E2E Test Stability (Critical) 🔥
+### 6.1 E2E Test Stability ~~(Critical)~~ 🔥 — SKIPPED
 
+<!-- SKIPPED: Mikhail requested to skip E2E work for now (2026-02-17) -->
+<!--
 **Problem:** E2E shard 1/4 consistently failing across all PRs, blocking merges.
 **Root Cause Found:** Password reset OTP not stored for test users due to `isTestUser` flag check timing.
 
@@ -1417,6 +1419,7 @@ pnpm exec playwright test --shard=1/4
 # List tests in shard 1
 pnpm exec playwright test --shard=1/4 --list
 ```
+-->
 
 ---
 
