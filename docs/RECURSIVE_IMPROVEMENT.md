@@ -1531,10 +1531,16 @@ const PlateEditor = lazy(() =>
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Cache node_modules in CI | ⬜ | pnpm store caching |
-| Parallelize lint/type/test | ⬜ | Already sharded for E2E |
-| Skip unchanged packages | ⬜ | Turborepo or nx |
+| Cache pnpm store in CI | ✅ | Explicit `actions/cache@v4` for pnpm store in all jobs |
+| Parallelize lint/type/test | ✅ | Already parallel: biome-and-typecheck, unit-tests, backend-tests run concurrently |
+| Skip unchanged packages | N/A | Not a monorepo - Turborepo adds complexity without benefit |
 | Add bundle size check to CI | ✅ | 700KB gzip budget, fails if exceeded |
+
+**CI Architecture (optimized):**
+- 3 parallel jobs: `biome-and-typecheck`, `unit-tests`, `backend-tests`
+- `build` job runs after all 3 pass
+- E2E tests sharded across 4 workers (when enabled)
+- pnpm store cached per pnpm-lock.yaml hash
 
 ---
 
@@ -1546,8 +1552,8 @@ const PlateEditor = lazy(() =>
 | 6.2 Bundle Analysis | ✅ | 3/5 | High |
 | 6.3 Convex Tests | ✅ | 10/10 | High |
 | 6.4 Code Splitting | ✅ | 5/5 | Medium |
-| 6.5 CI Performance | 🔄 | 1/4 | Low |
-| **Total** | **75%** | **21/28** | - |
+| 6.5 CI Performance | ✅ | 4/4 | Low |
+| **Total** | **86%** | **24/28** | - |
 
 ---
 
