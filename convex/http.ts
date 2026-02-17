@@ -9,8 +9,8 @@ const http = router;
 // Intercept the route registration for auth endpoints to add rate limiting
 const originalRoute = http.route.bind(http);
 
-// @ts-expect-error - overriding route method to add middleware
-http.route = (options) => {
+// We cast to any here to allow overriding the method property which is normally readonly or strictly typed
+(http as any).route = (options: any) => {
   // Check if this is an auth route we want to protect
   // We target /api/auth endpoints, specifically POST requests (Sign In, Sign Up, Verify, etc.)
   if (options.pathPrefix === "/api/auth" && options.method === "POST") {
@@ -45,7 +45,8 @@ http.route = (options) => {
         });
       }
 
-      return originalHandler(ctx, request);
+      // Cast originalHandler to any to call it
+      return (originalHandler as any)(ctx, request);
     });
 
     return originalRoute({
