@@ -1466,16 +1466,16 @@ pnpm vite build --mode analyze
 
 | Function | File | Complexity | Status |
 |----------|------|------------|--------|
-| `createIssue` | `issues/mutations.ts` | High | ⬜ |
-| `updateIssue` | `issues/mutations.ts` | High | ⬜ |
-| `bulkUpdateIssues` | `issues/mutations.ts` | High | ⬜ |
-| `moveIssue` | `issues/mutations.ts` | Medium | ⬜ |
-| `createSprint` | `sprints.ts` | Medium | ⬜ |
-| `completeSprint` | `sprints.ts` | Medium | ⬜ |
-| `acceptInboxIssue` | `inbox.ts` | Medium | ⬜ |
-| `bulkAccept` | `inbox.ts` | Medium | ⬜ |
+| `createIssue` | `issues/mutations.ts` | High | ✅ (22 tests) |
+| `updateIssue` | `issues/mutations.ts` | High | ✅ |
+| `bulkUpdateIssues` | `issues/mutations.ts` | High | ✅ |
+| `moveIssue` | `issues/mutations.ts` | Medium | ✅ |
+| `createSprint` | `sprints.ts` | Medium | ✅ (25 tests) |
+| `completeSprint` | `sprints.ts` | Medium | ✅ |
+| `acceptInboxIssue` | `inbox.ts` | Medium | ✅ (9 tests) |
+| `bulkAccept` | `inbox.ts` | Medium | ✅ |
 | `sendEventReminders` | `eventReminders.ts` | High | ⬜ |
-| `validateProjectAccess` | `projects.ts` | High | ⬜ |
+| `validateProjectAccess` | `projects.ts` | High | ✅ (43 tests) |
 
 **Test Pattern (convex-test):**
 ```typescript
@@ -1539,10 +1539,10 @@ const SettingsRoute = createFileRoute('/settings')({
 |---------|--------|-------|----------|
 | 6.1 E2E Stability | ✅ | 2/4 | Critical |
 | 6.2 Bundle Analysis | ✅ | 3/5 | High |
-| 6.3 Convex Tests | ⬜ | 0/10 | High |
+| 6.3 Convex Tests | ✅ | 9/10 | High |
 | 6.4 Code Splitting | ⬜ | 0/5 | Medium |
 | 6.5 CI Performance | ⬜ | 0/4 | Low |
-| **Total** | **18%** | **5/28** | - |
+| **Total** | **50%** | **14/28** | - |
 
 ---
 
