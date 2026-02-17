@@ -72,7 +72,7 @@ describe("Users", () => {
       ).rejects.toThrow("Invalid email format");
     });
 
-    it("should reject email already in use by another user", async () => {
+    it("should initiate verification even if email is in use (enumeration protection)", async () => {
       const t = convexTest(schema, modules);
       register(t);
       const user1Id = await createTestUser(t);
@@ -85,11 +85,13 @@ describe("Users", () => {
 
       const asUser1 = asAuthenticatedUser(t, user1Id);
 
-      await expect(
-        asUser1.mutation(api.users.updateProfile, {
-          email: "taken@example.com",
-        }),
-      ).rejects.toThrow("Email already in use");
+      // Should verify email instead of failing immediately
+      await asUser1.mutation(api.users.updateProfile, {
+        email: "taken@example.com",
+      });
+
+      const user = await t.run(async (ctx) => ctx.db.get(user1Id));
+      expect(user?.pendingEmail).toBe("taken@example.com");
     });
 
     it("should allow updating to own email (no-op but valid)", async () => {

@@ -167,16 +167,6 @@ export const updateProfile = authenticatedMutation({
     if (args.email !== undefined) {
       validate.email(args.email);
 
-      // Check if email is already in use by another user
-      const existingUser = await ctx.db
-        .query("users")
-        .withIndex("email", (q) => q.eq("email", args.email))
-        .first();
-
-      if (existingUser && existingUser._id !== ctx.userId) {
-        throw conflict("Email already in use");
-      }
-
       // Check if email actually changed
       const currentUser = await ctx.db.get(ctx.userId);
       if (currentUser?.email !== args.email) {
