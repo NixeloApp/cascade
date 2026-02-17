@@ -1,5 +1,7 @@
+import type { GenericActionCtx, RouteSpec } from "convex/server";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
+import type { DataModel } from "./_generated/dataModel";
 import { auth } from "./auth";
 import { getClientIp } from "./lib/ssrf";
 import router from "./router";
@@ -9,23 +11,16 @@ const http = router;
 // Intercept the route registration for auth endpoints to add rate limiting
 const originalRoute = http.route.bind(http);
 
-// Define interfaces to avoid using 'any' and bypass Biome errors
-interface RouteOptions {
-  pathPrefix: string;
-  method: string;
-  handler: (ctx: unknown, request: Request) => Promise<Response>;
-}
+// Type for callable HTTP handler
+type HttpHandler = (ctx: GenericActionCtx<DataModel>, request: Request) => Promise<Response>;
 
-interface HttpRouter {
-  route: (options: RouteOptions) => void;
-}
-
-// We cast to unknown first, then to our interface to avoid "noExplicitAny"
-(http as unknown as HttpRouter).route = (options: RouteOptions) => {
+// Override route method to intercept auth endpoints
+http.route = (options: RouteSpec) => {
   // Check if this is an auth route we want to protect
   // We target /api/auth endpoints, specifically POST requests (Sign In, Sign Up, Verify, etc.)
-  if (options.pathPrefix === "/api/auth" && options.method === "POST") {
-    const originalHandler = options.handler;
+  if ("pathPrefix" in options && options.pathPrefix === "/api/auth" && options.method === "POST") {
+    // Cast handler to callable type - PublicHttpAction is callable at runtime
+    const originalHandler = options.handler as unknown as HttpHandler;
 
     // Create a wrapped handler that checks rate limits
     const wrappedHandler = httpAction(async (ctx, request) => {
