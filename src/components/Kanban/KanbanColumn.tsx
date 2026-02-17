@@ -196,8 +196,13 @@ const KanbanColumnComponent = function KanbanColumn({
 
   // Issues are now pre-filtered by status from parent - memoize sorting
   const stateIssues = useMemo(() => {
+    // "todo" and "inprogress" columns are already sorted by order from the server.
+    // "done" columns are sorted by updatedAt, so we need to resort them if we want order-based sorting.
+    if (state.category !== "done") {
+      return issues;
+    }
     return [...issues].sort((a, b) => a.order - b.order);
-  }, [issues]);
+  }, [issues, state.category]);
 
   // WIP limit checks
   const wipLimit = state.wipLimit ?? 0;
