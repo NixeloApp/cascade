@@ -1,16 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// Define a spy to capture constructor arguments
+const constructorSpy = vi.fn();
+
 // Mock the dependencies
-// We need to use vi.doMock because we want to reset the module cache in each test
-// but hoisting vi.mock is fine as long as we use doMock for the dynamic behavior if needed
-// Actually, simple vi.mock works fine if we just want to spy on the constructor
 vi.mock("@convex-dev/rate-limiter", () => {
   return {
-    RateLimiter: vi.fn(() => ({
-      limit: vi.fn(),
-      check: vi.fn(),
-      reset: vi.fn(),
-    })),
+    RateLimiter: class MockRateLimiter {
+      constructor(...args: any[]) {
+        constructorSpy(...args);
+      }
+      limit = vi.fn();
+      check = vi.fn();
+      reset = vi.fn();
+    },
   };
 });
 
@@ -25,6 +28,7 @@ describe("Rate Limits Configuration", () => {
 
   beforeEach(() => {
     vi.resetModules();
+    constructorSpy.mockClear();
     process.env = { ...originalEnv };
   });
 
@@ -39,11 +43,10 @@ describe("Rate Limits Configuration", () => {
     // Dynamic import to trigger re-execution of the module code
     await import("./rateLimits");
 
-    const { RateLimiter } = await import("@convex-dev/rate-limiter");
-    expect(RateLimiter).toHaveBeenCalledTimes(1);
+    expect(constructorSpy).toHaveBeenCalledTimes(1);
 
     // Get the second argument passed to the constructor (the config object)
-    const config = (RateLimiter as any).mock.calls[0][1];
+    const config = constructorSpy.mock.calls[0][1];
 
     // Verify password reset limits
     expect(config.passwordReset).toBeDefined();
@@ -65,11 +68,10 @@ describe("Rate Limits Configuration", () => {
     // Dynamic import to trigger re-execution of the module code
     await import("./rateLimits");
 
-    const { RateLimiter } = await import("@convex-dev/rate-limiter");
-    expect(RateLimiter).toHaveBeenCalledTimes(1);
+    expect(constructorSpy).toHaveBeenCalledTimes(1);
 
     // Get the second argument passed to the constructor (the config object)
-    const config = (RateLimiter as any).mock.calls[0][1];
+    const config = constructorSpy.mock.calls[0][1];
 
     // Verify password reset limits
     expect(config.passwordReset).toBeDefined();
