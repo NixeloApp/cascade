@@ -33,7 +33,10 @@ describe("OTP Security", () => {
     },
   });
 
-  it("should NOT store OTP for non-test user even if E2E_API_KEY is present", async () => {
+  it("should store OTP for mailtrap emails in safe environments (regardless of isTestUser)", async () => {
+    // Note: We store OTPs unconditionally for test emails (@inbox.mailtrap.io) in safe
+    // environments. This matches OTPVerification behavior and fixes E2E test flakiness
+    // where the isTestUser flag wasn't set in time for password reset flows.
     process.env.E2E_API_KEY = "test-key";
     process.env.NODE_ENV = "production";
 
@@ -44,6 +47,7 @@ describe("OTP Security", () => {
       await ctx.db.insert("users", {
         email,
         name: "Regular User",
+        // Note: isTestUser is NOT set - this should still work for test emails
       });
     });
 
@@ -59,7 +63,9 @@ describe("OTP Security", () => {
     const otps = await t.run(async (ctx) => {
       return await ctx.db.query("testOtpCodes").collect();
     });
-    expect(otps).toHaveLength(0);
+    // OTP should be stored since email is @inbox.mailtrap.io and E2E_API_KEY is present
+    expect(otps).toHaveLength(1);
+    expect(otps[0].email).toBe(email);
   });
 
   it("should store OTP for test user when E2E_API_KEY is present", async () => {

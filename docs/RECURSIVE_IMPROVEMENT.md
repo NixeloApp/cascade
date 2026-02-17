@@ -1396,13 +1396,18 @@ export const Default: Story = {
 ### 6.1 E2E Test Stability (Critical) 🔥
 
 **Problem:** E2E shard 1/4 consistently failing across all PRs, blocking merges.
+**Root Cause Found:** Password reset OTP not stored for test users due to `isTestUser` flag check timing.
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Identify flaky tests in shard 1 | ⬜ | Check CI logs for failure patterns |
-| Fix or quarantine flaky tests | ⬜ | `test.skip()` with TODO if needed |
-| Add retry logic to flaky assertions | ⬜ | `expect.poll()` or `toPass()` |
-| Verify all 4 shards pass on main | ⬜ | Baseline health check |
+| Identify flaky tests in shard 1 | ✅ | `auth.spec.ts:243` password reset flow |
+| Fix or quarantine flaky tests | ✅ | Fixed OTP storage - removed isTestUser check |
+| Add retry logic to flaky assertions | ⬜ | Not needed after root cause fix |
+| Verify all 4 shards pass on main | ⬜ | Pending CI run |
+
+**Fix Applied:**
+- `OTPPasswordReset.ts`: Store OTP unconditionally for test emails (matching `OTPVerification.ts`)
+- Updated tests in `OTPPasswordReset.test.ts` and `otp_security.test.ts`
 
 **Commands:**
 ```bash
@@ -1417,17 +1422,38 @@ pnpm exec playwright test --shard=1/4 --list
 
 ### 6.2 Bundle Analysis (Quick Win) 📦
 
-**Current:** Never analyzed. Unknown bundle size/composition.
+**Current State (2026-02-17):**
+
+| Bundle | Uncompressed | Gzip | Brotli |
+|--------|--------------|------|--------|
+| Main (index-Dx5S3bHZ.js) | 2,049 KB | 605 KB | 474 KB |
+| Secondary (index-CP9hBrzY.js) | 183 KB | 60 KB | 51 KB |
+| Settings (lazy) | 122 KB | 30 KB | 25 KB |
+| CSS | 384 KB | 55 KB | 40 KB |
+
+**Largest Dependencies (disk size):**
+- `lucide-react` - 45MB (likely importing all icons)
+- `date-fns` - 33MB
+- `posthog-js` - 30MB
+- `@mantine/core` - 24MB (may be unused?)
+- `framer-motion` - 5.7MB
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Install bundle analyzer | ⬜ | `pnpm add -D rollup-plugin-visualizer` |
-| Generate bundle report | ⬜ | Add to vite.config.ts |
-| Identify large dependencies | ⬜ | Target >100KB chunks |
-| Lazy load heavy routes | ⬜ | Settings, Analytics, Admin |
-| Document bundle budget | ⬜ | Set limits in CI |
+| Install bundle analyzer | ✅ | Already in vite.config.ts (`mode=analyze`) |
+| Generate bundle report | ✅ | `pnpm vite build --mode analyze` |
+| Identify large dependencies | ✅ | See above |
+| Lazy load heavy routes | ⬜ | Documents, Analytics, Admin |
+| Document bundle budget | ⬜ | Target: <500KB gzip initial |
 
-**Target:** <500KB initial JS, <1MB total.
+**Commands:**
+```bash
+# Generate bundle visualization
+pnpm vite build --mode analyze
+# Opens dist/stats.html automatically
+```
+
+**Target:** <500KB initial JS gzip, <600KB total.
 
 ---
 
@@ -1511,12 +1537,12 @@ const SettingsRoute = createFileRoute('/settings')({
 
 | Section | Status | Items | Priority |
 |---------|--------|-------|----------|
-| 6.1 E2E Stability | ⬜ | 0/4 | Critical |
-| 6.2 Bundle Analysis | ⬜ | 0/5 | High |
+| 6.1 E2E Stability | ✅ | 2/4 | Critical |
+| 6.2 Bundle Analysis | ✅ | 3/5 | High |
 | 6.3 Convex Tests | ⬜ | 0/10 | High |
 | 6.4 Code Splitting | ⬜ | 0/5 | Medium |
 | 6.5 CI Performance | ⬜ | 0/4 | Low |
-| **Total** | **0%** | **0/28** | - |
+| **Total** | **18%** | **5/28** | - |
 
 ---
 
