@@ -3,6 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
@@ -12,7 +13,6 @@ import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { showCreated, showError } from "@/lib/toast";
 
 interface CreateTeamModalProps {
   isOpen: boolean;
@@ -50,7 +50,7 @@ export function CreateTeamModal({
         workspaceId,
       });
 
-      showCreated("Team");
+      toast.success("Team created successfully");
       navigate({
         to: ROUTES.workspaces.teams.detail.path,
         params: { orgSlug, workspaceSlug, teamSlug },
@@ -62,7 +62,7 @@ export function CreateTeamModal({
       setDescription("");
       setIsPrivate(false);
     } catch (error) {
-      showError(error, "Failed to create team");
+      toast.error(error instanceof Error ? error.message : "Failed to create team");
     } finally {
       setIsSubmitting(false);
     }

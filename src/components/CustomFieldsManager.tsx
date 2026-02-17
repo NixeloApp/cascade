@@ -7,8 +7,9 @@ import { showError, showSuccess } from "@/lib/toast";
 import { CustomFieldCard } from "./Fields/CustomFieldCard";
 import { CustomFieldForm } from "./Fields/CustomFieldForm";
 import { Button } from "./ui/Button";
-import { EmptyState } from "./ui/EmptyState";
+import { Card } from "./ui/Card";
 import { Flex } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
@@ -87,11 +88,12 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
           <LoadingSpinner />
         </Flex>
       ) : customFields.length === 0 ? (
-        <EmptyState
-          icon={ClipboardList}
-          title="No custom fields yet"
-          description="Add your first field to get started."
-        />
+        <Card className="p-8 text-center">
+          <Icon icon={ClipboardList} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
+          <Typography variant="p" color="secondary">
+            No custom fields yet. Add your first field to get started.
+          </Typography>
+        </Card>
       ) : (
         <Flex direction="column" gap="md">
           {customFields.map((field: Doc<"customFields">) => (

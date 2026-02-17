@@ -16,7 +16,6 @@ import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
-import { LoadingSpinner } from "../ui/LoadingSpinner";
 
 type ComplianceStatus = "compliant" | "under_hours" | "over_hours" | "equity_under";
 
@@ -252,9 +251,9 @@ export function HourComplianceDashboard() {
 
           {/* Records List */}
           {!records ? (
-            <Flex align="center" justify="center" className="py-8">
-              <LoadingSpinner />
-            </Flex>
+            <Typography variant="muted" className="text-center py-8">
+              Loading...
+            </Typography>
           ) : records.length === 0 ? (
             <EmptyState
               icon={TrendingUp}

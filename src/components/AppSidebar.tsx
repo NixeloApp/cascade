@@ -9,7 +9,6 @@ import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import {
-  Archive,
   BarChart3,
   Bot,
   Calendar,
@@ -231,16 +230,6 @@ export function AppSidebar() {
               isCollapsed={isCollapsed}
               onClick={handleNavClick}
               data-tour="nav-issues"
-            />
-            {/* Archives */}
-            <NavItem
-              to={ROUTES.archives.path}
-              params={{ orgSlug }}
-              icon={Archive}
-              label="Archives"
-              isActive={isActive("/archives")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
             />
             {/* Calendar - Links to first project's calendar */}
             {defaultProject && (

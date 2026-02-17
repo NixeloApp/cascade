@@ -42,7 +42,6 @@ export function run() {
     "src/lib/yjs/", // Y.js collaboration cursor colors (dynamic per-user)
     "*.test.ts",
     "*.test.tsx",
-    "*.stories.tsx", // Storybook files use arbitrary colors for demos
     "convex/labels.test.ts",
   ];
 

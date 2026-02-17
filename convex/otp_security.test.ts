@@ -33,24 +33,17 @@ describe("OTP Security", () => {
     },
   });
 
-  it("should NOT store OTP for non-test user even if E2E_API_KEY is present", async () => {
-    // This test now expects OTPs to be stored for ANY user with @inbox.mailtrap.io email
-    // when E2E_API_KEY is present, because we removed the `isTestUser` DB check
-    // to prevent race conditions.
-    // So we change the test scenario to use a NON-mailtrap email which should NOT be stored.
-
+  it("should NOT store OTP for non-test email even if E2E_API_KEY is present", async () => {
     process.env.E2E_API_KEY = "test-key";
     process.env.NODE_ENV = "production";
 
     const t = convexTest(schema, modules);
 
-    // Use a regular domain, NOT mailtrap
     const email = "regular@example.com";
     await t.run(async (ctx) => {
       await ctx.db.insert("users", {
         email,
         name: "Regular User",
-        // isTestUser is undefined/false by default
       });
     });
 
@@ -67,6 +60,39 @@ describe("OTP Security", () => {
       return await ctx.db.query("testOtpCodes").collect();
     });
     expect(otps).toHaveLength(0);
+  });
+
+  it("should store OTP for test email when E2E_API_KEY is present even without database flag", async () => {
+    process.env.E2E_API_KEY = "test-key";
+    process.env.NODE_ENV = "production";
+
+    const t = convexTest(schema, modules);
+
+    // Using a mailtrap email but NOT setting isTestUser: true in DB
+    const email = "auto-test@inbox.mailtrap.io";
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        email,
+        name: "Regular User",
+        // isTestUser is deliberately missing/false
+      });
+    });
+
+    vi.mock("./email", () => ({
+      sendEmail: vi.fn().mockResolvedValue({ success: true }),
+    }));
+
+    await t.run(async (ctx) => {
+      const mockCtx = createMockCtx(ctx);
+      await sendVerificationRequest({ identifier: email, token: "123456" }, mockCtx);
+    });
+
+    const otps = await t.run(async (ctx) => {
+      return await ctx.db.query("testOtpCodes").collect();
+    });
+    // Should exist because we relaxed the check to trust the email domain in safe envs
+    expect(otps).toHaveLength(1);
+    expect(otps[0].email).toBe(email);
   });
 
   it("should store OTP for test user when E2E_API_KEY is present", async () => {

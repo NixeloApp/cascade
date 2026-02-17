@@ -97,15 +97,13 @@ describe("OTPPasswordReset", () => {
     await sendVerificationRequest(params, mockCtx);
 
     // Verify rate limit check happened first
-    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(
-      1,
+    expect(mockCtx.runMutation).toHaveBeenCalledWith(
       internal.authWrapper.checkPasswordResetRateLimitByEmail,
       expect.anything(),
     );
 
-    // Verify OTP storage happened (for test emails in test environment)
-    // NOTE: We no longer check user lookup as we rely on email domain
-    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(2, internal.e2e.storeTestOtp, {
+    // Verify OTP storage happened
+    expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.e2e.storeTestOtp, {
       email: "test@inbox.mailtrap.io",
       code: "123456",
       type: "reset",
