@@ -1149,8 +1149,12 @@ describe('useHookName', () => {
 | `InboxList` | ✅ | Done (2026-02-16) - 7 stories |
 | `KanbanBoard` | ❌ | Swimlanes, WIP limits |
 | `NotificationCenter` | ✅ | Done (2026-02-16) - 8 stories + NotificationItem 13 stories |
-| `SprintManager` | ❌ | Active, planning |
+| `SprintManager` | ✅ | Done (2026-02-16) - 10 stories |
 | `SwimlanRow` | ✅ | Done (2026-02-16) - 7 stories |
+| `OfflineBanner` | ✅ | Done (2026-02-16) - 4 stories |
+| `KeyboardShortcutsHelp` | ✅ | Done (2026-02-16) - 7 stories |
+| `UserMenu` | ✅ | Done (2026-02-16) - 6 stories |
+| `IssueWatchers` | ✅ | Done (2026-02-16) - 8 stories |
 
 **Stories Added (2026-02-16):**
 - `ActivityFeed.stories.tsx` - Presentational wrapper to bypass Convex hooks, 8 stories
@@ -1292,10 +1296,10 @@ export const Default: Story = {
 | 5.1 N+1 Queries | ✅ | 6/6 | 1h |
 | 5.2 Hook Tests | ✅ | 7/19 (+118 tests) | 3h |
 | 5.3 Component Tests | ✅ | 12/50 (+210 tests) | 5.5h |
-| 5.4 Storybook | ✅ | 16/50 (+128 stories) | 3.5h |
+| 5.4 Storybook | ✅ | 20/50 (+153 stories) | 4h |
 | 5.5 Refactors | ⏸️ | 0/5 (deferred) | 0.25h |
 | 5.6 Plane Research | ✅ | 3/6 (Gantt, Filters, Exporter) | 1h |
-| **Total** | **100%** | **34 items + 342 tests + 128 stories** | **13.25h** |
+| **Total** | **100%** | **34 items + 342 tests + 153 stories** | **13.75h** |
 
 **Session Summary (2026-02-16):**
 - Fixed all 6 N+1 query issues using batch fetch + Map lookup pattern
@@ -1370,6 +1374,15 @@ export const Default: Story = {
 - TimeTracker includes progress bar states (under/over estimate)
 - All 2678 tests pass, validator passes with 0 errors
 - Total session: **34 stories**
+
+**Session 10 (2026-02-16):**
+- Added Storybook stories: OfflineBanner (4 stories), KeyboardShortcutsHelp (7 stories), UserMenu (6 stories), IssueWatchers (8 stories)
+- OfflineBanner: Online/offline states, app context integration
+- KeyboardShortcutsHelp: Search filtering, key sequences, badge showcase
+- UserMenu: Dropdown states, header context, avatar variants
+- IssueWatchers: Watching states, multiple watchers, sidebar context
+- All 2678 tests pass, validator passes with 0 errors
+- Total session: **25 stories**
 
 ---
 
