@@ -1482,6 +1482,9 @@ pnpm vite build --mode analyze
 | `documentVersions.*` | `documentVersions.ts` | Medium | ✅ (17 tests) |
 | `calendarEventsAttendance.*` | `calendarEventsAttendance.ts` | Medium | ✅ (17 tests) |
 | `attachments.*` | `attachments.ts` | Low | ✅ (3 tests) |
+| `notificationPreferences.*` | `notificationPreferences.ts` | Medium | ✅ (10 tests) |
+| `userSettings.*` | `userSettings.ts` | Medium | ✅ (13 tests) |
+| `userProfiles.*` | `userProfiles.ts` | High | ✅ (23 tests) |
 
 **Test Pattern (convex-test):**
 ```typescript
@@ -1556,10 +1559,10 @@ const PlateEditor = lazy(() =>
 |---------|--------|-------|----------|
 | 6.1 E2E Stability | ✅ | 2/4 | Critical |
 | 6.2 Bundle Analysis | ✅ | 5/5 | High |
-| 6.3 Convex Tests | ✅ | 16/16 | High |
+| 6.3 Convex Tests | ✅ | 19/19 | High |
 | 6.4 Code Splitting | ✅ | 5/5 | Medium |
 | 6.5 CI Performance | ✅ | 4/4 | Low |
-| **Total** | **94%** | **32/34** | - |
+| **Total** | **95%** | **35/37** | - |
 
 ---
 
