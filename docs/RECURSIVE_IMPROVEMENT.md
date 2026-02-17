@@ -1393,8 +1393,10 @@ export const Default: Story = {
 
 ---
 
-### 6.1 E2E Test Stability (Critical) 🔥
+### 6.1 E2E Test Stability ~~(Critical)~~ 🔥 — SKIPPED
 
+<!-- SKIPPED: Mikhail requested to skip E2E work for now (2026-02-17) -->
+<!--
 **Problem:** E2E shard 1/4 consistently failing across all PRs, blocking merges.
 
 | Task | Status | Notes |
@@ -1412,6 +1414,7 @@ pnpm exec playwright test --shard=1/4
 # List tests in shard 1
 pnpm exec playwright test --shard=1/4 --list
 ```
+-->
 
 ---
 
@@ -1511,7 +1514,7 @@ const SettingsRoute = createFileRoute('/settings')({
 
 | Section | Status | Items | Priority |
 |---------|--------|-------|----------|
-| 6.1 E2E Stability | ⬜ | 0/4 | Critical |
+| 6.1 E2E Stability | ⏭️ SKIP | 0/4 | ~~Critical~~ |
 | 6.2 Bundle Analysis | ⬜ | 0/5 | High |
 | 6.3 Convex Tests | ⬜ | 0/10 | High |
 | 6.4 Code Splitting | ⬜ | 0/5 | Medium |
