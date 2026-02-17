@@ -97,6 +97,16 @@ export const checkEmailVerificationRateLimit = internalMutation({
 });
 
 /**
+ * Check rate limit for general auth attempts (Sign In / Sign Up) by IP
+ */
+export const checkAuthRateLimit = internalMutation({
+  args: { ip: v.string() },
+  handler: async (ctx, args) => {
+    await rateLimit(ctx, "authAttempt", { key: args.ip });
+  },
+});
+
+/**
  * Secure password reset request
  *
  * Calls the actual auth endpoint internally but always returns success.

@@ -107,3 +107,8 @@
 ## 2025-02-18 - IP Spoofing via Header Priority
 **Learning:** Generic `getClientIp` helpers often prioritize vendor-specific headers (like `X-Client-IP` or `X-Real-IP`) over standard `X-Forwarded-For`. This is dangerous because many standard load balancers (e.g., AWS ALB) do not strip or overwrite these headers, allowing attackers to spoof their IP by simply sending the header.
 **Action:** Always prioritize the last IP in `X-Forwarded-For` (which is appended by the trusted proxy) over single-value headers unless the specific environment guarantees those headers are secure.
+
+## 2025-05-26 - Authentication Rate Limiting via Middleware Injection
+**Vulnerability:** The default authentication flow (Sign Up / Sign In via `OTPVerification`) lacked IP-based rate limiting, relying only on email-based limits. This exposed the system to resource exhaustion and potential brute-force attacks by rotating emails.
+**Learning:** External authentication libraries (like `@convex-dev/auth`) may abstract away the HTTP handler, making it difficult to apply custom middleware like rate limiting. Simply configuring the provider is insufficient if the provider interface doesn't expose the request object.
+**Prevention:** Implemented a monkey-patch on the `http.route` method in `convex/http.ts` to intercept route registration for `/api/auth` endpoints. This allows wrapping the original handler with custom logic (IP rate limiting) before the library takes control, ensuring security without modifying the library itself.

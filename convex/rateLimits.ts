@@ -24,6 +24,26 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   // API Endpoints: General rate limit
   apiEndpoint: { kind: "fixed window", rate: 100, period: 60_000 }, // 100/min
 
+  // Auth Attempts: Strict limit to prevent brute force and spam
+  authAttempt: {
+    kind: "token bucket",
+    rate:
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.E2E_TEST_MODE ||
+      process.env.CI
+        ? 1000
+        : 20,
+    period: 60_000,
+    capacity:
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development" ||
+      process.env.E2E_TEST_MODE ||
+      process.env.CI
+        ? 1000
+        : 20,
+  },
+
   // Password Reset: Strict limit to prevent spam/DoS
   // Increased capacity/rate significantly for test/CI environments where all traffic may share one IP (localhost/runner)
   passwordReset: {
