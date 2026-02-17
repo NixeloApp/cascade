@@ -1292,10 +1292,10 @@ export const Default: Story = {
 | 5.1 N+1 Queries | ✅ | 6/6 | 1h |
 | 5.2 Hook Tests | ✅ | 7/19 (+118 tests) | 3h |
 | 5.3 Component Tests | ✅ | 12/50 (+210 tests) | 5.5h |
-| 5.4 Storybook | ✅ | 12/50 (+94 stories) | 3h |
+| 5.4 Storybook | ✅ | 16/50 (+128 stories) | 3.5h |
 | 5.5 Refactors | ⏸️ | 0/5 (deferred) | 0.25h |
 | 5.6 Plane Research | ✅ | 3/6 (Gantt, Filters, Exporter) | 1h |
-| **Total** | **100%** | **34 items + 342 tests + 94 stories** | **12.75h** |
+| **Total** | **100%** | **34 items + 342 tests + 128 stories** | **13.25h** |
 
 **Session Summary (2026-02-16):**
 - Fixed all 6 N+1 query issues using batch fetch + Map lookup pattern
@@ -1362,6 +1362,14 @@ export const Default: Story = {
 - Used presentational wrapper pattern to bypass Convex hooks for complex components
 - All 2678 tests pass, validator passes with 0 errors
 - Total session: **27 stories**
+
+**Session 9 (2026-02-16):**
+- Added Storybook stories: GlobalSearch (9 stories), ErrorBoundary (7 stories), PresenceIndicator (8 stories), TimeTracker (10 stories)
+- ErrorBoundary includes multiple fallback variants (minimal, card, inline)
+- PresenceIndicator includes facepile component with overflow handling
+- TimeTracker includes progress bar states (under/over estimate)
+- All 2678 tests pass, validator passes with 0 errors
+- Total session: **34 stories**
 
 ---
 
