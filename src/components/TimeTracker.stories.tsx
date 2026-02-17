@@ -143,7 +143,7 @@ function TimeTrackerPresentational({
   entries = [],
   isTimerRunning = false,
   runningTimerDuration = "00:00:00",
-  billingEnabled = false,
+  billingEnabled: _billingEnabled = false,
   showEntries: initialShowEntries = false,
   onStartTimer = () => {},
   onStopTimer = () => {},

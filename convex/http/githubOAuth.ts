@@ -1,4 +1,5 @@
 import { api, internal } from "../_generated/api";
+import type { ActionCtx } from "../_generated/server";
 import { httpAction } from "../_generated/server";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
 import { validation } from "../lib/errors";
@@ -54,7 +55,7 @@ const getGitHubOAuthConfig = () => {
  * Initiate GitHub OAuth flow logic
  * Exported for testing
  */
-export const initiateAuthHandler = async (_ctx: any, _request: Request) => {
+export const initiateAuthHandler = async (_ctx: ActionCtx, _request: Request) => {
   if (!isGitHubOAuthConfigured()) {
     return new Response(
       JSON.stringify({
@@ -101,7 +102,7 @@ export const initiateAuth = httpAction(initiateAuthHandler);
  * Handle OAuth callback logic
  * Exported for testing
  */
-export const handleCallbackHandler = async (_ctx: any, request: Request) => {
+export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");

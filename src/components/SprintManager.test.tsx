@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { showError, showSuccess } from "@/lib/toast";
-import { render, screen, within } from "@/test/custom-render";
+import { render, screen } from "@/test/custom-render";
 import { SprintManager } from "./SprintManager";
 
 // Mock dependencies

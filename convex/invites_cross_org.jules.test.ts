@@ -6,7 +6,21 @@ import { modules } from "./testSetup.test-helper";
 import { createOrganizationAdmin, createTestContext, createTestUser } from "./testUtils";
 
 describe("Invites Security - Cross Organization", () => {
+  const originalEnv: Record<string, string | undefined> = {};
+  const envKeys = [
+    "SITE_URL",
+    "MAILTRAP_API_TOKEN",
+    "MAILTRAP_INBOX_ID",
+    "MAILTRAP_FROM_EMAIL",
+    "MAILTRAP_MODE",
+  ];
+
   beforeEach(() => {
+    // Save original env vars
+    for (const key of envKeys) {
+      originalEnv[key] = process.env[key];
+    }
+
     // Mock global fetch for email sending
     global.fetch = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ success: true, message_ids: ["msg_123"] }), {
@@ -25,6 +39,16 @@ describe("Invites Security - Cross Organization", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+
+    // Restore original env vars
+    for (const key of envKeys) {
+      const value = originalEnv[key];
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
   });
 
   it("should reproduce cross-org invite vulnerability: Attacker (Org A) invites Victim to Project A but scopes invite to Org B", async () => {

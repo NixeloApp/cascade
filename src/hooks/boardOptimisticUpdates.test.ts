@@ -187,9 +187,9 @@ describe("boardOptimisticUpdates", () => {
         const boardUpdateCall = mockStore.setQuery.mock.calls.find(
           (call: unknown[]) => call[0] === "api.issues.listByProjectSmart",
         );
-        expect(boardUpdateCall).toBeDefined();
+        if (!boardUpdateCall) throw new Error("Expected boardUpdateCall to be defined");
 
-        const updatedBoard = boardUpdateCall![2] as BoardData;
+        const updatedBoard = boardUpdateCall[2] as BoardData;
         expect(updatedBoard.issuesByStatus.todo).toHaveLength(0);
         expect(updatedBoard.issuesByStatus.in_progress).toHaveLength(1);
         expect(updatedBoard.issuesByStatus.in_progress[0].status).toBe("in_progress");
@@ -238,7 +238,8 @@ describe("boardOptimisticUpdates", () => {
         const boardUpdateCall = mockStore.setQuery.mock.calls.find(
           (call: unknown[]) => call[0] === "api.issues.listByProjectSmart",
         );
-        const updatedBoard = boardUpdateCall![2] as BoardData;
+        if (!boardUpdateCall) throw new Error("Expected boardUpdateCall to be defined");
+        const updatedBoard = boardUpdateCall[2] as BoardData;
 
         // Issue1 (order 1000) should be before issue2 (order 2000)
         expect(updatedBoard.issuesByStatus.in_progress[0]._id).toBe(issueId1);
@@ -456,7 +457,8 @@ describe("boardOptimisticUpdates", () => {
         const boardUpdateCall = mockStore.setQuery.mock.calls.find(
           (call: unknown[]) => call[0] === "api.issues.listByProjectSmart",
         );
-        const updatedBoard = boardUpdateCall![2] as BoardData;
+        if (!boardUpdateCall) throw new Error("Expected boardUpdateCall to be defined");
+        const updatedBoard = boardUpdateCall[2] as BoardData;
 
         expect(updatedBoard.issuesByStatus.todo).toHaveLength(0);
         expect(updatedBoard.issuesByStatus.in_progress).toHaveLength(1);
@@ -494,7 +496,8 @@ describe("boardOptimisticUpdates", () => {
         const boardUpdateCall = mockStore.setQuery.mock.calls.find(
           (call: unknown[]) => call[0] === "api.issues.listByProjectSmart",
         );
-        const updatedBoard = boardUpdateCall![2] as BoardData;
+        if (!boardUpdateCall) throw new Error("Expected boardUpdateCall to be defined");
+        const updatedBoard = boardUpdateCall[2] as BoardData;
 
         expect(updatedBoard.totalCount).toBe(1);
         expect(updatedBoard.someOtherField).toBe("preserved");

@@ -124,6 +124,8 @@ export const securePasswordReset = httpAction(async (ctx, request) => {
       }
     }
 
+    // IP-based rate limit returns explicit 429 (unlike email rate limits which return silent 200)
+    // because IP limits don't leak per-email account info and are meant to signal/block abusive IPs
     try {
       await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimit, { ip: clientIp });
     } catch {
