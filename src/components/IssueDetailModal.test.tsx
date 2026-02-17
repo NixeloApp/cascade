@@ -427,4 +427,18 @@ describe("IssueDetailModal", () => {
     expect(screen.getByText("Story Points")).toBeInTheDocument();
     expect(screen.getByText("3.5")).toBeInTheDocument();
   });
+
+  it("should have accessible labels for title and description inputs in edit mode", async () => {
+    const user = userEvent.setup();
+    setupMockQuery();
+
+    renderModal();
+
+    const editButton = screen.getByRole("button", { name: /Edit/i });
+    await user.click(editButton);
+
+    // Should find by Label or aria-label
+    expect(screen.getByLabelText(/Issue title/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Issue description/i)).toBeInTheDocument();
+  });
 });
