@@ -25,7 +25,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   apiEndpoint: { kind: "fixed window", rate: 100, period: 60_000 }, // 100/min
 
   // Password Reset: Strict limit to prevent spam/DoS
-  // Increased capacity/rate slightly to accommodate parallel E2E tests
+  // Increased capacity/rate significantly for test/CI environments where all traffic may share one IP (localhost/runner)
   passwordReset: {
     kind: "token bucket",
     rate:
@@ -33,7 +33,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 100
+        ? 1000
         : 20,
     period: 60_000,
     capacity:
@@ -41,7 +41,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 100
+        ? 1000
         : 20,
   }, // 20 per minute default to prevent blocking legit users/tests if env detection fails
 
@@ -58,7 +58,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 100
+        ? 1000
         : 20,
     period: 60_000,
     capacity:
@@ -66,7 +66,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 100
+        ? 1000
         : 20,
   },
 });
