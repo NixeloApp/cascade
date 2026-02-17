@@ -137,6 +137,8 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
+    # Temporarily disabled - E2E hits cloud backend, need local backend setup
+    if: false
     # runs-on: blacksmith-4vcpu-ubuntu-2204
     runs-on: ubuntu-latest
     strategy:
