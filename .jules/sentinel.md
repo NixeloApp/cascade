@@ -103,3 +103,7 @@
 **Vulnerability:** The Pumble integration used a custom `fetch` implementation with weak validation (`.includes("pumble.com")`) that could be bypassed for SSRF. It also did not prevent DNS rebinding or private IP access, unlike the main webhook delivery system.
 **Learning:** Ad-hoc implementation of security-critical logic (like safe HTTP fetching) often leads to vulnerabilities. Security features like SSRF protection should be encapsulated in reusable helpers and used consistently across the codebase.
 **Prevention:** Extracted the robust SSRF protection logic from `webhookHelpers.ts` into a reusable `safeFetch` helper and applied it to the Pumble integration, ensuring consistent protection against SSRF, DNS rebinding, and private IP access.
+
+## 2025-02-18 - IP Spoofing via Header Priority
+**Learning:** Generic `getClientIp` helpers often prioritize vendor-specific headers (like `X-Client-IP` or `X-Real-IP`) over standard `X-Forwarded-For`. This is dangerous because many standard load balancers (e.g., AWS ALB) do not strip or overwrite these headers, allowing attackers to spoof their IP by simply sending the header.
+**Action:** Always prioritize the last IP in `X-Forwarded-For` (which is appended by the trusted proxy) over single-value headers unless the specific environment guarantees those headers are secure.
