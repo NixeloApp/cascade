@@ -237,6 +237,15 @@ export const unsubscribeAll = authenticatedMutation({
   },
 });
 
+// Push preference fields type
+type PushPreferenceFields = {
+  pushEnabled: boolean;
+  pushMentions: boolean;
+  pushAssignments: boolean;
+  pushComments: boolean;
+  pushStatusChanges: boolean;
+};
+
 // Build push preference updates from optional args
 function buildPushUpdates(args: {
   pushEnabled?: boolean;
@@ -244,8 +253,8 @@ function buildPushUpdates(args: {
   pushAssignments?: boolean;
   pushComments?: boolean;
   pushStatusChanges?: boolean;
-}): Record<string, boolean> {
-  const updates: Record<string, boolean> = {};
+}): Partial<PushPreferenceFields> {
+  const updates: Partial<PushPreferenceFields> = {};
   if (args.pushEnabled !== undefined) updates.pushEnabled = args.pushEnabled;
   if (args.pushMentions !== undefined) updates.pushMentions = args.pushMentions;
   if (args.pushAssignments !== undefined) updates.pushAssignments = args.pushAssignments;

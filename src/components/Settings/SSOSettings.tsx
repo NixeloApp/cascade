@@ -352,6 +352,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   const updateDomains = useMutation(api.sso.updateDomains);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [idpEntityId, setIdpEntityId] = useState("");
   const [idpSsoUrl, setIdpSsoUrl] = useState("");
   const [idpCertificate, setIdpCertificate] = useState("");
@@ -360,15 +361,26 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   const [clientSecret, setClientSecret] = useState("");
   const [domains, setDomains] = useState("");
 
+  // Reset initialization when dialog closes
   useEffect(() => {
-    const state = getInitialFormState(connection);
-    setIdpEntityId(state.idpEntityId);
-    setIdpSsoUrl(state.idpSsoUrl);
-    setIdpCertificate(state.idpCertificate);
-    setIssuer(state.issuer);
-    setClientId(state.clientId);
-    setDomains(state.domains);
-  }, [connection]);
+    if (!open) {
+      setInitialized(false);
+    }
+  }, [open]);
+
+  // Initialize form only once when dialog opens with data
+  useEffect(() => {
+    if (connection && !initialized) {
+      const state = getInitialFormState(connection);
+      setIdpEntityId(state.idpEntityId);
+      setIdpSsoUrl(state.idpSsoUrl);
+      setIdpCertificate(state.idpCertificate);
+      setIssuer(state.issuer);
+      setClientId(state.clientId);
+      setDomains(state.domains);
+      setInitialized(true);
+    }
+  }, [connection, initialized]);
 
   const handleSave = useCallback(async () => {
     if (!connection) return;

@@ -128,16 +128,19 @@ jobs:
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: dist/
-          retention-days: 1
+      # NOTE: Artifact upload disabled while E2E tests are disabled
+      # Uncomment when re-enabling E2E tests
+      # - name: Upload build artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-output
+      #     path: dist/
+      #     retention-days: 1
 
   e2e-tests:
     name: E2E Tests
     # Temporarily disabled - E2E hits cloud backend, need local backend setup
+    # To re-enable: remove "if: false" and uncomment artifact upload in build job
     if: false
     # runs-on: blacksmith-4vcpu-ubuntu-2204
     runs-on: ubuntu-latest

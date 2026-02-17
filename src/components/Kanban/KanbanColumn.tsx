@@ -146,13 +146,16 @@ function CollapsedColumn({
   onToggleCollapse: () => void;
 }) {
   return (
-    <section
-      ref={columnRef}
+    <Flex
+      as="section"
+      direction="column"
+      align="center"
+      ref={columnRef as React.RefObject<HTMLDivElement>}
       aria-label={`${state.name} column (collapsed)`}
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "flex-shrink-0 w-11 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default flex flex-col items-center",
+        "flex-shrink-0 w-11 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
       )}
@@ -192,7 +195,7 @@ function CollapsedColumn({
         {issueCount}
         {state.wipLimit ? `/${state.wipLimit}` : ""}
       </Badge>
-    </section>
+    </Flex>
   );
 }
 
@@ -394,8 +397,8 @@ const KanbanColumnComponent = function KanbanColumn({
       onDragLeave: () => setIsDraggedOver(false),
       onDrop: ({ source }) => {
         setIsDraggedOver(false);
-        const data = source.data as IssueCardData;
         if (isIssueCardData(source.data as Record<string, unknown>)) {
+          const data = source.data as IssueCardData;
           onIssueDrop?.(data.issueId, data.status, state.id);
         }
       },

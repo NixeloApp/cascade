@@ -15,6 +15,7 @@ import {
   Smartphone,
   User,
 } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -62,7 +63,9 @@ function NotificationToggle({
     <Flex
       align={description ? "start" : "center"}
       justify="between"
-      className={description ? "py-3 border-b border-ui-border-secondary last:border-0" : "py-2"}
+      className={cn(
+        description ? "py-3 border-b border-ui-border-secondary last:border-0" : "py-2",
+      )}
     >
       <FlexItem flex="1">
         <Flex align="center" gap="sm">
@@ -79,7 +82,7 @@ function NotificationToggle({
         checked={checked}
         onCheckedChange={onChange}
         disabled={disabled}
-        className={description ? "ml-4" : undefined}
+        className={cn(description && "ml-4")}
       />
     </Flex>
   );
@@ -94,7 +97,12 @@ function DigestOption({
   disabled,
 }: DigestOptionProps) {
   return (
-    <label className="flex items-center gap-3 p-3 rounded-lg border border-ui-border cursor-pointer hover:bg-ui-bg-secondary transition-colors">
+    <Flex
+      as="label"
+      align="center"
+      gap="md"
+      className="p-3 rounded-lg border border-ui-border cursor-pointer hover:bg-ui-bg-secondary transition-colors"
+    >
       <input
         type="radio"
         name="digest"
@@ -108,7 +116,7 @@ function DigestOption({
         <Typography variant="label">{label}</Typography>
         <Typography variant="caption">{description}</Typography>
       </div>
-    </label>
+    </Flex>
   );
 }
 
@@ -253,12 +261,12 @@ export function NotificationsTab() {
                 >
                   {isSubscribed ? (
                     <>
-                      <BellOff className="w-4 h-4 mr-1" />
+                      <Icon icon={BellOff} size="sm" className="mr-1" />
                       Disable
                     </>
                   ) : (
                     <>
-                      <Bell className="w-4 h-4 mr-1" />
+                      <Icon icon={Bell} size="sm" className="mr-1" />
                       Enable
                     </>
                   )}

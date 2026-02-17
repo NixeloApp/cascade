@@ -244,6 +244,7 @@ export function TwoFactorSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [disableDialogOpen, setDisableDialogOpen] = useState(false);
   const [disableCode, setDisableCode] = useState("");
+  const [useBackupCode, setUseBackupCode] = useState(false);
   const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
   const [regenerateCode, setRegenerateCode] = useState("");
 
@@ -300,11 +301,12 @@ export function TwoFactorSettings() {
 
     setIsLoading(true);
     try {
-      const result = await disable({ code: disableCode, isBackupCode: disableCode.includes("-") });
+      const result = await disable({ code: disableCode, isBackupCode: useBackupCode });
       if (result.success) {
         showSuccess("2FA has been disabled");
         setDisableDialogOpen(false);
         setDisableCode("");
+        setUseBackupCode(false);
       } else {
         showError(new Error(result.error || "Failed to disable 2FA"), "Error");
       }
@@ -313,7 +315,7 @@ export function TwoFactorSettings() {
     } finally {
       setIsLoading(false);
     }
-  }, [disable, disableCode]);
+  }, [disable, disableCode, useBackupCode]);
 
   const handleRegenerateBackupCodes = useCallback(async () => {
     if (regenerateCode.length !== 6) {
@@ -352,7 +354,7 @@ export function TwoFactorSettings() {
   useEffect(() => {
     if (status?.enabled && step === "backup") {
       // Keep showing backup codes if we just enabled
-    } else if (!["idle", "setup", "verify", "backup"].includes(step)) {
+    } else if (step === "complete") {
       setStep("idle");
     }
   }, [status?.enabled, step]);
@@ -394,7 +396,13 @@ export function TwoFactorSettings() {
 
       <Dialog
         open={disableDialogOpen}
-        onOpenChange={setDisableDialogOpen}
+        onOpenChange={(open) => {
+          setDisableDialogOpen(open);
+          if (!open) {
+            setDisableCode("");
+            setUseBackupCode(false);
+          }
+        }}
         title="Disable Two-Factor Authentication"
         description="Enter your authenticator code or a backup code to disable 2FA"
         footer={
@@ -408,13 +416,27 @@ export function TwoFactorSettings() {
           </>
         }
       >
-        <Input
-          label="Verification Code"
-          value={disableCode}
-          onChange={(e) => setDisableCode(e.target.value)}
-          placeholder="6-digit code or backup code"
-          className="font-mono"
-        />
+        <div className="space-y-4">
+          <Flex align="center" gap="sm">
+            <input
+              type="checkbox"
+              id="useBackupCode"
+              checked={useBackupCode}
+              onChange={(e) => setUseBackupCode(e.target.checked)}
+              className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2 rounded"
+            />
+            <label htmlFor="useBackupCode" className="text-sm cursor-pointer">
+              Use backup code instead
+            </label>
+          </Flex>
+          <Input
+            label={useBackupCode ? "Backup Code" : "Authenticator Code"}
+            value={disableCode}
+            onChange={(e) => setDisableCode(e.target.value)}
+            placeholder={useBackupCode ? "XXXX-XXXX" : "000000"}
+            className="font-mono"
+          />
+        </div>
       </Dialog>
 
       <Dialog
