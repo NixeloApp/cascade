@@ -3,7 +3,7 @@
 > **Purpose:** Living document for continuous quality improvement. When told "work on this doc", systematically improve Nixelo by benchmarking against Plane, Cal.com, and Mintlify.
 >
 > **Last Run:** 2026-02-16
-> **Overall Progress:** 129/276 (Phase 1-5 complete, Phase 6 ready)
+> **Overall Progress:** 131/278 (Phase 1-5 complete, Phase 6 at 95%)
 
 ---
 
@@ -1485,6 +1485,8 @@ pnpm vite build --mode analyze
 | `notificationPreferences.*` | `notificationPreferences.ts` | Medium | ✅ (10 tests) |
 | `userSettings.*` | `userSettings.ts` | Medium | ✅ (13 tests) |
 | `userProfiles.*` | `userProfiles.ts` | High | ✅ (23 tests) |
+| `export.*` | `export.ts` | Medium | ✅ (16 tests) |
+| `documentTemplates.*` | `documentTemplates.ts` | Medium | ✅ (22 tests) |
 
 **Test Pattern (convex-test):**
 ```typescript
@@ -1559,10 +1561,10 @@ const PlateEditor = lazy(() =>
 |---------|--------|-------|----------|
 | 6.1 E2E Stability | ✅ | 2/4 | Critical |
 | 6.2 Bundle Analysis | ✅ | 5/5 | High |
-| 6.3 Convex Tests | ✅ | 19/19 | High |
+| 6.3 Convex Tests | ✅ | 21/21 | High |
 | 6.4 Code Splitting | ✅ | 5/5 | Medium |
 | 6.5 CI Performance | ✅ | 4/4 | Low |
-| **Total** | **95%** | **35/37** | - |
+| **Total** | **95%** | **37/39** | - |
 
 ---
 
