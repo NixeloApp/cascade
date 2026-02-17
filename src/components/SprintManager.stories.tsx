@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Calendar, ChevronRight, PlayCircle, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { useState } from "react";
 import { formatDate } from "@/lib/dates";
 import { getStatusColor } from "@/lib/issue-utils";
