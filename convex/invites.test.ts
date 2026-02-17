@@ -144,7 +144,7 @@ describe("Invites", () => {
       }).rejects.toThrow("Only admins can send platform invites");
     });
 
-    it("should add existing user directly to project instead of creating invite", async () => {
+    it("should add existing user directly to project instead of creating invite (if in org)", async () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t);
       const projectId = await createTestProject(t, adminId);
@@ -158,6 +158,16 @@ describe("Invites", () => {
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       if (!project) throw new Error("Project not found");
+
+      // Add existing user to organization first (requirement for direct add)
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project.organizationId,
+          userId: existingUserId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
 
       // Invite existing user to project - should add directly
       const result = await asAdmin.mutation(api.invites.sendInvite, {
