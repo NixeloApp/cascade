@@ -120,46 +120,11 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
 
   const { historyStack, redoStack, handleUndo, handleRedo, pushAction } = useBoardHistory();
 
-  // Cache for filtered results to prevent unnecessary re-renders of columns
-  const filteredCacheRef = useRef<
-    Record<
-      string,
-      {
-        sourceIssues: EnrichedIssue[];
-        filters: BoardFilters | undefined;
-        result: EnrichedIssue[];
-      }
-    >
-  >({});
-
   // Apply filters to issues
   const filteredIssuesByStatus = useMemo(() => {
     const result: Record<string, EnrichedIssue[]> = {};
-    const cache = filteredCacheRef.current;
-
-    // Remove cache entries for statuses that no longer exist
-    for (const status of Object.keys(cache)) {
-      if (!(status in issuesByStatus)) {
-        delete cache[status];
-      }
-    }
-
     for (const [status, issues] of Object.entries(issuesByStatus)) {
-      const cached = cache[status];
-
-      // If we have a cached result and inputs match, use it
-      if (cached && cached.sourceIssues === issues && cached.filters === filters) {
-        result[status] = cached.result;
-      } else {
-        // Otherwise re-calculate
-        const filtered = applyFilters(issues, filters);
-        result[status] = filtered;
-        cache[status] = {
-          sourceIssues: issues,
-          filters: filters,
-          result: filtered,
-        };
-      }
+      result[status] = applyFilters(issues, filters);
     }
     return result;
   }, [issuesByStatus, filters]);

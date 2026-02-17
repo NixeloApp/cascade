@@ -34,23 +34,16 @@ describe("OTP Security", () => {
   });
 
   it("should NOT store OTP for non-test user even if E2E_API_KEY is present", async () => {
-    // This test now expects OTPs to be stored for ANY user with @inbox.mailtrap.io email
-    // when E2E_API_KEY is present, because we removed the `isTestUser` DB check
-    // to prevent race conditions.
-    // So we change the test scenario to use a NON-mailtrap email which should NOT be stored.
-
     process.env.E2E_API_KEY = "test-key";
     process.env.NODE_ENV = "production";
 
     const t = convexTest(schema, modules);
 
-    // Use a regular domain, NOT mailtrap
-    const email = "regular@example.com";
+    const email = "regular@inbox.mailtrap.io";
     await t.run(async (ctx) => {
       await ctx.db.insert("users", {
         email,
         name: "Regular User",
-        // isTestUser is undefined/false by default
       });
     });
 

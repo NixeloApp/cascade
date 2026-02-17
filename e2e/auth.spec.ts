@@ -241,9 +241,6 @@ test.describe("Integration", () => {
   });
 
   test("password reset flow sends code and allows reset", async ({ authPage, page }) => {
-    // Increase timeout to allow for potential OTP delays (default is 60s)
-    test.setTimeout(130000);
-
     // Create a fresh user for password reset test
     const testEmail = getTestEmailAddress("reset-test");
     const originalPassword = "OriginalPassword123!";
