@@ -1474,7 +1474,7 @@ pnpm vite build --mode analyze
 | `completeSprint` | `sprints.ts` | Medium | ✅ |
 | `acceptInboxIssue` | `inbox.ts` | Medium | ✅ (9 tests) |
 | `bulkAccept` | `inbox.ts` | Medium | ✅ |
-| `sendEventReminders` | `eventReminders.ts` | High | ⬜ |
+| `sendEventReminders` | `eventReminders.ts` | High | ✅ (15 tests) |
 | `validateProjectAccess` | `projects.ts` | High | ✅ (43 tests) |
 
 **Test Pattern (convex-test):**
@@ -1529,7 +1529,7 @@ const SettingsRoute = createFileRoute('/settings')({
 | Cache node_modules in CI | ⬜ | pnpm store caching |
 | Parallelize lint/type/test | ⬜ | Already sharded for E2E |
 | Skip unchanged packages | ⬜ | Turborepo or nx |
-| Add bundle size check to CI | ⬜ | Fail if >budget |
+| Add bundle size check to CI | ✅ | 700KB gzip budget, fails if exceeded |
 
 ---
 
@@ -1539,10 +1539,10 @@ const SettingsRoute = createFileRoute('/settings')({
 |---------|--------|-------|----------|
 | 6.1 E2E Stability | ✅ | 2/4 | Critical |
 | 6.2 Bundle Analysis | ✅ | 3/5 | High |
-| 6.3 Convex Tests | ✅ | 9/10 | High |
+| 6.3 Convex Tests | ✅ | 10/10 | High |
 | 6.4 Code Splitting | ⬜ | 0/5 | Medium |
-| 6.5 CI Performance | ⬜ | 0/4 | Low |
-| **Total** | **50%** | **14/28** | - |
+| 6.5 CI Performance | 🔄 | 1/4 | Low |
+| **Total** | **57%** | **16/28** | - |
 
 ---
 
