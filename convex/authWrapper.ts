@@ -99,6 +99,20 @@ export const checkEmailVerificationRateLimit = internalMutation({
 });
 
 /**
+ * Check rate limit for general authentication attempts by IP
+ * Used by the HTTP wrapper to protect api/auth/signin
+ */
+export const checkAuthRateLimitHandler = async (ctx: MutationCtx, args: { ip: string }) => {
+  // Limit auth attempts per IP to prevent credential stuffing/spam
+  await rateLimit(ctx, "authAttempt", { key: args.ip });
+};
+
+export const checkAuthRateLimit = internalMutation({
+  args: { ip: v.string() },
+  handler: checkAuthRateLimitHandler,
+});
+
+/**
  * Secure password reset request handler
  * Exported for testing purposes
  */
