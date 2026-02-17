@@ -107,3 +107,8 @@
 ## 2025-02-18 - IP Spoofing via Header Priority
 **Learning:** Generic `getClientIp` helpers often prioritize vendor-specific headers (like `X-Client-IP` or `X-Real-IP`) over standard `X-Forwarded-For`. This is dangerous because many standard load balancers (e.g., AWS ALB) do not strip or overwrite these headers, allowing attackers to spoof their IP by simply sending the header.
 **Action:** Always prioritize the last IP in `X-Forwarded-For` (which is appended by the trusted proxy) over single-value headers unless the specific environment guarantees those headers are secure.
+
+## 2026-02-17 - Cross-Organization Authorization Bypass via Unvalidated ID Relations
+**Vulnerability:** The `sendInvite` mutation allowed attackers to create invites scoped to an arbitrary Organization by linking them to a Project they controlled in a *different* Organization. The authorization check passed because the user was a Project Admin (valid for the project) but the mutation failed to verify that the project actually belonged to the target Organization.
+**Learning:** When a mutation accepts multiple resource IDs (e.g. `organizationId` and `projectId`), validating the user's permission on each ID independently is insufficient. You MUST also validate the relationship between the resources themselves (e.g. `project.organizationId === args.organizationId`) to prevent "confused deputy" attacks where a valid permission on Resource A is used to authorize an action on unrelated Resource B.
+**Prevention:** Added a strict validation check in `sendInvite` to ensure the provided `projectId` belongs to the specified `organizationId`. Always enforce hierarchy checks when crossing resource boundaries.
