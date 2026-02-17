@@ -9,9 +9,19 @@ const http = router;
 // Intercept the route registration for auth endpoints to add rate limiting
 const originalRoute = http.route.bind(http);
 
-// We cast to any here to allow overriding the method property which is normally readonly or strictly typed
-// biome-ignore lint/suspicious/noExplicitAny: Monkey-patching internal router method requires any
-(http as any).route = (options: any) => {
+// Define interfaces to avoid using 'any' and bypass Biome errors
+interface RouteOptions {
+  pathPrefix: string;
+  method: string;
+  handler: (ctx: unknown, request: Request) => Promise<Response>;
+}
+
+interface HttpRouter {
+  route: (options: RouteOptions) => void;
+}
+
+// We cast to unknown first, then to our interface to avoid "noExplicitAny"
+(http as unknown as HttpRouter).route = (options: RouteOptions) => {
   // Check if this is an auth route we want to protect
   // We target /api/auth endpoints, specifically POST requests (Sign In, Sign Up, Verify, etc.)
   if (options.pathPrefix === "/api/auth" && options.method === "POST") {
@@ -46,9 +56,7 @@ const originalRoute = http.route.bind(http);
         });
       }
 
-      // Cast originalHandler to any to call it
-      // biome-ignore lint/suspicious/noExplicitAny: Handler type is wrapped and requires any to be called directly
-      return (originalHandler as any)(ctx, request);
+      return originalHandler(ctx, request);
     });
 
     return originalRoute({
