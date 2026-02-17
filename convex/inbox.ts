@@ -594,6 +594,22 @@ export const bulkAccept = projectEditorMutation({
   },
 });
 
+// Filter valid inbox items for bulk operations
+function filterValidInboxItems<T extends { projectId: string; status: string }>(
+  ids: string[],
+  itemMap: Map<string, T | null>,
+  projectId: string,
+  validStatuses: string[],
+): Array<{ id: string; item: T }> {
+  const result: Array<{ id: string; item: T }> = [];
+  for (const id of ids) {
+    const item = itemMap.get(id);
+    if (!item || item.projectId !== projectId || !validStatuses.includes(item.status)) continue;
+    result.push({ id, item });
+  }
+  return result;
+}
+
 /** Bulk decline multiple inbox issues */
 export const bulkDecline = projectEditorMutation({
   args: {
@@ -605,34 +621,22 @@ export const bulkDecline = projectEditorMutation({
 
     // Batch fetch all inbox issues upfront (N+1 fix)
     const inboxIssues = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
-    const inboxMap = new Map(args.ids.map((id, i) => [id, inboxIssues[i]]));
+    const inboxMap = new Map(args.ids.map((id, i) => [id as string, inboxIssues[i]]));
 
-    // Filter valid items and collect issue IDs to fetch
-    const validItems: Array<{
-      id: (typeof args.ids)[number];
-      inboxIssue: NonNullable<(typeof inboxIssues)[number]>;
-    }> = [];
-    for (const id of args.ids) {
-      const inboxIssue = inboxMap.get(id);
-      if (!inboxIssue) continue;
-      if (inboxIssue.projectId !== ctx.projectId) continue;
-      if (inboxIssue.status !== "pending" && inboxIssue.status !== "snoozed") continue;
-      validItems.push({ id, inboxIssue });
-    }
-
-    if (validItems.length === 0) {
-      return { declined: 0 };
-    }
+    const validItems = filterValidInboxItems(args.ids, inboxMap, ctx.projectId, [
+      "pending",
+      "snoozed",
+    ]);
+    if (validItems.length === 0) return { declined: 0 };
 
     // Batch fetch all issues for notifications
-    const issueIds = [...new Set(validItems.map((item) => item.inboxIssue.issueId))];
+    const issueIds = [...new Set(validItems.map((v) => v.item.issueId))];
     const issues = await Promise.all(issueIds.map((id) => ctx.db.get(id)));
-    const issueMap = new Map(issueIds.map((id, i) => [id, issues[i]]));
+    const issueMap = new Map(issueIds.map((id, i) => [id as string, issues[i]]));
 
     let declined = 0;
-
-    for (const { id, inboxIssue } of validItems) {
-      await ctx.db.patch(id, {
+    for (const { id, item } of validItems) {
+      await ctx.db.patch(id as Id<"inboxIssues">, {
         status: "declined",
         declineReason: args.reason,
         triagedBy: ctx.userId,
@@ -640,21 +644,22 @@ export const bulkDecline = projectEditorMutation({
         updatedAt: now,
       });
 
-      // Create notification for the issue creator (using cached issue)
-      const issue = issueMap.get(inboxIssue.issueId);
+      const issue = issueMap.get(item.issueId as string);
       if (issue && issue.reporterId !== ctx.userId) {
+        const message = args.reason
+          ? `Your issue "${issue.title}" was declined. Reason: ${args.reason}`
+          : `Your issue "${issue.title}" was declined.`;
         await ctx.db.insert("notifications", {
           userId: issue.reporterId,
           type: "inbox_declined",
           title: "Issue declined",
-          message: `Your issue "${issue.title}" was declined.${args.reason ? ` Reason: ${args.reason}` : ""}`,
+          message,
           issueId: issue._id,
           projectId: ctx.projectId,
           actorId: ctx.userId,
           isRead: false,
         });
       }
-
       declined++;
     }
 

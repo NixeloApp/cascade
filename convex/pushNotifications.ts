@@ -237,6 +237,23 @@ export const unsubscribeAll = authenticatedMutation({
   },
 });
 
+// Build push preference updates from optional args
+function buildPushUpdates(args: {
+  pushEnabled?: boolean;
+  pushMentions?: boolean;
+  pushAssignments?: boolean;
+  pushComments?: boolean;
+  pushStatusChanges?: boolean;
+}): Record<string, boolean> {
+  const updates: Record<string, boolean> = {};
+  if (args.pushEnabled !== undefined) updates.pushEnabled = args.pushEnabled;
+  if (args.pushMentions !== undefined) updates.pushMentions = args.pushMentions;
+  if (args.pushAssignments !== undefined) updates.pushAssignments = args.pushAssignments;
+  if (args.pushComments !== undefined) updates.pushComments = args.pushComments;
+  if (args.pushStatusChanges !== undefined) updates.pushStatusChanges = args.pushStatusChanges;
+  return updates;
+}
+
 /**
  * Update push notification preferences
  */
@@ -255,8 +272,9 @@ export const updatePreferences = authenticatedMutation({
       .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
       .first();
 
+    const now = Date.now();
+
     if (!prefs) {
-      // Create preferences with defaults
       await ctx.db.insert("notificationPreferences", {
         userId: ctx.userId,
         emailEnabled: true,
@@ -270,18 +288,10 @@ export const updatePreferences = authenticatedMutation({
         pushAssignments: args.pushAssignments ?? true,
         pushComments: args.pushComments ?? true,
         pushStatusChanges: args.pushStatusChanges ?? true,
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
     } else {
-      // Update existing preferences
-      const updates: Record<string, boolean | number> = { updatedAt: Date.now() };
-      if (args.pushEnabled !== undefined) updates.pushEnabled = args.pushEnabled;
-      if (args.pushMentions !== undefined) updates.pushMentions = args.pushMentions;
-      if (args.pushAssignments !== undefined) updates.pushAssignments = args.pushAssignments;
-      if (args.pushComments !== undefined) updates.pushComments = args.pushComments;
-      if (args.pushStatusChanges !== undefined) updates.pushStatusChanges = args.pushStatusChanges;
-
-      await ctx.db.patch(prefs._id, updates);
+      await ctx.db.patch(prefs._id, { ...buildPushUpdates(args), updatedAt: now });
     }
 
     return { success: true };
