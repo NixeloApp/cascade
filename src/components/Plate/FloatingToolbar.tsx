@@ -117,8 +117,8 @@ export function FloatingToolbar() {
     const url = window.prompt("Enter URL:");
     if (url && selection) {
       // TODO: Implement proper link insertion with LinkPlugin
-      // For now, just wrap the selection in a link
-      console.debug("Link URL:", url);
+      // Link insertion placeholder - requires LinkPlugin integration
+      void url; // URL captured, awaiting LinkPlugin implementation
     }
   }, [selection]);
 

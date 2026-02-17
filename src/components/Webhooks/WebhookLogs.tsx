@@ -8,6 +8,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
@@ -87,15 +88,11 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       className="sm:max-w-5xl"
     >
       {!executions || executions.length === 0 ? (
-        <div className="text-center py-12">
-          <Icon icon={BarChart3} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
-          <Typography variant="h5" className="mb-1">
-            No delivery logs yet
-          </Typography>
-          <Typography variant="caption">
-            Webhook deliveries will appear here once triggered
-          </Typography>
-        </div>
+        <EmptyState
+          icon={BarChart3}
+          title="No delivery logs yet"
+          description="Webhook deliveries will appear here once triggered"
+        />
       ) : (
         <div className="space-y-4">
           <Typography variant="caption" className="mb-4">

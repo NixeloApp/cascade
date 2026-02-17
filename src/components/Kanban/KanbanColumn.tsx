@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ANIMATION } from "@/lib/constants";
@@ -187,7 +187,7 @@ const KanbanColumnComponent = function KanbanColumn({
   onLoadMore,
   isLoadingMore = false,
   onIssueDrop,
-  onIssueReorder,
+  onIssueReorder: _onIssueReorder,
   isCollapsed = false,
   onToggleCollapse,
 }: KanbanColumnProps) {
@@ -268,8 +268,9 @@ const KanbanColumnComponent = function KanbanColumn({
         </Tooltip>
 
         {/* Vertical column name */}
-        <div
-          className="flex-1 flex items-center justify-center py-4"
+        <FlexItem
+          flex="1"
+          className="flex items-center justify-center py-4"
           style={{ writingMode: "vertical-lr" }}
         >
           <Typography
@@ -278,7 +279,7 @@ const KanbanColumnComponent = function KanbanColumn({
           >
             {state.name}
           </Typography>
-        </div>
+        </FlexItem>
 
         {/* Issue count badge */}
         <Badge

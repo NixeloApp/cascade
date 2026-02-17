@@ -20,6 +20,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Typography } from "@/components/ui/Typography";
 import { getEditorPlugins, getInitialValue } from "@/lib/plate/editor";
+import { handleMarkdownExport, handleMarkdownImport } from "@/lib/plate/markdown";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { DocumentHeader } from "./DocumentHeader";
@@ -75,10 +76,9 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   }, [document, documentId, togglePublic]);
 
   // Handle content change (debounced save would go here)
-  const handleChange = useCallback(({ value }: { value: Value }) => {
+  const handleChange = useCallback(({ value: _value }: { value: Value }) => {
     // TODO: Implement Y.js sync or direct Convex save
-    // For now, just log changes
-    console.debug("Editor content changed", value.length, "nodes");
+    // Content change tracking placeholder - sync implementation pending
   }, []);
 
   // Handle version restore
@@ -167,12 +167,16 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
         onTitleEdit={handleTitleEdit}
         onTogglePublic={handleTogglePublic}
         onImportMarkdown={async () => {
-          // TODO: Implement markdown import
-          showError("Markdown import not yet implemented for Plate editor");
+          const value = await handleMarkdownImport();
+          if (value) {
+            // Reset editor with imported content
+            editor.tf.reset();
+            editor.tf.setValue(value);
+          }
         }}
         onExportMarkdown={async () => {
-          // TODO: Implement markdown export
-          showError("Markdown export not yet implemented for Plate editor");
+          const value = editor.children;
+          handleMarkdownExport(value, document.title || "document");
         }}
         onShowVersionHistory={() => setShowVersionHistory(true)}
         editorReady={true}

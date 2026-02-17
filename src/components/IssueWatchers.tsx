@@ -2,8 +2,8 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { Eye } from "lucide-react";
-import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { showError, showSuccess } from "@/lib/toast";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { Typography } from "./ui/Typography";
@@ -28,13 +28,13 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
     try {
       if (isWatching) {
         await unwatch({ issueId });
-        toast.success("Stopped watching this issue");
+        showSuccess("Stopped watching this issue");
       } else {
         await watch({ issueId });
-        toast.success("Now watching this issue");
+        showSuccess("Now watching this issue");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update watch status");
+      showError(error, "Failed to update watch status");
     }
   };
 

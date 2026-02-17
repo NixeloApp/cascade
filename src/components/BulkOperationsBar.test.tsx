@@ -1,7 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
-import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { BulkOperationsBar } from "./BulkOperationsBar";
@@ -33,12 +32,12 @@ vi.mock("convex/react", () => ({
   useMutation: vi.fn(),
 }));
 
-vi.mock("sonner", () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
+vi.mock("../lib/toast", () => ({
+  showError: vi.fn(),
+  showSuccess: vi.fn(),
 }));
+
+import { showError, showSuccess } from "../lib/toast";
 
 describe("BulkOperationsBar - Component Behavior", () => {
   const mockProjectId = "project123" as Id<"projects">;
@@ -336,7 +335,7 @@ describe("BulkOperationsBar - Component Behavior", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith("Deleted 1 issue(s)");
+        expect(showSuccess).toHaveBeenCalledWith("Deleted 1 issue(s)");
       });
     });
 
@@ -364,7 +363,7 @@ describe("BulkOperationsBar - Component Behavior", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Delete failed");
+        expect(showError).toHaveBeenCalled();
       });
     });
 
@@ -392,7 +391,7 @@ describe("BulkOperationsBar - Component Behavior", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalled();
+        expect(showError).toHaveBeenCalled();
       });
 
       expect(mockOnClearSelection).not.toHaveBeenCalled();
