@@ -1,6 +1,5 @@
-import type { GenericActionCtx, RouteSpec } from "convex/server";
+import type { FunctionReference } from "convex/server";
 import { internal } from "./_generated/api";
-import type { DataModel } from "./_generated/dataModel";
 import { httpAction } from "./_generated/server";
 import { auth } from "./auth";
 import { getClientIp } from "./lib/ssrf";
@@ -8,55 +7,51 @@ import router from "./router";
 
 const http = router;
 
-// Intercept the route registration for auth endpoints to add rate limiting
+// Monkey-patch http.route to intercept auth routes
 const originalRoute = http.route.bind(http);
 
-// Type for callable HTTP handler
-type HttpHandler = (ctx: GenericActionCtx<DataModel>, request: Request) => Promise<Response>;
+http.route = (options) => {
+  // Intercept the sign-in route to add IP-based rate limiting
+  // Use unknown casting to avoid any, then safely check properties
+  const routePath = (options as unknown as { path?: string }).path;
+  if (routePath?.startsWith("/api/auth/signin") && options.method === "POST") {
+    const originalHandler = options.handler;
 
-// Override route method to intercept auth endpoints
-http.route = (options: RouteSpec) => {
-  // Check if this is an auth route we want to protect
-  // We target /api/auth endpoints, specifically POST requests (Sign In, Sign Up, Verify, etc.)
-  if ("pathPrefix" in options && options.pathPrefix === "/api/auth" && options.method === "POST") {
-    // Cast handler to callable type - PublicHttpAction is callable at runtime
-    const originalHandler = options.handler as unknown as HttpHandler;
+    // Wrap the handler with rate limiting logic
+    options.handler = httpAction(async (ctx, request) => {
+      const clientIp = getClientIp(request);
 
-    // Create a wrapped handler that checks rate limits
-    const wrappedHandler = httpAction(async (ctx, request) => {
-      let clientIp = getClientIp(request);
+      if (clientIp) {
+        try {
+          // Cast internal to unknown then to the expected type
+          // This avoids 'any' and ensures we are accessing the property safely
+          const internalApi = internal as unknown as {
+            authWrapper?: {
+              checkAuthRateLimit?: FunctionReference<"mutation">;
+            };
+          };
+          const authWrapper = internalApi.authWrapper;
 
-      if (!clientIp) {
-        const isTestOrDev =
-          process.env.NODE_ENV === "test" ||
-          process.env.NODE_ENV === "development" ||
-          process.env.E2E_TEST_MODE ||
-          process.env.CI;
-
-        if (isTestOrDev) {
-          clientIp = "127.0.0.1";
-        } else {
-          return new Response("Could not determine client IP for security-sensitive action", {
-            status: 400,
+          if (authWrapper?.checkAuthRateLimit) {
+            await ctx.runMutation(authWrapper.checkAuthRateLimit, {
+              ip: clientIp,
+            });
+          }
+        } catch (_error) {
+          // Rate limit exceeded
+          return new Response(JSON.stringify({ success: false, error: "Too many requests" }), {
+            status: 429,
+            headers: { "Content-Type": "application/json" },
           });
         }
       }
 
-      try {
-        await ctx.runMutation(internal.authWrapper.checkAuthRateLimit, { ip: clientIp });
-      } catch (_e) {
-        return new Response(JSON.stringify({ success: false, error: "Rate limit exceeded" }), {
-          status: 429,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      return originalHandler(ctx, request);
-    });
-
-    return originalRoute({
-      ...options,
-      handler: wrappedHandler,
+      // Proceed to original handler
+      // Cast to unknown then Function to avoid any
+      return (originalHandler as unknown as (ctx: unknown, request: Request) => Promise<Response>)(
+        ctx,
+        request,
+      );
     });
   }
 
