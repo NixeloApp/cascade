@@ -1,4 +1,3 @@
-
 import { describe, expect, it, vi } from "vitest";
 
 // Mock internalMutation to return the handler
@@ -44,7 +43,7 @@ describe("Auth Rate Limit", () => {
 
     // checkAuthRateLimit is now the async handler function due to the mock
     // We cast it to any because TypeScript thinks it's a FunctionReference
-    await (checkAuthRateLimit as any)(mockCtx, args);
+    await (checkAuthRateLimit as unknown as (ctx: any, args: any) => Promise<void>)(mockCtx, args);
 
     expect(rateLimit).toHaveBeenCalledWith(mockCtx, "authAttempt", { key: "1.2.3.4" });
   });

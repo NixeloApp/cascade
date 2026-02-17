@@ -10,6 +10,7 @@ const http = router;
 const originalRoute = http.route.bind(http);
 
 // We cast to any here to allow overriding the method property which is normally readonly or strictly typed
+// biome-ignore lint/suspicious/noExplicitAny: Monkey-patching internal router method requires any
 (http as any).route = (options: any) => {
   // Check if this is an auth route we want to protect
   // We target /api/auth endpoints, specifically POST requests (Sign In, Sign Up, Verify, etc.)
@@ -46,6 +47,7 @@ const originalRoute = http.route.bind(http);
       }
 
       // Cast originalHandler to any to call it
+      // biome-ignore lint/suspicious/noExplicitAny: Handler type is wrapped and requires any to be called directly
       return (originalHandler as any)(ctx, request);
     });
 
