@@ -11,7 +11,10 @@ const originalRoute = http.route.bind(http);
 
 http.route = (options) => {
   // Intercept the sign-in route to add IP-based rate limiting
-  if (options?.path?.startsWith("/api/auth/signin") && options.method === "POST") {
+  if (
+    (options as any)?.path?.startsWith("/api/auth/signin") &&
+    options.method === "POST"
+  ) {
     const originalHandler = options.handler;
 
     // Wrap the handler with rate limiting logic
@@ -42,7 +45,7 @@ http.route = (options) => {
       }
 
       // Proceed to original handler
-      return originalHandler(ctx, request);
+      return (originalHandler as any)(ctx, request);
     });
   }
 
