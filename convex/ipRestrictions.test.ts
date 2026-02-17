@@ -45,10 +45,9 @@ describe("ipRestrictions", () => {
       enabled: true,
     });
 
-    const statusAfterEnable = await asUser.query(
-      api.ipRestrictions.getIpRestrictionsStatus,
-      { organizationId },
-    );
+    const statusAfterEnable = await asUser.query(api.ipRestrictions.getIpRestrictionsStatus, {
+      organizationId,
+    });
     expect(statusAfterEnable.enabled).toBe(true);
 
     // Verify access
@@ -93,12 +92,14 @@ describe("ipRestrictions", () => {
     expect(list).toHaveLength(2);
 
     await asUser.mutation(api.ipRestrictions.removeIpFromAllowlist, {
+      // biome-ignore lint/style/noNonNullAssertion: testing convenience
       id: homeEntry!._id,
     });
 
     // Fail removing last IP while enabled
     await expect(async () => {
       await asUser.mutation(api.ipRestrictions.removeIpFromAllowlist, {
+        // biome-ignore lint/style/noNonNullAssertion: testing convenience
         id: officeEntry!._id,
       });
     }).rejects.toThrow("Cannot remove the last IP");
@@ -109,13 +110,13 @@ describe("ipRestrictions", () => {
       enabled: false,
     });
     await asUser.mutation(api.ipRestrictions.removeIpFromAllowlist, {
+      // biome-ignore lint/style/noNonNullAssertion: testing convenience
       id: officeEntry!._id,
     });
 
-    const finalStatus = await asUser.query(
-      api.ipRestrictions.getIpRestrictionsStatus,
-      { organizationId },
-    );
+    const finalStatus = await asUser.query(api.ipRestrictions.getIpRestrictionsStatus, {
+      organizationId,
+    });
     expect(finalStatus.allowlistCount).toBe(0);
   });
 
