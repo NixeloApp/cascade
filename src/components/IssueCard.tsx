@@ -94,7 +94,7 @@ function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
   }
 
   // Check issue object equality
-  return true;
+  return areIssuesEqual(prev.issue, next.issue);
 }
 
 export function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
