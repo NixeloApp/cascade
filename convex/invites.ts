@@ -223,6 +223,12 @@ export const sendInvite = authenticatedMutation({
     if (args.projectId) {
       const project = await ctx.db.get(args.projectId);
       if (!project) throw notFound("project", args.projectId);
+
+      // Ensure project belongs to the organization
+      if (project.organizationId !== args.organizationId) {
+        throw validation("projectId", "Project does not belong to the specified organization");
+      }
+
       projectName = project.name;
 
       // Allow if platform admin OR project admin
