@@ -19,6 +19,23 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       verify: OTPVerification,
     }),
   ],
+  callbacks: {
+    async afterUserCreatedOrUpdated(ctx, args) {
+      if (args.existingUserId) {
+        // Existing user updated
+        return;
+      }
+
+      // New user created - check if test user
+      const user = await ctx.db.get(args.userId);
+      if (user?.email?.endsWith("@inbox.mailtrap.io")) {
+        await ctx.db.patch(user._id, {
+          isTestUser: true,
+          testUserCreatedAt: Date.now(),
+        });
+      }
+    },
+  },
 });
 
 export const loggedInUser = query({
