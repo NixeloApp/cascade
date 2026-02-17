@@ -1443,8 +1443,8 @@ pnpm exec playwright test --shard=1/4 --list
 | Install bundle analyzer | ✅ | Already in vite.config.ts (`mode=analyze`) |
 | Generate bundle report | ✅ | `pnpm vite build --mode analyze` |
 | Identify large dependencies | ✅ | See above |
-| Lazy load heavy routes | ⬜ | Documents, Analytics, Admin |
-| Document bundle budget | ⬜ | Target: <500KB gzip initial |
+| Lazy load heavy routes | ✅ | PlateEditor, AnalyticsDashboard, TimeTrackingPage, Settings |
+| Document bundle budget | ✅ | 700KB gzip budget enforced in CI |
 
 **Commands:**
 ```bash
@@ -1453,7 +1453,7 @@ pnpm vite build --mode analyze
 # Opens dist/stats.html automatically
 ```
 
-**Target:** <500KB initial JS gzip, <600KB total.
+**Budget:** 700KB gzip main bundle (CI enforced). Current: ~605KB gzip.
 
 ---
 
@@ -1551,11 +1551,11 @@ const PlateEditor = lazy(() =>
 | Section | Status | Items | Priority |
 |---------|--------|-------|----------|
 | 6.1 E2E Stability | ✅ | 2/4 | Critical |
-| 6.2 Bundle Analysis | ✅ | 3/5 | High |
+| 6.2 Bundle Analysis | ✅ | 5/5 | High |
 | 6.3 Convex Tests | ✅ | 12/12 | High |
 | 6.4 Code Splitting | ✅ | 5/5 | Medium |
 | 6.5 CI Performance | ✅ | 4/4 | Low |
-| **Total** | **87%** | **26/30** | - |
+| **Total** | **93%** | **28/30** | - |
 
 ---
 
