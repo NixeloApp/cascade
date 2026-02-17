@@ -376,7 +376,13 @@ const KanbanColumnComponent = function KanbanColumn({
   const columnRef = useRef<HTMLElement>(null);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
 
-  const stateIssues = useMemo(() => [...issues].sort((a, b) => a.order - b.order), [issues]);
+  const stateIssues = useMemo(() => {
+    // Optimization: Skip sorting for todo/inprogress columns as they are pre-sorted by the server
+    if (state.category === "todo" || state.category === "inprogress") {
+      return issues;
+    }
+    return [...issues].sort((a, b) => a.order - b.order);
+  }, [issues, state.category]);
 
   const wipLimit = state.wipLimit ?? 0;
   const wipStatus: WipStatus = {
