@@ -13,7 +13,7 @@ import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kan
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
-import { IssueCard, areIssuesEqual } from "../IssueCard";
+import { areIssuesEqual, IssueCard } from "../IssueCard";
 import { Badge } from "../ui/Badge";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { PaginationInfo } from "../ui/PaginationInfo";
