@@ -46,11 +46,11 @@ describe("Users Email Enumeration", () => {
     // Now try to verify the change
     // This MUST fail because the email is actually taken
     if (token) {
-        await expect(
-            attacker.mutation(api.users.verifyEmailChange, {
-                token: token,
-            })
-        ).rejects.toThrow("Email already in use");
+      await expect(
+        attacker.mutation(api.users.verifyEmailChange, {
+          token: token,
+        }),
+      ).rejects.toThrow("Email already in use");
     }
   });
 });
