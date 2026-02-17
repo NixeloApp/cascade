@@ -63,16 +63,19 @@ describe("useBoardDragAndDrop", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Use mockReturnValue (not Once) so it returns the same value every time
+    // Use call order to return correct mocks since API object equality can be flaky in tests
+    // 1st call: updateStatus (needs optimistic update)
+    // 2nd call: updateStatusByCategory
+    let callCount = 0;
     (useMutation as Mock).mockImplementation(() => {
-      // Return appropriate mock based on which API is being used
-      // First call is updateStatus, second is updateStatusByCategory
-      return mockUpdateStatus;
+      callCount++;
+      // Odd calls (1, 3, 5...) are updateStatus
+      if (callCount % 2 === 1) {
+        return mockUpdateStatus;
+      }
+      // Even calls (2, 4, 6...) are updateStatusByCategory
+      return mockUpdateStatusByCategory;
     });
-    // Override for the actual test usage - since both mutations are called in sequence
-    (useMutation as Mock)
-      .mockReturnValueOnce(mockUpdateStatus)
-      .mockReturnValueOnce(mockUpdateStatusByCategory);
     mockUpdateStatus.mockResolvedValue(undefined);
     mockUpdateStatusByCategory.mockResolvedValue(undefined);
   });
@@ -619,6 +622,33 @@ describe("useBoardDragAndDrop", () => {
           newOrder: 21,
         }),
       );
+    });
+  });
+
+  describe("handler stability", () => {
+    it("should return same handler references when dependencies update", () => {
+      const issue1 = createMockIssue({ _id: "issue-1" as Id<"issues"> });
+      const { result, rerender } = renderHook((props) => useBoardDragAndDrop(props), {
+        initialProps: {
+          ...defaultOptions,
+          allIssues: [issue1],
+          issuesByStatus: { todo: [issue1] },
+        },
+      });
+
+      const firstHandleDrop = result.current.handleIssueDrop;
+      const firstHandleReorder = result.current.handleIssueReorder;
+
+      // Re-render with new data (simulating issue update)
+      const issue2 = createMockIssue({ _id: "issue-2" as Id<"issues"> });
+      rerender({
+        ...defaultOptions,
+        allIssues: [issue1, issue2],
+        issuesByStatus: { todo: [issue1, issue2] },
+      });
+
+      expect(result.current.handleIssueDrop).toBe(firstHandleDrop);
+      expect(result.current.handleIssueReorder).toBe(firstHandleReorder);
     });
   });
 });

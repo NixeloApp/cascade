@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import { useMutation } from "convex/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { showError } from "@/lib/toast";
 import { optimisticBoardUpdate } from "./boardOptimisticUpdates";
 import type { BoardAction } from "./useBoardHistory";
@@ -58,6 +58,10 @@ export function useBoardDragAndDrop({
 }: UseBoardDragAndDropOptions) {
   const [isDragging, setIsDragging] = useState(false);
 
+  // Store latest data in refs to avoid recreating handlers
+  const dataRef = useRef({ allIssues, issuesByStatus, isTeamMode });
+  dataRef.current = { allIssues, issuesByStatus, isTeamMode };
+
   const rawUpdateStatus = useMutation(api.issues.updateStatus);
 
   const optimisticUpdate = useMemo(
@@ -85,6 +89,9 @@ export function useBoardDragAndDrop({
    */
   const handleIssueDrop = useCallback(
     async (issueId: Id<"issues">, sourceStatus: string, targetStatus: string) => {
+      // Access latest data from ref
+      const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
+
       // Skip if dropped on same column
       if (sourceStatus === targetStatus) {
         return;
@@ -129,12 +136,11 @@ export function useBoardDragAndDrop({
       }
     },
     [
-      allIssues,
-      issuesByStatus,
+      // Dependencies that are stable or relevant for recreation
       updateIssueStatus,
       updateStatusByCategory,
-      isTeamMode,
       pushHistoryAction,
+      // allIssues, issuesByStatus, isTeamMode are accessed via ref
     ],
   );
 
@@ -150,6 +156,9 @@ export function useBoardDragAndDrop({
       targetStatus: string,
       edge: "top" | "bottom",
     ) => {
+      // Access latest data from ref
+      const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
+
       const draggedIssue = allIssues.find((i) => i._id === draggedIssueId);
       const targetIssue = allIssues.find((i) => i._id === targetIssueId);
       if (!draggedIssue || !targetIssue) return;
@@ -192,12 +201,10 @@ export function useBoardDragAndDrop({
       }
     },
     [
-      allIssues,
-      issuesByStatus,
       updateIssueStatus,
       updateStatusByCategory,
-      isTeamMode,
       pushHistoryAction,
+      // allIssues, issuesByStatus, isTeamMode are accessed via ref
     ],
   );
 
