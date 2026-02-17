@@ -319,9 +319,7 @@ export async function enrichIssues(
   const userIds = new Set<Id<"users">>();
   const epicIds = new Set<Id<"issues">>();
   // We only track projects that actually need label fetching to optimize queries
-  const projectLabelsNeeded = includeLabels
-    ? getProjectLabelsNeeded(issues)
-    : new Map();
+  const projectLabelsNeeded = includeLabels ? getProjectLabelsNeeded(issues) : new Map();
 
   for (const issue of issues) {
     if (includeAssignee && issue.assigneeId) userIds.add(issue.assigneeId);
@@ -356,13 +354,9 @@ export async function enrichIssues(
       includeAssignee && issue.assigneeId
         ? toUserInfo(userMap.get(issue.assigneeId.toString()) ?? null)
         : null,
-    reporter: includeReporter
-      ? toUserInfo(userMap.get(issue.reporterId.toString()) ?? null)
-      : null,
+    reporter: includeReporter ? toUserInfo(userMap.get(issue.reporterId.toString()) ?? null) : null,
     epic:
-      includeEpic && issue.epicId
-        ? toEpicInfo(epicMap.get(issue.epicId.toString()) ?? null)
-        : null,
+      includeEpic && issue.epicId ? toEpicInfo(epicMap.get(issue.epicId.toString()) ?? null) : null,
     labels: includeLabels ? getLabelInfos(issue, labelsByProject) : [],
   }));
 }
