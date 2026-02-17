@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import { useMutation } from "convex/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { showError } from "@/lib/toast";
 import { optimisticBoardUpdate } from "./boardOptimisticUpdates";
 import type { BoardAction } from "./useBoardHistory";
@@ -58,6 +58,12 @@ export function useBoardDragAndDrop({
 }: UseBoardDragAndDropOptions) {
   const [isDragging, setIsDragging] = useState(false);
 
+  // Store data in a ref to keep callbacks stable even when data changes
+  const dataRef = useRef({ allIssues, issuesByStatus, isTeamMode });
+  useEffect(() => {
+    dataRef.current = { allIssues, issuesByStatus, isTeamMode };
+  }, [allIssues, issuesByStatus, isTeamMode]);
+
   const rawUpdateStatus = useMutation(api.issues.updateStatus);
 
   const optimisticUpdate = useMemo(
@@ -90,6 +96,8 @@ export function useBoardDragAndDrop({
         return;
       }
 
+      // Access latest data from ref
+      const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
       const issue = allIssues.find((i) => i._id === issueId);
       if (!issue) return;
 
@@ -128,14 +136,7 @@ export function useBoardDragAndDrop({
         showError(error, "Failed to update issue status");
       }
     },
-    [
-      allIssues,
-      issuesByStatus,
-      updateIssueStatus,
-      updateStatusByCategory,
-      isTeamMode,
-      pushHistoryAction,
-    ],
+    [updateIssueStatus, updateStatusByCategory, pushHistoryAction],
   );
 
   /**
@@ -150,6 +151,8 @@ export function useBoardDragAndDrop({
       targetStatus: string,
       edge: "top" | "bottom",
     ) => {
+      // Access latest data from ref
+      const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
       const draggedIssue = allIssues.find((i) => i._id === draggedIssueId);
       const targetIssue = allIssues.find((i) => i._id === targetIssueId);
       if (!draggedIssue || !targetIssue) return;
@@ -191,14 +194,7 @@ export function useBoardDragAndDrop({
         showError(error, "Failed to reorder issue");
       }
     },
-    [
-      allIssues,
-      issuesByStatus,
-      updateIssueStatus,
-      updateStatusByCategory,
-      isTeamMode,
-      pushHistoryAction,
-    ],
+    [updateIssueStatus, updateStatusByCategory, pushHistoryAction],
   );
 
   return {

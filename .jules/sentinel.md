@@ -103,3 +103,17 @@
 **Vulnerability:** The Pumble integration used a custom `fetch` implementation with weak validation (`.includes("pumble.com")`) that could be bypassed for SSRF. It also did not prevent DNS rebinding or private IP access, unlike the main webhook delivery system.
 **Learning:** Ad-hoc implementation of security-critical logic (like safe HTTP fetching) often leads to vulnerabilities. Security features like SSRF protection should be encapsulated in reusable helpers and used consistently across the codebase.
 **Prevention:** Extracted the robust SSRF protection logic from `webhookHelpers.ts` into a reusable `safeFetch` helper and applied it to the Pumble integration, ensuring consistent protection against SSRF, DNS rebinding, and private IP access.
+
+## 2025-02-18 - IP Spoofing via Header Priority
+**Learning:** Generic `getClientIp` helpers often prioritize vendor-specific headers (like `X-Client-IP` or `X-Real-IP`) over standard `X-Forwarded-For`. This is dangerous because many standard load balancers (e.g., AWS ALB) do not strip or overwrite these headers, allowing attackers to spoof their IP by simply sending the header.
+**Action:** Always prioritize the last IP in `X-Forwarded-For` (which is appended by the trusted proxy) over single-value headers unless the specific environment guarantees those headers are secure.
+
+## 2026-03-02 - Rate Limit Bypass in Auth via Library Routes
+**Vulnerability:** The `api.auth.signIn` endpoint (handled by `convex-auth` library) lacked IP-based rate limiting, allowing distributed email spam attacks (credential stuffing or verification spam) that bypassed per-email rate limits.
+**Learning:** External libraries that automatically register HTTP routes often bypass application-level middleware or security wrappers. You must inspect how libraries add routes and intercept them if they lack critical security controls like rate limiting.
+**Action:** Monkey-patched `http.route` in `convex/http.ts` to intercept `/api/auth/signin` requests and enforce a strict IP-based rate limit (`authAttempt`) before delegating to the library handler.
+
+## 2026-02-17 - Cross-Organization Authorization Bypass via Unvalidated ID Relations
+**Vulnerability:** The `sendInvite` mutation allowed attackers to create invites scoped to an arbitrary Organization by linking them to a Project they controlled in a *different* Organization. The authorization check passed because the user was a Project Admin (valid for the project) but the mutation failed to verify that the project actually belonged to the target Organization.
+**Learning:** When a mutation accepts multiple resource IDs (e.g. `organizationId` and `projectId`), validating the user's permission on each ID independently is insufficient. You MUST also validate the relationship between the resources themselves (e.g. `project.organizationId === args.organizationId`) to prevent "confused deputy" attacks where a valid permission on Resource A is used to authorize an action on unrelated Resource B.
+**Prevention:** Added a strict validation check in `sendInvite` to ensure the provided `projectId` belongs to the specified `organizationId`. Always enforce hierarchy checks when crossing resource boundaries.

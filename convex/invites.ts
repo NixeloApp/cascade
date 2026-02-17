@@ -72,16 +72,8 @@ async function addExistingUserToProject(
   role: "admin" | "editor" | "viewer",
   addedBy: Id<"users">,
 ): Promise<{ success: boolean; addedDirectly: true; userId: Id<"users"> }> {
-  // Check if already a member
-  const existingMember = await ctx.db
-    .query("projectMembers")
-    .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", existingUserId))
-    .filter(notDeleted)
-    .first();
-
-  if (existingMember) {
-    throw conflict("User is already a member of this project");
-  }
+  // Note: Existence check should be done by caller or here if standalone.
+  // We assume caller handles higher-level logic.
 
   // Add them directly to the project
   await ctx.db.insert("projectMembers", {
@@ -92,6 +84,41 @@ async function addExistingUserToProject(
   });
 
   return { success: true, addedDirectly: true, userId: existingUserId };
+}
+
+// Helper: Try to add existing user to project if they are in the org
+async function tryAddExistingUserToProject(
+  ctx: MutationCtx,
+  existingUserId: Id<"users">,
+  organizationId: Id<"organizations">,
+  projectId: Id<"projects">,
+  role: "admin" | "editor" | "viewer",
+  addedBy: Id<"users">,
+): Promise<{ success: boolean; addedDirectly: true; userId: Id<"users"> } | null> {
+  // Check project membership (prevent duplicates)
+  const existingMember = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", existingUserId))
+    .filter(notDeleted)
+    .first();
+
+  if (existingMember) {
+    throw conflict("User is already a member of this project");
+  }
+
+  // Check org membership (security check)
+  const orgMember = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_organization_user", (q) =>
+      q.eq("organizationId", organizationId).eq("userId", existingUserId),
+    )
+    .first();
+
+  if (orgMember) {
+    return addExistingUserToProject(ctx, projectId, existingUserId, role, addedBy);
+  }
+
+  return null;
 }
 
 // Helper: Check for duplicate pending invites
@@ -196,6 +223,12 @@ export const sendInvite = authenticatedMutation({
     if (args.projectId) {
       const project = await ctx.db.get(args.projectId);
       if (!project) throw notFound("project", args.projectId);
+
+      // Ensure project belongs to the organization
+      if (project.organizationId !== args.organizationId) {
+        throw validation("projectId", "Project does not belong to the specified organization");
+      }
+
       projectName = project.name;
 
       // Allow if platform admin OR project admin
@@ -213,17 +246,20 @@ export const sendInvite = authenticatedMutation({
       .withIndex("email", (q) => q.eq("email", args.email))
       .first();
 
-    // For project invites, add existing users directly
+    // For project invites, add existing users directly ONLY if they are already in the organization
     if (existingUser && args.projectId) {
-      return addExistingUserToProject(
+      const result = await tryAddExistingUserToProject(
         ctx,
-        args.projectId,
         existingUser._id,
+        args.organizationId,
+        args.projectId,
         effectiveProjectRole,
         ctx.userId,
       );
+      if (result) return result;
     }
-    if (existingUser) {
+
+    if (existingUser && !args.projectId) {
       throw conflict("A user with this email already exists");
     }
 
