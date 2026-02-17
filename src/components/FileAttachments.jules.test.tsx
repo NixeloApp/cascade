@@ -53,21 +53,19 @@ describe("FileAttachments Upload", () => {
 
     // Mock useMutation implementation to return specific mocks based on the "function reference"
     // Since we mocked api.files.* as strings, we can check for those strings.
-    // Each returned mock needs withOptimisticUpdate to satisfy ReactMutation type
-    // Using type assertion since this is test code and exact typing doesn't matter
-    (vi.mocked(useMutation) as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (fn: unknown) => {
-        const createMutationMock = (baseMock: ReturnType<typeof vi.fn>) => {
-          return Object.assign(baseMock, {
-            withOptimisticUpdate: vi.fn().mockReturnValue(baseMock),
-          });
-        };
-        if (fn === "generateUploadUrl") return createMutationMock(mockGenerateUploadUrl);
-        if (fn === "addAttachment") return createMutationMock(mockAddAttachment);
-        if (fn === "removeAttachment") return createMutationMock(mockRemoveAttachment);
-        return createMutationMock(vi.fn());
-      },
-    );
+    vi.mocked(useMutation).mockImplementation((fn: any) => {
+      const mock = (() => {
+        if (fn === "generateUploadUrl") return mockGenerateUploadUrl;
+        if (fn === "addAttachment") return mockAddAttachment;
+        if (fn === "removeAttachment") return mockRemoveAttachment;
+        return vi.fn();
+      })();
+
+      // Cast to match ReactMutation interface, ensuring withOptimisticUpdate exists
+      return Object.assign(mock, {
+        withOptimisticUpdate: vi.fn(),
+      }) as any;
+    });
 
     mockGenerateUploadUrl.mockResolvedValue("https://upload.example.com");
     mockAddAttachment.mockResolvedValue(undefined);
