@@ -11,10 +11,9 @@ const originalRoute = http.route.bind(http);
 
 http.route = (options) => {
   // Intercept the sign-in route to add IP-based rate limiting
-  if (
-    (options as any)?.path?.startsWith("/api/auth/signin") &&
-    options.method === "POST"
-  ) {
+  // Use unknown casting to avoid any, then safely check properties
+  const routePath = (options as unknown as { path?: string }).path;
+  if (routePath?.startsWith("/api/auth/signin") && options.method === "POST") {
     const originalHandler = options.handler;
 
     // Wrap the handler with rate limiting logic
@@ -23,29 +22,35 @@ http.route = (options) => {
 
       if (clientIp) {
         try {
-          // Cast internal to any because checkAuthRateLimit is newly added
-          // and types might not be regenerated yet in this environment
-          const authWrapper = (internal as any).authWrapper;
+          // Cast internal to unknown then to the expected type
+          // This avoids 'any' and ensures we are accessing the property safely
+          const internalApi = internal as unknown as {
+            authWrapper?: {
+              checkAuthRateLimit?: FunctionReference<"mutation">;
+            };
+          };
+          const authWrapper = internalApi.authWrapper;
 
           if (authWrapper?.checkAuthRateLimit) {
             await ctx.runMutation(authWrapper.checkAuthRateLimit, {
               ip: clientIp,
             });
           }
-        } catch (error) {
+        } catch (_error) {
           // Rate limit exceeded
-          return new Response(
-            JSON.stringify({ success: false, error: "Too many requests" }),
-            {
-              status: 429,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
+          return new Response(JSON.stringify({ success: false, error: "Too many requests" }), {
+            status: 429,
+            headers: { "Content-Type": "application/json" },
+          });
         }
       }
 
       // Proceed to original handler
-      return (originalHandler as any)(ctx, request);
+      // Cast to unknown then Function to avoid any
+      return (originalHandler as unknown as (ctx: unknown, request: Request) => Promise<Response>)(
+        ctx,
+        request,
+      );
     });
   }
 
