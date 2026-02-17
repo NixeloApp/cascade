@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
-import { securePasswordReset } from "./authWrapper";
+import { securePasswordResetHandler } from "./authWrapper";
 import { getClientIp } from "./lib/ssrf";
 
 // Mock rateLimits to prevent top-level execution requiring components
@@ -22,7 +22,7 @@ vi.mock("./lib/ssrf", () => ({
   getClientIp: vi.fn(),
 }));
 
-describe("securePasswordReset", () => {
+describe("securePasswordResetHandler", () => {
   const mockCtx = {
     runMutation: vi.fn(),
   };
@@ -46,7 +46,7 @@ describe("securePasswordReset", () => {
       body: JSON.stringify({ email: "test@example.com" }),
     });
 
-    const response = await securePasswordReset(mockCtx as any, request);
+    const response = await securePasswordResetHandler(mockCtx as any, request);
     const body = await response.json();
 
     expect(response.status).toBe(429);
@@ -72,7 +72,7 @@ describe("securePasswordReset", () => {
       body: JSON.stringify({ email: "spammed@example.com" }),
     });
 
-    const response = await securePasswordReset(mockCtx as any, request);
+    const response = await securePasswordResetHandler(mockCtx as any, request);
     const body = await response.json();
 
     // Should return success: true (silent fail)

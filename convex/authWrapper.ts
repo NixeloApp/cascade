@@ -5,8 +5,10 @@
  * Always returns success regardless of whether email exists.
  */
 
+import type { GenericActionCtx } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import type { DataModel } from "./_generated/dataModel";
 import {
   httpAction,
   internalAction,
@@ -102,7 +104,13 @@ export const checkEmailVerificationRateLimit = internalMutation({
  * Calls the actual auth endpoint internally but always returns success.
  * This prevents attackers from discovering which emails are registered.
  */
-export const securePasswordReset = httpAction(async (ctx, request) => {
+/**
+ * Handler function for secure password reset (exported for testing)
+ */
+export const securePasswordResetHandler = async (
+  ctx: GenericActionCtx<DataModel>,
+  request: Request,
+): Promise<Response> => {
   try {
     let clientIp = getClientIp(request);
 
@@ -175,4 +183,9 @@ export const securePasswordReset = httpAction(async (ctx, request) => {
       headers: { "Content-Type": "application/json" },
     });
   }
-});
+};
+
+/**
+ * HTTP action for secure password reset
+ */
+export const securePasswordReset = httpAction(securePasswordResetHandler);
