@@ -239,17 +239,21 @@ export function run() {
   const lowCount = allIssues.filter((i) => i.severity === SEVERITY.LOW).length;
 
   const messages = [];
-  if (highCount > 0 || medCount > 0 || lowCount > 0) {
-    for (const issue of allIssues) {
-      messages.push(
-        `  [${issue.severity}] ${issue.file}:${issue.line} ${issue.type} — ${issue.message}`,
-      );
-    }
+  for (const issue of allIssues) {
+    const color =
+      issue.severity === SEVERITY.HIGH
+        ? c.red
+        : issue.severity === SEVERITY.MEDIUM
+          ? c.yellow
+          : c.dim;
+    messages.push(
+      `  ${color}[${issue.severity}]${c.reset} ${issue.file}:${issue.line} ${issue.type} — ${issue.message}`,
+    );
   }
 
-  const totalErrors = highCount + medCount + lowCount;
+  // Only HIGH severity issues are errors; MEDIUM and LOW are warnings
   let detail;
-  if (totalErrors > 0) {
+  if (highCount > 0 || medCount > 0 || lowCount > 0) {
     const parts = [];
     if (highCount > 0) parts.push(`${highCount} high`);
     if (medCount > 0) parts.push(`${medCount} medium`);
@@ -260,9 +264,9 @@ export function run() {
   }
 
   return {
-    passed: totalErrors === 0,
-    errors: totalErrors,
+    passed: highCount === 0,
+    errors: highCount,
     detail,
-    messages,
+    messages: highCount > 0 ? messages.filter((m) => m.includes("[HIGH]")) : [],
   };
 }

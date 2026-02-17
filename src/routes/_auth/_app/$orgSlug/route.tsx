@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { CommandPalette, useCommands } from "@/components/CommandPalette";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
@@ -168,12 +169,23 @@ function OrganizationLayoutInner() {
 
   return (
     <SidebarProvider>
+      {/* Skip link for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-toast-critical focus:bg-brand focus:text-brand-foreground focus:px-4 focus:py-2 focus:rounded-lg focus:outline-none"
+      >
+        Skip to main content
+      </a>
+
       <Flex className="h-screen overflow-hidden bg-ui-bg-secondary">
         {/* Unified sidebar */}
         <AppSidebar />
 
         {/* Main content area */}
         <Flex direction="column" className="flex-1 min-w-0">
+          {/* Offline indicator */}
+          <OfflineBanner />
+
           {/* Slim header */}
           <AppHeader
             onShowCommandPalette={() => setShowCommandPalette(true)}
@@ -181,7 +193,12 @@ function OrganizationLayoutInner() {
           />
 
           {/* Page content */}
-          <FlexItem as="main" flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
+          <FlexItem
+            as="main"
+            flex="1"
+            id="main-content"
+            className="overflow-auto bg-ui-bg scrollbar-subtle"
+          >
             <Outlet />
           </FlexItem>
         </Flex>
