@@ -13,7 +13,8 @@ export async function safeFetch(
 ): Promise<Response> {
   const urlStr = input instanceof Request ? input.url : input.toString();
   const options = init || {};
-  const headers = (options.headers as Record<string, string>) || {};
+  // Normalize headers to a Headers object to handle Record, string[][], or Headers input
+  const headers = new Headers(options.headers);
 
   // 1. Validate destination URL (SSRF protection) and get safe IP
   const resolvedIp = await validateDestinationResolved(urlStr);
@@ -23,15 +24,16 @@ export async function safeFetch(
 
   // For HTTP, rewrite URL to use resolved IP to prevent DNS rebinding
   if (parsedUrl.protocol === "http:") {
-    headers.Host = parsedUrl.host; // includes port if present
+    headers.set("Host", parsedUrl.host); // includes port if present
     parsedUrl.hostname = resolvedIp;
     targetUrl = parsedUrl.toString();
   }
 
   // Merge headers back into options
-  const newOptions = {
+  const newOptions: RequestInit = {
     ...options,
     headers,
+    redirect: "error", // Prevent redirects to internal IPs
   };
 
   return fetch(targetUrl, newOptions);

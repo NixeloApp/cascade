@@ -161,9 +161,6 @@
       "includes": ["**/*.test.ts", "**/*.test.tsx", "**/convex/*.test.ts", "**/*.spec.ts"],
       "linter": {
         "rules": {
-          "complexity": {
-            "noExcessiveCognitiveComplexity": "off"
-          },
           "correctness": {
             "noUnusedVariables": "off"
           },

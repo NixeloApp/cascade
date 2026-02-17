@@ -40,9 +40,8 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
     if (!files || files.length === 0) return;
 
     setUploading(true);
-
-    const uploadFile = async (file: File) => {
-      try {
+    try {
+      for (const file of Array.from(files)) {
         // Get upload URL
         const uploadUrl = await generateUploadUrl();
 
@@ -52,10 +51,6 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
           headers: { "Content-Type": file.type },
           body: file,
         });
-
-        if (!result.ok) {
-          throw new Error(`Upload failed with status: ${result.status} ${result.statusText}`);
-        }
 
         const { storageId } = await result.json();
 
@@ -69,15 +64,9 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
         });
 
         showSuccess(`Uploaded ${file.name}`);
-        return { status: "fulfilled" as const, filename: file.name };
-      } catch (error) {
-        showError(error, `Failed to upload ${file.name}`);
-        return { status: "rejected" as const, filename: file.name, error };
       }
-    };
-
-    try {
-      await Promise.all(Array.from(files).map(uploadFile));
+    } catch (error) {
+      showError(error, "Failed to upload file");
     } finally {
       setUploading(false);
       if (fileInputRef.current) {

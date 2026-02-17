@@ -180,9 +180,6 @@ export const updateProfile = authenticatedMutation({
       // Check if email actually changed
       const currentUser = await ctx.db.get(ctx.userId);
       if (currentUser?.email !== args.email) {
-        // Rate limit email change requests to prevent spam
-        await rateLimit(ctx, "emailChange", { key: ctx.userId });
-
         // Do NOT update email immediately. Start pending verification flow.
         const token = generateOTP();
         const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes

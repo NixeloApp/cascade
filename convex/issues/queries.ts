@@ -267,11 +267,7 @@ export const listRoadmapIssues = authenticatedQuery({
       issues = issues.filter((i) => i.dueDate !== undefined);
     }
 
-    return await enrichIssues(ctx, issues, {
-      includeReporter: false,
-      includeEpic: false,
-      includeLabels: false,
-    });
+    return await enrichIssues(ctx, issues);
   },
 });
 

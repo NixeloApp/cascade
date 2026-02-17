@@ -120,35 +120,12 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
 
   const { historyStack, redoStack, handleUndo, handleRedo, pushAction } = useBoardHistory();
 
-  // Keep track of previous inputs/outputs to optimize filtering
-  const prevFilteredIssuesRef = useRef<Record<string, EnrichedIssue[]>>({});
-  const prevIssuesByStatusRef = useRef<Record<string, EnrichedIssue[]>>({});
-  const prevFiltersRef = useRef(filters);
-
   // Apply filters to issues
   const filteredIssuesByStatus = useMemo(() => {
-    // Check if filters changed (shallow equality)
-    const filtersChanged = prevFiltersRef.current !== filters;
-
     const result: Record<string, EnrichedIssue[]> = {};
-    const prevResult = prevFilteredIssuesRef.current;
-    const prevIssuesByStatus = prevIssuesByStatusRef.current;
-
     for (const [status, issues] of Object.entries(issuesByStatus)) {
-      if (!filtersChanged && prevIssuesByStatus[status] === issues && prevResult[status]) {
-        // Reuse previous result if filters didn't change and issue list reference is same
-        result[status] = prevResult[status];
-      } else {
-        // Recompute
-        result[status] = applyFilters(issues, filters);
-      }
+      result[status] = applyFilters(issues, filters);
     }
-
-    // Update refs
-    prevFilteredIssuesRef.current = result;
-    prevIssuesByStatusRef.current = issuesByStatus;
-    prevFiltersRef.current = filters;
-
     return result;
   }, [issuesByStatus, filters]);
 
@@ -279,7 +256,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   let workflowStates: WorkflowState[] = [];
 
   if (isProjectMode && project) {
-    workflowStates = [...project.workflowStates].sort(
+    workflowStates = project.workflowStates.sort(
       (a: { order: number }, b: { order: number }) => a.order - b.order,
     );
   } else if (isTeamMode && smartWorkflowStates) {

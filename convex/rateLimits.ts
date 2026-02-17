@@ -24,8 +24,8 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   // API Endpoints: General rate limit
   apiEndpoint: { kind: "fixed window", rate: 100, period: 60_000 }, // 100/min
 
-  // Password Reset (IP-based): Strict limit to prevent spam/DoS
-  // Increased capacity/rate significantly for test/CI environments where all traffic may share one IP (localhost/runner)
+  // Password Reset: Strict limit to prevent spam/DoS
+  // Increased capacity/rate slightly to accommodate parallel E2E tests
   passwordReset: {
     kind: "token bucket",
     rate:
@@ -33,7 +33,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 1000
+        ? 100
         : 20,
     period: 60_000,
     capacity:
@@ -41,50 +41,9 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 1000
-        : 20,
-  },
-
-  // Auth Attempts: Strict limit per IP to prevent credential stuffing/spam
-  authAttempt: {
-    kind: "token bucket",
-    rate:
-      process.env.NODE_ENV === "test" ||
-      process.env.NODE_ENV === "development" ||
-      process.env.E2E_TEST_MODE ||
-      process.env.CI
-        ? 1000
-        : 20,
-    period: 60_000,
-    capacity:
-      process.env.NODE_ENV === "test" ||
-      process.env.NODE_ENV === "development" ||
-      process.env.E2E_TEST_MODE ||
-      process.env.CI
-        ? 1000
+        ? 100
         : 20,
   }, // 20 per minute default to prevent blocking legit users/tests if env detection fails
-
-  // Password Reset (Email-based): Per-email rate limiting to prevent targeted DoS
-  // Distinct bucket from IP-based for independent thresholds
-  passwordResetByEmail: {
-    kind: "token bucket",
-    rate:
-      process.env.NODE_ENV === "test" ||
-      process.env.NODE_ENV === "development" ||
-      process.env.E2E_TEST_MODE ||
-      process.env.CI
-        ? 1000
-        : 5,
-    period: 60_000,
-    capacity:
-      process.env.NODE_ENV === "test" ||
-      process.env.NODE_ENV === "development" ||
-      process.env.E2E_TEST_MODE ||
-      process.env.CI
-        ? 1000
-        : 5,
-  }, // 5 per minute per email - more strict than IP since it's per-target
 
   // Email Change Verification: Strict limit to prevent OTP brute-forcing
   // User-based (authenticated), so low limit is safe even for parallel tests
@@ -99,7 +58,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 1000
+        ? 100
         : 20,
     period: 60_000,
     capacity:
@@ -107,7 +66,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
       process.env.NODE_ENV === "development" ||
       process.env.E2E_TEST_MODE ||
       process.env.CI
-        ? 1000
+        ? 100
         : 20,
   },
 });

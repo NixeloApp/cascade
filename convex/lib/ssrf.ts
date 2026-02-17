@@ -333,10 +333,8 @@ export async function validateDestinationResolved(url: string): Promise<string> 
  * Safe Client IP Extraction Helper
  *
  * This utility provides a consistent way to extract the client's IP address
- * from request headers. It first checks immutable CDN headers (Cloudflare,
- * Akamai), then uses the last IP in X-Forwarded-For (appended by the trusted
- * proxy), and only falls back to single-value headers (Fastly, X-Real-IP,
- * X-Client-IP) when XFF is absent.
+ * from request headers, prioritizing headers set by trusted proxies/CDNs
+ * (Cloudflare, Vercel, Fastly, etc.) over the easily spoofable X-Forwarded-For.
  */
 export function getClientIp(request: Request): string | null {
   const headers = request.headers;
@@ -350,33 +348,28 @@ export function getClientIp(request: Request): string | null {
   const trueClientIp = headers.get("true-client-ip");
   if (trueClientIp) return trueClientIp;
 
-  // 3. X-Forwarded-For
+  // 3. Vercel / Nginx Real IP (Standard for many reverse proxies)
+  const realIp = headers.get("x-real-ip");
+  if (realIp) return realIp;
+
+  // 4. X-Client-IP (Common alternative)
+  const clientIp = headers.get("x-client-ip");
+  if (clientIp) return clientIp;
+
+  // 5. Fastly Client IP
+  const fastlyIp = headers.get("fastly-client-ip");
+  if (fastlyIp) return fastlyIp;
+
+  // 6. X-Forwarded-For
   // Standard load balancers (AWS ALB, Nginx, etc.) append the client IP to the end of the list.
   // We take the LAST IP in the list to prevent spoofing where a client sends a custom header.
   // Assumption: There is at least one trusted proxy in front of us that appends the real IP.
-  // We check this BEFORE X-Real-IP or X-Client-IP because those are single-value headers
-  // that can be easily spoofed if the load balancer doesn't strip them (which many, like AWS ALB, don't).
   const forwardedFor = headers.get("x-forwarded-for");
   if (forwardedFor) {
     const ips = forwardedFor.split(",").map((ip) => ip.trim());
     const lastIp = ips[ips.length - 1];
     if (lastIp) return lastIp;
   }
-
-  // 4. Fastly Client IP
-  // If we are on Fastly, this should match X-Forwarded-For (last).
-  const fastlyIp = headers.get("fastly-client-ip");
-  if (fastlyIp) return fastlyIp;
-
-  // 5. Vercel / Nginx Real IP (Standard for many reverse proxies)
-  // Only use this if X-Forwarded-For is missing (rare) or invalid.
-  const realIp = headers.get("x-real-ip");
-  if (realIp) return realIp;
-
-  // 6. X-Client-IP (Common alternative)
-  // Only use this if all else fails.
-  const clientIp = headers.get("x-client-ip");
-  if (clientIp) return clientIp;
 
   return null;
 }
