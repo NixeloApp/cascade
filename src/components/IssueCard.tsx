@@ -303,9 +303,9 @@ export const IssueCard = memo(function IssueCard({
                 />
               </div>
             </Tooltip>
-            <code data-testid={TEST_IDS.ISSUE.KEY} className="font-mono text-xs">
+            <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
               {issue.key}
-            </code>
+            </Typography>
           </Flex>
           <Tooltip
             content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}

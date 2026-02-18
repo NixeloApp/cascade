@@ -3,7 +3,7 @@
 > **Status:** 🚧 In Progress
 > **Goal:** All styling lives in CVA components. No raw Tailwind in app code.
 > **Last Updated:** 2026-02-17
-> **Progress:** 229/1145 classNames migrated (20%)
+> **Progress:** 246/1145 classNames migrated (21%)
 
 ---
 
@@ -164,12 +164,12 @@ grep -r "from.*ui/PageHeader" src/
 | File | Violations | Status |
 |------|------------|--------|
 | `AnalyticsDashboard.tsx` | ~10 | ✅ |
-| `SprintManager.tsx` | ~19 | ⬜ |
+| `SprintManager.tsx` | ~19 | ✅ |
 | `ActivityFeed.tsx` | ~4 | ✅ |
 | `FilterBar.tsx` | ~11 | ✅ |
-| `BulkOperationsBar.tsx` | ~11 | ⬜ |
-| `DocumentHeader.tsx` | ~8 | ⬜ |
-| `IssueCard.tsx` | ~9 | ⬜ |
+| `BulkOperationsBar.tsx` | ~11 | ✅ |
+| `DocumentHeader.tsx` | ~8 | ✅ |
+| `IssueCard.tsx` | ~9 | ✅ |
 | `ProjectsList.tsx` | ~2 | ✅ |
 | `Analytics/ChartCard.tsx` | ~1 | ✅ |
 
@@ -275,9 +275,9 @@ Items intentionally not in scope for Phase 7:
 
 ## Stats
 
-**Last Run:** 2026-02-17
-**Files Migrated:** 12 / ~100
-**Violations Remaining:** 916 (down from 1145)
+**Last Run:** 2026-02-18
+**Files Migrated:** 16 / ~100
+**Violations Remaining:** 899 (down from 1145)
 
 ---
 

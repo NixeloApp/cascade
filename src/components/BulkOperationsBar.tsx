@@ -11,6 +11,7 @@ import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { Input } from "./ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 interface BulkOperationsBarProps {
@@ -184,7 +185,7 @@ export function BulkOperationsBar({
           <Flex align="center" justify="between" gap="lg">
             {/* Selection Info */}
             <Flex align="center" gap="md">
-              <Typography variant="p" className="font-medium text-ui-text">
+              <Typography variant="label">
                 {count} issue{count !== 1 ? "s" : ""} selected
               </Typography>
               <Button
@@ -216,14 +217,11 @@ export function BulkOperationsBar({
 
           {/* Expanded Actions */}
           {showActions && (
-            <div className="mt-3 pt-3 border-t border-ui-border">
+            <Stack gap="md" className="mt-3 pt-3 border-t border-ui-border">
               <Grid cols={1} colsSm={2} colsMd={3} colsLg={6} gap="md">
                 {/* Status */}
-                <div>
-                  <Typography
-                    variant="small"
-                    className="block font-medium text-ui-text-secondary mb-1.5"
-                  >
+                <Stack gap="xs">
+                  <Typography variant="label" color="secondary">
                     Status
                   </Typography>
                   <Select onValueChange={handleUpdateStatus}>
@@ -238,14 +236,11 @@ export function BulkOperationsBar({
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </Stack>
 
                 {/* Priority */}
-                <div>
-                  <Typography
-                    variant="small"
-                    className="block font-medium text-ui-text-secondary mb-1.5"
-                  >
+                <Stack gap="xs">
+                  <Typography variant="label" color="secondary">
                     Priority
                   </Typography>
                   <Select onValueChange={handleUpdatePriority}>
@@ -260,14 +255,11 @@ export function BulkOperationsBar({
                       <SelectItem value="lowest">Lowest</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </Stack>
 
                 {/* Assignee */}
-                <div>
-                  <Typography
-                    variant="small"
-                    className="block font-medium text-ui-text-secondary mb-1.5"
-                  >
+                <Stack gap="xs">
+                  <Typography variant="label" color="secondary">
                     Assignee
                   </Typography>
                   <Select onValueChange={handleAssign}>
@@ -283,14 +275,11 @@ export function BulkOperationsBar({
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </Stack>
 
                 {/* Sprint */}
-                <div>
-                  <Typography
-                    variant="small"
-                    className="block font-medium text-ui-text-secondary mb-1.5"
-                  >
+                <Stack gap="xs">
+                  <Typography variant="label" color="secondary">
                     Sprint
                   </Typography>
                   <Select onValueChange={handleMoveToSprint}>
@@ -306,14 +295,11 @@ export function BulkOperationsBar({
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </Stack>
 
                 {/* Start Date */}
-                <div>
-                  <Typography
-                    variant="small"
-                    className="block font-medium text-ui-text-secondary mb-1.5"
-                  >
+                <Stack gap="xs">
+                  <Typography variant="label" color="secondary">
                     Start Date
                   </Typography>
                   <Flex gap="sm">
@@ -331,14 +317,11 @@ export function BulkOperationsBar({
                       Clear
                     </Button>
                   </Flex>
-                </div>
+                </Stack>
 
                 {/* Due Date */}
-                <div>
-                  <Typography
-                    variant="small"
-                    className="block font-medium text-ui-text-secondary mb-1.5"
-                  >
+                <Stack gap="xs">
+                  <Typography variant="label" color="secondary">
                     Due Date
                   </Typography>
                   <Flex gap="sm">
@@ -356,9 +339,9 @@ export function BulkOperationsBar({
                       Clear
                     </Button>
                   </Flex>
-                </div>
+                </Stack>
               </Grid>
-            </div>
+            </Stack>
           )}
         </div>
       </div>
