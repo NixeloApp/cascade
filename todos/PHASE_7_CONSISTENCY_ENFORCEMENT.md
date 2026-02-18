@@ -179,9 +179,9 @@ grep -r "from.*ui/PageHeader" src/
 
 | File | Violations | Status |
 |------|------------|--------|
-| `Settings/ProfileContent.tsx` | ~16 | ⬜ |
-| `Settings/NotificationsTab.tsx` | ~25 | ⬜ |
-| `Settings/PreferencesTab.tsx` | ~13 | ⬜ |
+| `Settings/ProfileContent.tsx` | ~16 | ✅ |
+| `Settings/NotificationsTab.tsx` | ~25 | ✅ |
+| `Settings/PreferencesTab.tsx` | ~13 | ✅ |
 | `Settings/ApiKeysManager.tsx` | ~46 | ⬜ |
 | `Settings/SSOSettings.tsx` | ~7 | ⬜ |
 | `Settings/TwoFactorSettings.tsx` | ~11 | ✅ |
@@ -278,8 +278,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-18
-**Files Migrated:** 67 / ~100
-**Violations Remaining:** 532 (down from 1145)
+**Files Migrated:** 70 / ~100
+**Violations Remaining:** 528 (down from 1145)
 
 ---
 
