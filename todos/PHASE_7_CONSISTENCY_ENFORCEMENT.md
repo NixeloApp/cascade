@@ -3,7 +3,7 @@
 > **Status:** 🚧 In Progress
 > **Goal:** All styling lives in CVA components. No raw Tailwind in app code.
 > **Last Updated:** 2026-02-17
-> **Progress:** 0/1145 classNames migrated (0%)
+> **Progress:** 229/1145 classNames migrated (20%)
 
 ---
 
@@ -156,21 +156,22 @@ grep -r "from.*ui/PageHeader" src/
 | `IssueDetailModal.tsx` | ~3 | ✅ |
 | `CreateIssueModal.tsx` | ~3 | ✅ |
 | `NotificationCenter.tsx` | ~6 | ✅ (4 remaining - responsive/padding edge cases) |
-| `GlobalSearch.tsx` | ~13 | ⬜ |
+| `GlobalSearch.tsx` | ~13 | ✅ |
 | `CommandPalette.tsx` | ~1 | ✅ (1 remaining - responsive gap) |
 
 **Priority 2: Feature Components**
 
 | File | Violations | Status |
 |------|------------|--------|
-| `AnalyticsDashboard.tsx` | ~10 | ⬜ |
+| `AnalyticsDashboard.tsx` | ~10 | ✅ |
 | `SprintManager.tsx` | ~19 | ⬜ |
 | `ActivityFeed.tsx` | ~4 | ✅ |
-| `FilterBar.tsx` | ~11 | ⬜ |
+| `FilterBar.tsx` | ~11 | ✅ |
 | `BulkOperationsBar.tsx` | ~11 | ⬜ |
 | `DocumentHeader.tsx` | ~8 | ⬜ |
 | `IssueCard.tsx` | ~9 | ⬜ |
-| `ProjectsList.tsx` | ~2 | ⬜ |
+| `ProjectsList.tsx` | ~2 | ✅ |
+| `Analytics/ChartCard.tsx` | ~1 | ✅ |
 
 **Priority 3: Settings & Forms**
 
@@ -275,8 +276,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-17
-**Files Migrated:** 6 / ~100
-**Violations Remaining:** 929 (down from 1145)
+**Files Migrated:** 12 / ~100
+**Violations Remaining:** 916 (down from 1145)
 
 ---
 

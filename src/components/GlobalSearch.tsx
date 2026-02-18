@@ -144,24 +144,20 @@ function SearchListContent({
 
   if (isLoading) {
     return (
-      <div className="p-8 text-center text-ui-text-secondary">
+      <Flex direction="column" align="center" className="p-8 text-ui-text-secondary">
         <div className="inline-block w-6 h-6 border-2 border-brand-ring border-t-transparent rounded-full animate-spin mb-2" />
-        <Typography variant="p" className="text-sm">
-          Searching...
-        </Typography>
-      </div>
+        <Typography variant="small">Searching...</Typography>
+      </Flex>
     );
   }
 
   return (
     <>
       <CommandEmpty className="p-8" data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}>
-        <div className="text-center">
-          <Icon icon={Search} size="xl" className="mx-auto mb-4" />
-          <Typography variant="p" className="font-medium text-ui-text">
-            No results found
-          </Typography>
-        </div>
+        <Flex direction="column" align="center">
+          <Icon icon={Search} size="xl" className="mb-4" />
+          <Typography variant="label">No results found</Typography>
+        </Flex>
       </CommandEmpty>
       {filteredResults.length > 0 && (
         <CommandGroup>
@@ -171,7 +167,7 @@ function SearchListContent({
         </CommandGroup>
       )}
       {hasMore && (
-        <div className="p-4 border-t border-ui-border">
+        <Flex className="p-4 border-t border-ui-border">
           <Button
             variant="ghost"
             size="sm"
@@ -180,7 +176,7 @@ function SearchListContent({
           >
             Load More ({totalCount - filteredResults.length} remaining)
           </Button>
-        </div>
+        </Flex>
       )}
     </>
   );
@@ -373,11 +369,7 @@ export function GlobalSearch() {
           </CommandList>
 
           {/* Footer */}
-          <Flex
-            align="center"
-            justify="between"
-            className="p-3 border-t border-ui-border text-xs text-ui-text-secondary"
-          >
+          <Flex align="center" justify="between" className="p-3 border-t border-ui-border">
             <Flex align="center" gap="lg">
               <ShortcutHint keys="up+down">Navigate</ShortcutHint>
               <ShortcutHint keys="Enter">Open</ShortcutHint>

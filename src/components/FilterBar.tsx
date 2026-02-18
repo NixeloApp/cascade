@@ -19,6 +19,7 @@ import {
 import { Flex, FlexItem } from "./ui/Flex";
 import { Checkbox, Input } from "./ui/form";
 import { Icon } from "./ui/Icon";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 export interface BoardFilters {
@@ -135,12 +136,10 @@ function SavedFiltersDropdown({
             justify="between"
             className="px-2 py-1.5 hover:bg-ui-bg-secondary rounded cursor-pointer"
           >
-            <button
-              type="button"
-              onClick={() => onLoadFilter(filter)}
-              className="flex-1 text-left text-sm"
-            >
-              {filter.name}
+            <button type="button" onClick={() => onLoadFilter(filter)} className="flex-1 text-left">
+              <Typography variant="small" as="span">
+                {filter.name}
+              </Typography>
               {filter.isPublic && (
                 <Typography variant="caption" color="tertiary" as="span" className="ml-1">
                   (public)
@@ -205,7 +204,7 @@ function SaveFilterDialog({
         </>
       }
     >
-      <div className="space-y-4">
+      <Stack gap="md">
         <Input
           label="Filter Name"
           type="text"
@@ -218,7 +217,7 @@ function SaveFilterDialog({
           checked={isPublic}
           onChange={(e) => onIsPublicChange(e.target.checked)}
         />
-      </div>
+      </Stack>
     </Dialog>
   );
 }

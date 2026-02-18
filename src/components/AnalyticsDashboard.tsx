@@ -3,8 +3,10 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { CheckCircle, MapPin, TrendingUp, Zap } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { BarChart } from "./Analytics/BarChart";
@@ -113,15 +115,15 @@ export function AnalyticsDashboard({ projectId }: Props) {
   if (!(analytics && velocity)) {
     return (
       <PageLayout fullHeight className="bg-ui-bg-secondary">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <Stack gap="lg" className="max-w-7xl mx-auto">
           {/* Header Skeleton */}
-          <div>
-            <Skeleton className="h-6 sm:h-8 w-48 sm:w-64 mb-2" />
+          <Stack gap="xs">
+            <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
             <Skeleton className="h-3 sm:h-4 w-64 sm:w-96" />
-          </div>
+          </Stack>
 
           {/* Metric Cards Skeleton */}
-          <Grid cols={2} colsMd={4} gap="md" className="sm:gap-4">
+          <Grid cols={2} colsMd={4} gap="md">
             <SkeletonStatCard />
             <SkeletonStatCard />
             <SkeletonStatCard />
@@ -129,32 +131,32 @@ export function AnalyticsDashboard({ projectId }: Props) {
           </Grid>
 
           {/* Charts Skeleton */}
-          <Grid cols={1} colsLg={2} gap="lg" className="sm:gap-6">
-            <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
+          <Grid cols={1} colsLg={2} gap="lg">
+            <Card variant="elevated" padding="lg">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
-            </div>
-            <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
+            </Card>
+            <Card variant="elevated" padding="lg">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
-            </div>
-            <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
+            </Card>
+            <Card variant="elevated" padding="lg">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
-            </div>
-            <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
+            </Card>
+            <Card variant="elevated" padding="lg">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
-            </div>
+            </Card>
           </Grid>
-        </div>
+        </Stack>
       </PageLayout>
     );
   }
 
   return (
     <PageLayout fullHeight className="bg-ui-bg-secondary">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <Stack gap="lg" className="max-w-7xl mx-auto">
         {/* Header */}
         <PageHeader
           title="Analytics Dashboard"
@@ -230,7 +232,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
 
         {/* Recent Activity */}
         <RecentActivity activities={recentActivity} />
-      </div>
+      </Stack>
     </PageLayout>
   );
 }
