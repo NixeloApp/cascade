@@ -226,21 +226,21 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   if (isLoading) {
     return (
       <FlexItem flex="1" className="overflow-x-auto">
-        <Flex align="center" justify="between" className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2">
+        <Flex align="center" justify="between">
           <SkeletonText lines={1} className="w-32" />
           <SkeletonText lines={1} className="w-32" />
         </Flex>
-        <Flex className="space-x-3 sm:space-x-6 px-4 sm:px-6 pb-6 overflow-x-auto">
+        <Flex gap="md" className="overflow-x-auto">
           {[1, 2, 3, 4].map((i) => (
             <FlexItem
               key={i}
               shrink={false}
               className="w-72 sm:w-80 bg-ui-bg-soft rounded-container border border-ui-border"
             >
-              <div className="p-3 sm:p-4 border-b border-ui-border/50 bg-transparent rounded-t-container">
+              <div className="border-b border-ui-border/50 bg-transparent rounded-t-container">
                 <SkeletonText lines={1} className="w-24" />
               </div>
-              <div className="p-2 space-y-2 min-h-96">
+              <div className="min-h-96">
                 <SkeletonKanbanCard />
                 <SkeletonKanbanCard />
                 <SkeletonKanbanCard />
@@ -289,7 +289,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
         <Flex
           ref={boardContainerRef}
           direction="column"
-          className="lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6 px-4 lg:px-6 pb-6 lg:overflow-x-auto -webkit-overflow-scrolling-touch"
+          className="lg:flex-row lg:overflow-x-auto -webkit-overflow-scrolling-touch"
         >
           {workflowStates.map((state, columnIndex: number) => {
             const counts = statusCounts[state.id] || {

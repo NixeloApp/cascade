@@ -199,7 +199,7 @@ export function InboxList({ projectId }: InboxListProps) {
   ).length;
 
   return (
-    <Flex direction="column" className="h-full p-4">
+    <Flex direction="column" className="h-full">
       <Flex align="center" justify="between" className="mb-4">
         <Typography variant="h3">Inbox</Typography>
         {counts.open > 0 && <Badge variant="secondary">{counts.open} to review</Badge>}
@@ -227,7 +227,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
         {/* Bulk Actions Bar */}
         {activeTab === "open" && triageableCount > 0 && (
-          <Flex align="center" gap="md" className="mb-4 p-2 bg-ui-bg-secondary rounded-container">
+          <Flex align="center" gap="md" className="mb-4 bg-ui-bg-secondary rounded-container">
             <Checkbox
               checked={selectedIds.size === triageableCount && triageableCount > 0}
               onCheckedChange={(checked) => {
@@ -240,7 +240,7 @@ export function InboxList({ projectId }: InboxListProps) {
             />
             {selectedIds.size > 0 ? (
               <>
-                <Typography variant="small" className="text-ui-text-secondary">
+                <Typography variant="small" color="secondary">
                   {selectedIds.size} selected
                 </Typography>
                 <FlexItem grow />
@@ -258,7 +258,7 @@ export function InboxList({ projectId }: InboxListProps) {
                 </Button>
               </>
             ) : (
-              <Typography variant="small" className="text-ui-text-tertiary">
+              <Typography variant="small" color="tertiary">
                 Select items for bulk actions
               </Typography>
             )}

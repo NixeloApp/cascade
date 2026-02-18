@@ -136,7 +136,7 @@ function SearchListContent({
 }) {
   if (query.length < 2) {
     return (
-      <Typography variant="small" color="secondary" className="p-8 text-center">
+      <Typography variant="small" color="secondary" className="text-center">
         Type at least 2 characters to search
       </Typography>
     );
@@ -144,7 +144,7 @@ function SearchListContent({
 
   if (isLoading) {
     return (
-      <Flex direction="column" align="center" className="p-8 text-ui-text-secondary">
+      <Flex direction="column" align="center" className="text-ui-text-secondary">
         <div className="inline-block w-6 h-6 border-2 border-brand-ring border-t-transparent rounded-full animate-spin mb-2" />
         <Typography variant="small">Searching...</Typography>
       </Flex>
@@ -153,7 +153,7 @@ function SearchListContent({
 
   return (
     <>
-      <CommandEmpty className="p-8" data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}>
+      <CommandEmpty data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}>
         <Flex direction="column" align="center">
           <Icon icon={Search} size="xl" className="mb-4" />
           <Typography variant="label">No results found</Typography>
@@ -167,7 +167,7 @@ function SearchListContent({
         </CommandGroup>
       )}
       {hasMore && (
-        <Flex className="p-4 border-t border-ui-border">
+        <Flex className="border-t border-ui-border">
           <Button
             variant="ghost"
             size="sm"
@@ -196,7 +196,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
         window.location.href = href;
         onClose();
       }}
-      className="p-3 sm:p-4 cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
+      className="cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
       data-testid={TEST_IDS.SEARCH.RESULT_ITEM}
     >
       <Flex align="start" gap="md" className="w-full">
@@ -243,7 +243,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
               {result.type}
             </Badge>
           </Flex>
-          <Typography variant="p" className="font-medium mt-1 truncate">
+          <Typography variant="label" className="mt-1 truncate">
             {result.title}
           </Typography>
           <Typography variant="meta" className="mt-1 line-clamp-2">
@@ -332,7 +332,7 @@ export function GlobalSearch() {
           />
 
           {/* Tabs with counts */}
-          <Flex gap="sm" className="sm:gap-4 px-4 pt-2 border-b border-ui-border overflow-x-auto">
+          <Flex gap="sm" className="border-b border-ui-border overflow-x-auto">
             <SearchTab
               label="All"
               isActive={activeTab === "all"}
@@ -369,7 +369,7 @@ export function GlobalSearch() {
           </CommandList>
 
           {/* Footer */}
-          <Flex align="center" justify="between" className="p-3 border-t border-ui-border">
+          <Flex align="center" justify="between" className="border-t border-ui-border">
             <Flex align="center" gap="lg">
               <ShortcutHint keys="up+down">Navigate</ShortcutHint>
               <ShortcutHint keys="Enter">Open</ShortcutHint>

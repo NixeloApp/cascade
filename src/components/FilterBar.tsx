@@ -96,7 +96,7 @@ function FilterDropdown<T>({
           </DropdownMenuCheckboxItem>
         ))}
         {(!items || items.length === 0) && (
-          <Typography variant="small" color="secondary" className="px-2 py-1.5">
+          <Typography variant="small" color="secondary">
             {emptyMessage}
           </Typography>
         )}
@@ -134,7 +134,7 @@ function SavedFiltersDropdown({
             key={filter._id}
             align="center"
             justify="between"
-            className="px-2 py-1.5 hover:bg-ui-bg-secondary rounded cursor-pointer"
+            className="hover:bg-ui-bg-secondary rounded cursor-pointer"
           >
             <button type="button" onClick={() => onLoadFilter(filter)} className="flex-1 text-left">
               <Typography variant="small" as="span">
@@ -298,8 +298,8 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
   const hasActiveFilters = activeFilterCount > 0;
 
   return (
-    <div className="bg-ui-bg-soft border-b border-ui-border px-4 py-2.5">
-      <Flex align="center" gap="sm" className="flex-wrap">
+    <div className="bg-ui-bg-soft border-b border-ui-border">
+      <Flex align="center" gap="sm" wrap>
         {/* Type Filter */}
         <FilterDropdown
           label="Type"
@@ -381,7 +381,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
             variant="ghost"
             size="sm"
             onClick={handleClearFilters}
-            className="h-8 px-2 text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover transition-default"
+            className="text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover transition-default"
           >
             <X className="w-4 h-4 mr-1" />
             Clear ({activeFilterCount})
@@ -394,7 +394,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
             variant="ghost"
             size="sm"
             onClick={() => setShowSaveDialog(true)}
-            className="h-8 px-3 text-ui-text-secondary hover:text-brand hover:bg-ui-bg-hover transition-default"
+            className="text-ui-text-secondary hover:text-brand hover:bg-ui-bg-hover transition-default"
           >
             Save Filter
           </Button>
