@@ -19,7 +19,9 @@ import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Input, Textarea } from "../ui/form";
+import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
@@ -133,16 +135,16 @@ export function IpRestrictionsSettings() {
               ) : (
                 <ShieldAlert className="h-5 w-5 text-ui-text-tertiary" />
               )}
-              <div>
-                <Typography variant="p" className="font-medium">
+              <Stack gap="none">
+                <Typography variant="label">
                   {status.enabled ? "IP Restrictions Active" : "IP Restrictions Disabled"}
                 </Typography>
-                <Typography variant="muted" className="text-sm">
+                <Typography variant="small" color="secondary">
                   {status.enabled
                     ? `${status.allowlistCount} IP${status.allowlistCount !== 1 ? "s" : ""} in allowlist`
                     : "Anyone can access from any IP address"}
                 </Typography>
-              </div>
+              </Stack>
             </Flex>
             <Switch
               checked={status.enabled}
@@ -153,11 +155,9 @@ export function IpRestrictionsSettings() {
           </Flex>
 
           {/* Allowlist Section */}
-          <div>
-            <Flex align="center" justify="between" className="mb-4">
-              <Typography variant="h3" className="text-base font-medium">
-                IP Allowlist
-              </Typography>
+          <Stack gap="md">
+            <Flex align="center" justify="between">
+              <Typography variant="h3">IP Allowlist</Typography>
               <Button variant="secondary" size="sm" onClick={() => setIsAddDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 Add IP
@@ -182,31 +182,21 @@ export function IpRestrictionsSettings() {
                   </>
                 }
               >
-                <Flex direction="column" gap="md">
-                  <div>
-                    <label
-                      htmlFor="ipRange"
-                      className="block text-sm font-medium text-ui-text mb-2"
-                    >
-                      IP Address or CIDR Range
-                    </label>
+                <Stack gap="md">
+                  <Stack gap="xs">
+                    <Label htmlFor="ipRange">IP Address or CIDR Range</Label>
                     <Input
                       id="ipRange"
                       value={newIpRange}
                       onChange={(e) => setNewIpRange(e.target.value)}
                       placeholder="192.168.1.0/24 or 203.0.113.50"
                     />
-                    <Typography variant="muted" className="mt-1 text-sm">
+                    <Typography variant="caption" color="secondary">
                       Examples: 192.168.1.100 (single IP), 10.0.0.0/8 (CIDR range)
                     </Typography>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium text-ui-text mb-2"
-                    >
-                      Description (optional)
-                    </label>
+                  </Stack>
+                  <Stack gap="xs">
+                    <Label htmlFor="description">Description (optional)</Label>
                     <Textarea
                       id="description"
                       value={newDescription}
@@ -214,8 +204,8 @@ export function IpRestrictionsSettings() {
                       placeholder="Office network, VPN exit node, etc."
                       rows={2}
                     />
-                  </div>
-                </Flex>
+                  </Stack>
+                </Stack>
               </Dialog>
             </Flex>
 
@@ -227,65 +217,66 @@ export function IpRestrictionsSettings() {
                 description="Add IP addresses or CIDR ranges to restrict access. When enabled, only users from these IPs can access the organization."
               />
             ) : (
-              <Flex direction="column" gap="sm">
+              <Stack gap="sm">
                 {allowlist.map((entry: IpAllowlistEntry) => (
-                  <Flex
-                    key={entry._id}
-                    align="center"
-                    justify="between"
-                    className="p-3 bg-ui-bg-soft rounded-secondary border border-ui-border"
-                  >
-                    <Flex direction="column" gap="xs">
-                      <Flex align="center" gap="sm">
-                        <Typography variant="mono" className="text-sm">
-                          {entry.ipRange}
-                        </Typography>
-                        {entry.description && (
-                          <Typography variant="muted" className="text-sm">
-                            — {entry.description}
+                  <Card key={entry._id} padding="sm" className="bg-ui-bg-soft">
+                    <Flex align="center" justify="between">
+                      <Stack gap="xs">
+                        <Flex align="center" gap="sm">
+                          <Typography variant="mono" className="text-sm">
+                            {entry.ipRange}
                           </Typography>
-                        )}
-                      </Flex>
-                      <Typography variant="muted" className="text-xs">
-                        Added by {entry.createdByName} on{" "}
-                        {new Date(entry.createdAt).toLocaleDateString()}
-                      </Typography>
+                          {entry.description && (
+                            <Typography variant="small" color="secondary">
+                              — {entry.description}
+                            </Typography>
+                          )}
+                        </Flex>
+                        <Typography variant="caption" color="secondary">
+                          Added by {entry.createdByName} on{" "}
+                          {new Date(entry.createdAt).toLocaleDateString()}
+                        </Typography>
+                      </Stack>
+                      <Tooltip content="Remove from allowlist">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveIp(entry._id)}
+                          className="text-status-error hover:bg-status-error/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </Tooltip>
                     </Flex>
-                    <Tooltip content="Remove from allowlist">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveIp(entry._id)}
-                        className="text-status-error hover:bg-status-error/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </Tooltip>
-                  </Flex>
+                  </Card>
                 ))}
-              </Flex>
+              </Stack>
             )}
-          </div>
+          </Stack>
 
           {/* Help Text */}
-          <div className="p-4 bg-ui-bg-soft rounded-secondary border border-ui-border">
-            <Typography variant="p" className="font-medium mb-2">
-              How IP Restrictions Work
-            </Typography>
-            <Flex direction="column" gap="xs" className="text-ui-text-secondary">
-              <Typography variant="small">
-                • When enabled, only users from allowed IPs can access your organization
-              </Typography>
-              <Typography variant="small">
-                • Use CIDR notation for ranges (e.g., 10.0.0.0/8 allows 10.0.0.0 - 10.255.255.255)
-              </Typography>
-              <Typography variant="small">• Single IPs work too (e.g., 203.0.113.50)</Typography>
-              <Typography variant="small">
-                • Make sure to add your current IP before enabling restrictions
-              </Typography>
-              <Typography variant="small">• Admins are also subject to IP restrictions</Typography>
-            </Flex>
-          </div>
+          <Card padding="md" className="bg-ui-bg-soft">
+            <Stack gap="sm">
+              <Typography variant="label">How IP Restrictions Work</Typography>
+              <Stack gap="xs">
+                <Typography variant="small" color="secondary">
+                  • When enabled, only users from allowed IPs can access your organization
+                </Typography>
+                <Typography variant="small" color="secondary">
+                  • Use CIDR notation for ranges (e.g., 10.0.0.0/8 allows 10.0.0.0 - 10.255.255.255)
+                </Typography>
+                <Typography variant="small" color="secondary">
+                  • Single IPs work too (e.g., 203.0.113.50)
+                </Typography>
+                <Typography variant="small" color="secondary">
+                  • Make sure to add your current IP before enabling restrictions
+                </Typography>
+                <Typography variant="small" color="secondary">
+                  • Admins are also subject to IP restrictions
+                </Typography>
+              </Stack>
+            </Stack>
+          </Card>
         </Flex>
       </CardBody>
     </Card>
