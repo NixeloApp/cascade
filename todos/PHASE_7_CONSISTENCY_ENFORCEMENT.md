@@ -182,15 +182,15 @@ grep -r "from.*ui/PageHeader" src/
 | `Settings/ProfileContent.tsx` | ~16 | ✅ |
 | `Settings/NotificationsTab.tsx` | ~25 | ✅ |
 | `Settings/PreferencesTab.tsx` | ~13 | ✅ |
-| `Settings/ApiKeysManager.tsx` | ~46 | ⬜ |
-| `Settings/SSOSettings.tsx` | ~7 | ⬜ |
+| `Settings/ApiKeysManager.tsx` | ~46 | ✅ |
+| `Settings/SSOSettings.tsx` | ~7 | ✅ |
 | `Settings/TwoFactorSettings.tsx` | ~11 | ✅ |
 
 **Priority 4: Admin Components**
 
 | File | Violations | Status |
 |------|------------|--------|
-| `Admin/UserManagement.tsx` | ~31 | ⬜ |
+| `Admin/UserManagement.tsx` | ~31 | ✅ |
 | `Admin/UserTypeManager.tsx` | ~28 | ⬜ |
 | `Admin/HourComplianceDashboard.tsx` | ~15 | ⬜ |
 | `Admin/IpRestrictionsSettings.tsx` | ~14 | ⬜ |
@@ -278,8 +278,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-18
-**Files Migrated:** 70 / ~100
-**Violations Remaining:** 528 (down from 1145)
+**Files Migrated:** 76 / ~100
+**Violations Remaining:** 515 (down from 1145)
 
 ---
 
