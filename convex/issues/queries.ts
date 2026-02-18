@@ -267,11 +267,7 @@ export const listRoadmapIssues = authenticatedQuery({
       issues = issues.filter((i) => i.dueDate !== undefined);
     }
 
-    return await enrichIssues(ctx, issues, {
-      includeReporter: false,
-      includeEpic: false,
-      includeLabels: false,
-    });
+    return await enrichIssues(ctx, issues);
   },
 });
 
@@ -455,29 +451,6 @@ export const listOrganizationIssues = organizationQuery({
           .query("issues")
           .withIndex("by_organization_deleted", (q) =>
             q.eq("organizationId", ctx.organizationId).lt("isDeleted", true),
-          )
-          .order("desc");
-      },
-    });
-  },
-});
-
-/**
- * List archived issues for the organization
- * Returns paginated archived issues sorted by archive date (most recent first)
- */
-export const listArchivedIssues = organizationQuery({
-  args: {
-    paginationOpts: paginationOptsValidator,
-  },
-  handler: async (ctx, args) => {
-    return await fetchPaginatedIssues(ctx, {
-      paginationOpts: args.paginationOpts,
-      query: (db) => {
-        return db
-          .query("issues")
-          .withIndex("by_organization_archived", (q) =>
-            q.eq("organizationId", ctx.organizationId).gt("archivedAt", 0),
           )
           .order("desc");
       },

@@ -8,7 +8,7 @@ import {
   getDoneColumnThreshold,
   getLoadingStrategy,
 } from "./pagination";
-import { DAY, roundToHour } from "./timeUtils";
+import { DAY } from "./timeUtils";
 
 describe("pagination utilities", () => {
   describe("constants", () => {
@@ -86,19 +86,19 @@ describe("pagination utilities", () => {
     it("should return threshold with default days", () => {
       const now = Date.now();
       const threshold = getDoneColumnThreshold(now);
-      expect(threshold).toBe(roundToHour(now) - DONE_COLUMN_DAYS * DAY);
+      expect(threshold).toBe(now - DONE_COLUMN_DAYS * DAY);
     });
 
     it("should return threshold with custom days", () => {
       const now = Date.now();
       const threshold = getDoneColumnThreshold(now, 7);
-      expect(threshold).toBe(roundToHour(now) - 7 * DAY);
+      expect(threshold).toBe(now - 7 * DAY);
     });
 
     it("should handle zero days", () => {
       const now = Date.now();
       const threshold = getDoneColumnThreshold(now, 0);
-      expect(threshold).toBe(roundToHour(now));
+      expect(threshold).toBe(now);
     });
   });
 

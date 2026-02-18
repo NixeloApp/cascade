@@ -309,26 +309,6 @@ export const updateOidcConfig = mutation({
   },
 });
 
-// Helper to validate SSO configuration completeness
-function validateSsoConfig(connection: {
-  type: "saml" | "oidc";
-  samlConfig?: { idpEntityId?: string; idpMetadataUrl?: string; idpSsoUrl?: string } | null;
-  oidcConfig?: { clientId?: string; issuer?: string } | null;
-}): string | null {
-  if (connection.type === "saml") {
-    const config = connection.samlConfig;
-    if (!config?.idpEntityId || (!config?.idpMetadataUrl && !config?.idpSsoUrl)) {
-      return "SAML configuration is incomplete. Please provide IdP Entity ID and SSO URL.";
-    }
-  } else if (connection.type === "oidc") {
-    const config = connection.oidcConfig;
-    if (!config?.clientId || !config?.issuer) {
-      return "OIDC configuration is incomplete. Please provide Client ID and Issuer URL.";
-    }
-  }
-  return null;
-}
-
 /**
  * Enable or disable an SSO connection
  */
@@ -343,20 +323,47 @@ export const setEnabled = mutation({
   }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const connection = await ctx.db.get(args.connectionId);
-    if (!connection) return { success: false, error: "Connection not found" };
-
-    const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
-    if (!isAdmin) return { success: false, error: "Admin access required" };
-
-    if (args.isEnabled) {
-      const validationError = validateSsoConfig(connection);
-      if (validationError) return { success: false, error: validationError };
+    if (!userId) {
+      throw new Error("Not authenticated");
     }
 
-    await ctx.db.patch(args.connectionId, { isEnabled: args.isEnabled, updatedAt: Date.now() });
+    const connection = await ctx.db.get(args.connectionId);
+    if (!connection) {
+      return { success: false, error: "Connection not found" };
+    }
+
+    // Check admin access
+    const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
+    if (!isAdmin) {
+      return { success: false, error: "Admin access required" };
+    }
+
+    // Validate configuration before enabling
+    if (args.isEnabled) {
+      if (connection.type === "saml") {
+        const config = connection.samlConfig;
+        if (!config?.idpEntityId || (!config?.idpMetadataUrl && !config?.idpSsoUrl)) {
+          return {
+            success: false,
+            error: "SAML configuration is incomplete. Please provide IdP Entity ID and SSO URL.",
+          };
+        }
+      } else if (connection.type === "oidc") {
+        const config = connection.oidcConfig;
+        if (!config?.clientId || !config?.issuer) {
+          return {
+            success: false,
+            error: "OIDC configuration is incomplete. Please provide Client ID and Issuer URL.",
+          };
+        }
+      }
+    }
+
+    await ctx.db.patch(args.connectionId, {
+      isEnabled: args.isEnabled,
+      updatedAt: Date.now(),
+    });
+
     return { success: true };
   },
 });

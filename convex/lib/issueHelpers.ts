@@ -294,37 +294,22 @@ function getProjectLabelsNeeded(issues: Doc<"issues">[]) {
  * Enrich multiple issues with assignee, reporter, epic, and label info
  * Uses batching to avoid N+1 queries
  */
-export interface EnrichIssuesOptions {
-  includeAssignee?: boolean;
-  includeReporter?: boolean;
-  includeEpic?: boolean;
-  includeLabels?: boolean;
-}
-
 export async function enrichIssues(
   ctx: QueryCtx,
   issues: Doc<"issues">[],
-  options: EnrichIssuesOptions = {},
 ): Promise<EnrichedIssue[]> {
-  const {
-    includeAssignee = true,
-    includeReporter = true,
-    includeEpic = true,
-    includeLabels = true,
-  } = options;
-
   if (issues.length === 0) return [];
 
   // Collect unique IDs
   const userIds = new Set<Id<"users">>();
   const epicIds = new Set<Id<"issues">>();
   // We only track projects that actually need label fetching to optimize queries
-  const projectLabelsNeeded = includeLabels ? getProjectLabelsNeeded(issues) : new Map();
+  const projectLabelsNeeded = getProjectLabelsNeeded(issues);
 
   for (const issue of issues) {
-    if (includeAssignee && issue.assigneeId) userIds.add(issue.assigneeId);
-    if (includeReporter) userIds.add(issue.reporterId);
-    if (includeEpic && issue.epicId) epicIds.add(issue.epicId);
+    if (issue.assigneeId) userIds.add(issue.assigneeId);
+    userIds.add(issue.reporterId);
+    if (issue.epicId) epicIds.add(issue.epicId);
   }
 
   // Batch fetch all data
@@ -350,14 +335,12 @@ export async function enrichIssues(
   // Enrich issues
   return issues.map((issue) => ({
     ...issue,
-    assignee:
-      includeAssignee && issue.assigneeId
-        ? toUserInfo(userMap.get(issue.assigneeId.toString()) ?? null)
-        : null,
-    reporter: includeReporter ? toUserInfo(userMap.get(issue.reporterId.toString()) ?? null) : null,
-    epic:
-      includeEpic && issue.epicId ? toEpicInfo(epicMap.get(issue.epicId.toString()) ?? null) : null,
-    labels: includeLabels ? getLabelInfos(issue, labelsByProject) : [],
+    assignee: issue.assigneeId
+      ? toUserInfo(userMap.get(issue.assigneeId.toString()) ?? null)
+      : null,
+    reporter: toUserInfo(userMap.get(issue.reporterId.toString()) ?? null),
+    epic: issue.epicId ? toEpicInfo(epicMap.get(issue.epicId.toString()) ?? null) : null,
+    labels: getLabelInfos(issue, labelsByProject),
   }));
 }
 

@@ -154,19 +154,10 @@ export const listUpcoming = authenticatedQuery({
       )
       .take(BOUNDED_LIST_LIMIT);
 
-    if (reminders.length === 0) {
-      return [];
-    }
-
-    // Batch fetch all events upfront (N+1 fix)
-    const eventIds = [...new Set(reminders.map((r) => r.eventId))];
-    const events = await Promise.all(eventIds.map((id) => ctx.db.get(id)));
-    const eventMap = new Map(eventIds.map((id, i) => [id, events[i]]));
-
-    // Enrich with event data from cache
-    const enriched = reminders
-      .map((reminder) => {
-        const event = eventMap.get(reminder.eventId);
+    // Enrich with event data
+    const enriched = await Promise.all(
+      reminders.map(async (reminder) => {
+        const event = await ctx.db.get(reminder.eventId);
         return {
           ...reminder,
           event: event
@@ -178,10 +169,10 @@ export const listUpcoming = authenticatedQuery({
               }
             : null,
         };
-      })
-      .filter((r) => r.event !== null);
+      }),
+    );
 
-    return enriched;
+    return enriched.filter((r) => r.event !== null);
   },
 });
 
@@ -240,28 +231,12 @@ export const processDueReminders = internalMutation({
       .filter((q) => q.lte(q.field("scheduledFor"), now))
       .take(100); // Process up to 100 at a time
 
-    if (dueReminders.length === 0) {
-      return { processed: 0, skipped: 0 };
-    }
-
-    // Batch fetch all events and users upfront (N+1 fix)
-    const eventIds = [...new Set(dueReminders.map((r) => r.eventId))];
-    const userIds = [...new Set(dueReminders.map((r) => r.userId))];
-
-    const [events, users] = await Promise.all([
-      Promise.all(eventIds.map((id) => ctx.db.get(id))),
-      Promise.all(userIds.map((id) => ctx.db.get(id))),
-    ]);
-
-    const eventMap = new Map(eventIds.map((id, i) => [id, events[i]]));
-    const userMap = new Map(userIds.map((id, i) => [id, users[i]]));
-
     let processed = 0;
     let skipped = 0;
 
     for (const reminder of dueReminders) {
-      // Get the event from cache
-      const event = eventMap.get(reminder.eventId);
+      // Get the event
+      const event = await ctx.db.get(reminder.eventId);
       if (!event) {
         // Event was deleted, remove reminder
         await ctx.db.delete(reminder._id);
@@ -276,8 +251,8 @@ export const processDueReminders = internalMutation({
         continue;
       }
 
-      // Get user from cache
-      const user = userMap.get(reminder.userId);
+      // Get user
+      const user = await ctx.db.get(reminder.userId);
       if (!user) {
         await ctx.db.delete(reminder._id);
         skipped++;

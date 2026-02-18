@@ -1,11 +1,9 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
-import { getVapidPublicKey, useWebPush } from "@/contexts/WebPushContext";
 import {
   AtSign,
   Bell,
@@ -16,157 +14,12 @@ import {
   Smartphone,
   User,
 } from "@/lib/icons";
-import { cn } from "@/lib/utils";
+import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
-
-// ============================================================================
-// Types
-// ============================================================================
-
-interface NotificationToggleProps {
-  icon: LucideIcon;
-  label: string;
-  description?: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  disabled?: boolean;
-  size?: "sm" | "md";
-}
-
-interface DigestOptionProps {
-  value: "none" | "daily" | "weekly";
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: () => void;
-  disabled?: boolean;
-}
-
-// ============================================================================
-// Subcomponents
-// ============================================================================
-
-function NotificationToggle({
-  icon,
-  label,
-  description,
-  checked,
-  onChange,
-  disabled,
-  size = "md",
-}: NotificationToggleProps) {
-  return (
-    <Flex
-      align={description ? "start" : "center"}
-      justify="between"
-      className={cn(
-        description ? "py-3 border-b border-ui-border-secondary last:border-0" : "py-2",
-      )}
-    >
-      <FlexItem flex="1">
-        <Flex align="center" gap="sm">
-          <Icon icon={icon} size={size} />
-          <Typography variant={size === "sm" ? "small" : "label"}>{label}</Typography>
-        </Flex>
-        {description && (
-          <Typography variant="caption" className="mt-1">
-            {description}
-          </Typography>
-        )}
-      </FlexItem>
-      <Switch
-        checked={checked}
-        onCheckedChange={onChange}
-        disabled={disabled}
-        className={cn(description && "ml-4")}
-      />
-    </Flex>
-  );
-}
-
-function DigestOption({
-  value,
-  label,
-  description,
-  checked,
-  onChange,
-  disabled,
-}: DigestOptionProps) {
-  return (
-    <Flex
-      as="label"
-      align="center"
-      gap="md"
-      className="p-3 rounded-lg border border-ui-border cursor-pointer hover:bg-ui-bg-secondary transition-colors"
-    >
-      <input
-        type="radio"
-        name="digest"
-        value={value}
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-        className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
-      />
-      <div>
-        <Typography variant="label">{label}</Typography>
-        <Typography variant="caption">{description}</Typography>
-      </div>
-    </Flex>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <Card>
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-ui-bg-tertiary rounded w-1/3" />
-          <div className="h-4 bg-ui-bg-tertiary rounded w-2/3" />
-          <div className="space-y-3">
-            <div className="h-10 bg-ui-bg-tertiary rounded" />
-            <div className="h-10 bg-ui-bg-tertiary rounded" />
-            <div className="h-10 bg-ui-bg-tertiary rounded" />
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function PushNotSupportedMessage() {
-  return (
-    <div className="p-4 bg-ui-bg-tertiary rounded-lg">
-      <Flex align="center" gap="sm">
-        <Icon icon={BellOff} size="md" className="text-ui-text-tertiary" />
-        <Typography variant="caption">
-          Push notifications are not supported in this browser. Try using Chrome, Edge, or Firefox.
-        </Typography>
-      </Flex>
-    </div>
-  );
-}
-
-function PushNotConfiguredMessage() {
-  return (
-    <div className="p-4 bg-ui-bg-tertiary rounded-lg">
-      <Flex align="center" gap="sm">
-        <Icon icon={Info} size="md" className="text-ui-text-tertiary" />
-        <Typography variant="caption">
-          Push notifications require server configuration. Contact your administrator.
-        </Typography>
-      </Flex>
-    </div>
-  );
-}
-
-// ============================================================================
-// Main Component
-// ============================================================================
 
 export function NotificationsTab() {
   const preferences = useQuery(api.notificationPreferences.get);
@@ -175,6 +28,7 @@ export function NotificationsTab() {
   const updatePushPreferences = useMutation(api.pushNotifications.updatePreferences);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Web Push hook
   const vapidKey = getVapidPublicKey();
   const {
     isSupported,
@@ -185,7 +39,21 @@ export function NotificationsTab() {
   } = useWebPush();
 
   if (!preferences) {
-    return <LoadingSkeleton />;
+    return (
+      <Card>
+        <div className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 bg-ui-bg-tertiary rounded w-1/3" />
+            <div className="h-4 bg-ui-bg-tertiary rounded w-2/3" />
+            <div className="space-y-3">
+              <div className="h-10 bg-ui-bg-tertiary rounded" />
+              <div className="h-10 bg-ui-bg-tertiary rounded" />
+              <div className="h-10 bg-ui-bg-tertiary rounded" />
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   const handleToggle = async (field: string, value: boolean) => {
@@ -224,8 +92,6 @@ export function NotificationsTab() {
     }
   };
 
-  const emailDisabled = isSaving || !preferences.emailEnabled;
-
   return (
     <div className="space-y-6">
       {/* Push Notifications */}
@@ -240,9 +106,24 @@ export function NotificationsTab() {
           </Flex>
 
           {!isSupported ? (
-            <PushNotSupportedMessage />
+            <div className="p-4 bg-ui-bg-tertiary rounded-lg">
+              <Flex align="center" gap="sm">
+                <Icon icon={BellOff} size="md" className="text-ui-text-tertiary" />
+                <Typography variant="caption">
+                  Push notifications are not supported in this browser. Try using Chrome, Edge, or
+                  Firefox.
+                </Typography>
+              </Flex>
+            </div>
           ) : !vapidKey ? (
-            <PushNotConfiguredMessage />
+            <div className="p-4 bg-ui-bg-tertiary rounded-lg">
+              <Flex align="center" gap="sm">
+                <Icon icon={Info} size="md" className="text-ui-text-tertiary" />
+                <Typography variant="caption">
+                  Push notifications require server configuration. Contact your administrator.
+                </Typography>
+              </Flex>
+            </div>
           ) : (
             <>
               <Flex align="start" justify="between" className="mb-4">
@@ -261,12 +142,12 @@ export function NotificationsTab() {
                 >
                   {isSubscribed ? (
                     <>
-                      <Icon icon={BellOff} size="sm" className="mr-1" />
+                      <BellOff className="w-4 h-4 mr-1" />
                       Disable
                     </>
                   ) : (
                     <>
-                      <Icon icon={Bell} size="sm" className="mr-1" />
+                      <Bell className="w-4 h-4 mr-1" />
                       Enable
                     </>
                   )}
@@ -278,38 +159,58 @@ export function NotificationsTab() {
                   <Typography variant="small" className="text-ui-text-secondary mb-2">
                     Choose which notifications you want to receive:
                   </Typography>
-                  <NotificationToggle
-                    icon={AtSign}
-                    label="Mentions"
-                    checked={pushPreferences.pushMentions}
-                    onChange={(v) => handlePushToggle("pushMentions", v)}
-                    disabled={isSaving}
-                    size="sm"
-                  />
-                  <NotificationToggle
-                    icon={User}
-                    label="Assignments"
-                    checked={pushPreferences.pushAssignments}
-                    onChange={(v) => handlePushToggle("pushAssignments", v)}
-                    disabled={isSaving}
-                    size="sm"
-                  />
-                  <NotificationToggle
-                    icon={MessageSquare}
-                    label="Comments"
-                    checked={pushPreferences.pushComments}
-                    onChange={(v) => handlePushToggle("pushComments", v)}
-                    disabled={isSaving}
-                    size="sm"
-                  />
-                  <NotificationToggle
-                    icon={RefreshCw}
-                    label="Status Changes"
-                    checked={pushPreferences.pushStatusChanges}
-                    onChange={(v) => handlePushToggle("pushStatusChanges", v)}
-                    disabled={isSaving}
-                    size="sm"
-                  />
+
+                  {/* Push Mentions */}
+                  <Flex align="center" justify="between" className="py-2">
+                    <Flex align="center" gap="sm">
+                      <Icon icon={AtSign} size="sm" />
+                      <Typography variant="small">Mentions</Typography>
+                    </Flex>
+                    <Switch
+                      checked={pushPreferences.pushMentions}
+                      onCheckedChange={(value) => handlePushToggle("pushMentions", value)}
+                      disabled={isSaving}
+                    />
+                  </Flex>
+
+                  {/* Push Assignments */}
+                  <Flex align="center" justify="between" className="py-2">
+                    <Flex align="center" gap="sm">
+                      <Icon icon={User} size="sm" />
+                      <Typography variant="small">Assignments</Typography>
+                    </Flex>
+                    <Switch
+                      checked={pushPreferences.pushAssignments}
+                      onCheckedChange={(value) => handlePushToggle("pushAssignments", value)}
+                      disabled={isSaving}
+                    />
+                  </Flex>
+
+                  {/* Push Comments */}
+                  <Flex align="center" justify="between" className="py-2">
+                    <Flex align="center" gap="sm">
+                      <Icon icon={MessageSquare} size="sm" />
+                      <Typography variant="small">Comments</Typography>
+                    </Flex>
+                    <Switch
+                      checked={pushPreferences.pushComments}
+                      onCheckedChange={(value) => handlePushToggle("pushComments", value)}
+                      disabled={isSaving}
+                    />
+                  </Flex>
+
+                  {/* Push Status Changes */}
+                  <Flex align="center" justify="between" className="py-2">
+                    <Flex align="center" gap="sm">
+                      <Icon icon={RefreshCw} size="sm" />
+                      <Typography variant="small">Status Changes</Typography>
+                    </Flex>
+                    <Switch
+                      checked={pushPreferences.pushStatusChanges}
+                      onCheckedChange={(value) => handlePushToggle("pushStatusChanges", value)}
+                      disabled={isSaving}
+                    />
+                  </Flex>
                 </div>
               )}
             </>
@@ -344,39 +245,95 @@ export function NotificationsTab() {
           <Typography variant="h5" className="mb-4">
             Notification Types
           </Typography>
+
           <div className="space-y-4">
-            <NotificationToggle
-              icon={AtSign}
-              label="Mentions"
-              description="When someone @mentions you in a comment or description"
-              checked={preferences.emailMentions}
-              onChange={(v) => handleToggle("emailMentions", v)}
-              disabled={emailDisabled}
-            />
-            <NotificationToggle
-              icon={User}
-              label="Assignments"
-              description="When you are assigned to an issue"
-              checked={preferences.emailAssignments}
-              onChange={(v) => handleToggle("emailAssignments", v)}
-              disabled={emailDisabled}
-            />
-            <NotificationToggle
-              icon={MessageSquare}
-              label="Comments"
-              description="When someone comments on your issues"
-              checked={preferences.emailComments}
-              onChange={(v) => handleToggle("emailComments", v)}
-              disabled={emailDisabled}
-            />
-            <NotificationToggle
-              icon={RefreshCw}
-              label="Status Changes"
-              description="When issue status changes on issues you're watching"
-              checked={preferences.emailStatusChanges}
-              onChange={(v) => handleToggle("emailStatusChanges", v)}
-              disabled={emailDisabled}
-            />
+            {/* Mentions */}
+            <Flex
+              align="start"
+              justify="between"
+              className="py-3 border-b border-ui-border-secondary last:border-0"
+            >
+              <FlexItem flex="1">
+                <Flex align="center" gap="sm">
+                  <Icon icon={AtSign} size="md" />
+                  <Typography variant="label">Mentions</Typography>
+                </Flex>
+                <Typography variant="caption" className="mt-1">
+                  When someone @mentions you in a comment or description
+                </Typography>
+              </FlexItem>
+              <Switch
+                checked={preferences.emailMentions}
+                onCheckedChange={(value) => handleToggle("emailMentions", value)}
+                disabled={isSaving || !preferences.emailEnabled}
+                className="ml-4"
+              />
+            </Flex>
+
+            {/* Assignments */}
+            <Flex
+              align="start"
+              justify="between"
+              className="py-3 border-b border-ui-border-secondary last:border-0"
+            >
+              <FlexItem flex="1">
+                <Flex align="center" gap="sm">
+                  <Icon icon={User} size="md" />
+                  <Typography variant="label">Assignments</Typography>
+                </Flex>
+                <Typography variant="caption" className="mt-1">
+                  When you are assigned to an issue
+                </Typography>
+              </FlexItem>
+              <Switch
+                checked={preferences.emailAssignments}
+                onCheckedChange={(value) => handleToggle("emailAssignments", value)}
+                disabled={isSaving || !preferences.emailEnabled}
+                className="ml-4"
+              />
+            </Flex>
+
+            {/* Comments */}
+            <Flex
+              align="start"
+              justify="between"
+              className="py-3 border-b border-ui-border-secondary last:border-0"
+            >
+              <FlexItem flex="1">
+                <Flex align="center" gap="sm">
+                  <Icon icon={MessageSquare} size="md" />
+                  <Typography variant="label">Comments</Typography>
+                </Flex>
+                <Typography variant="caption" className="mt-1">
+                  When someone comments on your issues
+                </Typography>
+              </FlexItem>
+              <Switch
+                checked={preferences.emailComments}
+                onCheckedChange={(value) => handleToggle("emailComments", value)}
+                disabled={isSaving || !preferences.emailEnabled}
+                className="ml-4"
+              />
+            </Flex>
+
+            {/* Status Changes */}
+            <Flex align="start" justify="between" className="py-3">
+              <FlexItem flex="1">
+                <Flex align="center" gap="sm">
+                  <Icon icon={RefreshCw} size="md" />
+                  <Typography variant="label">Status Changes</Typography>
+                </Flex>
+                <Typography variant="caption" className="mt-1">
+                  When issue status changes on issues you're watching
+                </Typography>
+              </FlexItem>
+              <Switch
+                checked={preferences.emailStatusChanges}
+                onCheckedChange={(value) => handleToggle("emailStatusChanges", value)}
+                disabled={isSaving || !preferences.emailEnabled}
+                className="ml-4"
+              />
+            </Flex>
           </div>
         </div>
       </Card>
@@ -390,31 +347,59 @@ export function NotificationsTab() {
           <Typography variant="caption" className="mb-4">
             Receive a summary of activity instead of individual emails
           </Typography>
+
           <div className="space-y-2">
-            <DigestOption
-              value="none"
-              label="No digest"
-              description="Receive emails as events happen"
-              checked={preferences.emailDigest === "none"}
-              onChange={() => handleDigestChange("none")}
-              disabled={emailDisabled}
-            />
-            <DigestOption
-              value="daily"
-              label="Daily digest"
-              description="One email per day with all activity (coming soon)"
-              checked={preferences.emailDigest === "daily"}
-              onChange={() => handleDigestChange("daily")}
-              disabled={emailDisabled}
-            />
-            <DigestOption
-              value="weekly"
-              label="Weekly digest"
-              description="One email per week with all activity (coming soon)"
-              checked={preferences.emailDigest === "weekly"}
-              onChange={() => handleDigestChange("weekly")}
-              disabled={emailDisabled}
-            />
+            <label className="flex items-center gap-3 p-3 rounded-lg border border-ui-border cursor-pointer hover:bg-ui-bg-secondary transition-colors">
+              <input
+                type="radio"
+                name="digest"
+                value="none"
+                checked={preferences.emailDigest === "none"}
+                onChange={() => handleDigestChange("none")}
+                disabled={isSaving || !preferences.emailEnabled}
+                className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
+              />
+              <div>
+                <Typography variant="label">No digest</Typography>
+                <Typography variant="caption">Receive emails as events happen</Typography>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-3 rounded-lg border border-ui-border cursor-pointer hover:bg-ui-bg-secondary transition-colors">
+              <input
+                type="radio"
+                name="digest"
+                value="daily"
+                checked={preferences.emailDigest === "daily"}
+                onChange={() => handleDigestChange("daily")}
+                disabled={isSaving || !preferences.emailEnabled}
+                className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
+              />
+              <div>
+                <Typography variant="label">Daily digest</Typography>
+                <Typography variant="caption">
+                  One email per day with all activity (coming soon)
+                </Typography>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-3 rounded-lg border border-ui-border cursor-pointer hover:bg-ui-bg-secondary transition-colors">
+              <input
+                type="radio"
+                name="digest"
+                value="weekly"
+                checked={preferences.emailDigest === "weekly"}
+                onChange={() => handleDigestChange("weekly")}
+                disabled={isSaving || !preferences.emailEnabled}
+                className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
+              />
+              <div>
+                <Typography variant="label">Weekly digest</Typography>
+                <Typography variant="caption">
+                  One email per week with all activity (coming soon)
+                </Typography>
+              </div>
+            </label>
           </div>
         </div>
       </Card>

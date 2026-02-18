@@ -20,15 +20,13 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     }),
   ],
   callbacks: {
-    async afterUserCreatedOrUpdated(ctx, { userId, existingUserId }) {
-      // Skip for existing users (updates) - only run for new users
-      if (existingUserId) {
-        return;
-      }
-
-      // E2E Testing: Automatically flag test users so OTPs are stored
+    async afterUserCreatedOrUpdated(ctx, args) {
+      const { userId } = args;
       const user = await ctx.db.get(userId);
-      if (user?.email?.endsWith("@inbox.mailtrap.io")) {
+      const email = user?.email;
+      const isTestEmail = email?.endsWith("@inbox.mailtrap.io");
+
+      if (isTestEmail && !user.isTestUser) {
         await ctx.db.patch(userId, {
           isTestUser: true,
           testUserCreatedAt: Date.now(),

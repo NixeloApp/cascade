@@ -284,67 +284,6 @@ interface SSOConfigDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface SSOConnection {
-  type: "saml" | "oidc";
-  samlConfig?: { idpEntityId?: string; idpSsoUrl?: string; idpCertificate?: string } | null;
-  oidcConfig?: { issuer?: string; clientId?: string } | null;
-  verifiedDomains?: string[];
-}
-
-// Helper to initialize form state from connection
-function getInitialFormState(connection: SSOConnection | null | undefined) {
-  if (!connection) {
-    return {
-      idpEntityId: "",
-      idpSsoUrl: "",
-      idpCertificate: "",
-      issuer: "",
-      clientId: "",
-      clientSecret: "",
-      domains: "",
-    };
-  }
-  const saml = connection.type === "saml" && connection.samlConfig;
-  const oidc = connection.type === "oidc" && connection.oidcConfig;
-  return {
-    idpEntityId: saml ? saml.idpEntityId || "" : "",
-    idpSsoUrl: saml ? saml.idpSsoUrl || "" : "",
-    idpCertificate: saml ? saml.idpCertificate || "" : "",
-    issuer: oidc ? oidc.issuer || "" : "",
-    clientId: oidc ? oidc.clientId || "" : "",
-    clientSecret: "",
-    domains: connection.verifiedDomains?.join(", ") || "",
-  };
-}
-
-async function saveConfig(
-  connection: { type: "saml" | "oidc" },
-  connectionId: Id<"ssoConnections">,
-  samlFields: { idpEntityId: string; idpSsoUrl: string; idpCertificate: string },
-  oidcFields: { issuer: string; clientId: string; clientSecret: string },
-  updateSamlConfig: ReturnType<typeof useMutation<typeof api.sso.updateSamlConfig>>,
-  updateOidcConfig: ReturnType<typeof useMutation<typeof api.sso.updateOidcConfig>>,
-): Promise<{ success: boolean; error?: string }> {
-  if (connection.type === "saml") {
-    return updateSamlConfig({
-      connectionId,
-      config: {
-        idpEntityId: samlFields.idpEntityId || undefined,
-        idpSsoUrl: samlFields.idpSsoUrl || undefined,
-        idpCertificate: samlFields.idpCertificate || undefined,
-      },
-    });
-  }
-  return updateOidcConfig({
-    connectionId,
-    config: {
-      issuer: oidcFields.issuer || undefined,
-      clientId: oidcFields.clientId || undefined,
-      clientSecret: oidcFields.clientSecret || undefined,
-    },
-  });
-}
-
 function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogProps) {
   const connection = useQuery(api.sso.get, { connectionId });
   const updateSamlConfig = useMutation(api.sso.updateSamlConfig);
@@ -352,54 +291,72 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   const updateDomains = useMutation(api.sso.updateDomains);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+
+  // SAML fields
   const [idpEntityId, setIdpEntityId] = useState("");
   const [idpSsoUrl, setIdpSsoUrl] = useState("");
   const [idpCertificate, setIdpCertificate] = useState("");
+
+  // OIDC fields
   const [issuer, setIssuer] = useState("");
   const [clientId, setClientId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
+
+  // Common fields
   const [domains, setDomains] = useState("");
 
-  // Reset initialization when dialog closes
+  // Initialize fields when connection loads
   useEffect(() => {
-    if (!open) {
-      setInitialized(false);
+    if (connection) {
+      if (connection.type === "saml" && connection.samlConfig) {
+        setIdpEntityId(connection.samlConfig.idpEntityId || "");
+        setIdpSsoUrl(connection.samlConfig.idpSsoUrl || "");
+        setIdpCertificate(connection.samlConfig.idpCertificate || "");
+      } else if (connection.type === "oidc" && connection.oidcConfig) {
+        setIssuer(connection.oidcConfig.issuer || "");
+        setClientId(connection.oidcConfig.clientId || "");
+      }
+      setDomains(connection.verifiedDomains?.join(", ") || "");
     }
-  }, [open]);
-
-  // Initialize form only once when dialog opens with data
-  useEffect(() => {
-    if (connection && !initialized) {
-      const state = getInitialFormState(connection);
-      setIdpEntityId(state.idpEntityId);
-      setIdpSsoUrl(state.idpSsoUrl);
-      setIdpCertificate(state.idpCertificate);
-      setIssuer(state.issuer);
-      setClientId(state.clientId);
-      setDomains(state.domains);
-      setInitialized(true);
-    }
-  }, [connection, initialized]);
+  }, [connection]);
 
   const handleSave = useCallback(async () => {
     if (!connection) return;
 
     setIsLoading(true);
     try {
-      const configResult = await saveConfig(
-        connection,
-        connectionId,
-        { idpEntityId, idpSsoUrl, idpCertificate },
-        { issuer, clientId, clientSecret },
-        updateSamlConfig,
-        updateOidcConfig,
-      );
-      if (!configResult.success) {
-        showError(new Error(configResult.error || "Failed to update"), "Error");
-        return;
+      // Update configuration
+      if (connection.type === "saml") {
+        const result = await updateSamlConfig({
+          connectionId,
+          config: {
+            idpEntityId: idpEntityId || undefined,
+            idpSsoUrl: idpSsoUrl || undefined,
+            idpCertificate: idpCertificate || undefined,
+          },
+        });
+        if (!result.success) {
+          showError(new Error(result.error || "Failed to update"), "Error");
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        const result = await updateOidcConfig({
+          connectionId,
+          config: {
+            issuer: issuer || undefined,
+            clientId: clientId || undefined,
+            clientSecret: clientSecret || undefined,
+          },
+        });
+        if (!result.success) {
+          showError(new Error(result.error || "Failed to update"), "Error");
+          setIsLoading(false);
+          return;
+        }
       }
 
+      // Update domains
       const domainList = domains
         .split(",")
         .map((d) => d.trim())
@@ -407,6 +364,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
       const domainsResult = await updateDomains({ connectionId, domains: domainList });
       if (!domainsResult.success) {
         showError(new Error(domainsResult.error || "Failed to update domains"), "Error");
+        setIsLoading(false);
         return;
       }
 

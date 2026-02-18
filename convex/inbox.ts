@@ -535,25 +535,14 @@ export const bulkAccept = projectEditorMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-
-    // Batch fetch all inbox issues upfront (N+1 fix)
-    const inboxIssues = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
-    const inboxMap = new Map(args.ids.map((id, i) => [id, inboxIssues[i]]));
-
-    const validItems = filterValidInboxItems(args.ids, inboxMap, ctx.projectId, [
-      "pending",
-      "snoozed",
-    ]);
-    if (validItems.length === 0) return { accepted: 0 };
-
-    // Batch fetch all issues for notifications
-    const issueIds = [...new Set(validItems.map((vi) => vi.item.issueId))];
-    const issues = await Promise.all(issueIds.map((id) => ctx.db.get(id)));
-    const issueMap = new Map(issueIds.map((id, i) => [id, issues[i]]));
-
     let accepted = 0;
 
-    for (const { id, item } of validItems) {
+    for (const id of args.ids) {
+      const inboxIssue = await ctx.db.get(id);
+      if (!inboxIssue) continue;
+      if (inboxIssue.projectId !== ctx.projectId) continue;
+      if (inboxIssue.status !== "pending" && inboxIssue.status !== "snoozed") continue;
+
       await ctx.db.patch(id, {
         status: "accepted",
         triagedBy: ctx.userId,
@@ -561,8 +550,8 @@ export const bulkAccept = projectEditorMutation({
         updatedAt: now,
       });
 
-      // Create notification for the issue creator (using cached issue)
-      const issue = issueMap.get(item.issueId);
+      // Create notification for the issue creator
+      const issue = await ctx.db.get(inboxIssue.issueId);
       if (issue && issue.reporterId !== ctx.userId) {
         await ctx.db.insert("notifications", {
           userId: issue.reporterId,
@@ -583,22 +572,6 @@ export const bulkAccept = projectEditorMutation({
   },
 });
 
-// Filter valid inbox items for bulk operations with proper Convex types
-function filterValidInboxItems(
-  ids: Id<"inboxIssues">[],
-  itemMap: Map<Id<"inboxIssues">, Doc<"inboxIssues"> | null>,
-  projectId: Id<"projects">,
-  validStatuses: Array<"pending" | "snoozed" | "accepted" | "declined" | "duplicate">,
-): Array<{ id: Id<"inboxIssues">; item: Doc<"inboxIssues"> }> {
-  const result: Array<{ id: Id<"inboxIssues">; item: Doc<"inboxIssues"> }> = [];
-  for (const id of ids) {
-    const item = itemMap.get(id);
-    if (!item || item.projectId !== projectId || !validStatuses.includes(item.status)) continue;
-    result.push({ id, item });
-  }
-  return result;
-}
-
 /** Bulk decline multiple inbox issues */
 export const bulkDecline = projectEditorMutation({
   args: {
@@ -607,24 +580,14 @@ export const bulkDecline = projectEditorMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-
-    // Batch fetch all inbox issues upfront (N+1 fix)
-    const inboxIssues = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
-    const inboxMap = new Map(args.ids.map((id, i) => [id, inboxIssues[i]]));
-
-    const validItems = filterValidInboxItems(args.ids, inboxMap, ctx.projectId, [
-      "pending",
-      "snoozed",
-    ]);
-    if (validItems.length === 0) return { declined: 0 };
-
-    // Batch fetch all issues for notifications
-    const issueIds = [...new Set(validItems.map((vi) => vi.item.issueId))];
-    const issues = await Promise.all(issueIds.map((id) => ctx.db.get(id)));
-    const issueMap = new Map(issueIds.map((id, i) => [id, issues[i]]));
-
     let declined = 0;
-    for (const { id, item } of validItems) {
+
+    for (const id of args.ids) {
+      const inboxIssue = await ctx.db.get(id);
+      if (!inboxIssue) continue;
+      if (inboxIssue.projectId !== ctx.projectId) continue;
+      if (inboxIssue.status !== "pending" && inboxIssue.status !== "snoozed") continue;
+
       await ctx.db.patch(id, {
         status: "declined",
         declineReason: args.reason,
@@ -633,22 +596,21 @@ export const bulkDecline = projectEditorMutation({
         updatedAt: now,
       });
 
-      const issue = issueMap.get(item.issueId);
+      // Create notification for the issue creator
+      const issue = await ctx.db.get(inboxIssue.issueId);
       if (issue && issue.reporterId !== ctx.userId) {
-        const message = args.reason
-          ? `Your issue "${issue.title}" was declined. Reason: ${args.reason}`
-          : `Your issue "${issue.title}" was declined.`;
         await ctx.db.insert("notifications", {
           userId: issue.reporterId,
           type: "inbox_declined",
           title: "Issue declined",
-          message,
+          message: `Your issue "${issue.title}" was declined.${args.reason ? ` Reason: ${args.reason}` : ""}`,
           issueId: issue._id,
           projectId: ctx.projectId,
           actorId: ctx.userId,
           isRead: false,
         });
       }
+
       declined++;
     }
 
@@ -669,18 +631,14 @@ export const bulkSnooze = projectEditorMutation({
     }
 
     const now = Date.now();
+    let snoozed = 0;
 
-    // Batch fetch all inbox issues upfront (N+1 fix)
-    const inboxIssues = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
-    const inboxMap = new Map(args.ids.map((id, i) => [id, inboxIssues[i]]));
+    for (const id of args.ids) {
+      const inboxIssue = await ctx.db.get(id);
+      if (!inboxIssue) continue;
+      if (inboxIssue.projectId !== ctx.projectId) continue;
+      if (inboxIssue.status !== "pending" && inboxIssue.status !== "snoozed") continue;
 
-    const validItems = filterValidInboxItems(args.ids, inboxMap, ctx.projectId, [
-      "pending",
-      "snoozed",
-    ]);
-    if (validItems.length === 0) return { snoozed: 0 };
-
-    for (const { id } of validItems) {
       await ctx.db.patch(id, {
         status: "snoozed",
         snoozedUntil: args.until,
@@ -688,8 +646,10 @@ export const bulkSnooze = projectEditorMutation({
         triagedAt: now,
         updatedAt: now,
       });
+
+      snoozed++;
     }
 
-    return { snoozed: validItems.length };
+    return { snoozed };
   },
 });

@@ -6,13 +6,13 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Toaster } from "@/components/ui/Sonner";
-import { getVapidPublicKey, WebPushProvider } from "@/contexts/WebPushContext";
+import { getVapidPublicKey, WebPushProvider } from "@/lib/webPush";
 import { LazyPostHog } from "../components/LazyPostHog";
 import { NotFoundPage } from "../components/NotFoundPage";
 import { TooltipProvider } from "../components/ui/Tooltip";
 import { Typography } from "../components/ui/Typography";
 import { ThemeProvider } from "../contexts/ThemeContext";
-import { register as registerServiceWorker } from "../lib/service-worker";
+import { register as registerServiceWorker } from "../lib/serviceWorker";
 
 declare global {
   interface Window {

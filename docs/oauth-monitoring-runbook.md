@@ -13,7 +13,7 @@ Nixelo uses synthetic OAuth monitoring that runs every 15 minutes to verify Goog
 │  1. Exchange refresh token → access token                       │
 │  2. Use access token to fetch user profile                      │
 │  3. If both succeed → OAuth is healthy                          │
-│  4. If either fails → Alert via email                           │
+│  4. If either fails → Alert to Slack                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -28,9 +28,10 @@ OAUTH_MONITOR_GOOGLE_CLIENT_SECRET=<your-client-secret>
 
 # Refresh token from OAuth Playground (see setup below)
 OAUTH_MONITOR_GOOGLE_REFRESH_TOKEN=1//0exxxxxxxxxxxxxxxxxxxxxxxx
-```
 
-Alerts are sent via the email rotation system (Mailtrap → Resend → SendPulse).
+# Optional: Slack webhook for alerts
+SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx/xxx/xxx
+```
 
 ---
 
@@ -97,10 +98,10 @@ Check the Convex logs:
 
 ### 🔴 CRITICAL: 2+ Consecutive Failures
 
-**Meaning:** Persistent failure, email alert sent.
+**Meaning:** Persistent failure, Slack alert sent.
 
 **Actions:**
-1. Check email for alert details
+1. Check Slack for alert details
 2. Identify error type (see below)
 3. Follow recovery procedure
 

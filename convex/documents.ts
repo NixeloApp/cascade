@@ -1066,19 +1066,16 @@ export const getCommentReactions = authenticatedQuery({
     commentIds: v.array(v.id("documentComments")),
   },
   handler: async (ctx, args) => {
-    // Fetch reactions for all comments in parallel
-    const reactionsArray = await Promise.all(
-      args.commentIds.map((commentId) =>
-        ctx.db
-          .query("documentCommentReactions")
-          .withIndex("by_comment", (q) => q.eq("commentId", commentId))
-          .take(BOUNDED_LIST_LIMIT),
-      ),
-    );
+    // Fetch reactions for all comments at once
     const reactionsByComment = new Map<Id<"documentComments">, Doc<"documentCommentReactions">[]>();
-    args.commentIds.forEach((commentId, idx) => {
-      reactionsByComment.set(commentId, reactionsArray[idx]);
-    });
+
+    for (const commentId of args.commentIds) {
+      const reactions = await ctx.db
+        .query("documentCommentReactions")
+        .withIndex("by_comment", (q) => q.eq("commentId", commentId))
+        .take(BOUNDED_LIST_LIMIT);
+      reactionsByComment.set(commentId, reactions);
+    }
 
     // Transform to summary format
     const result: Record<string, Array<{ emoji: string; count: number; hasReacted: boolean }>> = {};
