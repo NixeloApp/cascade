@@ -13,7 +13,7 @@ interface Props {
 
 export function SectionErrorFallback({ title, message, onRetry }: Props) {
   return (
-    <Flex align="center" justify="center" className="h-full p-8">
+    <Flex align="center" justify="center" className="h-full">
       <Stack align="center" gap="md" className="max-w-md w-full text-center">
         <Icon icon={AlertTriangle} size="xl" className="text-status-error" />
         <Typography variant="h3">{title}</Typography>

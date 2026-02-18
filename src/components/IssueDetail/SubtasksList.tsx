@@ -128,7 +128,7 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
               key={subtask._id}
               gap="sm"
               align="start"
-              className="p-2 rounded hover:bg-ui-bg-secondary group"
+              className="rounded hover:bg-ui-bg-secondary group"
             >
               <Checkbox
                 checked={subtask.status === "done" || subtask.status === "completed"}

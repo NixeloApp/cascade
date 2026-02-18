@@ -67,9 +67,9 @@ function AttachmentItem({
     return (
       <Card padding="sm" className="bg-ui-bg-soft">
         <Flex align="center" gap="sm">
-          <div className="animate-pulse h-8 w-8 bg-ui-bg-tertiary rounded-md" />
+          <div className="animate-pulse size-8 bg-ui-bg-tertiary rounded-md" />
           <FlexItem flex="1">
-            <div className="animate-pulse h-4 bg-ui-bg-tertiary rounded-md" />
+            <div className="animate-pulse h-4 w-full bg-ui-bg-tertiary rounded-md" />
           </FlexItem>
         </Flex>
       </Card>
@@ -91,7 +91,7 @@ function AttachmentItem({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-ui-text hover:text-brand hover:underline truncate block transition-colors duration-default"
+            className="text-ui-text hover:text-brand hover:underline truncate block transition-colors duration-default"
           >
             {filename}
           </a>

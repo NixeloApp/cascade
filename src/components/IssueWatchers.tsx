@@ -77,7 +77,7 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
 
                   {/* User Info */}
                   <FlexItem flex="1" className="min-w-0">
-                    <Typography variant="p" className="font-medium truncate">
+                    <Typography variant="label" className="truncate">
                       {watcher.userName}
                     </Typography>
                     {watcher.userEmail && (
@@ -95,7 +95,7 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
 
       {/* Empty State */}
       {watchers && watchers.length === 0 && (
-        <Typography variant="small" color="secondary" className="text-center py-4">
+        <Typography variant="small" color="secondary" className="text-center">
           No watchers yet. Be the first to watch this issue!
         </Typography>
       )}

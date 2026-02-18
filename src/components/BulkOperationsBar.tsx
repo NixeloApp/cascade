@@ -199,7 +199,7 @@ export function BulkOperationsBar({
             </Flex>
 
             {/* Actions */}
-            <Flex align="center" gap="sm" className="flex-wrap">
+            <Flex align="center" gap="sm" wrap>
               <Button variant="outline" size="sm" onClick={() => setShowActions(!showActions)}>
                 {showActions ? "Hide" : "Actions"}
               </Button>

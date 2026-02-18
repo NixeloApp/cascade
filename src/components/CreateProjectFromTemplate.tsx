@@ -130,7 +130,7 @@ export function CreateProjectFromTemplate({
       className="sm:max-w-4xl"
       footer={
         step === "configure" ? (
-          <Flex className="flex-col sm:flex-row sm:justify-between gap-3 w-full">
+          <Flex direction="column" gap="sm" className="sm:flex-row sm:justify-between w-full">
             <Button
               onClick={handleBack}
               variant="secondary"
@@ -189,7 +189,7 @@ export function CreateProjectFromTemplate({
                     type="button"
                     key={template._id}
                     onClick={() => handleSelectTemplate(template._id)}
-                    className="text-left p-6 border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
+                    className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
                   >
                     <Flex align="start" gap="lg">
                       <FlexItem shrink={false}>

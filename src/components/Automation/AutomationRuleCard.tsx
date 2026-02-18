@@ -117,7 +117,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
           <button
             type="button"
             onClick={handleToggle}
-            className="p-2 hover:bg-ui-bg-secondary rounded transition-colors"
+            className="hover:bg-ui-bg-secondary rounded transition-colors"
             title={rule.isActive ? "Disable rule" : "Enable rule"}
             aria-label={rule.isActive ? "Disable rule" : "Enable rule"}
           >
@@ -126,7 +126,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
           <button
             type="button"
             onClick={onEdit}
-            className="p-2 hover:bg-ui-bg-secondary rounded transition-colors"
+            className="hover:bg-ui-bg-secondary rounded transition-colors"
             title="Edit rule"
             aria-label="Edit rule"
           >
@@ -135,7 +135,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
           <button
             type="button"
             onClick={onDelete}
-            className="p-2 hover:bg-ui-bg-secondary rounded transition-colors"
+            className="hover:bg-ui-bg-secondary rounded transition-colors"
             title="Delete rule"
             aria-label="Delete rule"
           >

@@ -95,7 +95,7 @@ export const NotificationItem = memo(function NotificationItem({
         <Link
           to={linkTo}
           params={linkParams}
-          className="flex-1 min-w-0 group-hover:text-brand transition-colors text-left"
+          className="flex-1 min-w-0 group-hover:text-brand transition-colors"
           onClick={() => {
             if (!notification.isRead) {
               onMarkAsRead(notification._id);
