@@ -7,6 +7,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
 
@@ -119,74 +120,65 @@ export function GoogleCalendarIntegration() {
   };
 
   return (
-    <Card>
-      <div className="p-6">
-        <Flex justify="between" align="start">
-          <Flex gap="lg" align="center">
-            <div className="p-3 bg-brand-ring rounded-lg">
-              <Calendar className="h-6 w-6 text-brand-foreground" />
-            </div>
-            <div>
-              <Typography variant="h3" className="text-lg font-semibold text-ui-text">
-                Google Calendar
-              </Typography>
-              <Typography className="text-sm text-ui-text-secondary mt-1">
-                Sync calendar events between Nixelo and Google Calendar
-              </Typography>
-              {calendarConnection && (
-                <Flex direction="column" gap="xs" className="mt-2">
-                  <Flex align="center" gap="xs" className="text-sm text-status-success">
-                    <Icon icon={Check} size="sm" />
-                    Connected to {calendarConnection.providerAccountId}
-                  </Flex>
-                  {calendarConnection.lastSyncAt && (
-                    <Typography className="text-xs text-ui-text-tertiary">
-                      Last synced: {new Date(calendarConnection.lastSyncAt).toLocaleString()}
-                    </Typography>
-                  )}
-                </Flex>
-              )}
-            </div>
-          </Flex>
-          <div>
-            {calendarConnection ? (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleDisconnect}
-                disabled={isDisconnecting}
-              >
-                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-              </Button>
-            ) : (
-              <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
-                {isConnecting ? "Connecting..." : "Connect Google"}
-              </Button>
-            )}
+    <Card padding="lg">
+      <Flex justify="between" align="start">
+        <Flex gap="lg" align="center">
+          <div className="p-3 bg-brand-ring rounded-lg">
+            <Calendar className="h-6 w-6 text-brand-foreground" />
           </div>
+          <Stack gap="xs">
+            <Typography variant="h3">Google Calendar</Typography>
+            <Typography variant="small" color="secondary">
+              Sync calendar events between Nixelo and Google Calendar
+            </Typography>
+            {calendarConnection && (
+              <Stack gap="xs">
+                <Flex align="center" gap="xs" className="text-status-success">
+                  <Icon icon={Check} size="sm" />
+                  <Typography variant="small">
+                    Connected to {calendarConnection.providerAccountId}
+                  </Typography>
+                </Flex>
+                {calendarConnection.lastSyncAt && (
+                  <Typography variant="caption" color="tertiary">
+                    Last synced: {new Date(calendarConnection.lastSyncAt).toLocaleString()}
+                  </Typography>
+                )}
+              </Stack>
+            )}
+          </Stack>
         </Flex>
+        {calendarConnection ? (
+          <Button variant="danger" size="sm" onClick={handleDisconnect} disabled={isDisconnecting}>
+            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+          </Button>
+        ) : (
+          <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
+            {isConnecting ? "Connecting..." : "Connect Google"}
+          </Button>
+        )}
+      </Flex>
 
-        {calendarConnection && (
-          <Flex direction="column" gap="xl" className="mt-6 pt-6 border-t border-ui-border">
-            {/* Sync Toggle */}
-            <Switch
-              label="Enable Sync"
-              description="Automatically sync events between Nixelo and Google Calendar"
-              labelSide="left"
-              checked={calendarConnection.syncEnabled}
-              onCheckedChange={handleToggleSync}
-              disabled={isSaving}
-            />
+      {calendarConnection && (
+        <Stack gap="xl" className="mt-6 pt-6 border-t border-ui-border">
+          {/* Sync Toggle */}
+          <Switch
+            label="Enable Sync"
+            description="Automatically sync events between Nixelo and Google Calendar"
+            labelSide="left"
+            checked={calendarConnection.syncEnabled}
+            onCheckedChange={handleToggleSync}
+            disabled={isSaving}
+          />
 
-            {/* Sync Direction */}
-            {calendarConnection.syncEnabled && (
-              <div>
-                <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-3">
-                  Sync Direction
-                </Typography>
-                <Flex direction="column" gap="sm">
-                  <label className="cursor-pointer hover:bg-ui-bg-tertiary">
-                    <Flex gap="md" align="center" className="p-3 bg-ui-bg-secondary rounded-lg">
+          {/* Sync Direction */}
+          {calendarConnection.syncEnabled && (
+            <Stack gap="sm">
+              <Typography variant="label">Sync Direction</Typography>
+              <Stack gap="sm">
+                <label className="cursor-pointer hover:bg-ui-bg-tertiary rounded-lg">
+                  <Card padding="sm" className="bg-ui-bg-secondary">
+                    <Flex gap="md" align="center">
                       <input
                         type="radio"
                         name="syncDirection"
@@ -195,19 +187,19 @@ export function GoogleCalendarIntegration() {
                         disabled={isSaving}
                         className="h-4 w-4 text-brand"
                       />
-                      <div>
-                        <Typography className="text-sm font-medium text-ui-text">
-                          Bidirectional
-                        </Typography>
-                        <Typography className="text-xs text-ui-text-tertiary">
+                      <Stack gap="none">
+                        <Typography variant="label">Bidirectional</Typography>
+                        <Typography variant="caption" color="tertiary">
                           Sync both ways (recommended)
                         </Typography>
-                      </div>
+                      </Stack>
                     </Flex>
-                  </label>
+                  </Card>
+                </label>
 
-                  <label className="cursor-pointer hover:bg-ui-bg-tertiary">
-                    <Flex gap="md" align="center" className="p-3 bg-ui-bg-secondary rounded-lg">
+                <label className="cursor-pointer hover:bg-ui-bg-tertiary rounded-lg">
+                  <Card padding="sm" className="bg-ui-bg-secondary">
+                    <Flex gap="md" align="center">
                       <input
                         type="radio"
                         name="syncDirection"
@@ -216,19 +208,19 @@ export function GoogleCalendarIntegration() {
                         disabled={isSaving}
                         className="h-4 w-4 text-brand"
                       />
-                      <div>
-                        <Typography className="text-sm font-medium text-ui-text">
-                          Import Only
-                        </Typography>
-                        <Typography className="text-xs text-ui-text-tertiary">
+                      <Stack gap="none">
+                        <Typography variant="label">Import Only</Typography>
+                        <Typography variant="caption" color="tertiary">
                           Only import from Google to Nixelo
                         </Typography>
-                      </div>
+                      </Stack>
                     </Flex>
-                  </label>
+                  </Card>
+                </label>
 
-                  <label className="cursor-pointer hover:bg-ui-bg-tertiary">
-                    <Flex gap="md" align="center" className="p-3 bg-ui-bg-secondary rounded-lg">
+                <label className="cursor-pointer hover:bg-ui-bg-tertiary rounded-lg">
+                  <Card padding="sm" className="bg-ui-bg-secondary">
+                    <Flex gap="md" align="center">
                       <input
                         type="radio"
                         name="syncDirection"
@@ -237,22 +229,20 @@ export function GoogleCalendarIntegration() {
                         disabled={isSaving}
                         className="h-4 w-4 text-brand"
                       />
-                      <div>
-                        <Typography className="text-sm font-medium text-ui-text">
-                          Export Only
-                        </Typography>
-                        <Typography className="text-xs text-ui-text-tertiary">
+                      <Stack gap="none">
+                        <Typography variant="label">Export Only</Typography>
+                        <Typography variant="caption" color="tertiary">
                           Only export from Nixelo to Google
                         </Typography>
-                      </div>
+                      </Stack>
                     </Flex>
-                  </label>
-                </Flex>
-              </div>
-            )}
-          </Flex>
-        )}
-      </div>
+                  </Card>
+                </label>
+              </Stack>
+            </Stack>
+          )}
+        </Stack>
+      )}
     </Card>
   );
 }

@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
@@ -149,7 +150,7 @@ export function IssuesCalendarView({
           )}
         </Flex>
 
-        <div className="space-y-1">
+        <Stack gap="xs">
           {(dayIssues ?? []).slice(0, 3).map((issue: Doc<"issues">) => (
             <Tooltip key={issue._id} content={issue.title}>
               <button
@@ -162,7 +163,7 @@ export function IssuesCalendarView({
                   <FlexItem flex="1" className="min-w-0">
                     <Flex align="center" gap="xs">
                       <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
-                      <Typography variant="muted" className="text-xs truncate">
+                      <Typography variant="caption" className="truncate">
                         {issue.title}
                       </Typography>
                     </Flex>
@@ -172,11 +173,11 @@ export function IssuesCalendarView({
             </Tooltip>
           ))}
           {dayIssues.length > 3 && (
-            <Typography variant="muted" className="text-xs pl-1.5">
+            <Typography variant="caption" color="secondary" className="pl-1.5">
               +{dayIssues.length - 3} more
             </Typography>
           )}
-        </div>
+        </Stack>
       </div>,
     );
   }
@@ -191,9 +192,7 @@ export function IssuesCalendarView({
         gap="lg"
         className="mb-6 sm:flex-row sm:items-center"
       >
-        <Typography variant="h2" className="text-xl sm:text-2xl font-bold">
-          Issues Calendar
-        </Typography>
+        <Typography variant="h2">Issues Calendar</Typography>
 
         {/* Month Navigation */}
         <Flex
@@ -226,10 +225,7 @@ export function IssuesCalendarView({
             </button>
           </Tooltip>
 
-          <Typography
-            variant="h3"
-            className="text-lg sm:text-xl font-semibold w-full sm:min-w-48 text-center"
-          >
+          <Typography variant="h3" className="w-full sm:min-w-48 text-center">
             {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
           </Typography>
 
@@ -285,26 +281,36 @@ export function IssuesCalendarView({
       </div>
 
       {/* Legend */}
-      <Flex align="center" gap="xl" className="mt-4 text-sm">
+      <Flex align="center" gap="xl" className="mt-4">
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-status-error" />
-          <Typography variant="muted">Highest</Typography>
+          <Typography variant="small" color="secondary">
+            Highest
+          </Typography>
         </Flex>
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-status-warning" />
-          <Typography variant="muted">High</Typography>
+          <Typography variant="small" color="secondary">
+            High
+          </Typography>
         </Flex>
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-accent-ring" />
-          <Typography variant="muted">Medium</Typography>
+          <Typography variant="small" color="secondary">
+            Medium
+          </Typography>
         </Flex>
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-brand-ring" />
-          <Typography variant="muted">Low</Typography>
+          <Typography variant="small" color="secondary">
+            Low
+          </Typography>
         </Flex>
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-ui-text-secondary" />
-          <Typography variant="muted">Lowest</Typography>
+          <Typography variant="small" color="secondary">
+            Lowest
+          </Typography>
         </Flex>
       </Flex>
 

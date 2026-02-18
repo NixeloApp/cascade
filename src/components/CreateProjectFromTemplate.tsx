@@ -5,12 +5,14 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowLeft } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Input, Select, Textarea } from "./ui/form";
 import { Icon } from "./ui/Icon";
@@ -171,7 +173,7 @@ export function CreateProjectFromTemplate({
       <div data-testid={TEST_IDS.PROJECT.CREATE_MODAL}>
         {step === "select" ? (
           // Template Selection
-          <div className="space-y-6">
+          <Stack gap="lg">
             <Typography variant="p" color="secondary">
               Start with a pre-configured template to save time and follow best practices
             </Typography>
@@ -194,55 +196,50 @@ export function CreateProjectFromTemplate({
                         <Typography variant="h2">{template.icon}</Typography>
                       </FlexItem>
                       <FlexItem flex="1" className="min-w-0">
-                        <Typography
-                          variant="h3"
-                          className="text-lg font-semibold text-ui-text mb-1"
-                        >
-                          {template.name}
-                        </Typography>
-                        <Typography variant="p" color="secondary" className="text-sm mb-3">
-                          {template.description}
-                        </Typography>
-                        <Flex align="center" gap="sm">
-                          <Badge size="sm" className={cn(getCategoryColor(template.category))}>
-                            {template.category}
-                          </Badge>
-                          <Badge size="sm" variant="neutral" className="capitalize">
-                            {template.boardType}
-                          </Badge>
-                        </Flex>
+                        <Stack gap="sm">
+                          <Typography variant="h3">{template.name}</Typography>
+                          <Typography variant="small" color="secondary">
+                            {template.description}
+                          </Typography>
+                          <Flex align="center" gap="sm">
+                            <Badge size="sm" className={cn(getCategoryColor(template.category))}>
+                              {template.category}
+                            </Badge>
+                            <Badge size="sm" variant="neutral" className="capitalize">
+                              {template.boardType}
+                            </Badge>
+                          </Flex>
+                        </Stack>
                       </FlexItem>
                     </Flex>
                   </button>
                 ))}
               </Grid>
             )}
-          </div>
+          </Stack>
         ) : (
           // Project Configuration
-          <div className="space-y-6">
+          <Stack gap="lg">
             {/* Template Info */}
             {selectedTemplate && (
-              <div className="p-4 bg-ui-bg-secondary rounded-lg">
+              <Card padding="md" className="bg-ui-bg-secondary">
                 <Flex align="center" gap="md">
                   <Typography variant="h3" as="span">
                     {selectedTemplate.icon}
                   </Typography>
-                  <div>
-                    <Typography variant="h3" className="font-semibold text-ui-text">
-                      {selectedTemplate.name}
-                    </Typography>
-                    <Typography variant="p" color="secondary" className="text-sm">
+                  <Stack gap="none">
+                    <Typography variant="h3">{selectedTemplate.name}</Typography>
+                    <Typography variant="small" color="secondary">
                       {selectedTemplate.workflowStates.length} workflow states,{" "}
                       {selectedTemplate.defaultLabels.length} default labels
                     </Typography>
-                  </div>
+                  </Stack>
                 </Flex>
-              </div>
+              </Card>
             )}
 
             {/* Form */}
-            <div className="space-y-4">
+            <Stack gap="md">
               {workspaces && workspaces.length > 1 && (
                 <Select
                   label="Workspace"
@@ -282,15 +279,13 @@ export function CreateProjectFromTemplate({
                 rows={3}
                 placeholder="Project description..."
               />
-            </div>
+            </Stack>
 
             {/* Preview */}
             {selectedTemplate && (
-              <div>
-                <Typography variant="h4" className="text-sm font-medium text-ui-text mb-3">
-                  What's Included:
-                </Typography>
-                <div className="space-y-2">
+              <Stack gap="sm">
+                <Typography variant="label">What's Included:</Typography>
+                <Stack gap="sm">
                   <Flex align="center" gap="sm">
                     <svg
                       aria-hidden="true"
@@ -304,7 +299,7 @@ export function CreateProjectFromTemplate({
                         clipRule="evenodd"
                       />
                     </svg>
-                    <Typography variant="p" className="text-ui-text">
+                    <Typography variant="small">
                       {selectedTemplate.workflowStates.length} workflow states
                     </Typography>
                   </Flex>
@@ -321,7 +316,7 @@ export function CreateProjectFromTemplate({
                         clipRule="evenodd"
                       />
                     </svg>
-                    <Typography variant="p" className="text-ui-text">
+                    <Typography variant="small">
                       {selectedTemplate.defaultLabels.length} pre-configured labels
                     </Typography>
                   </Flex>
@@ -338,14 +333,14 @@ export function CreateProjectFromTemplate({
                         clipRule="evenodd"
                       />
                     </svg>
-                    <Typography variant="p" className="text-ui-text capitalize">
+                    <Typography variant="small" className="capitalize">
                       {selectedTemplate.boardType} board type
                     </Typography>
                   </Flex>
-                </div>
-              </div>
+                </Stack>
+              </Stack>
             )}
-          </div>
+          </Stack>
         )}
       </div>
     </Dialog>
