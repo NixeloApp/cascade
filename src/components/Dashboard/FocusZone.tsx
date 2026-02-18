@@ -3,9 +3,10 @@ import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowRight } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
-import { Card, CardBody } from "../ui/Card";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface FocusTask {
@@ -36,12 +37,8 @@ export function FocusZone({ task }: FocusZoneProps) {
   };
 
   return (
-    <div className="mb-8">
-      <Typography
-        variant="small"
-        color="tertiary"
-        className="uppercase tracking-widest mb-2 font-bold"
-      >
+    <Stack gap="sm" className="mb-8">
+      <Typography variant="label" color="tertiary" className="uppercase tracking-widest">
         Focus Item
       </Typography>
       <Card
@@ -55,33 +52,29 @@ export function FocusZone({ task }: FocusZoneProps) {
       >
         {/* Brand left border accent */}
         <div className="absolute left-0 top-0 h-full w-1 bg-brand" />
-        <CardBody className="p-6 pl-7">
-          <Flex direction="column" gap="md">
-            <Flex justify="between" align="center">
-              <Badge variant="primary">{task.priority.toUpperCase()}</Badge>
-              <Typography variant="small" color="secondary" className="font-mono">
-                {task.key}
-              </Typography>
-            </Flex>
-
-            <div>
-              <Typography variant="h3" className="text-xl sm:text-2xl font-bold">
-                {task.title}
-              </Typography>
-              <Typography variant="muted" className="mt-1">
-                In project: <strong>{task.projectName}</strong>
-              </Typography>
-            </div>
-
-            <Flex justify="end" align="center" gap="xs">
-              <Typography variant="small" className="font-medium text-brand">
-                View Task
-              </Typography>
-              <Icon icon={ArrowRight} size="sm" className="text-brand" />
-            </Flex>
+        <Stack gap="md" className="p-6 pl-7">
+          <Flex justify="between" align="center">
+            <Badge variant="primary">{task.priority.toUpperCase()}</Badge>
+            <Typography variant="inlineCode" color="secondary">
+              {task.key}
+            </Typography>
           </Flex>
-        </CardBody>
+
+          <Stack gap="xs">
+            <Typography variant="h3">{task.title}</Typography>
+            <Typography variant="muted">
+              In project: <strong>{task.projectName}</strong>
+            </Typography>
+          </Stack>
+
+          <Flex justify="end" align="center" gap="xs">
+            <Typography variant="label" className="text-brand">
+              View Task
+            </Typography>
+            <Icon icon={ArrowRight} size="sm" className="text-brand" />
+          </Flex>
+        </Stack>
       </Card>
-    </div>
+    </Stack>
   );
 }

@@ -1,4 +1,4 @@
-import { Flex } from "../ui/Flex";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface GreetingProps {
@@ -15,24 +15,22 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
   const firstName = userName?.split(" ")[0] || "there";
 
   return (
-    <div className="mb-8">
-      <Flex direction="column" gap="xs">
-        <Typography variant="h1" className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-          {greeting}, <strong className="text-brand">{firstName}</strong>.
-        </Typography>
-        <Typography variant="lead" color="secondary" className="max-w-2xl">
-          {completedCount > 0 ? (
-            <>
-              <strong>
-                {completedCount} {completedCount === 1 ? "task" : "tasks"}
-              </strong>{" "}
-              completed this week.
-            </>
-          ) : (
-            "Here's your overview for today."
-          )}
-        </Typography>
-      </Flex>
-    </div>
+    <Stack gap="xs" className="mb-8">
+      <Typography variant="h1">
+        {greeting}, <strong className="text-brand">{firstName}</strong>.
+      </Typography>
+      <Typography variant="lead" color="secondary" className="max-w-2xl">
+        {completedCount > 0 ? (
+          <>
+            <strong>
+              {completedCount} {completedCount === 1 ? "task" : "tasks"}
+            </strong>{" "}
+            completed this week.
+          </>
+        ) : (
+          "Here's your overview for today."
+        )}
+      </Typography>
+    </Stack>
   );
 }

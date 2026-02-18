@@ -19,16 +19,16 @@ This doc is designed for automated recursive runs via cron.
 3. IF Foundation incomplete → work on foundation tasks
 4. IF Audit incomplete → run audit tasks
 5. IF Migration ready → pick next unmigrated file
-6. MIGRATE 1-2 files max per run (stay focused)
+6. MIGRATE as many files as possible per session
 7. UPDATE progress in this doc
 8. COMMIT with message: "refactor(ui): migrate {filename} to CVA components"
-9. STOP - let next cron run continue
+9. CONTINUE until context limit or interrupted
 ```
 
 ### Rules (NO EXCEPTIONS)
 
 1. **Never skip stages** - Foundation → Audit → Migration (in order)
-2. **Never migrate multiple files** - 1-2 files per run max
+2. **Migrate continuously - do as many files as possible per session
 3. **Never leave broken state** - If stuck, revert and document blocker
 4. **Always update progress** - Mark items as ✅ when done
 5. **Always commit** - Each run = 1 commit
@@ -276,8 +276,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-18
-**Files Migrated:** 16 / ~100
-**Violations Remaining:** 899 (down from 1145)
+**Files Migrated:** 20 / ~100
+**Violations Remaining:** 888 (down from 1145)
 
 ---
 
