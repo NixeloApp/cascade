@@ -12,10 +12,13 @@ import { formatDateForInput, formatDurationHuman, parseDuration } from "@/lib/fo
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { calculateManualEntryTimes, validateManualTimeEntry } from "./manualTimeEntryValidation";
 
@@ -243,7 +246,6 @@ export function ManualTimeEntryModal({
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-4"
       >
         {/* Mode Toggle */}
         <Flex gap="xs" className="p-1 bg-ui-bg-secondary rounded-lg">
@@ -266,13 +268,8 @@ export function ManualTimeEntryModal({
         {/* Date */}
         <form.Field name="date">
           {(field) => (
-            <div>
-              <label
-                htmlFor="time-entry-date"
-                className="block text-sm font-medium text-ui-text mb-1"
-              >
-                Date *
-              </label>
+            <Stack gap="xs">
+              <Label htmlFor="time-entry-date">Date *</Label>
               <input
                 id="time-entry-date"
                 type="date"
@@ -282,7 +279,7 @@ export function ManualTimeEntryModal({
                 className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
                 required
               />
-            </div>
+            </Stack>
           )}
         </form.Field>
 
@@ -290,36 +287,31 @@ export function ManualTimeEntryModal({
         {entryMode === "duration" && (
           <form.Field name="durationInput">
             {(field) => (
-              <div>
-                <label
-                  htmlFor="time-entry-duration"
-                  className="block text-sm font-medium text-ui-text mb-1"
-                >
-                  Duration *
-                </label>
-                <input
-                  id="time-entry-duration"
-                  type="text"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
-                  className={cn(
-                    "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-ring",
-                    isDurationInputValid ? "border-ui-border" : "border-status-error",
+              <Stack gap="sm">
+                <Stack gap="xs">
+                  <Label htmlFor="time-entry-duration">Duration *</Label>
+                  <input
+                    id="time-entry-duration"
+                    type="text"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
+                    className={cn(
+                      "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-ring",
+                      isDurationInputValid ? "border-ui-border" : "border-status-error",
+                    )}
+                  />
+                  {!isDurationInputValid ? (
+                    <Typography variant="caption" className="text-status-error">
+                      Invalid format. Try: 1:30, 1.5, 1h 30m, or 90m
+                    </Typography>
+                  ) : (
+                    <Typography variant="caption">Accepts: 1:30, 1.5, 1h 30m, 90m</Typography>
                   )}
-                />
-                {!isDurationInputValid ? (
-                  <Typography className="text-xs text-status-error mt-1">
-                    Invalid format. Try: 1:30, 1.5, 1h 30m, or 90m
-                  </Typography>
-                ) : (
-                  <Typography className="text-xs text-ui-text-tertiary mt-1">
-                    Accepts: 1:30, 1.5, 1h 30m, 90m
-                  </Typography>
-                )}
+                </Stack>
 
                 {/* Quick Increment Buttons */}
-                <Flex gap="sm" className="mt-2">
+                <Flex gap="sm">
                   <Button
                     type="button"
                     variant="secondary"
@@ -361,30 +353,25 @@ export function ManualTimeEntryModal({
 
                 {/* Duration Display */}
                 {durationSeconds > 0 && (
-                  <div className="mt-3 p-3 bg-brand-subtle border border-brand-border rounded-lg">
-                    <Typography variant="mono" className="text-sm font-medium text-brand-active">
+                  <Card padding="sm" className="bg-brand-subtle border-brand-border">
+                    <Typography variant="mono" className="text-brand-active">
                       Duration: {formatDurationHuman(durationSeconds)}
                     </Typography>
-                  </div>
+                  </Card>
                 )}
-              </div>
+              </Stack>
             )}
           </form.Field>
         )}
 
         {/* Time Range Mode */}
         {entryMode === "timeRange" && (
-          <>
+          <Stack gap="md">
             <Grid cols={2} gap="lg">
               <form.Field name="startTime">
                 {(field) => (
-                  <div>
-                    <label
-                      htmlFor="time-entry-start"
-                      className="block text-sm font-medium text-ui-text mb-1"
-                    >
-                      Start Time *
-                    </label>
+                  <Stack gap="xs">
+                    <Label htmlFor="time-entry-start">Start Time *</Label>
                     <input
                       id="time-entry-start"
                       type="time"
@@ -393,18 +380,13 @@ export function ManualTimeEntryModal({
                       className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
                       required
                     />
-                  </div>
+                  </Stack>
                 )}
               </form.Field>
               <form.Field name="endTime">
                 {(field) => (
-                  <div>
-                    <label
-                      htmlFor="time-entry-end"
-                      className="block text-sm font-medium text-ui-text mb-1"
-                    >
-                      End Time *
-                    </label>
+                  <Stack gap="xs">
+                    <Label htmlFor="time-entry-end">End Time *</Label>
                     <input
                       id="time-entry-end"
                       type="time"
@@ -413,30 +395,25 @@ export function ManualTimeEntryModal({
                       className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
                       required
                     />
-                  </div>
+                  </Stack>
                 )}
               </form.Field>
             </Grid>
 
             {/* Duration Display */}
             {timeRangeDuration > 0 && (
-              <div className="p-3 bg-brand-subtle border border-brand-border rounded-lg">
-                <Typography variant="mono" className="text-sm font-medium text-brand-active">
+              <Card padding="sm" className="bg-brand-subtle border-brand-border">
+                <Typography variant="mono" className="text-brand-active">
                   Duration: {formatDurationHuman(timeRangeDuration)}
                 </Typography>
-              </div>
+              </Card>
             )}
-          </>
+          </Stack>
         )}
 
         {/* Project Selection */}
-        <div>
-          <label
-            htmlFor="time-entry-project"
-            className="block text-sm font-medium text-ui-text mb-1"
-          >
-            Project
-          </label>
+        <Stack gap="xs">
+          <Label htmlFor="time-entry-project">Project</Label>
           <Select
             value={projectId || "none"}
             onValueChange={(value) => {
@@ -456,17 +433,12 @@ export function ManualTimeEntryModal({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Stack>
 
         {/* Issue Selection */}
         {projectId && projectIssues && projectIssues.length > 0 && (
-          <div>
-            <label
-              htmlFor="time-entry-issue"
-              className="block text-sm font-medium text-ui-text mb-1"
-            >
-              Issue (optional)
-            </label>
+          <Stack gap="xs">
+            <Label htmlFor="time-entry-issue">Issue (optional)</Label>
             <Select
               value={issueId || "none"}
               onValueChange={(value) =>
@@ -485,7 +457,7 @@ export function ManualTimeEntryModal({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Stack>
         )}
 
         {/* Description */}
@@ -503,13 +475,8 @@ export function ManualTimeEntryModal({
         {/* Activity */}
         <form.Field name="activity">
           {(field) => (
-            <div>
-              <label
-                htmlFor="time-entry-activity"
-                className="block text-sm font-medium text-ui-text mb-1"
-              >
-                Activity
-              </label>
+            <Stack gap="xs">
+              <Label htmlFor="time-entry-activity">Activity</Label>
               <Select
                 value={field.state.value || "none"}
                 onValueChange={(value) => field.handleChange(value === "none" ? "" : value)}
@@ -526,15 +493,13 @@ export function ManualTimeEntryModal({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Stack>
           )}
         </form.Field>
 
         {/* Tags */}
-        <div>
-          <label htmlFor="time-entry-tags" className="block text-sm font-medium text-ui-text mb-1">
-            Tags
-          </label>
+        <Stack gap="sm">
+          <Label htmlFor="time-entry-tags">Tags</Label>
           <Flex gap="sm">
             <input
               id="time-entry-tags"
@@ -555,39 +520,37 @@ export function ManualTimeEntryModal({
             </Button>
           </Flex>
           {tags.length > 0 && (
-            <div className="mt-2">
-              <Flex gap="sm" className="flex-wrap">
-                {tags.map((tag) => (
-                  <Flex
-                    key={tag}
-                    as="span"
-                    inline
-                    align="center"
-                    gap="xs"
-                    className="px-2 py-1 bg-brand-subtle text-brand-hover text-xs rounded"
+            <Flex gap="sm" wrap>
+              {tags.map((tag) => (
+                <Flex
+                  key={tag}
+                  as="span"
+                  inline
+                  align="center"
+                  gap="xs"
+                  className="px-2 py-1 bg-brand-subtle text-brand-hover text-xs rounded"
+                >
+                  {tag}
+                  <Button
+                    onClick={() => setTags(tags.filter((t) => t !== tag))}
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    className="p-0 min-w-0 h-auto hover:text-brand-active"
+                    aria-label={`Remove tag ${tag}`}
                   >
-                    {tag}
-                    <Button
-                      onClick={() => setTags(tags.filter((t) => t !== tag))}
-                      variant="ghost"
-                      size="sm"
-                      type="button"
-                      className="p-0 min-w-0 h-auto hover:text-brand-active"
-                      aria-label={`Remove tag ${tag}`}
-                    >
-                      ×
-                    </Button>
-                  </Flex>
-                ))}
-              </Flex>
-            </div>
+                    ×
+                  </Button>
+                </Flex>
+              ))}
+            </Flex>
           )}
-        </div>
+        </Stack>
 
         {/* Billable */}
         <form.Field name="billable">
           {(field) => (
-            <div>
+            <Stack gap="xs">
               <label className="cursor-pointer">
                 <Flex align="center" gap="sm">
                   <input
@@ -599,10 +562,10 @@ export function ManualTimeEntryModal({
                   <Typography variant="label">Billable time</Typography>
                 </Flex>
               </label>
-              <Typography className="text-xs text-ui-text-tertiary mt-1 ml-6">
+              <Typography variant="caption" className="ml-6">
                 Mark this time as billable to clients
               </Typography>
-            </div>
+            </Stack>
           )}
         </form.Field>
 
