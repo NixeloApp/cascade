@@ -1,50 +1,88 @@
-# Nixelo - Feature Todos
+# Nixelo Todos
 
-> **Last Updated:** 2026-02-10
-
----
-
-## Current Focus
-
-| Priority | File | Feature | Status |
-|----------|------|---------|--------|
-| **P1** | [multi-level-views.md](./multi-level-views.md) | Org/Workspace/Team views | Not Started |
-| **P2** | [feature-gaps.md](./feature-gaps.md) | Comments, user picker, Slack | In Progress |
-| **P2** | [emoji-overhaul.md](./emoji-overhaul.md) | Icon picker component | Phase 2 Pending |
+Project todos and improvement tracking.
 
 ---
 
-## Active (MVP)
+## Roadmap Todos
 
-| File | Description | Effort |
-|------|-------------|--------|
-| [multi-level-views.md](./multi-level-views.md) | Schema migration + 9 new views | Large |
-| [feature-gaps.md](./feature-gaps.md) | Rich comments, user field, Slack | Medium |
-| [emoji-overhaul.md](./emoji-overhaul.md) | IconPicker + accessibility | Medium |
-
----
-
-## In Progress
-
-| File | Description | Priority |
-|------|-------------|----------|
-| [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Metrics, fallback UI, feature flags | P2 |
+| File | Status | Focus |
+|------|--------|-------|
+| [agency-mvp.md](./agency-mvp.md) | Active | Agency MVP features |
+| [enterprise.md](./enterprise.md) | Active | Enterprise features |
+| [growth-features.md](./growth-features.md) | Active | Growth features |
+| [public-launch.md](./public-launch.md) | Active | Public launch checklist |
+| [feature-gaps.md](./feature-gaps.md) | Active | Feature gaps to close |
+| [multi-level-views.md](./multi-level-views.md) | Active | Multi-level views |
+| [emoji-overhaul.md](./emoji-overhaul.md) | Active | Emoji system overhaul |
+| [uptime-monitoring.md](./uptime-monitoring.md) | Active | Uptime monitoring |
+| [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Active | OAuth monitoring |
 
 ---
 
-## Deferred (Post-MVP)
+## Recursive Improvement (Completed Phases)
 
-| File | Description | Priority |
-|------|-------------|----------|
-| [agency-mvp.md](./agency-mvp.md) | Invoicing, client portal | P2 |
-| [public-launch.md](./public-launch.md) | Demo video, HN, Reddit | P3 |
-| [uptime-monitoring.md](./uptime-monitoring.md) | Monitors, status pages | P3 |
-| [enterprise.md](./enterprise.md) | SSO/SAML, Stripe, AI | P4 |
-| [growth-features.md](./growth-features.md) | Slack sync, search, versioning | P4 |
+> **Progress:** 133/278 (Phase 1-6 complete)
+> **Last Run:** 2026-02-17
+
+| Phase | File | Status | Summary |
+|-------|------|--------|---------|
+| 1 | [PHASE_1_USER_STORIES.md](./PHASE_1_USER_STORIES.md) | ✅ | Feature parity with Plane, Cal.com |
+| 2 | [PHASE_2_EDITOR_POLISH.md](./PHASE_2_EDITOR_POLISH.md) | ✅ | Editor features, markdown |
+| 3 | [PHASE_3_UI_UX_CONSISTENCY.md](./PHASE_3_UI_UX_CONSISTENCY.md) | ✅ | Design system, a11y, error handling |
+| 4 | [PHASE_4_FEATURE_POLISH.md](./PHASE_4_FEATURE_POLISH.md) | ✅ | Keyboard shortcuts, empty states, toasts |
+| 5 | [PHASE_5_QUALITY_DEEP_DIVE.md](./PHASE_5_QUALITY_DEEP_DIVE.md) | ✅ | 342 tests, 153 stories, N+1 fixes |
+| 6 | [PHASE_6_PERFORMANCE_BACKEND.md](./PHASE_6_PERFORMANCE_BACKEND.md) | ✅ | Bundle, Convex tests, CI |
 
 ---
 
-## Related Docs
+## How Recursive Improvement Works
 
-- [CLAUDE.md](../CLAUDE.md) - Development guide
-- [RULES.md](../RULES.md) - Development rules
+1. **Invoke with:** "work on this doc" or "recursive improvement"
+2. **Each run:** Pick the highest-priority incomplete section, research competitors, implement improvements
+3. **Update:** Mark items complete, add findings, increment progress
+4. **Repeat:** Until all sections reach 100%
+
+---
+
+## Competitor Repos
+
+| Competitor | Local Path | Focus |
+|------------|------------|-------|
+| **Plane** | `/home/mikhail/Desktop/plane` | Issue tracking, Kanban, workflows |
+| **Cal.com** | `/home/mikhail/Desktop/cal.com` | Scheduling, auth, enterprise features |
+| **Mintlify** | `docs/research/library/mintlify/` | Design polish, animations, premium feel |
+
+---
+
+## Nixelo Advantages Over Competitors
+
+| Feature | Plane | Cal.com | Nixelo |
+|---------|-------|---------|--------|
+| Column WIP limits | ❌ | N/A | ✅ |
+| Sprint templates | ❌ | N/A | ✅ |
+| Document comments | ❌ | N/A | ✅ |
+| IP restrictions | N/A | ❌ | ✅ |
+| Time tracking on issues | ❌ | N/A | ✅ |
+
+---
+
+## Commands
+
+```bash
+# Run full validation
+pnpm run check
+
+# Run custom validators
+node scripts/validate.js
+
+# Generate bundle report
+pnpm vite build --mode analyze
+
+# Compare with Plane
+ls /home/mikhail/Desktop/plane/apps/web/core/components/
+```
+
+---
+
+*This is a living document. Update after each improvement session.*
