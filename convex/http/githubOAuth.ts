@@ -1,5 +1,4 @@
 import { api, internal } from "../_generated/api";
-import type { ActionCtx } from "../_generated/server";
 import { httpAction } from "../_generated/server";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
 import { validation } from "../lib/errors";
@@ -14,21 +13,6 @@ import { validation } from "../lib/errors";
  * 2. GitHub redirects back → GET /github/callback (exchanges code for token)
  * 3. Save tokens to database → User can link repositories
  */
-
-// Helper to parse cookies from header
-function parseCookies(header: string | null): Map<string, string> {
-  const cookies = new Map();
-  if (!header) return cookies;
-  header.split(";").forEach((cookie) => {
-    const parts = cookie.split("=");
-    const name = parts[0]?.trim();
-    const value = parts[1]?.trim();
-    if (name && value) {
-      cookies.set(name, value);
-    }
-  });
-  return cookies;
-}
 
 // OAuth configuration - throws if not configured
 const getGitHubOAuthConfig = () => {
@@ -52,73 +36,54 @@ const getGitHubOAuthConfig = () => {
 };
 
 /**
- * Initiate GitHub OAuth flow logic
- * Exported for testing
+ * Initiate GitHub OAuth flow
+ * GET /github/auth
  */
-export const initiateAuthHandler = async (_ctx: ActionCtx, _request: Request) => {
+export const initiateAuth = httpAction((_ctx, _request) => {
   if (!isGitHubOAuthConfigured()) {
-    return new Response(
-      JSON.stringify({
-        error:
-          "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
+    return Promise.resolve(
+      new Response(
+        JSON.stringify({
+          error:
+            "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
     );
   }
 
   const config = getGitHubOAuthConfig();
-  const state = crypto.randomUUID();
 
   // Build OAuth authorization URL
   const authUrl = new URL("https://github.com/login/oauth/authorize");
   authUrl.searchParams.set("client_id", config.clientId);
   authUrl.searchParams.set("redirect_uri", config.redirectUri);
   authUrl.searchParams.set("scope", config.scopes);
-  authUrl.searchParams.set("state", state); // CSRF protection
-
-  const isSecure = process.env.CONVEX_SITE_URL?.startsWith("https");
-  const cookieAttributes = `HttpOnly; Path=/; SameSite=Lax; Max-Age=600${isSecure ? "; Secure" : ""}`;
+  authUrl.searchParams.set("state", crypto.randomUUID()); // CSRF protection
 
   // Redirect user to GitHub OAuth page
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: authUrl.toString(),
-      "Set-Cookie": `github_oauth_state=${state}; ${cookieAttributes}`,
-    },
-  });
-};
+  return Promise.resolve(
+    new Response(null, {
+      status: 302,
+      headers: {
+        Location: authUrl.toString(),
+      },
+    }),
+  );
+});
 
 /**
- * Initiate GitHub OAuth flow
- * GET /github/auth
+ * Handle OAuth callback from GitHub
+ * GET /github/callback?code=xxx&state=xxx
  */
-export const initiateAuth = httpAction(initiateAuthHandler);
-
-/**
- * Handle OAuth callback logic
- * Exported for testing
- */
-export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
+export const handleCallback = httpAction(async (_ctx, request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
   const errorDescription = url.searchParams.get("error_description");
-
-  // Verify state for CSRF protection
-  const cookies = parseCookies(request.headers.get("Cookie"));
-  const storedState = cookies.get("github_oauth_state");
-
-  if (!state || !storedState || state !== storedState) {
-    return new Response(JSON.stringify({ error: "Invalid state parameter" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
 
   if (error) {
     // User denied access or error occurred
@@ -209,9 +174,6 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       accessToken: access_token,
     };
 
-    const isSecure = process.env.CONVEX_SITE_URL?.startsWith("https");
-    const clearCookieAttributes = `HttpOnly; Path=/; Max-Age=0${isSecure ? "; Secure" : ""}`;
-
     // Return success page that passes tokens to opener window
     // The frontend will save these via the authenticated connectGitHub mutation
     return new Response(
@@ -258,10 +220,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       `,
       {
         status: 200,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": `github_oauth_state=; ${clearCookieAttributes}`,
-        },
+        headers: { "Content-Type": "text/html" },
       },
     );
   } catch (error) {
@@ -295,13 +254,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       },
     );
   }
-};
-
-/**
- * Handle OAuth callback from GitHub
- * GET /github/callback?code=xxx&state=xxx
- */
-export const handleCallback = httpAction(handleCallbackHandler);
+});
 
 /**
  * List user's GitHub repositories

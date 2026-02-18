@@ -26,7 +26,6 @@ import { Route as AuthAppOrgSlugMcpServerRouteImport } from './routes/_auth/_app
 import { Route as AuthAppOrgSlugDashboardRouteImport } from './routes/_auth/_app/$orgSlug/dashboard'
 import { Route as AuthAppOrgSlugAuthenticationRouteImport } from './routes/_auth/_app/$orgSlug/authentication'
 import { Route as AuthAppOrgSlugAssistantRouteImport } from './routes/_auth/_app/$orgSlug/assistant'
-import { Route as AuthAppOrgSlugArchivesRouteImport } from './routes/_auth/_app/$orgSlug/archives'
 import { Route as AuthAppOrgSlugAnalyticsRouteImport } from './routes/_auth/_app/$orgSlug/analytics'
 import { Route as AuthAppOrgSlugAddOnsRouteImport } from './routes/_auth/_app/$orgSlug/add-ons'
 import { Route as AuthAppOrgSlugWorkspacesIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/index'
@@ -144,11 +143,6 @@ const AuthAppOrgSlugAuthenticationRoute =
 const AuthAppOrgSlugAssistantRoute = AuthAppOrgSlugAssistantRouteImport.update({
   id: '/assistant',
   path: '/assistant',
-  getParentRoute: () => AuthAppOrgSlugRouteRoute,
-} as any)
-const AuthAppOrgSlugArchivesRoute = AuthAppOrgSlugArchivesRouteImport.update({
-  id: '/archives',
-  path: '/archives',
   getParentRoute: () => AuthAppOrgSlugRouteRoute,
 } as any)
 const AuthAppOrgSlugAnalyticsRoute = AuthAppOrgSlugAnalyticsRouteImport.update({
@@ -363,7 +357,6 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthAppAppRoute
   '/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
   '/$orgSlug/analytics': typeof AuthAppOrgSlugAnalyticsRoute
-  '/$orgSlug/archives': typeof AuthAppOrgSlugArchivesRoute
   '/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/$orgSlug/authentication': typeof AuthAppOrgSlugAuthenticationRoute
   '/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
@@ -413,7 +406,6 @@ export interface FileRoutesByTo {
   '/app': typeof AuthAppAppRoute
   '/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
   '/$orgSlug/analytics': typeof AuthAppOrgSlugAnalyticsRoute
-  '/$orgSlug/archives': typeof AuthAppOrgSlugArchivesRoute
   '/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/$orgSlug/authentication': typeof AuthAppOrgSlugAuthenticationRoute
   '/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
@@ -464,7 +456,6 @@ export interface FileRoutesById {
   '/_auth/_app/app': typeof AuthAppAppRoute
   '/_auth/_app/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
   '/_auth/_app/$orgSlug/analytics': typeof AuthAppOrgSlugAnalyticsRoute
-  '/_auth/_app/$orgSlug/archives': typeof AuthAppOrgSlugArchivesRoute
   '/_auth/_app/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/_auth/_app/$orgSlug/authentication': typeof AuthAppOrgSlugAuthenticationRoute
   '/_auth/_app/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
@@ -517,7 +508,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/$orgSlug/add-ons'
     | '/$orgSlug/analytics'
-    | '/$orgSlug/archives'
     | '/$orgSlug/assistant'
     | '/$orgSlug/authentication'
     | '/$orgSlug/dashboard'
@@ -567,7 +557,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/$orgSlug/add-ons'
     | '/$orgSlug/analytics'
-    | '/$orgSlug/archives'
     | '/$orgSlug/assistant'
     | '/$orgSlug/authentication'
     | '/$orgSlug/dashboard'
@@ -617,7 +606,6 @@ export interface FileRouteTypes {
     | '/_auth/_app/app'
     | '/_auth/_app/$orgSlug/add-ons'
     | '/_auth/_app/$orgSlug/analytics'
-    | '/_auth/_app/$orgSlug/archives'
     | '/_auth/_app/$orgSlug/assistant'
     | '/_auth/_app/$orgSlug/authentication'
     | '/_auth/_app/$orgSlug/dashboard'
@@ -786,13 +774,6 @@ declare module '@tanstack/react-router' {
       path: '/assistant'
       fullPath: '/$orgSlug/assistant'
       preLoaderRoute: typeof AuthAppOrgSlugAssistantRouteImport
-      parentRoute: typeof AuthAppOrgSlugRouteRoute
-    }
-    '/_auth/_app/$orgSlug/archives': {
-      id: '/_auth/_app/$orgSlug/archives'
-      path: '/archives'
-      fullPath: '/$orgSlug/archives'
-      preLoaderRoute: typeof AuthAppOrgSlugArchivesRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/analytics': {
@@ -1125,7 +1106,6 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren =
 interface AuthAppOrgSlugRouteRouteChildren {
   AuthAppOrgSlugAddOnsRoute: typeof AuthAppOrgSlugAddOnsRoute
   AuthAppOrgSlugAnalyticsRoute: typeof AuthAppOrgSlugAnalyticsRoute
-  AuthAppOrgSlugArchivesRoute: typeof AuthAppOrgSlugArchivesRoute
   AuthAppOrgSlugAssistantRoute: typeof AuthAppOrgSlugAssistantRoute
   AuthAppOrgSlugAuthenticationRoute: typeof AuthAppOrgSlugAuthenticationRoute
   AuthAppOrgSlugDashboardRoute: typeof AuthAppOrgSlugDashboardRoute
@@ -1148,7 +1128,6 @@ interface AuthAppOrgSlugRouteRouteChildren {
 const AuthAppOrgSlugRouteRouteChildren: AuthAppOrgSlugRouteRouteChildren = {
   AuthAppOrgSlugAddOnsRoute: AuthAppOrgSlugAddOnsRoute,
   AuthAppOrgSlugAnalyticsRoute: AuthAppOrgSlugAnalyticsRoute,
-  AuthAppOrgSlugArchivesRoute: AuthAppOrgSlugArchivesRoute,
   AuthAppOrgSlugAssistantRoute: AuthAppOrgSlugAssistantRoute,
   AuthAppOrgSlugAuthenticationRoute: AuthAppOrgSlugAuthenticationRoute,
   AuthAppOrgSlugDashboardRoute: AuthAppOrgSlugDashboardRoute,

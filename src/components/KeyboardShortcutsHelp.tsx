@@ -76,7 +76,7 @@ function formatModifierShortcut(shortcut: string): string[] {
         return "Shift";
       case "delete":
       case "backspace":
-        return "Del";
+        return "⌫";
       case "enter":
       case "return":
         return "Enter";
@@ -88,13 +88,13 @@ function formatModifierShortcut(shortcut: string): string[] {
       case "tab":
         return "Tab";
       case "up":
-        return "Up";
+        return "↑";
       case "down":
-        return "Down";
+        return "↓";
       case "left":
-        return "Left";
+        return "←";
       case "right":
-        return "Right";
+        return "→";
       default:
         return part.toUpperCase();
     }
@@ -128,8 +128,6 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
       { id: "go-documents", description: "Go to documents", keySequence: "gd" },
       { id: "go-projects", description: "Go to projects", keySequence: "gp" },
       { id: "go-issues", description: "Go to issues", keySequence: "gi" },
-      { id: "go-analytics", description: "Go to analytics", keySequence: "ga" },
-      { id: "go-settings", description: "Go to settings", keySequence: "gs" },
       { id: "nav-1", description: "Go to dashboard", modifierShortcut: "cmd+1" },
       { id: "nav-2", description: "Go to documents", modifierShortcut: "cmd+2" },
       { id: "nav-3", description: "Go to workspaces", modifierShortcut: "cmd+3" },
@@ -196,18 +194,14 @@ function ModifierShortcutBadge({ shortcut }: { shortcut: string }) {
 }
 
 function KeySequenceBadge({ sequence }: { sequence: string }) {
-  // Pre-compute items with stable keys based on sequence + position
-  const items = sequence.split("").map((char, idx) => ({
-    key: `${sequence}-${idx}`,
-    char,
-    isLast: idx === sequence.length - 1,
-  }));
+  const chars = sequence.split("");
   return (
     <Flex gap="xs" align="center">
-      {items.map((item) => (
-        <Flex key={item.key} gap="xs" align="center">
-          <KeyBadge>{item.char.toUpperCase()}</KeyBadge>
-          {!item.isLast && (
+      {chars.map((char, charIndex) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: static key sequence chars, index needed for separator
+        <Flex key={charIndex} gap="xs" align="center">
+          <KeyBadge>{char.toUpperCase()}</KeyBadge>
+          {charIndex < chars.length - 1 && (
             <Typography variant="muted" className="text-xs">
               then
             </Typography>

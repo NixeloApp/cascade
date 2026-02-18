@@ -50,7 +50,6 @@ export function IssueDetailContent({
               onChange={(e) => onTitleChange(e.target.value)}
               className="text-2xl font-bold h-auto py-2"
               placeholder="Issue title"
-              aria-label="Issue title"
             />
             <Textarea
               value={editDescription}
@@ -58,7 +57,6 @@ export function IssueDetailContent({
               rows={8}
               className="text-base"
               placeholder="Add a description..."
-              aria-label="Issue description"
             />
             <Flex gap="sm">
               <Button onClick={onSave}>Save Changes</Button>

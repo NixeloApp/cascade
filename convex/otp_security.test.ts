@@ -33,21 +33,17 @@ describe("OTP Security", () => {
     },
   });
 
-  it("should store OTP for mailtrap emails in safe environments (regardless of isTestUser)", async () => {
-    // Note: We store OTPs unconditionally for test emails (@inbox.mailtrap.io) in safe
-    // environments. This matches OTPVerification behavior and fixes E2E test flakiness
-    // where the isTestUser flag wasn't set in time for password reset flows.
+  it("should NOT store OTP for non-test email even if E2E_API_KEY is present", async () => {
     process.env.E2E_API_KEY = "test-key";
     process.env.NODE_ENV = "production";
 
     const t = convexTest(schema, modules);
 
-    const email = "regular@inbox.mailtrap.io";
+    const email = "regular@example.com"; // Not @inbox.mailtrap.io
     await t.run(async (ctx) => {
       await ctx.db.insert("users", {
         email,
         name: "Regular User",
-        // Note: isTestUser is NOT set - this should still work for test emails
       });
     });
 
@@ -63,7 +59,39 @@ describe("OTP Security", () => {
     const otps = await t.run(async (ctx) => {
       return await ctx.db.query("testOtpCodes").collect();
     });
-    // OTP should be stored since email is @inbox.mailtrap.io and E2E_API_KEY is present
+    // OTP should NOT be stored - email is not @inbox.mailtrap.io
+    expect(otps).toHaveLength(0);
+  });
+
+  it("should store OTP for test email when E2E_API_KEY is present even without database flag", async () => {
+    process.env.E2E_API_KEY = "test-key";
+    process.env.NODE_ENV = "production";
+
+    const t = convexTest(schema, modules);
+
+    // Using a mailtrap email but NOT setting isTestUser: true in DB
+    const email = "auto-test@inbox.mailtrap.io";
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        email,
+        name: "Regular User",
+        // isTestUser is deliberately missing/false
+      });
+    });
+
+    vi.mock("./email", () => ({
+      sendEmail: vi.fn().mockResolvedValue({ success: true }),
+    }));
+
+    await t.run(async (ctx) => {
+      const mockCtx = createMockCtx(ctx);
+      await sendVerificationRequest({ identifier: email, token: "123456" }, mockCtx);
+    });
+
+    const otps = await t.run(async (ctx) => {
+      return await ctx.db.query("testOtpCodes").collect();
+    });
+    // Should exist because we relaxed the check to trust the email domain in safe envs
     expect(otps).toHaveLength(1);
     expect(otps[0].email).toBe(email);
   });

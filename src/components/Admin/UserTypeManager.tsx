@@ -15,7 +15,6 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
-import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
 
 type EmploymentType = "employee" | "contractor" | "intern";
@@ -339,9 +338,7 @@ export function UserTypeManager() {
         />
         <CardBody>
           {!configs ? (
-            <Flex align="center" justify="center" className="py-8">
-              <LoadingSpinner />
-            </Flex>
+            <div className="text-center py-8 text-ui-text-tertiary">Loading...</div>
           ) : configs.length === 0 ? (
             <EmptyState
               icon={Settings}
@@ -469,9 +466,7 @@ export function UserTypeManager() {
 
           {/* Assigned users */}
           {!profiles ? (
-            <Flex align="center" justify="center" className="py-8">
-              <LoadingSpinner />
-            </Flex>
+            <div className="text-center py-8 text-ui-text-tertiary">Loading...</div>
           ) : profiles.length === 0 ? (
             <EmptyState
               icon={Users}

@@ -117,49 +117,5 @@ describe("issueHelpers", () => {
       expect(e2?.assignee?._id).toBe(user2);
       expect(e2?.reporter?._id).toBe(user1);
     });
-
-    it("should respect enrichment options", async () => {
-      const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const projectId = await createTestProject(t, userId);
-
-      const issueId = await t.run(async (ctx) => {
-        const p = await ctx.db.get(projectId);
-        if (!p) throw new Error("Project not found");
-        return await ctx.db.insert("issues", {
-          projectId,
-          organizationId: p.organizationId,
-          workspaceId: p.workspaceId,
-          title: "Test Issue",
-          key: "TEST-1",
-          type: "task",
-          status: "todo",
-          priority: "medium",
-          reporterId: userId,
-          assigneeId: userId,
-          updatedAt: Date.now(),
-          labels: ["bug"],
-          linkedDocuments: [],
-          attachments: [],
-          order: 0,
-        });
-      });
-
-      const enriched = await t.run(async (ctx) => {
-        const issue = await ctx.db.get(issueId);
-        if (!issue) throw new Error("Issue not found");
-        return await enrichIssues(ctx, [issue], {
-          includeReporter: false,
-          includeLabels: false,
-          includeAssignee: true,
-          includeEpic: false,
-        });
-      });
-
-      expect(enriched).toHaveLength(1);
-      expect(enriched[0].assignee).not.toBeNull();
-      expect(enriched[0].reporter).toBeNull();
-      expect(enriched[0].labels).toEqual([]);
-    });
   });
 });

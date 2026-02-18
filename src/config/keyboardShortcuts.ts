@@ -71,15 +71,7 @@ export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
       handler: () => handlers.navigate(ROUTES.workspaces.list.build(orgSlug)),
       description: "Go to workspaces",
     },
-    // Focus search (/)
-    {
-      key: "/",
-      handler: () => {
-        window.dispatchEvent(new CustomEvent("nixelo:focus-search"));
-      },
-      description: "Focus search",
-    },
-    // Single-key create actions (only when not typing)
+    // Single-key actions (only when not typing)
     {
       key: "c",
       handler: () => {
@@ -101,52 +93,6 @@ export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
       },
       description: "Create new project",
     },
-    // Issue actions (when issue is focused/selected)
-    {
-      key: "e",
-      handler: () => {
-        window.dispatchEvent(new CustomEvent("nixelo:edit-issue"));
-      },
-      description: "Edit issue",
-    },
-    {
-      key: "a",
-      handler: () => {
-        window.dispatchEvent(new CustomEvent("nixelo:assign-to-me"));
-      },
-      description: "Assign to me",
-    },
-    {
-      key: "l",
-      handler: () => {
-        window.dispatchEvent(new CustomEvent("nixelo:add-label"));
-      },
-      description: "Add label",
-    },
-    {
-      key: "t",
-      handler: () => {
-        window.dispatchEvent(new CustomEvent("nixelo:start-timer"));
-      },
-      description: "Start time tracking",
-    },
-    // Shift+key actions
-    {
-      key: "p",
-      shift: true,
-      handler: () => {
-        window.dispatchEvent(new CustomEvent("nixelo:set-priority"));
-      },
-      description: "Set priority",
-    },
-    {
-      key: "s",
-      shift: true,
-      handler: () => {
-        window.dispatchEvent(new CustomEvent("nixelo:change-status"));
-      },
-      description: "Change status",
-    },
   ];
 
   return shortcuts;
@@ -155,7 +101,6 @@ export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
 export function createKeySequences(handlers: ShortcutHandlers): KeySequence[] {
   const { orgSlug } = handlers;
   return [
-    // Navigation sequences (g+X)
     {
       keys: ["g", "h"],
       handler: () => handlers.navigate(ROUTES.dashboard.build(orgSlug)),
@@ -170,26 +115,6 @@ export function createKeySequences(handlers: ShortcutHandlers): KeySequence[] {
       keys: ["g", "d"],
       handler: () => handlers.navigate(ROUTES.documents.list.build(orgSlug)),
       description: "Go to documents",
-    },
-    {
-      keys: ["g", "p"],
-      handler: () => handlers.navigate(ROUTES.projects.list.build(orgSlug)),
-      description: "Go to projects",
-    },
-    {
-      keys: ["g", "i"],
-      handler: () => handlers.navigate(ROUTES.issues.list.build(orgSlug)),
-      description: "Go to issues",
-    },
-    {
-      keys: ["g", "a"],
-      handler: () => handlers.navigate(ROUTES.analytics.build(orgSlug)),
-      description: "Go to analytics",
-    },
-    {
-      keys: ["g", "s"],
-      handler: () => handlers.navigate(ROUTES.settings.profile.build(orgSlug)),
-      description: "Go to settings",
     },
   ];
 }

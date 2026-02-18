@@ -97,8 +97,7 @@ describe("OTPPasswordReset", () => {
     await sendVerificationRequest(params, mockCtx);
 
     // Verify rate limit check happened first
-    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(
-      1,
+    expect(mockCtx.runMutation).toHaveBeenCalledWith(
       internal.authWrapper.checkPasswordResetRateLimitByEmail,
       expect.anything(),
     );

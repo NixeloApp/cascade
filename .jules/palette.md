@@ -57,7 +57,3 @@
 ## 2024-05-24 - Overlay Button for Clickable Cards
 **Learning:** To make a complex card (like `IssueCard`) fully clickable while containing other interactive elements (checkbox, tooltip triggers), wrapping the content in a button is invalid HTML.
 **Action:** Use a container `div` with `role="article"`. Place a sibling `<button>` with `absolute inset-0` and `z-0` (Overlay Button) to handle the main click action. Ensure other interactive elements in the card have `relative z-10` to remain clickable above the overlay.
-
-## 2024-05-22 - Missing Labels in Edit Views
-**Learning:** `Input` and `Textarea` components support `label` prop, but when used in custom layouts (like "header-style" inputs), developers often omit it for visual reasons, forgetting `aria-label`.
-**Action:** When auditing forms, check specifically for inputs that look like headers or large text fields - they are prime candidates for missing labels.

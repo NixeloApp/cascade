@@ -2,14 +2,12 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { AutomationRuleCard } from "./Automation/AutomationRuleCard";
 import { AutomationRuleForm } from "./Automation/AutomationRuleForm";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
@@ -92,11 +90,16 @@ export function AutomationRulesManager({ projectId }: AutomationRulesManagerProp
           <LoadingSpinner size="lg" />
         </Card>
       ) : rules.length === 0 ? (
-        <EmptyState
-          icon={Zap}
-          title="No automation rules yet"
-          description="Create your first rule to automate repetitive tasks"
-        />
+        <Card className="p-8 text-center">
+          <div className="text-ui-text-secondary">
+            <Typography variant="p" className="mb-2">
+              No automation rules yet
+            </Typography>
+            <Typography variant="p" className="text-sm">
+              Create your first rule to automate repetitive tasks
+            </Typography>
+          </div>
+        </Card>
       ) : (
         <div className="space-y-3">
           {rules.map((rule: AutomationRule) => (

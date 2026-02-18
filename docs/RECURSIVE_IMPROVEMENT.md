@@ -219,22 +219,22 @@ Run `node scripts/validate.js` to check component usage consistency.
 
 | Component | Usage Count | Consistent? | Notes |
 |-----------|-------------|-------------|-------|
-| Button | 514 | ✅ | primary/secondary/ghost/danger variants |
-| Card | 238 | ✅ | CardHeader/CardBody pattern |
-| Dialog | 62 | ✅ | title/description/footer props |
-| Input | 142 | ✅ | error prop for validation |
-| Select | 428 | ✅ | FormSelect wrapper |
-| Badge | 194 | ✅ | 10 variants: primary/secondary/success/error/warning/info/neutral/brand/accent/outline |
-| Typography | 915 | ✅ | small/caption/muted/label/p variants |
-| Flex | 1031 | ⚠️ | 417 raw flex divs remain |
-| Icon (lucide) | 71 | ✅ | Consistent h-4 w-4 / h-5 w-5 sizing |
-| Tooltip | 79 | ✅ | Consistent usage |
+| Button | - | ❓ | Audit variants usage |
+| Card | - | ❓ | Audit hoverable consistency |
+| Dialog | - | ❓ | Audit animation consistency |
+| Input | - | ❓ | Audit error state consistency |
+| Select | - | ❓ | Audit placeholder consistency |
+| Badge | - | ❓ | Audit color usage |
+| Typography | - | ❓ | Audit variant usage |
+| Flex | - | ❓ | vs raw flex divs |
+| Icon | - | ❓ | Audit size consistency |
+| Tooltip | - | ❓ | Audit delay consistency |
 
-**Audit Results (2026-02-15):**
-- [x] Run validator: 2 Standards violations (raw flex div), 6 N+1 queries, 1 biome-ignore, 5 emoji
-- [ ] Fix raw flex div in KanbanColumn.tsx:273 (minor - collapsed column state)
-- [x] Raw HTML: 15 `<p>`, 66 `<h1-h6>`, 374 `<span>` - most are valid (inside Typography, or semantic)
-- [x] Component patterns documented in docs/design/PATTERNS.md
+**Audit Tasks:**
+- [ ] Run validator, capture baseline
+- [ ] Fix all "raw flex div" violations
+- [ ] Fix all "raw HTML tag" violations
+- [ ] Document component usage patterns
 
 ---
 
@@ -326,21 +326,19 @@ Run `node scripts/validate.js` to check component usage consistency.
 
 | Scenario | Handled? | UI Pattern | Notes |
 |----------|----------|------------|-------|
-| Network error | ✅ | showError toast | 273 usages across codebase |
-| 404 page | ✅ | NotFoundPage.tsx | Icon + code + message + home button |
-| 500 error | ✅ | ErrorBoundary.tsx | Icon + code + message + details + reload |
-| Form validation | ✅ | FormFields.tsx | error prop on Input/Textarea/Select |
-| Auth error | ✅ | Toast + redirect | Via @convex-dev/auth |
-| Permission denied | ✅ | forbidden() + toast | 14 files handle permission errors |
-| Rate limited | ✅ | validation() error | Convex rate limiting |
-| Convex offline | ✅ | Convex handles | Auto-reconnect + optimistic updates |
+| Network error | ❓ | - | - |
+| 404 page | ❓ | - | - |
+| 500 error | ❓ | - | - |
+| Form validation | ❓ | - | - |
+| Auth error | ❓ | - | - |
+| Permission denied | ❓ | - | - |
+| Rate limited | ❓ | - | - |
+| Convex offline | ❓ | - | - |
 
-**Audit Results (2026-02-15):**
-- [x] ErrorBoundary used in 30 places
-- [x] showError() toast helper used in 273 places
-- [x] 155 try/catch blocks with proper error handling
-- [x] Form validation via TanStack Form + getFieldError() helper
-- [x] All error pages follow consistent design: icon + large code + message + action button
+**Audit Tasks:**
+- [ ] Test all error scenarios
+- [ ] Standardize error messages
+- [ ] Add error boundaries where missing
 
 ---
 
@@ -350,19 +348,16 @@ Run `node scripts/validate.js` to check component usage consistency.
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| `strict: true` | ✅ | Enabled in tsconfig |
-| No `any` types | ⚠️ | 6 in src/, 66 in convex/ (mostly validators) |
-| No `@ts-ignore` | ✅ | 0 usages |
-| No `@ts-expect-error` | ⚠️ | 1 usage |
-| No `@ts-nocheck` | ⚠️ | 1 usage |
-| `as any` casts | ⚠️ | 118 in src/, 32 in convex/ |
-| Type assertions | ⚠️ | 514 (many valid for Id<> casts) |
+| `strict: true` | ✅ | - |
+| No `any` types | ❓ | Run audit |
+| No `@ts-ignore` | ❓ | Run audit |
+| Explicit return types | ❓ | Run audit |
+| No type assertions | ❓ | Run audit |
 
-**Audit Results (2026-02-15):**
-- [x] No @ts-ignore in codebase
-- [x] Most `any` types in Convex are for validator flexibility
-- [x] Type assertions mostly for Convex Id<> types (valid)
-- [ ] Could reduce `as any` casts with better typing
+**Audit Tasks:**
+- [ ] `grep -r "any" src/ --include="*.ts" --include="*.tsx"`
+- [ ] `grep -r "@ts-ignore" src/`
+- [ ] Fix violations
 
 ---
 
@@ -370,21 +365,19 @@ Run `node scripts/validate.js` to check component usage consistency.
 
 | Area | Unit Tests | E2E Tests | Coverage |
 |------|------------|-----------|----------|
-| Components | 67 files | - | Good |
-| Hooks | 26 hooks | - | Partial |
-| Utils | 37 utils | - | Partial |
-| Convex functions | 0 | - | Gap |
-| Auth flows | - | ✅ | E2E covers |
-| Issue CRUD | - | ✅ | E2E covers |
-| Kanban DnD | ✅ | ✅ | Both |
-| Document editing | - | ✅ | E2E covers |
+| Components | ❓ | - | - |
+| Hooks | ❓ | - | - |
+| Utils | ❓ | - | - |
+| Convex functions | ❓ | - | - |
+| Auth flows | - | ❓ | - |
+| Issue CRUD | - | ❓ | - |
+| Kanban DnD | - | ❓ | - |
+| Document editing | - | ❓ | - |
 
-**Audit Results (2026-02-15):**
-- [x] 67 unit test files in src/
-- [x] 28 E2E test files in e2e/
-- [x] Key components tested: IssueCard, FilterBar, BulkOperationsBar, CreateIssueModal, etc.
-- [ ] Gap: No Convex function unit tests (rely on E2E)
-- [ ] Gap: Some hooks missing direct tests
+**Audit Tasks:**
+- [ ] Run coverage report
+- [ ] Identify gaps
+- [ ] Add critical path tests
 
 ---
 
@@ -392,26 +385,17 @@ Run `node scripts/validate.js` to check component usage consistency.
 
 | Metric | Target | Current | Notes |
 |--------|--------|---------|-------|
-| LCP (Largest Contentful Paint) | < 2.5s | ❓ | Need Lighthouse |
-| FID (First Input Delay) | < 100ms | ❓ | Need Lighthouse |
-| CLS (Cumulative Layout Shift) | < 0.1 | ❓ | Need Lighthouse |
-| Bundle size (initial) | < 200KB | ❓ | Need build analysis |
-| Kanban render (100 issues) | < 50ms | ✅ | VirtualList + memo |
-| Document load (large) | < 1s | ✅ | Y.js optimized |
+| LCP (Largest Contentful Paint) | < 2.5s | ❓ | - |
+| FID (First Input Delay) | < 100ms | ❓ | - |
+| CLS (Cumulative Layout Shift) | < 0.1 | ❓ | - |
+| Bundle size (initial) | < 200KB | ❓ | - |
+| Kanban render (100 issues) | < 50ms | ❓ | - |
+| Document load (large) | < 1s | ❓ | - |
 
-**Codebase Stats (2026-02-15):**
-- 401 TSX files, 87 TS files in src/
-- 229 TS files in convex/
-- 343 component files
-- 26 custom hooks
-- 37 lib utilities
-
-**Optimization Patterns:**
-- [x] React.memo on expensive components (KanbanColumn, IssueCard)
-- [x] VirtualList for large lists (react-window)
-- [x] Convex real-time = no manual refetching
-- [x] Skeleton loaders prevent layout shift
-- [ ] Bundle analysis not yet run
+**Audit Tasks:**
+- [ ] Run Lighthouse audit
+- [ ] Profile Kanban with many issues
+- [ ] Analyze bundle with `vite-bundle-analyzer`
 
 ---
 
@@ -421,22 +405,20 @@ Run `node scripts/validate.js` to check component usage consistency.
 
 | Criterion | Status | Notes |
 |-----------|--------|-------|
-| Color contrast (4.5:1 text) | ✅ | Semantic tokens designed for contrast |
-| Color contrast (3:1 UI) | ✅ | Border/icon tokens tested |
-| Focus indicators visible | ✅ | 31 focus-visible usages, ring utilities |
-| Keyboard navigation | ✅ | 16 onKeyDown, 9 useListNavigation |
-| Screen reader support | ✅ | 223 aria-label, 22 sr-only |
-| Alt text on images | ✅ | All 3 images have dynamic alt text |
-| Form labels | ✅ | 148 htmlFor, 218 label elements |
-| Error identification | ✅ | aria-describedby (32), error props |
+| Color contrast (4.5:1 text) | ❓ | - |
+| Color contrast (3:1 UI) | ❓ | - |
+| Focus indicators visible | ❓ | - |
+| Keyboard navigation | ❓ | - |
+| Screen reader support | ❓ | - |
+| Alt text on images | ❓ | - |
+| Form labels | ❓ | - |
+| Error identification | ❓ | - |
 
-**Audit Results (2026-02-15):**
-- [x] 223 aria-label attributes
-- [x] 32 aria-describedby for error messages
-- [x] 28 role attributes
-- [x] 22 sr-only screen reader text
-- [x] 12 tabIndex for focus management
-- [x] All images have dynamic alt text (false positive in initial grep)
+**Audit Tasks:**
+- [ ] Run axe accessibility audit
+- [ ] Test with screen reader
+- [ ] Test keyboard-only navigation
+- [ ] Fix violations
 
 ---
 
@@ -491,10 +473,6 @@ Track each improvement session here.
 | 2026-02-15 | 1.1 Bulk Dates | Plane parity! Implemented: startDate field in issues schema, bulkUpdateStartDate + bulkUpdateDueDate mutations with date validation (start cannot exceed due), BulkOperationsBar with date pickers + clear buttons, 6-column grid layout | 3 | Continue improvements |
 | 2026-02-15 | 1.5 Bulk Triage | Implemented: bulkAccept/bulkDecline/bulkSnooze mutations in inbox.ts, InboxList with selection state + checkbox support, bulk actions bar with Accept All/Snooze 1 Week/Decline All buttons, select/deselect all for triageable items | 3 | Continue improvements |
 | 2026-02-15 | 1.2 Column Collapse | Plane parity! Implemented: isCollapsed/onToggleCollapse props on KanbanColumn, collapsed view with vertical column name + Maximize2 button, Minimize2 button in expanded header, collapsedColumns state in KanbanBoard | 2 | 100% complete! |
-| 2026-02-15 | 2.1 + 2.6 UI/UX Audit | Component inventory: Button(514), Card(238), Dialog(62), Typography(915), Flex(1031), Badge(194). Error states: NotFoundPage, ErrorBoundary, showError(273 usages), FormFields validation. 417 raw flex divs (most valid), 2 validator violations. | 2 | Section 3: Code Quality |
-| 2026-02-15 | 3.1-3.3 + 4.1 Code Quality | TypeScript: 0 @ts-ignore, 6 any in src, 118 as any. Tests: 67 unit + 28 E2E files. Codebase: 401 TSX, 343 components, 26 hooks. Accessibility: 223 aria-label, 31 focus-visible, 22 sr-only, all images have alt. | 4 | All sections audited! |
-| 2026-02-15 | Phase 2: Markdown | Integrated markdown import/export in PlateEditor. Uses existing markdown.ts utilities (valueToMarkdown, markdownToValue). DocumentHeader already had buttons. | 1 | Y.js collaboration |
-| 2026-02-15 | Phase 3: UI/UX Consistency | **14 items fixed**: (1) Fixed KanbanColumn FlexItem, (2) Replaced emoji arrows in KeyboardShortcutsHelp, (3) Added ErrorBoundary to PageLayout (22 files), (4) Added "Try again" button to ErrorBoundary, (5) Created OfflineBanner component, (6) Added OfflineBanner to main layout, (7) Added "Skip to main content" link, (8) Added prefers-reduced-motion support, (9) Removed console.debug from PlateEditor, (10) Removed console.debug from FloatingToolbar. Audited: animation (125 animate-*, 363 transition-*), performance (36 useMemo, 11 memo), accessibility (223 aria-label, skip link, reduced motion). | 14 | Phase 3 complete! |
 
 ---
 
