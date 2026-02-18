@@ -33,6 +33,7 @@ Project todos and improvement tracking.
 | 4 | [PHASE_4_FEATURE_POLISH.md](./PHASE_4_FEATURE_POLISH.md) | ✅ | Keyboard shortcuts, empty states, toasts |
 | 5 | [PHASE_5_QUALITY_DEEP_DIVE.md](./PHASE_5_QUALITY_DEEP_DIVE.md) | ✅ | 342 tests, 153 stories, N+1 fixes |
 | 6 | [PHASE_6_PERFORMANCE_BACKEND.md](./PHASE_6_PERFORMANCE_BACKEND.md) | ✅ | Bundle, Convex tests, CI |
+| 7 | [PHASE_7_CONSISTENCY_ENFORCEMENT.md](./PHASE_7_CONSISTENCY_ENFORCEMENT.md) | 🚧 | CVA expansion, validators, component recipes |
 
 ---
 
