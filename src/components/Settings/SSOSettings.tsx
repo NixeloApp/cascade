@@ -307,64 +307,76 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
 
   // Initialize fields when connection loads
   useEffect(() => {
-    if (connection) {
-      if (connection.type === "saml" && connection.samlConfig) {
-        setIdpEntityId(connection.samlConfig.idpEntityId || "");
-        setIdpSsoUrl(connection.samlConfig.idpSsoUrl || "");
-        setIdpCertificate(connection.samlConfig.idpCertificate || "");
-      } else if (connection.type === "oidc" && connection.oidcConfig) {
-        setIssuer(connection.oidcConfig.issuer || "");
-        setClientId(connection.oidcConfig.clientId || "");
-      }
-      setDomains(connection.verifiedDomains?.join(", ") || "");
+    if (!connection) return;
+
+    // Initialize type-specific fields
+    if (connection.type === "saml" && connection.samlConfig) {
+      setIdpEntityId(connection.samlConfig.idpEntityId || "");
+      setIdpSsoUrl(connection.samlConfig.idpSsoUrl || "");
+      setIdpCertificate(connection.samlConfig.idpCertificate || "");
     }
+    if (connection.type === "oidc" && connection.oidcConfig) {
+      setIssuer(connection.oidcConfig.issuer || "");
+      setClientId(connection.oidcConfig.clientId || "");
+    }
+    // Initialize common fields
+    setDomains(connection.verifiedDomains?.join(", ") || "");
   }, [connection]);
+
+  // Parse domains from comma-separated string
+  const parseDomains = useCallback(
+    () =>
+      domains
+        .split(",")
+        .map((d) => d.trim())
+        .filter((d) => d.length > 0),
+    [domains],
+  );
+
+  // Save SAML configuration
+  const saveSamlConfig = useCallback(
+    () =>
+      updateSamlConfig({
+        connectionId,
+        config: {
+          idpEntityId: idpEntityId || undefined,
+          idpSsoUrl: idpSsoUrl || undefined,
+          idpCertificate: idpCertificate || undefined,
+        },
+      }),
+    [updateSamlConfig, connectionId, idpEntityId, idpSsoUrl, idpCertificate],
+  );
+
+  // Save OIDC configuration
+  const saveOidcConfig = useCallback(
+    () =>
+      updateOidcConfig({
+        connectionId,
+        config: {
+          issuer: issuer || undefined,
+          clientId: clientId || undefined,
+          clientSecret: clientSecret || undefined,
+        },
+      }),
+    [updateOidcConfig, connectionId, issuer, clientId, clientSecret],
+  );
 
   const handleSave = useCallback(async () => {
     if (!connection) return;
 
     setIsLoading(true);
     try {
-      // Update configuration
-      if (connection.type === "saml") {
-        const result = await updateSamlConfig({
-          connectionId,
-          config: {
-            idpEntityId: idpEntityId || undefined,
-            idpSsoUrl: idpSsoUrl || undefined,
-            idpCertificate: idpCertificate || undefined,
-          },
-        });
-        if (!result.success) {
-          showError(new Error(result.error || "Failed to update"), "Error");
-          setIsLoading(false);
-          return;
-        }
-      } else {
-        const result = await updateOidcConfig({
-          connectionId,
-          config: {
-            issuer: issuer || undefined,
-            clientId: clientId || undefined,
-            clientSecret: clientSecret || undefined,
-          },
-        });
-        if (!result.success) {
-          showError(new Error(result.error || "Failed to update"), "Error");
-          setIsLoading(false);
-          return;
-        }
+      // Update type-specific configuration
+      const configResult = connection.type === "saml" ? await saveSamlConfig() : await saveOidcConfig();
+      if (!configResult.success) {
+        showError(new Error(configResult.error || "Failed to update"), "Error");
+        return;
       }
 
       // Update domains
-      const domainList = domains
-        .split(",")
-        .map((d) => d.trim())
-        .filter((d) => d.length > 0);
-      const domainsResult = await updateDomains({ connectionId, domains: domainList });
+      const domainsResult = await updateDomains({ connectionId, domains: parseDomains() });
       if (!domainsResult.success) {
         showError(new Error(domainsResult.error || "Failed to update domains"), "Error");
-        setIsLoading(false);
         return;
       }
 
@@ -375,21 +387,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
     } finally {
       setIsLoading(false);
     }
-  }, [
-    connection,
-    connectionId,
-    updateSamlConfig,
-    updateOidcConfig,
-    updateDomains,
-    idpEntityId,
-    idpSsoUrl,
-    idpCertificate,
-    issuer,
-    clientId,
-    clientSecret,
-    domains,
-    onOpenChange,
-  ]);
+  }, [connection, saveSamlConfig, saveOidcConfig, updateDomains, connectionId, parseDomains, onOpenChange]);
 
   if (!connection) {
     return (

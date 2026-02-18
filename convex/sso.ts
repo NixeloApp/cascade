@@ -53,6 +53,33 @@ async function checkOrgAdmin(
   return membership?.role === "admin" || membership?.role === "owner";
 }
 
+/**
+ * Validate SAML configuration is complete for enabling
+ */
+function validateSamlConfig(config: {
+  idpEntityId?: string;
+  idpMetadataUrl?: string;
+  idpSsoUrl?: string;
+} | undefined): string | null {
+  if (!config?.idpEntityId || (!config?.idpMetadataUrl && !config?.idpSsoUrl)) {
+    return "SAML configuration is incomplete. Please provide IdP Entity ID and SSO URL.";
+  }
+  return null;
+}
+
+/**
+ * Validate OIDC configuration is complete for enabling
+ */
+function validateOidcConfig(config: {
+  clientId?: string;
+  issuer?: string;
+} | undefined): string | null {
+  if (!config?.clientId || !config?.issuer) {
+    return "OIDC configuration is incomplete. Please provide Client ID and Issuer URL.";
+  }
+  return null;
+}
+
 // =============================================================================
 // Queries
 // =============================================================================
@@ -340,22 +367,13 @@ export const setEnabled = mutation({
 
     // Validate configuration before enabling
     if (args.isEnabled) {
-      if (connection.type === "saml") {
-        const config = connection.samlConfig;
-        if (!config?.idpEntityId || (!config?.idpMetadataUrl && !config?.idpSsoUrl)) {
-          return {
-            success: false,
-            error: "SAML configuration is incomplete. Please provide IdP Entity ID and SSO URL.",
-          };
-        }
-      } else if (connection.type === "oidc") {
-        const config = connection.oidcConfig;
-        if (!config?.clientId || !config?.issuer) {
-          return {
-            success: false,
-            error: "OIDC configuration is incomplete. Please provide Client ID and Issuer URL.",
-          };
-        }
+      const validationError =
+        connection.type === "saml"
+          ? validateSamlConfig(connection.samlConfig)
+          : validateOidcConfig(connection.oidcConfig);
+
+      if (validationError) {
+        return { success: false, error: validationError };
       }
     }
 

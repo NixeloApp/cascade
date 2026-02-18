@@ -118,6 +118,188 @@ const KanbanIssueItem = memo(
 );
 KanbanIssueItem.displayName = "KanbanIssueItem";
 
+/**
+ * Collapsed column view - shows vertical name and count badge
+ */
+const CollapsedColumn = memo(
+  ({
+    columnRef,
+    state,
+    columnIndex,
+    isDraggedOver,
+    stateIssues,
+    isOverWipLimit,
+    isAtWipLimit,
+    onToggleCollapse,
+  }: {
+    columnRef: React.RefObject<HTMLElement | null>;
+    state: WorkflowState;
+    columnIndex: number;
+    isDraggedOver: boolean;
+    stateIssues: Issue[];
+    isOverWipLimit: boolean;
+    isAtWipLimit: boolean;
+    onToggleCollapse: () => void;
+  }) => (
+    <section
+      ref={columnRef}
+      aria-label={`${state.name} column (collapsed)`}
+      data-testid={TEST_IDS.BOARD.COLUMN}
+      data-board-column
+      className={cn(
+        "flex-shrink-0 w-11 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default flex flex-col items-center",
+        getWorkflowCategoryColor(state.category),
+        isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
+      )}
+      style={{
+        animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
+      }}
+    >
+      <Tooltip content={`Expand ${state.name}`}>
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="p-2 text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover rounded-secondary transition-fast mt-2"
+          aria-label={`Expand ${state.name} column`}
+        >
+          <Maximize2 className="w-4 h-4" />
+        </button>
+      </Tooltip>
+      <div
+        className="flex-1 flex items-center justify-center py-4"
+        style={{ writingMode: "vertical-lr" }}
+      >
+        <Typography
+          variant="h3"
+          className="font-medium text-ui-text-secondary tracking-tight text-sm transform rotate-180"
+        >
+          {state.name}
+        </Typography>
+      </div>
+      <Badge
+        variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
+        shape="pill"
+        className="mb-3"
+      >
+        {stateIssues.length}
+        {state.wipLimit ? `/${state.wipLimit}` : ""}
+      </Badge>
+    </section>
+  ),
+);
+CollapsedColumn.displayName = "CollapsedColumn";
+
+/**
+ * Column header with name, count, and action buttons
+ */
+const ColumnHeader = memo(
+  ({
+    state,
+    stateIssues,
+    hiddenCount,
+    totalCount,
+    isOverWipLimit,
+    isAtWipLimit,
+    canEdit,
+    columnIndex,
+    onToggleCollapse,
+    onCreateIssue,
+  }: {
+    state: WorkflowState;
+    stateIssues: Issue[];
+    hiddenCount: number;
+    totalCount: number;
+    isOverWipLimit: boolean;
+    isAtWipLimit: boolean;
+    canEdit: boolean;
+    columnIndex: number;
+    onToggleCollapse?: () => void;
+    onCreateIssue?: () => void;
+  }) => (
+    <div
+      data-testid={TEST_IDS.BOARD.COLUMN_HEADER}
+      className="p-3 sm:p-4 border-b border-ui-border/50 bg-transparent rounded-t-container"
+    >
+      <Flex align="center" justify="between" gap="sm">
+        <Flex align="center" className="space-x-2 min-w-0">
+          <Typography
+            variant="h3"
+            className="font-medium text-ui-text-secondary truncate tracking-tight text-sm"
+          >
+            {state.name}
+          </Typography>
+          <Badge
+            data-testid={TEST_IDS.BOARD.COLUMN_COUNT}
+            variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
+            shape="pill"
+            className="shrink-0"
+          >
+            {hiddenCount > 0 ? `${stateIssues.length}/${totalCount}` : stateIssues.length}
+            {state.wipLimit ? `/${state.wipLimit}` : ""}
+          </Badge>
+          {isOverWipLimit && (
+            <Tooltip content={`WIP limit exceeded (max ${state.wipLimit})`}>
+              <Badge variant="error" size="sm">
+                Over limit
+              </Badge>
+            </Tooltip>
+          )}
+        </Flex>
+        <Flex align="center" gap="xs">
+          {onToggleCollapse && (
+            <Tooltip content={`Collapse ${state.name}`}>
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2 shrink-0 rounded-secondary transition-fast"
+                aria-label={`Collapse ${state.name} column`}
+              >
+                <Minimize2 className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
+          )}
+          {canEdit && onCreateIssue && (
+            <Tooltip content="Create issue">
+              <button
+                type="button"
+                onClick={onCreateIssue}
+                className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2.5 sm:p-3 shrink-0 rounded-secondary transition-fast"
+                aria-label={`Add issue to ${state.name}`}
+                {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </Tooltip>
+          )}
+        </Flex>
+      </Flex>
+    </div>
+  ),
+);
+ColumnHeader.displayName = "ColumnHeader";
+
+/**
+ * Empty column state with icon and message
+ */
+const EmptyColumnState = memo(
+  ({ canEdit, onCreateIssue }: { canEdit: boolean; onCreateIssue?: () => void }) => (
+    <Flex direction="column" align="center" justify="center" className="py-12 px-4 text-center">
+      <Flex align="center" justify="center" className="w-10 h-10 rounded-full bg-ui-bg-hover mb-3">
+        <Plus className="w-5 h-5 text-ui-text-tertiary" />
+      </Flex>
+      <Typography variant="small" className="text-ui-text-tertiary mb-1">
+        No issues yet
+      </Typography>
+      {canEdit && onCreateIssue && (
+        <Typography variant="small" className="text-ui-text-tertiary">
+          Drop issues here or click + to add
+        </Typography>
+      )}
+    </Flex>
+  ),
+);
+EmptyColumnState.displayName = "EmptyColumnState";
+
 function areSelectedIssuesEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
   if (prev.selectedIssueIds === next.selectedIssueIds) {
     return true;
@@ -187,7 +369,7 @@ const KanbanColumnComponent = function KanbanColumn({
   onLoadMore,
   isLoadingMore = false,
   onIssueDrop,
-  onIssueReorder,
+  onIssueReorder: _onIssueReorder,
   isCollapsed = false,
   onToggleCollapse,
 }: KanbanColumnProps) {
@@ -246,55 +428,16 @@ const KanbanColumnComponent = function KanbanColumn({
   // Render collapsed column view
   if (isCollapsed) {
     return (
-      <section
-        ref={columnRef}
-        aria-label={`${state.name} column (collapsed)`}
-        data-testid={TEST_IDS.BOARD.COLUMN}
-        data-board-column
-        className={cn(
-          "flex-shrink-0 w-11 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default flex flex-col items-center",
-          getWorkflowCategoryColor(state.category),
-          isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
-        )}
-        style={{
-          animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
-        }}
-      >
-        {/* Collapse toggle button */}
-        <Tooltip content={`Expand ${state.name}`}>
-          <button
-            type="button"
-            onClick={handleToggleCollapse}
-            className="p-2 text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover rounded-secondary transition-fast mt-2"
-            aria-label={`Expand ${state.name} column`}
-          >
-            <Maximize2 className="w-4 h-4" />
-          </button>
-        </Tooltip>
-
-        {/* Vertical column name */}
-        <div
-          className="flex-1 flex items-center justify-center py-4"
-          style={{ writingMode: "vertical-lr" }}
-        >
-          <Typography
-            variant="h3"
-            className="font-medium text-ui-text-secondary tracking-tight text-sm transform rotate-180"
-          >
-            {state.name}
-          </Typography>
-        </div>
-
-        {/* Issue count badge */}
-        <Badge
-          variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
-          shape="pill"
-          className="mb-3"
-        >
-          {stateIssues.length}
-          {state.wipLimit ? `/${state.wipLimit}` : ""}
-        </Badge>
-      </section>
+      <CollapsedColumn
+        columnRef={columnRef}
+        state={state}
+        columnIndex={columnIndex}
+        isDraggedOver={isDraggedOver}
+        stateIssues={stateIssues}
+        isOverWipLimit={isOverWipLimit}
+        isAtWipLimit={isAtWipLimit}
+        onToggleCollapse={handleToggleCollapse}
+      />
     );
   }
 
@@ -315,92 +458,23 @@ const KanbanColumnComponent = function KanbanColumn({
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
       }}
     >
-      {/* Column Header */}
-      <div
-        data-testid={TEST_IDS.BOARD.COLUMN_HEADER}
-        className="p-3 sm:p-4 border-b border-ui-border/50 bg-transparent rounded-t-container"
-      >
-        <Flex align="center" justify="between" gap="sm">
-          <Flex align="center" className="space-x-2 min-w-0">
-            <Typography
-              variant="h3"
-              className="font-medium text-ui-text-secondary truncate tracking-tight text-sm"
-            >
-              {state.name}
-            </Typography>
-            <Badge
-              data-testid={TEST_IDS.BOARD.COLUMN_COUNT}
-              variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
-              shape="pill"
-              className="shrink-0"
-            >
-              {hiddenCount > 0 ? `${stateIssues.length}/${totalCount}` : stateIssues.length}
-              {state.wipLimit ? `/${state.wipLimit}` : ""}
-            </Badge>
-            {isOverWipLimit && (
-              <Tooltip content={`WIP limit exceeded (max ${state.wipLimit})`}>
-                <Badge variant="error" size="sm">
-                  Over limit
-                </Badge>
-              </Tooltip>
-            )}
-          </Flex>
-          <Flex align="center" gap="xs">
-            {onToggleCollapse && (
-              <Tooltip content={`Collapse ${state.name}`}>
-                <button
-                  type="button"
-                  onClick={handleToggleCollapse}
-                  className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2 shrink-0 rounded-secondary transition-fast"
-                  aria-label={`Collapse ${state.name} column`}
-                >
-                  <Minimize2 className="w-3.5 h-3.5" />
-                </button>
-              </Tooltip>
-            )}
-            {canEdit && (
-              <Tooltip content="Create issue">
-                <button
-                  type="button"
-                  onClick={handleCreateIssue}
-                  className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2.5 sm:p-3 shrink-0 rounded-secondary transition-fast"
-                  aria-label={`Add issue to ${state.name}`}
-                  {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </Tooltip>
-            )}
-          </Flex>
-        </Flex>
-      </div>
+      <ColumnHeader
+        state={state}
+        stateIssues={stateIssues}
+        hiddenCount={hiddenCount}
+        totalCount={totalCount}
+        isOverWipLimit={isOverWipLimit}
+        isAtWipLimit={isAtWipLimit}
+        canEdit={canEdit}
+        columnIndex={columnIndex}
+        onToggleCollapse={onToggleCollapse ? handleToggleCollapse : undefined}
+        onCreateIssue={onCreateIssue ? handleCreateIssue : undefined}
+      />
 
       {/* Issues */}
       <div className="p-2 space-y-2 min-h-96 transition-default">
         {stateIssues.length === 0 && hiddenCount === 0 ? (
-          /* Empty column state */
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            className="py-12 px-4 text-center"
-          >
-            <Flex
-              align="center"
-              justify="center"
-              className="w-10 h-10 rounded-full bg-ui-bg-hover mb-3"
-            >
-              <Plus className="w-5 h-5 text-ui-text-tertiary" />
-            </Flex>
-            <Typography variant="small" className="text-ui-text-tertiary mb-1">
-              No issues yet
-            </Typography>
-            {canEdit && onCreateIssue && (
-              <Typography variant="small" className="text-ui-text-tertiary">
-                Drop issues here or click + to add
-              </Typography>
-            )}
-          </Flex>
+          <EmptyColumnState canEdit={canEdit} onCreateIssue={handleCreateIssue} />
         ) : (
           <>
             {stateIssues.map((issue, issueIndex) => (
