@@ -31,7 +31,7 @@ function PreferenceRow({
   onChange,
   isLast = false,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType;
   label: string;
   description: string;
   checked: boolean;
@@ -67,7 +67,7 @@ function PushPreferenceRow({
   disabled,
   onChange,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType;
   label: string;
   checked: boolean;
   disabled: boolean;
@@ -132,7 +132,7 @@ function PushNotificationsCard({
   onPushToggle,
 }: {
   isSupported: boolean;
-  vapidKey: string | null;
+  vapidKey: string | undefined;
   isSubscribed: boolean;
   isPushLoading: boolean;
   pushPreferences:
