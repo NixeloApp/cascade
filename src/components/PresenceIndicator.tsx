@@ -20,7 +20,7 @@ export function PresenceIndicator({ roomId, userId }: PresenceIndicatorProps) {
   }
 
   return (
-    <Flex align="center" className="space-x-2">
+    <Flex align="center" gap="sm">
       <MetadataItem>
         {presenceState.length} {presenceState.length === 1 ? "person" : "people"} editing
       </MetadataItem>

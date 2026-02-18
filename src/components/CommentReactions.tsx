@@ -5,6 +5,7 @@ import { Smile } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
+import { Button } from "./ui/Button";
 import { Flex } from "./ui/Flex";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { Tooltip } from "./ui/Tooltip";
@@ -58,27 +59,29 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <Tooltip content="Add reaction">
           <PopoverTrigger asChild>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label="Add reaction"
-              className="inline-flex items-center justify-center w-6 h-6 rounded-full text-ui-text-tertiary hover:text-ui-text-secondary hover:bg-ui-bg-hover transition-colors duration-default"
+              className="w-6 h-6 rounded-full text-ui-text-tertiary hover:text-ui-text-secondary"
             >
               <Smile size={16} />
-            </button>
+            </Button>
           </PopoverTrigger>
         </Tooltip>
         <PopoverContent side="top" align="start" className="w-auto p-1">
           <Flex gap="xs">
             {COMMON_EMOJIS.map((emoji) => (
               <Tooltip key={emoji} content={emoji}>
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => handleToggle(emoji)}
                   aria-label={`React with ${emoji}`}
-                  className="w-8 h-8 flex items-center justify-center rounded hover:bg-ui-bg-hover transition-colors duration-default text-lg"
+                  className="w-8 h-8 text-lg"
                 >
                   {emoji}
-                </button>
+                </Button>
               </Tooltip>
             ))}
           </Flex>
