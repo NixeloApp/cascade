@@ -339,9 +339,11 @@ export function UserTypeManager() {
         />
         <CardBody>
           {!configs ? (
-            <Typography variant="small" color="tertiary" className="text-center py-8">
-              Loading...
-            </Typography>
+            <Flex justify="center" align="center" className="min-h-32">
+              <Typography variant="small" color="tertiary">
+                Loading...
+              </Typography>
+            </Flex>
           ) : configs.length === 0 ? (
             <EmptyState
               icon={Settings}
@@ -442,19 +444,20 @@ export function UserTypeManager() {
                 </Typography>
                 <Stack gap="sm">
                   {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
-                    <Flex
+                    <Card
                       key={user._id}
-                      justify="between"
-                      align="center"
-                      className="bg-ui-bg p-2 rounded transition-default hover:bg-ui-bg-hover"
+                      padding="sm"
+                      className="bg-ui-bg transition-default hover:bg-ui-bg-hover"
                     >
-                      <Typography variant="small">
-                        {user.name || user.email || "Unknown User"}
-                      </Typography>
-                      <Button size="sm" onClick={() => handleAssignUser(user._id)}>
-                        Assign Type
-                      </Button>
-                    </Flex>
+                      <Flex justify="between" align="center">
+                        <Typography variant="small">
+                          {user.name || user.email || "Unknown User"}
+                        </Typography>
+                        <Button size="sm" onClick={() => handleAssignUser(user._id)}>
+                          Assign Type
+                        </Button>
+                      </Flex>
+                    </Card>
                   ))}
                   {usersWithoutProfiles.length > 5 && (
                     <Typography variant="caption">
@@ -468,9 +471,11 @@ export function UserTypeManager() {
 
           {/* Assigned users */}
           {!profiles ? (
-            <Typography variant="small" color="tertiary" className="text-center py-8">
-              Loading...
-            </Typography>
+            <Flex justify="center" align="center" className="min-h-32">
+              <Typography variant="small" color="tertiary">
+                Loading...
+              </Typography>
+            </Flex>
           ) : profiles.length === 0 ? (
             <EmptyState
               icon={Users}
@@ -600,7 +605,7 @@ export function UserTypeManager() {
         }
       >
         <form id="config-form" onSubmit={handleSaveConfig}>
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             <Input
               label="Display Name"
               value={configName}
@@ -636,7 +641,7 @@ export function UserTypeManager() {
               />
             </Grid>
 
-            <Flex direction="column" gap="md">
+            <Stack gap="md">
               <label>
                 <Flex align="center" gap="sm">
                   <input
@@ -686,8 +691,8 @@ export function UserTypeManager() {
                   <Typography variant="small">Can manage projects</Typography>
                 </Flex>
               </label>
-            </Flex>
-          </Flex>
+            </Stack>
+          </Stack>
         </form>
       </Dialog>
 
@@ -722,7 +727,7 @@ export function UserTypeManager() {
         }
       >
         <form id="profile-form" onSubmit={handleSaveProfile}>
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             <Select
               label="Employment Type"
               value={profileType}
@@ -900,7 +905,7 @@ export function UserTypeManager() {
               </Card>
             )}
 
-            <Flex direction="column" gap="md">
+            <Stack gap="md">
               <label>
                 <Flex align="center" gap="sm">
                   <input
@@ -914,8 +919,8 @@ export function UserTypeManager() {
                   </Typography>
                 </Flex>
               </label>
-            </Flex>
-          </Flex>
+            </Stack>
+          </Stack>
         </form>
       </Dialog>
     </Flex>

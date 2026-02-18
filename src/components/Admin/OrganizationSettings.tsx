@@ -88,7 +88,7 @@ export function OrganizationSettings() {
     return (
       <Card>
         <CardBody>
-          <Flex justify="center" className="py-8">
+          <Flex justify="center" align="center" className="min-h-32">
             <LoadingSpinner />
           </Flex>
         </CardBody>
@@ -175,7 +175,7 @@ export function OrganizationSettings() {
             </Stack>
 
             {/* Requires Time Approval */}
-            <Flex align="center" justify="between" className="py-2">
+            <Flex align="center" justify="between">
               <Stack gap="none">
                 <Typography variant="label">Require Time Approval</Typography>
                 <Typography variant="small" color="secondary">
@@ -204,7 +204,7 @@ export function OrganizationSettings() {
         <CardBody>
           <Stack gap="lg">
             {/* Billing Enabled */}
-            <Flex align="center" justify="between" className="py-2">
+            <Flex align="center" justify="between">
               <Stack gap="none">
                 <Typography variant="label">Enable Billing Features</Typography>
                 <Typography variant="small" color="secondary">

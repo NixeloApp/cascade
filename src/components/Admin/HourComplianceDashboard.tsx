@@ -250,9 +250,11 @@ export function HourComplianceDashboard() {
 
           {/* Records List */}
           {!records ? (
-            <Typography variant="small" color="secondary" className="text-center py-8">
-              Loading...
-            </Typography>
+            <Flex justify="center" align="center" className="min-h-32">
+              <Typography variant="small" color="secondary">
+                Loading...
+              </Typography>
+            </Flex>
           ) : records.length === 0 ? (
             <EmptyState
               icon={TrendingUp}
@@ -294,14 +296,14 @@ export function HourComplianceDashboard() {
                       <Grid cols={2} colsMd={4} gap="md" className="mt-3">
                         <Stack gap="none">
                           <Typography variant="meta">Period:</Typography>
-                          <Typography variant="small" className="font-medium">
+                          <Typography variant="label">
                             {formatDate(record.periodStart)} - {formatDate(record.periodEnd)}
                           </Typography>
                         </Stack>
 
                         <Stack gap="none">
                           <Typography variant="meta">Hours Worked:</Typography>
-                          <Typography variant="small" className="font-medium">
+                          <Typography variant="label">
                             {record.totalHoursWorked.toFixed(1)}h
                           </Typography>
                         </Stack>
@@ -309,7 +311,7 @@ export function HourComplianceDashboard() {
                         {record.hoursDeficit && (
                           <Stack gap="none">
                             <Typography variant="meta">Deficit:</Typography>
-                            <Typography variant="small" color="warning" className="font-medium">
+                            <Typography variant="label" color="warning">
                               -{record.hoursDeficit.toFixed(1)}h
                             </Typography>
                           </Stack>
@@ -318,7 +320,7 @@ export function HourComplianceDashboard() {
                         {record.hoursExcess && (
                           <Stack gap="none">
                             <Typography variant="meta">Excess:</Typography>
-                            <Typography variant="small" color="error" className="font-medium">
+                            <Typography variant="label" color="error">
                               +{record.hoursExcess.toFixed(1)}h
                             </Typography>
                           </Stack>
@@ -327,7 +329,7 @@ export function HourComplianceDashboard() {
                         {record.equityHoursDeficit && (
                           <Stack gap="none">
                             <Typography variant="meta">Equity Short:</Typography>
-                            <Typography variant="small" color="brand" className="font-medium">
+                            <Typography variant="label" color="brand">
                               -{record.equityHoursDeficit.toFixed(1)}h
                             </Typography>
                           </Stack>
@@ -336,7 +338,7 @@ export function HourComplianceDashboard() {
                         {record.totalEquityHours && (
                           <Stack gap="none">
                             <Typography variant="meta">Equity Hours:</Typography>
-                            <Typography variant="small" className="font-medium">
+                            <Typography variant="label">
                               {record.totalEquityHours.toFixed(1)}h
                             </Typography>
                           </Stack>
@@ -402,7 +404,7 @@ export function HourComplianceDashboard() {
         }
       >
         <form id="review-form" onSubmit={handleReview}>
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             <Textarea
               label="Review Notes (Optional)"
               value={reviewNotes}
@@ -410,7 +412,7 @@ export function HourComplianceDashboard() {
               placeholder="Add notes about this compliance record..."
               rows={4}
             />
-          </Flex>
+          </Stack>
         </form>
       </Dialog>
     </Flex>

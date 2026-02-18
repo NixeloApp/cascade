@@ -103,7 +103,7 @@ export function IpRestrictionsSettings() {
     return (
       <Card>
         <CardBody>
-          <Flex justify="center" className="py-8">
+          <Flex justify="center" align="center" className="min-h-32">
             <LoadingSpinner />
           </Flex>
         </CardBody>
@@ -128,7 +128,7 @@ export function IpRestrictionsSettings() {
       <CardBody>
         <Flex direction="column" gap="xl">
           {/* Enable/Disable Toggle */}
-          <Flex align="center" justify="between" className="py-2 border-b border-ui-border pb-4">
+          <Flex align="center" justify="between" className="border-b border-ui-border pb-4">
             <Flex align="center" gap="md">
               {status.enabled ? (
                 <ShieldCheck className="h-5 w-5 text-status-success" />
@@ -223,9 +223,7 @@ export function IpRestrictionsSettings() {
                     <Flex align="center" justify="between">
                       <Stack gap="xs">
                         <Flex align="center" gap="sm">
-                          <Typography variant="mono" className="text-sm">
-                            {entry.ipRange}
-                          </Typography>
+                          <Typography variant="mono">{entry.ipRange}</Typography>
                           {entry.description && (
                             <Typography variant="small" color="secondary">
                               — {entry.description}
