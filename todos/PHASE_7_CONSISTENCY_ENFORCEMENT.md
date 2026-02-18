@@ -2,8 +2,8 @@
 
 > **Status:** 🚧 In Progress
 > **Goal:** All styling lives in CVA components. No raw Tailwind in app code.
-> **Last Updated:** 2026-02-17
-> **Progress:** 246/1145 classNames migrated (21%)
+> **Last Updated:** 2026-02-18
+> **Progress:** 320/1145 classNames migrated (28%)
 
 ---
 
@@ -276,8 +276,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-18
-**Files Migrated:** 20 / ~100
-**Violations Remaining:** 888 (down from 1145)
+**Files Migrated:** 35 / ~100
+**Violations Remaining:** 825 (down from 1145)
 
 ---
 
