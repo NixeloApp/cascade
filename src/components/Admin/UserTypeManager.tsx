@@ -819,7 +819,7 @@ export function UserTypeManager() {
                           onChange={(e) => setProfileHasEquity(e.target.checked)}
                           className="w-4 h-4"
                         />
-                        <Typography variant="caption" className="font-medium text-brand-active">
+                        <Typography variant="label" className="text-brand-active">
                           Has Equity
                         </Typography>
                       </Flex>
@@ -890,7 +890,7 @@ export function UserTypeManager() {
                       />
 
                       <Card padding="sm" className="bg-brand-subtle">
-                        <Flex align="start" gap="sm" className="text-xs text-brand-hover">
+                        <Flex align="start" gap="sm" className="text-brand-hover">
                           <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
                           <span>
                             Tip: Equity hours are non-paid hours compensated with equity. Set
@@ -914,9 +914,7 @@ export function UserTypeManager() {
                     onChange={(e) => setProfileIsActive(e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <Typography variant="small" className="font-medium">
-                    Active Employment
-                  </Typography>
+                  <Typography variant="label">Active Employment</Typography>
                 </Flex>
               </label>
             </Stack>

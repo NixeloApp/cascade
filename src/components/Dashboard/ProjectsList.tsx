@@ -101,8 +101,8 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                   <Flex direction="column" className="flex-1 min-w-0">
                     <Flex justify="between" align="center" gap="sm">
                       <Typography
-                        variant="small"
-                        className="font-semibold text-ui-text truncate group-hover:text-brand transition-colors tracking-tight"
+                        variant="label"
+                        className="truncate group-hover:text-brand transition-colors tracking-tight"
                       >
                         {project.name}
                       </Typography>
@@ -113,7 +113,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                         {project.role}
                       </Badge>
                     </Flex>
-                    <Typography variant="small" className="text-ui-text-secondary">
+                    <Typography variant="small" color="secondary">
                       {project.myIssues} assigned issues
                     </Typography>
                   </Flex>

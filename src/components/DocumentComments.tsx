@@ -8,9 +8,11 @@ import { MessageCircle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Textarea } from "./ui/form/Textarea";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 interface DocumentCommentsProps {
@@ -56,11 +58,11 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       <Typography variant="h5">Comments</Typography>
 
       {/* Comments List */}
-      <div className="space-y-4">
+      <Stack gap="md">
         {comments.length === 0 ? (
           <EmptyState
             icon={MessageCircle}
@@ -69,46 +71,48 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
           />
         ) : (
           comments.map((comment) => (
-            <Flex
-              gap="md"
-              className="p-4 bg-ui-bg-soft border border-ui-border rounded-lg transition-colors duration-default hover:border-ui-border-secondary"
+            <Card
               key={comment._id}
+              padding="md"
+              className="bg-ui-bg-soft transition-colors duration-default hover:border-ui-border-secondary"
             >
-              {/* Avatar */}
-              <FlexItem shrink={false}>
-                <Avatar name={comment.authorName} src={comment.authorImage} size="lg" />
-              </FlexItem>
+              <Flex gap="md">
+                {/* Avatar */}
+                <FlexItem shrink={false}>
+                  <Avatar name={comment.authorName} src={comment.authorImage} size="lg" />
+                </FlexItem>
 
-              {/* Comment Content */}
-              <FlexItem flex="1" className="min-w-0">
-                {/* Author and Date */}
-                <Flex align="center" gap="sm" className="mb-2 text-sm">
-                  <Typography variant="label">{comment.authorName || "Unknown User"}</Typography>
-                  <time
-                    className="text-ui-text-tertiary text-xs"
-                    dateTime={new Date(comment._creationTime).toISOString()}
-                  >
-                    {formatRelativeTime(comment._creationTime)}
-                  </time>
-                  {comment.updatedAt > comment._creationTime && (
-                    <Typography variant="caption" color="tertiary" className="italic">
-                      (edited)
-                    </Typography>
-                  )}
-                </Flex>
+                {/* Comment Content */}
+                <FlexItem flex="1" className="min-w-0">
+                  {/* Author and Date */}
+                  <Flex align="center" gap="sm" className="mb-2">
+                    <Typography variant="label">{comment.authorName || "Unknown User"}</Typography>
+                    <time
+                      className="text-caption text-ui-text-tertiary"
+                      dateTime={new Date(comment._creationTime).toISOString()}
+                    >
+                      {formatRelativeTime(comment._creationTime)}
+                    </time>
+                    {comment.updatedAt > comment._creationTime && (
+                      <Typography variant="caption" color="tertiary" className="italic">
+                        (edited)
+                      </Typography>
+                    )}
+                  </Flex>
 
-                {/* Comment Text */}
-                <Typography variant="p" className="whitespace-pre-wrap">
-                  {comment.content}
-                </Typography>
-              </FlexItem>
-            </Flex>
+                  {/* Comment Text */}
+                  <Typography variant="p" className="whitespace-pre-wrap">
+                    {comment.content}
+                  </Typography>
+                </FlexItem>
+              </Flex>
+            </Card>
           ))
         )}
-      </div>
+      </Stack>
 
       {/* Add Comment */}
-      <div className="space-y-3 pt-4 border-t border-ui-border">
+      <Stack gap="sm" className="pt-4 border-t border-ui-border">
         <Typography variant="label">Add Comment</Typography>
         <Textarea
           value={newComment}
@@ -121,7 +125,7 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
             Add Comment
           </Button>
         </Flex>
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }

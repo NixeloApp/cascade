@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { Button } from "../ui/Button";
 import { Dialog, DialogTrigger } from "../ui/Dialog";
 import { Label } from "../ui/Label";
@@ -50,9 +51,9 @@ export function DashboardCustomizeModal() {
         </Button>
       </DialogTrigger>
 
-      <div className="space-y-4 py-4">
-        <Flex align="center" justify="between" className="space-x-2">
-          <Label htmlFor="show-stats" className="flex flex-col space-y-1">
+      <Stack gap="md">
+        <Flex align="center" justify="between" gap="sm">
+          <Label htmlFor="show-stats" className="flex flex-col gap-1">
             <span>Quick Stats</span>
             <Typography variant="caption" color="secondary" as="span">
               Show issue and project counts
@@ -65,8 +66,8 @@ export function DashboardCustomizeModal() {
           />
         </Flex>
 
-        <Flex align="center" justify="between" className="space-x-2">
-          <Label htmlFor="show-activity" className="flex flex-col space-y-1">
+        <Flex align="center" justify="between" gap="sm">
+          <Label htmlFor="show-activity" className="flex flex-col gap-1">
             <span>Recent Activity</span>
             <Typography variant="caption" color="secondary" as="span">
               Show your latest actions and history
@@ -79,8 +80,8 @@ export function DashboardCustomizeModal() {
           />
         </Flex>
 
-        <Flex align="center" justify="between" className="space-x-2">
-          <Label htmlFor="show-workspaces" className="flex flex-col space-y-1">
+        <Flex align="center" justify="between" gap="sm">
+          <Label htmlFor="show-workspaces" className="flex flex-col gap-1">
             <span>My Workspaces</span>
             <Typography variant="caption" color="secondary" as="span">
               Show list of projects you belong to
@@ -92,7 +93,7 @@ export function DashboardCustomizeModal() {
             onCheckedChange={() => handleToggle("showWorkspaces")}
           />
         </Flex>
-      </div>
+      </Stack>
     </Dialog>
   );
 }

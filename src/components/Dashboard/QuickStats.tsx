@@ -54,17 +54,17 @@ function StatCard({ title, value, subtitle, variant, progressValue }: StatCardPr
       <CardBody className="pl-6">
         <Stack gap="sm">
           <Typography
-            variant="small"
+            variant="label"
             color="tertiary"
-            className="text-caption uppercase tracking-wider font-bold"
+            className="text-caption uppercase tracking-wider"
           >
             {title}
           </Typography>
           <Flex align="baseline" gap="xs">
-            <Typography variant="h2" className={cn("text-3xl font-extrabold", styles.text)}>
+            <Typography variant="h2" className={cn("text-display-sm", styles.text)}>
               {value || 0}
             </Typography>
-            <Typography variant="small" color="secondary" className="text-xs">
+            <Typography variant="caption" color="secondary">
               {subtitle}
             </Typography>
           </Flex>
@@ -92,9 +92,9 @@ function HighPriorityCard({ count }: { count: number }) {
       <CardBody>
         <Stack gap="sm">
           <Typography
-            variant="small"
+            variant="label"
             className={cn(
-              "text-caption uppercase tracking-wider font-bold",
+              "text-caption uppercase tracking-wider",
               hasHighPriority ? "text-status-warning" : "text-ui-text-tertiary",
             )}
           >
@@ -110,7 +110,7 @@ function HighPriorityCard({ count }: { count: number }) {
             >
               {count || 0}
             </Typography>
-            <Typography variant="small" color="secondary" className="text-xs">
+            <Typography variant="caption" color="secondary">
               High Priority
             </Typography>
           </Flex>

@@ -52,7 +52,7 @@ export function FocusZone({ task }: FocusZoneProps) {
       >
         {/* Brand left border accent */}
         <div className="absolute left-0 top-0 h-full w-1 bg-brand" />
-        <Stack gap="md" className="p-6 pl-7">
+        <Stack gap="md" className="pl-7 py-6 pr-6">
           <Flex justify="between" align="center">
             <Badge variant="primary">{task.priority.toUpperCase()}</Badge>
             <Typography variant="inlineCode" color="secondary">

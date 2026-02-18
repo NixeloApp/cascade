@@ -68,8 +68,8 @@ export function DocumentHeader({
       role={document.isOwner ? "button" : undefined}
       tabIndex={document.isOwner ? 0 : undefined}
       className={cn(
-        "text-xl sm:text-2xl font-semibold text-ui-text tracking-tight",
-        "px-2 py-1 -ml-2 rounded transition-default",
+        "text-xl sm:text-2xl tracking-tight",
+        "-ml-2 rounded transition-default",
         document.isOwner && "cursor-pointer hover:bg-ui-bg-hover",
       )}
       onClick={document.isOwner ? handleTitleEdit : undefined}
@@ -101,7 +101,7 @@ export function DocumentHeader({
           align="start"
           justify="between"
           gap="md"
-          className="sm:flex-row sm:items-center sm:gap-4"
+          className="sm:flex-row sm:items-center"
         >
           <FlexItem flex="1" className="w-full sm:w-auto">
             {isEditingTitle ? (
@@ -120,7 +120,7 @@ export function DocumentHeader({
             )}
           </FlexItem>
 
-          <Flex wrap align="center" className="gap-1.5 sm:gap-2 w-full sm:w-auto">
+          <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
             <PresenceIndicator roomId={document._id} userId={userId} />
 
             {/* Version History */}

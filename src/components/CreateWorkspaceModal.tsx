@@ -77,7 +77,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
       }
     >
       <form id="create-workspace-form" onSubmit={handleSubmit}>
-        <Stack gap="md" className="py-2">
+        <Stack gap="md">
           <Stack gap="xs">
             <Label htmlFor="workspace-name">Workspace Name</Label>
             <Input

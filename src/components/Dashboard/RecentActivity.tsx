@@ -71,7 +71,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
               {activities.map((activity: Activity) => (
                 <div
                   key={activity._id}
-                  className="relative py-3 px-2 -mx-2 rounded-lg transition-colors duration-150 hover:bg-ui-bg-secondary/30"
+                  className="relative rounded-lg transition-colors duration-150 hover:bg-ui-bg-secondary/30"
                 >
                   <Flex gap="md" align="start">
                     {/* User avatar */}
@@ -91,9 +91,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                           {activity.issueKey}
                         </Badge>
                         <Metadata separator="|">
-                          <MetadataItem className="font-medium">
-                            {activity.projectName}
-                          </MetadataItem>
+                          <MetadataItem>{activity.projectName}</MetadataItem>
                           <MetadataTimestamp date={activity._creationTime} format="absolute" />
                         </Metadata>
                       </Stack>

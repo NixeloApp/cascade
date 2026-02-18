@@ -87,7 +87,7 @@ export function CreateTeamModal({
       }
     >
       <form id="create-team-form" onSubmit={handleSubmit}>
-        <Stack gap="md" className="py-2">
+        <Stack gap="md">
           <Stack gap="xs">
             <Label htmlFor="team-name">Team Name</Label>
             <Input

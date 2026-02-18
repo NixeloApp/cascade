@@ -39,12 +39,12 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
                 key={activity._id}
                 gap="md"
                 align="start"
-                className="relative py-3 px-2 -mx-2 rounded-lg transition-colors duration-150 hover:bg-ui-bg-secondary/30"
+                className="relative rounded-lg transition-colors duration-150 hover:bg-ui-bg-secondary/30"
               >
                 <Flex
                   align="center"
                   justify="center"
-                  className="shrink-0 w-8 h-8 rounded-full bg-ui-bg-tertiary text-ui-text-secondary text-caption font-medium relative z-10"
+                  className="shrink-0 w-8 h-8 rounded-full bg-ui-bg-tertiary text-ui-text-secondary font-medium relative z-10"
                 >
                   {activity.userName.charAt(0).toUpperCase()}
                 </Flex>

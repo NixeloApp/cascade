@@ -76,7 +76,7 @@ export function MyIssuesList({
 
   return (
     <Flex direction="column" className="h-full">
-      <Stack gap="xs" className="p-6 pb-2">
+      <Stack gap="xs" className="pb-2 pt-6 px-6">
         <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
           Feed
         </Typography>
@@ -158,8 +158,9 @@ export function MyIssuesList({
                   <FlexItem flex="1">
                     <Flex gap="sm" align="center" className="mb-1.5">
                       <Typography
-                        variant="small"
-                        className="font-mono text-xs text-ui-text-tertiary group-hover:text-brand transition-colors"
+                        variant="inlineCode"
+                        color="tertiary"
+                        className="group-hover:text-brand transition-colors"
                       >
                         {issue.key}
                       </Typography>
@@ -171,12 +172,12 @@ export function MyIssuesList({
                       </Badge>
                     </Flex>
                     <Typography
-                      variant="h4"
-                      className="font-bold text-ui-text mb-1 group-hover:text-brand:text-brand-muted transition-colors"
+                      variant="label"
+                      className="mb-1 group-hover:text-brand transition-colors"
                     >
                       {issue.title}
                     </Typography>
-                    <Metadata size="xs" gap="xs" className="uppercase tracking-wider font-bold">
+                    <Metadata size="xs" gap="xs" className="uppercase tracking-wider">
                       <MetadataItem>{issue.projectName}</MetadataItem>
                       <MetadataItem>{issue.status}</MetadataItem>
                     </Metadata>

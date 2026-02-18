@@ -8,6 +8,7 @@ import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
@@ -162,7 +163,7 @@ export function AdvancedSearchModal({
             )}
           </Flex>
 
-          <div className="border border-ui-border rounded-lg overflow-hidden">
+          <Card radius="full" className="overflow-hidden">
             <SearchResultsList
               searchQuery={searchQuery}
               results={results}
@@ -171,7 +172,7 @@ export function AdvancedSearchModal({
               onSelectIssue={handleSelectIssue}
               onLoadMore={handleLoadMore}
             />
-          </div>
+          </Card>
         </Stack>
       </Stack>
     </Dialog>
