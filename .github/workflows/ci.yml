@@ -28,6 +28,18 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -72,6 +84,18 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -93,6 +117,18 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -117,6 +153,18 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -127,6 +175,31 @@ jobs:
           VITE_CONVEX_URL: ${{ github.ref == 'refs/heads/main' && secrets.VITE_CONVEX_URL || 'http://127.0.0.1:3210' }}
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+      - name: Check bundle size
+        run: |
+          # Find main JS bundle and check gzip size
+          MAIN_BUNDLE=$(ls -S dist/client/assets/index-*.js 2>/dev/null | head -1)
+          if [ -z "$MAIN_BUNDLE" ]; then
+            echo "❌ No main bundle found"
+            exit 1
+          fi
+
+          # Get gzip size in KB
+          GZIP_SIZE=$(gzip -c "$MAIN_BUNDLE" | wc -c)
+          GZIP_KB=$((GZIP_SIZE / 1024))
+          BUDGET_KB=700  # Target: <700KB gzip (allows some headroom from 605KB baseline)
+
+          echo "📦 Bundle: $(basename $MAIN_BUNDLE)"
+          echo "📏 Size: ${GZIP_KB}KB gzip (budget: ${BUDGET_KB}KB)"
+
+          if [ "$GZIP_KB" -gt "$BUDGET_KB" ]; then
+            echo "❌ Bundle size exceeds budget by $((GZIP_KB - BUDGET_KB))KB"
+            echo "   Consider lazy loading routes or reducing dependencies"
+            exit 1
+          else
+            echo "✅ Bundle size within budget (${BUDGET_KB}KB - ${GZIP_KB}KB = $((BUDGET_KB - GZIP_KB))KB headroom)"
+          fi
 
       # NOTE: Artifact upload disabled while E2E tests are disabled
       # Uncomment when re-enabling E2E tests

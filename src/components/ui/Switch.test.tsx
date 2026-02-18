@@ -59,9 +59,8 @@ describe("Switch", () => {
 
     // Let's verify via the switch's aria-describedby
     const describedBy = switchElement.getAttribute("aria-describedby");
-    expect(describedBy).toBeTruthy();
-    // biome-ignore lint/style/noNonNullAssertion: guaranteed by toBeTruthy
-    const descriptionContainer = document.getElementById(describedBy!);
+    if (!describedBy) throw new Error("Expected describedBy to be defined");
+    const descriptionContainer = document.getElementById(describedBy);
     expect(descriptionContainer).toBeInTheDocument();
     expect(descriptionContainer).toContainElement(descriptionElement);
   });

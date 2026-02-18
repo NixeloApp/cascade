@@ -1,10 +1,14 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { PlateEditor } from "@/components/PlateEditor";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+
+// Lazy load PlateEditor (heavy Plate.js/ProseMirror dependency)
+const PlateEditor = lazy(() =>
+  import("@/components/PlateEditor").then((m) => ({ default: m.PlateEditor })),
+);
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/documents/$id")({
   component: DocumentPage,

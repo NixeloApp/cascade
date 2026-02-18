@@ -17,13 +17,12 @@ describe("listRoadmapIssues optimization", () => {
     for (let i = 0; i < 10; i++) {
       await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
         await ctx.db.insert("issues", {
           projectId,
           organizationId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          workspaceId: project!.workspaceId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          teamId: project!.teamId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
           key: `PROJ-${i + 1}`,
           title: `Issue ${i}`,
           type: "task",
@@ -44,13 +43,12 @@ describe("listRoadmapIssues optimization", () => {
     for (let i = 0; i < 5; i++) {
       const id = await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
         return await ctx.db.insert("issues", {
           projectId,
           organizationId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          workspaceId: project!.workspaceId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          teamId: project!.teamId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
           key: `PROJ-D-${i + 1}`,
           title: `Dated Issue ${i}`,
           type: "task",
@@ -71,13 +69,12 @@ describe("listRoadmapIssues optimization", () => {
     // Create a subtask with due date (should be excluded)
     await t.run(async (ctx) => {
       const project = await ctx.db.get(projectId);
+      if (!project) throw new Error("Project not found");
       await ctx.db.insert("issues", {
         projectId,
         organizationId,
-        // biome-ignore lint/style/noNonNullAssertion: testing convenience
-        workspaceId: project!.workspaceId,
-        // biome-ignore lint/style/noNonNullAssertion: testing convenience
-        teamId: project!.teamId,
+        workspaceId: project.workspaceId,
+        teamId: project.teamId,
         key: `PROJ-SUB-1`,
         title: `Subtask with date`,
         type: "subtask",
@@ -118,13 +115,12 @@ describe("listRoadmapIssues optimization", () => {
     for (let i = 0; i < 10; i++) {
       await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
         await ctx.db.insert("issues", {
           projectId,
           organizationId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          workspaceId: project!.workspaceId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          teamId: project!.teamId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
           key: `PROJ-${i + 1}`,
           title: `Issue ${i}`,
           type: "task",

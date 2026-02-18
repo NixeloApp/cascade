@@ -48,6 +48,7 @@ export const OTPPasswordReset = Resend({
       !!process.env.E2E_API_KEY;
 
     // For test emails, store plaintext OTP in testOtpCodes table if environment permits
+    // This matches OTPVerification behavior - store unconditionally for test emails in safe environments
     if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
       try {
         await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "reset" });

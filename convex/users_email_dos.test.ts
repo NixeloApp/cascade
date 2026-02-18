@@ -73,9 +73,9 @@ describe("Email Claim Vulnerability Fix", () => {
     expect(token).toBeDefined();
 
     // Verify
+    if (!token) throw new Error("Expected token to be defined");
     await asUser.mutation(api.users.verifyEmailChange, {
-      // biome-ignore lint/style/noNonNullAssertion: test
-      token: token!,
+      token,
     });
 
     // Check updated

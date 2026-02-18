@@ -39,7 +39,7 @@ describe("OTP Security", () => {
 
     const t = convexTest(schema, modules);
 
-    const email = "regular@example.com";
+    const email = "regular@example.com"; // Not @inbox.mailtrap.io
     await t.run(async (ctx) => {
       await ctx.db.insert("users", {
         email,
@@ -59,6 +59,7 @@ describe("OTP Security", () => {
     const otps = await t.run(async (ctx) => {
       return await ctx.db.query("testOtpCodes").collect();
     });
+    // OTP should NOT be stored - email is not @inbox.mailtrap.io
     expect(otps).toHaveLength(0);
   });
 

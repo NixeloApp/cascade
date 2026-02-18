@@ -1,10 +1,16 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
-import { TimeTrackingPage } from "@/components/TimeTracking/TimeTrackingPage";
 import { ROUTES } from "@/config/routes";
+
+// Lazy load TimeTrackingPage (admin-only, heavy component)
+const TimeTrackingPage = lazy(() =>
+  import("@/components/TimeTracking/TimeTrackingPage").then((m) => ({
+    default: m.TimeTrackingPage,
+  })),
+);
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/time-tracking")({
   component: TimeTrackingPageRoute,
@@ -42,7 +48,9 @@ function TimeTrackingPageRoute() {
         title="Time Tracking"
         description="Track time, analyze costs, and monitor burn rate"
       />
-      <TimeTrackingPage isGlobalAdmin />
+      <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
+        <TimeTrackingPage isGlobalAdmin />
+      </Suspense>
     </PageLayout>
   );
 }

@@ -94,6 +94,37 @@ async function addExistingUserToProject(
   return { success: true, addedDirectly: true, userId: existingUserId };
 }
 
+// Helper: Validate invite permissions and get project info
+async function validateInvitePermissions(
+  ctx: MutationCtx,
+  organizationId: Id<"organizations">,
+  projectId: Id<"projects"> | undefined,
+  userId: Id<"users">,
+): Promise<{ projectName: string | undefined }> {
+  const isPlatAdmin = await isOrganizationAdmin(ctx, organizationId, userId);
+
+  if (!projectId) {
+    if (!isPlatAdmin) {
+      throw forbidden("admin", "Only admins can send platform invites");
+    }
+    return { projectName: undefined };
+  }
+
+  const project = await ctx.db.get(projectId);
+  if (!project || project.isDeleted) throw notFound("project", projectId);
+
+  if (project.organizationId !== organizationId) {
+    throw validation("projectId", "Project does not belong to the specified organization");
+  }
+
+  const hasProjectAdmin = await isProjectAdmin(ctx, projectId, userId);
+  if (!(isPlatAdmin || hasProjectAdmin)) {
+    throw forbidden("admin", "Only project admins can invite to projects");
+  }
+
+  return { projectName: project.name };
+}
+
 // Helper: Check for duplicate pending invites
 async function checkDuplicatePendingInvite(
   ctx: MutationCtx,
@@ -188,24 +219,14 @@ export const sendInvite = authenticatedMutation({
       throw validation("email", "Invalid email address");
     }
 
-    // Check permissions and get project info
-    const isPlatAdmin = await isOrganizationAdmin(ctx, args.organizationId, ctx.userId);
-    let projectName: string | undefined;
+    // Validate permissions and get project info
     const effectiveProjectRole = args.projectRole || "editor";
-
-    if (args.projectId) {
-      const project = await ctx.db.get(args.projectId);
-      if (!project) throw notFound("project", args.projectId);
-      projectName = project.name;
-
-      // Allow if platform admin OR project admin
-      const hasProjectAdmin = await isProjectAdmin(ctx, args.projectId, ctx.userId);
-      if (!(isPlatAdmin || hasProjectAdmin)) {
-        throw forbidden("admin", "Only project admins can invite to projects");
-      }
-    } else if (!isPlatAdmin) {
-      throw forbidden("admin", "Only admins can send platform invites");
-    }
+    const { projectName } = await validateInvitePermissions(
+      ctx,
+      args.organizationId,
+      args.projectId,
+      ctx.userId,
+    );
 
     // Check if user already exists with this email
     const existingUser = await ctx.db
