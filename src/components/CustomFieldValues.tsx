@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Stack } from "@/components/ui/Stack";
 import { Check, X } from "@/lib/icons";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
@@ -121,7 +122,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
 
       case "multiselect":
         return (
-          <div className="space-y-2">
+          <Stack gap="sm">
             {field.options?.map((option: string) => {
               const selectedOptions = editValue
                 .split(",")
@@ -144,7 +145,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
                 />
               );
             })}
-          </div>
+          </Stack>
         );
 
       default:
@@ -157,7 +158,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
   const renderFieldValue = (field: CustomField, value?: string) => {
     if (!value) {
       return (
-        <Typography variant="muted" className="italic">
+        <Typography variant="small" color="secondary" className="italic">
           Not set
         </Typography>
       );
@@ -170,7 +171,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
             <Icon icon={Check} size="xs" className="inline mr-1" /> Yes
           </Badge>
         ) : (
-          <Typography variant="muted">
+          <Typography variant="small" color="secondary">
             <Icon icon={X} size="xs" className="inline mr-1" /> No
           </Typography>
         );
@@ -207,11 +208,8 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
   };
 
   return (
-    <div className="space-y-3">
-      <Typography
-        variant="h3"
-        className="text-sm font-semibold text-ui-text uppercase tracking-wide"
-      >
+    <Stack gap="md">
+      <Typography variant="label" className="uppercase tracking-wide">
         Custom Fields
       </Typography>
 
@@ -227,7 +225,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
                   <Label required={field.isRequired}>{field.name}</Label>
                 </Flex>
                 {field.description && (
-                  <Typography variant="muted" className="text-xs text-ui-text-tertiary mt-0.5">
+                  <Typography variant="caption" className="mt-0.5">
                     {field.description}
                   </Typography>
                 )}
@@ -244,7 +242,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
             </Flex>
 
             {isEditing ? (
-              <div className="space-y-2">
+              <Stack gap="sm">
                 {renderFieldInput(field)}
                 <Flex gap="sm">
                   <Button onClick={() => handleSave(field._id)} size="sm">
@@ -254,13 +252,13 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
                     Cancel
                   </Button>
                 </Flex>
-              </div>
+              </Stack>
             ) : (
               <div className="mt-1">{renderFieldValue(field, fieldValue?.value)}</div>
             )}
           </div>
         );
       })}
-    </div>
+    </Stack>
   );
 }

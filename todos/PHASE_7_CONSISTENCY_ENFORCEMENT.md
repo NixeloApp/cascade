@@ -191,10 +191,10 @@ grep -r "from.*ui/PageHeader" src/
 | File | Violations | Status |
 |------|------------|--------|
 | `Admin/UserManagement.tsx` | ~31 | ✅ |
-| `Admin/UserTypeManager.tsx` | ~28 | ⬜ |
-| `Admin/HourComplianceDashboard.tsx` | ~15 | ⬜ |
-| `Admin/IpRestrictionsSettings.tsx` | ~14 | ⬜ |
-| `Admin/OrganizationSettings.tsx` | ~14 | ⬜ |
+| `Admin/UserTypeManager.tsx` | ~28 | ✅ |
+| `Admin/HourComplianceDashboard.tsx` | ~15 | ✅ |
+| `Admin/IpRestrictionsSettings.tsx` | ~14 | ✅ |
+| `Admin/OrganizationSettings.tsx` | ~14 | ✅ |
 
 **Priority 5: Onboarding (complex - do last)**
 
@@ -278,8 +278,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-18
-**Files Migrated:** 76 / ~100
-**Violations Remaining:** 515 (down from 1145)
+**Files Migrated:** 81 / ~100
+**Violations Remaining:** 495 (down from 1145)
 
 ---
 

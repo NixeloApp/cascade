@@ -6,10 +6,11 @@ import { showError, showSuccess } from "@/lib/toast";
 import { AutomationRuleCard } from "./Automation/AutomationRuleCard";
 import { AutomationRuleForm } from "./Automation/AutomationRuleForm";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Card, CardBody } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 interface AutomationRulesManagerProps {
@@ -70,38 +71,42 @@ export function AutomationRulesManager({ projectId }: AutomationRulesManagerProp
   };
 
   return (
-    <Flex direction="column" gap="xl">
+    <Stack gap="xl">
       {/* Header */}
       <Flex align="center" justify="between">
-        <div>
-          <Typography variant="h3" className="text-lg font-semibold text-ui-text">
-            Automation Rules
-          </Typography>
-          <Typography variant="p" color="secondary" className="text-sm mt-1">
+        <Stack gap="xs">
+          <Typography variant="h3">Automation Rules</Typography>
+          <Typography variant="small" color="secondary">
             Automate workflows with trigger-based actions
           </Typography>
-        </div>
+        </Stack>
         <Button onClick={handleCreate}>+ Create Rule</Button>
       </Flex>
 
       {/* Rules List */}
       {rules === undefined ? (
-        <Card className="p-8 text-center">
-          <LoadingSpinner size="lg" />
+        <Card>
+          <CardBody>
+            <Flex justify="center" align="center" className="min-h-32">
+              <LoadingSpinner size="lg" />
+            </Flex>
+          </CardBody>
         </Card>
       ) : rules.length === 0 ? (
-        <Card className="p-8 text-center">
-          <div className="text-ui-text-secondary">
-            <Typography variant="p" className="mb-2">
-              No automation rules yet
-            </Typography>
-            <Typography variant="p" className="text-sm">
-              Create your first rule to automate repetitive tasks
-            </Typography>
-          </div>
+        <Card>
+          <CardBody>
+            <Stack align="center" gap="sm" className="min-h-32 justify-center">
+              <Typography variant="small" color="secondary">
+                No automation rules yet
+              </Typography>
+              <Typography variant="caption">
+                Create your first rule to automate repetitive tasks
+              </Typography>
+            </Stack>
+          </CardBody>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <Stack gap="sm">
           {rules.map((rule: AutomationRule) => (
             <AutomationRuleCard
               key={rule._id}
@@ -110,7 +115,7 @@ export function AutomationRulesManager({ projectId }: AutomationRulesManagerProp
               onDelete={() => setDeleteConfirm(rule._id)}
             />
           ))}
-        </div>
+        </Stack>
       )}
 
       {/* Form Dialog */}
@@ -135,6 +140,6 @@ export function AutomationRulesManager({ projectId }: AutomationRulesManagerProp
         message="Are you sure you want to delete this rule? This action cannot be undone."
         confirmLabel="Delete"
       />
-    </Flex>
+    </Stack>
   );
 }
