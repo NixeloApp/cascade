@@ -10,6 +10,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { Stack } from "@/components/ui/Stack";
 import { Textarea } from "@/components/ui/Textarea";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -86,8 +87,8 @@ export function CreateTeamModal({
       }
     >
       <form id="create-team-form" onSubmit={handleSubmit}>
-        <Flex direction="column" gap="md" className="py-2">
-          <Flex direction="column" gap="xs" className="w-full items-center">
+        <Stack gap="md" className="py-2">
+          <Stack gap="xs">
             <Label htmlFor="team-name">Team Name</Label>
             <Input
               id="team-name"
@@ -97,9 +98,9 @@ export function CreateTeamModal({
               autoFocus
               required
             />
-          </Flex>
-          <Flex direction="column" gap="xs" className="w-full items-center">
-            <Label htmlFor="team-description" className="text-ui-text-secondary">
+          </Stack>
+          <Stack gap="xs">
+            <Label htmlFor="team-description" color="secondary">
               Description (Optional)
             </Label>
             <Textarea
@@ -108,8 +109,8 @@ export function CreateTeamModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </Flex>
-          <Flex align="center" className="space-x-2 pt-2">
+          </Stack>
+          <Flex align="center" gap="sm" className="pt-2">
             <Checkbox
               id="team-private"
               checked={isPrivate}
@@ -118,7 +119,7 @@ export function CreateTeamModal({
               description="Only invited members can view this team"
             />
           </Flex>
-        </Flex>
+        </Stack>
       </form>
     </Dialog>
   );

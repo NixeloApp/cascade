@@ -81,7 +81,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
 
                     <FlexItem flex="1" className="min-w-0">
                       <Stack gap="xs">
-                        <Typography variant="p" className="text-sm m-0">
+                        <Typography variant="small">
                           <strong>{activity.userName}</strong> {activity.action}
                         </Typography>
                         <Badge
