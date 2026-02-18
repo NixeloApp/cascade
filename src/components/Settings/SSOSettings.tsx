@@ -367,7 +367,8 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
     setIsLoading(true);
     try {
       // Update type-specific configuration
-      const configResult = connection.type === "saml" ? await saveSamlConfig() : await saveOidcConfig();
+      const configResult =
+        connection.type === "saml" ? await saveSamlConfig() : await saveOidcConfig();
       if (!configResult.success) {
         showError(new Error(configResult.error || "Failed to update"), "Error");
         return;
@@ -387,7 +388,15 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
     } finally {
       setIsLoading(false);
     }
-  }, [connection, saveSamlConfig, saveOidcConfig, updateDomains, connectionId, parseDomains, onOpenChange]);
+  }, [
+    connection,
+    saveSamlConfig,
+    saveOidcConfig,
+    updateDomains,
+    connectionId,
+    parseDomains,
+    onOpenChange,
+  ]);
 
   if (!connection) {
     return (

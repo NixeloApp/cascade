@@ -135,7 +135,14 @@ function PushNotificationsCard({
   vapidKey: string | null;
   isSubscribed: boolean;
   isPushLoading: boolean;
-  pushPreferences: { pushMentions: boolean; pushAssignments: boolean; pushComments: boolean; pushStatusChanges: boolean } | undefined;
+  pushPreferences:
+    | {
+        pushMentions: boolean;
+        pushAssignments: boolean;
+        pushComments: boolean;
+        pushStatusChanges: boolean;
+      }
+    | undefined;
   isSaving: boolean;
   onSubscribe: () => void;
   onUnsubscribe: () => void;

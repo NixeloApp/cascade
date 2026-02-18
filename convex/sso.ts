@@ -56,11 +56,15 @@ async function checkOrgAdmin(
 /**
  * Validate SAML configuration is complete for enabling
  */
-function validateSamlConfig(config: {
-  idpEntityId?: string;
-  idpMetadataUrl?: string;
-  idpSsoUrl?: string;
-} | undefined): string | null {
+function validateSamlConfig(
+  config:
+    | {
+        idpEntityId?: string;
+        idpMetadataUrl?: string;
+        idpSsoUrl?: string;
+      }
+    | undefined,
+): string | null {
   if (!config?.idpEntityId || (!config?.idpMetadataUrl && !config?.idpSsoUrl)) {
     return "SAML configuration is incomplete. Please provide IdP Entity ID and SSO URL.";
   }
@@ -70,10 +74,14 @@ function validateSamlConfig(config: {
 /**
  * Validate OIDC configuration is complete for enabling
  */
-function validateOidcConfig(config: {
-  clientId?: string;
-  issuer?: string;
-} | undefined): string | null {
+function validateOidcConfig(
+  config:
+    | {
+        clientId?: string;
+        issuer?: string;
+      }
+    | undefined,
+): string | null {
   if (!config?.clientId || !config?.issuer) {
     return "OIDC configuration is incomplete. Please provide Client ID and Issuer URL.";
   }
