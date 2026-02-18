@@ -3333,6 +3333,305 @@ export const batchCleanupEndpoint = httpAction(async (ctx, request) => {
   }
 });
 
+/**
+ * Programmatic Google OAuth Login for E2E Testing
+ * POST /e2e/google-oauth-login
+ * Body: { refreshToken: string, skipOnboarding?: boolean }
+ *
+ * Uses a pre-generated Google refresh token (from OAuth Playground) to:
+ * 1. Exchange refresh token for access token
+ * 2. Fetch user profile from Google
+ * 3. Create or login user via @convex-dev/auth Google provider
+ * 4. Return auth tokens for the test to use
+ *
+ * This bypasses Google's browser OAuth flow (no captchas, no flakiness).
+ */
+export const googleOAuthLoginEndpoint = httpAction(async (ctx: ActionCtx, request: Request) => {
+  // Validate API key
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { refreshToken, skipOnboarding = false } = body;
+
+    // Use provided token or fall back to OAUTH_MONITOR token
+    const tokenToUse = refreshToken || process.env.OAUTH_MONITOR_GOOGLE_REFRESH_TOKEN;
+
+    if (!tokenToUse) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Missing refresh token. Provide refreshToken in body or set OAUTH_MONITOR_GOOGLE_REFRESH_TOKEN",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    // Get Google OAuth credentials (same as used by @convex-dev/auth)
+    const clientId = process.env.AUTH_GOOGLE_ID;
+    const clientSecret = process.env.AUTH_GOOGLE_SECRET;
+
+    if (!(clientId && clientSecret)) {
+      return new Response(
+        JSON.stringify({
+          error: "Google OAuth not configured (AUTH_GOOGLE_ID/AUTH_GOOGLE_SECRET)",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    // Step 1: Exchange refresh token for access token
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: tokenToUse,
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const errorData = (await tokenResponse.json().catch(() => ({}))) as {
+        error?: string;
+        error_description?: string;
+      };
+      return new Response(
+        JSON.stringify({
+          error: `Token refresh failed: ${errorData.error_description || errorData.error || tokenResponse.status}`,
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const tokens = (await tokenResponse.json()) as { access_token: string };
+    const accessToken = tokens.access_token;
+
+    // Step 2: Fetch user profile from Google
+    const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!userInfoResponse.ok) {
+      return new Response(
+        JSON.stringify({ error: `Failed to fetch Google user info: ${userInfoResponse.status}` }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const googleUser = (await userInfoResponse.json()) as {
+      id: string;
+      email: string;
+      name?: string;
+      picture?: string;
+    };
+
+    // Step 3: Create or update user in Convex (same as normal Google OAuth flow)
+    const result = await ctx.runMutation(internal.e2e.createGoogleOAuthUserInternal, {
+      googleId: googleUser.id,
+      email: googleUser.email,
+      name: googleUser.name,
+      picture: googleUser.picture,
+      skipOnboarding,
+    });
+
+    if (!result.success) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Step 4: Login the user to get auth tokens
+    // Use the signIn action with the "password" provider but skip password verification
+    // Actually, we need to create a session directly since @convex-dev/auth Google flow
+    // requires browser redirects. We'll create auth session manually.
+    const authResult = await ctx.runMutation(internal.e2e.createGoogleOAuthSessionInternal, {
+      userId: result.userId as Id<"users">,
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        email: googleUser.email,
+        userId: result.userId,
+        token: authResult.token,
+        refreshToken: authResult.refreshToken,
+        redirectUrl: result.redirectUrl,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+/**
+ * Internal mutation to create/update user from Google OAuth profile
+ */
+export const createGoogleOAuthUserInternal = internalMutation({
+  args: {
+    googleId: v.string(),
+    email: v.string(),
+    name: v.optional(v.string()),
+    picture: v.optional(v.string()),
+    skipOnboarding: v.boolean(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    userId: v.optional(v.id("users")),
+    redirectUrl: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const { googleId, email, name, picture, skipOnboarding } = args;
+
+    // Check if user exists by email
+    let user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("email"), email))
+      .first();
+
+    if (user) {
+      // Update existing user with Google info
+      await ctx.db.patch(user._id, {
+        name: name || user.name,
+        image: picture || user.image,
+        emailVerificationTime: user.emailVerificationTime || Date.now(),
+      });
+    } else {
+      // Create new user
+      const userId = await ctx.db.insert("users", {
+        email,
+        name,
+        image: picture,
+        emailVerificationTime: Date.now(),
+      });
+      user = await ctx.db.get(userId);
+    }
+
+    if (!user) {
+      return { success: false, error: "Failed to create/get user" };
+    }
+
+    // Check/create Google auth account link
+    const existingAccount = await ctx.db
+      .query("authAccounts")
+      .filter((q) =>
+        q.and(q.eq(q.field("provider"), "google"), q.eq(q.field("providerAccountId"), googleId)),
+      )
+      .first();
+
+    if (!existingAccount) {
+      // Link Google account to user
+      await ctx.db.insert("authAccounts", {
+        userId: user._id,
+        provider: "google",
+        providerAccountId: googleId,
+      });
+    } else if (existingAccount.userId !== user._id) {
+      // Account linked to different user - this shouldn't happen in E2E
+      return { success: false, error: "Google account linked to different user" };
+    }
+
+    // Handle onboarding
+    let redirectUrl = "/app";
+    if (skipOnboarding) {
+      // Mark onboarding as complete
+      const existingOnboarding = await ctx.db
+        .query("userOnboarding")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .first();
+
+      if (!existingOnboarding) {
+        await ctx.db.insert("userOnboarding", {
+          userId: user._id,
+          onboardingCompleted: true,
+          onboardingStep: 5,
+          sampleWorkspaceCreated: false,
+          tourShown: true,
+          wizardCompleted: true,
+          checklistDismissed: true,
+          updatedAt: Date.now(),
+        });
+      } else if (!existingOnboarding.onboardingCompleted) {
+        await ctx.db.patch(existingOnboarding._id, {
+          onboardingCompleted: true,
+          updatedAt: Date.now(),
+        });
+      }
+      redirectUrl = "/app";
+    } else {
+      // Check if onboarding is needed
+      const onboarding = await ctx.db
+        .query("userOnboarding")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .first();
+
+      if (!onboarding?.onboardingCompleted) {
+        redirectUrl = "/onboarding";
+      }
+    }
+
+    return {
+      success: true,
+      userId: user._id,
+      redirectUrl,
+    };
+  },
+});
+
+/**
+ * Internal mutation to create auth session for Google OAuth user
+ * This creates a session directly, bypassing the normal @convex-dev/auth flow
+ */
+export const createGoogleOAuthSessionInternal = internalMutation({
+  args: {
+    userId: v.id("users"),
+  },
+  returns: v.object({
+    token: v.string(),
+    refreshToken: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const { userId } = args;
+
+    // Generate session tokens (similar to @convex-dev/auth internal flow)
+    // Create a new auth session
+    const sessionId = await ctx.db.insert("authSessions", {
+      userId,
+      expirationTime: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    // Generate tokens - using a simple but unique format
+    // In production @convex-dev/auth uses JWT, but for E2E we just need working tokens
+    const token = `e2e_${sessionId}_${Date.now()}`;
+    const refreshToken = `e2e_refresh_${sessionId}_${Date.now()}`;
+
+    return { token, refreshToken };
+  },
+});
+
 /** Batch cleanup - processes up to 500 items per call to stay under limits. */
 export const batchCleanupInternal = internalMutation({
   args: {},

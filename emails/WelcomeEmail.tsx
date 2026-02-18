@@ -8,16 +8,12 @@ import { Button, Heading, Link, Section, Text } from "@react-email/components";
 import { EmailLayout } from "./_components/Layout";
 
 interface WelcomeEmailProps {
-  firstName: string;
+  firstName?: string;
   ctaUrl: string;
   unsubscribeUrl?: string;
 }
 
-export function WelcomeEmail({
-  firstName = "there",
-  ctaUrl = "https://nixelo.app/dashboard",
-  unsubscribeUrl,
-}: WelcomeEmailProps) {
+export function WelcomeEmail({ firstName = "there", ctaUrl, unsubscribeUrl }: WelcomeEmailProps) {
   const preview = "Welcome to Nixelo - Your project management journey starts here";
 
   return (

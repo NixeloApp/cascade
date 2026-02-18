@@ -251,6 +251,8 @@ export const E2E_ENDPOINTS = {
   nukeTestUsers: `${CONVEX_SITE_URL}/e2e/nuke-test-users`,
   // Seed screenshot data (workspace, team, project, issues, documents)
   seedScreenshotData: `${CONVEX_SITE_URL}/e2e/seed-screenshot-data`,
+  // Google OAuth login via refresh token (bypasses browser OAuth flow)
+  googleOAuthLogin: `${CONVEX_SITE_URL}/e2e/google-oauth-login`,
 };
 
 /**
