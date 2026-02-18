@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
@@ -467,7 +467,7 @@ describe("Document Templates", () => {
     it("should create built-in templates", async () => {
       const t = convexTest(schema, modules);
 
-      const result = await t.mutation(api.documentTemplates.initializeBuiltInTemplates, {});
+      const result = await t.mutation(internal.documentTemplates.initializeBuiltInTemplates, {});
 
       expect(result.message).toContain("Created");
       expect(result.message).toContain("built-in templates");
@@ -476,8 +476,8 @@ describe("Document Templates", () => {
     it("should not recreate if already exist", async () => {
       const t = convexTest(schema, modules);
 
-      await t.mutation(api.documentTemplates.initializeBuiltInTemplates, {});
-      const result = await t.mutation(api.documentTemplates.initializeBuiltInTemplates, {});
+      await t.mutation(internal.documentTemplates.initializeBuiltInTemplates, {});
+      const result = await t.mutation(internal.documentTemplates.initializeBuiltInTemplates, {});
 
       expect(result.message).toContain("already exist");
     });

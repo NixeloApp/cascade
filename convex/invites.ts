@@ -138,7 +138,7 @@ async function validateInvitePermissions(
   }
 
   const project = await ctx.db.get(projectId);
-  if (!project) throw notFound("project", projectId);
+  if (!project || project.isDeleted) throw notFound("project", projectId);
 
   if (project.organizationId !== organizationId) {
     throw validation("projectId", "Project does not belong to the specified organization");

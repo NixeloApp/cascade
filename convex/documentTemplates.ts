@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { mutation } from "./_generated/server";
+import { internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
@@ -194,12 +194,12 @@ export const createDocumentFromTemplate = authenticatedMutation({
 /**
  * Initializes built-in document templates on first deployment.
  *
- * NOTE: Intentionally unauthenticated - this is a deployment-time setup function
- * called by the E2E test harness and deployment scripts. The operation is idempotent
+ * NOTE: Internal mutation - only callable from other Convex functions, not from clients.
+ * Used by the E2E test harness and deployment scripts. The operation is idempotent
  * (no-op if templates already exist) and only inserts public, built-in templates
  * with no user-specific data.
  */
-export const initializeBuiltInTemplates = mutation({
+export const initializeBuiltInTemplates = internalMutation({
   args: {},
   handler: async (ctx) => {
     // Check if built-in templates already exist
