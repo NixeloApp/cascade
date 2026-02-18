@@ -378,18 +378,22 @@ function GenerateKeyModal({
                   <label
                     key={scope.value}
                     htmlFor={`scope-${scope.value}`}
-                    className="flex items-start p-3 bg-ui-bg-secondary rounded-lg cursor-pointer hover:bg-ui-bg-tertiary"
+                    className="cursor-pointer"
                   >
-                    <Checkbox
-                      id={`scope-${scope.value}`}
-                      checked={selectedScopes.includes(scope.value)}
-                      onChange={() => toggleScope(scope.value)}
-                      className="mt-0.5"
-                    />
-                    <Stack gap="none" className="ml-3">
-                      <Typography variant="label">{scope.label}</Typography>
-                      <Typography variant="caption">{scope.description}</Typography>
-                    </Stack>
+                    <Card padding="sm" className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary">
+                      <Flex align="start" gap="md">
+                        <Checkbox
+                          id={`scope-${scope.value}`}
+                          checked={selectedScopes.includes(scope.value)}
+                          onChange={() => toggleScope(scope.value)}
+                          className="mt-0.5"
+                        />
+                        <Stack gap="none">
+                          <Typography variant="label">{scope.label}</Typography>
+                          <Typography variant="caption">{scope.description}</Typography>
+                        </Stack>
+                      </Flex>
+                    </Card>
                   </label>
                 ))}
               </Stack>
@@ -505,7 +509,7 @@ function UsageStatsModal({
       }
     >
       {!stats ? (
-        <Stack gap="sm" align="center" className="py-8">
+        <Stack gap="sm" align="center" className="min-h-32 justify-center">
           <LoadingSpinner size="lg" />
           <Typography variant="small" color="tertiary">
             Loading statistics...

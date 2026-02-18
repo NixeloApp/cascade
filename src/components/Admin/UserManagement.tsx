@@ -266,7 +266,7 @@ export function UserManagement() {
         <Card>
           <CardBody>
             {!invites ? (
-              <Flex justify="center" className="py-8">
+              <Flex justify="center" align="center" className="min-h-32">
                 <LoadingSpinner />
               </Flex>
             ) : invites.length === 0 ? (
@@ -412,7 +412,7 @@ export function UserManagement() {
         <Card>
           <CardBody>
             {!users ? (
-              <Flex justify="center" className="py-8">
+              <Flex justify="center" align="center" className="min-h-32">
                 <LoadingSpinner />
               </Flex>
             ) : users.length === 0 ? (

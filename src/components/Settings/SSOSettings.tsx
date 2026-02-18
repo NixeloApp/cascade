@@ -11,6 +11,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Input, Textarea } from "@/components/ui/form";
 import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { Key, Plus, Settings, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -107,7 +108,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
     return (
       <Card>
         <CardBody>
-          <Flex align="center" justify="center" className="py-8">
+          <Flex align="center" justify="center" className="min-h-32">
             <LoadingSpinner size="md" />
           </Flex>
         </CardBody>
@@ -116,14 +117,14 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       <Flex align="center" justify="between">
-        <div>
+        <Stack gap="xs">
           <Typography variant="h4">Single Sign-On (SSO)</Typography>
           <Typography variant="caption">
             Configure SAML or OIDC authentication for your organization
           </Typography>
-        </div>
+        </Stack>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Icon icon={Plus} size="sm" />
           Add Connection
@@ -133,25 +134,25 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
       {connections.length === 0 ? (
         <Card>
           <CardBody>
-            <Flex direction="column" align="center" gap="md" className="py-8">
+            <Stack align="center" gap="md" className="min-h-32 justify-center">
               <Icon icon={Key} size="xl" className="text-ui-text-tertiary" />
-              <Typography variant="muted" className="text-center">
+              <Typography variant="small" color="secondary" className="text-center">
                 No SSO connections configured.
                 <br />
                 Add a SAML or OIDC connection to enable enterprise sign-in.
               </Typography>
-            </Flex>
+            </Stack>
           </CardBody>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <Stack gap="md">
           {connections.map((connection) => (
             <Card key={connection._id}>
               <CardBody>
                 <Flex align="center" justify="between">
                   <Flex align="center" gap="md">
                     <Icon icon={Key} size="lg" className="text-brand" />
-                    <div>
+                    <Stack gap="xs">
                       <Flex align="center" gap="sm">
                         <Typography variant="label">{connection.name}</Typography>
                         <Badge variant={connection.type === "saml" ? "brand" : "accent"} size="sm">
@@ -166,7 +167,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
                           Domains: {connection.verifiedDomains.join(", ")}
                         </Typography>
                       )}
-                    </div>
+                    </Stack>
                   </Flex>
 
                   <Flex gap="sm">
@@ -202,7 +203,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
               </CardBody>
             </Card>
           ))}
-        </div>
+        </Stack>
       )}
 
       <Alert variant="info">
@@ -231,7 +232,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
           </>
         }
       >
-        <div className="space-y-4">
+        <Stack gap="md">
           <Input
             label="Connection Name"
             value={newConnectionName}
@@ -239,10 +240,8 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
             placeholder="e.g., Okta, Azure AD, Google Workspace"
           />
 
-          <div>
-            <Typography variant="label" className="mb-2">
-              Connection Type
-            </Typography>
+          <Stack gap="sm">
+            <Typography variant="label">Connection Type</Typography>
             <Flex gap="sm">
               <Button
                 variant={newConnectionType === "saml" ? "primary" : "secondary"}
@@ -259,8 +258,8 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
                 OIDC
               </Button>
             </Flex>
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       </Dialog>
 
       {/* Configuration Dialog */}
@@ -274,7 +273,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
           }}
         />
       )}
-    </div>
+    </Stack>
   );
 }
 
@@ -401,7 +400,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   if (!connection) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange} title="Configure SSO">
-        <Flex align="center" justify="center" className="py-8">
+        <Flex align="center" justify="center" className="min-h-32">
           <LoadingSpinner size="md" />
         </Flex>
       </Dialog>
@@ -425,7 +424,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
         </>
       }
     >
-      <div className="space-y-4">
+      <Stack gap="md">
         {connection.type === "saml" ? (
           <>
             <Input
@@ -472,19 +471,19 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
           </>
         )}
 
-        <div className="border-t border-ui-border pt-4">
+        <Stack gap="sm" className="border-t border-ui-border pt-4">
           <Input
             label="Verified Domains"
             value={domains}
             onChange={(e) => setDomains(e.target.value)}
             placeholder="acme.com, acme.io"
           />
-          <Typography variant="caption" className="mt-1">
+          <Typography variant="caption">
             Comma-separated list of domains. Users with these email domains will be routed to this
             SSO connection.
           </Typography>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
     </Dialog>
   );
 }
