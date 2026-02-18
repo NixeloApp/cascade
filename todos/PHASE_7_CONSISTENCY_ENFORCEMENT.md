@@ -150,7 +150,7 @@ grep -r "from.*ui/PageHeader" src/
 
 | File | Violations | Status |
 |------|------------|--------|
-| `Dashboard.tsx` | ~3 | ⬜ |
+| `Dashboard.tsx` | ~3 | ✅ |
 | `AppSidebar.tsx` | ~11 | ⬜ |
 | `AppHeader.tsx` | ~7 | ⬜ |
 | `IssueDetailModal.tsx` | ~3 | ⬜ |
@@ -275,8 +275,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-17
-**Files Migrated:** 0 / ~100
-**Violations Remaining:** 1145 (run validator to update)
+**Files Migrated:** 1 / ~100
+**Violations Remaining:** ~1142 (run validator to update)
 
 ---
 
