@@ -153,11 +153,11 @@ grep -r "from.*ui/PageHeader" src/
 | `Dashboard.tsx` | ~3 | ✅ |
 | `AppSidebar.tsx` | ~11 | ✅ (allowed - has internal nav components) |
 | `AppHeader.tsx` | ~7 | ✅ (allowed - has internal nav components) |
-| `IssueDetailModal.tsx` | ~3 | ⬜ |
-| `CreateIssueModal.tsx` | ~3 | ⬜ |
-| `NotificationCenter.tsx` | ~6 | ⬜ |
+| `IssueDetailModal.tsx` | ~3 | ✅ |
+| `CreateIssueModal.tsx` | ~3 | ✅ |
+| `NotificationCenter.tsx` | ~6 | ✅ (4 remaining - responsive/padding edge cases) |
 | `GlobalSearch.tsx` | ~13 | ⬜ |
-| `CommandPalette.tsx` | ~1 | ⬜ |
+| `CommandPalette.tsx` | ~1 | ✅ (1 remaining - responsive gap) |
 
 **Priority 2: Feature Components**
 
@@ -275,8 +275,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-17
-**Files Migrated:** 2 / ~100 (Dashboard, ActivityFeed)
-**Violations Remaining:** 936 (down from 1145)
+**Files Migrated:** 6 / ~100
+**Violations Remaining:** 929 (down from 1145)
 
 ---
 

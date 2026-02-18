@@ -18,6 +18,7 @@ import { Flex } from "./ui/Flex";
 import { Select } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 // =============================================================================
@@ -247,12 +248,13 @@ export function CreateIssueModal({
       description="Form to create a new issue"
       className="sm:max-w-2xl"
     >
-      <form
-        onSubmit={(e) => {
+      <Stack
+        as="form"
+        onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-4"
+        gap="md"
       >
         {/* Project Selector (if no projectId passed) */}
         {!projectId && orgProjects && (
@@ -308,12 +310,7 @@ export function CreateIssueModal({
             Get AI Suggestions
           </Button>
           {showAISuggestions && (
-            <Flex
-              align="center"
-              gap="xs"
-              className="text-sm text-status-success"
-              aria-live="polite"
-            >
+            <Flex align="center" gap="xs" className="text-status-success" aria-live="polite">
               <Icon icon={Check} size="sm" />
               <span>AI suggestions applied</span>
             </Flex>
@@ -389,7 +386,7 @@ export function CreateIssueModal({
 
         {/* Labels (outside form - array state) */}
         {labels && labels.length > 0 && (
-          <fieldset className="space-y-2">
+          <Stack as="fieldset" gap="xs">
             <Typography as="legend" variant="label" className="block text-ui-text">
               Labels
             </Typography>
@@ -415,7 +412,7 @@ export function CreateIssueModal({
                 </button>
               ))}
             </Flex>
-          </fieldset>
+          </Stack>
         )}
 
         {/* Footer - form.Subscribe needs to stay inside the form */}
@@ -436,7 +433,7 @@ export function CreateIssueModal({
             </Flex>
           )}
         </form.Subscribe>
-      </form>
+      </Stack>
     </Dialog>
   );
 }

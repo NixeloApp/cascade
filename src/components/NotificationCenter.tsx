@@ -108,9 +108,7 @@ export function NotificationCenter() {
           justify="between"
           className="p-4 border-b border-ui-border sticky top-0 bg-ui-bg rounded-t-lg"
         >
-          <Typography variant="h3" className="text-lg font-semibold">
-            Notifications
-          </Typography>
+          <Typography variant="h3">Notifications</Typography>
           {unreadCount != null && unreadCount > 0 && (
             <Button
               variant="ghost"
