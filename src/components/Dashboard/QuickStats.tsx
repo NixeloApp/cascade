@@ -4,6 +4,7 @@ import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Progress } from "../ui/Progress";
 import { SkeletonStatCard } from "../ui/Skeleton";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface Stats {
@@ -50,32 +51,32 @@ function StatCard({ title, value, subtitle, variant, progressValue }: StatCardPr
     <Card className="relative overflow-hidden group hover:shadow-card-hover transition-shadow">
       {/* Colored left border accent */}
       <div className={cn("absolute left-0 top-0 h-full w-1", styles.bg)} />
-      <CardBody className="p-5 pl-6">
-        <Typography
-          variant="small"
-          color="tertiary"
-          className="text-caption uppercase tracking-wider mb-2 font-bold"
-        >
-          {title}
-        </Typography>
-        <Flex align="baseline" gap="xs" className="mb-3">
-          <Typography variant="h2" className={cn("text-3xl font-extrabold", styles.text)}>
-            {value || 0}
+      <CardBody className="pl-6">
+        <Stack gap="sm">
+          <Typography
+            variant="small"
+            color="tertiary"
+            className="text-caption uppercase tracking-wider font-bold"
+          >
+            {title}
           </Typography>
-          <Typography variant="small" color="secondary" className="text-xs">
-            {subtitle}
-          </Typography>
-        </Flex>
-        {progressValue !== undefined && (
-          <div className="mt-4">
+          <Flex align="baseline" gap="xs">
+            <Typography variant="h2" className={cn("text-3xl font-extrabold", styles.text)}>
+              {value || 0}
+            </Typography>
+            <Typography variant="small" color="secondary" className="text-xs">
+              {subtitle}
+            </Typography>
+          </Flex>
+          {progressValue !== undefined && (
             <Progress
               value={progressValue}
               className="h-1.5"
               id="stat-progress"
               indicatorClassName={styles.bg}
             />
-          </div>
-        )}
+          )}
+        </Stack>
       </CardBody>
     </Card>
   );
@@ -88,30 +89,32 @@ function HighPriorityCard({ count }: { count: number }) {
   const hasHighPriority = count > 0;
   return (
     <Card className={cn("relative overflow-hidden", hasHighPriority && "border-status-warning/30")}>
-      <CardBody className="p-5">
-        <Typography
-          variant="small"
-          className={cn(
-            "text-caption uppercase tracking-wider mb-2 font-bold",
-            hasHighPriority ? "text-status-warning" : "text-ui-text-tertiary",
-          )}
-        >
-          Attention Needed
-        </Typography>
-        <Flex align="baseline" gap="xs">
+      <CardBody>
+        <Stack gap="sm">
           <Typography
-            variant="h2"
+            variant="small"
             className={cn(
-              "text-3xl font-extrabold",
-              hasHighPriority ? "text-status-warning" : "text-ui-text",
+              "text-caption uppercase tracking-wider font-bold",
+              hasHighPriority ? "text-status-warning" : "text-ui-text-tertiary",
             )}
           >
-            {count || 0}
+            Attention Needed
           </Typography>
-          <Typography variant="small" color="secondary" className="text-xs">
-            High Priority
-          </Typography>
-        </Flex>
+          <Flex align="baseline" gap="xs">
+            <Typography
+              variant="h2"
+              className={cn(
+                "text-3xl font-extrabold",
+                hasHighPriority ? "text-status-warning" : "text-ui-text",
+              )}
+            >
+              {count || 0}
+            </Typography>
+            <Typography variant="small" color="secondary" className="text-xs">
+              High Priority
+            </Typography>
+          </Flex>
+        </Stack>
 
         {hasHighPriority && (
           <div className="absolute right-0 top-0 h-full w-1.5 bg-status-warning" />

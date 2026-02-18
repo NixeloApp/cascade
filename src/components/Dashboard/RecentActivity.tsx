@@ -6,6 +6,7 @@ import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
 import { SkeletonText } from "../ui/Skeleton";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface Activity {
@@ -79,21 +80,23 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                     </FlexItem>
 
                     <FlexItem flex="1" className="min-w-0">
-                      <Typography variant="p" className="text-sm m-0">
-                        <strong>{activity.userName}</strong> {activity.action}
-                      </Typography>
-                      <div className="mt-1.5">
+                      <Stack gap="xs">
+                        <Typography variant="p" className="text-sm m-0">
+                          <strong>{activity.userName}</strong> {activity.action}
+                        </Typography>
                         <Badge
                           variant="neutral"
-                          className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border"
+                          className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border w-fit"
                         >
                           {activity.issueKey}
                         </Badge>
-                      </div>
-                      <Metadata separator="|" className="mt-2">
-                        <MetadataItem className="font-medium">{activity.projectName}</MetadataItem>
-                        <MetadataTimestamp date={activity._creationTime} format="absolute" />
-                      </Metadata>
+                        <Metadata separator="|">
+                          <MetadataItem className="font-medium">
+                            {activity.projectName}
+                          </MetadataItem>
+                          <MetadataTimestamp date={activity._creationTime} format="absolute" />
+                        </Metadata>
+                      </Stack>
                     </FlexItem>
                   </Flex>
                 </div>

@@ -13,6 +13,7 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { SkeletonList } from "../ui/Skeleton";
+import { Stack } from "../ui/Stack";
 
 type IssueFilter = "assigned" | "created" | "all";
 
@@ -75,18 +76,14 @@ export function MyIssuesList({
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="p-6 pb-2">
-        <Typography
-          variant="h3"
-          className="text-xl font-bold"
-          data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}
-        >
+      <Stack gap="xs" className="p-6 pb-2">
+        <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
           Feed
         </Typography>
-        <Typography variant="small" color="tertiary" className="text-sm mt-1">
+        <Typography variant="small" color="tertiary">
           Track your active contributions
         </Typography>
-      </div>
+      </Stack>
       <Flex
         justify="between"
         align="stretch"

@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Component, type ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { Button } from "./ui/Button";
 import { Typography } from "./ui/Typography";
 
@@ -43,32 +44,34 @@ export class ErrorBoundary extends Component<Props, State> {
           justify="center"
           className="min-h-screen bg-ui-bg animate-fade-in"
         >
-          <Flex direction="column" align="center" className="max-w-md text-center px-6">
+          <Stack align="center" gap="lg" className="max-w-md text-center px-6">
             {/* Subtle icon */}
             <Flex
               align="center"
               justify="center"
-              className="mb-8 h-20 w-20 rounded-full bg-status-error-bg"
+              className="h-20 w-20 rounded-full bg-status-error-bg"
             >
               <AlertTriangle className="h-10 w-10 text-status-error" />
             </Flex>
 
             {/* Large error code with tight tracking */}
-            <Typography variant="h1" className="text-8xl font-bold tracking-tightest text-ui-text">
+            <Typography variant="h1" className="text-8xl font-bold tracking-tightest">
               500
             </Typography>
 
             {/* Message with secondary text styling */}
-            <Typography className="mt-4 text-lg text-ui-text-secondary">
-              Something went wrong
-            </Typography>
-            <Typography className="mt-2 text-ui-text-tertiary">
-              We encountered an unexpected error. Please try refreshing the page.
-            </Typography>
+            <Stack gap="sm" align="center">
+              <Typography variant="large" color="secondary">
+                Something went wrong
+              </Typography>
+              <Typography color="tertiary">
+                We encountered an unexpected error. Please try refreshing the page.
+              </Typography>
+            </Stack>
 
             {/* Error details collapsible */}
             {this.state.error && (
-              <details className="mt-6 w-full text-left">
+              <details className="w-full text-left">
                 <summary className="cursor-pointer text-sm text-ui-text-secondary hover:text-ui-text transition-default">
                   View error details
                 </summary>
@@ -79,10 +82,10 @@ export class ErrorBoundary extends Component<Props, State> {
             )}
 
             {/* Reload button */}
-            <Button onClick={() => window.location.reload()} size="lg" className="mt-8">
+            <Button onClick={() => window.location.reload()} size="lg">
               Reload page
             </Button>
-          </Flex>
+          </Stack>
         </Flex>
       );
     }
