@@ -2,7 +2,9 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { formatRelativeTime } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { CommentReactions } from "./CommentReactions";
@@ -53,15 +55,19 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   };
 
   if (status === "LoadingFirstPage") {
-    return <div className="p-8 text-center">Loading comments...</div>;
+    return (
+      <Card padding="lg" className="text-center">
+        <Typography color="secondary">Loading comments...</Typography>
+      </Card>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       {/* Comments List */}
-      <div className="space-y-4">
+      <Stack gap="md">
         {comments?.length === 0 ? (
-          <div className="text-center py-8 text-ui-text-secondary">
+          <Stack align="center" gap="sm" className="py-8">
             <svg
               aria-hidden="true"
               className="w-12 h-12 mx-auto mb-3 text-ui-text-tertiary"
@@ -77,60 +83,60 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
               />
             </svg>
             <Typography variant="p">No comments yet</Typography>
-            <Typography variant="muted" className="mt-1">
-              Be the first to comment!
-            </Typography>
-          </div>
+            <Typography variant="muted">Be the first to comment!</Typography>
+          </Stack>
         ) : (
           <>
             {comments?.map((comment) => (
-              <Flex
-                gap="md"
-                className="p-4 bg-ui-bg-soft border border-ui-border rounded-lg transition-colors duration-default hover:border-ui-border-secondary"
+              <Card
+                padding="md"
                 key={comment._id}
+                className="bg-ui-bg-soft transition-colors duration-default hover:border-ui-border-secondary"
               >
-                {/* Avatar */}
-                <FlexItem shrink={false}>
-                  <Avatar name={comment.author?.name} src={comment.author?.image} size="lg" />
-                </FlexItem>
+                <Flex gap="md">
+                  {/* Avatar */}
+                  <FlexItem shrink={false}>
+                    <Avatar name={comment.author?.name} src={comment.author?.image} size="lg" />
+                  </FlexItem>
 
-                {/* Comment Content */}
-                <FlexItem flex="1" className="min-w-0">
-                  {/* Author and Date */}
-                  <Flex align="center" gap="sm" className="mb-2 text-sm">
-                    <strong>{comment.author?.name || "Unknown User"}</strong>
-                    <time
-                      className="text-ui-text-tertiary text-xs"
-                      dateTime={new Date(comment._creationTime).toISOString()}
-                    >
-                      {formatRelativeTime(comment._creationTime)}
-                    </time>
-                    {comment.updatedAt > comment._creationTime && (
-                      <Typography variant="caption" color="tertiary" className="italic">
-                        (edited)
-                      </Typography>
-                    )}
-                  </Flex>
+                  {/* Comment Content */}
+                  <FlexItem flex="1" className="min-w-0">
+                    {/* Author and Date */}
+                    <Flex align="center" gap="sm" className="mb-2 text-sm">
+                      <strong>{comment.author?.name || "Unknown User"}</strong>
+                      <time
+                        className="text-ui-text-tertiary text-xs"
+                        dateTime={new Date(comment._creationTime).toISOString()}
+                      >
+                        {formatRelativeTime(comment._creationTime)}
+                      </time>
+                      {comment.updatedAt > comment._creationTime && (
+                        <Typography variant="caption" color="tertiary" className="italic">
+                          (edited)
+                        </Typography>
+                      )}
+                    </Flex>
 
-                  {/* Comment Text with Mentions */}
-                  <CommentRenderer content={comment.content} mentions={comment.mentions} />
+                    {/* Comment Text with Mentions */}
+                    <CommentRenderer content={comment.content} mentions={comment.mentions} />
 
-                  {/* Comment Reactions */}
-                  <CommentReactions
-                    commentId={comment._id}
-                    reactions={comment.reactions || []}
-                    currentUserId={currentUser?._id}
-                  />
-                </FlexItem>
-              </Flex>
+                    {/* Comment Reactions */}
+                    <CommentReactions
+                      commentId={comment._id}
+                      reactions={comment.reactions || []}
+                      currentUserId={currentUser?._id}
+                    />
+                  </FlexItem>
+                </Flex>
+              </Card>
             ))}
 
             {status === "CanLoadMore" && (
-              <div className="text-center pt-2">
+              <Flex justify="center" className="pt-2">
                 <Button variant="secondary" onClick={() => loadMore(50)}>
                   Load More Comments
                 </Button>
-              </div>
+              </Flex>
             )}
             {status === "LoadingMore" && (
               <Typography variant="small" color="tertiary" className="text-center pt-2">
@@ -139,10 +145,10 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
             )}
           </>
         )}
-      </div>
+      </Stack>
 
       {/* Add Comment */}
-      <div className="space-y-3">
+      <Stack gap="sm">
         <Typography variant="label">Add Comment</Typography>
         <MentionInput
           projectId={projectId}
@@ -156,7 +162,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
             Add Comment
           </Button>
         </Flex>
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }

@@ -4,8 +4,10 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
@@ -127,7 +129,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
   };
 
   return (
-    <div className="space-y-4">
+    <Stack gap="md">
       {/* Add Dependency Button */}
       <div>
         <Button onClick={() => setShowAddDialog(true)} size="sm" variant="secondary">
@@ -137,95 +139,85 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
 
       {/* Outgoing Links */}
       {links && links.outgoing.length > 0 && (
-        <div>
-          <Typography variant="label" className="mb-2">
-            Dependencies
-          </Typography>
-          <div className="space-y-2">
+        <Stack gap="sm">
+          <Typography variant="label">Dependencies</Typography>
+          <Stack gap="sm">
             {links.outgoing.map((link: IssueLinkWithDetails) => (
-              <Flex
-                align="center"
-                justify="between"
-                className="p-3 bg-ui-bg-secondary rounded-lg"
-                key={link._id}
-              >
-                <Flex align="center" gap="md" className="flex-1 min-w-0">
-                  <Badge variant="brand" size="md">
-                    {getLinkTypeLabel(link.linkType, "outgoing")}
-                  </Badge>
-                  {link.issue && (
-                    <IssueDisplay
-                      type={link.issue.type}
-                      issueKey={link.issue.key}
-                      title={link.issue.title}
-                    />
-                  )}
+              <Card padding="sm" key={link._id} className="bg-ui-bg-secondary">
+                <Flex align="center" justify="between">
+                  <Flex align="center" gap="md" className="flex-1 min-w-0">
+                    <Badge variant="brand" size="md">
+                      {getLinkTypeLabel(link.linkType, "outgoing")}
+                    </Badge>
+                    {link.issue && (
+                      <IssueDisplay
+                        type={link.issue.type}
+                        issueKey={link.issue.key}
+                        title={link.issue.title}
+                      />
+                    )}
+                  </Flex>
+                  <Tooltip content="Remove dependency">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
+                      onClick={() => setDeleteConfirm(link._id)}
+                      aria-label="Remove dependency"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </Tooltip>
                 </Flex>
-                <Tooltip content="Remove dependency">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
-                    onClick={() => setDeleteConfirm(link._id)}
-                    aria-label="Remove dependency"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </Tooltip>
-              </Flex>
+              </Card>
             ))}
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       )}
 
       {/* Incoming Links */}
       {links && links.incoming.length > 0 && (
-        <div>
-          <Typography variant="label" className="mb-2">
-            Referenced By
-          </Typography>
-          <div className="space-y-2">
+        <Stack gap="sm">
+          <Typography variant="label">Referenced By</Typography>
+          <Stack gap="sm">
             {links.incoming.map((link: IssueLinkWithDetails) => (
-              <Flex
-                align="center"
-                justify="between"
-                className="p-3 bg-ui-bg-secondary rounded-lg"
-                key={link._id}
-              >
-                <Flex align="center" gap="md" className="flex-1 min-w-0">
-                  <Badge variant="accent" size="md">
-                    {getLinkTypeLabel(link.linkType, "incoming")}
-                  </Badge>
-                  {link.issue && (
-                    <IssueDisplay
-                      type={link.issue.type}
-                      issueKey={link.issue.key}
-                      title={link.issue.title}
-                    />
-                  )}
+              <Card padding="sm" key={link._id} className="bg-ui-bg-secondary">
+                <Flex align="center" justify="between">
+                  <Flex align="center" gap="md" className="flex-1 min-w-0">
+                    <Badge variant="accent" size="md">
+                      {getLinkTypeLabel(link.linkType, "incoming")}
+                    </Badge>
+                    {link.issue && (
+                      <IssueDisplay
+                        type={link.issue.type}
+                        issueKey={link.issue.key}
+                        title={link.issue.title}
+                      />
+                    )}
+                  </Flex>
+                  <Tooltip content="Remove dependency">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
+                      onClick={() => setDeleteConfirm(link._id)}
+                      aria-label="Remove dependency"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </Tooltip>
                 </Flex>
-                <Tooltip content="Remove dependency">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
-                    onClick={() => setDeleteConfirm(link._id)}
-                    aria-label="Remove dependency"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </Tooltip>
-              </Flex>
+              </Card>
             ))}
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       )}
 
       {/* Empty State */}
       {links && links.outgoing.length === 0 && links.incoming.length === 0 && (
-        <div className="text-center py-6">
+        <Flex justify="center" className="py-6">
           <Typography variant="caption">No dependencies yet</Typography>
-        </div>
+        </Flex>
       )}
 
       {/* Add Dependency Sheet (side panel to avoid nested dialog issue) */}
@@ -258,7 +250,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
           </>
         }
       >
-        <div className="p-6 space-y-4">
+        <Stack gap="md" className="p-6">
           {/* Link Type */}
           <Select
             label="Relationship Type"
@@ -310,7 +302,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
               </Typography>
             </Typography>
           )}
-        </div>
+        </Stack>
       </Sheet>
 
       {/* Delete Confirmation */}
@@ -323,6 +315,6 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
         variant="danger"
         confirmLabel="Remove"
       />
-    </div>
+    </Stack>
   );
 }
