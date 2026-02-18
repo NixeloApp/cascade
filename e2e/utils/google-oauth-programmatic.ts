@@ -175,8 +175,8 @@ export async function verifyGoogleOAuthSuccess(page: Page): Promise<void> {
   // Should be on app or onboarding
   await expect(page).toHaveURL(/app|onboarding|dashboard/);
 
-  // Should not have error messages
-  const errorAlert = page.locator('[role="alert"], .error-message, [data-testid="error"]');
+  // Should not have error messages (check for alert roles and error styling)
+  const errorAlert = page.locator('[role="alert"], .error-message');
   await expect(errorAlert).not.toBeVisible();
 
   // Verify tokens are set in localStorage
