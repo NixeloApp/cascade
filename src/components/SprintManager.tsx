@@ -65,15 +65,15 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
             </Badge>
           </Flex>
           {sprint.goal && (
-            <Typography variant="muted" className="mb-2">
+            <Typography variant="small" color="secondary" className="mb-2">
               {sprint.goal}
             </Typography>
           )}
 
           {/* Progress bar for active sprints - issue-based */}
           {sprint.status === "active" && (
-            <div className="mt-3 mb-2">
-              <Flex justify="between" className="mb-1">
+            <Stack gap="xs" className="mt-3 mb-2">
+              <Flex justify="between">
                 <Typography variant="caption">
                   {sprint.completedCount} of {sprint.issueCount} completed
                 </Typography>
@@ -87,7 +87,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
                   style={{ width: `${progress}%` }}
                 />
               </div>
-            </div>
+            </Stack>
           )}
 
           {sprint.startDate && sprint.endDate && (
@@ -390,7 +390,9 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             <Stack gap="lg">
               <Stack gap="sm">
                 <Typography variant="h4">Start Sprint</Typography>
-                <Typography variant="muted">Choose how long this sprint should run.</Typography>
+                <Typography variant="small" color="secondary">
+                  Choose how long this sprint should run.
+                </Typography>
               </Stack>
 
               {/* Duration Presets */}

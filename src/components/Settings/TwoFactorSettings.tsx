@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/form";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { Copy, Key, ShieldCheck } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -29,8 +30,8 @@ function BackupCodesView({
   onFinish: () => void;
 }) {
   return (
-    <Card className="p-6">
-      <Flex direction="column" gap="lg">
+    <Card padding="lg">
+      <Stack gap="lg">
         <Flex align="center" gap="sm">
           <Icon icon={Key} size="lg" className="text-status-warning" />
           <Typography variant="h4">Save Your Backup Codes</Typography>
@@ -44,7 +45,7 @@ function BackupCodesView({
           </AlertDescription>
         </Alert>
 
-        <div className="bg-ui-bg-secondary rounded-lg p-4">
+        <Card padding="md" className="bg-ui-bg-secondary">
           <Grid cols={2} gap="sm">
             {backupCodes.map((code) => (
               <code
@@ -55,7 +56,7 @@ function BackupCodesView({
               </code>
             ))}
           </Grid>
-        </div>
+        </Card>
 
         <Flex gap="sm">
           <Button onClick={onCopy} variant="secondary">
@@ -64,7 +65,7 @@ function BackupCodesView({
           </Button>
           <Button onClick={onFinish}>I&apos;ve Saved My Codes</Button>
         </Flex>
-      </Flex>
+      </Stack>
     </Card>
   );
 }
@@ -88,8 +89,8 @@ function SetupWizardView({
   onCancel: () => void;
 }) {
   return (
-    <Card className="p-6">
-      <Flex direction="column" gap="lg">
+    <Card padding="lg">
+      <Stack gap="lg">
         <Flex align="center" gap="sm">
           <Icon icon={ShieldCheck} size="lg" className="text-brand" />
           <Typography variant="h4">Set Up Two-Factor Authentication</Typography>
@@ -100,23 +101,23 @@ function SetupWizardView({
           etc.)
         </Typography>
 
-        <Flex direction="column" align="center" gap="md" className="py-4">
+        <Stack align="center" gap="md" className="py-4">
           {otpauthUrl && (
-            <div className="p-4 bg-white rounded-lg border border-ui-border">
+            <Card padding="md" className="bg-white">
               <QRCodeSVG value={otpauthUrl} size={200} />
-            </div>
+            </Card>
           )}
 
-          <div className="text-center">
+          <Stack align="center" gap="xs">
             <Typography variant="caption">Can&apos;t scan? Enter this code manually:</Typography>
-            <code className="block mt-2 font-mono text-sm bg-ui-bg-secondary p-2 rounded select-all">
+            <code className="font-mono text-sm bg-ui-bg-secondary p-2 rounded select-all">
               {secret}
             </code>
-          </div>
-        </Flex>
+          </Stack>
+        </Stack>
 
-        <div className="border-t border-ui-border pt-4">
-          <Typography variant="label" className="mb-2">
+        <Stack gap="sm" className="border-t border-ui-border pt-4">
+          <Typography variant="label">
             Enter the 6-digit code from your authenticator app:
           </Typography>
           <Flex gap="sm">
@@ -131,12 +132,12 @@ function SetupWizardView({
               {isLoading ? <LoadingSpinner size="sm" /> : "Verify"}
             </Button>
           </Flex>
-        </div>
+        </Stack>
 
         <Button variant="ghost" onClick={onCancel} className="self-start">
           Cancel Setup
         </Button>
-      </Flex>
+      </Stack>
     </Card>
   );
 }
@@ -281,7 +282,7 @@ export function TwoFactorSettings() {
 
   if (status === undefined) {
     return (
-      <Card className="p-6">
+      <Card padding="lg">
         <Flex align="center" justify="center" className="py-4">
           <LoadingSpinner size="md" />
         </Flex>
@@ -313,17 +314,17 @@ export function TwoFactorSettings() {
 
   // Show enabled/disabled status
   return (
-    <Card className="p-6">
-      <Flex direction="column" gap="lg">
+    <Card padding="lg">
+      <Stack gap="lg">
         <Flex align="center" justify="between">
           <Flex align="center" gap="sm">
             <Icon icon={ShieldCheck} size="lg" className="text-brand" />
-            <div>
+            <Stack gap="none">
               <Typography variant="h5">Two-Factor Authentication</Typography>
               <Typography variant="caption">
                 Add an extra layer of security to your account
               </Typography>
-            </div>
+            </Stack>
           </Flex>
           <Badge variant={status.enabled ? "success" : "secondary"}>
             {status.enabled ? "Enabled" : "Disabled"}
@@ -331,7 +332,7 @@ export function TwoFactorSettings() {
         </Flex>
 
         {status.enabled ? (
-          <Flex direction="column" gap="md">
+          <Stack gap="md">
             <Alert variant="success">
               <AlertTitle>2FA is active</AlertTitle>
               <AlertDescription>
@@ -349,9 +350,9 @@ export function TwoFactorSettings() {
                 Disable 2FA
               </Button>
             </Flex>
-          </Flex>
+          </Stack>
         ) : (
-          <Flex direction="column" gap="md">
+          <Stack gap="md">
             <Typography variant="small" color="secondary">
               Use an authenticator app to generate one-time codes for signing in. This provides
               better security than SMS-based verification.
@@ -360,9 +361,9 @@ export function TwoFactorSettings() {
             <Button onClick={handleBeginSetup} disabled={isLoading} className="self-start">
               {isLoading ? <LoadingSpinner size="sm" /> : "Enable 2FA"}
             </Button>
-          </Flex>
+          </Stack>
         )}
-      </Flex>
+      </Stack>
 
       {/* Disable 2FA Dialog */}
       <Dialog
