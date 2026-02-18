@@ -1,4 +1,4 @@
-# Phase 7: Zero Raw Tailwind
+# Phase 7: Design Consistency Enforcement
 
 > **Status:** 🚧 In Progress
 > **Goal:** All styling lives in CVA components. No raw Tailwind in app code.
@@ -15,492 +15,114 @@ This doc is designed for automated recursive runs via cron.
 
 ```
 1. READ this doc first
-2. CHECK current stage (Foundation vs Migration)
+2. CHECK current stage (Foundation vs Audit vs Migration)
 3. IF Foundation incomplete → work on foundation tasks
-4. IF Foundation complete → pick next unmigrated file from 7.6
-5. MIGRATE 1-2 files max per run (stay focused)
-6. UPDATE progress in this doc
-7. COMMIT with message: "refactor(ui): migrate {filename} to CVA components"
-8. STOP - let next cron run continue
+4. IF Audit incomplete → run audit tasks
+5. IF Migration ready → pick next unmigrated file
+6. MIGRATE 1-2 files max per run (stay focused)
+7. UPDATE progress in this doc
+8. COMMIT with message: "refactor(ui): migrate {filename} to CVA components"
+9. STOP - let next cron run continue
 ```
 
 ### Rules (NO EXCEPTIONS)
 
-1. **Never skip Foundation** - Components must exist before migration
+1. **Never skip stages** - Foundation → Audit → Migration (in order)
 2. **Never migrate multiple files** - 1-2 files per run max
 3. **Never leave broken state** - If stuck, revert and document blocker
-4. **Always update progress** - Mark files as ✅ when done
+4. **Always update progress** - Mark items as ✅ when done
 5. **Always commit** - Each run = 1 commit
+6. **Flag duplicates, don't merge** - Report conflicts, let human decide
 
 ---
 
 ## Current Stage
 
 **[x] Stage 1: Foundation** ✅ COMPLETE
-**[ ] Stage 2: Migration** ← START HERE
+**[x] Stage 2: Component Audit** ✅ COMPLETE
+**[ ] Stage 3: Migration** ← START HERE
 
 ---
 
-## Stage 1: Foundation (Do First, No Cron)
+## Stage 1: Foundation (COMPLETE)
 
-Complete ALL of these before ANY migration. Check off as done.
+All foundation components created:
 
-### 1.1 Extend Card.tsx
+- [x] Card.tsx - Extended with variant/padding/radius CVA props
+- [x] Stack.tsx - Vertical flex with gap (replaces `space-y-*`)
+- [x] Section.tsx - Content section with title/description
+- [x] FormLayout.tsx - FormLayout, FormRow, FormActions, FormSection
+- [x] Separator.tsx - Extended with spacing prop
+- [x] check-raw-tailwind.js - Validator (soft check during migration)
 
-**File:** `src/components/ui/Card.tsx`
+**Note:** PageHeader was NOT created in ui/ - existing `layout/PageHeader` is superior (has breadcrumb support, already in production use).
 
-**Current:** Basic Card with no variants
+---
 
-**Target:**
-```tsx
-const cardVariants = cva(
-  "rounded-container border transition-default",
-  {
-    variants: {
-      variant: {
-        default: "bg-ui-bg border-ui-border",
-        elevated: "bg-ui-bg border-transparent shadow-card",
-        soft: "bg-ui-bg-soft border-transparent",
-        interactive: "bg-ui-bg border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary cursor-pointer",
-        outline: "bg-transparent border-ui-border",
-        ghost: "bg-transparent border-transparent",
-      },
-      padding: {
-        none: "",
-        xs: "p-2",
-        sm: "p-3",
-        md: "p-4",
-        lg: "p-6",
-        xl: "p-8",
-      },
-      radius: {
-        none: "rounded-none",
-        sm: "rounded",
-        md: "rounded-lg",
-        lg: "rounded-container",
-        full: "rounded-2xl",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      padding: "md",
-      radius: "lg",
-    },
-  }
-);
+## Stage 2: Component Audit
+
+Before migrating, audit the component library for issues.
+
+### 2.1 Duplicate Component Check
+
+| Component | Location | Status | Action |
+|-----------|----------|--------|--------|
+| PageHeader | `layout/PageHeader.tsx` | Production ✅ | Keep - has breadcrumbs |
+| PageHeader | `ui/PageHeader.tsx` | ~~Created~~ | **DELETED** - was duplicate |
+| Flex | `ui/Flex.tsx` | Production ✅ | Keep |
+| Stack | `ui/Stack.tsx` | New ✅ | Keep - convenience for flex-col |
+| Grid | `ui/Grid.tsx` | Production ✅ | Keep |
+| Section | `ui/Section.tsx` | New ✅ | Keep - differs from FormSection |
+| FormLayout | `ui/FormLayout.tsx` | New ✅ | Keep - container-level |
+| FormPrimitives | `ui/FormPrimitives.tsx` | Production ✅ | Keep - field-level |
+
+**Status:** [x] Audit complete - duplicates resolved
+
+---
+
+### 2.2 Gap Size Consistency Check
+
+All layout components should use the same gap scale:
+
+| Component | Gap Options | Status |
+|-----------|-------------|--------|
+| Flex | none, xs, sm, md, lg, xl | ✅ |
+| Stack | none, xs, sm, md, lg, xl | ✅ |
+| Section | none, xs, sm, md, lg, xl | ✅ |
+| Grid | none, xs, sm, md, lg, xl | ✅ |
+
+**Status:** [x] All components use consistent gap scale
+
+---
+
+### 2.3 Import Pattern Check
+
+Ensure no conflicting imports:
+
+```bash
+# Check for any imports of ui/PageHeader (should be 0)
+grep -r "from.*ui/PageHeader" src/
 ```
 
-**Status:** [ ] Not started
+**Status:** [x] Verified - ui/PageHeader deleted, no imports exist
 
 ---
 
-### 1.2 Create Stack Component
+### 2.4 Additional Validators to Consider
 
-**File:** `src/components/ui/Stack.tsx`
+| Validator | Purpose | Priority | Status |
+|-----------|---------|----------|--------|
+| check-duplicate-components.js | Flag components with same name in different dirs | Medium | [ ] |
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] |
+| check-import-paths.js | Flag imports from wrong locations | Medium | [ ] |
 
-**Purpose:** Vertical flex with gap. Replaces `<div className="space-y-*">` and `<Flex direction="column">`.
-
-```tsx
-import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
-import { cn } from "@/lib/utils";
-
-const stackVariants = cva("flex flex-col", {
-  variants: {
-    gap: {
-      none: "gap-0",
-      xs: "gap-1",
-      sm: "gap-2",
-      md: "gap-4",
-      lg: "gap-6",
-      xl: "gap-8",
-    },
-    align: {
-      start: "items-start",
-      center: "items-center",
-      end: "items-end",
-      stretch: "items-stretch",
-    },
-  },
-  defaultVariants: {
-    gap: "md",
-    align: "stretch",
-  },
-});
-
-export interface StackProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof stackVariants> {}
-
-export const Stack = React.forwardRef<HTMLDivElement, StackProps>(
-  ({ className, gap, align, ...props }, ref) => (
-    <div ref={ref} className={cn(stackVariants({ gap, align }), className)} {...props} />
-  )
-);
-Stack.displayName = "Stack";
-```
-
-**Status:** [ ] Not started
+**Note:** These are optional. The raw-tailwind validator is the main enforcement.
 
 ---
 
-### 1.3 Create Section Component
+## Stage 3: Migration (Cron Runs)
 
-**File:** `src/components/ui/Section.tsx`
-
-**Purpose:** Content section with optional title. Replaces `<div className="space-y-4">` with heading.
-
-```tsx
-import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { Typography } from "./Typography";
-
-const sectionVariants = cva("", {
-  variants: {
-    gap: {
-      sm: "space-y-2",
-      md: "space-y-4",
-      lg: "space-y-6",
-    },
-    padding: {
-      none: "",
-      sm: "p-3",
-      md: "p-4",
-      lg: "p-6",
-    },
-  },
-  defaultVariants: {
-    gap: "md",
-    padding: "none",
-  },
-});
-
-export interface SectionProps
-  extends React.HTMLAttributes<HTMLElement>,
-    VariantProps<typeof sectionVariants> {
-  title?: string;
-  description?: string;
-}
-
-export const Section = React.forwardRef<HTMLElement, SectionProps>(
-  ({ className, gap, padding, title, description, children, ...props }, ref) => (
-    <section ref={ref} className={cn(sectionVariants({ gap, padding }), className)} {...props}>
-      {(title || description) && (
-        <div className="space-y-1">
-          {title && <Typography variant="h4">{title}</Typography>}
-          {description && <Typography variant="muted">{description}</Typography>}
-        </div>
-      )}
-      {children}
-    </section>
-  )
-);
-Section.displayName = "Section";
-```
-
-**Status:** [ ] Not started
-
----
-
-### 1.4 Create FormLayout Components
-
-**File:** `src/components/ui/FormLayout.tsx`
-
-**Purpose:** Form structure components. Replaces raw divs in forms.
-
-```tsx
-import * as React from "react";
-import { cn } from "@/lib/utils";
-
-// Vertical form container with consistent gap
-export const FormLayout = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("space-y-4", className)} {...props} />
-));
-FormLayout.displayName = "FormLayout";
-
-// Horizontal row for side-by-side fields
-export interface FormRowProps extends React.HTMLAttributes<HTMLDivElement> {
-  cols?: 2 | 3 | 4;
-}
-
-export const FormRow = React.forwardRef<HTMLDivElement, FormRowProps>(
-  ({ className, cols = 2, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "grid gap-4",
-        cols === 2 && "grid-cols-1 sm:grid-cols-2",
-        cols === 3 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-        cols === 4 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
-        className
-      )}
-      {...props}
-    />
-  )
-);
-FormRow.displayName = "FormRow";
-
-// Right-aligned action buttons
-export const FormActions = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex justify-end gap-2 pt-4", className)} {...props} />
-));
-FormActions.displayName = "FormActions";
-
-// Grouped section within a form
-export interface FormSectionProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string;
-  description?: string;
-}
-
-export const FormSection = React.forwardRef<HTMLDivElement, FormSectionProps>(
-  ({ className, title, description, children, ...props }, ref) => (
-    <div ref={ref} className={cn("space-y-4", className)} {...props}>
-      {(title || description) && (
-        <div className="space-y-1">
-          {title && <p className="text-sm font-medium text-ui-text">{title}</p>}
-          {description && <p className="text-sm text-ui-text-tertiary">{description}</p>}
-        </div>
-      )}
-      {children}
-    </div>
-  )
-);
-FormSection.displayName = "FormSection";
-```
-
-**Status:** [ ] Not started
-
----
-
-### 1.5 Create PageHeader Component
-
-**File:** `src/components/ui/PageHeader.tsx`
-
-**Purpose:** Consistent page headers with title, description, actions.
-
-```tsx
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { Typography } from "./Typography";
-import { Flex } from "./Flex";
-
-export interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  title: string;
-  description?: string;
-  actions?: React.ReactNode;
-}
-
-export const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
-  ({ className, title, description, actions, ...props }, ref) => (
-    <Flex
-      ref={ref}
-      justify="between"
-      align="start"
-      gap="md"
-      className={cn("mb-6", className)}
-      {...props}
-    >
-      <div className="space-y-1">
-        <Typography variant="h2">{title}</Typography>
-        {description && <Typography variant="muted">{description}</Typography>}
-      </div>
-      {actions && <Flex gap="sm" align="center" className="shrink-0">{actions}</Flex>}
-    </Flex>
-  )
-);
-PageHeader.displayName = "PageHeader";
-```
-
-**Status:** [ ] Not started
-
----
-
-### 1.6 Extend Separator with Spacing
-
-**File:** `src/components/ui/Separator.tsx`
-
-**Add spacing prop:**
-```tsx
-// Add to existing Separator
-spacing: {
-  none: "",
-  sm: "my-2",
-  md: "my-4",
-  lg: "my-6",
-}
-```
-
-**Status:** [ ] Not started
-
----
-
-### 1.7 Create Validator
-
-**File:** `scripts/validate/check-raw-tailwind.js`
-
-```js
-/**
- * CHECK: Raw Tailwind
- * Flags raw Tailwind classes outside allowed directories
- */
-
-import fs from "node:fs";
-import path from "node:path";
-import { c, ROOT, relPath, walkDir } from "./utils.js";
-
-export function run() {
-  const SRC = path.join(ROOT, "src/components");
-
-  // Directories where raw Tailwind is allowed
-  const ALLOWED = [
-    "src/components/ui/",
-    "src/components/Landing/",
-    "src/components/Kanban/",
-    "src/components/Calendar/",
-    "src/components/Auth/",
-    ".stories.tsx",
-    ".test.tsx",
-  ];
-
-  // Patterns that should use CVA components instead
-  const RAW_PATTERNS = [
-    { pattern: /\bflex\b/, replacement: "<Flex>" },
-    { pattern: /\binline-flex\b/, replacement: "<Flex inline>" },
-    { pattern: /\bgrid\b/, replacement: "<Grid>" },
-    { pattern: /\bgap-\d+/, replacement: "<Flex gap='...'>" },
-    { pattern: /\bp-\d+/, replacement: "<Card padding='...'>" },
-    { pattern: /\bpx-\d+/, replacement: "<Card padding='...'>" },
-    { pattern: /\bpy-\d+/, replacement: "<Card padding='...'>" },
-    { pattern: /\bspace-y-\d+/, replacement: "<Stack gap='...'>" },
-    { pattern: /\bspace-x-\d+/, replacement: "<Flex gap='...'>" },
-    { pattern: /\brounded-(?!none|full)/, replacement: "<Card>" },
-    { pattern: /\btext-(?:xs|sm|base|lg|xl|\d)/, replacement: "<Typography>" },
-    { pattern: /\bfont-(?:thin|light|normal|medium|semibold|bold)/, replacement: "<Typography>" },
-  ];
-
-  let violations = [];
-
-  function isAllowed(filePath) {
-    const rel = relPath(filePath);
-    return ALLOWED.some(pattern => rel.includes(pattern));
-  }
-
-  function checkFile(filePath) {
-    if (isAllowed(filePath)) return;
-
-    const content = fs.readFileSync(filePath, "utf-8");
-    const lines = content.split("\n");
-    const rel = relPath(filePath);
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line.includes("className")) continue;
-
-      for (const { pattern, replacement } of RAW_PATTERNS) {
-        if (pattern.test(line)) {
-          violations.push({
-            file: rel,
-            line: i + 1,
-            pattern: pattern.toString(),
-            replacement,
-            snippet: line.trim().slice(0, 80),
-          });
-          break; // One violation per line is enough
-        }
-      }
-    }
-  }
-
-  const files = walkDir(SRC, { extensions: new Set([".tsx"]) });
-  for (const f of files) checkFile(f);
-
-  const messages = [];
-  if (violations.length > 0) {
-    // Group by file
-    const byFile = {};
-    for (const v of violations) {
-      if (!byFile[v.file]) byFile[v.file] = [];
-      byFile[v.file].push(v);
-    }
-
-    for (const [file, items] of Object.entries(byFile).sort()) {
-      messages.push(`  ${c.bold}${file}${c.reset} (${items.length})`);
-      for (const item of items.slice(0, 3)) { // Show max 3 per file
-        messages.push(`    ${c.dim}L${item.line}${c.reset} → use ${item.replacement}`);
-      }
-      if (items.length > 3) {
-        messages.push(`    ${c.dim}... and ${items.length - 3} more${c.reset}`);
-      }
-    }
-  }
-
-  return {
-    passed: violations.length === 0,
-    errors: violations.length,
-    detail: violations.length > 0
-      ? `${violations.length} raw Tailwind violation(s)`
-      : null,
-    messages,
-  };
-}
-```
-
-**Status:** [ ] Not started
-
----
-
-### 1.8 Register Validator
-
-**File:** `scripts/validate.js`
-
-Add to imports and checks array:
-```js
-import { run as checkRawTailwind } from "./validate/check-raw-tailwind.js";
-
-// In checks array:
-{ name: "Raw Tailwind", run: checkRawTailwind },
-```
-
-**Status:** [ ] Not started
-
----
-
-### 1.9 Export New Components
-
-**File:** `src/components/ui/index.ts` (if exists) or individual exports
-
-Ensure all new components are exported.
-
-**Status:** [ ] Not started
-
----
-
-### Foundation Checklist
-
-- [x] 1.1 Card.tsx extended with variants/padding/radius
-- [x] 1.2 Stack.tsx created
-- [x] 1.3 Section.tsx created
-- [x] 1.4 FormLayout.tsx created (FormLayout, FormRow, FormActions, FormSection)
-- [x] 1.5 PageHeader.tsx created
-- [x] 1.6 Separator.tsx extended with spacing
-- [x] 1.7 check-raw-tailwind.js created
-- [x] 1.8 Validator registered in validate.js
-- [x] 1.9 Components exported (direct imports, no index needed)
-
-**Foundation Status:** [x] COMPLETE - Ready for Stage 2
-
----
-
-## Stage 2: Migration (Cron Runs)
-
-**✅ Foundation complete - ready to start migration**
+**✅ Audit complete - ready for migration**
 
 ### Migration Protocol (Each Cron Run)
 
@@ -528,44 +150,60 @@ Ensure all new components are exported.
 
 | File | Violations | Status |
 |------|------------|--------|
-| `Dashboard.tsx` | ~20 | ⬜ |
-| `AppSidebar.tsx` | ~30 | ⬜ |
-| `AppHeader.tsx` | ~15 | ⬜ |
-| `IssueDetailModal.tsx` | ~25 | ⬜ |
-| `CreateIssueModal.tsx` | ~20 | ⬜ |
-| `NotificationCenter.tsx` | ~15 | ⬜ |
-| `GlobalSearch.tsx` | ~10 | ⬜ |
-| `CommandPalette.tsx` | ~10 | ⬜ |
+| `Dashboard.tsx` | ~3 | ⬜ |
+| `AppSidebar.tsx` | ~11 | ⬜ |
+| `AppHeader.tsx` | ~7 | ⬜ |
+| `IssueDetailModal.tsx` | ~3 | ⬜ |
+| `CreateIssueModal.tsx` | ~3 | ⬜ |
+| `NotificationCenter.tsx` | ~6 | ⬜ |
+| `GlobalSearch.tsx` | ~13 | ⬜ |
+| `CommandPalette.tsx` | ~1 | ⬜ |
 
 **Priority 2: Feature Components**
 
 | File | Violations | Status |
 |------|------------|--------|
-| `AnalyticsDashboard.tsx` | ~20 | ⬜ |
-| `SprintManager.tsx` | ~15 | ⬜ |
-| `ActivityFeed.tsx` | ~10 | ⬜ |
-| `FilterBar.tsx` | ~10 | ⬜ |
-| `BulkOperationsBar.tsx` | ~8 | ⬜ |
+| `AnalyticsDashboard.tsx` | ~10 | ⬜ |
+| `SprintManager.tsx` | ~19 | ⬜ |
+| `ActivityFeed.tsx` | ~4 | ⬜ |
+| `FilterBar.tsx` | ~11 | ⬜ |
+| `BulkOperationsBar.tsx` | ~11 | ⬜ |
 | `DocumentHeader.tsx` | ~8 | ⬜ |
-| `IssueCard.tsx` | ~10 | ⬜ |
-| `ProjectsList.tsx` | ~8 | ⬜ |
+| `IssueCard.tsx` | ~9 | ⬜ |
+| `ProjectsList.tsx` | ~2 | ⬜ |
 
 **Priority 3: Settings & Forms**
 
 | File | Violations | Status |
 |------|------------|--------|
-| `Settings/ProfileContent.tsx` | ~15 | ⬜ |
-| `Settings/NotificationsTab.tsx` | ~12 | ⬜ |
-| `Settings/SecurityTab.tsx` | ~12 | ⬜ |
-| `Settings/PreferencesTab.tsx` | ~10 | ⬜ |
-| `Settings/ApiKeysManager.tsx` | ~10 | ⬜ |
-| `Settings/WebhooksManager.tsx` | ~10 | ⬜ |
-| `Settings/SSOSettings.tsx` | ~15 | ⬜ |
-| `Settings/TwoFactorSettings.tsx` | ~12 | ⬜ |
+| `Settings/ProfileContent.tsx` | ~16 | ⬜ |
+| `Settings/NotificationsTab.tsx` | ~25 | ⬜ |
+| `Settings/PreferencesTab.tsx` | ~13 | ⬜ |
+| `Settings/ApiKeysManager.tsx` | ~46 | ⬜ |
+| `Settings/SSOSettings.tsx` | ~7 | ⬜ |
+| `Settings/TwoFactorSettings.tsx` | ~11 | ⬜ |
 
-**Priority 4: Remaining (auto-populated by validator)**
+**Priority 4: Admin Components**
 
-Run `node scripts/validate.js` to see remaining files.
+| File | Violations | Status |
+|------|------------|--------|
+| `Admin/UserManagement.tsx` | ~31 | ⬜ |
+| `Admin/UserTypeManager.tsx` | ~28 | ⬜ |
+| `Admin/HourComplianceDashboard.tsx` | ~15 | ⬜ |
+| `Admin/IpRestrictionsSettings.tsx` | ~14 | ⬜ |
+| `Admin/OrganizationSettings.tsx` | ~14 | ⬜ |
+
+**Priority 5: Onboarding (complex - do last)**
+
+| File | Violations | Status |
+|------|------------|--------|
+| `Onboarding/LeadOnboarding.tsx` | ~33 | ⬜ |
+| `Onboarding/MemberOnboarding.tsx` | ~32 | ⬜ |
+| `Onboarding/ProjectWizard.tsx` | ~29 | ⬜ |
+
+**Priority 6: Remaining (auto-populated by validator)**
+
+Run `node scripts/validate.js` to see full list (~100+ files).
 
 ---
 
@@ -587,7 +225,7 @@ Run `node scripts/validate.js` to see remaining files.
 | `<div className="p-6 rounded-lg shadow">` | `<Card variant="elevated" padding="lg">` |
 | `<span className="text-sm text-ui-text-secondary">` | `<Typography variant="small" color="secondary">` |
 | `<p className="text-xs text-ui-text-tertiary">` | `<Typography variant="meta">` |
-| Page title + actions row | `<PageHeader title="..." actions={...}>` |
+| Page title + actions row | `layout/PageHeader` (NOT ui/PageHeader) |
 | Form with vertical fields | `<FormLayout>...<FormActions>` |
 | Side-by-side form fields | `<FormRow cols={2}>` |
 
@@ -596,6 +234,12 @@ Run `node scripts/validate.js` to see remaining files.
 1. Check if it's a one-off → maybe it's fine as-is
 2. Check if it's repeated → might need new CVA variant
 3. Document in "Blockers" section below and SKIP the file
+
+### "Found a duplicate component"
+
+1. **Don't merge** - just flag it in the audit section
+2. Document which version is production vs new
+3. Let human decide which to keep
 
 ### "Tests are failing"
 
@@ -615,10 +259,23 @@ Document any files that can't be migrated and why:
 
 ---
 
+## Deferred / Future Work
+
+Items intentionally not in scope for Phase 7:
+
+| Item | Reason | Track In |
+|------|--------|----------|
+| CVA for all existing ui/ components | Too disruptive | Future phase |
+| Standardize Flex vs Stack usage | Needs design decision | PATTERNS.md |
+| check-duplicate-components.js | Nice-to-have | Backlog |
+| check-import-paths.js | Nice-to-have | Backlog |
+
+---
+
 ## Stats
 
 **Last Run:** 2026-02-17
-**Files Migrated:** 0 / ~40
+**Files Migrated:** 0 / ~100
 **Violations Remaining:** 1145 (run validator to update)
 
 ---
@@ -641,4 +298,4 @@ git add . && git commit -m "refactor(ui): migrate {filename} to CVA components"
 
 ---
 
-*Zero raw Tailwind = zero AI slop. One file at a time.*
+*Zero raw Tailwind = zero AI slop. One file at a time. Flag duplicates, don't merge.*

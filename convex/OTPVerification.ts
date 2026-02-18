@@ -10,6 +10,7 @@
  * The authVerificationCodes table stores hashed codes, making them unreadable.
  */
 import Resend from "@auth/core/providers/resend";
+import { render } from "@react-email/render";
 import type { FunctionReference } from "convex/server";
 import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
@@ -91,18 +92,16 @@ export const OTPVerification = Resend({
       // Store test OTP if applicable
       await storeTestOtp(ctx, email, token);
 
+      // Render email using React Email template
+      const { VerifyEmail } = await import("../emails/VerifyEmail");
+      const html = await render(VerifyEmail({ code: token, expiryMinutes: 15 }));
+
       // Send verification email through the email provider system
       // In dev/E2E (MAILTRAP_MODE=sandbox), emails go to Mailtrap inbox
       const result = await sendEmail(ctx, {
         to: email,
         subject: "Verify your email",
-        html: `
-          <h2>Verify your email</h2>
-          <p>Your verification code is:</p>
-          <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
-          <p>This code expires in 15 minutes.</p>
-          <p>If you didn't create an account, you can safely ignore this email.</p>
-        `,
+        html,
         text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.\n\nIf you didn't create an account, you can safely ignore this email.`,
       });
 

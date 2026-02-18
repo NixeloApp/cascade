@@ -1,4 +1,5 @@
 import Resend from "@auth/core/providers/resend";
+import { render } from "@react-email/render";
 import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
 import type { ConvexAuthContext } from "./lib/authTypes";
@@ -58,16 +59,14 @@ export const OTPPasswordReset = Resend({
       }
     }
 
+    // Render email using React Email template
+    const { PasswordResetEmail } = await import("../emails/PasswordResetEmail");
+    const html = await render(PasswordResetEmail({ code: token, expiryMinutes: 15 }));
+
     const result = await sendEmail(ctx, {
       to: email,
       subject: "Reset your password",
-      html: `
-        <h2>Reset your password</h2>
-        <p>Your password reset code is:</p>
-        <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
-        <p>This code expires in 15 minutes.</p>
-        <p>If you didn't request this, you can safely ignore this email.</p>
-      `,
+      html,
       text: `Your password reset code is: ${token}\n\nThis code expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
     });
 

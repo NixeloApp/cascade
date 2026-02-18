@@ -169,21 +169,4 @@ const button = {
   padding: "12px 32px",
 };
 
-const divider = {
-  borderColor: "#e5e7eb",
-  margin: "24px 0",
-};
-
-const unsubscribeSection = {
-  margin: "16px 0 0",
-};
-
-const unsubscribeText = {
-  color: "#6b7280",
-  fontSize: "12px",
-  lineHeight: "16px",
-  textAlign: "center" as const,
-  margin: "0",
-};
-
 export default AssignmentEmail;

@@ -23,6 +23,20 @@ vi.mock("./email", () => ({
   sendEmail: (...args: any[]) => mockSendEmail(...args),
 }));
 
+// Mock React Email templates and render function to avoid JSX transformation issues in tests
+// The mock render returns HTML that includes the token from the component props
+vi.mock("@react-email/render", () => ({
+  render: vi.fn((component) => {
+    // Extract code from the component props if available
+    const code = component?.props?.code || "123456";
+    return Promise.resolve(`<html>Reset password with code: ${code}</html>`);
+  }),
+}));
+
+vi.mock("../emails/PasswordResetEmail", () => ({
+  PasswordResetEmail: vi.fn((props) => ({ props })),
+}));
+
 describe("OTPPasswordReset", () => {
   // Access the custom sendVerificationRequest method from the provider
   const sendVerificationRequest = (OTPPasswordReset as any).options.sendVerificationRequest;

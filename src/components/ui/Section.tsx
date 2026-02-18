@@ -6,15 +6,20 @@ import { Typography } from "./Typography";
 const sectionVariants = cva("", {
   variants: {
     gap: {
+      none: "",
+      xs: "space-y-1",
       sm: "space-y-2",
       md: "space-y-4",
       lg: "space-y-6",
+      xl: "space-y-8",
     },
     padding: {
       none: "",
+      xs: "p-2",
       sm: "p-3",
       md: "p-4",
       lg: "p-6",
+      xl: "p-8",
     },
   },
   defaultVariants: {
