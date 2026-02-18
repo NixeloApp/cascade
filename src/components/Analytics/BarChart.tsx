@@ -34,7 +34,7 @@ export const BarChart = memo(function BarChart({
                 minWidth: item.value > 0 ? "2rem" : "0",
               }}
             >
-              <Typography variant="small" className="font-semibold text-brand-foreground">
+              <Typography variant="label" className="text-brand-foreground">
                 {item.value}
               </Typography>
             </div>

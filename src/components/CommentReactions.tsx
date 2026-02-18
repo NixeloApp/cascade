@@ -69,7 +69,7 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
             </Button>
           </PopoverTrigger>
         </Tooltip>
-        <PopoverContent side="top" align="start" className="w-auto p-1">
+        <PopoverContent side="top" align="start" className="w-auto p-1.5">
           <Flex gap="xs">
             {COMMON_EMOJIS.map((emoji) => (
               <Tooltip key={emoji} content={emoji}>
@@ -78,7 +78,7 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
                   size="icon"
                   onClick={() => handleToggle(emoji)}
                   aria-label={`React with ${emoji}`}
-                  className="w-8 h-8 text-lg"
+                  className="w-8 h-8"
                 >
                   {emoji}
                 </Button>

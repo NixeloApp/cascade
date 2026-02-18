@@ -165,7 +165,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
         />
 
         {/* Key Metrics */}
-        <Grid cols={2} colsMd={4} gap="md" className="sm:gap-4">
+        <Grid cols={2} colsMd={4} gap="md">
           <MetricCard
             title="Total Issues"
             value={analytics.totalIssues}
@@ -195,7 +195,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
         </Grid>
 
         {/* Charts Grid */}
-        <Grid cols={1} colsLg={2} gap="lg" className="sm:gap-6">
+        <Grid cols={1} colsLg={2} gap="lg">
           {/* Issues by Status */}
           <ChartCard title="Issues by Status">
             <BarChart data={statusChartData} color="bg-status-info" />

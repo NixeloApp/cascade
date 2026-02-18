@@ -55,7 +55,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </Flex>
 
             {/* Large error code with tight tracking */}
-            <Typography variant="h1" className="text-8xl font-bold tracking-tightest">
+            <Typography variant="h1" className="text-display tracking-tightest">
               500
             </Typography>
 
@@ -72,12 +72,22 @@ export class ErrorBoundary extends Component<Props, State> {
             {/* Error details collapsible */}
             {this.state.error && (
               <details className="w-full text-left">
-                <summary className="cursor-pointer text-sm text-ui-text-secondary hover:text-ui-text transition-default">
+                <Typography
+                  as="summary"
+                  variant="small"
+                  color="secondary"
+                  className="cursor-pointer hover:text-ui-text transition-default"
+                >
                   View error details
-                </summary>
-                <pre className="mt-2 text-xs bg-ui-bg-tertiary text-ui-text-secondary p-4 rounded-lg overflow-auto max-h-40">
+                </Typography>
+                <Typography
+                  as="pre"
+                  variant="mono"
+                  color="secondary"
+                  className="mt-2 bg-ui-bg-tertiary p-4 rounded-lg overflow-auto max-h-40"
+                >
                   {this.state.error.message}
-                </pre>
+                </Typography>
               </details>
             )}
 

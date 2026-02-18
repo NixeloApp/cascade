@@ -8,6 +8,7 @@ import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Select } from "../ui/form/Select";
 import { Textarea } from "../ui/form/Textarea";
+import { Stack } from "../ui/Stack";
 
 type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "checkbox" | "url";
 
@@ -125,7 +126,7 @@ export function CustomFieldForm({ projectId, field, open, onOpenChange }: Custom
       title={field ? "Edit Custom Field" : "Create Custom Field"}
       isLoading={isLoading}
     >
-      <div className="space-y-4">
+      <Stack gap="md">
         {/* Name */}
         <Input
           label="Field Name *"
@@ -192,7 +193,7 @@ export function CustomFieldForm({ projectId, field, open, onOpenChange }: Custom
           checked={isRequired}
           onChange={(e) => setIsRequired(e.target.checked)}
         />
-      </div>
+      </Stack>
     </FormDialog>
   );
 }

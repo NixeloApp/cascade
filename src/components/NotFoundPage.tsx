@@ -21,7 +21,7 @@ export function NotFoundPage() {
         </Flex>
 
         {/* Large error code with tight tracking */}
-        <Typography variant="h1" className="text-8xl font-bold tracking-tightest">
+        <Typography variant="h1" className="text-display tracking-tightest">
           404
         </Typography>
 
