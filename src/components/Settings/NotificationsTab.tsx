@@ -103,20 +103,24 @@ function DigestOption({
   onChange: () => void;
 }) {
   return (
-    <label className="flex items-center gap-3 p-3 rounded-lg border border-ui-border cursor-pointer hover:bg-ui-bg-secondary transition-colors">
-      <input
-        type="radio"
-        name="digest"
-        value={value}
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-        className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
-      />
-      <div>
-        <Typography variant="label">{label}</Typography>
-        <Typography variant="caption">{description}</Typography>
-      </div>
+    <label className="cursor-pointer">
+      <Card padding="sm" className="hover:bg-ui-bg-secondary transition-colors">
+        <Flex align="center" gap="md">
+          <input
+            type="radio"
+            name="digest"
+            value={value}
+            checked={checked}
+            onChange={onChange}
+            disabled={disabled}
+            className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
+          />
+          <Stack gap="none">
+            <Typography variant="label">{label}</Typography>
+            <Typography variant="caption">{description}</Typography>
+          </Stack>
+        </Flex>
+      </Card>
     </label>
   );
 }

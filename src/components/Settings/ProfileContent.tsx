@@ -236,9 +236,11 @@ export function ProfileContent({ userId }: ProfileContentProps) {
 
   if (!viewUser) {
     return (
-      <Flex align="center" justify="center" className="py-8">
-        <LoadingSpinner size="lg" />
-      </Flex>
+      <Card padding="lg">
+        <Flex align="center" justify="center">
+          <LoadingSpinner size="lg" />
+        </Flex>
+      </Card>
     );
   }
 

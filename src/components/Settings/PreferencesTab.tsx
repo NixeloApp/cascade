@@ -125,9 +125,7 @@ export function PreferencesTab() {
           <Typography variant="h5">Regional</Typography>
           <Flex align="center" justify="between">
             <Stack gap="xs">
-              <Label htmlFor="timezone" className="text-base">
-                Timezone
-              </Label>
+              <Typography variant="label">Timezone</Typography>
               <Typography variant="small" color="secondary">
                 Your timestamp display preference
               </Typography>
@@ -155,9 +153,7 @@ export function PreferencesTab() {
           <Typography variant="h5">Desktop Notifications</Typography>
           <Flex align="center" justify="between">
             <Stack gap="xs">
-              <Label htmlFor="desktop-notifs" className="text-base">
-                Browser Push Notifications
-              </Label>
+              <Typography variant="label">Browser Push Notifications</Typography>
               <Typography variant="small" color="secondary">
                 Receive pop-up notifications when you are active
               </Typography>
