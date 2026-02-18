@@ -93,7 +93,7 @@ Benchmarking against Plane, Cal.com, and Mintlify for feature parity.
 | User Story | Plane | Nixelo | Gap | Priority |
 |------------|-------|--------|-----|----------|
 | Rich text editor (ProseMirror) | ✅ | ✅ | - | - |
-| Real-time collaboration (Y.js) | ✅ | ✅ | - | - |
+| Real-time collaboration (Y.js) | ✅ | ⏸️ | Deferred - using Convex real-time sync | Low |
 | Version history | ✅ | ✅ | - | - |
 | Document templates | ✅ | ✅ | - | - |
 | Public sharing | ✅ | ✅ | - | - |

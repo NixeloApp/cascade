@@ -21,10 +21,14 @@ Top targets:
 
 ## Approach
 
+0. **Verify compiler coverage first** — Run `npx react-compiler-healthcheck` on each target file. Skip files with compiler bailouts until underlying Rules of React violations are fixed.
 1. Remove wrapper while preserving the inner logic
 2. Update imports (remove useMemo/useCallback/memo from imports)
 3. Run `pnpm check` after each file
-4. Keep `useMemo` only if explicitly needed for non-React lib compatibility
+4. **Retain** `useMemo`/`useCallback` when ANY of the following apply:
+   - The compiler has bailed out on that component/hook (see step 0)
+   - Reference identity is required for correctness, not just performance (e.g., stable callback used as a `useEffect` dependency to gate side effects)
+   - Non-React library integration requires stable identity
 
 ## Notes
 

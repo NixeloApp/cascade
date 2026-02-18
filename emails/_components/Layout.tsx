@@ -54,7 +54,7 @@ export function EmailLayout({ preview, children, unsubscribeUrl }: EmailLayoutPr
                 </>
               )}
             </Text>
-            <Text style={footerText}>© 2025 Nixelo. All rights reserved.</Text>
+            <Text style={footerText}>© 2026 Nixelo. All rights reserved.</Text>
           </Section>
         </Container>
       </Body>

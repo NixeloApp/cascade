@@ -9,11 +9,15 @@ import { EmailLayout } from "./_components/Layout";
 
 interface WelcomeEmailProps {
   firstName?: string;
-  ctaUrl: string;
+  ctaUrl?: string;
   unsubscribeUrl?: string;
 }
 
-export function WelcomeEmail({ firstName = "there", ctaUrl, unsubscribeUrl }: WelcomeEmailProps) {
+export function WelcomeEmail({
+  firstName = "there",
+  ctaUrl = "https://nixelo.app/dashboard",
+  unsubscribeUrl,
+}: WelcomeEmailProps) {
   const preview = "Welcome to Nixelo - Your project management journey starts here";
 
   return (
