@@ -5,6 +5,7 @@ import { IssueDependencies } from "@/components/IssueDependencies";
 import { IssueMetadataSection } from "@/components/IssueDetail/IssueMetadataSection";
 import { IssueWatchers } from "@/components/IssueWatchers";
 import { TimeTracker } from "@/components/TimeTracker";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
 
@@ -24,13 +25,12 @@ interface IssueDetailSidebarProps {
 function SidebarSection({ title, children }: { title: string; children: ReactNode }): ReactNode {
   return (
     <section className="pb-6 border-b border-ui-border/30 last:border-b-0 last:pb-0">
-      <Typography
-        variant="h4"
-        className="text-xs font-bold uppercase tracking-widest text-ui-text-tertiary mb-4"
-      >
-        {title}
-      </Typography>
-      {children}
+      <Stack gap="md">
+        <Typography variant="label" color="tertiary" className="text-xs uppercase tracking-widest">
+          {title}
+        </Typography>
+        {children}
+      </Stack>
     </section>
   );
 }
@@ -48,7 +48,7 @@ export function IssueDetailSidebar({
   billingEnabled,
 }: IssueDetailSidebarProps): ReactNode {
   return (
-    <div className="w-full md:w-80 lg:w-96 p-6 space-y-8 bg-ui-bg-soft">
+    <Stack gap="xl" className="w-full md:w-80 lg:w-96 p-6 bg-ui-bg-soft">
       <SidebarSection title="Properties">
         <IssueMetadataSection
           status={status}
@@ -79,6 +79,6 @@ export function IssueDetailSidebar({
       <SidebarSection title="Dependencies">
         <IssueDependencies issueId={issueId} projectId={projectId} />
       </SidebarSection>
-    </div>
+    </Stack>
   );
 }

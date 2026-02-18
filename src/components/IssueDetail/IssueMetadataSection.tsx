@@ -1,7 +1,9 @@
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
 import { Badge } from "../ui/Badge";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface IssueMetadataProps {
@@ -26,60 +28,49 @@ export function IssueMetadataSection({
   labels,
 }: IssueMetadataProps) {
   return (
-    <>
+    <Stack gap="md">
       {/* Metadata Grid */}
-      <Grid
-        cols={1}
-        colsSm={2}
-        gap="lg"
-        className="p-4 bg-ui-bg-soft rounded-lg border border-ui-border/30"
-      >
-        <div className="space-y-1">
-          <Typography variant="muted" className="text-xs text-ui-text-secondary">
-            Status
-          </Typography>
-          <Typography variant="p" className="font-medium text-ui-text">
-            {status}
-          </Typography>
-        </div>
-        <div className="space-y-1">
-          <Typography variant="muted" className="text-xs text-ui-text-secondary">
-            Type
-          </Typography>
-          <Typography variant="p" className="font-medium capitalize text-ui-text">
-            {type}
-          </Typography>
-        </div>
-        <div className="space-y-1">
-          <Typography variant="muted" className="text-xs text-ui-text-secondary">
-            Assignee
-          </Typography>
-          <Typography variant="p" className="font-medium text-ui-text">
-            {assignee?.name || "Unassigned"}
-          </Typography>
-        </div>
-        <div className="space-y-1">
-          <Typography variant="muted" className="text-xs text-ui-text-secondary">
-            Reporter
-          </Typography>
-          <Typography variant="p" className="font-medium text-ui-text">
-            {reporter?.name || "Unknown"}
-          </Typography>
-        </div>
-        <div className="space-y-1">
-          <Typography variant="muted" className="text-xs text-ui-text-secondary">
-            Story Points
-          </Typography>
-          <Typography variant="p" className="font-medium text-ui-text">
-            {storyPoints ?? "Not set"}
-          </Typography>
-        </div>
-      </Grid>
+      <Card padding="md" variant="flat" className="border-ui-border/30">
+        <Grid cols={1} colsSm={2} gap="lg">
+          <Stack gap="xs">
+            <Typography variant="meta" color="secondary">
+              Status
+            </Typography>
+            <Typography variant="label">{status}</Typography>
+          </Stack>
+          <Stack gap="xs">
+            <Typography variant="meta" color="secondary">
+              Type
+            </Typography>
+            <Typography variant="label" className="capitalize">
+              {type}
+            </Typography>
+          </Stack>
+          <Stack gap="xs">
+            <Typography variant="meta" color="secondary">
+              Assignee
+            </Typography>
+            <Typography variant="label">{assignee?.name || "Unassigned"}</Typography>
+          </Stack>
+          <Stack gap="xs">
+            <Typography variant="meta" color="secondary">
+              Reporter
+            </Typography>
+            <Typography variant="label">{reporter?.name || "Unknown"}</Typography>
+          </Stack>
+          <Stack gap="xs">
+            <Typography variant="meta" color="secondary">
+              Story Points
+            </Typography>
+            <Typography variant="label">{storyPoints ?? "Not set"}</Typography>
+          </Stack>
+        </Grid>
+      </Card>
 
       {/* Labels */}
       {labels.length > 0 && (
-        <div className="pt-4">
-          <Typography variant="muted" className="text-xs text-ui-text-secondary mb-2">
+        <Stack gap="sm">
+          <Typography variant="meta" color="secondary">
             Labels
           </Typography>
           <Flex wrap gap="sm">
@@ -94,8 +85,8 @@ export function IssueMetadataSection({
               </Badge>
             ))}
           </Flex>
-        </div>
+        </Stack>
       )}
-    </>
+    </Stack>
   );
 }

@@ -3,11 +3,14 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { showError, showSuccess } from "@/lib/toast";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Progress } from "../ui/Progress";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface Subtask {
@@ -61,9 +64,9 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
   const totalSubtasks = subtasks?.length || 0;
 
   return (
-    <div>
-      <Flex justify="between" align="center" className="mb-3">
-        <Typography variant="h3" className="text-sm font-medium text-ui-text">
+    <Stack gap="sm">
+      <Flex justify="between" align="center">
+        <Typography variant="label">
           Sub-tasks
           {totalSubtasks > 0 && (
             <Typography variant="caption" color="tertiary" as="span" className="ml-2">
@@ -71,64 +74,55 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
             </Typography>
           )}
         </Typography>
-        <button
-          type="button"
-          onClick={() => setIsCreatingSubtask(true)}
-          className="text-sm text-brand hover:text-brand-hover:text-brand-ring font-medium"
-        >
+        <Button variant="ghost" size="sm" onClick={() => setIsCreatingSubtask(true)}>
           + Add Sub-task
-        </button>
+        </Button>
       </Flex>
 
       {/* Progress bar */}
-      {totalSubtasks > 0 && (
-        <Progress value={(completedSubtasks / totalSubtasks) * 100} className="mb-3" />
-      )}
+      {totalSubtasks > 0 && <Progress value={(completedSubtasks / totalSubtasks) * 100} />}
 
       {/* Create sub-task form */}
       {isCreatingSubtask && (
-        <div className="mb-3 p-3 border border-ui-border rounded-lg bg-ui-bg-secondary">
-          <Input
-            type="text"
-            value={subtaskTitle}
-            onChange={(e) => setSubtaskTitle(e.target.value)}
-            placeholder="Sub-task title..."
-            className="mb-2"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleCreateSubtask();
-              } else if (e.key === "Escape") {
-                setIsCreatingSubtask(false);
-                setSubtaskTitle("");
-              }
-            }}
-            autoFocus
-          />
-          <Flex gap="sm">
-            <button
-              type="button"
-              onClick={handleCreateSubtask}
-              className="px-3 py-1 bg-brand-main text-ui-bg rounded hover:bg-brand-secondary text-sm"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsCreatingSubtask(false);
-                setSubtaskTitle("");
+        <Card padding="sm" variant="flat">
+          <Stack gap="sm">
+            <Input
+              type="text"
+              value={subtaskTitle}
+              onChange={(e) => setSubtaskTitle(e.target.value)}
+              placeholder="Sub-task title..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleCreateSubtask();
+                } else if (e.key === "Escape") {
+                  setIsCreatingSubtask(false);
+                  setSubtaskTitle("");
+                }
               }}
-              className="px-3 py-1 bg-ui-bg-tertiary text-ui-text rounded hover:bg-ui-bg-tertiary text-sm"
-            >
-              Cancel
-            </button>
-          </Flex>
-        </div>
+              autoFocus
+            />
+            <Flex gap="sm">
+              <Button size="sm" onClick={handleCreateSubtask}>
+                Add
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setIsCreatingSubtask(false);
+                  setSubtaskTitle("");
+                }}
+              >
+                Cancel
+              </Button>
+            </Flex>
+          </Stack>
+        </Card>
       )}
 
       {/* Sub-task list */}
       {subtasks && subtasks.length > 0 ? (
-        <Flex direction="column" gap="sm">
+        <Stack gap="xs">
           {subtasks.map((subtask) => (
             <Flex
               key={subtask._id}
@@ -146,8 +140,8 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
               />
               <FlexItem flex="1">
                 <Metadata separator="-">
-                  <MetadataItem className="font-mono text-ui-text">{subtask.key}</MetadataItem>
-                  <MetadataItem className="text-ui-text">{subtask.title}</MetadataItem>
+                  <MetadataItem className="font-mono">{subtask.key}</MetadataItem>
+                  <MetadataItem>{subtask.title}</MetadataItem>
                 </Metadata>
                 {subtask.assignee && (
                   <Typography variant="meta">
@@ -157,7 +151,7 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
               </FlexItem>
             </Flex>
           ))}
-        </Flex>
+        </Stack>
       ) : (
         !isCreatingSubtask && (
           <Typography variant="muted" className="italic">
@@ -165,6 +159,6 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
           </Typography>
         )
       )}
-    </div>
+    </Stack>
   );
 }
