@@ -172,6 +172,8 @@ grep -r "from.*ui/PageHeader" src/
 | `IssueCard.tsx` | ~9 | ✅ |
 | `ProjectsList.tsx` | ~2 | ✅ |
 | `Analytics/ChartCard.tsx` | ~1 | ✅ |
+| `DocumentTemplatesManager.tsx` | ~12 | ✅ |
+| `ProjectSettings/WorkflowSettings.tsx` | ~11 | ✅ |
 
 **Priority 3: Settings & Forms**
 
@@ -182,7 +184,7 @@ grep -r "from.*ui/PageHeader" src/
 | `Settings/PreferencesTab.tsx` | ~13 | ⬜ |
 | `Settings/ApiKeysManager.tsx` | ~46 | ⬜ |
 | `Settings/SSOSettings.tsx` | ~7 | ⬜ |
-| `Settings/TwoFactorSettings.tsx` | ~11 | ⬜ |
+| `Settings/TwoFactorSettings.tsx` | ~11 | ✅ |
 
 **Priority 4: Admin Components**
 
@@ -276,8 +278,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-18
-**Files Migrated:** 63 / ~100
-**Violations Remaining:** 553 (down from 1145)
+**Files Migrated:** 67 / ~100
+**Violations Remaining:** 532 (down from 1145)
 
 ---
 
