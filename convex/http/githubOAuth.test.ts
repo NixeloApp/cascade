@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ActionCtx } from "../_generated/server";
 import { handleCallbackHandler, initiateAuthHandler } from "./githubOAuth";
+
+// Stub context - handlers don't use ctx, they only make external API calls
+const stubCtx = {} as ActionCtx;
 
 // Mock dependencies
 vi.mock("../lib/env", () => ({
@@ -51,7 +55,10 @@ describe("GitHub OAuth Security", () => {
 
   describe("initiateAuthHandler", () => {
     it("should generate state and set cookie", async () => {
-      const response = await initiateAuthHandler({}, new Request("http://localhost/github/auth"));
+      const response = await initiateAuthHandler(
+        stubCtx,
+        new Request("http://localhost/github/auth"),
+      );
 
       expect(response.status).toBe(302);
       const location = response.headers.get("Location");
@@ -73,7 +80,7 @@ describe("GitHub OAuth Security", () => {
       );
       request.headers.set("Cookie", "github_oauth_state=mock-uuid-state");
 
-      const response = await handleCallbackHandler({}, request);
+      const response = await handleCallbackHandler(stubCtx, request);
       expect(response.status).toBe(200);
 
       // Cookie should be cleared
@@ -87,7 +94,7 @@ describe("GitHub OAuth Security", () => {
       // Cookie present, param missing
       request.headers.set("Cookie", "github_oauth_state=mock-uuid-state");
 
-      const response = await handleCallbackHandler({}, request);
+      const response = await handleCallbackHandler(stubCtx, request);
       expect(response.status).toBe(400);
     });
 
@@ -97,7 +104,7 @@ describe("GitHub OAuth Security", () => {
       );
       // No cookie
 
-      const response = await handleCallbackHandler({}, request);
+      const response = await handleCallbackHandler(stubCtx, request);
       expect(response.status).toBe(400);
     });
 
@@ -105,7 +112,7 @@ describe("GitHub OAuth Security", () => {
       const request = new Request("http://localhost/github/callback?code=123&state=wrong-state");
       request.headers.set("Cookie", "github_oauth_state=mock-uuid-state");
 
-      const response = await handleCallbackHandler({}, request);
+      const response = await handleCallbackHandler(stubCtx, request);
       expect(response.status).toBe(400);
     });
   });

@@ -279,9 +279,12 @@ describe("User Profiles", () => {
       const profile = await asUser.query(api.userProfiles.getUserProfileWithDefaults, { userId });
 
       expect(profile).not.toBeNull();
-      expect(profile?.effectiveMaxHoursPerWeek).toBe(40); // From employee default
-      expect(profile?.effectiveMaxHoursPerDay).toBe(8);
-      expect(profile?.typeConfig?.type).toBe("employee");
+      if (!profile || !("effectiveMaxHoursPerWeek" in profile)) {
+        throw new Error("Expected profile with computed defaults");
+      }
+      expect(profile.effectiveMaxHoursPerWeek).toBe(40); // From employee default
+      expect(profile.effectiveMaxHoursPerDay).toBe(8);
+      expect(profile.typeConfig?.type).toBe("employee");
     });
 
     it("should use profile overrides when set", async () => {
@@ -302,7 +305,10 @@ describe("User Profiles", () => {
 
       const profile = await asUser.query(api.userProfiles.getUserProfileWithDefaults, { userId });
 
-      expect(profile?.effectiveMaxHoursPerWeek).toBe(35); // Profile override
+      if (!profile || !("effectiveMaxHoursPerWeek" in profile)) {
+        throw new Error("Expected profile with computed defaults");
+      }
+      expect(profile.effectiveMaxHoursPerWeek).toBe(35); // Profile override
     });
   });
 
