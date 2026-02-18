@@ -8,6 +8,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import {
+  type ActionCtx,
   httpAction,
   internalAction,
   internalMutation,
@@ -78,11 +79,12 @@ export const checkPasswordResetRateLimit = internalMutation({
 
 /**
  * Check rate limit for password reset by email (for OTPPasswordReset provider)
+ * Uses distinct bucket from IP-based rate limiting for independent thresholds
  */
 export const checkPasswordResetRateLimitByEmail = internalMutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    await rateLimit(ctx, "passwordReset", { key: args.email });
+    await rateLimit(ctx, "passwordResetByEmail", { key: args.email });
   },
 });
 
@@ -97,12 +99,24 @@ export const checkEmailVerificationRateLimit = internalMutation({
 });
 
 /**
- * Secure password reset request
- *
- * Calls the actual auth endpoint internally but always returns success.
- * This prevents attackers from discovering which emails are registered.
+ * Check rate limit for general authentication attempts by IP
+ * Used by the HTTP wrapper to protect api/auth/signin
  */
-export const securePasswordReset = httpAction(async (ctx, request) => {
+export const checkAuthRateLimitHandler = async (ctx: MutationCtx, args: { ip: string }) => {
+  // Limit auth attempts per IP to prevent credential stuffing/spam
+  await rateLimit(ctx, "authAttempt", { key: args.ip });
+};
+
+export const checkAuthRateLimit = internalMutation({
+  args: { ip: v.string() },
+  handler: checkAuthRateLimitHandler,
+});
+
+/**
+ * Secure password reset request handler
+ * Exported for testing purposes
+ */
+export const securePasswordResetHandler = async (ctx: ActionCtx, request: Request) => {
   try {
     let clientIp = getClientIp(request);
 
@@ -137,9 +151,26 @@ export const securePasswordReset = httpAction(async (ctx, request) => {
     }
 
     const body = await request.json();
-    const { email } = body;
+    const { email: rawEmail } = body;
 
-    if (!email || typeof email !== "string") {
+    if (!rawEmail || typeof rawEmail !== "string") {
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Normalize email to prevent bypass via casing/whitespace
+    const email = rawEmail.trim().toLowerCase();
+
+    // Check rate limit by email to prevent spam/DoS on a single target
+    // If limit exceeded, return success (silent drop) to prevent enumeration or feedback to attacker
+    try {
+      await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimitByEmail, { email });
+    } catch {
+      // Rate limit exceeded for email
+      // We return success to the client so they don't know the email is valid or rate limited,
+      // but we do NOT schedule the reset email.
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -163,4 +194,12 @@ export const securePasswordReset = httpAction(async (ctx, request) => {
       headers: { "Content-Type": "application/json" },
     });
   }
-});
+};
+
+/**
+ * Secure password reset request
+ *
+ * Calls the actual auth endpoint internally but always returns success.
+ * This prevents attackers from discovering which emails are registered.
+ */
+export const securePasswordReset = httpAction(securePasswordResetHandler);

@@ -80,27 +80,24 @@ describe("Unsubscribe", () => {
       expect(result).toBeNull();
     });
 
-    it("should return null for expired token (30+ days old)", async () => {
+    it("should return userId for manually-inserted token", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
 
-      // Create an old token directly in the database
-      const oldToken = "expired-token-12345";
+      // Manually insert a token to verify query retrieval works
+      const manualToken = "manual-token-12345";
       await t.run(async (ctx) => {
-        // Insert with _creationTime is handled by Convex, so we'll test the expiration
-        // by checking the logic flow. In real scenarios, we can't easily mock _creationTime
         await ctx.db.insert("unsubscribeTokens", {
           userId,
-          token: oldToken,
+          token: manualToken,
           usedAt: undefined,
         });
       });
 
-      // Note: Since we can't mock _creationTime in convex-test, this test verifies the query works
-      // The expiration logic is tested implicitly through the unsubscribe mutation tests
-      const result = await t.query(api.unsubscribe.getUserFromToken, { token: oldToken });
+      // Note: Token expiration (30+ days) can't be tested in convex-test since
+      // _creationTime is set automatically. Expiration is tested via E2E.
+      const result = await t.query(api.unsubscribe.getUserFromToken, { token: manualToken });
 
-      // Token is fresh, so it should return the userId
       expect(result).toBe(userId);
     });
   });

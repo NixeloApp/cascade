@@ -115,7 +115,9 @@ describe("User Settings", () => {
       });
 
       const settings1 = await asUser.query(api.userSettings.get, {});
+      expect(settings1?.updatedAt).toBeDefined();
       const updatedAt1 = settings1?.updatedAt;
+      if (!updatedAt1) throw new Error("Expected updatedAt to be defined");
 
       // Small delay to ensure different timestamp
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -125,7 +127,7 @@ describe("User Settings", () => {
       });
 
       const settings2 = await asUser.query(api.userSettings.get, {});
-      expect(settings2?.updatedAt).toBeGreaterThanOrEqual(updatedAt1 ?? 0);
+      expect(settings2?.updatedAt).toBeGreaterThan(updatedAt1);
     });
 
     it("should reject unauthenticated users", async () => {

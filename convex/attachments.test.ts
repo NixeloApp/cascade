@@ -26,23 +26,9 @@ describe("Attachments", () => {
     });
   });
 
-  describe("getAttachment", () => {
-    it("should reject unauthenticated users", async () => {
-      const t = convexTest(schema, modules);
-      const { asUser } = await createTestContext(t);
-
-      // Generate a storage URL to get a valid storage ID
-      const url = await asUser.mutation(api.attachments.generateUploadUrl, {});
-      // Note: In tests, we can't easily create a valid storage ID without uploading
-      // The actual attachment queries require storage operations that are mocked in convex-test
-
-      // Test that unauthenticated access fails with the function
-      // We can't test getAttachment without a valid storage ID, so we test authentication
-      await expect(t.mutation(api.attachments.generateUploadUrl, {})).rejects.toThrow(
-        /authenticated/i,
-      );
-    });
-  });
+  // Note: getAttachment requires a valid storage ID from an actual file upload.
+  // Storage operations can't be mocked in convex-test, so auth tests for
+  // getAttachment are covered in E2E tests.
 
   // Note: attachToIssue and removeAttachment tests require valid storage IDs
   // which are difficult to mock in convex-test. These operations are tested via E2E tests.

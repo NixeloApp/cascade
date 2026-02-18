@@ -59,10 +59,10 @@ export function useBoardDragAndDrop({
   const [isDragging, setIsDragging] = useState(false);
 
   // Store data in a ref to keep callbacks stable even when data changes
-  const dataRef = useRef({ allIssues, issuesByStatus });
+  const dataRef = useRef({ allIssues, issuesByStatus, isTeamMode });
   useEffect(() => {
-    dataRef.current = { allIssues, issuesByStatus };
-  }, [allIssues, issuesByStatus]);
+    dataRef.current = { allIssues, issuesByStatus, isTeamMode };
+  }, [allIssues, issuesByStatus, isTeamMode]);
 
   const rawUpdateStatus = useMutation(api.issues.updateStatus);
 
@@ -96,7 +96,8 @@ export function useBoardDragAndDrop({
         return;
       }
 
-      const { allIssues, issuesByStatus } = dataRef.current;
+      // Access latest data from ref
+      const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
       const issue = allIssues.find((i) => i._id === issueId);
       if (!issue) return;
 
@@ -135,7 +136,7 @@ export function useBoardDragAndDrop({
         showError(error, "Failed to update issue status");
       }
     },
-    [updateIssueStatus, updateStatusByCategory, isTeamMode, pushHistoryAction],
+    [updateIssueStatus, updateStatusByCategory, pushHistoryAction],
   );
 
   /**
@@ -150,7 +151,8 @@ export function useBoardDragAndDrop({
       targetStatus: string,
       edge: "top" | "bottom",
     ) => {
-      const { allIssues, issuesByStatus } = dataRef.current;
+      // Access latest data from ref
+      const { allIssues, issuesByStatus, isTeamMode } = dataRef.current;
       const draggedIssue = allIssues.find((i) => i._id === draggedIssueId);
       const targetIssue = allIssues.find((i) => i._id === targetIssueId);
       if (!draggedIssue || !targetIssue) return;
@@ -192,7 +194,7 @@ export function useBoardDragAndDrop({
         showError(error, "Failed to reorder issue");
       }
     },
-    [updateIssueStatus, updateStatusByCategory, isTeamMode, pushHistoryAction],
+    [updateIssueStatus, updateStatusByCategory, pushHistoryAction],
   );
 
   return {

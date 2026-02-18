@@ -191,7 +191,14 @@ export const createDocumentFromTemplate = authenticatedMutation({
   },
 });
 
-/** Initializes built-in document templates on first deployment, skipping if they already exist. */
+/**
+ * Initializes built-in document templates on first deployment.
+ *
+ * NOTE: Intentionally unauthenticated - this is a deployment-time setup function
+ * called by the E2E test harness and deployment scripts. The operation is idempotent
+ * (no-op if templates already exist) and only inserts public, built-in templates
+ * with no user-specific data.
+ */
 export const initializeBuiltInTemplates = mutation({
   args: {},
   handler: async (ctx) => {
