@@ -14,6 +14,7 @@ import { IssueDetailModal } from "./IssueDetailModal";
 import { Icon } from "./ui/Icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { Skeleton } from "./ui/Skeleton";
+import { Stack } from "./ui/Stack";
 import { ToggleGroup, ToggleGroupItem } from "./ui/ToggleGroup";
 import { Typography } from "./ui/Typography";
 
@@ -137,9 +138,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 {issue.key}
               </button>
             </Flex>
-            <Typography className="text-xs text-ui-text-secondary truncate">
-              {issue.title}
-            </Typography>
+            <Typography variant="caption">{issue.title}</Typography>
           </FlexItem>
 
           {/* Timeline Bar */}
@@ -159,10 +158,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 title={`${issue.title} - Due: ${formatDate(issue.dueDate)}`}
                 aria-label={`View issue ${issue.key}`}
               >
-                <Typography
-                  variant="label"
-                  className="text-xs text-brand-foreground font-medium truncate"
-                >
+                <Typography variant="label" className="text-brand-foreground truncate">
                   {issue.assignee?.name.split(" ")[0]}
                 </Typography>
               </button>
@@ -253,14 +249,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       <Flex direction="column" className="h-full">
         {/* Header */}
         <Flex align="center" justify="between" className="mb-6 shrink-0">
-          <div>
-            <Typography variant="h2" className="text-2xl font-bold">
-              Roadmap
-            </Typography>
-            <Typography variant="muted" className="mt-1">
+          <Stack gap="xs">
+            <Typography variant="h2">Roadmap</Typography>
+            <Typography variant="small" color="secondary">
               Visualize issue timeline and dependencies
             </Typography>
-          </div>
+          </Stack>
 
           <Flex gap="md">
             {/* Epic Filter */}
@@ -324,12 +318,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           {/* Timeline Body (Virtualized) */}
           <FlexItem flex="1">
             {filteredIssues.length === 0 ? (
-              <div className="p-12 text-center text-ui-text-secondary">
-                <Typography>No issues with due dates to display</Typography>
-                <Typography className="text-sm mt-1">
+              <Stack gap="xs" align="center" className="p-12 text-center">
+                <Typography color="secondary">No issues with due dates to display</Typography>
+                <Typography variant="small" color="secondary">
                   Add due dates to issues to see them on the roadmap
                 </Typography>
-              </div>
+              </Stack>
             ) : (
               <List<RowData>
                 listRef={listRef}
