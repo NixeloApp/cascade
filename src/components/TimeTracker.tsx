@@ -3,7 +3,9 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { formatCurrency, formatDate, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -35,7 +37,7 @@ function TimeProgress({
 
   if (estimatedHours > 0) {
     return (
-      <div className="space-y-2">
+      <Stack gap="sm">
         <Flex align="center" justify="between">
           <Typography variant="caption">
             {totalLoggedHours.toFixed(1)}h / {estimatedHours}h estimated
@@ -43,7 +45,8 @@ function TimeProgress({
           {remainingHours !== null && (
             <Typography
               variant="caption"
-              className={isOverEstimate ? "text-status-error font-medium" : undefined}
+              color={isOverEstimate ? "error" : undefined}
+              className={isOverEstimate ? "font-medium" : undefined}
             >
               {isOverEstimate ? "+" : ""}
               {Math.abs(remainingHours).toFixed(1)}h {isOverEstimate ? "over" : "remaining"}
@@ -61,7 +64,7 @@ function TimeProgress({
             }}
           />
         </div>
-      </div>
+      </Stack>
     );
   }
 
@@ -88,24 +91,22 @@ function TimeEntriesList({
   entries: (Doc<"timeEntries"> & { totalCost?: number })[];
 }) {
   return (
-    <div className="p-4 border-t border-ui-border bg-ui-bg-secondary space-y-2">
+    <Stack gap="sm" className="p-4 border-t border-ui-border bg-ui-bg-secondary">
       {entries.map((entry) => {
         const hours = formatHours(entry.duration);
         const entryDate = formatDate(entry.date);
 
         return (
-          <div key={entry._id} className="bg-ui-bg border border-ui-border rounded-lg p-3">
+          <Card key={entry._id} padding="sm">
             <Flex align="start" justify="between">
-              <div>
+              <Stack gap="xs">
                 <Typography variant="large" as="div">
                   {hours}h
                 </Typography>
                 {entry.description && (
-                  <Typography variant="caption" className="mt-1">
-                    {entry.description}
-                  </Typography>
+                  <Typography variant="caption">{entry.description}</Typography>
                 )}
-                <Flex align="center" gap="sm" className="mt-1">
+                <Flex align="center" gap="sm">
                   <time
                     className="text-xs text-ui-text-tertiary"
                     dateTime={new Date(entry.date).toISOString()}
@@ -115,17 +116,17 @@ function TimeEntriesList({
                   {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
                   {entry.billable && <Badge variant="success">Billable</Badge>}
                 </Flex>
-              </div>
+              </Stack>
               {entry.totalCost && (
                 <Typography variant="small" as="div" className="font-medium">
                   {formatCurrency(entry.totalCost)}
                 </Typography>
               )}
             </Flex>
-          </div>
+          </Card>
         );
       })}
-    </div>
+    </Stack>
   );
 }
 
@@ -181,10 +182,10 @@ export function TimeTracker({
   };
 
   return (
-    <div className="border border-ui-border rounded-lg">
+    <Card padding="none" className="border border-ui-border">
       {/* Header */}
-      <div className="p-4 border-b border-ui-border">
-        <Flex align="center" justify="between" className="mb-3">
+      <Stack gap="sm" className="p-4 border-b border-ui-border">
+        <Flex align="center" justify="between">
           <Typography variant="label">Time Tracking</Typography>
           <Flex align="center" gap="sm">
             {/* Timer Button */}
@@ -224,7 +225,7 @@ export function TimeTracker({
 
         {/* Progress Bar */}
         <TimeProgress estimatedHours={estimatedHours} totalLoggedHours={totalLoggedHours} />
-      </div>
+      </Stack>
 
       {/* Time Entries Toggle */}
       {totalLoggedHours > 0 && (
@@ -254,6 +255,6 @@ export function TimeTracker({
         issueId={issueId}
         billingEnabled={billingEnabled}
       />
-    </div>
+    </Card>
   );
 }
