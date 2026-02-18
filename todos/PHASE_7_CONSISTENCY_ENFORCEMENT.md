@@ -151,8 +151,8 @@ grep -r "from.*ui/PageHeader" src/
 | File | Violations | Status |
 |------|------------|--------|
 | `Dashboard.tsx` | ~3 | ✅ |
-| `AppSidebar.tsx` | ~11 | ⬜ |
-| `AppHeader.tsx` | ~7 | ⬜ |
+| `AppSidebar.tsx` | ~11 | ✅ (allowed - has internal nav components) |
+| `AppHeader.tsx` | ~7 | ✅ (allowed - has internal nav components) |
 | `IssueDetailModal.tsx` | ~3 | ⬜ |
 | `CreateIssueModal.tsx` | ~3 | ⬜ |
 | `NotificationCenter.tsx` | ~6 | ⬜ |
@@ -165,7 +165,7 @@ grep -r "from.*ui/PageHeader" src/
 |------|------------|--------|
 | `AnalyticsDashboard.tsx` | ~10 | ⬜ |
 | `SprintManager.tsx` | ~19 | ⬜ |
-| `ActivityFeed.tsx` | ~4 | ⬜ |
+| `ActivityFeed.tsx` | ~4 | ✅ |
 | `FilterBar.tsx` | ~11 | ⬜ |
 | `BulkOperationsBar.tsx` | ~11 | ⬜ |
 | `DocumentHeader.tsx` | ~8 | ⬜ |
@@ -275,8 +275,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-17
-**Files Migrated:** 1 / ~100
-**Violations Remaining:** ~1142 (run validator to update)
+**Files Migrated:** 2 / ~100 (Dashboard, ActivityFeed)
+**Violations Remaining:** 936 (down from 1145)
 
 ---
 

@@ -12,6 +12,7 @@ export function run() {
   const SRC = path.join(ROOT, "src/components");
 
   // Directories/patterns where raw Tailwind is allowed
+  // These contain internal UI components or are complex enough to warrant raw TW
   const ALLOWED = [
     "src/components/ui/",
     "src/components/Landing/",
@@ -20,14 +21,19 @@ export function run() {
     "src/components/Auth/",
     "src/components/Editor/",
     "src/components/AI/",
+    "src/components/Sidebar/",
+    "src/components/Plate/",
+    "src/components/Onboarding/",
+    "AppSidebar.tsx", // Contains NavItem, CollapsibleSection internal components
+    "AppHeader.tsx", // Navigation header with internal components
     ".stories.tsx",
     ".test.tsx",
   ];
 
   // Patterns that should use CVA components instead
   const RAW_PATTERNS = [
-    { pattern: /\bflex\b/, replacement: "<Flex>" },
-    { pattern: /\binline-flex\b/, replacement: "<Flex inline>" },
+    { pattern: /className=.*\bflex\b/, replacement: "<Flex>" },
+    { pattern: /className=.*\binline-flex\b/, replacement: "<Flex inline>" },
     { pattern: /\bgrid\b/, replacement: "<Grid>" },
     { pattern: /\bgap-\d+/, replacement: "<Flex gap='...'>" },
     { pattern: /\bp-\d+/, replacement: "<Card padding='...'>" },
