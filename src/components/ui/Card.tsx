@@ -4,33 +4,49 @@ import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 import { Typography } from "./Typography";
 
-const cardVariants = cva(
-  "bg-ui-bg rounded-lg border border-ui-border shadow-card transition-[border-color,box-shadow] duration-[var(--duration-default)]",
-  {
-    variants: {
-      hoverable: {
-        true: "hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
-        false: "",
-      },
-      variant: {
-        default: "",
-        soft: "bg-ui-bg-soft",
-        flat: "shadow-none",
-      },
+const cardVariants = cva("border transition-default", {
+  variants: {
+    variant: {
+      default: "bg-ui-bg border-ui-border shadow-card",
+      elevated: "bg-ui-bg border-transparent shadow-card-hover",
+      soft: "bg-ui-bg-soft border-transparent",
+      interactive:
+        "bg-ui-bg border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary cursor-pointer",
+      outline: "bg-transparent border-ui-border",
+      ghost: "bg-transparent border-transparent",
+      flat: "bg-ui-bg border-ui-border shadow-none",
     },
-    defaultVariants: {
-      hoverable: false,
-      variant: "default",
+    padding: {
+      none: "",
+      xs: "p-2",
+      sm: "p-3",
+      md: "p-4",
+      lg: "p-6",
+      xl: "p-8",
+    },
+    radius: {
+      none: "rounded-none",
+      sm: "rounded",
+      md: "rounded-lg",
+      lg: "rounded-container",
+      full: "rounded-2xl",
+    },
+    hoverable: {
+      true: "hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
+      false: "",
     },
   },
-);
+  defaultVariants: {
+    variant: "default",
+    padding: "none",
+    radius: "lg",
+    hoverable: false,
+  },
+});
 
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {
-  hoverable?: boolean;
-  variant?: "default" | "soft" | "flat";
-}
+    VariantProps<typeof cardVariants> {}
 
 /**
  * Card container component for grouping related content.
@@ -43,7 +59,19 @@ export interface CardProps
  * <Card hoverable onClick={() => {}}>Clickable</Card>
  */
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, hoverable = false, variant = "default", onClick, children, ...props }, ref) => {
+  (
+    {
+      className,
+      hoverable = false,
+      variant = "default",
+      padding,
+      radius,
+      onClick,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
     const interactiveProps = onClick
       ? {
           role: "button" as const,
@@ -61,7 +89,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={cn(cardVariants({ hoverable, variant }), className)}
+        className={cn(cardVariants({ hoverable, variant, padding, radius }), className)}
         {...interactiveProps}
         {...props}
       >
