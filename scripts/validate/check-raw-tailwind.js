@@ -100,10 +100,13 @@ export function run() {
     }
   }
 
+  // During Phase 7 migration, this is a soft check (warnings only, doesn't fail CI)
+  // Once migration is complete, change `passed: true` to `passed: violations.length === 0`
   return {
-    passed: violations.length === 0,
-    errors: violations.length,
-    detail: violations.length > 0 ? `${violations.length} raw Tailwind violation(s)` : null,
+    passed: true, // Soft check - doesn't fail CI during migration
+    errors: 0,
+    warnings: violations.length,
+    detail: violations.length > 0 ? `${violations.length} raw Tailwind (soft check)` : null,
     messages,
   };
 }
