@@ -342,6 +342,9 @@ importers:
       autoprefixer:
         specifier: ~10.4.24
         version: 10.4.24(postcss@8.5.6)
+      babel-plugin-react-compiler:
+        specifier: ^1.0.0
+        version: 1.0.0
       convex-helpers:
         specifier: ^0.1.111
         version: 0.1.112(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
@@ -4648,6 +4651,9 @@ packages:
     resolution: {integrity: sha512-hYm+XLYRMvupxiQzrvXUj7YyvFFVfv5gI0R71AJzudg1g2AI2vyCPPIFEBjk162/wFzti3inBHo7isWFuEVS/A==}
     peerDependencies:
       '@babel/core': ^7.4.0 || ^8.0.0-0 <8.0.0
+
+  babel-plugin-react-compiler@1.0.0:
+    resolution: {integrity: sha512-Ixm8tFfoKKIPYdCCKYTsqv+Fd4IJ0DQqMyEimo+pxUOMUR9cVPlwTrFt9Avu+3cb6Zp3mAzl+t1MrG2fxxKsxw==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -14224,6 +14230,10 @@ snapshots:
       '@babel/helper-define-polyfill-provider': 0.6.6(@babel/core@7.29.0)
     transitivePeerDependencies:
       - supports-color
+
+  babel-plugin-react-compiler@1.0.0:
+    dependencies:
+      '@babel/types': 7.29.0
 
   bail@2.0.2: {}
 
