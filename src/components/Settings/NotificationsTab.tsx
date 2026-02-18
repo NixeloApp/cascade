@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -31,7 +32,7 @@ function PreferenceRow({
   onChange,
   isLast = false,
 }: {
-  icon: React.ComponentType;
+  icon: LucideIcon;
   label: string;
   description: string;
   checked: boolean;
@@ -67,7 +68,7 @@ function PushPreferenceRow({
   disabled,
   onChange,
 }: {
-  icon: React.ComponentType;
+  icon: LucideIcon;
   label: string;
   checked: boolean;
   disabled: boolean;
