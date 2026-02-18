@@ -8,7 +8,6 @@ import { Stack } from "@/components/ui/Stack";
 import { Monitor, Moon, Sun } from "@/lib/icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Card } from "../ui/Card";
-import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Switch } from "../ui/Switch";
 import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
