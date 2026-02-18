@@ -3,6 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -35,36 +36,36 @@ type ProfileUser = {
 export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
     <Grid cols={2} colsMd={5} gap="lg">
-      <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
+      <Card padding="md" variant="flat" className="text-center">
         <Typography variant="h3" color="brand" className="text-2xl">
           {stats.projects}
         </Typography>
         <Typography variant="caption">Workspaces</Typography>
-      </div>
-      <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
+      </Card>
+      <Card padding="md" variant="flat" className="text-center">
         <Typography variant="h3" color="brand" className="text-2xl">
           {stats.issuesCreated}
         </Typography>
         <Typography variant="caption">Created</Typography>
-      </div>
-      <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
+      </Card>
+      <Card padding="md" variant="flat" className="text-center">
         <Typography variant="h3" color="brand" className="text-2xl">
           {stats.issuesAssigned}
         </Typography>
         <Typography variant="caption">Assigned</Typography>
-      </div>
-      <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
+      </Card>
+      <Card padding="md" variant="flat" className="text-center">
         <Typography variant="h3" color="brand" className="text-2xl">
           {stats.issuesCompleted}
         </Typography>
         <Typography variant="caption">Completed</Typography>
-      </div>
-      <div className="bg-ui-bg-secondary rounded-lg p-4 text-center">
+      </Card>
+      <Card padding="md" variant="flat" className="text-center">
         <Typography variant="h3" color="brand" className="text-2xl">
           {stats.comments}
         </Typography>
         <Typography variant="caption">Comments</Typography>
-      </div>
+      </Card>
     </Grid>
   );
 }
@@ -74,21 +75,19 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
  */
 export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: number } }) {
   return (
-    <div className="border-t border-ui-border pt-6">
-      <Typography variant="h5" className="mb-4">
-        Account Information
-      </Typography>
-      <div className="space-y-3">
+    <Stack gap="md" className="border-t border-ui-border pt-6">
+      <Typography variant="h5">Account Information</Typography>
+      <Stack gap="sm">
         <Flex justify="between">
           <Typography variant="caption">User ID:</Typography>
-          <code className="font-mono text-sm">{user._id}</code>
+          <Typography variant="mono">{user._id}</Typography>
         </Flex>
         <Flex justify="between">
           <Typography variant="caption">Email Verified:</Typography>
           <Typography variant="small">{user.emailVerificationTime ? "Yes" : "No"}</Typography>
         </Flex>
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }
 
@@ -138,7 +137,7 @@ export function ProfileHeader({
       {/* User Info */}
       <FlexItem flex="1">
         {isEditing ? (
-          <div className="space-y-3">
+          <Stack gap="sm">
             <Input
               label="Name"
               value={name}
@@ -152,7 +151,7 @@ export function ProfileHeader({
               placeholder="your.email@example.com"
               type="email"
             />
-            <Flex gap="sm" className="mt-2">
+            <Flex gap="sm">
               <Button onClick={onSave} size="sm">
                 Save
               </Button>
@@ -160,7 +159,7 @@ export function ProfileHeader({
                 Cancel
               </Button>
             </Flex>
-          </div>
+          </Stack>
         ) : (
           <>
             <Typography variant="h3">{user.name || "Anonymous User"}</Typography>
@@ -234,8 +233,8 @@ export function ProfileContent({ userId }: ProfileContentProps) {
   }
 
   return (
-    <Card>
-      <div className="p-6 space-y-6">
+    <Card padding="lg">
+      <Stack gap="lg">
         {/* Profile Header */}
         <ProfileHeader
           user={viewUser}
@@ -257,7 +256,7 @@ export function ProfileContent({ userId }: ProfileContentProps) {
         {viewUser && "_creationTime" in viewUser && (
           <AccountInfo user={viewUser as ProfileUser & { _creationTime: number }} />
         )}
-      </div>
+      </Stack>
     </Card>
   );
 }
