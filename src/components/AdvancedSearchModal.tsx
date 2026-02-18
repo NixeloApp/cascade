@@ -13,6 +13,7 @@ import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { Stack } from "./ui/Stack";
 
 interface AdvancedSearchModalProps {
   open: boolean;
@@ -96,18 +97,16 @@ export function AdvancedSearchModal({
         </Button>
       }
     >
-      <div className="space-y-6">
+      <Stack gap="lg">
         {/* Search Input */}
-        <div>
-          <Input
-            label="Search Issues"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by title, key, or description..."
-            autoFocus
-            helperText="Type at least 2 characters to search"
-          />
-        </div>
+        <Input
+          label="Search Issues"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by title, key, or description..."
+          autoFocus
+          helperText="Type at least 2 characters to search"
+        />
 
         {/* Filters */}
         <Grid cols={1} colsMd={3} gap="lg">
@@ -141,25 +140,25 @@ export function AdvancedSearchModal({
         </Grid>
 
         {/* Results */}
-        <div>
-          <Flex align="center" justify="between" className="mb-3">
-            <Typography variant="h3" className="text-sm font-medium text-ui-text">
+        <Stack gap="sm">
+          <Flex align="center" justify="between">
+            <Typography variant="label">
               Results {searchQuery.length >= 2 && `(${total} total, showing ${results.length})`}
             </Typography>
             {(selectedType.length > 0 ||
               selectedPriority.length > 0 ||
               selectedStatus.length > 0) && (
-              <button
-                type="button"
+              <Button
+                variant="link"
+                size="sm"
                 onClick={() => {
                   setSelectedType([]);
                   setSelectedPriority([]);
                   setSelectedStatus([]);
                 }}
-                className="text-sm text-brand hover:underline"
               >
                 Clear Filters
-              </button>
+              </Button>
             )}
           </Flex>
 
@@ -173,8 +172,8 @@ export function AdvancedSearchModal({
               onLoadMore={handleLoadMore}
             />
           </div>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
     </Dialog>
   );
 }
