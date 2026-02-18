@@ -6,7 +6,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, BookOpen, Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -19,6 +18,7 @@ import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
+import { Stack } from "../ui/Stack";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 
@@ -43,21 +43,21 @@ export function ApiKeysManager() {
   const [selectedKeyId, setSelectedKeyId] = useState<Id<"apiKeys"> | null>(null);
 
   return (
-    <Card>
-      <div className="p-6">
+    <Card padding="lg">
+      <Stack gap="lg">
         {/* Header */}
-        <Flex justify="between" align="center" className="mb-6">
-          <div>
-            <Typography variant="h3" className="text-lg font-semibold text-ui-text">
+        <Flex justify="between" align="center">
+          <Stack gap="xs">
+            <Typography variant="h3">
               <Flex gap="sm" align="center">
                 <Key className="h-5 w-5" />
                 API Keys
               </Flex>
             </Typography>
-            <Typography className="text-sm text-ui-text-secondary mt-1">
+            <Typography variant="small" color="secondary">
               Generate API keys for CLI tools, AI agents, and external integrations
             </Typography>
-          </div>
+          </Stack>
           <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
             <Flex gap="sm" align="center">
               <Plus className="h-4 w-4" />
@@ -68,33 +68,34 @@ export function ApiKeysManager() {
 
         {/* API Keys List */}
         {!apiKeys || apiKeys.length === 0 ? (
-          <div className="text-center py-12 bg-ui-bg-secondary rounded-lg border-2 border-dashed border-ui-border">
-            <Key className="h-12 w-12 text-ui-text-tertiary mx-auto mb-3" />
-            <Typography variant="h4" className="text-sm font-medium text-ui-text mb-1">
-              No API keys yet
-            </Typography>
-            <Typography className="text-sm text-ui-text-secondary mb-4">
-              Generate your first API key to access Nixelo programmatically
-            </Typography>
-            <Flex justify="center">
+          <Card
+            padding="lg"
+            className="text-center bg-ui-bg-secondary border-2 border-dashed border-ui-border"
+          >
+            <Stack gap="sm" align="center">
+              <Key className="h-12 w-12 text-ui-text-tertiary" />
+              <Typography variant="label">No API keys yet</Typography>
+              <Typography variant="small" color="secondary">
+                Generate your first API key to access Nixelo programmatically
+              </Typography>
               <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
                 <Flex gap="sm" align="center">
                   <Plus className="h-4 w-4" />
                   Generate Your First Key
                 </Flex>
               </Button>
-            </Flex>
-          </div>
+            </Stack>
+          </Card>
         ) : (
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             {apiKeys.map((key) => (
               <ApiKeyCard key={key.id} apiKey={key} onViewStats={() => setSelectedKeyId(key.id)} />
             ))}
-          </Flex>
+          </Stack>
         )}
 
         {/* Documentation Link */}
-        <div className="mt-6 p-4 bg-brand-subtle rounded-lg border border-brand-border">
+        <Card padding="md" className="bg-brand-subtle border-brand-border">
           <Flex align="center" gap="sm" className="text-sm text-brand-active">
             <Icon icon={BookOpen} size="sm" />
             <span>
@@ -110,8 +111,8 @@ export function ApiKeysManager() {
               for usage examples and integration guides.
             </span>
           </Flex>
-        </div>
-      </div>
+        </Card>
+      </Stack>
 
       {/* Generate Key Modal */}
       <GenerateKeyModal open={showGenerateModal} onOpenChange={setShowGenerateModal} />
@@ -173,69 +174,67 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
   };
 
   return (
-    <div className="p-4 bg-ui-bg-secondary rounded-lg border border-ui-border">
+    <Card padding="md" className="bg-ui-bg-secondary">
       <Flex justify="between" align="start">
         <FlexItem flex="1">
-          {/* Name & Status */}
-          <Flex gap="sm" align="center" className="mb-2">
-            <Typography variant="h4" className="font-medium text-ui-text">
-              {apiKey.name}
-            </Typography>
-            {apiKey.isActive ? (
-              <Badge variant="success">Active</Badge>
-            ) : (
-              <Badge variant="error">Revoked</Badge>
-            )}
-          </Flex>
+          <Stack gap="sm">
+            {/* Name & Status */}
+            <Flex gap="sm" align="center">
+              <Typography variant="label">{apiKey.name}</Typography>
+              {apiKey.isActive ? (
+                <Badge variant="success">Active</Badge>
+              ) : (
+                <Badge variant="error">Revoked</Badge>
+              )}
+            </Flex>
 
-          {/* Key Prefix */}
-          <Flex gap="sm" align="center" className="mb-3">
-            <code className="text-sm font-mono bg-ui-bg px-2 py-1 rounded border border-ui-border">
-              {apiKey.keyPrefix}...
-            </code>
-            <Tooltip content="Copy key prefix">
-              <Button
-                onClick={copyKeyPrefix}
-                variant="ghost"
-                size="sm"
-                className="p-1 min-w-0"
-                aria-label="Copy key prefix"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </Tooltip>
-          </Flex>
+            {/* Key Prefix */}
+            <Flex gap="sm" align="center">
+              <Typography variant="inlineCode">{apiKey.keyPrefix}...</Typography>
+              <Tooltip content="Copy key prefix">
+                <Button
+                  onClick={copyKeyPrefix}
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 min-w-0"
+                  aria-label="Copy key prefix"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </Tooltip>
+            </Flex>
 
-          {/* Scopes */}
-          <Flex className="flex-wrap gap-1 mb-3">
-            {apiKey.scopes.map((scope: string) => (
-              <Badge key={scope} variant="brand" size="sm">
-                {scope}
-              </Badge>
-            ))}
-          </Flex>
+            {/* Scopes */}
+            <Flex wrap gap="xs">
+              {apiKey.scopes.map((scope: string) => (
+                <Badge key={scope} variant="brand" size="sm">
+                  {scope}
+                </Badge>
+              ))}
+            </Flex>
 
-          {/* Stats */}
-          <Metadata size="xs" gap="md">
-            <MetadataItem>
-              <strong>{apiKey.usageCount}</strong> API calls
-            </MetadataItem>
-            <MetadataItem>
-              <strong>{apiKey.rateLimit}</strong> req/min
-            </MetadataItem>
-            {apiKey.lastUsedAt && (
+            {/* Stats */}
+            <Metadata size="xs" gap="md">
               <MetadataItem>
-                Last used: <MetadataTimestamp date={apiKey.lastUsedAt} format="absolute" />
+                <strong>{apiKey.usageCount}</strong> API calls
               </MetadataItem>
-            )}
-            {apiKey.expiresAt && (
-              <MetadataItem
-                className={apiKey.expiresAt < Date.now() ? "text-status-error" : undefined}
-              >
-                Expires: <MetadataTimestamp date={apiKey.expiresAt} format="absolute" />
+              <MetadataItem>
+                <strong>{apiKey.rateLimit}</strong> req/min
               </MetadataItem>
-            )}
-          </Metadata>
+              {apiKey.lastUsedAt && (
+                <MetadataItem>
+                  Last used: <MetadataTimestamp date={apiKey.lastUsedAt} format="absolute" />
+                </MetadataItem>
+              )}
+              {apiKey.expiresAt && (
+                <MetadataItem
+                  className={apiKey.expiresAt < Date.now() ? "text-status-error" : undefined}
+                >
+                  Expires: <MetadataTimestamp date={apiKey.expiresAt} format="absolute" />
+                </MetadataItem>
+              )}
+            </Metadata>
+          </Stack>
         </FlexItem>
 
         {/* Actions */}
@@ -245,7 +244,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
               onClick={onViewStats}
               variant="ghost"
               size="sm"
-              className="p-2 min-w-0 text-ui-text-tertiary hover:text-brand:text-brand-muted"
+              className="p-2 min-w-0 text-ui-text-tertiary hover:text-brand"
               aria-label="View usage statistics"
             >
               <TrendingUp className="h-4 w-4" />
@@ -269,7 +268,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
               variant="ghost"
               size="sm"
               isLoading={isDeleting}
-              className="p-2 min-w-0 text-ui-text-tertiary hover:text-status-error:text-status-error"
+              className="p-2 min-w-0 text-ui-text-tertiary hover:text-status-error"
               aria-label="Delete key"
             >
               <Trash2 className="h-4 w-4" />
@@ -277,7 +276,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
           </Tooltip>
         </Flex>
       </Flex>
-    </div>
+    </Card>
   );
 }
 
@@ -358,7 +357,7 @@ function GenerateKeyModal({
       title="Generate API Key"
       className="sm:max-w-2xl"
     >
-      <div className="space-y-6">
+      <Stack gap="lg">
         {!generatedKey ? (
           <>
             {/* Key Name */}
@@ -372,11 +371,9 @@ function GenerateKeyModal({
             />
 
             {/* Scopes */}
-            <div>
-              <Label required className="block mb-2">
-                Permissions (Scopes)
-              </Label>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+            <Stack gap="sm">
+              <Label required>Permissions (Scopes)</Label>
+              <Stack gap="sm" className="max-h-64 overflow-y-auto">
                 {availableScopes.map((scope) => (
                   <label
                     key={scope.value}
@@ -389,18 +386,14 @@ function GenerateKeyModal({
                       onChange={() => toggleScope(scope.value)}
                       className="mt-0.5"
                     />
-                    <div className="ml-3">
-                      <Typography className="text-sm font-medium text-ui-text">
-                        {scope.label}
-                      </Typography>
-                      <Typography className="text-xs text-ui-text-tertiary">
-                        {scope.description}
-                      </Typography>
-                    </div>
+                    <Stack gap="none" className="ml-3">
+                      <Typography variant="label">{scope.label}</Typography>
+                      <Typography variant="caption">{scope.description}</Typography>
+                    </Stack>
                   </label>
                 ))}
-              </div>
-            </div>
+              </Stack>
+            </Stack>
 
             {/* Rate Limit */}
             <Input
@@ -426,42 +419,47 @@ function GenerateKeyModal({
         ) : (
           <>
             {/* Success - Show Generated Key */}
-            <div className="text-center">
+            <Stack gap="lg" align="center" className="text-center">
               <Flex
                 justify="center"
                 align="center"
-                className="mx-auto h-12 w-12 rounded-full bg-status-success-bg mb-4"
+                className="h-12 w-12 rounded-full bg-status-success-bg"
               >
                 <Key className="h-6 w-6 text-status-success" />
               </Flex>
-              <Typography variant="h3" className="text-lg font-semibold text-ui-text mb-2">
-                API Key Generated!
-              </Typography>
-              <Typography className="text-sm text-ui-text-secondary mb-6">
-                <Icon icon={AlertTriangle} size="sm" className="inline mr-1" />{" "}
-                <strong>Save this key now!</strong> You won't be able to see it again.
-              </Typography>
+              <Stack gap="sm" align="center">
+                <Typography variant="h3">API Key Generated!</Typography>
+                <Typography variant="small" color="secondary">
+                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" />{" "}
+                  <strong>Save this key now!</strong> You won't be able to see it again.
+                </Typography>
+              </Stack>
 
               {/* Generated Key Display */}
-              <div className="mb-6 p-4 bg-ui-bg-tertiary rounded-lg">
-                <code className="text-sm font-mono text-status-success break-all select-all">
+              <Card padding="md" className="w-full bg-ui-bg-tertiary">
+                <Typography
+                  variant="inlineCode"
+                  className="text-status-success break-all select-all"
+                >
                   {generatedKey}
-                </code>
-              </div>
+                </Typography>
+              </Card>
 
               {/* Copy Instructions */}
-              <div className="text-left mb-6 p-4 bg-status-info-bg rounded-lg">
-                <Typography variant="label" className="text-status-info-text mb-2">
-                  Usage Example:
-                </Typography>
-                <code className="block bg-ui-bg p-2 rounded text-xs font-mono">
-                  curl -H "Authorization: Bearer {generatedKey.substring(0, 20)}..."
-                  https://nixelo.app/api/issues
-                </code>
-              </div>
+              <Card padding="md" className="w-full text-left bg-status-info-bg">
+                <Stack gap="sm">
+                  <Typography variant="label" className="text-status-info-text">
+                    Usage Example:
+                  </Typography>
+                  <Typography variant="inlineCode" className="block bg-ui-bg p-2 rounded text-xs">
+                    curl -H "Authorization: Bearer {generatedKey.substring(0, 20)}..."
+                    https://nixelo.app/api/issues
+                  </Typography>
+                </Stack>
+              </Card>
 
               {/* Actions */}
-              <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
+              <Flex justify="end" gap="sm" className="w-full pt-4 border-t border-ui-border">
                 <Button variant="secondary" onClick={() => onOpenChange(false)}>
                   I've Saved It
                 </Button>
@@ -472,10 +470,10 @@ function GenerateKeyModal({
                   </Flex>
                 </Button>
               </Flex>
-            </div>
+            </Stack>
           </>
         )}
-      </div>
+      </Stack>
     </Dialog>
   );
 }
@@ -507,87 +505,88 @@ function UsageStatsModal({
       }
     >
       {!stats ? (
-        <div className="text-center py-8">
+        <Stack gap="sm" align="center" className="py-8">
           <LoadingSpinner size="lg" />
-          <Typography className="mt-2 text-sm text-ui-text-tertiary">
+          <Typography variant="small" color="tertiary">
             Loading statistics...
           </Typography>
-        </div>
+        </Stack>
       ) : (
-        <div className="space-y-6">
+        <Stack gap="lg">
           {/* Overview Stats */}
           <Grid cols={2} colsSm={4} gap="lg">
-            <div className="p-4 bg-ui-bg-secondary rounded-lg">
-              <Typography className="text-xs text-ui-text-secondary mb-1">Total Calls</Typography>
-              <Typography className="text-2xl font-bold text-ui-text">
-                {stats.totalCalls.toLocaleString()}
-              </Typography>
-            </div>
-            <div className="p-4 bg-ui-bg-secondary rounded-lg">
-              <Typography className="text-xs text-ui-text-secondary mb-1">Last 24 Hours</Typography>
-              <Typography className="text-2xl font-bold text-ui-text">
-                {stats.last24Hours.toLocaleString()}
-              </Typography>
-            </div>
-            <div className="p-4 bg-ui-bg-secondary rounded-lg">
-              <Typography className="text-xs text-ui-text-secondary mb-1">Success Rate</Typography>
-              <Typography className="text-2xl font-bold text-status-success">
-                {stats.last24Hours > 0
-                  ? Math.round((stats.successCount / stats.last24Hours) * 100)
-                  : 100}
-                %
-              </Typography>
-            </div>
-            <div className="p-4 bg-ui-bg-secondary rounded-lg">
-              <Typography className="text-xs text-ui-text-secondary mb-1">Avg Response</Typography>
-              <Typography className="text-2xl font-bold text-ui-text">
-                {stats.avgResponseTime}ms
-              </Typography>
-            </div>
+            <Card padding="md" className="bg-ui-bg-secondary">
+              <Stack gap="xs">
+                <Typography variant="caption">Total Calls</Typography>
+                <Typography variant="h3">{stats.totalCalls.toLocaleString()}</Typography>
+              </Stack>
+            </Card>
+            <Card padding="md" className="bg-ui-bg-secondary">
+              <Stack gap="xs">
+                <Typography variant="caption">Last 24 Hours</Typography>
+                <Typography variant="h3">{stats.last24Hours.toLocaleString()}</Typography>
+              </Stack>
+            </Card>
+            <Card padding="md" className="bg-ui-bg-secondary">
+              <Stack gap="xs">
+                <Typography variant="caption">Success Rate</Typography>
+                <Typography variant="h3" className="text-status-success">
+                  {stats.last24Hours > 0
+                    ? Math.round((stats.successCount / stats.last24Hours) * 100)
+                    : 100}
+                  %
+                </Typography>
+              </Stack>
+            </Card>
+            <Card padding="md" className="bg-ui-bg-secondary">
+              <Stack gap="xs">
+                <Typography variant="caption">Avg Response</Typography>
+                <Typography variant="h3">{stats.avgResponseTime}ms</Typography>
+              </Stack>
+            </Card>
           </Grid>
 
           {/* Recent Requests */}
-          <div>
-            <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-3">
-              Recent Requests
-            </Typography>
+          <Stack gap="sm">
+            <Typography variant="label">Recent Requests</Typography>
             {stats.recentLogs.length === 0 ? (
-              <Typography className="text-sm text-ui-text-tertiary py-4 text-center">
+              <Typography variant="small" color="tertiary" className="py-4 text-center">
                 No recent requests
               </Typography>
             ) : (
-              <Flex direction="column" gap="sm" className="max-h-64 overflow-y-auto">
+              <Stack gap="sm" className="max-h-64 overflow-y-auto">
                 {stats.recentLogs.map((log: UsageLog) => (
-                  <div
+                  <Card
+                    padding="sm"
                     key={`${log.endpoint}-${log.createdAt}`}
-                    className={cn("p-3 bg-ui-bg-secondary rounded-lg text-sm")}
+                    className="bg-ui-bg-secondary"
                   >
-                    <Flex justify="between" align="center" className="mb-1">
-                      <Flex gap="sm" align="center">
-                        <Typography variant="small" className="font-mono font-medium">
-                          {log.method}
-                        </Typography>
-                        <Typography variant="small" color="secondary">
-                          {log.endpoint}
-                        </Typography>
+                    <Stack gap="xs">
+                      <Flex justify="between" align="center">
+                        <Flex gap="sm" align="center">
+                          <Typography variant="mono">{log.method}</Typography>
+                          <Typography variant="small" color="secondary">
+                            {log.endpoint}
+                          </Typography>
+                        </Flex>
+                        <Badge size="sm" variant={log.statusCode < 400 ? "success" : "error"}>
+                          {log.statusCode}
+                        </Badge>
                       </Flex>
-                      <Badge size="sm" variant={log.statusCode < 400 ? "success" : "error"}>
-                        {log.statusCode}
-                      </Badge>
-                    </Flex>
-                    <Metadata size="xs" gap="md">
-                      <MetadataItem>{log.responseTime}ms</MetadataItem>
-                      <MetadataTimestamp date={log.createdAt} format="absolute" />
-                      {log.error && (
-                        <MetadataItem className="text-status-error">{log.error}</MetadataItem>
-                      )}
-                    </Metadata>
-                  </div>
+                      <Metadata size="xs" gap="md">
+                        <MetadataItem>{log.responseTime}ms</MetadataItem>
+                        <MetadataTimestamp date={log.createdAt} format="absolute" />
+                        {log.error && (
+                          <MetadataItem className="text-status-error">{log.error}</MetadataItem>
+                        )}
+                      </Metadata>
+                    </Stack>
+                  </Card>
                 ))}
-              </Flex>
+              </Stack>
             )}
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       )}
     </Dialog>
   );

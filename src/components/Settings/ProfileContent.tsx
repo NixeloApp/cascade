@@ -37,34 +37,44 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
     <Grid cols={2} colsMd={5} gap="lg">
       <Card padding="md" variant="flat" className="text-center">
-        <Typography variant="h3" color="brand" className="text-2xl">
-          {stats.projects}
-        </Typography>
-        <Typography variant="caption">Workspaces</Typography>
+        <Stack gap="xs" align="center">
+          <Typography variant="h2" color="brand">
+            {stats.projects}
+          </Typography>
+          <Typography variant="caption">Workspaces</Typography>
+        </Stack>
       </Card>
       <Card padding="md" variant="flat" className="text-center">
-        <Typography variant="h3" color="brand" className="text-2xl">
-          {stats.issuesCreated}
-        </Typography>
-        <Typography variant="caption">Created</Typography>
+        <Stack gap="xs" align="center">
+          <Typography variant="h2" color="brand">
+            {stats.issuesCreated}
+          </Typography>
+          <Typography variant="caption">Created</Typography>
+        </Stack>
       </Card>
       <Card padding="md" variant="flat" className="text-center">
-        <Typography variant="h3" color="brand" className="text-2xl">
-          {stats.issuesAssigned}
-        </Typography>
-        <Typography variant="caption">Assigned</Typography>
+        <Stack gap="xs" align="center">
+          <Typography variant="h2" color="brand">
+            {stats.issuesAssigned}
+          </Typography>
+          <Typography variant="caption">Assigned</Typography>
+        </Stack>
       </Card>
       <Card padding="md" variant="flat" className="text-center">
-        <Typography variant="h3" color="brand" className="text-2xl">
-          {stats.issuesCompleted}
-        </Typography>
-        <Typography variant="caption">Completed</Typography>
+        <Stack gap="xs" align="center">
+          <Typography variant="h2" color="brand">
+            {stats.issuesCompleted}
+          </Typography>
+          <Typography variant="caption">Completed</Typography>
+        </Stack>
       </Card>
       <Card padding="md" variant="flat" className="text-center">
-        <Typography variant="h3" color="brand" className="text-2xl">
-          {stats.comments}
-        </Typography>
-        <Typography variant="caption">Comments</Typography>
+        <Stack gap="xs" align="center">
+          <Typography variant="h2" color="brand">
+            {stats.comments}
+          </Typography>
+          <Typography variant="caption">Comments</Typography>
+        </Stack>
       </Card>
     </Grid>
   );

@@ -14,8 +14,10 @@ import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form";
+import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 /**
@@ -31,9 +33,7 @@ function UserRow({
       <td className="px-6 py-4 whitespace-nowrap">
         <Flex align="center" gap="md">
           <Avatar src={user.image} name={user.name} email={user.email} size="sm" />
-          <Typography variant="small" className="font-medium text-ui-text">
-            {user.name || "Anonymous"}
-          </Typography>
+          <Typography variant="label">{user.name || "Anonymous"}</Typography>
         </Flex>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -150,12 +150,12 @@ export function UserManagement() {
     <Flex direction="column" gap="xl">
       {/* Header */}
       <Flex justify="between" align="center">
-        <div>
+        <Stack gap="xs">
           <Typography variant="h3">User Management</Typography>
-          <Typography variant="p" color="secondary" className="mt-1">
+          <Typography variant="p" color="secondary">
             Manage user invitations and platform access
           </Typography>
-        </div>
+        </Stack>
         {activeTab === "invites" && (
           <Button onClick={() => setShowInviteForm(true)}>Invite User</Button>
         )}
@@ -200,11 +200,9 @@ export function UserManagement() {
           />
           <CardBody>
             <form onSubmit={handleSendInvite}>
-              <Flex direction="column" gap="lg">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-ui-text mb-2">
-                    Email Address
-                  </label>
+              <Stack gap="lg">
+                <Stack gap="sm">
+                  <Label htmlFor="email">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
@@ -215,20 +213,15 @@ export function UserManagement() {
                     autoFocus
                     data-testid={TEST_IDS.INVITE.EMAIL_INPUT}
                   />
-                </div>
+                </Stack>
 
-                <div>
-                  <label htmlFor="role" className="block text-sm font-medium text-ui-text mb-2">
-                    Role
-                  </label>
+                <Stack gap="sm">
+                  <Label htmlFor="role">Role</Label>
                   <Select
                     value={role}
                     onValueChange={(value) => setRole(value as "user" | "superAdmin")}
                   >
-                    <SelectTrigger
-                      className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-ring"
-                      data-testid={TEST_IDS.INVITE.ROLE_SELECT}
-                    >
+                    <SelectTrigger className="w-full" data-testid={TEST_IDS.INVITE.ROLE_SELECT}>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -236,10 +229,10 @@ export function UserManagement() {
                       <SelectItem value="superAdmin">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Typography variant="muted" className="mt-1">
+                  <Typography variant="caption">
                     Super Admins have full system access and can manage all users
                   </Typography>
-                </div>
+                </Stack>
 
                 <Flex gap="md">
                   <Button
@@ -262,7 +255,7 @@ export function UserManagement() {
                     Cancel
                   </Button>
                 </Flex>
-              </Flex>
+              </Stack>
             </form>
           </CardBody>
         </Card>
@@ -381,7 +374,7 @@ export function UserManagement() {
                                     onClick={() => handleResendInvite(invite._id)}
                                     variant="ghost"
                                     size="sm"
-                                    className="text-brand hover:text-brand-hover:text-brand-muted"
+                                    className="text-brand hover:text-brand-hover"
                                     aria-label="Resend invitation"
                                   >
                                     Resend
@@ -390,7 +383,7 @@ export function UserManagement() {
                                     onClick={() => handleRevokeInvite(invite._id)}
                                     variant="ghost"
                                     size="sm"
-                                    className="text-status-error hover:text-status-error:text-status-error"
+                                    className="text-status-error hover:bg-status-error-bg"
                                     aria-label="Revoke invitation"
                                   >
                                     Revoke
