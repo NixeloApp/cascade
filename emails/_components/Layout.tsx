@@ -21,9 +21,10 @@ import type * as React from "react";
 interface EmailLayoutProps {
   preview: string;
   children: React.ReactNode;
+  unsubscribeUrl?: string;
 }
 
-export function EmailLayout({ preview, children }: EmailLayoutProps) {
+export function EmailLayout({ preview, children, unsubscribeUrl }: EmailLayoutProps) {
   return (
     <Html>
       <Head />
@@ -44,12 +45,16 @@ export function EmailLayout({ preview, children }: EmailLayoutProps) {
           <Section style={footer}>
             <Text style={footerText}>
               You're receiving this because you're part of a Nixelo project.
-              <br />
-              <Link href="{{unsubscribeUrl}}" style={link}>
-                Manage notification preferences
-              </Link>
+              {unsubscribeUrl && (
+                <>
+                  <br />
+                  <Link href={unsubscribeUrl} style={link}>
+                    Manage notification preferences
+                  </Link>
+                </>
+              )}
             </Text>
-            <Text style={footerText}>© 2025 Nixelo. All rights reserved.</Text>
+            <Text style={footerText}>© 2026 Nixelo. All rights reserved.</Text>
           </Section>
         </Container>
       </Body>

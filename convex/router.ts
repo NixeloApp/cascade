@@ -10,6 +10,7 @@ import {
   debugVerifyPasswordEndpoint,
   deleteTestUserEndpoint,
   getLatestOTPEndpoint,
+  googleOAuthLoginEndpoint,
   loginTestUserEndpoint,
   nukeAllE2EWorkspacesEndpoint,
   nukeAllTestUsersEndpoint,
@@ -215,6 +216,13 @@ http.route({
   path: "/e2e/batch-cleanup",
   method: "POST",
   handler: batchCleanupEndpoint,
+});
+
+// Google OAuth login via refresh token (bypasses browser OAuth flow)
+http.route({
+  path: "/e2e/google-oauth-login",
+  method: "POST",
+  handler: googleOAuthLoginEndpoint,
 });
 
 export default http;

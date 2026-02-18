@@ -26,6 +26,7 @@ import { run as runColorAudit } from "./validate/check-colors.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
 import { run as runEmojiCheck } from "./validate/check-emoji.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
+import { run as runRawTailwindCheck } from "./validate/check-raw-tailwind.js";
 import { run as runStandardsCheck } from "./validate/check-standards.js";
 import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
 import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
@@ -39,6 +40,7 @@ const checks = [
   { name: "API calls", fn: runApiCallsCheck },
   { name: "Query issues", fn: runQueryIssuesCheck },
   { name: "Arbitrary Tailwind", fn: runArbitraryTailwindCheck },
+  { name: "Raw Tailwind", fn: runRawTailwindCheck },
   { name: "Type consistency", fn: runTypeConsistencyCheck },
   { name: "Type safety", fn: runTypeSafetyCheck },
   { name: "Emoji usage", fn: runEmojiCheck },

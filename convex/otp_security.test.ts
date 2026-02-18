@@ -1,9 +1,22 @@
 import { getFunctionName } from "convex/server";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OTPPasswordReset } from "./OTPPasswordReset";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
+
+// Mock React Email templates and render function to avoid JSX transformation issues in tests
+vi.mock("@react-email/render", () => ({
+  render: vi.fn().mockResolvedValue("<html>Mocked email HTML</html>"),
+}));
+
+vi.mock("../emails/PasswordResetEmail", () => ({
+  PasswordResetEmail: vi.fn(() => null),
+}));
+
+vi.mock("../emails/VerifyEmail", () => ({
+  VerifyEmail: vi.fn(() => null),
+}));
 
 // Access the sendVerificationRequest function
 const sendVerificationRequest = (OTPPasswordReset as any).options
@@ -12,6 +25,10 @@ const sendVerificationRequest = (OTPPasswordReset as any).options
 
 describe("OTP Security", () => {
   const originalEnv = process.env;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   afterEach(() => {
     process.env = originalEnv;

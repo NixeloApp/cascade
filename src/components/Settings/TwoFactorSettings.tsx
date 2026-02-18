@@ -18,6 +18,129 @@ import { showError, showSuccess } from "@/lib/toast";
 
 type SetupStep = "idle" | "setup" | "verify" | "backup" | "complete";
 
+/** Backup codes display view */
+function BackupCodesView({
+  backupCodes,
+  onCopy,
+  onFinish,
+}: {
+  backupCodes: string[];
+  onCopy: () => void;
+  onFinish: () => void;
+}) {
+  return (
+    <Card className="p-6">
+      <Flex direction="column" gap="lg">
+        <Flex align="center" gap="sm">
+          <Icon icon={Key} size="lg" className="text-status-warning" />
+          <Typography variant="h4">Save Your Backup Codes</Typography>
+        </Flex>
+
+        <Alert variant="warning">
+          <AlertTitle>Important: Save these codes now</AlertTitle>
+          <AlertDescription>
+            These backup codes can be used to access your account if you lose your authenticator.
+            Each code can only be used once. Store them in a secure location.
+          </AlertDescription>
+        </Alert>
+
+        <div className="bg-ui-bg-secondary rounded-lg p-4">
+          <Grid cols={2} gap="sm">
+            {backupCodes.map((code) => (
+              <code
+                key={code}
+                className="font-mono text-sm bg-ui-bg p-2 rounded border border-ui-border text-center"
+              >
+                {code}
+              </code>
+            ))}
+          </Grid>
+        </div>
+
+        <Flex gap="sm">
+          <Button onClick={onCopy} variant="secondary">
+            <Icon icon={Copy} size="sm" />
+            Copy Codes
+          </Button>
+          <Button onClick={onFinish}>I&apos;ve Saved My Codes</Button>
+        </Flex>
+      </Flex>
+    </Card>
+  );
+}
+
+/** QR code setup wizard view */
+function SetupWizardView({
+  otpauthUrl,
+  secret,
+  verificationCode,
+  isLoading,
+  onCodeChange,
+  onVerify,
+  onCancel,
+}: {
+  otpauthUrl: string;
+  secret: string;
+  verificationCode: string;
+  isLoading: boolean;
+  onCodeChange: (code: string) => void;
+  onVerify: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Card className="p-6">
+      <Flex direction="column" gap="lg">
+        <Flex align="center" gap="sm">
+          <Icon icon={ShieldCheck} size="lg" className="text-brand" />
+          <Typography variant="h4">Set Up Two-Factor Authentication</Typography>
+        </Flex>
+
+        <Typography variant="small" color="secondary">
+          Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password,
+          etc.)
+        </Typography>
+
+        <Flex direction="column" align="center" gap="md" className="py-4">
+          {otpauthUrl && (
+            <div className="p-4 bg-white rounded-lg border border-ui-border">
+              <QRCodeSVG value={otpauthUrl} size={200} />
+            </div>
+          )}
+
+          <div className="text-center">
+            <Typography variant="caption">Can&apos;t scan? Enter this code manually:</Typography>
+            <code className="block mt-2 font-mono text-sm bg-ui-bg-secondary p-2 rounded select-all">
+              {secret}
+            </code>
+          </div>
+        </Flex>
+
+        <div className="border-t border-ui-border pt-4">
+          <Typography variant="label" className="mb-2">
+            Enter the 6-digit code from your authenticator app:
+          </Typography>
+          <Flex gap="sm">
+            <Input
+              value={verificationCode}
+              onChange={(e) => onCodeChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="000000"
+              className="font-mono text-center text-lg tracking-widest"
+              maxLength={6}
+            />
+            <Button onClick={onVerify} disabled={isLoading || verificationCode.length !== 6}>
+              {isLoading ? <LoadingSpinner size="sm" /> : "Verify"}
+            </Button>
+          </Flex>
+        </div>
+
+        <Button variant="ghost" onClick={onCancel} className="self-start">
+          Cancel Setup
+        </Button>
+      </Flex>
+    </Card>
+  );
+}
+
 /**
  * Two-Factor Authentication settings component.
  * Allows users to enable/disable 2FA and manage backup codes.
@@ -169,102 +292,22 @@ export function TwoFactorSettings() {
   // Show backup codes after setup or regeneration
   if (step === "backup" && backupCodes.length > 0) {
     return (
-      <Card className="p-6">
-        <Flex direction="column" gap="lg">
-          <Flex align="center" gap="sm">
-            <Icon icon={Key} size="lg" className="text-status-warning" />
-            <Typography variant="h4">Save Your Backup Codes</Typography>
-          </Flex>
-
-          <Alert variant="warning">
-            <AlertTitle>Important: Save these codes now</AlertTitle>
-            <AlertDescription>
-              These backup codes can be used to access your account if you lose your authenticator.
-              Each code can only be used once. Store them in a secure location.
-            </AlertDescription>
-          </Alert>
-
-          <div className="bg-ui-bg-secondary rounded-lg p-4">
-            <Grid cols={2} gap="sm">
-              {backupCodes.map((code) => (
-                <code
-                  key={code}
-                  className="font-mono text-sm bg-ui-bg p-2 rounded border border-ui-border text-center"
-                >
-                  {code}
-                </code>
-              ))}
-            </Grid>
-          </div>
-
-          <Flex gap="sm">
-            <Button onClick={copyBackupCodes} variant="secondary">
-              <Icon icon={Copy} size="sm" />
-              Copy Codes
-            </Button>
-            <Button onClick={handleFinish}>I&apos;ve Saved My Codes</Button>
-          </Flex>
-        </Flex>
-      </Card>
+      <BackupCodesView backupCodes={backupCodes} onCopy={copyBackupCodes} onFinish={handleFinish} />
     );
   }
 
   // Show setup wizard
   if (step === "setup" || step === "verify") {
     return (
-      <Card className="p-6">
-        <Flex direction="column" gap="lg">
-          <Flex align="center" gap="sm">
-            <Icon icon={ShieldCheck} size="lg" className="text-brand" />
-            <Typography variant="h4">Set Up Two-Factor Authentication</Typography>
-          </Flex>
-
-          <Typography variant="small" color="secondary">
-            Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password,
-            etc.)
-          </Typography>
-
-          <Flex direction="column" align="center" gap="md" className="py-4">
-            {otpauthUrl && (
-              <div className="p-4 bg-white rounded-lg border border-ui-border">
-                <QRCodeSVG value={otpauthUrl} size={200} />
-              </div>
-            )}
-
-            <div className="text-center">
-              <Typography variant="caption">Can&apos;t scan? Enter this code manually:</Typography>
-              <code className="block mt-2 font-mono text-sm bg-ui-bg-secondary p-2 rounded select-all">
-                {secret}
-              </code>
-            </div>
-          </Flex>
-
-          <div className="border-t border-ui-border pt-4">
-            <Typography variant="label" className="mb-2">
-              Enter the 6-digit code from your authenticator app:
-            </Typography>
-            <Flex gap="sm">
-              <Input
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="000000"
-                className="font-mono text-center text-lg tracking-widest"
-                maxLength={6}
-              />
-              <Button
-                onClick={handleVerifyCode}
-                disabled={isLoading || verificationCode.length !== 6}
-              >
-                {isLoading ? <LoadingSpinner size="sm" /> : "Verify"}
-              </Button>
-            </Flex>
-          </div>
-
-          <Button variant="ghost" onClick={handleFinish} className="self-start">
-            Cancel Setup
-          </Button>
-        </Flex>
-      </Card>
+      <SetupWizardView
+        otpauthUrl={otpauthUrl}
+        secret={secret}
+        verificationCode={verificationCode}
+        isLoading={isLoading}
+        onCodeChange={setVerificationCode}
+        onVerify={handleVerifyCode}
+        onCancel={handleFinish}
+      />
     );
   }
 

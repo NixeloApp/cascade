@@ -7,6 +7,15 @@ vi.mock("./email", () => ({
   sendEmail: vi.fn(),
 }));
 
+// Mock React Email templates and render function to avoid JSX transformation issues in tests
+vi.mock("@react-email/render", () => ({
+  render: vi.fn().mockResolvedValue("<html>Mocked email HTML</html>"),
+}));
+
+vi.mock("../emails/VerifyEmail", () => ({
+  VerifyEmail: vi.fn(() => null),
+}));
+
 const sendVerificationRequest = (OTPVerification as any).options
   ? (OTPVerification as any).options.sendVerificationRequest
   : (OTPVerification as any).sendVerificationRequest;

@@ -3,8 +3,10 @@ import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useListNavigation } from "../hooks/useListNavigation";
@@ -104,7 +106,7 @@ export function Dashboard() {
       <Grid cols={1} colsLg={3} gap="xl">
         {/* Main Feed/Issues */}
         <Flex className={sidebarVisible ? "lg:col-span-2" : "lg:col-span-3"}>
-          <div className="bg-ui-bg rounded-xl border border-ui-border overflow-hidden">
+          <Card variant="flat" radius="full" className="overflow-hidden">
             <MyIssuesList
               myIssues={myIssues}
               myCreatedIssues={myCreatedIssues}
@@ -115,12 +117,12 @@ export function Dashboard() {
               loadMore={loadMoreMyIssues}
               status={myIssuesStatus}
             />
-          </div>
+          </Card>
         </Flex>
 
         {/* Sidebars */}
         {sidebarVisible && (
-          <div className="space-y-8">
+          <Stack gap="xl">
             {/* My Workspaces */}
             {showWorkspaces && (
               <WorkspacesList projects={myProjects} projectNavigation={projectNavigation} />
@@ -128,7 +130,7 @@ export function Dashboard() {
 
             {/* Recent Activity */}
             {showRecentActivity && <RecentActivity activities={recentActivity} />}
-          </div>
+          </Stack>
         )}
       </Grid>
     </div>

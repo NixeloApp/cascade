@@ -41,6 +41,16 @@ export interface SeedScreenshotResult {
   error?: string;
 }
 
+export interface GoogleOAuthLoginResult {
+  success: boolean;
+  email?: string;
+  userId?: string;
+  token?: string;
+  refreshToken?: string;
+  redirectUrl?: string;
+  error?: string;
+}
+
 /**
  * Service class for E2E test user API operations
  */
@@ -287,6 +297,45 @@ export class TestUserService {
       return await response.json();
     } catch (error) {
       console.warn(`  ⚠️ Failed to seed screenshot data:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Login via Google OAuth using a refresh token (bypasses browser OAuth flow)
+   *
+   * Uses the OAUTH_MONITOR_GOOGLE_REFRESH_TOKEN if no token is provided.
+   * This creates/logs in the Google user and returns auth tokens.
+   *
+   * @param options.refreshToken - Google refresh token (optional, uses env var if not provided)
+   * @param options.skipOnboarding - Skip onboarding for new users
+   * @returns Auth tokens and user info
+   */
+  async googleOAuthLogin(
+    options: { refreshToken?: string; skipOnboarding?: boolean } = {},
+  ): Promise<GoogleOAuthLoginResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.googleOAuthLogin, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({
+          refreshToken: options.refreshToken,
+          skipOnboarding: options.skipOnboarding ?? false,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: result.error || `Request failed with status ${response.status}`,
+        };
+      }
+
+      return result;
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to login via Google OAuth:`, error);
       return { success: false, error: String(error) };
     }
   }

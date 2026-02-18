@@ -10,6 +10,20 @@ vi.mock("./_generated/api", () => ({
   },
 }));
 
+// Mock React Email templates and render function to avoid JSX transformation issues in tests
+vi.mock("@react-email/render", () => ({
+  render: vi.fn().mockResolvedValue("<html>Mocked email HTML</html>"),
+}));
+
+vi.mock("../emails/PasswordResetEmail", () => ({
+  PasswordResetEmail: vi.fn(() => null),
+}));
+
+// Mock sendEmail
+vi.mock("./email", () => ({
+  sendEmail: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 describe("OTP Rate Limiting", () => {
   it("should enforce rate limiting on password reset requests", async () => {
     const mockRunMutation = vi.fn().mockResolvedValue(undefined);

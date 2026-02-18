@@ -20,7 +20,7 @@ describe("Card", () => {
 
       const card = container.firstChild;
       expect(card).toHaveClass("bg-ui-bg");
-      expect(card).toHaveClass("rounded-lg");
+      expect(card).toHaveClass("rounded-container");
       expect(card).toHaveClass("border");
       expect(card).toHaveClass("border-ui-border");
     });
@@ -54,7 +54,7 @@ describe("Card", () => {
       // tailwind-merge removes conflicting bg- classes, keeping custom bg-blue-50
       expect(card).toHaveClass("p-8");
       expect(card).toHaveClass("bg-blue-50");
-      expect(card).toHaveClass("rounded-lg");
+      expect(card).toHaveClass("rounded-container");
       expect(card).toHaveClass("border");
     });
   });

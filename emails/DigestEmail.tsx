@@ -53,7 +53,7 @@ export function DigestEmail({
   };
 
   return (
-    <EmailLayout preview={preview}>
+    <EmailLayout preview={preview} unsubscribeUrl={unsubscribeUrl}>
       <Heading style={h2}>
         {title} for {userName}
       </Heading>
@@ -110,22 +110,6 @@ export function DigestEmail({
           </Section>
         </>
       )}
-
-      {/* Unsubscribe */}
-      <Hr style={divider} />
-      <Section style={unsubscribeSection}>
-        <Text style={unsubscribeText}>
-          This is your {frequency} digest. You can{" "}
-          <Link href={unsubscribeUrl} style={link}>
-            change your notification preferences
-          </Link>{" "}
-          or{" "}
-          <Link href={unsubscribeUrl} style={link}>
-            unsubscribe
-          </Link>{" "}
-          anytime.
-        </Text>
-      </Section>
     </EmailLayout>
   );
 }
@@ -246,18 +230,6 @@ const button = {
   textAlign: "center" as const,
   display: "inline-block",
   padding: "12px 32px",
-};
-
-const unsubscribeSection = {
-  margin: "24px 0 0",
-};
-
-const unsubscribeText = {
-  color: "#6b7280",
-  fontSize: "12px",
-  lineHeight: "16px",
-  textAlign: "center" as const,
-  margin: "0",
 };
 
 export default DigestEmail;
