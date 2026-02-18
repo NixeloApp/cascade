@@ -9,6 +9,7 @@ import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { EmptyState } from "./ui/EmptyState";
+import { Stack } from "./ui/Stack";
 import { WebhookCard } from "./Webhooks/WebhookCard";
 import { WebhookForm } from "./Webhooks/WebhookForm";
 
@@ -74,7 +75,7 @@ export function WebhooksManager({ projectId }: WebhooksManagerProps) {
               description="Add webhooks to integrate with external services"
             />
           ) : (
-            <div className="space-y-3">
+            <Stack gap="sm">
               {webhooks.map((webhook: Webhook) => (
                 <WebhookCard
                   key={webhook._id}
@@ -83,7 +84,7 @@ export function WebhooksManager({ projectId }: WebhooksManagerProps) {
                   onDelete={() => deleteConfirm.confirmDelete(webhook._id)}
                 />
               ))}
-            </div>
+            </Stack>
           )}
         </CardBody>
       </Card>

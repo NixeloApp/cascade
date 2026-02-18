@@ -8,10 +8,12 @@ import { toggleInArray } from "@/lib/array-utils";
 import { FormInput } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Label } from "../ui/Label";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 // =============================================================================
@@ -117,12 +119,13 @@ export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookF
       description="Configure webhook URL and events to trigger notifications"
       className="sm:max-w-lg"
     >
-      <form
-        onSubmit={(e) => {
+      <Stack
+        as="form"
+        gap="md"
+        onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-4"
       >
         <form.Field name="name">
           {(field) => (
@@ -160,26 +163,26 @@ export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookF
           )}
         </form.Field>
 
-        <div>
-          <Label required className="block mb-2">
-            Events to Subscribe
-          </Label>
-          <div className="space-y-2 p-3 bg-ui-bg-secondary rounded-lg">
-            {AVAILABLE_EVENTS.map((event) => (
-              <Checkbox
-                key={event.value}
-                label={event.label}
-                checked={selectedEvents.includes(event.value)}
-                onChange={() => toggleEvent(event.value)}
-              />
-            ))}
-          </div>
+        <Stack gap="sm">
+          <Label required>Events to Subscribe</Label>
+          <Card padding="sm" variant="flat">
+            <Stack gap="sm">
+              {AVAILABLE_EVENTS.map((event) => (
+                <Checkbox
+                  key={event.value}
+                  label={event.label}
+                  checked={selectedEvents.includes(event.value)}
+                  onChange={() => toggleEvent(event.value)}
+                />
+              ))}
+            </Stack>
+          </Card>
           {selectedEvents.length === 0 && (
-            <Typography className="mt-1 text-sm text-status-error">
+            <Typography variant="small" className="text-status-error">
               Select at least one event
             </Typography>
           )}
-        </div>
+        </Stack>
 
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
@@ -198,7 +201,7 @@ export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookF
             </Flex>
           )}
         </form.Subscribe>
-      </form>
+      </Stack>
     </Dialog>
   );
 }

@@ -1,6 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { ProfileContent } from "./Settings/ProfileContent";
 import { Dialog } from "./ui/Dialog";
+import { Stack } from "./ui/Stack";
 
 interface UserProfileProps {
   userId?: Id<"users">;
@@ -16,16 +17,9 @@ export function UserProfile({ userId, open, onOpenChange }: UserProfileProps) {
       title="User Profile"
       className="sm:max-w-4xl p-0 gap-0 overflow-hidden"
     >
-      <div className="max-h-panel overflow-y-auto px-6 pb-6">
-        {/* We pass a prop to ProfileContent to remove its Card wrapper if we want,
-             but ProfileContent currently returns a Card.
-             It might be better to modify ProfileContent to accept a className or "variant"
-             to avoid double borders if it's inside a dialog.
-             For now, let's just render it. The nested card look is acceptable or we can strip it.
-             Actually, let's fix ProfileContent to not force a Card if we don't want it.
-         */}
+      <Stack className="max-h-panel overflow-y-auto px-6 pb-6">
         <ProfileContent userId={userId} />
-      </div>
+      </Stack>
     </Dialog>
   );
 }
