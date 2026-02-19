@@ -278,20 +278,20 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
             {searchResults?.page && searchResults.page.length > 0 && (
               <Card padding="none" className="max-h-48 overflow-y-auto">
                 {searchResults.page.map((issue: Issue) => (
-                  <button
-                    type="button"
+                  <Button
                     key={issue._id}
+                    variant="ghost"
                     onClick={() => {
                       setSelectedIssueKey(issue._id);
                       setSearchQuery("");
                     }}
                     className={cn(
-                      "w-full p-3 text-left hover:bg-ui-bg-tertiary border-b border-ui-border-secondary last:border-0",
+                      "w-full p-3 justify-start text-left rounded-none hover:bg-ui-bg-tertiary border-b border-ui-border-secondary last:border-0",
                       selectedIssueKey === issue._id && "bg-brand-subtle",
                     )}
                   >
                     <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
-                  </button>
+                  </Button>
                 ))}
               </Card>
             )}

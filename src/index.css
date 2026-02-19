@@ -240,6 +240,9 @@
   --text-caption: 10px;
   --text-calendar-weekday: 0.8rem;
 
+  /* Display Text (large error codes, hero numbers) */
+  --text-display: 4.5rem;
+
   /* Chat Bubble */
   --max-width-chat-bubble: 85%;
   --max-width-chat-bubble-md: 80%;

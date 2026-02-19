@@ -197,15 +197,21 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                   <Flex align="center" gap="md">
                     <Icon icon={getFileIcon(attachment.filename)} size="lg" className="shrink-0" />
                     <FlexItem flex="1" className="min-w-0">
-                      <a
-                        href={attachment.url || "#"}
-                        download={attachment.filename}
-                        className="hover:text-brand truncate block transition-colors duration-default"
-                      >
-                        <Typography variant="label" className="truncate">
-                          {attachment.filename}
+                      {attachment.url ? (
+                        <a
+                          href={attachment.url}
+                          download={attachment.filename}
+                          className="hover:text-brand truncate block transition-colors duration-default"
+                        >
+                          <Typography variant="label" className="truncate">
+                            {attachment.filename}
+                          </Typography>
+                        </a>
+                      ) : (
+                        <Typography variant="label" color="tertiary" className="truncate">
+                          {attachment.filename} (unavailable)
                         </Typography>
-                      </a>
+                      )}
                       <Metadata>
                         <MetadataTimestamp date={attachment.uploadedAt} format="absolute" />
                       </Metadata>
@@ -213,22 +219,24 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                   </Flex>
                 </FlexItem>
                 <Flex align="center" gap="xs" className="shrink-0">
-                  <Tooltip content="Download">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className="opacity-0 group-hover:opacity-100"
-                    >
-                      <a
-                        href={attachment.url || "#"}
-                        download={attachment.filename}
-                        aria-label={`Download ${attachment.filename}`}
+                  {attachment.url && (
+                    <Tooltip content="Download">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="opacity-0 group-hover:opacity-100"
                       >
-                        <Icon icon={Download} size="sm" />
-                      </a>
-                    </Button>
-                  </Tooltip>
+                        <a
+                          href={attachment.url}
+                          download={attachment.filename}
+                          aria-label={`Download ${attachment.filename}`}
+                        >
+                          <Icon icon={Download} size="sm" />
+                        </a>
+                      </Button>
+                    </Tooltip>
+                  )}
                   <Tooltip content="Delete">
                     <Button
                       variant="ghost"

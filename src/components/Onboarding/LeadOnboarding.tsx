@@ -10,6 +10,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -262,7 +263,10 @@ export function LeadOnboarding({
             hoverable
             padding="lg"
             onClick={handleCreateSample}
-            className="group border-2 border-brand/30 bg-brand-subtle/30 text-left disabled:opacity-50"
+            className={cn(
+              "group border-2 border-brand/30 bg-brand-subtle/30 text-left",
+              isCreating && "opacity-50 pointer-events-none",
+            )}
             aria-disabled={isCreating}
           >
             <Stack gap="lg">
@@ -294,7 +298,10 @@ export function LeadOnboarding({
             hoverable
             padding="lg"
             onClick={handleFinishWithoutProject}
-            className="group border-2 text-left disabled:opacity-50"
+            className={cn(
+              "group border-2 text-left",
+              isCreating && "opacity-50 pointer-events-none",
+            )}
             aria-disabled={isCreating}
           >
             <Stack gap="lg">
@@ -303,7 +310,7 @@ export function LeadOnboarding({
                 justify="center"
                 className="p-3 rounded-lg bg-ui-bg-tertiary group-hover:bg-ui-bg-hover transition-colors w-fit"
               >
-                <Icon icon={FolderPlus} size="lg" color="secondary" />
+                <Icon icon={FolderPlus} size="lg" className="text-ui-text-secondary" />
               </Flex>
               <Stack gap="xs">
                 <Typography variant="h3">Start from Scratch</Typography>

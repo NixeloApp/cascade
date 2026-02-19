@@ -280,7 +280,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           ) : (
                             <ChevronDown className="w-4 h-4 text-ui-text-secondary" />
                           )}
-                          <strong>{group.name}</strong>
+                          <Typography variant="label">{group.name}</Typography>
                           <Typography variant="caption" color="tertiary">
                             ({group.labels.length})
                           </Typography>

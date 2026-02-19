@@ -1,11 +1,11 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Download, Upload } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { ExportPanel } from "./ImportExport/ExportPanel";
 import { ImportPanel } from "./ImportExport/ImportPanel";
 import { Dialog } from "./ui/Dialog";
@@ -55,36 +55,22 @@ export function ImportExportModal({
         {/* Mode Selection */}
         <Card padding="xs" variant="ghost" className="bg-ui-bg-tertiary">
           <Flex gap="sm">
-            <button
-              type="button"
+            <Button
+              variant={mode === "export" ? "secondary" : "ghost"}
               onClick={() => setMode("export")}
-              className={cn(
-                "flex-1 px-4 py-2 rounded-md font-medium transition-colors",
-                mode === "export"
-                  ? "bg-ui-bg text-brand-indigo-text shadow-sm"
-                  : "text-ui-text-secondary hover:text-ui-text",
-              )}
+              leftIcon={<Icon icon={Download} size="sm" />}
+              className="flex-1"
             >
-              <Flex align="center" justify="center" gap="xs">
-                <Icon icon={Download} size="sm" />
-                Export
-              </Flex>
-            </button>
-            <button
-              type="button"
+              Export
+            </Button>
+            <Button
+              variant={mode === "import" ? "secondary" : "ghost"}
               onClick={() => setMode("import")}
-              className={cn(
-                "flex-1 px-4 py-2 rounded-md font-medium transition-colors",
-                mode === "import"
-                  ? "bg-ui-bg text-brand-indigo-text shadow-sm"
-                  : "text-ui-text-secondary hover:text-ui-text",
-              )}
+              leftIcon={<Icon icon={Upload} size="sm" />}
+              className="flex-1"
             >
-              <Flex align="center" justify="center" gap="xs">
-                <Icon icon={Upload} size="sm" />
-                Import
-              </Flex>
-            </button>
+              Import
+            </Button>
           </Flex>
         </Card>
 

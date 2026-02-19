@@ -52,6 +52,7 @@ export function run() {
     "/DocumentTemplatesManager.tsx", // Template cards with gradients
     "/FilterBar.tsx", // Filter dropdowns
     "/GlobalSearch.tsx", // Search modal
+    "/ImportExportModal.tsx", // flex-1 on Button components
     "/InboxList.tsx", // TabsContent styling
     "/IssueCard.tsx", // Responsive card layout
     "/IssueDependencies.tsx", // min-w-0 truncation pattern
