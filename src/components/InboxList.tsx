@@ -326,7 +326,7 @@ function InboxIssueList({
   onToggleSelect: (id: Id<"inboxIssues">) => void;
 }) {
   return (
-    <Flex direction="column" gap="sm">
+    <Stack gap="sm">
       {items.map((item) => (
         <InboxIssueRow
           key={item._id}
@@ -336,7 +336,7 @@ function InboxIssueList({
           onToggleSelect={onToggleSelect}
         />
       ))}
-    </Flex>
+    </Stack>
   );
 }
 
@@ -463,19 +463,19 @@ function InboxIssueRow({
               </Typography>
 
               {item.status === "snoozed" && item.snoozedUntil && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" size="sm">
                   Until {new Date(item.snoozedUntil).toLocaleDateString()}
                 </Badge>
               )}
 
               {item.status === "duplicate" && item.duplicateOfIssue && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" size="sm">
                   Duplicate of {item.duplicateOfIssue.key}
                 </Badge>
               )}
 
               {item.status === "declined" && item.declineReason && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" size="sm">
                   {item.declineReason}
                 </Badge>
               )}

@@ -233,7 +233,7 @@ export function DocumentTemplatesManager({
                       className="p-4 bg-linear-to-br from-brand-subtle to-brand-subtle rounded-lg hover:shadow-card-hover transition-all text-left border-2 border-transparent hover:border-brand-muted"
                     >
                       <Flex align="start" gap="md">
-                        <Typography variant="label" className="text-3xl">
+                        <Typography variant="h2" as="span">
                           {template.icon}
                         </Typography>
                         <FlexItem flex="1">
@@ -277,7 +277,7 @@ export function DocumentTemplatesManager({
                           onClick={() => onSelectTemplate?.(template._id)}
                           className="flex items-start gap-3 flex-1 text-left"
                         >
-                          <Typography variant="label" className="text-2xl">
+                          <Typography variant="h3" as="span">
                             {template.icon}
                           </Typography>
                           <FlexItem flex="1">
