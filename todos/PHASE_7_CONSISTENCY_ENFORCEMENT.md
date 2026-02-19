@@ -278,8 +278,17 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-19
-**Files Migrated:** 220+ / ~100
-**Violations Remaining:** 175 (down from 1145)
+**Files Migrated:** 220+
+**Violations Remaining:** 170 (down from 1145)
+
+**Note:** Most remaining violations (170) are edge cases that don't warrant migration:
+- Table elements (td/th) with cell padding
+- Form inputs with styling (text-sm, font-mono)
+- Semantic HTML elements (time, kbd, pre)
+- Responsive patterns on Flex (sm:flex-row)
+- Dialog/Popover overrides (p-0, max-w-*)
+- Button/Badge positioning (absolute, translate-*)
+- Interactive element styling (hover states on buttons)
 
 ---
 

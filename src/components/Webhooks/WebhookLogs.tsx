@@ -182,9 +182,9 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                     <Stack gap="xs">
                       <Typography variant="label">Request Payload:</Typography>
                       <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto">
-                        <pre className="text-xs">
+                        <Typography as="pre" variant="mono">
                           {JSON.stringify(JSON.parse(execution.requestPayload), null, 2)}
-                        </pre>
+                        </Typography>
                       </Card>
                     </Stack>
 
@@ -193,7 +193,9 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                       <Stack gap="xs">
                         <Typography variant="label">Response Body:</Typography>
                         <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto max-h-48">
-                          <pre className="text-xs">{execution.responseBody}</pre>
+                          <Typography as="pre" variant="mono">
+                            {execution.responseBody}
+                          </Typography>
                         </Card>
                       </Stack>
                     )}
