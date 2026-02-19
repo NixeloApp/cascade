@@ -347,7 +347,9 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                                 >
                                   {label.name}
                                 </Badge>
-                                <code className="text-xs text-ui-text-tertiary">{label.color}</code>
+                                <Typography variant="inlineCode" color="tertiary">
+                                  {label.color}
+                                </Typography>
                               </Flex>
 
                               <Flex gap="sm">

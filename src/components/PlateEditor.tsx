@@ -130,9 +130,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
     return (
       <Flex align="center" justify="center" className="h-full">
         <Stack gap="md" align="center" className="text-center">
-          <Typography variant="h2" className="text-xl font-semibold">
-            Document Not Found
-          </Typography>
+          <Typography variant="h3">Document Not Found</Typography>
           <Typography color="secondary">
             This document doesn't exist or you don't have access to it.
           </Typography>
@@ -186,9 +184,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
                 className="border-status-error/20 bg-status-error-bg text-status-error text-center"
               >
                 <Stack gap="sm">
-                  <Typography variant="p" className="font-medium tracking-tight">
-                    Editor failed to load
-                  </Typography>
+                  <Typography variant="label">Editor failed to load</Typography>
                   <Typography variant="muted" className="opacity-80">
                     There was an issue initializing the rich text editor.
                   </Typography>

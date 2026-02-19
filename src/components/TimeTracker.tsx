@@ -191,48 +191,57 @@ export function TimeTracker({
   return (
     <Card padding="none" className="border border-ui-border">
       {/* Header */}
-      <Stack gap="sm" className="p-4 border-b border-ui-border">
-        <Flex align="center" justify="between">
-          <Typography variant="label">Time Tracking</Typography>
-          <Flex align="center" gap="sm">
-            {/* Timer Button */}
-            {isTimerRunningForThisIssue ? (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleStopTimer}
-                leftIcon={<Square className="w-4 h-4" fill="currentColor" />}
-              >
-                Stop Timer
-              </Button>
-            ) : (
-              <Button
-                variant="success"
-                size="sm"
-                onClick={handleStartTimer}
-                disabled={!!runningTimer}
-                title={runningTimer ? "Stop the current timer first" : "Start timer for this issue"}
-                leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
-              >
-                Start Timer
-              </Button>
-            )}
+      <Card
+        padding="md"
+        radius="none"
+        variant="ghost"
+        className="border-b border-ui-border border-x-0 border-t-0"
+      >
+        <Stack gap="sm">
+          <Flex align="center" justify="between">
+            <Typography variant="label">Time Tracking</Typography>
+            <Flex align="center" gap="sm">
+              {/* Timer Button */}
+              {isTimerRunningForThisIssue ? (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleStopTimer}
+                  leftIcon={<Square className="w-4 h-4" fill="currentColor" />}
+                >
+                  Stop Timer
+                </Button>
+              ) : (
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={handleStartTimer}
+                  disabled={!!runningTimer}
+                  title={
+                    runningTimer ? "Stop the current timer first" : "Start timer for this issue"
+                  }
+                  leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
+                >
+                  Start Timer
+                </Button>
+              )}
 
-            {/* Log Time Button */}
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowLogModal(true)}
-              leftIcon={<Plus className="w-4 h-4" />}
-            >
-              Log Time
-            </Button>
+              {/* Log Time Button */}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowLogModal(true)}
+                leftIcon={<Plus className="w-4 h-4" />}
+              >
+                Log Time
+              </Button>
+            </Flex>
           </Flex>
-        </Flex>
 
-        {/* Progress Bar */}
-        <TimeProgress estimatedHours={estimatedHours} totalLoggedHours={totalLoggedHours} />
-      </Stack>
+          {/* Progress Bar */}
+          <TimeProgress estimatedHours={estimatedHours} totalLoggedHours={totalLoggedHours} />
+        </Stack>
+      </Card>
 
       {/* Time Entries Toggle */}
       {totalLoggedHours > 0 && (
