@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -29,9 +30,11 @@ export function PageContent({
 }: PageContentProps): ReactNode {
   if (isLoading) {
     return (
-      <Flex align="center" justify="center" className="py-20">
-        <LoadingSpinner size="lg" />
-      </Flex>
+      <Card padding="xl" variant="ghost">
+        <Flex align="center" justify="center">
+          <LoadingSpinner size="lg" />
+        </Flex>
+      </Card>
     );
   }
 

@@ -163,14 +163,14 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
                 {/* Error message */}
                 {execution.error && (
-                  <div className="bg-status-error-bg border border-status-error/30 rounded p-3 mt-3">
+                  <Card padding="sm" className="bg-status-error-bg border-status-error/30 mt-3">
                     <Typography variant="caption" className="text-status-error-text mb-1">
                       Error:
                     </Typography>
                     <Typography variant="mono" className="text-status-error-text/90">
                       {String(execution.error)}
                     </Typography>
-                  </div>
+                  </Card>
                 )}
 
                 {/* Expandable Details */}
@@ -179,18 +179,20 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                     {/* Request Payload */}
                     <Stack gap="xs">
                       <Typography variant="label">Request Payload:</Typography>
-                      <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto">
-                        {JSON.stringify(JSON.parse(execution.requestPayload), null, 2)}
-                      </pre>
+                      <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto">
+                        <pre className="text-xs">
+                          {JSON.stringify(JSON.parse(execution.requestPayload), null, 2)}
+                        </pre>
+                      </Card>
                     </Stack>
 
                     {/* Response Body */}
                     {execution.responseBody && (
                       <Stack gap="xs">
                         <Typography variant="label">Response Body:</Typography>
-                        <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto max-h-48">
-                          {execution.responseBody}
-                        </pre>
+                        <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto max-h-48">
+                          <pre className="text-xs">{execution.responseBody}</pre>
+                        </Card>
                       </Stack>
                     )}
                   </Stack>
