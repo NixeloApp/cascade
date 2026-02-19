@@ -16,8 +16,10 @@ import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { getEditorPlugins, getInitialValue } from "@/lib/plate/editor";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -99,23 +101,25 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   if (document === undefined || userId === undefined) {
     return (
       <Flex direction="column" className="h-full bg-ui-bg">
-        <div className="border-b border-ui-border bg-ui-bg p-4 sm:p-6">
-          <Flex align="center" justify="between" className="mb-4">
-            <Skeleton className="h-8 w-1/2" />
-            <Flex align="center" className="space-x-4">
-              <Skeleton className="h-8 w-24" />
-              <Skeleton className="h-8 w-20" />
+        <Card padding="lg" radius="none" className="border-x-0 border-t-0">
+          <Stack gap="md">
+            <Flex align="center" justify="between">
+              <Skeleton className="h-8 w-1/2" />
+              <Flex align="center" gap="md">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-20" />
+              </Flex>
             </Flex>
-          </Flex>
-          <Flex align="center" className="space-x-4">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-40" />
-          </Flex>
-        </div>
+            <Flex align="center" gap="md">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-40" />
+            </Flex>
+          </Stack>
+        </Card>
         <FlexItem flex="1" className="overflow-auto bg-ui-bg">
-          <div className="max-w-3xl mx-auto px-4 py-8 sm:px-8 sm:py-12">
+          <Card padding="lg" variant="ghost" className="max-w-3xl mx-auto">
             <SkeletonText lines={8} />
-          </div>
+          </Card>
         </FlexItem>
       </Flex>
     );
@@ -125,17 +129,17 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   if (document === null) {
     return (
       <Flex align="center" justify="center" className="h-full">
-        <div className="text-center">
-          <Typography variant="h2" className="text-xl font-semibold mb-2">
+        <Stack gap="md" align="center" className="text-center">
+          <Typography variant="h2" className="text-xl font-semibold">
             Document Not Found
           </Typography>
-          <Typography className="text-ui-text-secondary mb-4">
+          <Typography color="secondary">
             This document doesn't exist or you don't have access to it.
           </Typography>
           <Button variant="outline" onClick={() => window.history.back()}>
             Go back
           </Button>
-        </div>
+        </Stack>
       </Flex>
     );
   }
@@ -174,17 +178,22 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
 
       {/* Editor - Clean Mintlify-inspired layout */}
       <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
-        <div className="max-w-3xl mx-auto px-4 py-8 sm:px-8 sm:py-12">
+        <Card padding="lg" variant="ghost" className="max-w-3xl mx-auto">
           <ErrorBoundary
             fallback={
-              <div className="p-6 border border-status-error/20 bg-status-error-bg rounded-container text-status-error text-center">
-                <Typography variant="p" className="font-medium tracking-tight">
-                  Editor failed to load
-                </Typography>
-                <Typography variant="muted" className="mt-2 opacity-80">
-                  There was an issue initializing the rich text editor.
-                </Typography>
-              </div>
+              <Card
+                padding="lg"
+                className="border-status-error/20 bg-status-error-bg text-status-error text-center"
+              >
+                <Stack gap="sm">
+                  <Typography variant="p" className="font-medium tracking-tight">
+                    Editor failed to load
+                  </Typography>
+                  <Typography variant="muted" className="opacity-80">
+                    There was an issue initializing the rich text editor.
+                  </Typography>
+                </Stack>
+              </Card>
             }
           >
             <Plate editor={editor} onChange={handleChange}>
@@ -197,7 +206,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
               />
             </Plate>
           </ErrorBoundary>
-        </div>
+        </Card>
       </FlexItem>
 
       {/* Version History Modal */}
