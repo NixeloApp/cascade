@@ -77,16 +77,14 @@ export function SearchResultsList({
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="md" className="shrink-0" />
               <FlexItem flex="1" className="min-w-0">
                 <Flex gap="sm" align="center" className="mb-1">
-                  <Typography variant="muted" className="text-sm font-mono">
+                  <Typography variant="inlineCode" color="secondary">
                     {issue.key}
                   </Typography>
                   <Badge size="sm" className={cn(getPriorityColor(issue.priority, "bg"))}>
                     {issue.priority}
                   </Badge>
                 </Flex>
-                <Typography variant="h4" className="text-sm font-medium text-ui-text">
-                  {issue.title}
-                </Typography>
+                <Typography variant="label">{issue.title}</Typography>
               </FlexItem>
             </Flex>
           </button>
