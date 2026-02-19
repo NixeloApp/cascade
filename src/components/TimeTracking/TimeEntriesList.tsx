@@ -99,9 +99,11 @@ export function TimeEntriesList({
 
   if (!entries) {
     return (
-      <Flex justify="center" align="center" className="p-8">
-        <LoadingSpinner size="lg" />
-      </Flex>
+      <Card padding="xl" variant="ghost">
+        <Flex justify="center" align="center">
+          <LoadingSpinner size="lg" />
+        </Flex>
+      </Card>
     );
   }
 
