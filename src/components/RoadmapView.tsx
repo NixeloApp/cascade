@@ -12,6 +12,7 @@ import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { Card } from "./ui/Card";
+import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { Skeleton } from "./ui/Skeleton";
@@ -196,37 +197,45 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 <FlexItem shrink={false} className="w-64">
                   <Skeleton className="h-5 w-24" />
                 </FlexItem>
-                <FlexItem flex="1" className="grid grid-cols-6 gap-2">
+                <Grid cols={6} gap="sm" className="flex-1">
                   {[1, 2, 3, 4, 5, 6].map((id) => (
                     <Skeleton key={id} className="h-5 w-full" />
                   ))}
-                </FlexItem>
+                </Grid>
               </Flex>
             </Card>
 
             {/* Skeleton Rows */}
             <Stack className="flex-1 overflow-auto">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <Flex align="center" className="border-b border-ui-border" key={i}>
-                  <FlexItem shrink={false} className="w-64 pr-4">
-                    <Flex align="center" gap="sm">
-                      <Skeleton className="h-4 w-4 rounded-full" />
-                      <Skeleton className="h-4 w-16" />
-                    </Flex>
-                    <Skeleton className="h-3 w-32" />
-                  </FlexItem>
-                  <FlexItem flex="1" className="relative h-8">
-                    <div
-                      className="absolute h-6"
-                      style={{
-                        left: `${(i * 13) % 70}%`, // Deterministic position
-                        width: `${10 + ((i * 3) % 10)}%`,
-                      }}
-                    >
-                      <Skeleton className="h-full w-full rounded-full opacity-50" />
-                    </div>
-                  </FlexItem>
-                </Flex>
+                <Card
+                  key={i}
+                  padding="none"
+                  radius="none"
+                  variant="ghost"
+                  className="border-b border-ui-border"
+                >
+                  <Flex align="center">
+                    <FlexItem shrink={false} className="w-64 pr-4">
+                      <Flex align="center" gap="sm">
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                        <Skeleton className="h-4 w-16" />
+                      </Flex>
+                      <Skeleton className="h-3 w-32" />
+                    </FlexItem>
+                    <FlexItem flex="1" className="relative h-8">
+                      <div
+                        className="absolute h-6"
+                        style={{
+                          left: `${(i * 13) % 70}%`, // Deterministic position
+                          width: `${10 + ((i * 3) % 10)}%`,
+                        }}
+                      >
+                        <Skeleton className="h-full w-full rounded-full opacity-50" />
+                      </div>
+                    </FlexItem>
+                  </Flex>
+                </Card>
               ))}
             </Stack>
           </Card>

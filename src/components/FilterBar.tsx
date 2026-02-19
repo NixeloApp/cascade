@@ -9,6 +9,7 @@ import { ChevronDown, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import {
   DropdownMenu,
@@ -96,11 +97,11 @@ function FilterDropdown<T>({
           </DropdownMenuCheckboxItem>
         ))}
         {(!items || items.length === 0) && (
-          <div className="px-2 py-1.5">
+          <Card padding="xs" radius="none" variant="ghost">
             <Typography variant="small" color="secondary">
               {emptyMessage}
             </Typography>
-          </div>
+          </Card>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

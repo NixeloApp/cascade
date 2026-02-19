@@ -3,6 +3,7 @@ import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
@@ -34,7 +35,7 @@ export function SearchResultsList({
 }: SearchResultsListProps) {
   if (searchQuery.length < 2) {
     return (
-      <div className="p-8 text-center text-ui-text-tertiary">
+      <Card padding="xl" variant="ghost" className="text-center text-ui-text-tertiary">
         <svg
           aria-hidden="true"
           className="w-16 h-16 mx-auto mb-4 text-ui-text-tertiary"
@@ -50,15 +51,15 @@ export function SearchResultsList({
           />
         </svg>
         <Typography variant="muted">Start typing to search issues</Typography>
-      </div>
+      </Card>
     );
   }
 
   if (results.length === 0) {
     return (
-      <div className="p-8 text-center text-ui-text-tertiary">
+      <Card padding="xl" variant="ghost" className="text-center text-ui-text-tertiary">
         <Typography variant="muted">No issues found matching your criteria</Typography>
-      </div>
+      </Card>
     );
   }
 
@@ -93,7 +94,12 @@ export function SearchResultsList({
       </div>
 
       {hasMore && (
-        <div className="p-4 border-t border-ui-border bg-ui-bg-secondary">
+        <Card
+          padding="md"
+          radius="none"
+          variant="ghost"
+          className="border-t border-ui-border bg-ui-bg-secondary"
+        >
           <button
             type="button"
             onClick={onLoadMore}
@@ -101,7 +107,7 @@ export function SearchResultsList({
           >
             Load More ({total - results.length} remaining)
           </button>
-        </div>
+        </Card>
       )}
     </>
   );
