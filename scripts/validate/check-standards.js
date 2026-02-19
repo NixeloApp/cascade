@@ -14,14 +14,12 @@ export function run() {
     "src/lib",
     "src/components/ui",
     "src/components/landing",
-    "src/components/Landing", // Landing page with external links
     "src/components/Calendar/shadcn-calendar",
     "src/components/Kanban", // Contains complex drag-and-drop logic that uses raw divs
-    "src/components/Auth", // Auth pages with styled links
   ];
 
-  // Files where raw <a> tags are allowed (external links, downloads, etc.)
-  const ALLOW_RAW_LINKS_FILES = [
+  // Files/directories where raw <a> tags are allowed (external links, downloads, etc.)
+  const ALLOW_RAW_LINKS_PATTERNS = [
     ".test.tsx", // Test files mock elements
     ".test.ts",
     "/AttachmentList.tsx", // Download links
@@ -31,6 +29,8 @@ export function run() {
     "/CustomFieldValues.tsx", // URL field type
     "/EventDetailsModal.tsx", // External event links (Google Meet, etc.)
     "/onboarding.tsx", // External link to docs
+    "src/components/Landing/", // Landing page navigation (public-facing)
+    "src/components/Auth/", // Auth page legal links
   ];
 
   // Files where <strong> for inline emphasis is allowed (inside Typography)
@@ -156,7 +156,9 @@ export function run() {
         // Allow in test files, download links, and files with external links
         if (tagName === "a") {
           const rel = relPath(filePath);
-          const isAllowed = ALLOW_RAW_LINKS_FILES.some((pattern) => rel.endsWith(pattern));
+          const isAllowed = ALLOW_RAW_LINKS_PATTERNS.some(
+            (pattern) => rel.endsWith(pattern) || rel.includes(pattern),
+          );
           if (!isAllowed) {
             reportError(
               filePath,
