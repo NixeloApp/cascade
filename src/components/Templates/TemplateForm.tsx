@@ -12,6 +12,7 @@ import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Stack } from "../ui/Stack";
 
 // =============================================================================
 // Schema
@@ -137,12 +138,13 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
       title={template ? "Edit Template" : "Create Template"}
       className="sm:max-w-2xl"
     >
-      <form
-        onSubmit={(e) => {
+      <Stack
+        as="form"
+        gap="md"
+        onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-4"
       >
         <Grid cols={1} colsSm={2} gap="lg">
           <form.Field name="name">
@@ -288,7 +290,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
             </Flex>
           )}
         </form.Subscribe>
-      </form>
+      </Stack>
     </Dialog>
   );
 }

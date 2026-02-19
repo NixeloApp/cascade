@@ -278,13 +278,15 @@ export function MeetingRecordingSection({
           AI Meeting Notes
         </CollapsibleHeader>
 
-        <CollapsibleContent className="space-y-4">
-          <RecordingStatusContent
-            recording={recording}
-            isScheduling={isScheduling}
-            onSchedule={handleScheduleRecording}
-            onCancel={handleCancelRecording}
-          />
+        <CollapsibleContent>
+          <Stack gap="md">
+            <RecordingStatusContent
+              recording={recording}
+              isScheduling={isScheduling}
+              onSchedule={handleScheduleRecording}
+              onCancel={handleCancelRecording}
+            />
+          </Stack>
         </CollapsibleContent>
       </Collapsible>
 
@@ -349,23 +351,22 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
                 item: { description: string; assignee?: string; dueDate?: string },
                 index: number,
               ) => (
-                <li
-                  key={`action-${index}-${item.description.slice(0, 20)}`}
-                  className="bg-status-warning-bg rounded p-2"
-                >
-                  <Flex justify="between" align="start">
-                    <Typography variant="small">{item.description}</Typography>
-                    {item.assignee && (
-                      <Badge size="sm" className="ml-2 shrink-0">
-                        {item.assignee}
-                      </Badge>
+                <li key={`action-${index}-${item.description.slice(0, 20)}`}>
+                  <Card padding="sm" className="bg-status-warning-bg">
+                    <Flex justify="between" align="start">
+                      <Typography variant="small">{item.description}</Typography>
+                      {item.assignee && (
+                        <Badge size="sm" className="ml-2 shrink-0">
+                          {item.assignee}
+                        </Badge>
+                      )}
+                    </Flex>
+                    {item.dueDate && (
+                      <Typography variant="meta" className="mt-1 block">
+                        Due: {item.dueDate}
+                      </Typography>
                     )}
-                  </Flex>
-                  {item.dueDate && (
-                    <Typography variant="meta" className="mt-1 block">
-                      Due: {item.dueDate}
-                    </Typography>
-                  )}
+                  </Card>
                 </li>
               ),
             )}
