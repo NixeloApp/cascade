@@ -5,6 +5,7 @@ import { IssueDependencies } from "@/components/IssueDependencies";
 import { IssueMetadataSection } from "@/components/IssueDetail/IssueMetadataSection";
 import { IssueWatchers } from "@/components/IssueWatchers";
 import { TimeTracker } from "@/components/TimeTracker";
+import { Card } from "@/components/ui/Card";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import type { LabelInfo } from "../../../convex/lib/issueHelpers";
@@ -26,7 +27,7 @@ function SidebarSection({ title, children }: { title: string; children: ReactNod
   return (
     <section className="pb-6 border-b border-ui-border/30 last:border-b-0 last:pb-0">
       <Stack gap="md">
-        <Typography variant="label" color="tertiary" className="text-xs uppercase tracking-widest">
+        <Typography variant="caption" color="tertiary" className="uppercase tracking-widest">
           {title}
         </Typography>
         {children}
@@ -48,37 +49,44 @@ export function IssueDetailSidebar({
   billingEnabled,
 }: IssueDetailSidebarProps): ReactNode {
   return (
-    <Stack gap="xl" className="w-full md:w-80 lg:w-96 p-6 bg-ui-bg-soft">
-      <SidebarSection title="Properties">
-        <IssueMetadataSection
-          status={status}
-          type={type}
-          assignee={assignee}
-          reporter={reporter}
-          storyPoints={storyPoints}
-          labels={labels}
-        />
-      </SidebarSection>
+    <Card
+      padding="lg"
+      radius="none"
+      variant="ghost"
+      className="w-full md:w-80 lg:w-96 bg-ui-bg-soft"
+    >
+      <Stack gap="xl">
+        <SidebarSection title="Properties">
+          <IssueMetadataSection
+            status={status}
+            type={type}
+            assignee={assignee}
+            reporter={reporter}
+            storyPoints={storyPoints}
+            labels={labels}
+          />
+        </SidebarSection>
 
-      <SidebarSection title="Time Tracking">
-        <TimeTracker
-          issueId={issueId}
-          projectId={projectId}
-          estimatedHours={estimatedHours}
-          billingEnabled={billingEnabled}
-        />
-      </SidebarSection>
+        <SidebarSection title="Time Tracking">
+          <TimeTracker
+            issueId={issueId}
+            projectId={projectId}
+            estimatedHours={estimatedHours}
+            billingEnabled={billingEnabled}
+          />
+        </SidebarSection>
 
-      <SidebarSection title="Attachments">
-        <FileAttachments issueId={issueId} />
-      </SidebarSection>
+        <SidebarSection title="Attachments">
+          <FileAttachments issueId={issueId} />
+        </SidebarSection>
 
-      <SidebarSection title="Watchers">
-        <IssueWatchers issueId={issueId} />
-      </SidebarSection>
-      <SidebarSection title="Dependencies">
-        <IssueDependencies issueId={issueId} projectId={projectId} />
-      </SidebarSection>
-    </Stack>
+        <SidebarSection title="Watchers">
+          <IssueWatchers issueId={issueId} />
+        </SidebarSection>
+        <SidebarSection title="Dependencies">
+          <IssueDependencies issueId={issueId} projectId={projectId} />
+        </SidebarSection>
+      </Stack>
+    </Card>
   );
 }

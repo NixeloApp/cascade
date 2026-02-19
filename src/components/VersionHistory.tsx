@@ -125,63 +125,63 @@ export function VersionHistory({
             </Typography>
           </Card>
         ) : (
-          <Stack gap="sm" className="py-2">
-            {versions.map((version: DocumentVersion, index: number) => {
-              const isLatest = index === 0;
-              const isSelected = selectedVersionId === version._id;
+          <Card padding="xs" variant="ghost" radius="none">
+            <Stack gap="sm">
+              {versions.map((version: DocumentVersion, index: number) => {
+                const isLatest = index === 0;
+                const isSelected = selectedVersionId === version._id;
 
-              return (
-                <Card
-                  key={version._id}
-                  padding="md"
-                  className={cn(
-                    "transition-default",
-                    isSelected
-                      ? "border-brand-ring bg-brand-subtle"
-                      : "hover:border-ui-border-secondary hover:bg-ui-bg-hover",
-                  )}
-                >
-                  <Flex align="start" justify="between">
-                    <FlexItem flex="1">
-                      <Flex align="center" gap="sm" className="mb-1.5">
-                        {isLatest && (
-                          <Badge variant="success" size="sm">
-                            Current
-                          </Badge>
-                        )}
-                        <Typography variant="small" className="font-medium tracking-tight">
-                          {version.title}
-                        </Typography>
-                      </Flex>
-                      <Metadata>
-                        <MetadataItem icon={<Clock className="w-3.5 h-3.5" />}>
-                          {formatDate(version._creationTime)}
-                        </MetadataItem>
-                        <MetadataItem>by {version.createdByName}</MetadataItem>
-                      </Metadata>
-                      {version.changeDescription && (
-                        <Typography variant="caption" className="mt-2">
-                          {version.changeDescription}
-                        </Typography>
-                      )}
-                    </FlexItem>
-
-                    {!isLatest && (
-                      <Button
-                        onClick={() => handleRestore(version._id)}
-                        size="sm"
-                        variant="outline"
-                        className="ml-4 border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                        Restore
-                      </Button>
+                return (
+                  <Card
+                    key={version._id}
+                    padding="md"
+                    className={cn(
+                      "transition-default",
+                      isSelected
+                        ? "border-brand-ring bg-brand-subtle"
+                        : "hover:border-ui-border-secondary hover:bg-ui-bg-hover",
                     )}
-                  </Flex>
-                </Card>
-              );
-            })}
-          </Stack>
+                  >
+                    <Flex align="start" justify="between">
+                      <FlexItem flex="1">
+                        <Flex align="center" gap="sm" className="mb-1.5">
+                          {isLatest && (
+                            <Badge variant="success" size="sm">
+                              Current
+                            </Badge>
+                          )}
+                          <Typography variant="label">{version.title}</Typography>
+                        </Flex>
+                        <Metadata>
+                          <MetadataItem icon={<Clock className="w-3.5 h-3.5" />}>
+                            {formatDate(version._creationTime)}
+                          </MetadataItem>
+                          <MetadataItem>by {version.createdByName}</MetadataItem>
+                        </Metadata>
+                        {version.changeDescription && (
+                          <Typography variant="caption" className="mt-2">
+                            {version.changeDescription}
+                          </Typography>
+                        )}
+                      </FlexItem>
+
+                      {!isLatest && (
+                        <Button
+                          onClick={() => handleRestore(version._id)}
+                          size="sm"
+                          variant="outline"
+                          className="ml-4 border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                          Restore
+                        </Button>
+                      )}
+                    </Flex>
+                  </Card>
+                );
+              })}
+            </Stack>
+          </Card>
         )}
       </FlexItem>
     </Dialog>

@@ -27,10 +27,7 @@ export function IssueDetailHeader({
   actions,
 }: IssueDetailHeaderProps): ReactNode {
   return (
-    <Card
-      padding="none"
-      className="border-b border-ui-border px-6 py-3 rounded-none border-x-0 border-t-0"
-    >
+    <Card padding="sm" radius="none" variant="ghost" className="border-b border-ui-border px-6">
       <Flex align="center" justify="between">
         <Flex align="center" gap="md">
           {breadcrumb}

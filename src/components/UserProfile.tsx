@@ -1,7 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { ProfileContent } from "./Settings/ProfileContent";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
-import { Stack } from "./ui/Stack";
 
 interface UserProfileProps {
   userId?: Id<"users">;
@@ -17,9 +17,9 @@ export function UserProfile({ userId, open, onOpenChange }: UserProfileProps) {
       title="User Profile"
       className="sm:max-w-4xl p-0 gap-0 overflow-hidden"
     >
-      <Stack className="max-h-panel overflow-y-auto px-6 pb-6">
+      <Card padding="lg" variant="ghost" radius="none" className="max-h-panel overflow-y-auto pt-0">
         <ProfileContent userId={userId} />
-      </Stack>
+      </Card>
     </Dialog>
   );
 }
