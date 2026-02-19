@@ -51,7 +51,7 @@ export function PumbleIntegration() {
   const projects: Project[] = projectsResult?.page ?? [];
 
   return (
-    <Card>
+    <Card padding="none">
       {/* Header */}
       <Card padding="lg" className="border-b border-ui-border rounded-b-none border-x-0 border-t-0">
         <Flex justify="between" align="start">
@@ -96,7 +96,7 @@ export function PumbleIntegration() {
       </Card>
 
       {/* Content */}
-      <Card padding="lg">
+      <Stack gap="lg" className="p-6">
         {webhooks === undefined ? (
           <Flex align="center" justify="center" className="py-12">
             <Typography color="tertiary">Loading webhooks...</Typography>
@@ -112,7 +112,7 @@ export function PumbleIntegration() {
         )}
 
         {/* Documentation Link */}
-        <div className="mt-6 border-t border-ui-border">
+        <div className="pt-6 border-t border-ui-border">
           <a
             href="https://help.pumble.com/hc/en-us/articles/360041954051-Incoming-webhooks"
             target="_blank"
@@ -138,7 +138,7 @@ export function PumbleIntegration() {
             </Flex>
           </a>
         </div>
-      </Card>
+      </Stack>
 
       {/* Add Webhook Modal */}
       <AddWebhookModal

@@ -54,7 +54,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         gap="lg"
         className="sm:flex-row sm:items-center"
       >
-        <FlexItem flex="1" className="w-full sm:w-auto">
+        <Flex direction="column" className="flex-1 w-full sm:w-auto">
           <Flex wrap align="center" gap="sm" className="mb-2">
             <Typography variant="h5">{sprint.name}</Typography>
             <Badge size="md" className={getStatusColor(sprint.status)}>
@@ -95,7 +95,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
               {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
             </Typography>
           )}
-        </FlexItem>
+        </Flex>
         {canEdit && (
           <Flex direction="column" gap="sm" className="sm:flex-row w-full sm:w-auto">
             {sprint.status === "future" && (

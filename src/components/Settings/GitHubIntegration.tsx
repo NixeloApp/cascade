@@ -7,6 +7,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { LinkedRepositories } from "./LinkedRepositories";
 
@@ -96,52 +97,50 @@ export function GitHubIntegration() {
   };
 
   return (
-    <Card>
-      <div className="p-6">
-        <Flex justify="between" align="start">
-          <Flex gap="lg" align="center">
-            <div className="p-3 bg-ui-bg-tertiary rounded-lg">
-              <Github className="h-6 w-6 text-ui-text" />
-            </div>
-            <div>
-              <Typography variant="h3" className="text-lg font-semibold text-ui-text">
-                GitHub
-              </Typography>
-              <Typography className="text-sm text-ui-text-secondary mt-1">
-                Link repositories and track PRs and commits
-              </Typography>
-              {githubConnection && (
-                <Flex align="center" gap="xs" className="text-sm text-status-success mt-2">
-                  <Icon icon={Check} size="sm" />
+    <Card padding="lg">
+      <Flex justify="between" align="start">
+        <Flex gap="lg" align="center">
+          <Card padding="sm" className="bg-ui-bg-tertiary">
+            <Github className="h-6 w-6" />
+          </Card>
+          <Stack gap="xs">
+            <Typography variant="h3">GitHub</Typography>
+            <Typography variant="small" color="secondary">
+              Link repositories and track PRs and commits
+            </Typography>
+            {githubConnection && (
+              <Flex align="center" gap="xs" className="text-status-success">
+                <Icon icon={Check} size="sm" />
+                <Typography variant="small">
                   Connected as @{githubConnection.githubUsername}
-                </Flex>
-              )}
-            </div>
-          </Flex>
-          <div>
-            {githubConnection ? (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleDisconnect}
-                disabled={isDisconnecting}
-              >
-                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-              </Button>
-            ) : (
-              <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
-                {isConnecting ? "Connecting..." : "Connect GitHub"}
-              </Button>
+                </Typography>
+              </Flex>
             )}
-          </div>
+          </Stack>
         </Flex>
+        <div>
+          {githubConnection ? (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleDisconnect}
+              disabled={isDisconnecting}
+            >
+              {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+            </Button>
+          ) : (
+            <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Connect GitHub"}
+            </Button>
+          )}
+        </div>
+      </Flex>
 
-        {githubConnection && (
-          <div className="mt-6 pt-6 border-t border-ui-border">
-            <LinkedRepositories />
-          </div>
-        )}
-      </div>
+      {githubConnection && (
+        <div className="mt-6 pt-6 border-t border-ui-border">
+          <LinkedRepositories />
+        </div>
+      )}
     </Card>
   );
 }

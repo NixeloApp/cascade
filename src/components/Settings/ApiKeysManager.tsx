@@ -96,9 +96,9 @@ export function ApiKeysManager() {
 
         {/* Documentation Link */}
         <Card padding="md" className="bg-brand-subtle border-brand-border">
-          <Flex align="center" gap="sm" className="text-sm text-brand-active">
-            <Icon icon={BookOpen} size="sm" />
-            <span>
+          <Flex align="center" gap="sm">
+            <Icon icon={BookOpen} size="sm" className="text-brand-active" />
+            <Typography variant="small" className="text-brand-active">
               <strong>Need help?</strong> Check out the{" "}
               <a
                 href="/docs/API.md"
@@ -109,7 +109,7 @@ export function ApiKeysManager() {
                 API Documentation
               </a>{" "}
               for usage examples and integration guides.
-            </span>
+            </Typography>
           </Flex>
         </Card>
       </Stack>

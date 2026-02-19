@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/dates";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailModal } from "./IssueDetailModal";
+import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { Skeleton } from "./ui/Skeleton";
@@ -185,10 +186,10 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         <Flex direction="column" className="h-full">
           {/* Skeleton Header */}
           <Flex align="center" justify="between" className="mb-6 shrink-0">
-            <div>
-              <Skeleton className="h-8 w-48 mb-2" />
+            <Stack gap="xs">
+              <Skeleton className="h-8 w-48" />
               <Skeleton className="h-4 w-64" />
-            </div>
+            </Stack>
             <Flex gap="md">
               <Skeleton className="h-10 w-32 rounded-lg" />
               <Skeleton className="h-8 w-32 rounded-lg" />
@@ -196,26 +197,21 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           </Flex>
 
           {/* Skeleton Timeline */}
-          <Flex
-            direction="column"
-            className="flex-1 bg-ui-bg rounded-lg border border-ui-border overflow-hidden"
-          >
+          <Card padding="none" className="flex-1 overflow-hidden">
             {/* Skeleton Dates Header */}
-            <FlexItem shrink={false} className="border-b border-ui-border bg-ui-bg-secondary p-4">
-              <Flex>
-                <FlexItem shrink={false} className="w-64">
-                  <Skeleton className="h-5 w-24" />
-                </FlexItem>
-                <FlexItem flex="1" className="grid grid-cols-6 gap-2">
-                  {[1, 2, 3, 4, 5, 6].map((id) => (
-                    <Skeleton key={id} className="h-5 w-full" />
-                  ))}
-                </FlexItem>
-              </Flex>
-            </FlexItem>
+            <Flex className="shrink-0 border-b border-ui-border bg-ui-bg-secondary p-4">
+              <FlexItem shrink={false} className="w-64">
+                <Skeleton className="h-5 w-24" />
+              </FlexItem>
+              <FlexItem flex="1" className="grid grid-cols-6 gap-2">
+                {[1, 2, 3, 4, 5, 6].map((id) => (
+                  <Skeleton key={id} className="h-5 w-full" />
+                ))}
+              </FlexItem>
+            </Flex>
 
             {/* Skeleton Rows */}
-            <FlexItem flex="1" className="overflow-auto">
+            <Stack className="flex-1 overflow-auto">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <Flex align="center" className="border-b border-ui-border" key={i}>
                   <FlexItem shrink={false} className="w-64 pr-4">
@@ -238,8 +234,8 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                   </FlexItem>
                 </Flex>
               ))}
-            </FlexItem>
-          </Flex>
+            </Stack>
+          </Card>
         </Flex>
       </PageLayout>
     );
@@ -292,29 +288,24 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         </Flex>
 
         {/* Timeline Container */}
-        <Flex
-          direction="column"
-          className="flex-1 bg-ui-bg rounded-lg border border-ui-border overflow-hidden"
-        >
+        <Card padding="none" className="flex-1 overflow-hidden">
           {/* Timeline Header (Fixed) */}
-          <FlexItem shrink={false} className="border-b border-ui-border bg-ui-bg-secondary p-4">
-            <Flex>
-              <Typography variant="label" className="w-64 shrink-0 text-ui-text">
-                Issue
-              </Typography>
-              <FlexItem flex="1" className="grid grid-cols-6">
-                {timelineMonths.map((month) => (
-                  <Typography
-                    key={month.getTime()}
-                    variant="label"
-                    className="text-center text-ui-text border-l border-ui-border px-2"
-                  >
-                    {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                  </Typography>
-                ))}
-              </FlexItem>
-            </Flex>
-          </FlexItem>
+          <Flex className="shrink-0 border-b border-ui-border bg-ui-bg-secondary p-4">
+            <Typography variant="label" className="w-64 shrink-0">
+              Issue
+            </Typography>
+            <FlexItem flex="1" className="grid grid-cols-6">
+              {timelineMonths.map((month) => (
+                <Typography
+                  key={month.getTime()}
+                  variant="label"
+                  className="text-center border-l border-ui-border px-2"
+                >
+                  {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                </Typography>
+              ))}
+            </FlexItem>
+          </Flex>
 
           {/* Timeline Body (Virtualized) */}
           <FlexItem flex="1">
@@ -336,7 +327,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               />
             )}
           </FlexItem>
-        </Flex>
+        </Card>
 
         {/* Issue Detail Modal */}
         {selectedIssue && (

@@ -10,6 +10,7 @@ import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Input, Select } from "../ui/form";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface Member {
@@ -122,84 +123,79 @@ export function MemberManagement({
 
   return (
     <>
-      <Card variant="soft">
-        <div className="p-6">
-          <Flex justify="between" align="center" className="mb-6">
-            <div>
-              <Typography variant="large" className="font-semibold tracking-tight">
-                Members
-              </Typography>
-              <Typography variant="small" color="secondary" className="mt-0.5">
-                {members.length} member{members.length !== 1 ? "s" : ""} with access
-              </Typography>
-            </div>
-            {!showAddForm && (
-              <Button variant="secondary" size="sm" onClick={() => setShowAddForm(true)}>
-                Add Member
-              </Button>
-            )}
-          </Flex>
-
-          {showAddForm && (
-            <div className="mb-6 p-5 bg-ui-bg-tertiary rounded-lg border border-ui-border">
-              <Typography variant="small" className="mb-4 font-semibold">
-                Add New Member
-              </Typography>
-              <div className="space-y-4">
-                <Input
-                  label="Email Address"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="user@example.com"
-                />
-                <Select
-                  label="Role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as "admin" | "editor" | "viewer")}
-                  options={ROLE_OPTIONS}
-                />
-                <Flex gap="sm" className="pt-1">
-                  <Button
-                    onClick={handleAddMember}
-                    disabled={isAdding}
-                    size="sm"
-                    isLoading={isAdding}
-                  >
-                    Add Member
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setShowAddForm(false);
-                      setEmail("");
-                      setRole("editor");
-                    }}
-                    disabled={isAdding}
-                  >
-                    Cancel
-                  </Button>
-                </Flex>
-              </div>
-            </div>
+      <Card variant="soft" padding="lg">
+        <Flex justify="between" align="center" className="mb-6">
+          <Stack gap="xs">
+            <Typography variant="h4">Members</Typography>
+            <Typography variant="small" color="secondary">
+              {members.length} member{members.length !== 1 ? "s" : ""} with access
+            </Typography>
+          </Stack>
+          {!showAddForm && (
+            <Button variant="secondary" size="sm" onClick={() => setShowAddForm(true)}>
+              Add Member
+            </Button>
           )}
+        </Flex>
 
-          <div className="space-y-2">
-            {members.map((member) => (
-              <Flex
-                align="center"
-                justify="between"
-                className="p-3 bg-ui-bg-tertiary rounded-lg transition-default hover:bg-ui-bg-hover"
-                key={member._id}
-              >
+        {showAddForm && (
+          <Card padding="lg" className="mb-6 bg-ui-bg-tertiary">
+            <Typography variant="label" className="mb-4">
+              Add New Member
+            </Typography>
+            <Stack gap="md">
+              <Input
+                label="Email Address"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@example.com"
+              />
+              <Select
+                label="Role"
+                value={role}
+                onChange={(e) => setRole(e.target.value as "admin" | "editor" | "viewer")}
+                options={ROLE_OPTIONS}
+              />
+              <Flex gap="sm" className="pt-1">
+                <Button
+                  onClick={handleAddMember}
+                  disabled={isAdding}
+                  size="sm"
+                  isLoading={isAdding}
+                >
+                  Add Member
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEmail("");
+                    setRole("editor");
+                  }}
+                  disabled={isAdding}
+                >
+                  Cancel
+                </Button>
+              </Flex>
+            </Stack>
+          </Card>
+        )}
+
+        <Stack gap="sm">
+          {members.map((member) => (
+            <Card
+              padding="sm"
+              key={member._id}
+              className="bg-ui-bg-tertiary transition-default hover:bg-ui-bg-hover"
+            >
+              <Flex align="center" justify="between">
                 <Flex gap="md" align="center">
                   <Avatar src={member.image} name={member.name} email={member.email} size="sm" />
-                  <div>
+                  <Stack gap="none">
                     <Flex gap="sm" align="center">
-                      <Typography variant="small" className="font-medium text-ui-text">
-                        {member.name}
-                      </Typography>
+                      <Typography variant="label">{member.name}</Typography>
                       {isOwner(member._id) && (
                         <Badge variant="primary" size="sm">
                           Owner
@@ -209,7 +205,7 @@ export function MemberManagement({
                     <Typography variant="small" color="secondary">
                       {member.email || "No email"}
                     </Typography>
-                  </div>
+                  </Stack>
                 </Flex>
 
                 <Flex gap="sm" align="center">
@@ -243,9 +239,9 @@ export function MemberManagement({
                   )}
                 </Flex>
               </Flex>
-            ))}
-          </div>
-        </div>
+            </Card>
+          ))}
+        </Stack>
       </Card>
 
       <ConfirmDialog
