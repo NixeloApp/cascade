@@ -52,28 +52,30 @@ export function FocusZone({ task }: FocusZoneProps) {
       >
         {/* Brand left border accent */}
         <div className="absolute left-0 top-0 h-full w-1 bg-brand" />
-        <Stack gap="md" className="pl-7 py-6 pr-6">
-          <Flex justify="between" align="center">
-            <Badge variant="primary">{task.priority.toUpperCase()}</Badge>
-            <Typography variant="inlineCode" color="secondary">
-              {task.key}
-            </Typography>
-          </Flex>
+        <Card padding="lg" radius="none" variant="ghost" className="pl-7">
+          <Stack gap="md">
+            <Flex justify="between" align="center">
+              <Badge variant="primary">{task.priority.toUpperCase()}</Badge>
+              <Typography variant="inlineCode" color="secondary">
+                {task.key}
+              </Typography>
+            </Flex>
 
-          <Stack gap="xs">
-            <Typography variant="h3">{task.title}</Typography>
-            <Typography variant="muted">
-              In project: <strong>{task.projectName}</strong>
-            </Typography>
+            <Stack gap="xs">
+              <Typography variant="h3">{task.title}</Typography>
+              <Typography variant="muted">
+                In project: <strong>{task.projectName}</strong>
+              </Typography>
+            </Stack>
+
+            <Flex justify="end" align="center" gap="xs">
+              <Typography variant="label" className="text-brand">
+                View Task
+              </Typography>
+              <Icon icon={ArrowRight} size="sm" className="text-brand" />
+            </Flex>
           </Stack>
-
-          <Flex justify="end" align="center" gap="xs">
-            <Typography variant="label" className="text-brand">
-              View Task
-            </Typography>
-            <Icon icon={ArrowRight} size="sm" className="text-brand" />
-          </Flex>
-        </Stack>
+        </Card>
       </Card>
     </Stack>
   );
