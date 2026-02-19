@@ -55,7 +55,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         className="sm:flex-row sm:items-center"
       >
         <FlexItem flex="1" className="w-full sm:w-auto">
-          <Flex wrap align="center" gap="sm" className="sm:gap-3 mb-2">
+          <Flex wrap align="center" gap="sm" className="mb-2">
             <Typography variant="h5">{sprint.name}</Typography>
             <Badge size="md" className={getStatusColor(sprint.status)}>
               {sprint.status}
@@ -83,7 +83,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
               </Flex>
               <div className="h-1.5 bg-ui-bg-tertiary rounded-pill overflow-hidden">
                 <div
-                  className="h-full bg-brand rounded-pill transition-default"
+                  className="size-full bg-brand rounded-pill transition-default"
                   style={{ width: `${progress}%` }}
                 />
               </div>

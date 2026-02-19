@@ -53,7 +53,7 @@ export function PumbleIntegration() {
   return (
     <Card>
       {/* Header */}
-      <div className="p-6 border-b border-ui-border">
+      <Card padding="lg" className="border-b border-ui-border rounded-b-none border-x-0 border-t-0">
         <Flex justify="between" align="start">
           <Flex gap="md" align="center">
             <FlexItem shrink={false}>
@@ -93,7 +93,7 @@ export function PumbleIntegration() {
             Add Webhook
           </Button>
         </Flex>
-      </div>
+      </Card>
 
       {/* Content */}
       <Card padding="lg">
@@ -112,7 +112,7 @@ export function PumbleIntegration() {
         )}
 
         {/* Documentation Link */}
-        <div className="mt-6 pt-6 border-t border-ui-border">
+        <div className="mt-6 border-t border-ui-border">
           <a
             href="https://help.pumble.com/hc/en-us/articles/360041954051-Incoming-webhooks"
             target="_blank"
@@ -371,12 +371,13 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
       title="Add Pumble Webhook"
       className="sm:max-w-2xl"
     >
-      <form
-        onSubmit={(e) => {
+      <Stack
+        gap="lg"
+        as="form"
+        onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-6"
       >
         {/* Name */}
         <form.Field name="name">
@@ -473,7 +474,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
             )}
           </form.Subscribe>
         </Flex>
-      </form>
+      </Stack>
     </Dialog>
   );
 }
@@ -531,12 +532,13 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title="Edit Webhook" className="sm:max-w-2xl">
-      <form
-        onSubmit={(e) => {
+      <Stack
+        gap="lg"
+        as="form"
+        onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-6"
       >
         {/* Name */}
         <form.Field name="name">
@@ -608,7 +610,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
             )}
           </form.Subscribe>
         </Flex>
-      </form>
+      </Stack>
     </Dialog>
   );
 }

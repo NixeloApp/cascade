@@ -112,10 +112,11 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       const isSelected = index === selectedIndex;
 
       return (
-        <div
+        <Flex
+          align="center"
           style={style}
           className={cn(
-            "flex items-center p-3 transition-colors border-b border-ui-border",
+            "transition-colors border-b border-ui-border",
             isSelected
               ? "bg-brand-subtle/50 ring-1 ring-inset ring-brand-ring/50 z-10"
               : "hover:bg-ui-bg-secondary",
@@ -171,7 +172,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               title="Today"
             />
           </FlexItem>
-        </div>
+        </Flex>
       );
     },
     [getPositionOnTimeline],
@@ -216,8 +217,8 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
             {/* Skeleton Rows */}
             <FlexItem flex="1" className="overflow-auto">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <Flex align="center" className="p-3 border-b border-ui-border" key={i}>
-                  <FlexItem shrink={false} className="w-64 pr-4 space-y-2">
+                <Flex align="center" className="border-b border-ui-border" key={i}>
+                  <FlexItem shrink={false} className="w-64 pr-4">
                     <Flex align="center" gap="sm">
                       <Skeleton className="h-4 w-4 rounded-full" />
                       <Skeleton className="h-4 w-16" />

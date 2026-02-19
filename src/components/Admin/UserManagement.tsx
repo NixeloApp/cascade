@@ -163,7 +163,7 @@ export function UserManagement() {
 
       {/* Tabs */}
       <div className="border-b border-ui-border">
-        <nav className="-mb-px flex space-x-8" aria-label="User management tabs">
+        <Flex as="nav" gap="xl" className="-mb-px" aria-label="User management tabs">
           <button
             type="button"
             onClick={() => setActiveTab("invites")}
@@ -188,7 +188,7 @@ export function UserManagement() {
           >
             Users
           </button>
-        </nav>
+        </Flex>
       </div>
 
       {/* Invite Form Modal */}

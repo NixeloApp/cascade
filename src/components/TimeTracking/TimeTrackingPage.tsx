@@ -4,8 +4,11 @@ import { useQuery } from "convex/react";
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { BurnRateDashboard } from "./BurnRateDashboard";
 import { TimeEntriesList } from "./TimeEntriesList";
@@ -59,7 +62,7 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
     <Flex direction="column" gap="xl">
       {/* Tabs */}
       <div className="border-b border-ui-border">
-        <nav className="-mb-px flex gap-6">
+        <Flex as="nav" gap="lg" className="-mb-px">
           <button
             type="button"
             onClick={() => setActiveTab("entries")}
@@ -100,20 +103,15 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
               </button>
             </>
           )}
-        </nav>
+        </Flex>
       </div>
 
       {/* Filters */}
       <Flex align="center" gap="lg" className="flex-wrap">
         {/* Project filter - only show if not locked to a specific project */}
         {!projectId && (
-          <div>
-            <label
-              htmlFor="tracking-project-filter"
-              className="block text-xs font-medium text-ui-text mb-1"
-            >
-              Project
-            </label>
+          <Stack gap="xs">
+            <Label htmlFor="tracking-project-filter">Project</Label>
             <Select
               value={selectedProject}
               onValueChange={(value) =>
@@ -132,18 +130,13 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Stack>
         )}
 
         {/* Date range filter */}
         {activeTab === "entries" && (
-          <div>
-            <label
-              htmlFor="tracking-date-range"
-              className="block text-xs font-medium text-ui-text mb-1"
-            >
-              Date Range
-            </label>
+          <Stack gap="xs">
+            <Label htmlFor="tracking-date-range">Date Range</Label>
             <Select
               value={dateRange}
               onValueChange={(value) => setDateRange(value as "week" | "month" | "all")}
@@ -157,7 +150,7 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
                 <SelectItem value="all">All Time</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Stack>
         )}
       </Flex>
 
@@ -178,7 +171,7 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
         )}
 
         {canSeeSensitiveTabs && activeTab === "burn-rate" && selectedProject === "all" && (
-          <div className="text-center p-12 bg-ui-bg-secondary rounded-lg">
+          <Card variant="soft" className="text-center">
             <svg
               className="mx-auto h-12 w-12 text-ui-text-tertiary"
               fill="none"
@@ -194,13 +187,13 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
-            <Typography variant="h3" className="mt-2 text-sm font-medium text-ui-text">
+            <Typography variant="label" className="mt-2">
               Select a project
             </Typography>
-            <Typography className="mt-1 text-sm text-ui-text-tertiary">
+            <Typography variant="small" color="tertiary" className="mt-1">
               Choose a project to view burn rate and cost analysis
             </Typography>
-          </div>
+          </Card>
         )}
 
         {canSeeSensitiveTabs && activeTab === "rates" && <UserRatesManagement />}
