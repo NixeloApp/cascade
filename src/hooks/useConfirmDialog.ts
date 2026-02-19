@@ -3,7 +3,7 @@
  * Pairs with ConfirmDialog component for consistent confirmation UX
  */
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 export interface ConfirmDialogState {
   isOpen: boolean;
@@ -70,18 +70,18 @@ export function useConfirmDialog(): UseConfirmDialogReturn {
   const [dialogState, setDialogState] = useState<ConfirmDialogState>(initialState);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  const openConfirm = useCallback((config: Omit<ConfirmDialogState, "isOpen">) => {
+  const openConfirm = (config: Omit<ConfirmDialogState, "isOpen">) => {
     setDialogState({
       isOpen: true,
       ...config,
     });
-  }, []);
+  };
 
-  const closeConfirm = useCallback(() => {
+  const closeConfirm = () => {
     setDialogState(initialState);
-  }, []);
+  };
 
-  const handleConfirm = useCallback(async (action: () => Promise<void> | void) => {
+  const handleConfirm = async (action: () => Promise<void> | void) => {
     setIsConfirming(true);
     try {
       await action();
@@ -89,7 +89,7 @@ export function useConfirmDialog(): UseConfirmDialogReturn {
     } finally {
       setIsConfirming(false);
     }
-  }, []);
+  };
 
   return {
     dialogState,

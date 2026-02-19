@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
@@ -42,30 +42,24 @@ export function IssuesCalendarView({
   const month = currentDate.getMonth();
 
   // Calculate the visible date range (including padding days)
-  const { startTimestamp, endTimestamp, firstDayOfMonth, daysInMonth } = useMemo(() => {
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysCount = lastDay.getDate();
-    const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const firstDayOfMonth = firstDay.getDay(); // 0 = Sunday
+  const daysInMonth = lastDay.getDate();
 
-    // Start from the beginning of the first week row
-    // (subtract days to get to previous Sunday if needed, though here we just render empty cells,
-    // but for data fetching we might want to include them if we were rendering them)
-    // The current UI renders empty cells for previous month days:
-    // for (let i = 0; i < firstDayOfMonth; i++) { ... }
-    // So we strictly need data starting from the 1st of the month.
-    // However, to be safe and cover full days, we use start of 1st day to end of last day.
+  // Start from the beginning of the first week row
+  // (subtract days to get to previous Sunday if needed, though here we just render empty cells,
+  // but for data fetching we might want to include them if we were rendering them)
+  // The current UI renders empty cells for previous month days:
+  // for (let i = 0; i < firstDayOfMonth; i++) { ... }
+  // So we strictly need data starting from the 1st of the month.
+  // However, to be safe and cover full days, we use start of 1st day to end of last day.
 
-    const start = new Date(year, month, 1, 0, 0, 0, 0);
-    const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+  const start = new Date(year, month, 1, 0, 0, 0, 0);
+  const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
-    return {
-      startTimestamp: start.getTime(),
-      endTimestamp: end.getTime(),
-      firstDayOfMonth: firstDayOfWeek,
-      daysInMonth: daysCount,
-    };
-  }, [year, month]);
+  const startTimestamp = start.getTime();
+  const endTimestamp = end.getTime();
 
   const issues = useQuery(api.issues.listIssuesByDateRange, {
     projectId,
@@ -75,7 +69,7 @@ export function IssuesCalendarView({
   });
 
   // Group issues by date
-  const issuesByDate = useMemo(() => {
+  const issuesByDate = (() => {
     const byDate: Record<string, typeof issues> = {};
     issues?.forEach((issue: Doc<"issues">) => {
       if (issue.dueDate) {
@@ -85,7 +79,7 @@ export function IssuesCalendarView({
       }
     });
     return byDate;
-  }, [issues]);
+  })();
 
   const previousMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));

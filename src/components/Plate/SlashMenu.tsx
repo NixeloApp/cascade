@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import type { PlateEditor } from "platejs/react";
 import { useEditorRef, useEditorSelection } from "platejs/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Command,
@@ -279,15 +279,12 @@ export function SlashMenu() {
   }, [selection]);
 
   // Handle item selection
-  const handleSelect = useCallback(
-    (item: SlashMenuItem) => {
-      deleteSlashCommand(editor);
-      item.action(editor);
-      setOpen(false);
-      setSearch("");
-    },
-    [editor],
-  );
+  const handleSelect = (item: SlashMenuItem) => {
+    deleteSlashCommand(editor);
+    item.action(editor);
+    setOpen(false);
+    setSearch("");
+  };
 
   // Close on escape
   useEffect(() => {

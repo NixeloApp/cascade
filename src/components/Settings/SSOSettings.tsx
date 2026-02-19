@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -39,7 +39,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
   const [newConnectionName, setNewConnectionName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreate = useCallback(async () => {
+  const handleCreate = async () => {
     if (!newConnectionName.trim()) {
       showError(new Error("Please enter a name"), "Invalid name");
       return;
@@ -60,49 +60,43 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [createConnection, organizationId, newConnectionType, newConnectionName]);
+  };
 
-  const handleDelete = useCallback(
-    async (connectionId: Id<"ssoConnections">) => {
-      if (!window.confirm("Are you sure you want to delete this SSO connection?")) {
-        return;
-      }
+  const handleDelete = async (connectionId: Id<"ssoConnections">) => {
+    if (!window.confirm("Are you sure you want to delete this SSO connection?")) {
+      return;
+    }
 
-      setIsLoading(true);
-      try {
-        const result = await removeConnection({ connectionId });
-        if (result.success) {
-          showSuccess("SSO connection deleted");
-        } else {
-          showError(new Error(result.error || "Failed to delete"), "Error");
-        }
-      } catch (error) {
-        showError(error, "Failed to delete connection");
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    try {
+      const result = await removeConnection({ connectionId });
+      if (result.success) {
+        showSuccess("SSO connection deleted");
+      } else {
+        showError(new Error(result.error || "Failed to delete"), "Error");
       }
-    },
-    [removeConnection],
-  );
+    } catch (error) {
+      showError(error, "Failed to delete connection");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleToggle = useCallback(
-    async (connectionId: Id<"ssoConnections">, currentState: boolean) => {
-      setIsLoading(true);
-      try {
-        const result = await setEnabled({ connectionId, isEnabled: !currentState });
-        if (result.success) {
-          showSuccess(currentState ? "SSO connection disabled" : "SSO connection enabled");
-        } else {
-          showError(new Error(result.error || "Failed to update"), "Error");
-        }
-      } catch (error) {
-        showError(error, "Failed to update connection");
-      } finally {
-        setIsLoading(false);
+  const handleToggle = async (connectionId: Id<"ssoConnections">, currentState: boolean) => {
+    setIsLoading(true);
+    try {
+      const result = await setEnabled({ connectionId, isEnabled: !currentState });
+      if (result.success) {
+        showSuccess(currentState ? "SSO connection disabled" : "SSO connection enabled");
+      } else {
+        showError(new Error(result.error || "Failed to update"), "Error");
       }
-    },
-    [setEnabled],
-  );
+    } catch (error) {
+      showError(error, "Failed to update connection");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (connections === undefined) {
     return (
@@ -323,44 +317,35 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   }, [connection]);
 
   // Parse domains from comma-separated string
-  const parseDomains = useCallback(
-    () =>
-      domains
-        .split(",")
-        .map((d) => d.trim())
-        .filter((d) => d.length > 0),
-    [domains],
-  );
+  const parseDomains = () =>
+    domains
+      .split(",")
+      .map((d) => d.trim())
+      .filter((d) => d.length > 0);
 
   // Save SAML configuration
-  const saveSamlConfig = useCallback(
-    () =>
-      updateSamlConfig({
-        connectionId,
-        config: {
-          idpEntityId: idpEntityId || undefined,
-          idpSsoUrl: idpSsoUrl || undefined,
-          idpCertificate: idpCertificate || undefined,
-        },
-      }),
-    [updateSamlConfig, connectionId, idpEntityId, idpSsoUrl, idpCertificate],
-  );
+  const saveSamlConfig = () =>
+    updateSamlConfig({
+      connectionId,
+      config: {
+        idpEntityId: idpEntityId || undefined,
+        idpSsoUrl: idpSsoUrl || undefined,
+        idpCertificate: idpCertificate || undefined,
+      },
+    });
 
   // Save OIDC configuration
-  const saveOidcConfig = useCallback(
-    () =>
-      updateOidcConfig({
-        connectionId,
-        config: {
-          issuer: issuer || undefined,
-          clientId: clientId || undefined,
-          clientSecret: clientSecret || undefined,
-        },
-      }),
-    [updateOidcConfig, connectionId, issuer, clientId, clientSecret],
-  );
+  const saveOidcConfig = () =>
+    updateOidcConfig({
+      connectionId,
+      config: {
+        issuer: issuer || undefined,
+        clientId: clientId || undefined,
+        clientSecret: clientSecret || undefined,
+      },
+    });
 
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     if (!connection) return;
 
     setIsLoading(true);
@@ -387,15 +372,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
     } finally {
       setIsLoading(false);
     }
-  }, [
-    connection,
-    saveSamlConfig,
-    saveOidcConfig,
-    updateDomains,
-    connectionId,
-    parseDomains,
-    onOpenChange,
-  ]);
+  };
 
   if (!connection) {
     return (

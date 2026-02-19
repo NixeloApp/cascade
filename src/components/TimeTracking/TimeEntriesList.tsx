@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Clock, FileText, Folder, Lock, Plus, Trash } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -72,29 +72,29 @@ export function TimeEntriesList({
   // Define the structure of the time entry returned by the API
   type TimeEntryWithDetails = FunctionReturnType<typeof api.timeTracking.listTimeEntries>[number];
 
-  // Group entries by date
-  const groupedEntries = useMemo(() => {
-    if (!entries) return [];
+  // Group entries by date inline
+  const groupedEntries = entries
+    ? (() => {
+        const grouped: Record<string, TimeEntryWithDetails[]> = {};
+        const typedEntries: TimeEntryWithDetails[] = entries;
 
-    const grouped: Record<string, TimeEntryWithDetails[]> = {};
-    const typedEntries: TimeEntryWithDetails[] = entries;
+        typedEntries.forEach((entry) => {
+          const dateKey = formatDate(entry.date);
+          if (!grouped[dateKey]) {
+            grouped[dateKey] = [];
+          }
+          grouped[dateKey].push(entry);
+        });
 
-    typedEntries.forEach((entry) => {
-      const dateKey = formatDate(entry.date); // Assuming entry.date is number (timestamp)
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = [];
-      }
-      grouped[dateKey].push(entry);
-    });
-
-    return Object.entries(grouped)
-      .map(([date, group]) => ({
-        date,
-        entries: group.sort((a, b) => b.startTime - a.startTime),
-        duration: group.reduce((sum, e) => sum + (e.duration || 0), 0),
-      }))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [entries]);
+        return Object.entries(grouped)
+          .map(([date, group]) => ({
+            date,
+            entries: group.sort((a, b) => b.startTime - a.startTime),
+            duration: group.reduce((sum, e) => sum + (e.duration || 0), 0),
+          }))
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      })()
+    : [];
 
   if (!entries) {
     return (

@@ -1,4 +1,3 @@
-import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 
@@ -27,13 +26,11 @@ export function LoadMoreButton({
   label,
   className,
 }: LoadMoreButtonProps) {
-  const buttonText = React.useMemo(() => {
-    if (label) return label;
-    if (remainingCount !== undefined && remainingCount > 0) {
-      return `Load ${remainingCount} more`;
-    }
-    return "Load more";
-  }, [label, remainingCount]);
+  const buttonText =
+    label ||
+    (remainingCount !== undefined && remainingCount > 0
+      ? `Load ${remainingCount} more`
+      : "Load more");
 
   return (
     <Button

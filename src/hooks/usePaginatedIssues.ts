@@ -8,7 +8,6 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
-import { useCallback, useMemo } from "react";
 import type { EnrichedIssue } from "../../convex/lib/issueHelpers";
 
 type PaginatedQuery = FunctionReference<"query", "public">;
@@ -74,26 +73,21 @@ export function usePaginatedIssues({
     sprintId,
   });
 
-  const totalCount = useMemo(() => {
-    if (!countsData) return 0;
+  const totalCount = !countsData
+    ? 0
+    : status
+      ? countsData[status]?.total || 0
+      : Object.values(countsData).reduce((acc, curr) => acc + (curr.total || 0), 0);
 
-    if (status) {
-      return countsData[status]?.total || 0;
-    }
-
-    // Sum all totals from the record values
-    return Object.values(countsData).reduce((acc, curr) => acc + (curr.total || 0), 0);
-  }, [countsData, status]);
-
-  const loadMore = useCallback(() => {
+  const loadMore = () => {
     if (queryStatus === "CanLoadMore") {
       convexLoadMore(pageSize);
     }
-  }, [queryStatus, convexLoadMore, pageSize]);
+  };
 
-  const reset = useCallback(() => {
+  const reset = () => {
     // usePaginatedQuery handles reset automatically when args change
-  }, []);
+  };
 
   return {
     issues: issues || [],

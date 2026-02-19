@@ -3,7 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
@@ -257,13 +257,10 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
     }
   };
 
-  const handleLoadFilter = useCallback(
-    (savedFilter: EnrichedSavedFilter) => {
-      onFilterChange(savedFilter.filters as BoardFilters);
-      toast.success("Filter applied");
-    },
-    [onFilterChange],
-  );
+  const handleLoadFilter = (savedFilter: EnrichedSavedFilter) => {
+    onFilterChange(savedFilter.filters as BoardFilters);
+    toast.success("Filter applied");
+  };
 
   const handleDeleteFilter = async (id: Id<"savedFilters">) => {
     try {
@@ -278,23 +275,20 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
     onFilterChange({});
   };
 
-  const toggleArrayFilter = useCallback(
-    <K extends keyof BoardFilters>(
-      key: K,
-      value: BoardFilters[K] extends (infer U)[] | undefined ? U : never,
-    ) => {
-      const currentArray = (filters[key] ?? []) as (typeof value)[];
-      const newArray = currentArray.includes(value)
-        ? currentArray.filter((v) => v !== value)
-        : [...currentArray, value];
+  const toggleArrayFilter = <K extends keyof BoardFilters>(
+    key: K,
+    value: BoardFilters[K] extends (infer U)[] | undefined ? U : never,
+  ) => {
+    const currentArray = (filters[key] ?? []) as (typeof value)[];
+    const newArray = currentArray.includes(value)
+      ? currentArray.filter((v) => v !== value)
+      : [...currentArray, value];
 
-      onFilterChange({
-        ...filters,
-        [key]: newArray.length > 0 ? newArray : undefined,
-      });
-    },
-    [filters, onFilterChange],
-  );
+    onFilterChange({
+      ...filters,
+      [key]: newArray.length > 0 ? newArray : undefined,
+    });
+  };
 
   const activeFilterCount = countActiveFilters(filters);
   const hasActiveFilters = activeFilterCount > 0;

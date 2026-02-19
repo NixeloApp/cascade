@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useConvexAuth, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { CommandPalette, useCommands } from "@/components/CommandPalette";
@@ -135,18 +135,12 @@ function OrganizationLayoutInner() {
 
   const { orgSlug } = useOrganization();
 
-  // Navigation callback for keyboard shortcuts
-  const handleNavigate = useCallback(
-    (to: string) => {
-      navigate({ to });
-    },
-    [navigate],
-  );
-
   // Build keyboard shortcuts (need orgSlug for navigation)
   const shortcuts = createKeyboardShortcuts({
     orgSlug,
-    navigate: handleNavigate,
+    navigate: (to: string) => {
+      navigate({ to });
+    },
     setShowCommandPalette,
     setShowShortcutsHelp,
     setShowAIAssistant,
@@ -154,7 +148,9 @@ function OrganizationLayoutInner() {
 
   const sequences = createKeySequences({
     orgSlug,
-    navigate: handleNavigate,
+    navigate: (to: string) => {
+      navigate({ to });
+    },
     setShowCommandPalette,
     setShowShortcutsHelp,
     setShowAIAssistant,

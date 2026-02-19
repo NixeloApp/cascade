@@ -2,7 +2,7 @@
  * Hook for managing async mutations with loading state and error handling
  */
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { showError } from "../lib/toast";
 
 export interface UseAsyncMutationOptions<TResult> {
@@ -38,31 +38,28 @@ export function useAsyncMutation<TArgs extends unknown[], TResult>(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const mutate = useCallback(
-    async (...args: TArgs): Promise<TResult | undefined> => {
-      setIsLoading(true);
-      setError(null);
+  const mutate = async (...args: TArgs): Promise<TResult | undefined> => {
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const result = await mutationFn(...args);
-        onSuccess?.(result);
-        return result;
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        setError(error);
-        onError?.(error);
+    try {
+      const result = await mutationFn(...args);
+      onSuccess?.(result);
+      return result;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
+      onError?.(error);
 
-        if (showErrorToast) {
-          showError(error, errorMessage);
-        }
-
-        return undefined;
-      } finally {
-        setIsLoading(false);
+      if (showErrorToast) {
+        showError(error, errorMessage);
       }
-    },
-    [mutationFn, onSuccess, onError, showErrorToast, errorMessage],
-  );
+
+      return undefined;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return {
     mutate,

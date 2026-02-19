@@ -7,7 +7,7 @@
 
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { useEditorRef, useElement, useNodePath } from "platejs/react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import {
@@ -35,14 +35,14 @@ export function DragHandle({ className }: DragHandleProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   // Handle delete block
-  const handleDelete = useCallback(() => {
+  const handleDelete = () => {
     if (path) {
       editor.tf.removeNodes({ at: path });
     }
-  }, [editor, path]);
+  };
 
   // Handle add block above
-  const handleAddAbove = useCallback(() => {
+  const handleAddAbove = () => {
     if (path) {
       const newNode = {
         type: NODE_TYPES.paragraph,
@@ -52,10 +52,10 @@ export function DragHandle({ className }: DragHandleProps) {
       // Focus the new node
       editor.tf.select({ path: [...path, 0], offset: 0 });
     }
-  }, [editor, path]);
+  };
 
   // Handle add block below
-  const handleAddBelow = useCallback(() => {
+  const handleAddBelow = () => {
     if (path) {
       const newNode = {
         type: NODE_TYPES.paragraph,
@@ -67,38 +67,35 @@ export function DragHandle({ className }: DragHandleProps) {
       // Focus the new node
       editor.tf.select({ path: [...nextPath, 0], offset: 0 });
     }
-  }, [editor, path]);
+  };
 
   // Handle drag start
-  const handleDragStart = useCallback(
-    (e: React.DragEvent) => {
-      if (!path) return;
+  const handleDragStart = (e: React.DragEvent) => {
+    if (!path) return;
 
-      setIsDragging(true);
+    setIsDragging(true);
 
-      // Set drag data with path info
-      e.dataTransfer.setData("application/x-plate-drag", JSON.stringify({ path }));
-      e.dataTransfer.effectAllowed = "move";
+    // Set drag data with path info
+    e.dataTransfer.setData("application/x-plate-drag", JSON.stringify({ path }));
+    e.dataTransfer.effectAllowed = "move";
 
-      // Create a drag preview
-      const dragImage = document.createElement("div");
-      dragImage.className = "bg-brand-subtle border border-brand rounded p-2 text-sm";
-      dragImage.textContent = "Moving block...";
-      document.body.appendChild(dragImage);
-      e.dataTransfer.setDragImage(dragImage, 0, 0);
+    // Create a drag preview
+    const dragImage = document.createElement("div");
+    dragImage.className = "bg-brand-subtle border border-brand rounded p-2 text-sm";
+    dragImage.textContent = "Moving block...";
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
 
-      // Remove the drag image after a short delay
-      setTimeout(() => {
-        document.body.removeChild(dragImage);
-      }, 0);
-    },
-    [path],
-  );
+    // Remove the drag image after a short delay
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
+  };
 
   // Handle drag end
-  const handleDragEnd = useCallback(() => {
+  const handleDragEnd = () => {
     setIsDragging(false);
-  }, []);
+  };
 
   if (!element || !path) {
     return null;

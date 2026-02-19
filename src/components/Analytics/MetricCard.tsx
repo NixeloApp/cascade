@@ -1,5 +1,4 @@
 import type { LucideIcon } from "lucide-react";
-import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -11,7 +10,7 @@ import { Typography } from "../ui/Typography";
  * Metric display card for analytics dashboard
  * Extracted from AnalyticsDashboard for better organization
  */
-export const MetricCard = memo(function MetricCard({
+export function MetricCard({
   title,
   value,
   subtitle,
@@ -46,4 +45,4 @@ export const MetricCard = memo(function MetricCard({
       </Flex>
     </Card>
   );
-});
+}

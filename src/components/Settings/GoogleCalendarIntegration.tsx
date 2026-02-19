@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, Check } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -26,8 +26,8 @@ export function GoogleCalendarIntegration() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Handle OAuth callback message from popup
-  const handleOAuthMessage = useCallback(
-    async (event: MessageEvent) => {
+  useEffect(() => {
+    const handleOAuthMessage = async (event: MessageEvent) => {
       if (event.data?.type !== "google-calendar-connected") return;
 
       const { providerAccountId, accessToken, refreshToken, expiresAt } = event.data.data;
@@ -46,14 +46,11 @@ export function GoogleCalendarIntegration() {
       } finally {
         setIsConnecting(false);
       }
-    },
-    [connectGoogle],
-  );
+    };
 
-  useEffect(() => {
     window.addEventListener("message", handleOAuthMessage);
     return () => window.removeEventListener("message", handleOAuthMessage);
-  }, [handleOAuthMessage]);
+  }, [connectGoogle]);
 
   const handleDisconnect = async () => {
     if (!confirm("Are you sure you want to disconnect Google Calendar?")) {

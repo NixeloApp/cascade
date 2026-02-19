@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { QRCodeSVG } from "qrcode.react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -164,7 +164,7 @@ export function TwoFactorSettings() {
   const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
   const [regenerateCode, setRegenerateCode] = useState("");
 
-  const handleBeginSetup = useCallback(async () => {
+  const handleBeginSetup = async () => {
     setIsLoading(true);
     try {
       const result = await beginSetup();
@@ -176,9 +176,9 @@ export function TwoFactorSettings() {
     } finally {
       setIsLoading(false);
     }
-  }, [beginSetup]);
+  };
 
-  const handleVerifyCode = useCallback(async () => {
+  const handleVerifyCode = async () => {
     if (verificationCode.length !== 6) {
       showError(new Error("Please enter a 6-digit code"), "Invalid code");
       return;
@@ -199,9 +199,9 @@ export function TwoFactorSettings() {
     } finally {
       setIsLoading(false);
     }
-  }, [completeSetup, verificationCode]);
+  };
 
-  const handleDisable = useCallback(async () => {
+  const handleDisable = async () => {
     if (disableCode.length < 6) {
       showError(new Error("Please enter a valid code"), "Invalid code");
       return;
@@ -225,9 +225,9 @@ export function TwoFactorSettings() {
     } finally {
       setIsLoading(false);
     }
-  }, [disable, disableCode]);
+  };
 
-  const handleRegenerateBackupCodes = useCallback(async () => {
+  const handleRegenerateBackupCodes = async () => {
     if (regenerateCode.length !== 6) {
       showError(new Error("Please enter a 6-digit code"), "Invalid code");
       return;
@@ -250,9 +250,9 @@ export function TwoFactorSettings() {
     } finally {
       setIsLoading(false);
     }
-  }, [regenerateBackupCodes, regenerateCode]);
+  };
 
-  const copyBackupCodes = useCallback(async () => {
+  const copyBackupCodes = async () => {
     const codesText = backupCodes.join("\n");
     try {
       await navigator.clipboard.writeText(codesText);
@@ -261,15 +261,15 @@ export function TwoFactorSettings() {
       console.error("Failed to copy backup codes:", error);
       showError(error, "Failed to copy to clipboard");
     }
-  }, [backupCodes]);
+  };
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = () => {
     setStep("idle");
     setVerificationCode("");
     setBackupCodes([]);
     setSecret("");
     setOtpauthUrl("");
-  }, []);
+  };
 
   // Reset step when status changes
   useEffect(() => {

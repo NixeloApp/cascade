@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { ROUTES } from "@/config/routes";
@@ -65,8 +65,8 @@ export function AppSidebar() {
   const myProjects = useQuery(api.dashboard.getMyProjects);
   const defaultProject = myProjects?.[0];
 
-  // Group teams by workspace - O(T) once, not O(W*T) per render
-  const teamsByWorkspace = useMemo(() => {
+  // Group teams by workspace
+  const teamsByWorkspace = (() => {
     const map = new Map<Id<"workspaces">, Doc<"teams">[]>();
     if (!teams) return map;
     for (const team of teams) {
@@ -78,7 +78,7 @@ export function AppSidebar() {
       }
     }
     return map;
-  }, [teams]);
+  })();
 
   // Mutations
   const createDocument = useMutation(api.documents.create);

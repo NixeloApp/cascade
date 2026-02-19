@@ -1,5 +1,4 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useCallback } from "react";
 
 interface IssueModalSearch {
   issue?: string;
@@ -27,17 +26,14 @@ export function useIssueModal(): {
   const issueKey = search.issue;
   const isOpen = !!issueKey;
 
-  const openIssue = useCallback(
-    (key: string) => {
-      navigate({
-        search: ((prev: Record<string, unknown>) => ({ ...prev, issue: key })) as any,
-        replace: false,
-      });
-    },
-    [navigate],
-  );
+  const openIssue = (key: string) => {
+    navigate({
+      search: ((prev: Record<string, unknown>) => ({ ...prev, issue: key })) as any,
+      replace: false,
+    });
+  };
 
-  const closeIssue = useCallback(() => {
+  const closeIssue = () => {
     navigate({
       search: ((prev: Record<string, unknown>) => {
         const { issue: _, ...rest } = prev;
@@ -45,7 +41,7 @@ export function useIssueModal(): {
       }) as any,
       replace: true,
     });
-  }, [navigate]);
+  };
 
   return { issueKey, openIssue, closeIssue, isOpen };
 }

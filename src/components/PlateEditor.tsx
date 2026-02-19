@@ -14,7 +14,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
@@ -51,20 +51,17 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   });
 
   // Handle title edit
-  const handleTitleEdit = useCallback(
-    async (title: string) => {
-      try {
-        await updateTitle({ id: documentId, title });
-        showSuccess("Title updated");
-      } catch (error) {
-        showError(error, "Failed to update title");
-      }
-    },
-    [documentId, updateTitle],
-  );
+  const handleTitleEdit = async (title: string) => {
+    try {
+      await updateTitle({ id: documentId, title });
+      showSuccess("Title updated");
+    } catch (error) {
+      showError(error, "Failed to update title");
+    }
+  };
 
   // Handle toggle public
-  const handleTogglePublic = useCallback(async () => {
+  const handleTogglePublic = async () => {
     if (!document) return;
     try {
       await togglePublic({ id: documentId });
@@ -72,34 +69,31 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
     } catch (error) {
       showError(error, "Failed to update document visibility");
     }
-  }, [document, documentId, togglePublic]);
+  };
 
   // Handle content change (debounced save would go here)
-  const handleChange = useCallback(({ value }: { value: Value }) => {
+  const handleChange = ({ value }: { value: Value }) => {
     // TODO: Implement Y.js sync or direct Convex save
     // For now, just log changes
     console.debug("Editor content changed", value.length, "nodes");
-  }, []);
+  };
 
   // Handle version restore
-  const handleRestoreVersion = useCallback(
-    async (snapshot: unknown, _version: number, title: string) => {
-      try {
-        if (snapshot && document) {
-          // Update document title if it changed
-          if (title !== document.title) {
-            await updateTitle({ id: documentId, title });
-          }
-          showSuccess("Version restored successfully. Refreshing...");
-          // Reload the page to apply the restored version
-          window.location.reload();
+  const handleRestoreVersion = async (snapshot: unknown, _version: number, title: string) => {
+    try {
+      if (snapshot && document) {
+        // Update document title if it changed
+        if (title !== document.title) {
+          await updateTitle({ id: documentId, title });
         }
-      } catch (error) {
-        showError(error, "Failed to restore version");
+        showSuccess("Version restored successfully. Refreshing...");
+        // Reload the page to apply the restored version
+        window.location.reload();
       }
-    },
-    [document, documentId, updateTitle],
-  );
+    } catch (error) {
+      showError(error, "Failed to restore version");
+    }
+  };
 
   // Loading state
   if (document === undefined || userId === undefined) {

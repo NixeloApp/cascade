@@ -11,7 +11,7 @@ import {
   MoreHorizontal,
   Plus,
 } from "lucide-react";
-import { memo, useCallback, useState } from "react";
+import { useState } from "react";
 import { ROUTES } from "@/config/routes";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -112,12 +112,7 @@ interface TreeNodeItemProps {
   onCreateDocument?: (parentId?: Id<"documents">) => void;
 }
 
-const TreeNodeItem = memo(function TreeNodeItem({
-  node,
-  orgSlug,
-  selectedId,
-  onCreateDocument,
-}: TreeNodeItemProps) {
+function TreeNodeItem({ node, orgSlug, selectedId, onCreateDocument }: TreeNodeItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const hasChildren = node.children && node.children.length > 0;
   const isSelected = selectedId === node._id;
@@ -125,19 +120,19 @@ const TreeNodeItem = memo(function TreeNodeItem({
 
   const moveDocument = useMutation(api.documents.moveDocument);
 
-  const handleToggle = useCallback((e: React.MouseEvent) => {
+  const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsExpanded((prev) => !prev);
-  }, []);
+  };
 
-  const handleMoveToRoot = useCallback(async () => {
+  const handleMoveToRoot = async () => {
     try {
       await moveDocument({ id: node._id, newParentId: undefined });
     } catch (error) {
       showError(error, "Failed to move document");
     }
-  }, [moveDocument, node._id]);
+  };
 
   return (
     <div>
@@ -234,4 +229,4 @@ const TreeNodeItem = memo(function TreeNodeItem({
       )}
     </div>
   );
-});
+}

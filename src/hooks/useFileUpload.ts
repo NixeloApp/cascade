@@ -5,7 +5,7 @@
 
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { showError, showSuccess } from "../lib/toast";
 
 export interface FileUploadOptions {
@@ -80,76 +80,64 @@ export function useFileUpload(options: FileUploadOptions = {}): FileUploadReturn
 
   const generateUploadUrl = useMutation(api.attachments.generateUploadUrl);
 
-  const reset = useCallback(() => {
+  const reset = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, []);
+  };
 
-  const openFilePicker = useCallback(() => {
+  const openFilePicker = () => {
     fileInputRef.current?.click();
-  }, []);
+  };
 
-  const handleFileSelect = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      // Validate file size
-      if (file.size > maxSize) {
-        const maxMB = Math.round(maxSize / (1024 * 1024));
-        showError(`File is too large. Maximum size is ${maxMB}MB.`);
-        return;
+    // Validate file size
+    if (file.size > maxSize) {
+      const maxMB = Math.round(maxSize / (1024 * 1024));
+      showError(`File is too large. Maximum size is ${maxMB}MB.`);
+      return;
+    }
+
+    // Validate file type
+    if (allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
+      showError("File type not supported.");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      // Step 1: Generate upload URL
+      const uploadUrl = await generateUploadUrl();
+
+      // Step 2: Upload file to storage
+      const result = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!result.ok) {
+        throw new Error("Upload failed");
       }
 
-      // Validate file type
-      if (allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
-        showError("File type not supported.");
-        return;
-      }
+      const { storageId } = await result.json();
 
-      setIsUploading(true);
+      // Step 3: Call success callback
+      await onSuccess?.(storageId, file);
 
-      try {
-        // Step 1: Generate upload URL
-        const uploadUrl = await generateUploadUrl();
-
-        // Step 2: Upload file to storage
-        const result = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": file.type },
-          body: file,
-        });
-
-        if (!result.ok) {
-          throw new Error("Upload failed");
-        }
-
-        const { storageId } = await result.json();
-
-        // Step 3: Call success callback
-        await onSuccess?.(storageId, file);
-
-        showSuccess(successMessage.replace("{filename}", file.name));
-        reset();
-      } catch (error) {
-        showError(error, errorMessage);
-        onError?.(error);
-      } finally {
-        setIsUploading(false);
-      }
-    },
-    [
-      maxSize,
-      allowedTypes,
-      generateUploadUrl,
-      onSuccess,
-      successMessage,
-      errorMessage,
-      onError,
-      reset,
-    ],
-  );
+      showSuccess(successMessage.replace("{filename}", file.name));
+      reset();
+    } catch (error) {
+      showError(error, errorMessage);
+      onError?.(error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return {
     isUploading,

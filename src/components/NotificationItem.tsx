@@ -14,7 +14,6 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { memo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
@@ -60,10 +59,10 @@ function getNotificationIcon(type: string) {
 }
 
 /**
- * A memoized component that renders a single notification item.
+ * A component that renders a single notification item.
  * Supports navigation to issue/document, and actions (Mark as read, Delete).
  */
-export const NotificationItem = memo(function NotificationItem({
+export function NotificationItem({
   notification,
   onMarkAsRead,
   onDelete,
@@ -184,4 +183,4 @@ export const NotificationItem = memo(function NotificationItem({
       )}
     </div>
   );
-});
+}

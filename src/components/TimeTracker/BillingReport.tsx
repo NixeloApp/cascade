@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -41,8 +41,8 @@ export function BillingReport({ projectId }: BillingReportProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("month");
   const project = useQuery(api.projects.getProject, { id: projectId });
 
-  // Memoize date range calculation to prevent query key changes
-  const dateRangeParams = useMemo(() => {
+  // Calculate date range parameters inline
+  const dateRangeParams = (() => {
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
 
@@ -54,32 +54,23 @@ export function BillingReport({ projectId }: BillingReportProps) {
       default:
         return {};
     }
-  }, [dateRange]);
+  })();
 
   const billing = useQuery(api.timeTracking.getProjectBilling, {
     projectId,
     ...dateRangeParams,
   });
 
-  // Memoize derived calculations
-  const { utilizationRate, averageRate, sortedUsers } = useMemo(() => {
-    if (!billing) {
-      return {
-        utilizationRate: 0,
-        averageRate: 0,
-        sortedUsers: [] as [string, BillingStats][],
-      };
-    }
-
-    const utilRate =
-      billing.totalHours > 0 ? (billing.billableHours / billing.totalHours) * 100 : 0;
-    const avgRate = billing.billableHours > 0 ? billing.totalRevenue / billing.billableHours : 0;
-    const sorted = (Object.entries(billing.byUser) as [string, BillingStats][]).sort(
-      (a, b) => (b[1].totalCost || 0) - (a[1].totalCost || 0),
-    );
-
-    return { utilizationRate: utilRate, averageRate: avgRate, sortedUsers: sorted };
-  }, [billing]);
+  // Calculate derived values inline
+  const utilizationRate =
+    billing && billing.totalHours > 0 ? (billing.billableHours / billing.totalHours) * 100 : 0;
+  const averageRate =
+    billing && billing.billableHours > 0 ? billing.totalRevenue / billing.billableHours : 0;
+  const sortedUsers = billing
+    ? (Object.entries(billing.byUser) as [string, BillingStats][]).sort(
+        (a, b) => (b[1].totalCost || 0) - (a[1].totalCost || 0),
+      )
+    : [];
 
   if (!(billing && project)) {
     return (

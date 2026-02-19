@@ -2,7 +2,7 @@
  * Hook for managing modal open/close state
  */
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 export interface UseModalReturn {
   isOpen: boolean;
@@ -17,17 +17,17 @@ export interface UseModalReturn {
 export function useModal(initialState = false): UseModalReturn {
   const [isOpen, setIsOpen] = useState(initialState);
 
-  const open = useCallback(() => {
+  const open = () => {
     setIsOpen(true);
-  }, []);
+  };
 
-  const close = useCallback(() => {
+  const close = () => {
     setIsOpen(false);
-  }, []);
+  };
 
-  const toggle = useCallback(() => {
+  const toggle = () => {
     setIsOpen((prev) => !prev);
-  }, []);
+  };
 
   return {
     isOpen,

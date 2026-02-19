@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -49,34 +49,26 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
   type Epic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
 
-  // Memoize date range calculations - only recalculate when component mounts
-  const { startOfMonth, endDate, timelineMonths } = useMemo(() => {
-    const today = new Date();
-    const start = new Date(today.getFullYear(), today.getMonth(), 1);
-    const end = new Date(today.getFullYear(), today.getMonth() + 6, 0); // 6 months ahead
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endDate = new Date(today.getFullYear(), today.getMonth() + 6, 0); // 6 months ahead
 
-    // Generate timeline columns
-    const months: Date[] = [];
-    for (let i = 0; i < 6; i++) {
-      months.push(new Date(today.getFullYear(), today.getMonth() + i, 1));
-    }
+  // Generate timeline columns
+  const timelineMonths: Date[] = [];
+  for (let i = 0; i < 6; i++) {
+    timelineMonths.push(new Date(today.getFullYear(), today.getMonth() + i, 1));
+  }
 
-    return { startOfMonth: start, endDate: end, timelineMonths: months };
-  }, []);
-
-  const getPositionOnTimeline = useCallback(
-    (date: number) => {
-      const issueDate = new Date(date);
-      const totalDays = Math.floor(
-        (endDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      const daysSinceStart = Math.floor(
-        (issueDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      return (daysSinceStart / totalDays) * 100;
-    },
-    [startOfMonth, endDate],
-  );
+  function getPositionOnTimeline(date: number) {
+    const issueDate = new Date(date);
+    const totalDays = Math.floor(
+      (endDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    const daysSinceStart = Math.floor(
+      (issueDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return (daysSinceStart / totalDays) * 100;
+  }
 
   // Keyboard navigation
   const listRef = useRef<ListImperativeAPI>(null);
@@ -98,84 +90,81 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     selectedIndex: number;
   };
 
-  const Row = useCallback(
-    ({
-      issues,
-      selectedIndex,
-      index,
-      style,
-    }: RowData & {
-      index: number;
-      style: React.CSSProperties;
-    }) => {
-      if (!issues) return null;
-      const issue = issues[index];
-      const isSelected = index === selectedIndex;
+  function Row({
+    issues,
+    selectedIndex,
+    index,
+    style,
+  }: RowData & {
+    index: number;
+    style: React.CSSProperties;
+  }) {
+    if (!issues) return null;
+    const issue = issues[index];
+    const isSelected = index === selectedIndex;
 
-      return (
-        <Flex
-          align="center"
-          style={style}
-          className={cn(
-            "transition-colors border-b border-ui-border",
-            isSelected
-              ? "bg-brand-subtle/50 ring-1 ring-inset ring-brand-ring/50 z-10"
-              : "hover:bg-ui-bg-secondary",
+    return (
+      <Flex
+        align="center"
+        style={style}
+        className={cn(
+          "transition-colors border-b border-ui-border",
+          isSelected
+            ? "bg-brand-subtle/50 ring-1 ring-inset ring-brand-ring/50 z-10"
+            : "hover:bg-ui-bg-secondary",
+        )}
+      >
+        {/* Issue Info */}
+        <FlexItem shrink={false} className="w-64 pr-4">
+          <Flex align="center" gap="sm" className="mb-1">
+            <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
+            <button
+              type="button"
+              onClick={() => setSelectedIssue(issue._id)}
+              className={cn(
+                "text-sm font-medium truncate text-left",
+                isSelected ? "text-brand-hover" : "text-ui-text hover:text-brand-muted",
+              )}
+            >
+              {issue.key}
+            </button>
+          </Flex>
+          <Typography variant="caption">{issue.title}</Typography>
+        </FlexItem>
+
+        {/* Timeline Bar */}
+        <FlexItem flex="1" className="relative h-8">
+          {issue.dueDate && (
+            <button
+              type="button"
+              className={cn(
+                "absolute h-6 rounded-full opacity-80 hover:opacity-100 transition-opacity cursor-pointer flex items-center px-2",
+                getPriorityColor(issue.priority, "bg"),
+              )}
+              style={{
+                left: `${getPositionOnTimeline(issue.dueDate)}%`,
+                width: "5%", // Default width for single date
+              }}
+              onClick={() => setSelectedIssue(issue._id)}
+              title={`${issue.title} - Due: ${formatDate(issue.dueDate)}`}
+              aria-label={`View issue ${issue.key}`}
+            >
+              <Typography variant="label" className="text-brand-foreground truncate">
+                {issue.assignee?.name.split(" ")[0]}
+              </Typography>
+            </button>
           )}
-        >
-          {/* Issue Info */}
-          <FlexItem shrink={false} className="w-64 pr-4">
-            <Flex align="center" gap="sm" className="mb-1">
-              <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
-              <button
-                type="button"
-                onClick={() => setSelectedIssue(issue._id)}
-                className={cn(
-                  "text-sm font-medium truncate text-left",
-                  isSelected ? "text-brand-hover" : "text-ui-text hover:text-brand-muted",
-                )}
-              >
-                {issue.key}
-              </button>
-            </Flex>
-            <Typography variant="caption">{issue.title}</Typography>
-          </FlexItem>
 
-          {/* Timeline Bar */}
-          <FlexItem flex="1" className="relative h-8">
-            {issue.dueDate && (
-              <button
-                type="button"
-                className={cn(
-                  "absolute h-6 rounded-full opacity-80 hover:opacity-100 transition-opacity cursor-pointer flex items-center px-2",
-                  getPriorityColor(issue.priority, "bg"),
-                )}
-                style={{
-                  left: `${getPositionOnTimeline(issue.dueDate)}%`,
-                  width: "5%", // Default width for single date
-                }}
-                onClick={() => setSelectedIssue(issue._id)}
-                title={`${issue.title} - Due: ${formatDate(issue.dueDate)}`}
-                aria-label={`View issue ${issue.key}`}
-              >
-                <Typography variant="label" className="text-brand-foreground truncate">
-                  {issue.assignee?.name.split(" ")[0]}
-                </Typography>
-              </button>
-            )}
-
-            {/* Today Indicator */}
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-status-error z-10"
-              style={{ left: `${getPositionOnTimeline(Date.now())}%` }}
-              title="Today"
-            />
-          </FlexItem>
-        </Flex>
-      );
-    },
-    [getPositionOnTimeline],
-  );
+          {/* Today Indicator */}
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-status-error z-10"
+            style={{ left: `${getPositionOnTimeline(Date.now())}%` }}
+            title="Today"
+          />
+        </FlexItem>
+      </Flex>
+    );
+  }
 
   // Loading State
   if (!(project && filteredIssues && epics)) {

@@ -9,7 +9,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { Globe, Plus, Shield, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -51,22 +51,19 @@ export function IpRestrictionsSettings() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTogglingEnabled, setIsTogglingEnabled] = useState(false);
 
-  const handleToggleEnabled = useCallback(
-    async (enabled: boolean) => {
-      setIsTogglingEnabled(true);
-      try {
-        await setEnabled({ organizationId, enabled });
-        showSuccess(enabled ? "IP restrictions enabled" : "IP restrictions disabled");
-      } catch (error) {
-        showError(error, "Failed to update IP restrictions");
-      } finally {
-        setIsTogglingEnabled(false);
-      }
-    },
-    [organizationId, setEnabled],
-  );
+  const handleToggleEnabled = async (enabled: boolean) => {
+    setIsTogglingEnabled(true);
+    try {
+      await setEnabled({ organizationId, enabled });
+      showSuccess(enabled ? "IP restrictions enabled" : "IP restrictions disabled");
+    } catch (error) {
+      showError(error, "Failed to update IP restrictions");
+    } finally {
+      setIsTogglingEnabled(false);
+    }
+  };
 
-  const handleAddIp = useCallback(async () => {
+  const handleAddIp = async () => {
     if (!newIpRange.trim()) return;
 
     setIsSubmitting(true);
@@ -85,19 +82,16 @@ export function IpRestrictionsSettings() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [organizationId, newIpRange, newDescription, addIp]);
+  };
 
-  const handleRemoveIp = useCallback(
-    async (id: Id<"organizationIpAllowlist">) => {
-      try {
-        await removeIp({ id });
-        showSuccess("IP removed from allowlist");
-      } catch (error) {
-        showError(error, "Failed to remove IP");
-      }
-    },
-    [removeIp],
-  );
+  const handleRemoveIp = async (id: Id<"organizationIpAllowlist">) => {
+    try {
+      await removeIp({ id });
+      showSuccess("IP removed from allowlist");
+    } catch (error) {
+      showError(error, "Failed to remove IP");
+    }
+  };
 
   if (!status || !allowlist) {
     return (

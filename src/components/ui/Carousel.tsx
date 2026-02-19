@@ -96,11 +96,11 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
 
     const activeIndex = controlledIndex ?? internalIndex;
 
-    const registerSlide = React.useCallback(() => {
+    const registerSlide = () => {
       const index = slideCountRef.current;
       slideCountRef.current += 1;
       return index;
-    }, []);
+    };
 
     // Update total slides count after all slides are registered
     React.useEffect(() => {
@@ -144,17 +144,14 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       slideCountRef.current = 0;
     }, []);
 
-    const contextValue = React.useMemo(
-      () => ({
-        activeIndex,
-        totalSlides,
-        goToSlide,
-        goToPrevious,
-        goToNext,
-        registerSlide,
-      }),
-      [activeIndex, totalSlides, goToSlide, goToPrevious, goToNext, registerSlide],
-    );
+    const contextValue = {
+      activeIndex,
+      totalSlides,
+      goToSlide,
+      goToPrevious,
+      goToNext,
+      registerSlide,
+    };
 
     return (
       <CarouselContext.Provider value={contextValue}>

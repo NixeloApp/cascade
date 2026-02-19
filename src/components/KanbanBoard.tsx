@@ -4,7 +4,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { useQuery } from "convex/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
@@ -121,17 +121,15 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   const { historyStack, redoStack, handleUndo, handleRedo, pushAction } = useBoardHistory();
 
   // Apply filters to issues
-  const filteredIssuesByStatus = useMemo(() => {
+  const filteredIssuesByStatus = (() => {
     const result: Record<string, EnrichedIssue[]> = {};
     for (const [status, issues] of Object.entries(issuesByStatus)) {
       result[status] = applyFilters(issues, filters);
     }
     return result;
-  }, [issuesByStatus, filters]);
+  })();
 
-  const allIssues = useMemo(() => {
-    return Object.values(filteredIssuesByStatus).flat();
-  }, [filteredIssuesByStatus]);
+  const allIssues = Object.values(filteredIssuesByStatus).flat();
 
   // Keyboard Navigation
   const { selectedIndex } = useListNavigation({
@@ -140,15 +138,12 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   });
   const focusedIssueId = allIssues[selectedIndex]?._id;
 
-  const boardOptions = useMemo(
-    () => ({
-      projectId,
-      teamId,
-      sprintId,
-      doneColumnDays: 14,
-    }),
-    [projectId, teamId, sprintId],
-  );
+  const boardOptions = {
+    projectId,
+    teamId,
+    sprintId,
+    doneColumnDays: 14,
+  };
 
   const { handleIssueDrop, handleIssueReorder } = useBoardDragAndDrop({
     allIssues,
@@ -159,11 +154,11 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   });
 
   // Handlers
-  const handleCreateIssue = useCallback((_status: string) => {
+  const handleCreateIssue = (_status: string) => {
     setShowCreateIssue(true);
-  }, []);
+  };
 
-  const handleToggleSelect = useCallback((issueId: Id<"issues">) => {
+  const handleToggleSelect = (issueId: Id<"issues">) => {
     setSelectedIssueIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(issueId)) {
@@ -173,21 +168,21 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
       }
       return newSet;
     });
-  }, []);
+  };
 
-  const handleClearSelection = useCallback(() => {
+  const handleClearSelection = () => {
     setSelectedIssueIds(new Set());
     setSelectionMode(false);
-  }, []);
+  };
 
-  const handleToggleSelectionMode = useCallback(() => {
+  const handleToggleSelectionMode = () => {
     setSelectionMode((prev) => {
       if (!prev) setSelectedIssueIds(new Set());
       return !prev;
     });
-  }, []);
+  };
 
-  const handleToggleSwimlanCollapse = useCallback((swimlanId: string) => {
+  const handleToggleSwimlanCollapse = (swimlanId: string) => {
     setCollapsedSwimlanes((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(swimlanId)) {
@@ -197,9 +192,9 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
       }
       return newSet;
     });
-  }, []);
+  };
 
-  const handleToggleColumnCollapse = useCallback((columnId: string) => {
+  const handleToggleColumnCollapse = (columnId: string) => {
     setCollapsedColumns((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(columnId)) {
@@ -209,16 +204,12 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
       }
       return newSet;
     });
-  }, []);
+  };
 
   // Swimlane grouping
-  const swimlaneIssues = useMemo(() => {
-    return groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy);
-  }, [filteredIssuesByStatus, swimlaneGroupBy]);
+  const swimlaneIssues = groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy);
 
-  const swimlaneConfigs = useMemo(() => {
-    return getSwimlanConfigs(swimlaneGroupBy, allIssues);
-  }, [swimlaneGroupBy, allIssues]);
+  const swimlaneConfigs = getSwimlanConfigs(swimlaneGroupBy, allIssues);
 
   // Loading State
   const isLoading = isLoadingIssues || (isProjectMode && !project);

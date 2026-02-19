@@ -9,7 +9,7 @@
  */
 
 import Fuse from "fuse.js";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface FuzzySearchOptions {
   /**
@@ -169,61 +169,44 @@ export function useFuzzySearch<T>(items: T[] | undefined, options: FuzzySearchOp
     setDebouncedQuery(query);
   }, [query, options.debounce]);
 
-  // Create Fuse instance (memoized - only recreates when items/options change)
-  const fuse = useMemo(() => {
-    if (!items || items.length === 0) return null;
-
-    return new Fuse(items, {
-      keys: options.keys,
-      threshold: options.threshold ?? 0.4,
-      minMatchCharLength: options.minMatchCharLength ?? 1,
-      includeScore: options.includeScore ?? true,
-      includeMatches: true, // For highlighting support
-      // Performance optimizations
-      ignoreLocation: true, // Match anywhere in the string (faster)
-      useExtendedSearch: false,
-      findAllMatches: false,
-      // Sorting
-      shouldSort: options.sortByScore ?? true,
-    });
-  }, [
-    items,
-    options.keys,
-    options.threshold,
-    options.minMatchCharLength,
-    options.includeScore,
-    options.sortByScore,
-  ]);
+  // Create Fuse instance
+  const fuse =
+    !items || items.length === 0
+      ? null
+      : new Fuse(items, {
+          keys: options.keys,
+          threshold: options.threshold ?? 0.4,
+          minMatchCharLength: options.minMatchCharLength ?? 1,
+          includeScore: options.includeScore ?? true,
+          includeMatches: true, // For highlighting support
+          // Performance optimizations
+          ignoreLocation: true, // Match anywhere in the string (faster)
+          useExtendedSearch: false,
+          findAllMatches: false,
+          // Sorting
+          shouldSort: options.sortByScore ?? true,
+        });
 
   // Perform search
-  const results = useMemo(() => {
-    if (!(fuse && debouncedQuery.trim())) {
-      // No query - return all items (or empty if no items)
-      return items?.map((item) => ({ item, score: 0 })) ?? [];
-    }
-
-    const searchResults = fuse.search(debouncedQuery);
-
-    // Apply limit if specified
-    const limitedResults = options.limit ? searchResults.slice(0, options.limit) : searchResults;
-
-    return limitedResults as FuzzySearchResult<T>[];
-  }, [fuse, debouncedQuery, items, options.limit]);
+  const results =
+    fuse && debouncedQuery.trim()
+      ? (fuse.search(debouncedQuery) as FuzzySearchResult<T>[]).slice(0, options.limit)
+      : (items?.map((item) => ({ item, score: 0 })) ?? []);
 
   /**
    * Update search query
    */
-  const search = useCallback((newQuery: string) => {
+  const search = (newQuery: string) => {
     setQuery(newQuery);
-  }, []);
+  };
 
   /**
    * Clear search query
    */
-  const clear = useCallback(() => {
+  const clear = () => {
     setQuery("");
     setDebouncedQuery("");
-  }, []);
+  };
 
   return {
     /**

@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -37,7 +37,7 @@ function Verify2FARoute() {
     }
   }, [redirectPath, navigate]);
 
-  const handleVerify = useCallback(async () => {
+  const handleVerify = async () => {
     if (code.length < 6) {
       showError(new Error("Please enter a valid code"), "Invalid code");
       return;
@@ -67,7 +67,7 @@ function Verify2FARoute() {
       showError(error, "Failed to verify code");
       setIsLoading(false);
     }
-  }, [code, isBackupCode, verifyCode, verifyBackupCode]);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && code.length >= 6) {
