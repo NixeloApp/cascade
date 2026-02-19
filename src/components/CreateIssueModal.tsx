@@ -312,7 +312,7 @@ export function CreateIssueModal({
           {showAISuggestions && (
             <Flex align="center" gap="xs" className="text-status-success" aria-live="polite">
               <Icon icon={Check} size="sm" />
-              <span>AI suggestions applied</span>
+              <Typography variant="small">AI suggestions applied</Typography>
             </Flex>
           )}
         </Flex>

@@ -7,6 +7,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
 import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
@@ -175,70 +176,44 @@ export function GoogleCalendarIntegration() {
           {calendarConnection.syncEnabled && (
             <Stack gap="sm">
               <Typography variant="label">Sync Direction</Typography>
-              <Stack gap="sm">
-                <label className="cursor-pointer hover:bg-ui-bg-tertiary rounded-lg">
-                  <Card padding="sm" className="bg-ui-bg-secondary">
-                    <Flex gap="md" align="center">
-                      <input
-                        type="radio"
-                        name="syncDirection"
-                        checked={calendarConnection.syncDirection === "bidirectional"}
-                        onChange={() => handleChangeSyncDirection("bidirectional")}
-                        disabled={isSaving}
-                        className="h-4 w-4 text-brand"
-                      />
-                      <Stack gap="none">
-                        <Typography variant="label">Bidirectional</Typography>
-                        <Typography variant="caption" color="tertiary">
-                          Sync both ways (recommended)
-                        </Typography>
-                      </Stack>
-                    </Flex>
-                  </Card>
-                </label>
-
-                <label className="cursor-pointer hover:bg-ui-bg-tertiary rounded-lg">
-                  <Card padding="sm" className="bg-ui-bg-secondary">
-                    <Flex gap="md" align="center">
-                      <input
-                        type="radio"
-                        name="syncDirection"
-                        checked={calendarConnection.syncDirection === "import"}
-                        onChange={() => handleChangeSyncDirection("import")}
-                        disabled={isSaving}
-                        className="h-4 w-4 text-brand"
-                      />
-                      <Stack gap="none">
-                        <Typography variant="label">Import Only</Typography>
-                        <Typography variant="caption" color="tertiary">
-                          Only import from Google to Nixelo
-                        </Typography>
-                      </Stack>
-                    </Flex>
-                  </Card>
-                </label>
-
-                <label className="cursor-pointer hover:bg-ui-bg-tertiary rounded-lg">
-                  <Card padding="sm" className="bg-ui-bg-secondary">
-                    <Flex gap="md" align="center">
-                      <input
-                        type="radio"
-                        name="syncDirection"
-                        checked={calendarConnection.syncDirection === "export"}
-                        onChange={() => handleChangeSyncDirection("export")}
-                        disabled={isSaving}
-                        className="h-4 w-4 text-brand"
-                      />
-                      <Stack gap="none">
-                        <Typography variant="label">Export Only</Typography>
-                        <Typography variant="caption" color="tertiary">
-                          Only export from Nixelo to Google
-                        </Typography>
-                      </Stack>
-                    </Flex>
-                  </Card>
-                </label>
-              </Stack>
+              <RadioGroup
+                value={calendarConnection.syncDirection}
+                onValueChange={(value) =>
+                  handleChangeSyncDirection(value as "bidirectional" | "import" | "export")
+                }
+                disabled={isSaving}
+              >
+                <Card
+                  padding="sm"
+                  className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary cursor-pointer"
+                >
+                  <RadioGroupItem
+                    value="bidirectional"
+                    label="Bidirectional"
+                    description="Sync both ways (recommended)"
+                  />
+                </Card>
+                <Card
+                  padding="sm"
+                  className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary cursor-pointer"
+                >
+                  <RadioGroupItem
+                    value="import"
+                    label="Import Only"
+                    description="Only import from Google to Nixelo"
+                  />
+                </Card>
+                <Card
+                  padding="sm"
+                  className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary cursor-pointer"
+                >
+                  <RadioGroupItem
+                    value="export"
+                    label="Export Only"
+                    description="Only export from Nixelo to Google"
+                  />
+                </Card>
+              </RadioGroup>
             </Stack>
           )}
         </Stack>

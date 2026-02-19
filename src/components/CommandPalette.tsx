@@ -119,7 +119,7 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
         <Flex
           wrap
           gap="md"
-          className="px-4 py-2 border-t border-ui-border bg-ui-bg-secondary text-ui-text-tertiary"
+          className="px-4 py-2 border-t border-ui-border bg-ui-bg-secondary text-ui-text-tertiary text-xs"
         >
           <ShortcutHint keys="up+down">Navigate</ShortcutHint>
           <ShortcutHint keys="Enter">Select</ShortcutHint>

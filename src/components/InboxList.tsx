@@ -199,7 +199,7 @@ export function InboxList({ projectId }: InboxListProps) {
   ).length;
 
   return (
-    <Flex direction="column" className="h-full">
+    <Flex direction="column" className="h-full p-4">
       <Flex align="center" justify="between" className="mb-4">
         <Typography variant="h3">Inbox</Typography>
         {counts.open > 0 && <Badge variant="secondary">{counts.open} to review</Badge>}

@@ -176,7 +176,7 @@ export function AutomationRuleForm({
           value={actionValue}
           onChange={(e) => setActionValue(e.target.value)}
           rows={3}
-          className="font-mono"
+          className="font-mono text-sm"
           placeholder='{"label": "urgent"}'
         />
       </Stack>

@@ -96,9 +96,11 @@ function FilterDropdown<T>({
           </DropdownMenuCheckboxItem>
         ))}
         {(!items || items.length === 0) && (
-          <Typography variant="small" color="secondary">
-            {emptyMessage}
-          </Typography>
+          <div className="px-2 py-1.5">
+            <Typography variant="small" color="secondary">
+              {emptyMessage}
+            </Typography>
+          </div>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

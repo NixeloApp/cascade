@@ -6,9 +6,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
 import { Stack } from "../ui/Stack";
@@ -175,14 +177,15 @@ export function Timesheet() {
                       <Typography variant="mono" className="text-sm font-medium">
                         {formatHours(entry.hours)}h
                       </Typography>
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDelete(entry._id)}
-                        className="p-1 text-ui-text-tertiary hover:text-status-error rounded"
-                        title="Delete"
+                        className="p-1 min-w-0 text-ui-text-tertiary hover:text-status-error"
+                        aria-label="Delete entry"
                       >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                        <Icon icon={Trash2} size="xs" />
+                      </Button>
                     </Flex>
                     {entry.description && (
                       <Typography variant="caption" color="tertiary" className="mt-1 line-clamp-1">

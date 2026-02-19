@@ -71,7 +71,10 @@ export function TimerWidget() {
 
             {/* Description or Issue */}
             {(runningTimer.description || runningTimer.issue) && (
-              <Typography variant="caption" className="text-brand-indigo-text max-w-37.5 truncate">
+              <Typography
+                variant="caption"
+                className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate"
+              >
                 {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
               </Typography>
             )}

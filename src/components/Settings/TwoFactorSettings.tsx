@@ -103,7 +103,7 @@ function SetupWizardView({
 
         <Stack align="center" gap="md" className="py-4">
           {otpauthUrl && (
-            <Card padding="md" className="bg-white">
+            <Card padding="md" className="bg-ui-bg">
               <QRCodeSVG value={otpauthUrl} size={200} />
             </Card>
           )}

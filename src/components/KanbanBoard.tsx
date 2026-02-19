@@ -286,11 +286,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
 
       {swimlaneGroupBy === "none" ? (
         /* Standard board view without swimlanes */
-        <Flex
-          ref={boardContainerRef}
-          direction="column"
-          className="lg:flex-row lg:overflow-x-auto -webkit-overflow-scrolling-touch"
-        >
+        <Flex ref={boardContainerRef} direction="column" className="lg:flex-row lg:overflow-x-auto">
           {workflowStates.map((state, columnIndex: number) => {
             const counts = statusCounts[state.id] || {
               total: 0,

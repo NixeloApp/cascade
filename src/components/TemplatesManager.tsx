@@ -103,7 +103,7 @@ export function TemplatesManager({ projectId }: TemplatesManagerProps) {
               description="Create templates to speed up issue creation"
             />
           ) : (
-            <Stack gap="sm">
+            <Stack gap="md">
               {templates.map((template: IssueTemplate) => (
                 <TemplateCard
                   key={template._id}

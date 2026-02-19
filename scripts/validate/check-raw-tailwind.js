@@ -24,8 +24,8 @@ export function run() {
     "src/components/Sidebar/",
     "src/components/Plate/",
     "src/components/Onboarding/",
-    "AppSidebar.tsx", // Contains NavItem, CollapsibleSection internal components
-    "AppHeader.tsx", // Navigation header with internal components
+    "/AppSidebar.tsx", // Contains NavItem, CollapsibleSection internal components
+    "/AppHeader.tsx", // Navigation header with internal components
     ".stories.tsx",
     ".test.tsx",
   ];

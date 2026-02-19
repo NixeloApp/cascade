@@ -7,7 +7,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { ArrowLeft } from "@/lib/icons";
+import { ArrowLeft, CheckCircle } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -287,52 +287,19 @@ export function CreateProjectFromTemplate({
                 <Typography variant="label">What's Included:</Typography>
                 <Stack gap="sm">
                   <Flex align="center" gap="sm">
-                    <svg
-                      aria-hidden="true"
-                      className="w-5 h-5 text-status-success"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Icon icon={CheckCircle} className="text-status-success" />
                     <Typography variant="small">
                       {selectedTemplate.workflowStates.length} workflow states
                     </Typography>
                   </Flex>
                   <Flex align="center" gap="sm">
-                    <svg
-                      aria-hidden="true"
-                      className="w-5 h-5 text-status-success"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Icon icon={CheckCircle} className="text-status-success" />
                     <Typography variant="small">
                       {selectedTemplate.defaultLabels.length} pre-configured labels
                     </Typography>
                   </Flex>
                   <Flex align="center" gap="sm">
-                    <svg
-                      aria-hidden="true"
-                      className="w-5 h-5 text-status-success"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Icon icon={CheckCircle} className="text-status-success" />
                     <Typography variant="small" className="capitalize">
                       {selectedTemplate.boardType} board type
                     </Typography>

@@ -129,7 +129,9 @@ export function GeneralSettings({
           </Card>
           <Card variant="soft" padding="md" className="bg-ui-bg-tertiary">
             <Label className="mb-1">Description</Label>
-            <Typography color="secondary">{description || "No description"}</Typography>
+            <Typography variant="p" color="secondary">
+              {description || "No description"}
+            </Typography>
           </Card>
         </Stack>
       )}

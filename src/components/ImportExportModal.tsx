@@ -52,7 +52,7 @@ export function ImportExportModal({
     >
       <Stack gap="lg">
         {/* Mode Selection */}
-        <Flex gap="sm" className="bg-ui-bg-tertiary rounded-lg">
+        <Flex gap="sm" className="bg-ui-bg-tertiary rounded-lg p-1">
           <button
             type="button"
             onClick={() => setMode("export")}

@@ -132,9 +132,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 onClick={() => setSelectedIssue(issue._id)}
                 className={cn(
                   "text-sm font-medium truncate text-left",
-                  isSelected
-                    ? "text-brand-hover"
-                    : "text-ui-text hover:text-brand:text-brand-muted",
+                  isSelected ? "text-brand-hover" : "text-ui-text hover:text-brand-muted",
                 )}
               >
                 {issue.key}
