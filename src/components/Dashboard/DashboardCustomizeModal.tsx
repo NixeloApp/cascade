@@ -45,19 +45,23 @@ export function DashboardCustomizeModal() {
       description="Choose which widgets to display on your personal dashboard."
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Settings2 className="w-4 h-4" />
-          Customize
+        <Button variant="outline" size="sm">
+          <Flex align="center" gap="xs">
+            <Settings2 className="w-4 h-4" />
+            Customize
+          </Flex>
         </Button>
       </DialogTrigger>
 
       <Stack gap="md">
         <Flex align="center" justify="between" gap="sm">
-          <Label htmlFor="show-stats" className="flex flex-col gap-1">
-            <span>Quick Stats</span>
-            <Typography variant="caption" color="secondary" as="span">
-              Show issue and project counts
-            </Typography>
+          <Label htmlFor="show-stats">
+            <Stack gap="none">
+              <span>Quick Stats</span>
+              <Typography variant="caption" color="secondary" as="span">
+                Show issue and project counts
+              </Typography>
+            </Stack>
           </Label>
           <Switch
             id="show-stats"
@@ -67,11 +71,13 @@ export function DashboardCustomizeModal() {
         </Flex>
 
         <Flex align="center" justify="between" gap="sm">
-          <Label htmlFor="show-activity" className="flex flex-col gap-1">
-            <span>Recent Activity</span>
-            <Typography variant="caption" color="secondary" as="span">
-              Show your latest actions and history
-            </Typography>
+          <Label htmlFor="show-activity">
+            <Stack gap="none">
+              <span>Recent Activity</span>
+              <Typography variant="caption" color="secondary" as="span">
+                Show your latest actions and history
+              </Typography>
+            </Stack>
           </Label>
           <Switch
             id="show-activity"
@@ -81,11 +87,13 @@ export function DashboardCustomizeModal() {
         </Flex>
 
         <Flex align="center" justify="between" gap="sm">
-          <Label htmlFor="show-workspaces" className="flex flex-col gap-1">
-            <span>My Workspaces</span>
-            <Typography variant="caption" color="secondary" as="span">
-              Show list of projects you belong to
-            </Typography>
+          <Label htmlFor="show-workspaces">
+            <Stack gap="none">
+              <span>My Workspaces</span>
+              <Typography variant="caption" color="secondary" as="span">
+                Show list of projects you belong to
+              </Typography>
+            </Stack>
           </Label>
           <Switch
             id="show-workspaces"

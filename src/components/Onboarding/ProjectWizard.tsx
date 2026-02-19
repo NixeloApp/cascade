@@ -2,6 +2,9 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Stack } from "@/components/ui/Stack";
 import { Check, KanbanSquare, ListTodo } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -114,7 +117,7 @@ export function ProjectWizard({
       description="Set up your project in a few easy steps"
       className="sm:max-w-2xl"
     >
-      <div className="space-y-6">
+      <Stack gap="lg">
         {/* Mintlify-inspired step indicator */}
         <div className="mb-8">
           <Flex gap="sm" className="mb-4">
@@ -168,19 +171,19 @@ export function ProjectWizard({
 
         {/* Step 1: Project Name & Key */}
         {step === 1 && (
-          <div className="space-y-4">
-            <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-              Create Your First Project
-            </Typography>
-            <Typography className="text-ui-text-secondary">
-              Let's start by giving your project a name and a unique key.
-            </Typography>
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Typography variant="h2">Create Your First Project</Typography>
+              <Typography color="secondary">
+                Let's start by giving your project a name and a unique key.
+              </Typography>
+            </Stack>
 
-            <div>
-              <Label htmlFor="project-name" required className="block mb-1">
+            <Stack gap="xs">
+              <Label htmlFor="project-name" required>
                 Project Name
               </Label>
-              <input
+              <Input
                 id="project-name"
                 type="text"
                 value={projectName}
@@ -191,28 +194,27 @@ export function ProjectWizard({
                   }
                 }}
                 placeholder="e.g., Website Redesign, Mobile App, Q1 Planning"
-                className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text"
               />
-            </div>
+            </Stack>
 
-            <div>
-              <Label htmlFor="project-key" required className="block mb-1">
+            <Stack gap="xs">
+              <Label htmlFor="project-key" required>
                 Project Key
               </Label>
-              <input
+              <Input
                 id="project-key"
                 type="text"
                 value={projectKey}
                 onChange={(e) => setProjectKey(e.target.value.toUpperCase())}
                 placeholder="e.g., WEB, MOBILE, Q1"
-                className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text font-mono"
+                className="font-mono"
                 maxLength={10}
               />
-              <Typography className="text-xs text-ui-text-tertiary mt-1">
+              <Typography variant="meta">
                 2-10 uppercase letters. This will prefix your issue keys (e.g.,{" "}
                 {projectKey || "KEY"}-123)
               </Typography>
-            </div>
+            </Stack>
 
             <Textarea
               label="Description (optional)"
@@ -221,107 +223,109 @@ export function ProjectWizard({
               placeholder="What is this project about?"
               rows={3}
             />
-          </div>
+          </Stack>
         )}
 
         {/* Step 2: Board Type */}
         {step === 2 && (
-          <div className="space-y-4">
-            <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-              Choose Your Board Type
-            </Typography>
-            <Typography className="text-ui-text-secondary">
-              How do you want to organize your work? You can change this later.
-            </Typography>
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Typography variant="h2">Choose Your Board Type</Typography>
+              <Typography color="secondary">
+                How do you want to organize your work? You can change this later.
+              </Typography>
+            </Stack>
 
             <Grid cols={2} gap="lg">
-              <button
-                type="button"
+              <Card
+                hoverable
+                padding="lg"
                 onClick={() => setBoardType("kanban")}
                 className={cn(
-                  "p-6 border-2 rounded-lg text-left transition-all",
+                  "border-2 text-left",
                   boardType === "kanban"
                     ? "border-brand bg-brand-indigo-track"
-                    : "border-ui-border hover:border-brand-muted",
+                    : "hover:border-brand-muted",
                 )}
               >
-                <Flex align="center" gap="sm" className="mb-2">
-                  <Icon icon={KanbanSquare} size="md" />
-                  <Typography variant="h3" className="font-bold text-lg text-ui-text">
-                    Kanban
+                <Stack gap="sm">
+                  <Flex align="center" gap="sm">
+                    <Icon icon={KanbanSquare} size="md" />
+                    <Typography variant="h3">Kanban</Typography>
+                  </Flex>
+                  <Typography variant="small" color="secondary">
+                    Continuous flow of work through columns. Great for ongoing projects and support
+                    teams.
                   </Typography>
-                </Flex>
-                <Typography className="text-sm text-ui-text-secondary">
-                  Continuous flow of work through columns. Great for ongoing projects and support
-                  teams.
-                </Typography>
-                <ul className="mt-3 text-ui-text-tertiary space-y-1">
-                  <Typography as="li" variant="caption">
-                    <Icon icon={Check} size="xs" className="inline mr-1" /> No time constraints
-                  </Typography>
-                  <Typography as="li" variant="caption">
-                    <Icon icon={Check} size="xs" className="inline mr-1" /> Visualize workflow
-                  </Typography>
-                  <Typography as="li" variant="caption">
-                    <Icon icon={Check} size="xs" className="inline mr-1" /> Limit work in progress
-                  </Typography>
-                </ul>
-              </button>
+                  <Stack gap="xs" className="mt-2">
+                    <Typography as="span" variant="caption" color="tertiary">
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> No time constraints
+                    </Typography>
+                    <Typography as="span" variant="caption" color="tertiary">
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Visualize workflow
+                    </Typography>
+                    <Typography as="span" variant="caption" color="tertiary">
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Limit work in progress
+                    </Typography>
+                  </Stack>
+                </Stack>
+              </Card>
 
-              <button
-                type="button"
+              <Card
+                hoverable
+                padding="lg"
                 onClick={() => setBoardType("scrum")}
                 className={cn(
-                  "p-6 border-2 rounded-lg text-left transition-all",
+                  "border-2 text-left",
                   boardType === "scrum"
                     ? "border-brand bg-brand-indigo-track"
-                    : "border-ui-border hover:border-brand-muted",
+                    : "hover:border-brand-muted",
                 )}
               >
-                <Flex align="center" gap="sm" className="mb-2">
-                  <Icon icon={ListTodo} size="md" />
-                  <Typography variant="h3" className="font-bold text-lg text-ui-text">
-                    Scrum
+                <Stack gap="sm">
+                  <Flex align="center" gap="sm">
+                    <Icon icon={ListTodo} size="md" />
+                    <Typography variant="h3">Scrum</Typography>
+                  </Flex>
+                  <Typography variant="small" color="secondary">
+                    Work in sprints with defined goals. Great for product development and fixed
+                    deadlines.
                   </Typography>
-                </Flex>
-                <Typography className="text-sm text-ui-text-secondary">
-                  Work in sprints with defined goals. Great for product development and fixed
-                  deadlines.
-                </Typography>
-                <ul className="mt-3 text-ui-text-tertiary space-y-1">
-                  <Typography as="li" variant="caption">
-                    <Icon icon={Check} size="xs" className="inline mr-1" /> Sprint planning
-                  </Typography>
-                  <Typography as="li" variant="caption">
-                    <Icon icon={Check} size="xs" className="inline mr-1" /> Velocity tracking
-                  </Typography>
-                  <Typography as="li" variant="caption">
-                    <Icon icon={Check} size="xs" className="inline mr-1" /> Burndown charts
-                  </Typography>
-                </ul>
-              </button>
+                  <Stack gap="xs" className="mt-2">
+                    <Typography as="span" variant="caption" color="tertiary">
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Sprint planning
+                    </Typography>
+                    <Typography as="span" variant="caption" color="tertiary">
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Velocity tracking
+                    </Typography>
+                    <Typography as="span" variant="caption" color="tertiary">
+                      <Icon icon={Check} size="xs" className="inline mr-1" /> Burndown charts
+                    </Typography>
+                  </Stack>
+                </Stack>
+              </Card>
             </Grid>
-          </div>
+          </Stack>
         )}
 
         {/* Step 3: Workflow States */}
         {step === 3 && (
-          <div className="space-y-4">
-            <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-              Customize Your Workflow
-            </Typography>
-            <Typography className="text-ui-text-secondary">
-              These are the stages your issues will move through. You can customize them now or use
-              the defaults.
-            </Typography>
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Typography variant="h2">Customize Your Workflow</Typography>
+              <Typography color="secondary">
+                These are the stages your issues will move through. You can customize them now or
+                use the defaults.
+              </Typography>
+            </Stack>
 
-            <Flex direction="column" gap="md">
+            <Stack gap="md">
               {workflowStates.map((state, index) => (
                 <Flex key={state.id} gap="md" align="center">
-                  <Typography variant="caption" className="font-mono w-6">
+                  <Typography variant="mono" className="w-6">
                     {index + 1}.
                   </Typography>
-                  <input
+                  <Input
                     type="text"
                     value={state.name}
                     onChange={(e) => {
@@ -329,7 +333,7 @@ export function ProjectWizard({
                       newStates[index].name = e.target.value;
                       setWorkflowStates(newStates);
                     }}
-                    className="flex-1 px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text"
+                    className="flex-1"
                   />
                   <Badge
                     variant={
@@ -350,7 +354,7 @@ export function ProjectWizard({
                   </Badge>
                 </Flex>
               ))}
-            </Flex>
+            </Stack>
 
             <Button
               onClick={() => {
@@ -371,49 +375,51 @@ export function ProjectWizard({
             >
               + Add another status
             </Button>
-          </div>
+          </Stack>
         )}
 
         {/* Step 4: Summary & Create */}
         {step === 4 && (
-          <div className="space-y-4">
-            <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-              Ready to Create!
-            </Typography>
-            <Typography className="text-ui-text-secondary">
-              Here's a summary of your new project:
-            </Typography>
+          <Stack gap="md">
+            <Stack gap="xs">
+              <Typography variant="h2">Ready to Create!</Typography>
+              <Typography color="secondary">Here's a summary of your new project:</Typography>
+            </Stack>
 
-            <div className="bg-ui-bg-secondary rounded-lg p-4 space-y-3">
-              <div>
-                <Typography variant="caption">Project Name:</Typography>
-                <Typography className="font-medium text-ui-text">{projectName}</Typography>
-              </div>
-              <div>
-                <Typography variant="caption">Project Key:</Typography>
-                <Typography className="font-mono font-medium text-ui-text">{projectKey}</Typography>
-              </div>
-              <div>
-                <Typography variant="caption">Board Type:</Typography>
-                <Typography className="font-medium text-ui-text capitalize">{boardType}</Typography>
-              </div>
-              <div>
-                <Typography variant="caption">Workflow States:</Typography>
-                <Flex wrap gap="sm" className="mt-1">
-                  {workflowStates.map((state) => (
-                    <Badge key={state.id} variant="secondary">
-                      {state.name}
-                    </Badge>
-                  ))}
-                </Flex>
-              </div>
-            </div>
+            <Card variant="soft" padding="md">
+              <Stack gap="sm">
+                <Stack gap="none">
+                  <Typography variant="caption">Project Name:</Typography>
+                  <Typography variant="label">{projectName}</Typography>
+                </Stack>
+                <Stack gap="none">
+                  <Typography variant="caption">Project Key:</Typography>
+                  <Typography variant="mono">{projectKey}</Typography>
+                </Stack>
+                <Stack gap="none">
+                  <Typography variant="caption">Board Type:</Typography>
+                  <Typography variant="label" className="capitalize">
+                    {boardType}
+                  </Typography>
+                </Stack>
+                <Stack gap="xs">
+                  <Typography variant="caption">Workflow States:</Typography>
+                  <Flex wrap gap="sm">
+                    {workflowStates.map((state) => (
+                      <Badge key={state.id} variant="secondary">
+                        {state.name}
+                      </Badge>
+                    ))}
+                  </Flex>
+                </Stack>
+              </Stack>
+            </Card>
 
-            <Typography className="text-sm text-ui-text-secondary">
+            <Typography variant="small" color="secondary">
               Click "Create Project" and we'll set everything up for you. You can start adding
               issues right away!
             </Typography>
-          </div>
+          </Stack>
         )}
 
         {/* Navigation Buttons - Mintlify-inspired with proper spacing */}
@@ -468,7 +474,7 @@ export function ProjectWizard({
             )}
           </Flex>
         </Flex>
-      </div>
+      </Stack>
     </Dialog>
   );
 }

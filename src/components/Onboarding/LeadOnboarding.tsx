@@ -3,8 +3,11 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { ArrowLeft, Building2, FolderPlus, Sparkles, UserPlus } from "lucide-react";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
+import { Stack } from "@/components/ui/Stack";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -94,56 +97,50 @@ export function LeadOnboarding({
 
   if (step === "features") {
     return (
-      <div className="space-y-8">
+      <Stack gap="xl">
         {/* Back button - Mintlify-inspired */}
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-2 text-ui-text-secondary hover:text-ui-text transition-colors duration-fast group"
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <Typography variant="caption" className="font-medium">
-            Back
-          </Typography>
-        </button>
+        <Button variant="ghost" size="sm" onClick={onBack} className="self-start group">
+          <Flex align="center" gap="xs">
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            <Typography variant="caption" className="font-medium">
+              Back
+            </Typography>
+          </Flex>
+        </Button>
 
         {/* Header */}
-        <div className="text-center">
-          <Typography
-            variant="h1"
-            className="text-3xl font-bold text-ui-text mb-3"
-            data-testid={TEST_IDS.ONBOARDING.TEAM_LEAD_HEADING}
-          >
+        <Stack gap="sm" className="text-center">
+          <Typography variant="h1" data-testid={TEST_IDS.ONBOARDING.TEAM_LEAD_HEADING}>
             Perfect for Team Leads
           </Typography>
-          <Typography className="text-ui-text-secondary text-lg">
-            Here's what you can do with Nixelo
-          </Typography>
-        </div>
+          <Typography variant="lead">Here's what you can do with Nixelo</Typography>
+        </Stack>
 
         {/* Feature Highlights */}
         <FeatureHighlights />
 
         {/* Additional lead features */}
-        <div className="bg-ui-bg rounded-xl p-6">
-          <Typography variant="h3" className="font-medium text-ui-text mb-4">
-            As a team lead, you can also:
-          </Typography>
-          <ul className="space-y-3 text-ui-text-secondary">
-            <li className="flex items-start gap-3">
-              <UserPlus className="w-5 h-5 text-brand-ring mt-0.5 shrink-0" />
-              <span>Invite team members and manage roles</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <FolderPlus className="w-5 h-5 text-brand-ring mt-0.5 shrink-0" />
-              <span>Create and customize project workflows</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <Sparkles className="w-5 h-5 text-brand-ring mt-0.5 shrink-0" />
-              <span>Use AI to generate issue suggestions and summaries</span>
-            </li>
-          </ul>
-        </div>
+        <Card padding="lg" radius="full">
+          <Stack gap="md">
+            <Typography variant="h3">As a team lead, you can also:</Typography>
+            <Stack gap="sm">
+              <Flex align="start" gap="sm">
+                <Icon icon={UserPlus} size="md" className="text-brand-ring mt-0.5 shrink-0" />
+                <Typography color="secondary">Invite team members and manage roles</Typography>
+              </Flex>
+              <Flex align="start" gap="sm">
+                <Icon icon={FolderPlus} size="md" className="text-brand-ring mt-0.5 shrink-0" />
+                <Typography color="secondary">Create and customize project workflows</Typography>
+              </Flex>
+              <Flex align="start" gap="sm">
+                <Icon icon={Sparkles} size="md" className="text-brand-ring mt-0.5 shrink-0" />
+                <Typography color="secondary">
+                  Use AI to generate issue suggestions and summaries
+                </Typography>
+              </Flex>
+            </Stack>
+          </Stack>
+        </Card>
 
         {/* Continue */}
         <Flex justify="center">
@@ -156,46 +153,47 @@ export function LeadOnboarding({
             Let's set up your project
           </Button>
         </Flex>
-      </div>
+      </Stack>
     );
   }
 
   if (step === "project") {
     return (
-      <div className="space-y-8">
+      <Stack gap="xl">
         {/* Back button - Mintlify-inspired */}
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setStep("features")}
-          className="flex items-center gap-2 text-ui-text-secondary hover:text-ui-text transition-colors duration-fast group"
+          className="self-start group"
         >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <Typography variant="caption" className="font-medium">
-            Back
-          </Typography>
-        </button>
+          <Flex align="center" gap="xs">
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            <Typography variant="caption" className="font-medium">
+              Back
+            </Typography>
+          </Flex>
+        </Button>
 
         {/* Header */}
-        <div className="text-center">
+        <Stack gap="md" className="text-center">
           <Flex
             inline
             align="center"
             justify="center"
-            className="w-16 h-16 rounded-full bg-brand-indigo-track mb-4"
+            className="w-16 h-16 rounded-full bg-brand-indigo-track mx-auto"
           >
-            <Building2 className="w-8 h-8 text-brand" />
+            <Icon icon={Building2} size="xl" className="text-brand" />
           </Flex>
-          <Typography variant="h1" className="text-3xl font-bold mb-3">
-            Name Your Project
-          </Typography>
-          <Typography variant="p" color="secondary" className="text-lg">
-            This is where your team will collaborate
-          </Typography>
-        </div>
+          <Stack gap="sm">
+            <Typography variant="h1">Name Your Project</Typography>
+            <Typography variant="lead">This is where your team will collaborate</Typography>
+          </Stack>
+        </Stack>
 
         {/* Project Name Input */}
-        <div className="max-w-md mx-auto space-y-4">
-          <div>
+        <Stack gap="md" className="max-w-md mx-auto">
+          <Stack gap="xs">
             <Input
               type="text"
               placeholder="e.g., Acme Corp, My Startup, Design Team"
@@ -213,117 +211,123 @@ export function LeadOnboarding({
               autoFocus
             />
             {projectError && (
-              <Typography variant="p" className="text-status-error text-sm mt-2 text-center">
+              <Typography variant="small" color="error" className="text-center">
                 {projectError}
               </Typography>
             )}
-          </div>
+          </Stack>
 
           <Button
             variant="primary"
             size="lg"
             onClick={handleCreateOrganization}
             disabled={isCreating || !projectName.trim()}
-            className="w-full h-12 text-lg font-semibold transition-all duration-300 hover:shadow-xl active:scale-95"
+            className="w-full"
           >
             {isCreating ? "Creating..." : "Create Project"}
           </Button>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
     );
   }
 
   if (step === "project-choice") {
     return (
-      <div className="space-y-8">
+      <Stack gap="xl">
         {/* Back button - Mintlify-inspired subtle styling */}
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setStep("project")}
-          className="flex items-center gap-2 text-ui-text-secondary hover:text-ui-text transition-colors duration-fast group"
+          className="self-start group"
         >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <Typography variant="caption" className="font-medium">
-            Back
-          </Typography>
-        </button>
+          <Flex align="center" gap="xs">
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            <Typography variant="caption" className="font-medium">
+              Back
+            </Typography>
+          </Flex>
+        </Button>
 
         {/* Header */}
-        <div className="text-center">
-          <Typography variant="h1" className="text-3xl font-bold mb-3 tracking-tight">
-            Start Your First Project
-          </Typography>
-          <Typography variant="p" color="secondary" className="text-lg">
-            How would you like to get started?
-          </Typography>
-        </div>
+        <Stack gap="sm" className="text-center">
+          <Typography variant="h1">Start Your First Project</Typography>
+          <Typography variant="lead">How would you like to get started?</Typography>
+        </Stack>
 
         {/* Options - Mintlify-inspired card styling */}
         <Grid cols={1} colsSm={2} gap="lg">
           {/* Sample Project - Highlighted as recommended */}
-          <button
-            type="button"
+          <Card
+            hoverable
+            padding="lg"
             onClick={handleCreateSample}
-            disabled={isCreating}
-            className="group p-6 rounded-container border-2 border-brand/30 bg-brand-subtle/30 text-left transition-all duration-default hover:border-brand hover:shadow-card-hover hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            className="group border-2 border-brand/30 bg-brand-subtle/30 text-left disabled:opacity-50"
+            aria-disabled={isCreating}
           >
-            <Flex direction="column" gap="lg">
+            <Stack gap="lg">
               <Flex align="center" justify="between">
-                <div className="p-3 rounded-lg bg-brand-subtle group-hover:bg-brand/10 transition-colors">
-                  <Sparkles className="w-6 h-6 text-brand" />
-                </div>
+                <Flex
+                  align="center"
+                  justify="center"
+                  className="p-3 rounded-lg bg-brand-subtle group-hover:bg-brand/10 transition-colors"
+                >
+                  <Icon icon={Sparkles} size="lg" className="text-brand" />
+                </Flex>
                 <Badge variant="brand" shape="pill" size="md">
                   Recommended
                 </Badge>
               </Flex>
-              <div>
-                <Typography variant="h3" className="font-semibold mb-1 text-ui-text">
+              <Stack gap="xs">
+                <Typography variant="h3">
                   {isCreating ? "Creating..." : "Start with a Sample"}
                 </Typography>
-                <Typography variant="p" color="secondary" className="text-sm">
+                <Typography variant="small" color="secondary">
                   Explore Nixelo with pre-filled demo issues and sprints
                 </Typography>
-              </div>
-            </Flex>
-          </button>
+              </Stack>
+            </Stack>
+          </Card>
 
           {/* Start Fresh */}
-          <button
-            type="button"
+          <Card
+            hoverable
+            padding="lg"
             onClick={handleFinishWithoutProject}
-            disabled={isCreating}
-            className="group p-6 rounded-container border-2 border-ui-border bg-ui-bg text-left transition-all duration-default hover:border-ui-border-secondary hover:shadow-card-hover hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            className="group border-2 text-left disabled:opacity-50"
+            aria-disabled={isCreating}
           >
-            <Flex direction="column" gap="lg">
-              <div className="p-3 rounded-lg bg-ui-bg-tertiary group-hover:bg-ui-bg-hover transition-colors w-fit">
-                <FolderPlus className="w-6 h-6 text-ui-text-secondary" />
-              </div>
-              <div>
-                <Typography variant="h3" className="font-semibold mb-1 text-ui-text">
-                  Start from Scratch
-                </Typography>
-                <Typography variant="p" color="secondary" className="text-sm">
+            <Stack gap="lg">
+              <Flex
+                align="center"
+                justify="center"
+                className="p-3 rounded-lg bg-ui-bg-tertiary group-hover:bg-ui-bg-hover transition-colors w-fit"
+              >
+                <Icon icon={FolderPlus} size="lg" color="secondary" />
+              </Flex>
+              <Stack gap="xs">
+                <Typography variant="h3">Start from Scratch</Typography>
+                <Typography variant="small" color="secondary">
                   Create your own project with a blank canvas
                 </Typography>
-              </div>
+              </Stack>
               <Typography variant="caption">For experienced users</Typography>
-            </Flex>
-          </button>
+            </Stack>
+          </Card>
         </Grid>
 
         {/* Skip option */}
-        <div className="text-center">
+        <Flex justify="center">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleFinishWithoutProject}
             disabled={isCreating}
-            className="text-ui-text-tertiary hover:text-ui-text"
           >
             I'll explore on my own
           </Button>
-        </div>
-      </div>
+        </Flex>
+      </Stack>
     );
   }
 

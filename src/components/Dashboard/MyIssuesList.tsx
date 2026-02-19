@@ -76,7 +76,7 @@ export function MyIssuesList({
 
   return (
     <Flex direction="column" className="h-full">
-      <Stack gap="xs" className="pb-2 pt-6 px-6">
+      <Stack gap="xs" className="px-6 pt-6 pb-2">
         <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
           Feed
         </Typography>

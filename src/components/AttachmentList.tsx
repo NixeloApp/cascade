@@ -2,10 +2,21 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
-import { Archive, File, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
+import {
+  Archive,
+  Download,
+  File,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
+  Paperclip,
+  Trash2,
+} from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
@@ -65,11 +76,11 @@ function AttachmentItem({
 
   if (!url) {
     return (
-      <Card padding="sm" className="bg-ui-bg-soft">
+      <Card padding="sm" variant="soft">
         <Flex align="center" gap="sm">
-          <div className="animate-pulse size-8 bg-ui-bg-tertiary rounded-md" />
+          <Skeleton className="size-8" />
           <FlexItem flex="1">
-            <div className="animate-pulse h-4 w-full bg-ui-bg-tertiary rounded-md" />
+            <Skeleton className="h-4 w-full" />
           </FlexItem>
         </Flex>
       </Card>
@@ -101,51 +112,23 @@ function AttachmentItem({
           className="opacity-0 group-hover:opacity-100 transition-opacity duration-default"
         >
           <Tooltip content="Download attachment">
-            <a
-              href={url}
-              download
-              className="p-1.5 text-ui-text-tertiary hover:text-ui-text rounded-md hover:bg-ui-bg-tertiary transition-colors duration-default"
-            >
-              <span className="sr-only">Download attachment</span>
-              <svg
-                aria-hidden="true"
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                />
-              </svg>
-            </a>
+            <Button variant="ghost" size="sm" asChild>
+              <a href={url} download aria-label="Download attachment">
+                <Icon icon={Download} size="sm" />
+              </a>
+            </Button>
           </Tooltip>
           {canEdit && (
             <Tooltip content="Remove attachment">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={onRemove}
-                className="p-1.5 text-ui-text-tertiary hover:text-status-error rounded-md hover:bg-status-error-bg transition-colors duration-default"
                 aria-label="Remove attachment"
+                className="hover:text-status-error hover:bg-status-error-bg"
               >
-                <svg
-                  aria-hidden="true"
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+                <Icon icon={Trash2} size="sm" />
+              </Button>
             </Tooltip>
           )}
         </Flex>
