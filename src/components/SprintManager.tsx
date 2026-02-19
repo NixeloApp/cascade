@@ -385,8 +385,8 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
 
       {/* Start Sprint Modal */}
       {startingSprintId && (
-        <Flex align="center" justify="center" className="fixed inset-0 z-modal bg-overlay p-4">
-          <Card padding="lg" className="max-w-lg w-full animate-scale-in">
+        <Flex align="center" justify="center" className="fixed inset-0 z-modal bg-overlay">
+          <Card padding="lg" className="max-w-lg w-full m-4 animate-scale-in">
             <Stack gap="lg">
               <Stack gap="sm">
                 <Typography variant="h4">Start Sprint</Typography>

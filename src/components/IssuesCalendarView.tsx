@@ -10,6 +10,8 @@ import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { Badge } from "./ui/Badge";
+import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
 import { Typography } from "./ui/Typography";
 
@@ -196,10 +198,11 @@ export function IssuesCalendarView({
           className="sm:gap-4 w-full sm:w-auto sm:justify-start"
         >
           <Tooltip content="Previous month">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={previousMonth}
-              className="p-2 hover:bg-ui-bg-secondary rounded-lg transition-colors min-w-11 min-h-11 sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+              className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
               aria-label="Previous month"
             >
               <svg
@@ -216,7 +219,7 @@ export function IssuesCalendarView({
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-            </button>
+            </Button>
           </Tooltip>
 
           <Typography variant="h3" className="w-full sm:min-w-48 text-center">
@@ -224,10 +227,11 @@ export function IssuesCalendarView({
           </Typography>
 
           <Tooltip content="Next month">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={nextMonth}
-              className="p-2 hover:bg-ui-bg-secondary rounded-lg transition-colors min-w-11 min-h-11 sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+              className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
               aria-label="Next month"
             >
               <svg
@@ -244,22 +248,23 @@ export function IssuesCalendarView({
                   d="M9 5l7 7-7 7"
                 />
               </svg>
-            </button>
+            </Button>
           </Tooltip>
 
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setCurrentDate(new Date())}
-            className="px-3 sm:px-4 py-2 bg-ui-bg-tertiary hover:bg-ui-bg-secondary rounded-lg text-sm font-medium transition-colors min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
+            className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
           >
             Today
-          </button>
+          </Button>
         </Flex>
       </Flex>
 
       {/* Calendar Grid */}
       <div className="overflow-x-auto">
-        <div className="bg-ui-bg rounded-lg border border-ui-border overflow-hidden min-w-160">
+        <Card padding="none" className="overflow-hidden min-w-160">
           {/* Weekday Headers */}
           <Grid cols={7} className="bg-ui-bg-secondary border-b border-ui-border">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
@@ -271,7 +276,7 @@ export function IssuesCalendarView({
 
           {/* Calendar Days */}
           <Grid cols={7}>{calendarDays}</Grid>
-        </div>
+        </Card>
       </div>
 
       {/* Legend */}

@@ -11,10 +11,12 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/Input";
 import { ScrollArea } from "./ui/ScrollArea";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 // =============================================================================
@@ -264,17 +266,19 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       className="sm:max-w-md"
     >
       {/* Search Input */}
-      <div className="relative mb-4">
-        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
-        <Input
-          type="text"
-          placeholder="Search shortcuts..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-8 pl-8 text-sm"
-          autoFocus
-        />
-      </div>
+      <Stack gap="md">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
+          <Input
+            type="text"
+            placeholder="Search shortcuts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-8 pl-8 text-sm"
+            autoFocus
+          />
+        </div>
+      </Stack>
 
       {/* Shortcuts List */}
       <ScrollArea className="max-h-panel-md">
@@ -302,27 +306,33 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
             ))}
           </Flex>
         ) : (
-          <Flex direction="column" align="center" justify="center" className="py-8 text-center">
-            <Typography variant="small" className="text-ui-text-secondary">
-              No shortcuts found for{" "}
-              <Typography as="span" variant="small" className="font-medium italic">
-                "{searchQuery}"
+          <Card padding="lg" variant="flat">
+            <Flex direction="column" align="center" justify="center" className="text-center">
+              <Typography variant="small" className="text-ui-text-secondary">
+                No shortcuts found for{" "}
+                <Typography as="span" variant="small" className="font-medium italic">
+                  "{searchQuery}"
+                </Typography>
               </Typography>
-            </Typography>
-          </Flex>
+            </Flex>
+          </Card>
         )}
       </ScrollArea>
 
       {/* Footer Tip */}
-      <div className="mt-4 pt-4 border-t border-ui-border">
-        <Typography variant="muted" className="text-xs text-center">
+      <Stack gap="md" className="border-t border-ui-border">
+        <Typography variant="muted" className="text-xs text-center pt-4">
           Press{" "}
-          <kbd className="px-1 py-0.5 rounded border border-ui-border bg-ui-bg text-xs font-mono">
+          <Typography
+            as="kbd"
+            variant="mono"
+            className="rounded border border-ui-border bg-ui-bg text-xs"
+          >
             {isMacPlatform() ? "⌘" : "Ctrl"}+K
-          </kbd>{" "}
+          </Typography>{" "}
           to open command palette
         </Typography>
-      </div>
+      </Stack>
     </Dialog>
   );
 }

@@ -186,16 +186,23 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           {/* Skeleton Timeline */}
           <Card padding="none" className="flex-1 overflow-hidden">
             {/* Skeleton Dates Header */}
-            <Flex className="shrink-0 border-b border-ui-border bg-ui-bg-secondary p-4">
-              <FlexItem shrink={false} className="w-64">
-                <Skeleton className="h-5 w-24" />
-              </FlexItem>
-              <FlexItem flex="1" className="grid grid-cols-6 gap-2">
-                {[1, 2, 3, 4, 5, 6].map((id) => (
-                  <Skeleton key={id} className="h-5 w-full" />
-                ))}
-              </FlexItem>
-            </Flex>
+            <Card
+              variant="soft"
+              padding="md"
+              radius="none"
+              className="shrink-0 border-b border-ui-border"
+            >
+              <Flex>
+                <FlexItem shrink={false} className="w-64">
+                  <Skeleton className="h-5 w-24" />
+                </FlexItem>
+                <FlexItem flex="1" className="grid grid-cols-6 gap-2">
+                  {[1, 2, 3, 4, 5, 6].map((id) => (
+                    <Skeleton key={id} className="h-5 w-full" />
+                  ))}
+                </FlexItem>
+              </Flex>
+            </Card>
 
             {/* Skeleton Rows */}
             <Stack className="flex-1 overflow-auto">
@@ -277,32 +284,41 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         {/* Timeline Container */}
         <Card padding="none" className="flex-1 overflow-hidden">
           {/* Timeline Header (Fixed) */}
-          <Flex className="shrink-0 border-b border-ui-border bg-ui-bg-secondary p-4">
-            <Typography variant="label" className="w-64 shrink-0">
-              Issue
-            </Typography>
-            <FlexItem flex="1" className="grid grid-cols-6">
-              {timelineMonths.map((month) => (
-                <Typography
-                  key={month.getTime()}
-                  variant="label"
-                  className="text-center border-l border-ui-border px-2"
-                >
-                  {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                </Typography>
-              ))}
-            </FlexItem>
-          </Flex>
+          <Card
+            variant="soft"
+            padding="md"
+            radius="none"
+            className="shrink-0 border-b border-ui-border"
+          >
+            <Flex>
+              <Typography variant="label" className="w-64 shrink-0">
+                Issue
+              </Typography>
+              <FlexItem flex="1" className="grid grid-cols-6">
+                {timelineMonths.map((month) => (
+                  <Typography
+                    key={month.getTime()}
+                    variant="label"
+                    className="text-center border-l border-ui-border px-2"
+                  >
+                    {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                  </Typography>
+                ))}
+              </FlexItem>
+            </Flex>
+          </Card>
 
           {/* Timeline Body (Virtualized) */}
           <FlexItem flex="1">
             {filteredIssues.length === 0 ? (
-              <Stack gap="xs" align="center" className="p-12 text-center">
-                <Typography color="secondary">No issues with due dates to display</Typography>
-                <Typography variant="small" color="secondary">
-                  Add due dates to issues to see them on the roadmap
-                </Typography>
-              </Stack>
+              <Card padding="xl" className="text-center">
+                <Stack gap="xs" align="center">
+                  <Typography color="secondary">No issues with due dates to display</Typography>
+                  <Typography variant="small" color="secondary">
+                    Add due dates to issues to see them on the roadmap
+                  </Typography>
+                </Stack>
+              </Card>
             ) : (
               <List<RowData>
                 listRef={listRef}
