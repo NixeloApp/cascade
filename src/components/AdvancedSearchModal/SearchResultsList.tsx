@@ -3,6 +3,7 @@ import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
@@ -98,13 +99,9 @@ export function SearchResultsList({
           variant="ghost"
           className="border-t border-ui-border bg-ui-bg-secondary"
         >
-          <button
-            type="button"
-            onClick={onLoadMore}
-            className="w-full px-4 py-2 text-sm font-medium text-brand bg-brand-subtle hover:bg-brand-subtle:bg-brand-active/30 rounded-lg transition-colors"
-          >
+          <Button variant="secondary" size="sm" onClick={onLoadMore} className="w-full">
             Load More ({total - results.length} remaining)
-          </button>
+          </Button>
         </Card>
       )}
     </>

@@ -181,7 +181,7 @@ function TreeNodeItem({ node, orgSlug, selectedId, onCreateDocument }: TreeNodeI
 
           {/* Title */}
           <FlexItem flex="1" className="min-w-0">
-            <Typography variant="small" className={cn("truncate", isSelected && "font-medium")}>
+            <Typography variant={isSelected ? "label" : "small"} className="truncate">
               {node.title || "Untitled"}
             </Typography>
           </FlexItem>
