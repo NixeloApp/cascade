@@ -14,8 +14,39 @@ export function run() {
     "src/lib",
     "src/components/ui",
     "src/components/landing",
+    "src/components/Landing", // Landing page with external links
     "src/components/Calendar/shadcn-calendar",
     "src/components/Kanban", // Contains complex drag-and-drop logic that uses raw divs
+    "src/components/Auth", // Auth pages with styled links
+  ];
+
+  // Files where raw <a> tags are allowed (external links, downloads, etc.)
+  const ALLOW_RAW_LINKS_FILES = [
+    ".test.tsx", // Test files mock elements
+    ".test.ts",
+    "/AttachmentList.tsx", // Download links
+    "/FileAttachments.tsx", // Download links
+    "/ApiKeysManager.tsx", // External docs links
+    "/PumbleIntegration.tsx", // External integration links
+    "/CustomFieldValues.tsx", // URL field type
+    "/EventDetailsModal.tsx", // External event links (Google Meet, etc.)
+    "/onboarding.tsx", // External link to docs
+  ];
+
+  // Files where <strong> for inline emphasis is allowed (inside Typography)
+  // These use <strong> for semantic emphasis within text, which is valid HTML
+  const ALLOW_INLINE_STRONG_FILES = [
+    "/ActivityFeed.tsx", // User names in activity messages
+    "/RecentActivity.tsx", // User names in activity messages
+    "/Greeting.tsx", // Emphasized counts and names
+    "/FocusZone.tsx", // Emphasized text
+    "/MemberOnboarding.tsx", // Emphasized text in onboarding
+    "/ApiKeysManager.tsx", // Emphasized warnings
+    "/HourComplianceDashboard.tsx", // Emphasized data
+    "/EmailVerificationRequired.tsx", // Emphasized email
+    "/ResetPasswordForm.tsx", // Emphasized email
+    "/forgot-password.tsx", // Emphasized email
+    "/invite.$token.tsx", // Emphasized names
   ];
 
   let errorCount = 0;
@@ -107,6 +138,32 @@ export function run() {
             node,
             `Use <Typography> component instead of raw <${tagName}> tags.`,
           );
+        }
+        // Inline text styling tags — use Typography with appropriate variant
+        // Allow <strong> for inline emphasis within text (semantically correct for accessibility)
+        if (["strong", "b", "em", "i"].includes(tagName)) {
+          const rel = relPath(filePath);
+          const isAllowed = ALLOW_INLINE_STRONG_FILES.some((pattern) => rel.endsWith(pattern));
+          if (!isAllowed) {
+            reportError(
+              filePath,
+              node,
+              `Use <Typography variant="label"> or <Typography as="strong"> instead of raw <${tagName}> tags.`,
+            );
+          }
+        }
+        // Raw anchor tags — use Link component or Button with asChild
+        // Allow in test files, download links, and files with external links
+        if (tagName === "a") {
+          const rel = relPath(filePath);
+          const isAllowed = ALLOW_RAW_LINKS_FILES.some((pattern) => rel.endsWith(pattern));
+          if (!isAllowed) {
+            reportError(
+              filePath,
+              node,
+              `Use <Link> component or <Button asChild><a>...</a></Button> instead of raw <a> tags.`,
+            );
+          }
         }
         // Flex standard
         if (tagName === "div" || tagName === "span") {
