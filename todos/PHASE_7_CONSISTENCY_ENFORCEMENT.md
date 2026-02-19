@@ -278,8 +278,8 @@ Items intentionally not in scope for Phase 7:
 ## Stats
 
 **Last Run:** 2026-02-19
-**Files Migrated:** 198+ / ~100
-**Violations Remaining:** 199 (down from 1145)
+**Files Migrated:** 201+ / ~100
+**Violations Remaining:** 193 (down from 1145)
 
 ---
 
