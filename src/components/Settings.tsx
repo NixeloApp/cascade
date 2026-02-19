@@ -17,6 +17,7 @@ import { PreferencesTab } from "./Settings/PreferencesTab";
 import { ProfileTab } from "./Settings/ProfileTab";
 import { PumbleIntegration } from "./Settings/PumbleIntegration";
 import { TwoFactorSettings } from "./Settings/TwoFactorSettings";
+import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 
 const isTestEmail = (email?: string) => email?.endsWith("@inbox.mailtrap.io") ?? false;
@@ -101,22 +102,22 @@ export function Settings() {
 
 function IntegrationsTab() {
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       <GitHubIntegration />
       <GoogleCalendarIntegration />
       <PumbleIntegration />
-    </div>
+    </Stack>
   );
 }
 
 function AdminTab() {
   return (
-    <div className="space-y-8">
+    <Stack gap="xl">
       <OrganizationSettings />
       <IpRestrictionsSettings />
       <UserManagement />
       <UserTypeManager />
       <HourComplianceDashboard />
-    </div>
+    </Stack>
   );
 }

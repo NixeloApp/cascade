@@ -159,9 +159,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
         <Flex gap="md" align="start">
           <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
           <Stack gap="sm" className="text-status-warning">
-            <Typography variant="p" className="font-semibold">
-              Import Requirements
-            </Typography>
+            <Typography variant="label">Import Requirements</Typography>
             <ul className="list-disc list-inside text-status-warning/90">
               <li>CSV must have a header row with column names</li>
               <li>

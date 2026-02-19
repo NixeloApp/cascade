@@ -11,6 +11,7 @@ import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface ExportPanelProps {
@@ -159,11 +160,9 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
       <Card padding="md" className="bg-brand-subtle border border-brand-border">
         <Flex gap="md" align="start">
           <Icon icon={Info} size="lg" className="text-brand" />
-          <div className="text-brand-active">
-            <Typography variant="label" className="mb-1">
-              Export Information
-            </Typography>
-            <ul className="list-disc list-inside space-y-1 text-brand-hover">
+          <Stack gap="xs" className="text-brand-active">
+            <Typography variant="label">Export Information</Typography>
+            <ul className="list-disc list-inside text-brand-hover">
               <li>CSV format is compatible with Excel, Google Sheets</li>
               <li>JSON format includes full issue data and metadata</li>
               <li>
@@ -172,7 +171,7 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
                   : "All issues in this project will be exported"}
               </li>
             </ul>
-          </div>
+          </Stack>
         </Flex>
       </Card>
 
