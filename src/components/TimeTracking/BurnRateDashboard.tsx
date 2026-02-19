@@ -77,9 +77,11 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
 
   if (!(burnRate && teamCosts)) {
     return (
-      <Flex justify="center" align="center" className="p-8">
-        <LoadingSpinner />
-      </Flex>
+      <Card padding="xl" variant="ghost">
+        <Flex justify="center" align="center">
+          <LoadingSpinner />
+        </Flex>
+      </Card>
     );
   }
 
@@ -247,7 +249,7 @@ function MetricCard({ label, value, icon, color }: MetricCardProps) {
   };
 
   return (
-    <div className={cn("p-4 border rounded-lg", colorClasses[color])}>
+    <Card padding="md" className={cn("border", colorClasses[color])}>
       <Flex align="center" gap="sm" className="mb-2">
         <Icon icon={icon} size="lg" />
         <Typography variant="caption" className="font-medium">
@@ -257,6 +259,6 @@ function MetricCard({ label, value, icon, color }: MetricCardProps) {
       <Typography variant="h3" className="text-ui-text">
         {value}
       </Typography>
-    </div>
+    </Card>
   );
 }

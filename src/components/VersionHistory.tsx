@@ -8,9 +8,11 @@ import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "./ui/Metadata";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 /**
@@ -106,11 +108,13 @@ export function VersionHistory({
     >
       <FlexItem flex="1" className="overflow-auto scrollbar-subtle">
         {versions === undefined ? (
-          <Flex align="center" justify="center" className="py-12">
-            <LoadingSpinner size="lg" />
-          </Flex>
+          <Card padding="xl" variant="ghost">
+            <Flex align="center" justify="center">
+              <LoadingSpinner size="lg" />
+            </Flex>
+          </Card>
         ) : versions.length === 0 ? (
-          <div className="text-center py-12">
+          <Card padding="xl" variant="ghost" className="text-center">
             <Clock className="w-12 h-12 text-ui-text-tertiary mx-auto mb-4" />
             <Typography variant="h5" className="mb-2">
               No version history yet
@@ -119,21 +123,22 @@ export function VersionHistory({
               Versions are automatically saved as you edit. Make some changes to create the first
               version.
             </Typography>
-          </div>
+          </Card>
         ) : (
-          <div className="space-y-2 py-2">
+          <Stack gap="sm" className="py-2">
             {versions.map((version: DocumentVersion, index: number) => {
               const isLatest = index === 0;
               const isSelected = selectedVersionId === version._id;
 
               return (
-                <div
+                <Card
                   key={version._id}
+                  padding="md"
                   className={cn(
-                    "p-4 rounded-container border transition-default",
+                    "transition-default",
                     isSelected
                       ? "border-brand-ring bg-brand-subtle"
-                      : "border-ui-border bg-ui-bg hover:border-ui-border-secondary hover:bg-ui-bg-hover",
+                      : "hover:border-ui-border-secondary hover:bg-ui-bg-hover",
                   )}
                 >
                   <Flex align="start" justify="between">
@@ -173,10 +178,10 @@ export function VersionHistory({
                       </Button>
                     )}
                   </Flex>
-                </div>
+                </Card>
               );
             })}
-          </div>
+          </Stack>
         )}
       </FlexItem>
     </Dialog>

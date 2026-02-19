@@ -89,14 +89,15 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
   return (
     <Flex direction="column" gap="lg">
       <div>
-        <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
+        <Typography variant="label" className="text-ui-text mb-3">
           Select Import Format
         </Typography>
         <Grid cols={2} gap="md">
           <Card
+            padding="md"
             onClick={() => setImportFormat("csv")}
             className={cn(
-              "p-4 cursor-pointer transition-all",
+              "cursor-pointer transition-all",
               importFormat === "csv" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
             )}
           >
@@ -114,9 +115,10 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
           </Card>
 
           <Card
+            padding="md"
             onClick={() => setImportFormat("json")}
             className={cn(
-              "p-4 cursor-pointer transition-all",
+              "cursor-pointer transition-all",
               importFormat === "json" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
             )}
           >
@@ -152,7 +154,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
         )}
       </div>
 
-      <div className="bg-status-warning/10 border border-status-warning/30 rounded-lg p-4">
+      <Card padding="md" className="bg-status-warning/10 border border-status-warning/30">
         <Flex gap="md" align="start">
           <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
           <div className="text-status-warning">
@@ -169,7 +171,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
             </ul>
           </div>
         </Flex>
-      </div>
+      </Card>
 
       <Button onClick={handleImport} disabled={!importData || isImporting} className="w-full">
         {isImporting ? (

@@ -424,119 +424,120 @@ function InboxIssueRow({
   const isOpen = item.status === "pending" || item.status === "snoozed";
 
   return (
-    <Flex
-      align="center"
-      gap="md"
+    <Card
+      padding="sm"
       className={cn(
-        "p-3 rounded-lg border border-ui-border bg-ui-bg hover:bg-ui-bg-hover transition-colors",
+        "hover:bg-ui-bg-hover transition-colors",
         item.status === "snoozed" && "opacity-75",
       )}
     >
-      {/* Selection Checkbox (only for triageable items) */}
-      {isOpen && (
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={() => onToggleSelect(item._id)}
-          aria-label={`Select ${item.issue.title}`}
-        />
-      )}
+      <Flex align="center" gap="md">
+        {/* Selection Checkbox (only for triageable items) */}
+        {isOpen && (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelect(item._id)}
+            aria-label={`Select ${item.issue.title}`}
+          />
+        )}
 
-      {/* Status Badge */}
-      <Flex align="center" justify="center" className={cn("size-7 rounded", config.color)}>
-        <Icon icon={StatusIcon} size="sm" />
-      </Flex>
-
-      {/* Issue Info */}
-      <FlexItem flex="1" className="min-w-0">
-        <Flex direction="column" gap="xs">
-          <Flex align="center" gap="sm">
-            <Typography variant="label" className="text-ui-text-secondary">
-              {item.issue.key}
-            </Typography>
-            <Typography className="truncate">{item.issue.title}</Typography>
-          </Flex>
-
-          <Flex align="center" gap="sm" className="text-xs text-ui-text-tertiary">
-            <span>
-              Submitted {new Date(item.createdAt).toLocaleDateString()}
-              {item.createdByUser?.name && ` by ${item.createdByUser.name}`}
-            </span>
-
-            {item.status === "snoozed" && item.snoozedUntil && (
-              <Badge variant="outline" className="text-xs">
-                Until {new Date(item.snoozedUntil).toLocaleDateString()}
-              </Badge>
-            )}
-
-            {item.status === "duplicate" && item.duplicateOfIssue && (
-              <Badge variant="outline" className="text-xs">
-                Duplicate of {item.duplicateOfIssue.key}
-              </Badge>
-            )}
-
-            {item.status === "declined" && item.declineReason && (
-              <Badge variant="outline" className="text-xs">
-                {item.declineReason}
-              </Badge>
-            )}
-          </Flex>
+        {/* Status Badge */}
+        <Flex align="center" justify="center" className={cn("size-7 rounded", config.color)}>
+          <Icon icon={StatusIcon} size="sm" />
         </Flex>
-      </FlexItem>
 
-      {/* Quick Actions */}
-      {isOpen && (
-        <Flex gap="xs">
-          <Button size="sm" variant="ghost" onClick={handleAccept}>
-            <CheckCircle2 className="w-4 h-4 mr-1" />
-            Accept
-          </Button>
-          <Button size="sm" variant="ghost" onClick={handleDecline}>
-            <XCircle className="w-4 h-4 mr-1" />
-            Decline
-          </Button>
-        </Flex>
-      )}
+        {/* Issue Info */}
+        <FlexItem flex="1" className="min-w-0">
+          <Flex direction="column" gap="xs">
+            <Flex align="center" gap="sm">
+              <Typography variant="label" className="text-ui-text-secondary">
+                {item.issue.key}
+              </Typography>
+              <Typography className="truncate">{item.issue.title}</Typography>
+            </Flex>
 
-      {/* More Actions */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="ghost" aria-label="More actions">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {isOpen && (
-            <>
-              {item.status === "snoozed" ? (
-                <DropdownMenuItem onClick={handleUnsnooze}>
-                  <Clock className="w-4 h-4 mr-2" />
-                  Unsnooze
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={handleSnooze}>
-                  <Clock className="w-4 h-4 mr-2" />
-                  Snooze 1 day
-                </DropdownMenuItem>
+            <Flex align="center" gap="sm">
+              <Typography variant="caption" color="tertiary">
+                Submitted {new Date(item.createdAt).toLocaleDateString()}
+                {item.createdByUser?.name && ` by ${item.createdByUser.name}`}
+              </Typography>
+
+              {item.status === "snoozed" && item.snoozedUntil && (
+                <Badge variant="outline" className="text-xs">
+                  Until {new Date(item.snoozedUntil).toLocaleDateString()}
+                </Badge>
               )}
-              <DropdownMenuSeparator />
-            </>
-          )}
 
-          {!isOpen && (
-            <>
-              <DropdownMenuItem onClick={handleReopen}>
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                Reopen
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          )}
+              {item.status === "duplicate" && item.duplicateOfIssue && (
+                <Badge variant="outline" className="text-xs">
+                  Duplicate of {item.duplicateOfIssue.key}
+                </Badge>
+              )}
 
-          <DropdownMenuItem onClick={handleDelete} className="text-status-error">
-            Remove from inbox
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </Flex>
+              {item.status === "declined" && item.declineReason && (
+                <Badge variant="outline" className="text-xs">
+                  {item.declineReason}
+                </Badge>
+              )}
+            </Flex>
+          </Flex>
+        </FlexItem>
+
+        {/* Quick Actions */}
+        {isOpen && (
+          <Flex gap="xs">
+            <Button size="sm" variant="ghost" onClick={handleAccept}>
+              <CheckCircle2 className="w-4 h-4 mr-1" />
+              Accept
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleDecline}>
+              <XCircle className="w-4 h-4 mr-1" />
+              Decline
+            </Button>
+          </Flex>
+        )}
+
+        {/* More Actions */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="ghost" aria-label="More actions">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {isOpen && (
+              <>
+                {item.status === "snoozed" ? (
+                  <DropdownMenuItem onClick={handleUnsnooze}>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Unsnooze
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={handleSnooze}>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Snooze 1 day
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+              </>
+            )}
+
+            {!isOpen && (
+              <>
+                <DropdownMenuItem onClick={handleReopen}>
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Reopen
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+
+            <DropdownMenuItem onClick={handleDelete} className="text-status-error">
+              Remove from inbox
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </Flex>
+    </Card>
   );
 }
