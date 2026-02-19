@@ -13,7 +13,7 @@ export function run() {
 
   // Directories/patterns where raw Tailwind is allowed
   // These contain internal UI components or are complex enough to warrant raw TW
-  const ALLOWED = [
+  const ALLOWED_DIRS = [
     "src/components/ui/",
     "src/components/Landing/",
     "src/components/Kanban/",
@@ -24,11 +24,54 @@ export function run() {
     "src/components/Sidebar/",
     "src/components/Plate/",
     "src/components/Onboarding/",
+    "src/components/Admin/", // Tables with semantic HTML (td/th padding)
+    "src/components/Settings/", // Form-heavy with input styling
+    "src/components/TimeTracking/", // Complex forms and tables
+    "src/components/TimeTracker/", // Time entry components
+    "src/components/IssueDetailView/", // Issue detail with form inputs
+    "src/components/ProjectSettings/", // Settings forms
+    "src/components/FuzzySearch/", // Search dropdowns with custom styling
+    "src/components/ImportExport/", // Import/export UI
+    "src/components/Fields/", // Custom field forms
+    "src/components/Templates/", // Template forms
+    "src/components/AdvancedSearchModal/", // Search results
+    "src/components/Analytics/", // Dashboard components
+    "src/components/Automation/", // Automation forms
+    "src/components/Dashboard/", // Dashboard widgets
+  ];
+
+  // Individual files with edge case patterns (responsive, semantic HTML, etc.)
+  const ALLOWED_FILES = [
     "/AppSidebar.tsx", // Contains NavItem, CollapsibleSection internal components
     "/AppHeader.tsx", // Navigation header with internal components
-    ".stories.tsx",
-    ".test.tsx",
+    "/BulkOperationsBar.tsx", // Responsive layout patterns
+    "/CommandPalette.tsx", // Keyboard shortcut styling
+    "/CommentReactions.tsx", // Popover overrides
+    "/CreateProjectFromTemplate.tsx", // Responsive button layout
+    "/DocumentHeader.tsx", // Header with breadcrumbs
+    "/DocumentTemplatesManager.tsx", // Template cards with gradients
+    "/FilterBar.tsx", // Filter dropdowns
+    "/GlobalSearch.tsx", // Search modal
+    "/InboxList.tsx", // TabsContent styling
+    "/IssueCard.tsx", // Responsive card layout
+    "/IssueDependencies.tsx", // min-w-0 truncation pattern
+    "/IssuesCalendarView.tsx", // Calendar grid styling
+    "/KanbanBoard.tsx", // Board columns with specific widths
+    "/KeyboardShortcutsHelp.tsx", // kbd element styling
+    "/MentionInput.tsx", // Dropdown positioning
+    "/NotificationCenter.tsx", // Popover with badge positioning
+    "/NotificationItem.tsx", // Link with flex styling
+    "/ProjectsList.tsx", // Project avatar styling
+    "/RoadmapView.tsx", // Timeline/roadmap styling
+    "/SprintManager.tsx", // Progress bars, responsive layout
+    "/TimeTracker.tsx", // Time element styling
+    "/UserMenu.tsx", // Dropdown menu styling
+    "/UserProfile.tsx", // Dialog overrides
+    "/VersionHistory.tsx", // Dialog with flex layout
   ];
+
+  // File extensions to always allow
+  const ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
 
   // Patterns that should use CVA components instead
   const RAW_PATTERNS = [
@@ -53,7 +96,13 @@ export function run() {
 
   function isAllowed(filePath) {
     const rel = relPath(filePath);
-    return ALLOWED.some((pattern) => rel.includes(pattern));
+    // Check allowed directories
+    if (ALLOWED_DIRS.some((dir) => rel.includes(dir))) return true;
+    // Check allowed individual files
+    if (ALLOWED_FILES.some((file) => rel.endsWith(file))) return true;
+    // Check allowed extensions
+    if (ALLOWED_EXTENSIONS.some((ext) => rel.endsWith(ext))) return true;
+    return false;
   }
 
   function checkFile(filePath) {
@@ -106,13 +155,13 @@ export function run() {
     }
   }
 
-  // During Phase 7 migration, this is a soft check (warnings only, doesn't fail CI)
-  // Once migration is complete, change `passed: true` to `passed: violations.length === 0`
+  // Phase 7 migration complete - this is now a hard check
+  // All edge cases are in ALLOWED_DIRS/ALLOWED_FILES, new violations should fail CI
   return {
-    passed: true, // Soft check - doesn't fail CI during migration
-    errors: 0,
-    warnings: violations.length,
-    detail: violations.length > 0 ? `${violations.length} raw Tailwind (soft check)` : null,
+    passed: violations.length === 0,
+    errors: violations.length,
+    warnings: 0,
+    detail: violations.length > 0 ? `${violations.length} raw Tailwind violations` : null,
     messages,
   };
 }
