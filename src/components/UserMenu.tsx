@@ -3,7 +3,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { LogOut, Settings } from "lucide-react";
-import { Flex } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Avatar } from "./ui/Avatar";
@@ -42,14 +42,12 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel className="font-normal">
-          <Flex direction="column" className="space-y-1">
-            <Typography className="text-sm font-medium leading-none">
-              {user.name || "User"}
-            </Typography>
-            <Typography className="text-xs leading-none text-ui-text-secondary truncate">
+          <Stack gap="xs">
+            <Typography variant="label">{user.name || "User"}</Typography>
+            <Typography variant="meta" color="secondary" className="truncate">
               {user.email}
             </Typography>
-          </Flex>
+          </Stack>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {orgSlug && (

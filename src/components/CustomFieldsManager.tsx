@@ -7,10 +7,11 @@ import { showError, showSuccess } from "@/lib/toast";
 import { CustomFieldCard } from "./Fields/CustomFieldCard";
 import { CustomFieldForm } from "./Fields/CustomFieldForm";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Card, CardBody } from "./ui/Card";
 import { Flex } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 interface CustomFieldsManagerProps {
@@ -68,34 +69,36 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
   };
 
   return (
-    <Flex direction="column" gap="xl">
+    <Stack gap="xl">
       {/* Header */}
       <Flex align="center" justify="between">
-        <div>
-          <Typography variant="h2" className="text-xl font-semibold text-ui-text">
-            Custom Fields
-          </Typography>
-          <Typography variant="p" color="secondary" className="text-sm">
+        <Stack gap="xs">
+          <Typography variant="h2">Custom Fields</Typography>
+          <Typography variant="small" color="secondary">
             Add custom metadata fields to your issues
           </Typography>
-        </div>
+        </Stack>
         <Button onClick={handleCreate}>+ Add Field</Button>
       </Flex>
 
       {/* Fields List */}
       {!customFields ? (
-        <Flex align="center" justify="center" className="py-8">
+        <Flex align="center" justify="center" className="min-h-32">
           <LoadingSpinner />
         </Flex>
       ) : customFields.length === 0 ? (
-        <Card className="p-8 text-center">
-          <Icon icon={ClipboardList} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
-          <Typography variant="p" color="secondary">
-            No custom fields yet. Add your first field to get started.
-          </Typography>
+        <Card>
+          <CardBody>
+            <Stack align="center" gap="md" className="min-h-32 justify-center">
+              <Icon icon={ClipboardList} size="xl" className="text-ui-text-tertiary" />
+              <Typography variant="small" color="secondary">
+                No custom fields yet. Add your first field to get started.
+              </Typography>
+            </Stack>
+          </CardBody>
         </Card>
       ) : (
-        <Flex direction="column" gap="md">
+        <Stack gap="md">
           {customFields.map((field: Doc<"customFields">) => (
             <CustomFieldCard
               key={field._id}
@@ -104,7 +107,7 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
               onDelete={() => handleDelete(field._id)}
             />
           ))}
-        </Flex>
+        </Stack>
       )}
 
       {/* Form Dialog */}
@@ -119,6 +122,6 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
           }
         }}
       />
-    </Flex>
+    </Stack>
   );
 }

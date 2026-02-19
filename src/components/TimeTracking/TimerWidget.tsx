@@ -6,6 +6,7 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDuration, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
@@ -54,42 +55,43 @@ export function TimerWidget() {
 
   if (runningTimer) {
     return (
-      <Flex
-        align="center"
-        gap="sm"
-        className="px-3 py-2 bg-brand-indigo-track border border-brand-indigo-border rounded-lg"
-      >
+      <Card padding="sm" className="bg-brand-indigo-track border-brand-indigo-border">
         <Flex align="center" gap="sm">
-          {/* Pulsing dot */}
-          <div className="relative">
-            <div className="w-2 h-2 bg-brand rounded-full" />
-            <div className="absolute inset-0 w-2 h-2 bg-brand rounded-full animate-ping" />
-          </div>
+          <Flex align="center" gap="sm">
+            {/* Pulsing dot */}
+            <div className="relative">
+              <div className="w-2 h-2 bg-brand rounded-full" />
+              <div className="absolute inset-0 w-2 h-2 bg-brand rounded-full animate-ping" />
+            </div>
 
-          {/* Timer display */}
-          <Typography variant="mono" className="text-sm font-semibold text-brand-indigo-text">
-            {formatDuration(currentDuration)}
-          </Typography>
-
-          {/* Description or Issue */}
-          {(runningTimer.description || runningTimer.issue) && (
-            <Typography variant="caption" className="text-brand-indigo-text max-w-37.5 truncate">
-              {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
+            {/* Timer display */}
+            <Typography variant="mono" className="font-semibold text-brand-indigo-text">
+              {formatDuration(currentDuration)}
             </Typography>
-          )}
-        </Flex>
 
-        {/* Stop button */}
-        <Button
-          onClick={handleStop}
-          variant="ghost"
-          size="sm"
-          className="text-xs text-brand-indigo-text hover:bg-brand-indigo-bg/10"
-          aria-label="Stop timer"
-        >
-          Stop
-        </Button>
-      </Flex>
+            {/* Description or Issue */}
+            {(runningTimer.description || runningTimer.issue) && (
+              <Typography
+                variant="caption"
+                className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate"
+              >
+                {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
+              </Typography>
+            )}
+          </Flex>
+
+          {/* Stop button */}
+          <Button
+            onClick={handleStop}
+            variant="ghost"
+            size="sm"
+            className="text-xs text-brand-indigo-text hover:bg-brand-indigo-bg/10"
+            aria-label="Stop timer"
+          >
+            Stop
+          </Button>
+        </Flex>
+      </Card>
     );
   }
 

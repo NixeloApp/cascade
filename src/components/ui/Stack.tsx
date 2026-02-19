@@ -27,7 +27,9 @@ const stackVariants = cva("flex flex-col", {
 
 export interface StackProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof stackVariants> {}
+    VariantProps<typeof stackVariants> {
+  as?: React.ElementType;
+}
 
 /**
  * Vertical flex layout with consistent gap spacing.
@@ -40,8 +42,8 @@ export interface StackProps
  * </Stack>
  */
 export const Stack = React.forwardRef<HTMLDivElement, StackProps>(
-  ({ className, gap, align, ...props }, ref) => (
-    <div ref={ref} className={cn(stackVariants({ gap, align }), className)} {...props} />
+  ({ className, gap, align, as: Component = "div", ...props }, ref) => (
+    <Component ref={ref} className={cn(stackVariants({ gap, align }), className)} {...props} />
   ),
 );
 Stack.displayName = "Stack";

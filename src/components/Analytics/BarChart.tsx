@@ -1,4 +1,3 @@
-import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
@@ -7,7 +6,7 @@ import { Typography } from "../ui/Typography";
  * Horizontal bar chart visualization
  * Extracted from AnalyticsDashboard for better organization and reusability
  */
-export const BarChart = memo(function BarChart({
+export function BarChart({
   data,
   color,
 }: {
@@ -34,7 +33,7 @@ export const BarChart = memo(function BarChart({
                 minWidth: item.value > 0 ? "2rem" : "0",
               }}
             >
-              <Typography variant="small" className="font-semibold text-brand-foreground">
+              <Typography variant="label" className="text-brand-foreground">
                 {item.value}
               </Typography>
             </div>
@@ -43,4 +42,4 @@ export const BarChart = memo(function BarChart({
       ))}
     </Flex>
   );
-});
+}

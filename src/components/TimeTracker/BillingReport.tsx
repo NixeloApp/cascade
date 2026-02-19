@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -41,8 +41,8 @@ export function BillingReport({ projectId }: BillingReportProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("month");
   const project = useQuery(api.projects.getProject, { id: projectId });
 
-  // Memoize date range calculation to prevent query key changes
-  const dateRangeParams = useMemo(() => {
+  // Calculate date range parameters inline
+  const dateRangeParams = (() => {
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
 
@@ -54,36 +54,27 @@ export function BillingReport({ projectId }: BillingReportProps) {
       default:
         return {};
     }
-  }, [dateRange]);
+  })();
 
   const billing = useQuery(api.timeTracking.getProjectBilling, {
     projectId,
     ...dateRangeParams,
   });
 
-  // Memoize derived calculations
-  const { utilizationRate, averageRate, sortedUsers } = useMemo(() => {
-    if (!billing) {
-      return {
-        utilizationRate: 0,
-        averageRate: 0,
-        sortedUsers: [] as [string, BillingStats][],
-      };
-    }
-
-    const utilRate =
-      billing.totalHours > 0 ? (billing.billableHours / billing.totalHours) * 100 : 0;
-    const avgRate = billing.billableHours > 0 ? billing.totalRevenue / billing.billableHours : 0;
-    const sorted = (Object.entries(billing.byUser) as [string, BillingStats][]).sort(
-      (a, b) => (b[1].totalCost || 0) - (a[1].totalCost || 0),
-    );
-
-    return { utilizationRate: utilRate, averageRate: avgRate, sortedUsers: sorted };
-  }, [billing]);
+  // Calculate derived values inline
+  const utilizationRate =
+    billing && billing.totalHours > 0 ? (billing.billableHours / billing.totalHours) * 100 : 0;
+  const averageRate =
+    billing && billing.billableHours > 0 ? billing.totalRevenue / billing.billableHours : 0;
+  const sortedUsers = billing
+    ? (Object.entries(billing.byUser) as [string, BillingStats][]).sort(
+        (a, b) => (b[1].totalCost || 0) - (a[1].totalCost || 0),
+      )
+    : [];
 
   if (!(billing && project)) {
     return (
-      <Flex justify="center" align="center" className="p-8">
+      <Flex justify="center" align="center">
         <LoadingSpinner />
       </Flex>
     );
@@ -94,10 +85,8 @@ export function BillingReport({ projectId }: BillingReportProps) {
       {/* Header */}
       <Flex justify="between" align="center" className="mb-6">
         <div>
-          <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-            Billing Report
-          </Typography>
-          <Typography className="text-sm text-ui-text-tertiary">
+          <Typography variant="h2">Billing Report</Typography>
+          <Typography variant="small" color="tertiary">
             {project.name} {project.clientName && `• ${project.clientName}`}
           </Typography>
         </div>
@@ -135,9 +124,11 @@ export function BillingReport({ projectId }: BillingReportProps) {
       <Grid cols={1} colsMd={2} colsLg={4} gap="lg" className="mb-6">
         <Card>
           <CardBody>
-            <Flex align="center" gap="sm" className="text-sm text-ui-text-tertiary mb-2">
-              <DollarSign className="w-4 h-4" />
-              Total Revenue
+            <Flex align="center" gap="sm" className="mb-2">
+              <DollarSign className="w-4 h-4 text-ui-text-tertiary" />
+              <Typography variant="small" color="tertiary">
+                Total Revenue
+              </Typography>
             </Flex>
             <Typography variant="h2" color="success">
               {formatCurrency(billing.totalRevenue)}
@@ -153,9 +144,11 @@ export function BillingReport({ projectId }: BillingReportProps) {
 
         <Card>
           <CardBody>
-            <Flex align="center" gap="sm" className="text-sm text-ui-text-tertiary mb-2">
-              <Clock className="w-4 h-4" />
-              Billable Hours
+            <Flex align="center" gap="sm" className="mb-2">
+              <Clock className="w-4 h-4 text-ui-text-tertiary" />
+              <Typography variant="small" color="tertiary">
+                Billable Hours
+              </Typography>
             </Flex>
             <Typography variant="h2" color="brand">
               {formatHours(billing.billableHours)}
@@ -168,9 +161,11 @@ export function BillingReport({ projectId }: BillingReportProps) {
 
         <Card>
           <CardBody>
-            <Flex align="center" gap="sm" className="text-sm text-ui-text-tertiary mb-2">
-              <TrendingUp className="w-4 h-4" />
-              Utilization Rate
+            <Flex align="center" gap="sm" className="mb-2">
+              <TrendingUp className="w-4 h-4 text-ui-text-tertiary" />
+              <Typography variant="small" color="tertiary">
+                Utilization Rate
+              </Typography>
             </Flex>
             <Typography variant="h2" color="accent">
               {utilizationRate.toFixed(0)}%
@@ -183,9 +178,11 @@ export function BillingReport({ projectId }: BillingReportProps) {
 
         <Card>
           <CardBody>
-            <Flex align="center" gap="sm" className="text-sm text-ui-text-tertiary mb-2">
-              <DollarSign className="w-4 h-4" />
-              Avg Hourly Rate
+            <Flex align="center" gap="sm" className="mb-2">
+              <DollarSign className="w-4 h-4 text-ui-text-tertiary" />
+              <Typography variant="small" color="tertiary">
+                Avg Hourly Rate
+              </Typography>
             </Flex>
             <Typography variant="h2" color="warning">
               {formatCurrency(averageRate)}
@@ -199,18 +196,16 @@ export function BillingReport({ projectId }: BillingReportProps) {
 
       {/* Team Breakdown */}
       <Card>
-        <CardBody className="p-6">
+        <CardBody>
           <Flex align="center" gap="sm" className="mb-4">
             <Users className="w-5 h-5 text-ui-text-tertiary" />
-            <Typography variant="h3" className="text-lg font-semibold text-ui-text">
-              Team Breakdown
-            </Typography>
+            <Typography variant="h3">Team Breakdown</Typography>
           </Flex>
 
           {sortedUsers.length === 0 ? (
-            <div className="text-center py-8 text-ui-text-tertiary">
+            <Typography color="tertiary" className="text-center">
               No time entries recorded yet
-            </div>
+            </Typography>
           ) : (
             <Flex direction="column" gap="md">
               {sortedUsers.map(([userId, stats]) => {
@@ -221,12 +216,10 @@ export function BillingReport({ projectId }: BillingReportProps) {
                     : 0;
 
                 return (
-                  <div key={userId} className="p-4 bg-ui-bg-secondary rounded-lg">
+                  <Card key={userId} variant="soft">
                     <Flex justify="between" align="center" className="mb-2">
                       <div>
-                        <Typography variant="label" className="text-ui-text">
-                          {billingStats.name}
-                        </Typography>
+                        <Typography variant="label">{billingStats.name}</Typography>
                         <Typography variant="caption" color="tertiary">
                           {formatHours(billingStats.billableHours)} /{" "}
                           {formatHours(billingStats.hours)} hours ({userUtilization.toFixed(0)}%
@@ -245,7 +238,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
 
                     {/* Progress bar */}
                     <Progress value={userUtilization} />
-                  </div>
+                  </Card>
                 );
               })}
             </Flex>
@@ -255,30 +248,32 @@ export function BillingReport({ projectId }: BillingReportProps) {
 
       {/* Quick Stats */}
       <Grid cols={3} gap="lg" className="mt-6 text-center">
-        <div className="p-4 bg-ui-bg-secondary rounded-lg">
-          <Typography variant="h3" className="text-ui-text">
-            {billing.entries}
-          </Typography>
-          <Typography variant="small" color="tertiary">
-            Time Entries
-          </Typography>
-        </div>
-        <div className="p-4 bg-ui-bg-secondary rounded-lg">
-          <Typography variant="h3" className="text-ui-text">
-            {Object.keys(billing.byUser).length}
-          </Typography>
-          <Typography variant="small" color="tertiary">
-            Team Members
-          </Typography>
-        </div>
-        <div className="p-4 bg-ui-bg-secondary rounded-lg">
-          <Typography variant="h3" className="text-ui-text">
-            {averageRate > 0 ? formatCurrency(averageRate) : "N/A"}
-          </Typography>
-          <Typography variant="small" color="tertiary">
-            Blended Rate
-          </Typography>
-        </div>
+        <Card variant="soft" className="text-center">
+          <CardBody>
+            <Typography variant="h3">{billing.entries}</Typography>
+            <Typography variant="small" color="tertiary">
+              Time Entries
+            </Typography>
+          </CardBody>
+        </Card>
+        <Card variant="soft" className="text-center">
+          <CardBody>
+            <Typography variant="h3">{Object.keys(billing.byUser).length}</Typography>
+            <Typography variant="small" color="tertiary">
+              Team Members
+            </Typography>
+          </CardBody>
+        </Card>
+        <Card variant="soft" className="text-center">
+          <CardBody>
+            <Typography variant="h3">
+              {averageRate > 0 ? formatCurrency(averageRate) : "N/A"}
+            </Typography>
+            <Typography variant="small" color="tertiary">
+              Blended Rate
+            </Typography>
+          </CardBody>
+        </Card>
       </Grid>
     </div>
   );

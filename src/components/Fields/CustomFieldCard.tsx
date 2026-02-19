@@ -16,6 +16,7 @@ import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Metadata, MetadataItem } from "../ui/Metadata";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "checkbox" | "url";
@@ -61,39 +62,39 @@ export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProp
   };
 
   return (
-    <Card className="p-4">
+    <Card padding="md">
       <Flex justify="between" align="start">
         <Flex gap="md" align="start" className="flex-1">
           <Icon icon={getFieldTypeIcon(field.fieldType)} size="lg" />
           <FlexItem flex="1">
-            <Flex gap="sm" align="center">
-              <Typography variant="h3" className="font-semibold text-ui-text">
-                {field.name}
-              </Typography>
-              {field.isRequired && <Badge variant="error">Required</Badge>}
-            </Flex>
-            <Metadata size="sm" className="mt-1">
-              <MetadataItem>
-                <code className="px-2 py-0.5 bg-ui-bg-secondary rounded font-mono text-xs">
-                  {field.fieldKey}
-                </code>
-              </MetadataItem>
-              <MetadataItem className="capitalize">{field.fieldType}</MetadataItem>
-            </Metadata>
-            {field.description && (
-              <Typography variant="muted" className="mt-2">
-                {field.description}
-              </Typography>
-            )}
-            {field.options && field.options.length > 0 && (
-              <Flex wrap gap="xs" className="mt-2">
-                {field.options.map((option) => (
-                  <Badge key={option} variant="secondary" size="md">
-                    {option}
-                  </Badge>
-                ))}
+            <Stack gap="sm">
+              <Flex gap="sm" align="center">
+                <Typography variant="label">{field.name}</Typography>
+                {field.isRequired && <Badge variant="error">Required</Badge>}
               </Flex>
-            )}
+              <Metadata size="sm">
+                <MetadataItem>
+                  <code className="px-2 py-0.5 bg-ui-bg-secondary rounded font-mono text-xs">
+                    {field.fieldKey}
+                  </code>
+                </MetadataItem>
+                <MetadataItem className="capitalize">{field.fieldType}</MetadataItem>
+              </Metadata>
+              {field.description && (
+                <Typography variant="small" color="secondary">
+                  {field.description}
+                </Typography>
+              )}
+              {field.options && field.options.length > 0 && (
+                <Flex wrap gap="xs">
+                  {field.options.map((option) => (
+                    <Badge key={option} variant="secondary" size="md">
+                      {option}
+                    </Badge>
+                  ))}
+                </Flex>
+              )}
+            </Stack>
           </FlexItem>
         </Flex>
         <Flex gap="sm">

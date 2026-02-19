@@ -5,11 +5,13 @@ import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface BurnRateDashboardProps {
@@ -85,9 +87,7 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
     <Flex direction="column" gap="xl">
       {/* Header with date range selector */}
       <Flex justify="between" align="center">
-        <Typography variant="h2" className="text-lg font-semibold text-ui-text">
-          Burn Rate & Team Costs
-        </Typography>
+        <Typography variant="h2">Burn Rate & Team Costs</Typography>
 
         <Flex gap="sm">
           {(["week", "month", "quarter"] as const).map((range) => (
@@ -138,55 +138,46 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
 
       {/* Hours Breakdown */}
       <Grid cols={1} colsMd={2} gap="lg">
-        <div className="p-4 bg-ui-bg border border-ui-border rounded-lg">
-          <Typography variant="h3" className="text-sm font-medium text-ui-text mb-2">
-            Total Hours
-          </Typography>
-          <Typography variant="h2" className="text-ui-text">
-            {formatHours(burnRate.totalHours)}h
-          </Typography>
-          <Typography className="text-xs text-ui-text-tertiary mt-1">
-            {burnRate.entriesCount} time entries
-          </Typography>
-        </div>
+        <Card padding="md">
+          <Stack gap="xs">
+            <Typography variant="label">Total Hours</Typography>
+            <Typography variant="h2">{formatHours(burnRate.totalHours)}h</Typography>
+            <Typography variant="caption">{burnRate.entriesCount} time entries</Typography>
+          </Stack>
+        </Card>
 
-        <div className="p-4 bg-ui-bg border border-ui-border rounded-lg">
-          <Typography variant="h3" className="text-sm font-medium text-ui-text mb-2">
-            Billable Hours
-          </Typography>
-          <Typography variant="h2" color="success">
-            {formatHours(burnRate.billableHours)}h
-          </Typography>
-          <Typography className="text-xs text-ui-text-tertiary mt-1">
-            {formatCurrency(burnRate.billableCost)} billable
-          </Typography>
-        </div>
+        <Card padding="md">
+          <Stack gap="xs">
+            <Typography variant="label">Billable Hours</Typography>
+            <Typography variant="h2" color="success">
+              {formatHours(burnRate.billableHours)}h
+            </Typography>
+            <Typography variant="caption">
+              {formatCurrency(burnRate.billableCost)} billable
+            </Typography>
+          </Stack>
+        </Card>
       </Grid>
 
       {/* Team Costs Breakdown */}
-      <div>
-        <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
-          Team Costs Breakdown
-        </Typography>
+      <Stack gap="md">
+        <Typography variant="h3">Team Costs Breakdown</Typography>
 
         {teamCosts.length === 0 ? (
-          <div className="text-center p-8 bg-ui-bg-secondary rounded-lg">
-            <Typography className="text-sm text-ui-text-tertiary">
+          <Card padding="lg" className="bg-ui-bg-secondary text-center">
+            <Typography variant="small" color="tertiary">
               No time entries for this period
             </Typography>
-          </div>
+          </Card>
         ) : (
-          <Flex direction="column" gap="sm">
+          <Stack gap="sm">
             {(teamCosts as unknown as UserWithBurnRate[]).map((member) => {
               const percentOfTotal =
                 burnRate.totalCost > 0 ? (member.cost / burnRate.totalCost) * 100 : 0;
 
               return (
-                <div
-                  key={member.user?._id || "unknown"}
-                  className="p-4 bg-ui-bg border border-ui-border rounded-lg"
-                >
-                  <div className="mb-2">
+                <Card key={member.user?._id || "unknown"} padding="md">
+                  <Stack gap="sm">
                     <Flex justify="between" align="center">
                       <Flex align="center" gap="md">
                         {member.user?.image ? (
@@ -204,42 +195,38 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
                             {member.user?.name?.[0] || "?"}
                           </Flex>
                         )}
-                        <div>
-                          <Typography variant="label" className="text-ui-text">
-                            {member.user?.name || "Unknown"}
-                          </Typography>
+                        <Stack gap="none">
+                          <Typography variant="label">{member.user?.name || "Unknown"}</Typography>
                           <Typography variant="caption" color="tertiary">
                             {formatHours(member.hours)}h total ({formatHours(member.billableHours)}h
                             billable)
                           </Typography>
-                        </div>
+                        </Stack>
                       </Flex>
 
-                      <Flex direction="column" align="end">
-                        <Typography variant="label" className="py-2 text-right text-ui-text">
+                      <Stack gap="none" align="end">
+                        <Typography variant="label" className="py-2 text-right">
                           {formatHours(member.hours)}
                         </Typography>
-                        <Typography variant="label" className="py-2 text-right text-ui-text">
+                        <Typography variant="label" className="py-2 text-right">
                           {formatHours(member.billableHours)}
                         </Typography>
-                        <Typography variant="label" className="text-ui-text">
-                          {formatCurrency(member.cost)}
-                        </Typography>
+                        <Typography variant="label">{formatCurrency(member.cost)}</Typography>
                         <Typography variant="caption" color="tertiary">
                           {percentOfTotal.toFixed(0)}% of total
                         </Typography>
-                      </Flex>
+                      </Stack>
                     </Flex>
-                  </div>
 
-                  {/* Progress bar */}
-                  <Progress value={percentOfTotal} />
-                </div>
+                    {/* Progress bar */}
+                    <Progress value={percentOfTotal} />
+                  </Stack>
+                </Card>
               );
             })}
-          </Flex>
+          </Stack>
         )}
-      </div>
+      </Stack>
     </Flex>
   );
 }

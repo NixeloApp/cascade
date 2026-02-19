@@ -3,7 +3,9 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { Eye } from "lucide-react";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { Typography } from "./ui/Typography";
@@ -39,7 +41,7 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <Stack gap="md">
       {/* Watch/Unwatch Button */}
       <div>
         <Button
@@ -64,44 +66,39 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
 
       {/* Watchers List */}
       {watchers && watchers.length > 0 && (
-        <div>
-          <Typography variant="h4" className="text-sm font-medium text-ui-text mb-2">
-            Watchers ({watchers.length})
-          </Typography>
-          <div className="space-y-2">
+        <Stack gap="sm">
+          <Typography variant="label">Watchers ({watchers.length})</Typography>
+          <Stack gap="sm">
             {watchers.map((watcher: Watcher) => (
-              <Flex
-                align="center"
-                gap="md"
-                className="p-2 bg-ui-bg-secondary rounded-lg"
-                key={watcher._id}
-              >
-                {/* Avatar */}
-                <Avatar name={watcher.userName} size="md" />
+              <Card padding="sm" key={watcher._id} className="bg-ui-bg-secondary">
+                <Flex align="center" gap="md">
+                  {/* Avatar */}
+                  <Avatar name={watcher.userName} size="md" />
 
-                {/* User Info */}
-                <FlexItem flex="1" className="min-w-0">
-                  <Typography variant="p" className="font-medium truncate">
-                    {watcher.userName}
-                  </Typography>
-                  {watcher.userEmail && (
-                    <Typography variant="caption" className="truncate">
-                      {watcher.userEmail}
+                  {/* User Info */}
+                  <FlexItem flex="1" className="min-w-0">
+                    <Typography variant="label" className="truncate">
+                      {watcher.userName}
                     </Typography>
-                  )}
-                </FlexItem>
-              </Flex>
+                    {watcher.userEmail && (
+                      <Typography variant="caption" className="truncate">
+                        {watcher.userEmail}
+                      </Typography>
+                    )}
+                  </FlexItem>
+                </Flex>
+              </Card>
             ))}
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       )}
 
       {/* Empty State */}
       {watchers && watchers.length === 0 && (
-        <Typography variant="small" color="secondary" className="text-center py-4">
+        <Typography variant="small" color="secondary" className="text-center">
           No watchers yet. Be the first to watch this issue!
         </Typography>
       )}
-    </div>
+    </Stack>
   );
 }

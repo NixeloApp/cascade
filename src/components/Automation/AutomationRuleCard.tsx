@@ -7,6 +7,7 @@ import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface AutomationRuleCardProps {
@@ -67,54 +68,56 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
   };
 
   return (
-    <Card className="p-4">
+    <Card padding="md">
       <Flex justify="between" align="start" gap="lg">
         <FlexItem flex="1" className="min-w-0">
-          <Flex gap="md" align="center" className="mb-2">
-            <Typography variant="h4" className="font-medium text-ui-text">
-              {rule.name}
-            </Typography>
-            <Badge variant={rule.isActive ? "success" : "neutral"} size="md">
-              {rule.isActive ? "Active" : "Inactive"}
-            </Badge>
-          </Flex>
-
-          {rule.description && (
-            <Typography variant="p" color="secondary" className="text-sm mb-3">
-              {rule.description}
-            </Typography>
-          )}
-
-          <Flex gap="lg" align="center" className="text-sm">
-            <Flex gap="sm" align="center">
-              <Typography variant="muted">When:</Typography>
-              <Badge variant="brand" size="md">
-                {getTriggerLabel(rule.trigger)}
-                {rule.triggerValue && (
-                  <>
-                    <Icon icon={ArrowRight} size="xs" className="inline mx-1" />
-                    {rule.triggerValue}
-                  </>
-                )}
+          <Stack gap="sm">
+            <Flex gap="md" align="center">
+              <Typography variant="label">{rule.name}</Typography>
+              <Badge variant={rule.isActive ? "success" : "neutral"} size="md">
+                {rule.isActive ? "Active" : "Inactive"}
               </Badge>
             </Flex>
 
-            <Flex gap="sm" align="center">
-              <Typography variant="muted">Then:</Typography>
-              <Badge variant="accent" size="md">
-                {getActionLabel(rule.actionType)}
-              </Badge>
-            </Flex>
+            {rule.description && (
+              <Typography variant="small" color="secondary">
+                {rule.description}
+              </Typography>
+            )}
 
-            <Typography variant="muted">Executed: {rule.executionCount} times</Typography>
-          </Flex>
+            <Flex gap="lg" align="center">
+              <Flex gap="sm" align="center">
+                <Typography variant="muted">When:</Typography>
+                <Badge variant="brand" size="md">
+                  {getTriggerLabel(rule.trigger)}
+                  {rule.triggerValue && (
+                    <>
+                      <Icon icon={ArrowRight} size="xs" className="inline mx-1" />
+                      {rule.triggerValue}
+                    </>
+                  )}
+                </Badge>
+              </Flex>
+
+              <Flex gap="sm" align="center">
+                <Typography variant="muted">Then:</Typography>
+                <Badge variant="accent" size="md">
+                  {getActionLabel(rule.actionType)}
+                </Badge>
+              </Flex>
+
+              <Typography variant="small" color="secondary">
+                Executed: {rule.executionCount} times
+              </Typography>
+            </Flex>
+          </Stack>
         </FlexItem>
 
         <Flex gap="sm" align="center" className="shrink-0">
           <button
             type="button"
             onClick={handleToggle}
-            className="p-2 hover:bg-ui-bg-secondary rounded transition-colors"
+            className="hover:bg-ui-bg-secondary rounded transition-colors"
             title={rule.isActive ? "Disable rule" : "Enable rule"}
             aria-label={rule.isActive ? "Disable rule" : "Enable rule"}
           >
@@ -123,7 +126,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
           <button
             type="button"
             onClick={onEdit}
-            className="p-2 hover:bg-ui-bg-secondary rounded transition-colors"
+            className="hover:bg-ui-bg-secondary rounded transition-colors"
             title="Edit rule"
             aria-label="Edit rule"
           >
@@ -132,7 +135,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
           <button
             type="button"
             onClick={onDelete}
-            className="p-2 hover:bg-ui-bg-secondary rounded transition-colors"
+            className="hover:bg-ui-bg-secondary rounded transition-colors"
             title="Delete rule"
             aria-label="Delete rule"
           >

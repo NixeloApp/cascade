@@ -4,7 +4,7 @@
  */
 
 import type { Id, TableNames } from "@convex/_generated/dataModel";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { showError, showSuccess } from "../lib/toast";
 
 export interface UseDeleteConfirmationOptions {
@@ -63,33 +63,30 @@ export function useDeleteConfirmation<T extends TableNames>(
   const [deleteId, setDeleteId] = useState<Id<T> | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const confirmDelete = useCallback((id: Id<T>) => {
+  const confirmDelete = (id: Id<T>) => {
     setDeleteId(id);
-  }, []);
+  };
 
-  const cancelDelete = useCallback(() => {
+  const cancelDelete = () => {
     setDeleteId(null);
-  }, []);
+  };
 
-  const executeDelete = useCallback(
-    async (deleteFn: (id: Id<T>) => Promise<void>) => {
-      if (!deleteId) return;
+  const executeDelete = async (deleteFn: (id: Id<T>) => Promise<void>) => {
+    if (!deleteId) return;
 
-      setIsDeleting(true);
-      try {
-        await deleteFn(deleteId);
-        showSuccess(successMessage);
-        onSuccess?.();
-        setDeleteId(null);
-      } catch (error) {
-        showError(error, errorMessage);
-        onError?.(error);
-      } finally {
-        setIsDeleting(false);
-      }
-    },
-    [deleteId, successMessage, errorMessage, onSuccess, onError],
-  );
+    setIsDeleting(true);
+    try {
+      await deleteFn(deleteId);
+      showSuccess(successMessage);
+      onSuccess?.();
+      setDeleteId(null);
+    } catch (error) {
+      showError(error, errorMessage);
+      onError?.(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return {
     deleteId,

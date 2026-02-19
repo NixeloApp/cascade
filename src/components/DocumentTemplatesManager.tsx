@@ -4,8 +4,10 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import { FileText } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -15,6 +17,7 @@ import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
+import { Label } from "./ui/Label";
 import { Typography } from "./ui/Typography";
 
 // =============================================================================
@@ -216,13 +219,11 @@ export function DocumentTemplatesManager({
             }}
           />
         ) : (
-          <div className="space-y-6">
+          <Stack gap="lg">
             {/* Built-in Templates */}
             {builtInTemplates.length > 0 && (
-              <div>
-                <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
-                  Built-in Templates
-                </Typography>
+              <Stack gap="sm">
+                <Typography variant="label">Built-in Templates</Typography>
                 <Grid cols={1} colsMd={2} colsLg={3} gap="lg">
                   {builtInTemplates.map((template: Doc<"documentTemplates">) => (
                     <button
@@ -236,40 +237,39 @@ export function DocumentTemplatesManager({
                           {template.icon}
                         </Typography>
                         <FlexItem flex="1">
-                          <Typography variant="h4" className="font-semibold text-ui-text mb-1">
-                            {template.name}
-                          </Typography>
-                          {template.description && (
-                            <Typography variant="muted" className="line-clamp-2">
-                              {template.description}
-                            </Typography>
-                          )}
-                          <Badge
-                            variant="primary"
-                            size="md"
-                            className="inline-block mt-2 capitalize"
-                          >
-                            {template.category}
-                          </Badge>
+                          <Stack gap="xs">
+                            <Typography variant="label">{template.name}</Typography>
+                            {template.description && (
+                              <Typography
+                                variant="small"
+                                color="secondary"
+                                className="line-clamp-2"
+                              >
+                                {template.description}
+                              </Typography>
+                            )}
+                            <Badge variant="primary" size="md" className="inline-block capitalize">
+                              {template.category}
+                            </Badge>
+                          </Stack>
                         </FlexItem>
                       </Flex>
                     </button>
                   ))}
                 </Grid>
-              </div>
+              </Stack>
             )}
 
             {/* Custom Templates */}
             {customTemplates.length > 0 && (
-              <div>
-                <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
-                  Custom Templates
-                </Typography>
+              <Stack gap="sm">
+                <Typography variant="label">Custom Templates</Typography>
                 <Grid cols={1} colsMd={2} colsLg={3} gap="lg">
                   {customTemplates.map((template: Doc<"documentTemplates">) => (
-                    <div
+                    <Card
                       key={template._id}
-                      className="p-4 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary transition-colors border border-ui-border"
+                      padding="md"
+                      className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary transition-colors"
                     >
                       <Flex align="start" gap="md">
                         <button
@@ -281,24 +281,28 @@ export function DocumentTemplatesManager({
                             {template.icon}
                           </Typography>
                           <FlexItem flex="1">
-                            <Typography variant="h4" className="font-medium text-ui-text mb-1">
-                              {template.name}
-                            </Typography>
-                            {template.description && (
-                              <Typography variant="muted" className="line-clamp-2 mb-2">
-                                {template.description}
-                              </Typography>
-                            )}
-                            <Flex gap="sm">
-                              <Badge variant="neutral" size="md" className="capitalize">
-                                {template.category}
-                              </Badge>
-                              {template.isPublic && (
-                                <Badge variant="success" size="md">
-                                  Public
-                                </Badge>
+                            <Stack gap="xs">
+                              <Typography variant="label">{template.name}</Typography>
+                              {template.description && (
+                                <Typography
+                                  variant="small"
+                                  color="secondary"
+                                  className="line-clamp-2"
+                                >
+                                  {template.description}
+                                </Typography>
                               )}
-                            </Flex>
+                              <Flex gap="sm">
+                                <Badge variant="neutral" size="md" className="capitalize">
+                                  {template.category}
+                                </Badge>
+                                {template.isPublic && (
+                                  <Badge variant="success" size="md">
+                                    Public
+                                  </Badge>
+                                )}
+                              </Flex>
+                            </Stack>
                           </FlexItem>
                         </button>
 
@@ -347,12 +351,12 @@ export function DocumentTemplatesManager({
                           />
                         </Flex>
                       </Flex>
-                    </div>
+                    </Card>
                   ))}
                 </Grid>
-              </div>
+              </Stack>
             )}
-          </div>
+          </Stack>
         )}
       </div>
 
@@ -368,96 +372,95 @@ export function DocumentTemplatesManager({
             e.preventDefault();
             form.handleSubmit();
           }}
-          className="space-y-4"
         >
-          <Grid cols={1} colsSm={2} gap="lg">
-            <form.Field name="name">
-              {(field) => (
-                <FormInput
-                  field={field}
-                  label="Template Name"
-                  placeholder="e.g., Weekly Sprint Review"
-                  required
-                  autoFocus
-                />
-              )}
-            </form.Field>
-
-            <form.Field name="icon">
-              {(field) => (
-                <FormInput
-                  field={field}
-                  label="Icon (Emoji)"
-                  placeholder="📄"
-                  maxLength={2}
-                  required
-                />
-              )}
-            </form.Field>
-          </Grid>
-
-          <form.Field name="description">
-            {(field) => (
-              <FormTextarea
-                field={field}
-                label="Description"
-                placeholder="Brief description of what this template is for..."
-                rows={3}
-              />
-            )}
-          </form.Field>
-
-          <Grid cols={1} colsSm={2} gap="lg">
-            <form.Field name="category">
-              {(field) => (
-                <FormSelect field={field} label="Category" required>
-                  <option value="meeting">Meeting</option>
-                  <option value="planning">Planning</option>
-                  <option value="engineering">Engineering</option>
-                  <option value="design">Design</option>
-                  <option value="other">Other</option>
-                </FormSelect>
-              )}
-            </form.Field>
-
-            <form.Field name="isPublic">
-              {(field) => (
-                <Flex align="center" gap="sm" className="pt-7">
-                  <input
-                    type="checkbox"
-                    id="isPublic"
-                    checked={field.state.value as boolean}
-                    onChange={(e) => field.handleChange(e.target.checked)}
-                    onBlur={field.handleBlur}
-                    className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus:ring-brand-ring:ring-brand focus:ring-2"
+          <Stack gap="md">
+            <Grid cols={1} colsSm={2} gap="lg">
+              <form.Field name="name">
+                {(field) => (
+                  <FormInput
+                    field={field}
+                    label="Template Name"
+                    placeholder="e.g., Weekly Sprint Review"
+                    required
+                    autoFocus
                   />
-                  <label htmlFor="isPublic" className="text-sm font-medium text-ui-text">
-                    Make public (visible to all users)
-                  </label>
-                </Flex>
+                )}
+              </form.Field>
+
+              <form.Field name="icon">
+                {(field) => (
+                  <FormInput
+                    field={field}
+                    label="Icon (Emoji)"
+                    placeholder="📄"
+                    maxLength={2}
+                    required
+                  />
+                )}
+              </form.Field>
+            </Grid>
+
+            <form.Field name="description">
+              {(field) => (
+                <FormTextarea
+                  field={field}
+                  label="Description"
+                  placeholder="Brief description of what this template is for..."
+                  rows={3}
+                />
               )}
             </form.Field>
-          </Grid>
 
-          <Flex justify="end" gap="sm" className="pt-4">
-            <form.Subscribe selector={(state) => state.isSubmitting}>
-              {(isSubmitting) => (
-                <>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={resetForm}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" isLoading={isSubmitting}>
-                    {editingId ? "Update" : "Create"} Template
-                  </Button>
-                </>
-              )}
-            </form.Subscribe>
-          </Flex>
+            <Grid cols={1} colsSm={2} gap="lg">
+              <form.Field name="category">
+                {(field) => (
+                  <FormSelect field={field} label="Category" required>
+                    <option value="meeting">Meeting</option>
+                    <option value="planning">Planning</option>
+                    <option value="engineering">Engineering</option>
+                    <option value="design">Design</option>
+                    <option value="other">Other</option>
+                  </FormSelect>
+                )}
+              </form.Field>
+
+              <form.Field name="isPublic">
+                {(field) => (
+                  <Flex align="center" gap="sm" className="pt-7">
+                    <input
+                      type="checkbox"
+                      id="isPublic"
+                      checked={field.state.value as boolean}
+                      onChange={(e) => field.handleChange(e.target.checked)}
+                      onBlur={field.handleBlur}
+                      className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus:ring-brand-ring:ring-brand focus:ring-2"
+                    />
+                    <Label htmlFor="isPublic">Make public (visible to all users)</Label>
+                  </Flex>
+                )}
+              </form.Field>
+            </Grid>
+
+            <Flex justify="end" gap="sm" className="pt-4">
+              <form.Subscribe selector={(state) => state.isSubmitting}>
+                {(isSubmitting) => (
+                  <>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={resetForm}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" isLoading={isSubmitting}>
+                      {editingId ? "Update" : "Create"} Template
+                    </Button>
+                  </>
+                )}
+              </form.Subscribe>
+            </Flex>
+          </Stack>
         </form>
       </Dialog>
 

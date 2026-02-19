@@ -12,7 +12,7 @@ import {
   useMarkToolbarButton,
   useMarkToolbarButtonState,
 } from "platejs/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
@@ -113,14 +113,13 @@ export function FloatingToolbar() {
   }, [selection]);
 
   // Handle link insertion
-  const handleLink = useCallback(() => {
+  const handleLink = () => {
     const url = window.prompt("Enter URL:");
     if (url && selection) {
       // TODO: Implement proper link insertion with LinkPlugin
-      // For now, just wrap the selection in a link
-      console.debug("Link URL:", url);
+      // For now, this is a no-op until LinkPlugin is integrated
     }
-  }, [selection]);
+  };
 
   if (!open || !anchorRect) {
     return null;

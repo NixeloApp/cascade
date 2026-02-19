@@ -7,7 +7,7 @@
 
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { showError, showSuccess } from "./toast";
 
 // ============================================================================
@@ -78,14 +78,11 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
   const unsubscribeMutation = useMutation(api.pushNotifications.unsubscribe);
 
   // Check if push is supported
-  const isSupported = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      "serviceWorker" in navigator &&
-      "PushManager" in window &&
-      "Notification" in window,
-    [],
-  );
+  const isSupported =
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    "Notification" in window;
 
   // Initialize service worker and check subscription
   useEffect(() => {
@@ -110,7 +107,7 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
   }, [isSupported]);
 
   // Subscribe to push notifications
-  const subscribe = useCallback(async () => {
+  const subscribe = async () => {
     if (!isSupported || !pushManager || !vapidPublicKey) {
       showError("Push notifications are not supported in this browser");
       return;
@@ -164,10 +161,10 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
     } finally {
       setIsLoading(false);
     }
-  }, [isSupported, pushManager, vapidPublicKey, subscribeMutation]);
+  };
 
   // Unsubscribe from push notifications
-  const unsubscribe = useCallback(async () => {
+  const unsubscribe = async () => {
     if (!currentSubscription) return;
 
     setIsLoading(true);
@@ -188,20 +185,17 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
     } finally {
       setIsLoading(false);
     }
-  }, [currentSubscription, unsubscribeMutation]);
+  };
 
   // Context value
-  const value = useMemo<WebPushContextValue>(
-    () => ({
-      permission,
-      isSupported,
-      isLoading,
-      isSubscribed: !!currentSubscription,
-      subscribe,
-      unsubscribe,
-    }),
-    [permission, isSupported, isLoading, currentSubscription, subscribe, unsubscribe],
-  );
+  const value: WebPushContextValue = {
+    permission,
+    isSupported,
+    isLoading,
+    isSubscribed: !!currentSubscription,
+    subscribe,
+    unsubscribe,
+  };
 
   return <WebPushContext.Provider value={value}>{children}</WebPushContext.Provider>;
 }

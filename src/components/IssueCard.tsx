@@ -267,7 +267,7 @@ export const IssueCard = memo(function IssueCard({
       <div className="relative z-10 pointer-events-none">
         {/* Header */}
         <Flex align="start" justify="between" className="mb-2">
-          <Flex align="center" className="space-x-2">
+          <Flex align="center" gap="sm">
             {/* Drag handle */}
             {canEdit && !selectionMode && (
               <div
@@ -303,9 +303,9 @@ export const IssueCard = memo(function IssueCard({
                 />
               </div>
             </Tooltip>
-            <code data-testid={TEST_IDS.ISSUE.KEY} className="font-mono text-xs">
+            <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
               {issue.key}
-            </code>
+            </Typography>
           </Flex>
           <Tooltip
             content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
@@ -327,7 +327,7 @@ export const IssueCard = memo(function IssueCard({
         <Typography
           variant="label"
           as="p"
-          className="text-xs sm:text-sm mb-2 line-clamp-2"
+          className="mb-2 line-clamp-2"
           data-testid={TEST_IDS.ISSUE.TITLE}
         >
           {issue.title}
@@ -358,7 +358,7 @@ export const IssueCard = memo(function IssueCard({
                   role="button"
                   className="rounded-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-ring pointer-events-auto"
                 >
-                  <Typography variant="caption" className="px-1.5 py-0.5 cursor-help">
+                  <Typography variant="caption" className="cursor-help">
                     +{issue.labels.length - 3}
                   </Typography>
                 </span>
@@ -375,10 +375,10 @@ export const IssueCard = memo(function IssueCard({
           gap="sm"
           className="sm:flex-row sm:items-center"
         >
-          <Flex align="center" className="space-x-2">
+          <Flex align="center" gap="sm">
             {issue.assignee && (
               <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-                <Flex align="center" className="space-x-1 pointer-events-auto">
+                <Flex align="center" gap="xs" className="pointer-events-auto">
                   {issue.assignee.image ? (
                     <img
                       src={issue.assignee.image}
@@ -389,7 +389,7 @@ export const IssueCard = memo(function IssueCard({
                     <Flex
                       align="center"
                       justify="center"
-                      className="w-5 h-5 rounded-full bg-ui-bg-tertiary text-xs text-ui-text-secondary"
+                      className="size-5 rounded-full bg-ui-bg-tertiary text-ui-text-secondary"
                     >
                       {issue.assignee.name.charAt(0).toUpperCase()}
                     </Flex>

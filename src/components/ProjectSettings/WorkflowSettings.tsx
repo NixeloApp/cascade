@@ -11,6 +11,7 @@ import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Input, Select } from "../ui/form";
 import { Icon } from "../ui/Icon";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface WorkflowSettingsProps {
@@ -141,114 +142,106 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
   };
 
   return (
-    <Card variant="soft">
-      <div className="p-6">
-        <Flex justify="between" align="center" className="mb-6">
-          <div>
-            <Typography variant="large" className="font-semibold tracking-tight">
-              Workflow
-            </Typography>
-            <Typography variant="small" color="secondary" className="mt-0.5">
-              Configure issue status workflow
-            </Typography>
-          </div>
-          {!isEditing && (
-            <Button variant="secondary" size="sm" onClick={handleEdit}>
-              Edit
-            </Button>
-          )}
-        </Flex>
+    <Card variant="soft" padding="lg">
+      <Flex justify="between" align="center" className="mb-6">
+        <Stack gap="xs">
+          <Typography variant="label">Workflow</Typography>
+          <Typography variant="small" color="secondary">
+            Configure issue status workflow
+          </Typography>
+        </Stack>
+        {!isEditing && (
+          <Button variant="secondary" size="sm" onClick={handleEdit}>
+            Edit
+          </Button>
+        )}
+      </Flex>
 
-        {isEditing ? (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              {states.map((state, index) => (
-                <Flex
-                  align="center"
-                  gap="md"
-                  className="p-3 bg-ui-bg-tertiary rounded-lg border border-ui-border transition-default hover:border-ui-border-secondary"
-                  key={state.id}
-                >
-                  <Flex gap="xs" direction="column">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleMoveState(index, "up")}
-                      disabled={index === 0}
-                      className="p-1 h-6 hover:bg-ui-bg-hover"
-                    >
-                      <Icon icon={ChevronUp} size="sm" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleMoveState(index, "down")}
-                      disabled={index === states.length - 1}
-                      className="p-1 h-6 hover:bg-ui-bg-hover"
-                    >
-                      <Icon icon={ChevronDown} size="sm" />
-                    </Button>
-                  </Flex>
-                  <Input
-                    value={state.name}
-                    onChange={(e) => handleStateChange(index, "name", e.target.value)}
-                    className="flex-1"
-                    placeholder="State name"
-                  />
-                  <Select
-                    value={state.category}
-                    onChange={(e) => handleStateChange(index, "category", e.target.value)}
-                    options={CATEGORY_OPTIONS}
-                    className="w-36"
-                  />
+      {isEditing ? (
+        <Stack gap="md">
+          <Stack gap="sm">
+            {states.map((state, index) => (
+              <Flex
+                align="center"
+                gap="md"
+                className="p-3 bg-ui-bg-tertiary rounded-lg border border-ui-border transition-default hover:border-ui-border-secondary"
+                key={state.id}
+              >
+                <Flex gap="xs" direction="column">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleRemoveState(index)}
-                    className="text-status-error hover:text-status-error hover:bg-status-error/10"
+                    onClick={() => handleMoveState(index, "up")}
+                    disabled={index === 0}
+                    className="p-1 h-6 hover:bg-ui-bg-hover"
                   >
-                    Remove
+                    <Icon icon={ChevronUp} size="sm" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleMoveState(index, "down")}
+                    disabled={index === states.length - 1}
+                    className="p-1 h-6 hover:bg-ui-bg-hover"
+                  >
+                    <Icon icon={ChevronDown} size="sm" />
                   </Button>
                 </Flex>
-              ))}
-            </div>
-
-            <Button variant="secondary" size="sm" onClick={handleAddState}>
-              + Add State
-            </Button>
-
-            <Flex gap="sm" className="pt-5 border-t border-ui-border">
-              <Button onClick={handleSave} disabled={isSaving} isLoading={isSaving}>
-                Save Changes
-              </Button>
-              <Button variant="secondary" onClick={handleCancel} disabled={isSaving}>
-                Cancel
-              </Button>
-            </Flex>
-          </div>
-        ) : (
-          <div className="space-y-5">
-            {(["todo", "inprogress", "done"] as const).map((category) => (
-              <div key={category} className="p-4 bg-ui-bg-tertiary rounded-lg">
-                <Typography variant="small" color="secondary" className="mb-2.5 font-medium">
-                  {category === "inprogress"
-                    ? "In Progress"
-                    : category === "todo"
-                      ? "To Do"
-                      : "Done"}
-                </Typography>
-                <Flex gap="sm" wrap>
-                  {groupedStates[category].map((state) => (
-                    <Badge key={state.id} className={CATEGORY_COLORS[state.category]}>
-                      {state.name}
-                    </Badge>
-                  ))}
-                </Flex>
-              </div>
+                <Input
+                  value={state.name}
+                  onChange={(e) => handleStateChange(index, "name", e.target.value)}
+                  className="flex-1"
+                  placeholder="State name"
+                />
+                <Select
+                  value={state.category}
+                  onChange={(e) => handleStateChange(index, "category", e.target.value)}
+                  options={CATEGORY_OPTIONS}
+                  className="w-36"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveState(index)}
+                  className="text-status-error hover:text-status-error hover:bg-status-error/10"
+                >
+                  Remove
+                </Button>
+              </Flex>
             ))}
-          </div>
-        )}
-      </div>
+          </Stack>
+
+          <Button variant="secondary" size="sm" onClick={handleAddState}>
+            + Add State
+          </Button>
+
+          <Flex gap="sm" className="pt-5 border-t border-ui-border">
+            <Button onClick={handleSave} disabled={isSaving} isLoading={isSaving}>
+              Save Changes
+            </Button>
+            <Button variant="secondary" onClick={handleCancel} disabled={isSaving}>
+              Cancel
+            </Button>
+          </Flex>
+        </Stack>
+      ) : (
+        <Stack gap="lg">
+          {(["todo", "inprogress", "done"] as const).map((category) => (
+            <Card key={category} padding="md" className="bg-ui-bg-tertiary">
+              <Typography variant="label" color="secondary" className="mb-2.5">
+                {category === "inprogress" ? "In Progress" : category === "todo" ? "To Do" : "Done"}
+              </Typography>
+              <Flex gap="sm" wrap>
+                {groupedStates[category].map((state) => (
+                  <Badge key={state.id} className={CATEGORY_COLORS[state.category]}>
+                    {state.name}
+                  </Badge>
+                ))}
+              </Flex>
+            </Card>
+          ))}
+        </Stack>
+      )}
     </Card>
   );
 }

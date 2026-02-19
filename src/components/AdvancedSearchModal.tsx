@@ -2,17 +2,19 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useQuery } from "convex/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { Stack } from "./ui/Stack";
 
 interface AdvancedSearchModalProps {
   open: boolean;
@@ -56,33 +58,27 @@ export function AdvancedSearchModal({
   const total = searchResult?.total ?? 0;
   const hasMore = (searchResult?.page?.length ?? 0) === LIMIT;
 
-  const handleSelectIssue = useCallback(
-    (issueId: Id<"issues">) => {
-      onSelectIssue(issueId);
-      onOpenChange(false);
-      setSearchQuery("");
-      setSelectedType([]);
-      setSelectedPriority([]);
-      setSelectedStatus([]);
-      setOffset(0);
-    },
-    [onSelectIssue, onOpenChange],
-  );
+  const handleSelectIssue = (issueId: Id<"issues">) => {
+    onSelectIssue(issueId);
+    onOpenChange(false);
+    setSearchQuery("");
+    setSelectedType([]);
+    setSelectedPriority([]);
+    setSelectedStatus([]);
+    setOffset(0);
+  };
 
-  const handleLoadMore = useCallback(() => {
+  const handleLoadMore = () => {
     setOffset((prev) => prev + LIMIT);
-  }, []);
+  };
 
-  const toggleFilter = useCallback(
-    (value: string, array: string[], setter: (arr: string[]) => void) => {
-      if (array.includes(value)) {
-        setter(array.filter((v) => v !== value));
-      } else {
-        setter([...array, value]);
-      }
-    },
-    [],
-  );
+  const toggleFilter = (value: string, array: string[], setter: (arr: string[]) => void) => {
+    if (array.includes(value)) {
+      setter(array.filter((v) => v !== value));
+    } else {
+      setter([...array, value]);
+    }
+  };
 
   return (
     <Dialog
@@ -96,18 +92,16 @@ export function AdvancedSearchModal({
         </Button>
       }
     >
-      <div className="space-y-6">
+      <Stack gap="lg">
         {/* Search Input */}
-        <div>
-          <Input
-            label="Search Issues"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by title, key, or description..."
-            autoFocus
-            helperText="Type at least 2 characters to search"
-          />
-        </div>
+        <Input
+          label="Search Issues"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by title, key, or description..."
+          autoFocus
+          helperText="Type at least 2 characters to search"
+        />
 
         {/* Filters */}
         <Grid cols={1} colsMd={3} gap="lg">
@@ -141,29 +135,29 @@ export function AdvancedSearchModal({
         </Grid>
 
         {/* Results */}
-        <div>
-          <Flex align="center" justify="between" className="mb-3">
-            <Typography variant="h3" className="text-sm font-medium text-ui-text">
+        <Stack gap="sm">
+          <Flex align="center" justify="between">
+            <Typography variant="label">
               Results {searchQuery.length >= 2 && `(${total} total, showing ${results.length})`}
             </Typography>
             {(selectedType.length > 0 ||
               selectedPriority.length > 0 ||
               selectedStatus.length > 0) && (
-              <button
-                type="button"
+              <Button
+                variant="link"
+                size="sm"
                 onClick={() => {
                   setSelectedType([]);
                   setSelectedPriority([]);
                   setSelectedStatus([]);
                 }}
-                className="text-sm text-brand hover:underline"
               >
                 Clear Filters
-              </button>
+              </Button>
             )}
           </Flex>
 
-          <div className="border border-ui-border rounded-lg overflow-hidden">
+          <Card radius="full" className="overflow-hidden">
             <SearchResultsList
               searchQuery={searchQuery}
               results={results}
@@ -172,9 +166,9 @@ export function AdvancedSearchModal({
               onSelectIssue={handleSelectIssue}
               onLoadMore={handleLoadMore}
             />
-          </div>
-        </div>
-      </div>
+          </Card>
+        </Stack>
+      </Stack>
     </Dialog>
   );
 }

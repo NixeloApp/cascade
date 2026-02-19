@@ -2,6 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Stack } from "@/components/ui/Stack";
 import { Download, Upload } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ExportPanel } from "./ImportExport/ExportPanel";
@@ -49,9 +50,9 @@ export function ImportExportModal({
       description="Manage issue import and export"
       className="sm:max-w-4xl"
     >
-      <div className="space-y-6">
+      <Stack gap="lg">
         {/* Mode Selection */}
-        <Flex gap="sm" className="p-1 bg-ui-bg-tertiary rounded-lg">
+        <Flex gap="sm" className="bg-ui-bg-tertiary rounded-lg p-1">
           <button
             type="button"
             onClick={() => setMode("export")}
@@ -90,7 +91,7 @@ export function ImportExportModal({
         ) : (
           <ImportPanel projectId={projectId} onImportComplete={handleImportComplete} />
         )}
-      </div>
+      </Stack>
     </Dialog>
   );
 }

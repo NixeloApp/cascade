@@ -92,10 +92,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
                         {project.name}
                       </Typography>
                     </Flex>
-                    <Typography
-                      variant="inlineCode"
-                      className="text-ui-text-tertiary text-xs shrink-0"
-                    >
+                    <Typography variant="meta" className="text-ui-text-tertiary font-mono shrink-0">
                       {project.key}
                     </Typography>
                   </Flex>

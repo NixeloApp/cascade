@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
 import { Textarea } from "@/components/ui/form/Textarea";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 
 interface IssueDetailContentProps {
@@ -40,70 +41,69 @@ export function IssueDetailContent({
   onCancel,
 }: IssueDetailContentProps): ReactNode {
   return (
-    <FlexItem flex="1" className="min-w-0 p-6 space-y-8 max-w-4xl border-r border-ui-border/50">
-      {/* Title & Description */}
-      <div className="space-y-4">
-        {isEditing ? (
-          <div className="space-y-4">
-            <Input
-              value={editTitle}
-              onChange={(e) => onTitleChange(e.target.value)}
-              className="text-2xl font-bold h-auto py-2"
-              placeholder="Issue title"
-            />
-            <Textarea
-              value={editDescription}
-              onChange={(e) => onDescriptionChange(e.target.value)}
-              rows={8}
-              className="text-base"
-              placeholder="Add a description..."
-            />
-            <Flex gap="sm">
-              <Button onClick={onSave}>Save Changes</Button>
-              <Button variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-            </Flex>
-          </div>
-        ) : (
-          <>
-            <Typography variant="h1" className="text-3xl font-semibold tracking-tight border-none">
-              {issueTitle}
-            </Typography>
-            <div className="prose max-w-none">
-              <Typography variant="p" className="text-base text-ui-text-secondary">
-                {issueDescription || (
-                  <span className="italic text-ui-text-tertiary">No description provided</span>
-                )}
+    <FlexItem flex="1" className="min-w-0 p-6 max-w-4xl border-r border-ui-border/50">
+      <Stack gap="xl">
+        {/* Title & Description */}
+        <Stack gap="md">
+          {isEditing ? (
+            <Stack gap="md">
+              <Input
+                value={editTitle}
+                onChange={(e) => onTitleChange(e.target.value)}
+                className="text-2xl font-bold h-auto py-2"
+                placeholder="Issue title"
+              />
+              <Textarea
+                value={editDescription}
+                onChange={(e) => onDescriptionChange(e.target.value)}
+                rows={8}
+                className="text-base"
+                placeholder="Add a description..."
+              />
+              <Flex gap="sm">
+                <Button onClick={onSave}>Save Changes</Button>
+                <Button variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+              </Flex>
+            </Stack>
+          ) : (
+            <Stack gap="md">
+              <Typography
+                variant="h1"
+                className="text-3xl font-semibold tracking-tight border-none"
+              >
+                {issueTitle}
               </Typography>
-            </div>
-          </>
+              <div className="prose max-w-none">
+                <Typography variant="p" color="secondary">
+                  {issueDescription || (
+                    <span className="italic text-ui-text-tertiary">No description provided</span>
+                  )}
+                </Typography>
+              </div>
+            </Stack>
+          )}
+        </Stack>
+
+        {/* Sub-tasks Section */}
+        {issueType !== "subtask" && (
+          <Stack gap="md">
+            <Typography variant="label" color="tertiary" className="uppercase tracking-wider">
+              Sub-tasks
+            </Typography>
+            <SubtasksList issueId={issueId} projectId={projectId} subtasks={subtasks} />
+          </Stack>
         )}
-      </div>
 
-      {/* Sub-tasks Section */}
-      {issueType !== "subtask" && (
-        <div>
-          <Typography
-            variant="h3"
-            className="text-sm font-semibold mb-4 uppercase tracking-wider text-ui-text-tertiary"
-          >
-            Sub-tasks
+        {/* Comments Section */}
+        <Stack gap="lg" className="pt-8 border-t border-ui-border/50">
+          <Typography variant="label" color="tertiary" className="uppercase tracking-widest">
+            Comments
           </Typography>
-          <SubtasksList issueId={issueId} projectId={projectId} subtasks={subtasks} />
-        </div>
-      )}
-
-      {/* Comments Section */}
-      <div className="pt-8 border-t border-ui-border/50">
-        <Typography
-          variant="h3"
-          className="text-sm font-semibold mb-6 uppercase tracking-widest text-ui-text-tertiary"
-        >
-          Comments
-        </Typography>
-        <IssueComments issueId={issueId} projectId={projectId} />
-      </div>
+          <IssueComments issueId={issueId} projectId={projectId} />
+        </Stack>
+      </Stack>
     </FlexItem>
   );
 }

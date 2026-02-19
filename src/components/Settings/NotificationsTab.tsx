@@ -19,6 +19,7 @@ import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
 
@@ -102,20 +103,24 @@ function DigestOption({
   onChange: () => void;
 }) {
   return (
-    <label className="flex items-center gap-3 p-3 rounded-lg border border-ui-border cursor-pointer hover:bg-ui-bg-secondary transition-colors">
-      <input
-        type="radio"
-        name="digest"
-        value={value}
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-        className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
-      />
-      <div>
-        <Typography variant="label">{label}</Typography>
-        <Typography variant="caption">{description}</Typography>
-      </div>
+    <label className="cursor-pointer">
+      <Card padding="sm" className="hover:bg-ui-bg-secondary transition-colors">
+        <Flex align="center" gap="md">
+          <input
+            type="radio"
+            name="digest"
+            value={value}
+            checked={checked}
+            onChange={onChange}
+            disabled={disabled}
+            className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
+          />
+          <Stack gap="none">
+            <Typography variant="label">{label}</Typography>
+            <Typography variant="caption">{description}</Typography>
+          </Stack>
+        </Flex>
+      </Card>
     </label>
   );
 }
@@ -152,7 +157,7 @@ function PushNotificationsCard({
   const renderContent = () => {
     if (!isSupported) {
       return (
-        <div className="p-4 bg-ui-bg-tertiary rounded-lg">
+        <Card padding="md" variant="flat">
           <Flex align="center" gap="sm">
             <Icon icon={BellOff} size="md" className="text-ui-text-tertiary" />
             <Typography variant="caption">
@@ -160,20 +165,20 @@ function PushNotificationsCard({
               Firefox.
             </Typography>
           </Flex>
-        </div>
+        </Card>
       );
     }
 
     if (!vapidKey) {
       return (
-        <div className="p-4 bg-ui-bg-tertiary rounded-lg">
+        <Card padding="md" variant="flat">
           <Flex align="center" gap="sm">
             <Icon icon={Info} size="md" className="text-ui-text-tertiary" />
             <Typography variant="caption">
               Push notifications require server configuration. Contact your administrator.
             </Typography>
           </Flex>
-        </div>
+        </Card>
       );
     }
 
@@ -208,8 +213,8 @@ function PushNotificationsCard({
         </Flex>
 
         {isSubscribed && pushPreferences && (
-          <div className="space-y-3 pt-4 border-t border-ui-border-secondary">
-            <Typography variant="small" className="text-ui-text-secondary mb-2">
+          <Stack gap="sm" className="pt-4 border-t border-ui-border-secondary">
+            <Typography variant="small" color="secondary">
               Choose which notifications you want to receive:
             </Typography>
             <PushPreferenceRow
@@ -240,16 +245,16 @@ function PushNotificationsCard({
               onChange={(value) => onPushToggle("pushStatusChanges", value)}
               disabled={isSaving}
             />
-          </div>
+          </Stack>
         )}
       </>
     );
   };
 
   return (
-    <Card>
-      <div className="p-6">
-        <Flex align="center" gap="sm" className="mb-4">
+    <Card padding="lg">
+      <Stack gap="md">
+        <Flex align="center" gap="sm">
           <Icon icon={Smartphone} size="lg" className="text-brand" />
           <Typography variant="h5">Push Notifications</Typography>
           <Badge variant="info" size="sm">
@@ -257,7 +262,7 @@ function PushNotificationsCard({
           </Badge>
         </Flex>
         {renderContent()}
-      </div>
+      </Stack>
     </Card>
   );
 }
@@ -281,18 +286,16 @@ export function NotificationsTab() {
 
   if (!preferences) {
     return (
-      <Card>
-        <div className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-6 bg-ui-bg-tertiary rounded w-1/3" />
-            <div className="h-4 bg-ui-bg-tertiary rounded w-2/3" />
-            <div className="space-y-3">
-              <div className="h-10 bg-ui-bg-tertiary rounded" />
-              <div className="h-10 bg-ui-bg-tertiary rounded" />
-              <div className="h-10 bg-ui-bg-tertiary rounded" />
-            </div>
-          </div>
-        </div>
+      <Card padding="lg">
+        <Stack gap="md" className="animate-pulse">
+          <div className="h-6 bg-ui-bg-tertiary rounded w-1/3" />
+          <div className="h-4 bg-ui-bg-tertiary rounded w-2/3" />
+          <Stack gap="sm">
+            <div className="h-10 bg-ui-bg-tertiary rounded" />
+            <div className="h-10 bg-ui-bg-tertiary rounded" />
+            <div className="h-10 bg-ui-bg-tertiary rounded" />
+          </Stack>
+        </Stack>
       </Card>
     );
   }
@@ -334,7 +337,7 @@ export function NotificationsTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       <PushNotificationsCard
         isSupported={isSupported}
         vapidKey={vapidKey}
@@ -348,34 +351,29 @@ export function NotificationsTab() {
       />
 
       {/* Master Toggle */}
-      <Card>
-        <div className="p-6">
-          <Flex align="start" justify="between">
-            <FlexItem flex="1">
-              <Typography variant="h5">Email Notifications</Typography>
-              <Typography variant="caption" className="mt-1">
-                Master switch for all email notifications. Turn this off to stop receiving all
-                emails.
-              </Typography>
-            </FlexItem>
-            <Switch
-              checked={preferences.emailEnabled}
-              onCheckedChange={(value) => handleToggle("emailEnabled", value)}
-              disabled={isSaving}
-              className="ml-4"
-            />
-          </Flex>
-        </div>
+      <Card padding="lg">
+        <Flex align="start" justify="between">
+          <FlexItem flex="1">
+            <Typography variant="h5">Email Notifications</Typography>
+            <Typography variant="caption" className="mt-1">
+              Master switch for all email notifications. Turn this off to stop receiving all emails.
+            </Typography>
+          </FlexItem>
+          <Switch
+            checked={preferences.emailEnabled}
+            onCheckedChange={(value) => handleToggle("emailEnabled", value)}
+            disabled={isSaving}
+            className="ml-4"
+          />
+        </Flex>
       </Card>
 
       {/* Individual Notification Types */}
-      <Card>
-        <div className="p-6">
-          <Typography variant="h5" className="mb-4">
-            Notification Types
-          </Typography>
+      <Card padding="lg">
+        <Stack gap="md">
+          <Typography variant="h5">Notification Types</Typography>
 
-          <div className="space-y-4">
+          <Stack gap="md">
             <PreferenceRow
               icon={AtSign}
               label="Mentions"
@@ -409,21 +407,21 @@ export function NotificationsTab() {
               disabled={isSaving || !preferences.emailEnabled}
               isLast
             />
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       </Card>
 
       {/* Digest Emails */}
-      <Card>
-        <div className="p-6">
-          <Typography variant="h5" className="mb-2">
-            Email Digests
-          </Typography>
-          <Typography variant="caption" className="mb-4">
-            Receive a summary of activity instead of individual emails
-          </Typography>
+      <Card padding="lg">
+        <Stack gap="md">
+          <Stack gap="xs">
+            <Typography variant="h5">Email Digests</Typography>
+            <Typography variant="caption">
+              Receive a summary of activity instead of individual emails
+            </Typography>
+          </Stack>
 
-          <div className="space-y-2">
+          <Stack gap="sm">
             <DigestOption
               value="none"
               label="No digest"
@@ -448,25 +446,27 @@ export function NotificationsTab() {
               onChange={() => handleDigestChange("weekly")}
               disabled={isSaving || !preferences.emailEnabled}
             />
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       </Card>
 
       {/* Help Text */}
-      <div className="mt-6 p-4 bg-brand-subtle rounded-lg border border-brand-border">
+      <Card padding="md" className="bg-brand-subtle border-brand-border">
         <Flex gap="md">
           <Icon icon={Info} size="md" className="text-brand" />
           <FlexItem flex="1">
-            <Typography variant="label" className="text-brand-active mb-1">
-              Email Configuration
-            </Typography>
-            <Typography variant="caption" className="text-brand-active">
-              Email notifications require Resend API configuration. If you're not receiving emails,
-              contact your administrator to set up email notifications.
-            </Typography>
+            <Stack gap="xs">
+              <Typography variant="label" className="text-brand-active">
+                Email Configuration
+              </Typography>
+              <Typography variant="caption" className="text-brand-active">
+                Email notifications require Resend API configuration. If you're not receiving
+                emails, contact your administrator to set up email notifications.
+              </Typography>
+            </Stack>
           </FlexItem>
         </Flex>
-      </div>
-    </div>
+      </Card>
+    </Stack>
   );
 }

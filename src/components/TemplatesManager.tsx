@@ -11,6 +11,7 @@ import { Button } from "./ui/Button";
 import { Card, CardBody, CardHeader } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { EmptyState } from "./ui/EmptyState";
+import { Stack } from "./ui/Stack";
 
 interface TemplatesManagerProps {
   projectId: Id<"projects">;
@@ -102,7 +103,7 @@ export function TemplatesManager({ projectId }: TemplatesManagerProps) {
               description="Create templates to speed up issue creation"
             />
           ) : (
-            <div className="space-y-3">
+            <Stack gap="md">
               {templates.map((template: IssueTemplate) => (
                 <TemplateCard
                   key={template._id}
@@ -111,7 +112,7 @@ export function TemplatesManager({ projectId }: TemplatesManagerProps) {
                   onDelete={() => deleteConfirm.confirmDelete(template._id)}
                 />
               ))}
-            </div>
+            </Stack>
           )}
         </CardBody>
       </Card>

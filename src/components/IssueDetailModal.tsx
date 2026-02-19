@@ -1,6 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
@@ -38,14 +39,14 @@ export function IssueDetailModal({
         description="Loading content..."
         className="sm:max-w-4xl"
       >
-        <output aria-live="polite" aria-busy="true" className="space-y-6 block">
+        <Stack as="output" aria-live="polite" aria-busy="true" gap="lg" className="block">
           <span className="sr-only">Loading...</span>
           <div className="animate-pulse bg-ui-bg-tertiary rounded h-8 w-3/4" />
-          <div className="space-y-2">
+          <Stack gap="xs">
             <div className="animate-pulse bg-ui-bg-tertiary rounded h-4 w-full" />
             <div className="animate-pulse bg-ui-bg-tertiary rounded h-4 w-2/3" />
-          </div>
-        </output>
+          </Stack>
+        </Stack>
       </Dialog>
     );
   }
@@ -66,7 +67,7 @@ export function IssueDetailModal({
         <Flex align="center" gap="sm">
           <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />
           <Flex align="center" gap="xs">
-            <Typography variant="muted" className="text-sm font-mono tracking-tight">
+            <Typography variant="small" className="font-mono tracking-tight text-ui-text-secondary">
               {issue.key}
             </Typography>
             <Tooltip content={detail.hasCopied ? "Copied!" : "Copy issue key"}>

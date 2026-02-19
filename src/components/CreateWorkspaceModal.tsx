@@ -5,9 +5,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { Stack } from "@/components/ui/Stack";
 import { Textarea } from "@/components/ui/Textarea";
 import { useOrganization } from "@/hooks/useOrgContext";
 
@@ -77,8 +77,8 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
       }
     >
       <form id="create-workspace-form" onSubmit={handleSubmit}>
-        <Flex direction="column" gap="md" className="py-2">
-          <Flex direction="column" gap="xs" className="w-full items-center">
+        <Stack gap="md">
+          <Stack gap="xs">
             <Label htmlFor="workspace-name">Workspace Name</Label>
             <Input
               id="workspace-name"
@@ -88,9 +88,9 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
               autoFocus
               required
             />
-          </Flex>
-          <Flex direction="column" gap="xs" className="w-full items-center">
-            <Label htmlFor="workspace-description" className="text-ui-text-secondary">
+          </Stack>
+          <Stack gap="xs">
+            <Label htmlFor="workspace-description" color="secondary">
               Description (Optional)
             </Label>
             <Textarea
@@ -99,8 +99,8 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </Flex>
-        </Flex>
+          </Stack>
+        </Stack>
       </form>
     </Dialog>
   );

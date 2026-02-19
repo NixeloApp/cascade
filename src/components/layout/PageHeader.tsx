@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/Breadcrumb";
 import { Flex } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
 
@@ -55,16 +56,10 @@ export function PageHeader({
         </Breadcrumb>
       )}
       <Flex justify="between" align="start" gap="md">
-        <div>
-          <Typography variant="h3" className="text-xl font-semibold">
-            {title}
-          </Typography>
-          {description && (
-            <Typography variant="muted" className="mt-1">
-              {description}
-            </Typography>
-          )}
-        </div>
+        <Stack gap="xs">
+          <Typography variant="h3">{title}</Typography>
+          {description && <Typography variant="muted">{description}</Typography>}
+        </Stack>
         {actions && (
           <Flex gap="sm" align="center" className="shrink-0">
             {actions}

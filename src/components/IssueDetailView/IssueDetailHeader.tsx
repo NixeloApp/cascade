@@ -1,6 +1,7 @@
 import type { IssueTypeWithSubtask } from "@convex/validators";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -26,14 +27,21 @@ export function IssueDetailHeader({
   actions,
 }: IssueDetailHeaderProps): ReactNode {
   return (
-    <div className="border-b border-ui-border px-6 py-3">
+    <Card
+      padding="none"
+      className="border-b border-ui-border px-6 py-3 rounded-none border-x-0 border-t-0"
+    >
       <Flex align="center" justify="between">
         <Flex align="center" gap="md">
           {breadcrumb}
-          {breadcrumb && <span className="text-ui-text-tertiary">/</span>}
+          {breadcrumb && (
+            <Typography as="span" color="tertiary">
+              /
+            </Typography>
+          )}
           <Flex align="center" gap="sm">
             <Icon icon={ISSUE_TYPE_ICONS[issueType]} size="md" />
-            <Typography variant="muted" className="font-mono text-sm tracking-tight">
+            <Typography variant="inlineCode" color="secondary">
               {issueKey}
             </Typography>
             <Tooltip content={hasCopied ? "Copied!" : "Copy issue key"}>
@@ -59,6 +67,6 @@ export function IssueDetailHeader({
           </Flex>
         )}
       </Flex>
-    </div>
+    </Card>
   );
 }

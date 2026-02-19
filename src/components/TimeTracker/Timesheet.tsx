@@ -6,10 +6,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 // Type for time entry with computed hours field
@@ -75,54 +79,52 @@ export function Timesheet() {
     .reduce((sum: number, e: TimeEntryWithHours) => sum + e.hours * (e.hourlyRate ?? 0), 0);
 
   return (
-    <div className="p-6">
+    <Stack gap="lg" className="p-6">
       {/* Header */}
-      <div className="mb-6">
-        <Flex justify="between" align="center" className="mb-4">
-          <div>
-            <Typography variant="h2" className="text-2xl font-bold text-ui-text">
-              My Timesheet
-            </Typography>
-            <Typography className="text-sm text-ui-text-tertiary">
+      <Stack gap="md">
+        <Flex justify="between" align="center">
+          <Stack gap="xs">
+            <Typography variant="h2">My Timesheet</Typography>
+            <Typography variant="small" color="tertiary">
               Week of {formatDate(timesheet.startDate)}
             </Typography>
-          </div>
+          </Stack>
           <Flex gap="lg">
-            <div className="text-right">
+            <Stack align="end" gap="none">
               <Typography variant="small" color="tertiary">
                 Total Hours
               </Typography>
-              <Typography variant="h3" className="text-ui-text">
-                {formatHours(timesheet.totalHours)}
-              </Typography>
-            </div>
-            <div className="text-right">
+              <Typography variant="h3">{formatHours(timesheet.totalHours)}</Typography>
+            </Stack>
+            <Stack align="end" gap="none">
               <Typography variant="small" color="tertiary">
                 Billable
               </Typography>
               <Typography variant="h3" color="success">
                 {formatHours(timesheet.billableHours)}
               </Typography>
-            </div>
+            </Stack>
             {billableRevenue > 0 && (
-              <div className="text-right">
+              <Stack align="end" gap="none">
                 <Typography variant="small" color="tertiary">
                   Revenue
                 </Typography>
                 <Typography variant="h3" color="brand">
                   ${billableRevenue.toFixed(2)}
                 </Typography>
-              </div>
+              </Stack>
             )}
           </Flex>
         </Flex>
 
         {/* Progress bar */}
-        <Progress value={Math.min((timesheet.totalHours / 40) * 100, 100)} />
-        <Typography variant="caption" color="tertiary" className="mt-1">
-          {formatHours(timesheet.totalHours)} / 40 hours (full-time week)
-        </Typography>
-      </div>
+        <Stack gap="xs">
+          <Progress value={Math.min((timesheet.totalHours / 40) * 100, 100)} />
+          <Typography variant="caption" color="tertiary">
+            {formatHours(timesheet.totalHours)} / 40 hours (full-time week)
+          </Typography>
+        </Stack>
+      </Stack>
 
       {/* Calendar Grid */}
       <Grid cols={7} gap="lg">
@@ -134,16 +136,14 @@ export function Timesheet() {
           );
 
           return (
-            <div
+            <Card
               key={day.dayKey}
-              className={cn(
-                "border rounded-lg p-3",
-                isToday ? "border-brand-ring bg-brand-subtle" : "border-ui-border bg-ui-bg",
-              )}
+              padding="sm"
+              className={cn(isToday && "border-brand-ring bg-brand-subtle")}
             >
               {/* Day header */}
-              <div className="mb-2">
-                <Typography variant="label" className="text-ui-text">
+              <Stack gap="none" className="mb-2">
+                <Typography variant="label">
                   {day.date.toLocaleDateString("en-US", { weekday: "short" })}
                 </Typography>
                 <Typography variant="caption" color="tertiary">
@@ -154,18 +154,15 @@ export function Timesheet() {
                     {formatHours(dayHours)}h
                   </Typography>
                 )}
-              </div>
+              </Stack>
 
               {/* Time entries */}
-              <Flex direction="column" gap="sm">
+              <Stack gap="sm">
                 {day.entries.map((entry: TimeEntryWithHours) => (
-                  <div
-                    key={entry._id}
-                    className="p-2 bg-ui-bg-secondary rounded border border-ui-border"
-                  >
+                  <Card key={entry._id} padding="sm" className="bg-ui-bg-secondary">
                     <Flex justify="between" align="start" className="mb-1">
                       <FlexItem flex="1" className="min-w-0">
-                        <Typography variant="mono" className="text-ui-text truncate block">
+                        <Typography variant="mono" className="truncate block">
                           {entry.projectKey}
                         </Typography>
                         <Typography variant="caption" color="secondary" className="truncate block">
@@ -180,37 +177,38 @@ export function Timesheet() {
                       <Typography variant="mono" className="text-sm font-medium">
                         {formatHours(entry.hours)}h
                       </Typography>
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDelete(entry._id)}
-                        className="p-1 text-ui-text-tertiary hover:text-status-error rounded"
-                        title="Delete"
+                        className="p-1 min-w-0 text-ui-text-tertiary hover:text-status-error"
+                        aria-label="Delete entry"
                       >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                        <Icon icon={Trash2} size="xs" />
+                      </Button>
                     </Flex>
                     {entry.description && (
                       <Typography variant="caption" color="tertiary" className="mt-1 line-clamp-1">
                         {entry.description}
                       </Typography>
                     )}
-                  </div>
+                  </Card>
                 ))}
-              </Flex>
-            </div>
+              </Stack>
+            </Card>
           );
         })}
       </Grid>
 
       {/* Empty state */}
       {timesheet.totalHours === 0 && (
-        <div className="text-center py-12">
-          <Calendar className="w-12 h-12 text-ui-text-tertiary mx-auto mb-3" />
-          <Typography className="text-ui-text-secondary">
+        <Stack gap="md" align="center" className="py-12">
+          <Calendar className="w-12 h-12 text-ui-text-tertiary" />
+          <Typography color="secondary">
             No time entries this week. Start a timer to begin tracking!
           </Typography>
-        </div>
+        </Stack>
       )}
-    </div>
+    </Stack>
   );
 }

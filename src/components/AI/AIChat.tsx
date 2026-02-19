@@ -3,7 +3,6 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
-import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Bot, Lightbulb } from "@/lib/icons";
@@ -136,11 +135,7 @@ function MessageItem({
   );
 }
 
-export const AIChat = React.memo(function AIChat({
-  projectId,
-  chatId: initialChatId,
-  onChatCreated,
-}: AIChatProps) {
+export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AIChatProps) {
   const {
     chatId,
     inputMessage,
@@ -284,4 +279,4 @@ export const AIChat = React.memo(function AIChat({
       </div>
     </Flex>
   );
-});
+}

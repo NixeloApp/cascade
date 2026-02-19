@@ -81,12 +81,13 @@ describe("ExportButton", () => {
     expect(svg).toHaveAttribute("aria-hidden", "true");
   });
 
-  it("should have correct styling classes", () => {
+  it("should have correct styling classes from Button component", () => {
     render(<ExportButton projectId={mockProjectId} />);
 
     const button = screen.getByRole("button", { name: /Import \/ Export/i });
 
-    expect(button).toHaveClass("flex", "items-center", "gap-2", "px-3", "py-2");
+    // Uses Button component with secondary variant
+    expect(button).toHaveClass("inline-flex", "items-center", "gap-2");
   });
 
   it("should be type button", () => {

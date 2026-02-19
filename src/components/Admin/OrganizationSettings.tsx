@@ -8,7 +8,9 @@ import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form";
+import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
 
@@ -86,7 +88,7 @@ export function OrganizationSettings() {
     return (
       <Card>
         <CardBody>
-          <Flex justify="center" className="py-8">
+          <Flex justify="center" align="center" className="min-h-32">
             <LoadingSpinner />
           </Flex>
         </CardBody>
@@ -97,24 +99,20 @@ export function OrganizationSettings() {
   return (
     <Flex direction="column" gap="xl">
       {/* Header */}
-      <div>
-        <Typography variant="h2" className="text-2xl font-bold">
-          Organization Settings
-        </Typography>
-        <Typography variant="muted" className="mt-1">
+      <Stack gap="xs">
+        <Typography variant="h2">Organization Settings</Typography>
+        <Typography variant="small" color="secondary">
           Configure settings for {organizationName}
         </Typography>
-      </div>
+      </Stack>
 
       {/* General Settings */}
       <Card>
         <CardHeader title="General" description="Basic information about your organization" />
         <CardBody>
-          <Flex direction="column" gap="lg">
-            <div>
-              <label htmlFor="orgName" className="block text-sm font-medium text-ui-text mb-2">
-                Organization Name
-              </label>
+          <Stack gap="lg">
+            <Stack gap="xs">
+              <Label htmlFor="orgName">Organization Name</Label>
               <Input
                 id="orgName"
                 value={formData.name}
@@ -122,11 +120,11 @@ export function OrganizationSettings() {
                 placeholder="Acme Corp"
                 className="max-w-md"
               />
-              <Typography variant="muted" className="mt-1 text-sm">
+              <Typography variant="caption" color="secondary">
                 Changing your organization name will also update your URL slug
               </Typography>
-            </div>
-          </Flex>
+            </Stack>
+          </Stack>
         </CardBody>
       </Card>
 
@@ -137,15 +135,10 @@ export function OrganizationSettings() {
           description="Configure default time tracking settings for your organization"
         />
         <CardBody>
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             {/* Default Max Hours Per Week */}
-            <div>
-              <label
-                htmlFor="maxHoursPerWeek"
-                className="block text-sm font-medium text-ui-text mb-2"
-              >
-                Default Max Hours Per Week
-              </label>
+            <Stack gap="xs">
+              <Label htmlFor="maxHoursPerWeek">Default Max Hours Per Week</Label>
               <Input
                 id="maxHoursPerWeek"
                 type="number"
@@ -157,19 +150,14 @@ export function OrganizationSettings() {
                 }
                 className="max-w-30"
               />
-              <Typography variant="muted" className="mt-1 text-sm">
+              <Typography variant="caption" color="secondary">
                 Maximum hours a team member can log per week
               </Typography>
-            </div>
+            </Stack>
 
             {/* Default Max Hours Per Day */}
-            <div>
-              <label
-                htmlFor="maxHoursPerDay"
-                className="block text-sm font-medium text-ui-text mb-2"
-              >
-                Default Max Hours Per Day
-              </label>
+            <Stack gap="xs">
+              <Label htmlFor="maxHoursPerDay">Default Max Hours Per Day</Label>
               <Input
                 id="maxHoursPerDay"
                 type="number"
@@ -181,21 +169,19 @@ export function OrganizationSettings() {
                 }
                 className="max-w-30"
               />
-              <Typography variant="muted" className="mt-1 text-sm">
+              <Typography variant="caption" color="secondary">
                 Maximum hours a team member can log per day
               </Typography>
-            </div>
+            </Stack>
 
             {/* Requires Time Approval */}
-            <Flex align="center" justify="between" className="py-2">
-              <div>
-                <Typography variant="p" className="font-medium">
-                  Require Time Approval
-                </Typography>
-                <Typography variant="muted" className="text-sm">
+            <Flex align="center" justify="between">
+              <Stack gap="none">
+                <Typography variant="label">Require Time Approval</Typography>
+                <Typography variant="small" color="secondary">
                   Time entries must be approved by a manager before being finalized
                 </Typography>
-              </div>
+              </Stack>
               <Switch
                 checked={formData.requiresTimeApproval}
                 onCheckedChange={(checked) =>
@@ -205,7 +191,7 @@ export function OrganizationSettings() {
                 data-testid={TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH}
               />
             </Flex>
-          </Flex>
+          </Stack>
         </CardBody>
       </Card>
 
@@ -216,25 +202,23 @@ export function OrganizationSettings() {
           description="Configure billing features for your organization"
         />
         <CardBody>
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             {/* Billing Enabled */}
-            <Flex align="center" justify="between" className="py-2">
-              <div>
-                <Typography variant="p" className="font-medium">
-                  Enable Billing Features
-                </Typography>
-                <Typography variant="muted" className="text-sm">
+            <Flex align="center" justify="between">
+              <Stack gap="none">
+                <Typography variant="label">Enable Billing Features</Typography>
+                <Typography variant="small" color="secondary">
                   Allow team members to mark time entries as billable. When disabled, the billable
                   checkbox will be hidden from time entry forms.
                 </Typography>
-              </div>
+              </Stack>
               <Switch
                 checked={formData.billingEnabled}
                 onCheckedChange={(checked) => setFormData({ ...formData, billingEnabled: checked })}
                 aria-label="Enable billing features"
               />
             </Flex>
-          </Flex>
+          </Stack>
         </CardBody>
       </Card>
 

@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { CreateEventModal } from "./CreateEventModal";
 import { EventDetailsModal } from "./EventDetailsModal";
@@ -47,10 +47,7 @@ export function CalendarView(): React.ReactElement {
     endDate,
   });
 
-  const events: CalendarEvent[] = useMemo(
-    () => (rawEvents ?? []).map(toCalendarEvent),
-    [rawEvents],
-  );
+  const events: CalendarEvent[] = (rawEvents ?? []).map(toCalendarEvent);
 
   function handleEventClick(event: CalendarEvent): void {
     setSelectedEventId(extractConvexId(event as NixeloCalendarEvent));

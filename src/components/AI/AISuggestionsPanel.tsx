@@ -3,7 +3,6 @@
  */
 
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import React from "react";
 import { AlertTriangle, Calendar, Check, Lightbulb, Sparkles, Target, X } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -21,9 +20,7 @@ interface AISuggestionsPanelProps {
   projectId?: Id<"projects">;
 }
 
-export const AISuggestionsPanel = React.memo(function AISuggestionsPanel({
-  projectId,
-}: AISuggestionsPanelProps) {
+export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
   const {
     isGenerating,
     selectedType,
@@ -133,7 +130,7 @@ export const AISuggestionsPanel = React.memo(function AISuggestionsPanel({
       </FlexItem>
     </Flex>
   );
-});
+}
 
 // Sub-components
 
@@ -143,11 +140,7 @@ interface SuggestionCardProps {
   onDismiss: (id: Id<"aiSuggestions">) => void;
 }
 
-const SuggestionCard = React.memo(function SuggestionCard({
-  suggestion,
-  onAccept,
-  onDismiss,
-}: SuggestionCardProps) {
+function SuggestionCard({ suggestion, onAccept, onDismiss }: SuggestionCardProps) {
   const metadata = SUGGESTION_METADATA[suggestion.suggestionType as SuggestionType];
 
   return (
@@ -225,4 +218,4 @@ const SuggestionCard = React.memo(function SuggestionCard({
       </Flex>
     </div>
   );
-});
+}

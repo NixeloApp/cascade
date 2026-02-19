@@ -7,6 +7,8 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Input, Textarea } from "../ui/form";
+import { Label } from "../ui/Label";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface GeneralSettingsProps {
@@ -62,91 +64,77 @@ export function GeneralSettings({
   };
 
   return (
-    <Card variant="soft">
-      <div className="p-6">
-        <Flex justify="between" align="center" className="mb-6">
-          <div>
-            <Typography variant="large" className="font-semibold tracking-tight">
-              General
-            </Typography>
-            <Typography variant="small" color="secondary" className="mt-0.5">
-              Basic project information
-            </Typography>
-          </div>
-          {!isEditing && (
-            <Button variant="secondary" size="sm" onClick={handleEdit}>
-              Edit
-            </Button>
-          )}
-        </Flex>
-
-        {isEditing ? (
-          <div className="space-y-5">
-            <Input
-              label="Project Name"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              placeholder="Enter project name"
-            />
-            <div>
-              <Typography variant="small" color="secondary" className="block mb-1.5 font-medium">
-                Project Key
-              </Typography>
-              <Typography
-                variant="muted"
-                className="font-mono bg-ui-bg-tertiary px-3 py-2.5 rounded-md block border border-ui-border"
-              >
-                {projectKey}
-              </Typography>
-              <Typography variant="muted" className="mt-1.5 text-xs">
-                Project key cannot be changed after creation
-              </Typography>
-            </div>
-            <Textarea
-              label="Description"
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder="Enter project description"
-              rows={3}
-            />
-            <Flex gap="sm" className="pt-2">
-              <Button onClick={handleSave} disabled={isSaving} isLoading={isSaving}>
-                Save Changes
-              </Button>
-              <Button variant="secondary" onClick={handleCancel} disabled={isSaving}>
-                Cancel
-              </Button>
-            </Flex>
-          </div>
-        ) : (
-          <div className="space-y-5">
-            <div className="p-4 bg-ui-bg-tertiary rounded-lg">
-              <Typography variant="small" color="secondary" className="block mb-1 font-medium">
-                Project Name
-              </Typography>
-              <Typography variant="p" className="mt-0 font-medium">
-                {name}
-              </Typography>
-            </div>
-            <div className="p-4 bg-ui-bg-tertiary rounded-lg">
-              <Typography variant="small" color="secondary" className="block mb-1 font-medium">
-                Project Key
-              </Typography>
-              <Typography variant="p" className="mt-0 font-mono text-ui-text-secondary">
-                {projectKey}
-              </Typography>
-            </div>
-            <div className="p-4 bg-ui-bg-tertiary rounded-lg">
-              <Typography variant="small" color="secondary" className="block mb-1 font-medium">
-                Description
-              </Typography>
-              <Typography variant="p" className="mt-0 text-ui-text-secondary">
-                {description || "No description"}
-              </Typography>
-            </div>
-          </div>
+    <Card variant="soft" padding="lg">
+      <Flex justify="between" align="center" className="mb-6">
+        <Stack gap="xs">
+          <Typography variant="h4">General</Typography>
+          <Typography variant="small" color="secondary">
+            Basic project information
+          </Typography>
+        </Stack>
+        {!isEditing && (
+          <Button variant="secondary" size="sm" onClick={handleEdit}>
+            Edit
+          </Button>
         )}
-      </div>
+      </Flex>
+
+      {isEditing ? (
+        <Stack gap="lg">
+          <Input
+            label="Project Name"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            placeholder="Enter project name"
+          />
+          <Stack gap="xs">
+            <Label>Project Key</Label>
+            <Typography
+              variant="mono"
+              className="bg-ui-bg-tertiary px-3 py-2.5 rounded-md block border border-ui-border"
+            >
+              {projectKey}
+            </Typography>
+            <Typography variant="caption" color="tertiary">
+              Project key cannot be changed after creation
+            </Typography>
+          </Stack>
+          <Textarea
+            label="Description"
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+            placeholder="Enter project description"
+            rows={3}
+          />
+          <Flex gap="sm" className="pt-2">
+            <Button onClick={handleSave} disabled={isSaving} isLoading={isSaving}>
+              Save Changes
+            </Button>
+            <Button variant="secondary" onClick={handleCancel} disabled={isSaving}>
+              Cancel
+            </Button>
+          </Flex>
+        </Stack>
+      ) : (
+        <Stack gap="lg">
+          <Card variant="soft" padding="md" className="bg-ui-bg-tertiary">
+            <Label className="mb-1">Project Name</Label>
+            <Typography variant="label">{name}</Typography>
+          </Card>
+          <Card variant="soft" padding="md" className="bg-ui-bg-tertiary">
+            <Label className="mb-1">Project Key</Label>
+            <Typography variant="mono" color="secondary">
+              {projectKey}
+            </Typography>
+          </Card>
+          <Card variant="soft" padding="md" className="bg-ui-bg-tertiary">
+            <Label className="mb-1">Description</Label>
+            <Typography variant="p" color="secondary">
+              {description || "No description"}
+            </Typography>
+          </Card>
+        </Stack>
+      )}
     </Card>
   );
 }

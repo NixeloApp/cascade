@@ -4,11 +4,14 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Textarea } from "../ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 // Enriched user rate from listUserRates query
@@ -81,14 +84,12 @@ export function UserRatesManagement() {
     <Flex direction="column" gap="xl">
       {/* Header */}
       <Flex justify="between" align="center">
-        <div>
-          <Typography variant="h2" className="text-lg font-semibold text-ui-text">
-            Hourly Rates
-          </Typography>
-          <Typography className="text-sm text-ui-text-secondary mt-1">
+        <Stack gap="xs">
+          <Typography variant="h2">Hourly Rates</Typography>
+          <Typography variant="small" color="secondary">
             Manage hourly rates for cost tracking and burn rate calculations
           </Typography>
-        </div>
+        </Stack>
         <Button onClick={() => setShowAddRate(true)} variant="primary">
           Set My Rate
         </Button>
@@ -98,26 +99,14 @@ export function UserRatesManagement() {
       {userRates && userRates.length > 0 ? (
         <Flex direction="column" gap="md">
           {(userRates as EnrichedUserRate[]).map((rate) => (
-            <div
-              key={rate._id}
-              className="p-4 bg-ui-bg border border-ui-border rounded-lg transition-default hover:bg-ui-bg-hover"
-            >
+            <Card key={rate._id} className="transition-default hover:bg-ui-bg-hover">
               <Flex justify="between" align="start">
                 <FlexItem flex="1">
                   <Flex align="center" gap="md">
-                    <Typography variant="h3" className="text-sm font-medium text-ui-text">
-                      {rate.user?.name || "Unknown User"}
-                    </Typography>
-                    <span
-                      className={cn(
-                        "px-2 py-0.5 text-xs rounded",
-                        rate.rateType === "billable"
-                          ? "bg-status-success/10 text-status-success"
-                          : "bg-ui-bg-secondary text-ui-text",
-                      )}
-                    >
+                    <Typography variant="label">{rate.user?.name || "Unknown User"}</Typography>
+                    <Badge size="sm" variant={rate.rateType === "billable" ? "success" : "neutral"}>
                       {rate.rateType}
-                    </span>
+                    </Badge>
                   </Flex>
                   <Typography variant="caption" color="secondary" className="mt-2">
                     {rate.projectId ? (
@@ -127,25 +116,25 @@ export function UserRatesManagement() {
                     )}
                   </Typography>
                   {rate.notes && (
-                    <Typography className="mt-2 text-xs text-ui-text-tertiary">
+                    <Typography variant="caption" color="tertiary" className="mt-2">
                       {rate.notes}
                     </Typography>
                   )}
                 </FlexItem>
-                <div className="text-right">
-                  <Typography variant="h3" className="text-ui-text">
+                <Stack gap="xs" align="end">
+                  <Typography variant="h3">
                     {formatCurrency(rate.hourlyRate, rate.currency)}
                   </Typography>
                   <Typography variant="caption" color="tertiary">
                     per hour
                   </Typography>
-                </div>
+                </Stack>
               </Flex>
-            </div>
+            </Card>
           ))}
         </Flex>
       ) : (
-        <div className="text-center p-12 bg-ui-bg-secondary rounded-lg border-2 border-dashed border-ui-border">
+        <Card variant="soft" className="text-center border-2 border-dashed border-ui-border">
           <svg
             className="mx-auto h-12 w-12 text-ui-text-tertiary"
             fill="none"
@@ -161,16 +150,16 @@ export function UserRatesManagement() {
               d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <Typography variant="h3" className="mt-2 text-sm font-medium text-ui-text">
+          <Typography variant="label" className="mt-2">
             No hourly rates set
           </Typography>
-          <Typography className="mt-1 text-sm text-ui-text-tertiary">
+          <Typography variant="small" color="tertiary" className="mt-1">
             Set your hourly rate to enable cost tracking and burn rate calculations
           </Typography>
           <Button onClick={() => setShowAddRate(true)} variant="primary" className="mt-4">
             Set My Rate
           </Button>
-        </div>
+        </Card>
       )}
 
       {/* Add/Edit Rate Modal */}
@@ -190,7 +179,7 @@ export function UserRatesManagement() {
           </>
         }
       >
-        <div className="space-y-4">
+        <Stack gap="md">
           {/* Project Selection */}
           <div>
             <label htmlFor="rate-apply-to" className="block text-sm font-medium text-ui-text mb-1">
@@ -214,14 +203,14 @@ export function UserRatesManagement() {
                 ))}
               </SelectContent>
             </Select>
-            <Typography className="text-xs text-ui-text-tertiary mt-1">
+            <Typography variant="caption" color="tertiary" className="mt-1">
               Project-specific rates override the default rate
             </Typography>
           </div>
 
           {/* Rate Type */}
           <div>
-            <Typography variant="label" className="block text-ui-text mb-1">
+            <Typography variant="label" className="block mb-1">
               Rate Type
             </Typography>
             <Flex gap="md">
@@ -242,9 +231,7 @@ export function UserRatesManagement() {
                     className="w-4 h-4 text-brand"
                   />
                   <FlexItem flex="1">
-                    <Typography variant="label" className="text-ui-text">
-                      Internal Cost
-                    </Typography>
+                    <Typography variant="label">Internal Cost</Typography>
                     <Typography variant="caption" color="tertiary">
                       What you pay
                     </Typography>
@@ -268,9 +255,7 @@ export function UserRatesManagement() {
                     className="w-4 h-4 text-brand"
                   />
                   <FlexItem flex="1">
-                    <Typography variant="label" className="text-ui-text">
-                      Billable Rate
-                    </Typography>
+                    <Typography variant="label">Billable Rate</Typography>
                     <Typography variant="caption" color="tertiary">
                       Charge clients
                     </Typography>
@@ -326,7 +311,7 @@ export function UserRatesManagement() {
             placeholder="e.g., Senior developer rate, Contract rate for Q1 2024..."
             rows={2}
           />
-        </div>
+        </Stack>
       </Dialog>
     </Flex>
   );

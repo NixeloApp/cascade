@@ -6,6 +6,8 @@ import { Icon } from "@/components/ui/Icon";
 import { Wrench } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 /**
@@ -32,28 +34,28 @@ export function DevToolsTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       {/* Info Banner */}
-      <div className="bg-status-info-bg border border-status-info rounded-lg p-4">
+      <Card padding="md" className="bg-status-info-bg border-status-info">
         <Flex align="start" gap="md">
           <Icon icon={Wrench} size="lg" className="text-status-info-text" />
-          <div>
-            <Typography variant="h3" className="font-medium text-status-info-text">
+          <Stack gap="xs">
+            <Typography variant="h3" className="text-status-info-text">
               Test Account Tools
             </Typography>
-            <Typography className="text-sm text-status-info-text mt-1">
+            <Typography variant="small" className="text-status-info-text">
               These tools are only visible for test accounts (@inbox.mailtrap.io).
             </Typography>
-          </div>
+          </Stack>
         </Flex>
-      </div>
+      </Card>
 
       {/* Onboarding Section */}
-      <div className="bg-ui-bg rounded-lg border border-ui-border p-6">
+      <Card padding="lg">
         <Typography variant="h3" className="mb-2">
           Onboarding
         </Typography>
-        <Typography variant="p" color="secondary" className="mb-4 text-sm">
+        <Typography variant="small" color="secondary" className="mb-4">
           Reset your onboarding state to test the onboarding flow again. After resetting, refresh
           the page to see the onboarding wizard.
         </Typography>
@@ -69,40 +71,40 @@ export function DevToolsTab() {
             <Typography variant="caption">Current user: {currentUser.email}</Typography>
           )}
         </Flex>
-      </div>
+      </Card>
 
       {/* User Info Section */}
-      <div className="bg-ui-bg rounded-lg border border-ui-border p-6">
+      <Card padding="lg">
         <Typography variant="h3" className="mb-2">
           Current User Info
         </Typography>
         {currentUser ? (
-          <div className="space-y-2">
+          <Stack gap="sm">
             <Flex gap="sm">
               <Typography variant="small" color="secondary">
                 ID:
               </Typography>
-              <code className="text-ui-text font-mono">{currentUser._id}</code>
+              <Typography variant="mono">{currentUser._id}</Typography>
             </Flex>
             <Flex gap="sm">
               <Typography variant="small" color="secondary">
                 Email:
               </Typography>
-              <code className="text-ui-text font-mono">{currentUser.email}</code>
+              <Typography variant="mono">{currentUser.email}</Typography>
             </Flex>
             <Flex gap="sm">
               <Typography variant="small" color="secondary">
                 Test User:
               </Typography>
-              <code className="text-ui-text font-mono">
-                {currentUser.isTestUser ? "Yes" : "No"}
-              </code>
+              <Typography variant="mono">{currentUser.isTestUser ? "Yes" : "No"}</Typography>
             </Flex>
-          </div>
+          </Stack>
         ) : (
-          <Typography className="text-sm text-ui-text-secondary">Loading user info...</Typography>
+          <Typography variant="small" color="secondary">
+            Loading user info...
+          </Typography>
         )}
-      </div>
-    </div>
+      </Card>
+    </Stack>
   );
 }

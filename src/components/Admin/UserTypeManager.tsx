@@ -15,6 +15,7 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select, Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 type EmploymentType = "employee" | "contractor" | "intern";
@@ -338,7 +339,11 @@ export function UserTypeManager() {
         />
         <CardBody>
           {!configs ? (
-            <div className="text-center py-8 text-ui-text-tertiary">Loading...</div>
+            <Flex justify="center" align="center" className="min-h-32">
+              <Typography variant="small" color="tertiary">
+                Loading...
+              </Typography>
+            </Flex>
           ) : configs.length === 0 ? (
             <EmptyState
               icon={Settings}
@@ -352,74 +357,71 @@ export function UserTypeManager() {
           ) : (
             <Grid cols={1} colsMd={3} gap="lg">
               {configs.map((config: EmploymentTypeConfig) => (
-                <div
+                <Card
                   key={config.type}
-                  className="p-4 border border-ui-border rounded-lg transition-default hover:bg-ui-bg-hover"
+                  padding="md"
+                  className="transition-default hover:bg-ui-bg-hover"
                 >
-                  <Flex justify="between" align="start" className="mb-3">
-                    <Flex align="center" gap="sm">
-                      {getTypeIcon(config.type, "w-7 h-7")}
-                      <div>
-                        <Typography variant="h3" className="font-semibold text-ui-text">
-                          {config.name}
+                  <Stack gap="sm">
+                    <Flex justify="between" align="start">
+                      <Flex align="center" gap="sm">
+                        {getTypeIcon(config.type, "w-7 h-7")}
+                        <Stack gap="xs">
+                          <Typography variant="label">{config.name}</Typography>
+                          <Badge size="sm" className={cn("capitalize", getTypeColor(config.type))}>
+                            {config.type}
+                          </Badge>
+                        </Stack>
+                      </Flex>
+                    </Flex>
+
+                    {config.description && (
+                      <Typography variant="small" color="secondary">
+                        {config.description}
+                      </Typography>
+                    )}
+
+                    <Stack gap="xs">
+                      <Flex justify="between">
+                        <Typography variant="small" color="secondary">
+                          Max hours/week:
                         </Typography>
-                        <Badge size="sm" className={cn("capitalize", getTypeColor(config.type))}>
-                          {config.type}
-                        </Badge>
-                      </div>
-                    </Flex>
-                  </Flex>
+                        <Typography variant="label">{config.defaultMaxHoursPerWeek}h</Typography>
+                      </Flex>
+                      <Flex justify="between">
+                        <Typography variant="small" color="secondary">
+                          Max hours/day:
+                        </Typography>
+                        <Typography variant="label">{config.defaultMaxHoursPerDay}h</Typography>
+                      </Flex>
+                      <Flex justify="between">
+                        <Typography variant="small" color="secondary">
+                          Requires approval:
+                        </Typography>
+                        <Typography variant="label">
+                          {config.defaultRequiresApproval ? "Yes" : "No"}
+                        </Typography>
+                      </Flex>
+                      <Flex justify="between">
+                        <Typography variant="small" color="secondary">
+                          Can work overtime:
+                        </Typography>
+                        <Typography variant="label">
+                          {config.defaultCanWorkOvertime ? "Yes" : "No"}
+                        </Typography>
+                      </Flex>
+                    </Stack>
 
-                  {config.description && (
-                    <Typography variant="p" color="secondary" className="text-sm mb-3">
-                      {config.description}
-                    </Typography>
-                  )}
-
-                  <Flex direction="column" gap="sm" className="text-sm">
-                    <Flex justify="between">
-                      <Typography variant="small" color="secondary">
-                        Max hours/week:
-                      </Typography>
-                      <Typography variant="small" className="font-medium">
-                        {config.defaultMaxHoursPerWeek}h
-                      </Typography>
-                    </Flex>
-                    <Flex justify="between">
-                      <Typography variant="small" color="secondary">
-                        Max hours/day:
-                      </Typography>
-                      <Typography variant="small" className="font-medium">
-                        {config.defaultMaxHoursPerDay}h
-                      </Typography>
-                    </Flex>
-                    <Flex justify="between">
-                      <Typography variant="small" color="secondary">
-                        Requires approval:
-                      </Typography>
-                      <Typography variant="small" className="font-medium">
-                        {config.defaultRequiresApproval ? "Yes" : "No"}
-                      </Typography>
-                    </Flex>
-                    <Flex justify="between">
-                      <Typography variant="small" color="secondary">
-                        Can work overtime:
-                      </Typography>
-                      <Typography variant="small" className="font-medium">
-                        {config.defaultCanWorkOvertime ? "Yes" : "No"}
-                      </Typography>
-                    </Flex>
-                  </Flex>
-
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleEditConfig(config.type)}
-                    className="w-full mt-4"
-                  >
-                    Edit Configuration
-                  </Button>
-                </div>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleEditConfig(config.type)}
+                      className="w-full"
+                    >
+                      Edit Configuration
+                    </Button>
+                  </Stack>
+                </Card>
               ))}
             </Grid>
           )}
@@ -435,38 +437,45 @@ export function UserTypeManager() {
         <CardBody>
           {/* Users without profiles */}
           {usersWithoutProfiles && usersWithoutProfiles.length > 0 && (
-            <div className="mb-6 p-4 bg-status-warning-bg border border-status-warning rounded-lg">
-              <Typography variant="h4" className="font-semibold text-status-warning-text mb-2">
-                Unassigned Users ({usersWithoutProfiles.length})
-              </Typography>
-              <Flex direction="column" gap="sm">
-                {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
-                  <Flex
-                    key={user._id}
-                    justify="between"
-                    align="center"
-                    className="bg-ui-bg p-2 rounded transition-default hover:bg-ui-bg-hover"
-                  >
-                    <Typography variant="small" className="text-ui-text">
-                      {user.name || user.email || "Unknown User"}
+            <Card padding="md" className="mb-6 bg-status-warning-bg border-status-warning">
+              <Stack gap="sm">
+                <Typography variant="label" className="text-status-warning-text">
+                  Unassigned Users ({usersWithoutProfiles.length})
+                </Typography>
+                <Stack gap="sm">
+                  {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
+                    <Card
+                      key={user._id}
+                      padding="sm"
+                      className="bg-ui-bg transition-default hover:bg-ui-bg-hover"
+                    >
+                      <Flex justify="between" align="center">
+                        <Typography variant="small">
+                          {user.name || user.email || "Unknown User"}
+                        </Typography>
+                        <Button size="sm" onClick={() => handleAssignUser(user._id)}>
+                          Assign Type
+                        </Button>
+                      </Flex>
+                    </Card>
+                  ))}
+                  {usersWithoutProfiles.length > 5 && (
+                    <Typography variant="caption">
+                      +{usersWithoutProfiles.length - 5} more...
                     </Typography>
-                    <Button size="sm" onClick={() => handleAssignUser(user._id)}>
-                      Assign Type
-                    </Button>
-                  </Flex>
-                ))}
-                {usersWithoutProfiles.length > 5 && (
-                  <Typography variant="muted" className="text-xs">
-                    +{usersWithoutProfiles.length - 5} more...
-                  </Typography>
-                )}
-              </Flex>
-            </div>
+                  )}
+                </Stack>
+              </Stack>
+            </Card>
           )}
 
           {/* Assigned users */}
           {!profiles ? (
-            <div className="text-center py-8 text-ui-text-tertiary">Loading...</div>
+            <Flex justify="center" align="center" className="min-h-32">
+              <Typography variant="small" color="tertiary">
+                Loading...
+              </Typography>
+            </Flex>
           ) : profiles.length === 0 ? (
             <EmptyState
               icon={Users}
@@ -474,74 +483,73 @@ export function UserTypeManager() {
               description="Assign employment types to users to get started"
             />
           ) : (
-            <div className="space-y-3">
+            <Stack gap="sm">
               {profiles.map((profile: UserProfileWithUser) => (
-                <div
+                <Card
                   key={profile._id}
-                  className="p-4 border border-ui-border rounded-lg transition-default hover:bg-ui-bg-hover"
+                  padding="md"
+                  className="transition-default hover:bg-ui-bg-hover"
                 >
                   <Flex justify="between" align="start">
                     <FlexItem flex="1">
-                      <Flex gap="md" align="center" className="mb-2">
-                        {getTypeIcon(profile.employmentType, "w-5 h-5")}
-                        <div>
-                          <Typography variant="h4" className="font-medium text-ui-text">
-                            {profile.user?.name || profile.user?.email || "Unknown User"}
-                          </Typography>
-                          <Flex gap="sm" className="mt-1">
-                            <Badge
-                              size="sm"
-                              className={cn("capitalize", getTypeColor(profile.employmentType))}
-                            >
-                              {profile.employmentType}
-                            </Badge>
-                            {!profile.isActive && (
-                              <Badge variant="error" size="sm">
-                                Inactive
+                      <Stack gap="sm">
+                        <Flex gap="md" align="center">
+                          {getTypeIcon(profile.employmentType, "w-5 h-5")}
+                          <Stack gap="xs">
+                            <Typography variant="label">
+                              {profile.user?.name || profile.user?.email || "Unknown User"}
+                            </Typography>
+                            <Flex gap="sm">
+                              <Badge
+                                size="sm"
+                                className={cn("capitalize", getTypeColor(profile.employmentType))}
+                              >
+                                {profile.employmentType}
                               </Badge>
-                            )}
-                          </Flex>
-                        </div>
-                      </Flex>
+                              {!profile.isActive && (
+                                <Badge variant="error" size="sm">
+                                  Inactive
+                                </Badge>
+                              )}
+                            </Flex>
+                          </Stack>
+                        </Flex>
 
-                      <Grid cols={2} colsMd={4} gap="md" className="mt-3">
-                        {profile.jobTitle && (
-                          <div>
+                        <Grid cols={2} colsMd={4} gap="md">
+                          {profile.jobTitle && (
+                            <Stack gap="none">
+                              <Typography variant="caption" color="tertiary">
+                                Job Title:
+                              </Typography>
+                              <Typography variant="label">{profile.jobTitle}</Typography>
+                            </Stack>
+                          )}
+                          {profile.department && (
+                            <Stack gap="none">
+                              <Typography variant="caption" color="tertiary">
+                                Department:
+                              </Typography>
+                              <Typography variant="label">{profile.department}</Typography>
+                            </Stack>
+                          )}
+                          <Stack gap="none">
                             <Typography variant="caption" color="tertiary">
-                              Job Title:
+                              Max hours/week:
                             </Typography>
-                            <Typography variant="small" className="font-medium">
-                              {profile.jobTitle}
+                            <Typography variant="label">
+                              {profile.maxHoursPerWeek || "Default"}
                             </Typography>
-                          </div>
-                        )}
-                        {profile.department && (
-                          <div>
+                          </Stack>
+                          <Stack gap="none">
                             <Typography variant="caption" color="tertiary">
-                              Department:
+                              Max hours/day:
                             </Typography>
-                            <Typography variant="small" className="font-medium">
-                              {profile.department}
+                            <Typography variant="label">
+                              {profile.maxHoursPerDay || "Default"}
                             </Typography>
-                          </div>
-                        )}
-                        <div>
-                          <Typography variant="caption" color="tertiary">
-                            Max hours/week:
-                          </Typography>
-                          <Typography variant="small" className="font-medium">
-                            {profile.maxHoursPerWeek || "Default"}
-                          </Typography>
-                        </div>
-                        <div>
-                          <Typography variant="caption" color="tertiary">
-                            Max hours/day:
-                          </Typography>
-                          <Typography variant="small" className="font-medium">
-                            {profile.maxHoursPerDay || "Default"}
-                          </Typography>
-                        </div>
-                      </Grid>
+                          </Stack>
+                        </Grid>
+                      </Stack>
                     </FlexItem>
 
                     <Flex gap="sm" className="ml-4">
@@ -567,9 +575,9 @@ export function UserTypeManager() {
                       </Button>
                     </Flex>
                   </Flex>
-                </div>
+                </Card>
               ))}
-            </div>
+            </Stack>
           )}
         </CardBody>
       </Card>
@@ -597,7 +605,7 @@ export function UserTypeManager() {
         }
       >
         <form id="config-form" onSubmit={handleSaveConfig}>
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             <Input
               label="Display Name"
               value={configName}
@@ -633,7 +641,7 @@ export function UserTypeManager() {
               />
             </Grid>
 
-            <Flex direction="column" gap="md">
+            <Stack gap="md">
               <label>
                 <Flex align="center" gap="sm">
                   <input
@@ -683,8 +691,8 @@ export function UserTypeManager() {
                   <Typography variant="small">Can manage projects</Typography>
                 </Flex>
               </label>
-            </Flex>
-          </Flex>
+            </Stack>
+          </Stack>
         </form>
       </Dialog>
 
@@ -719,7 +727,7 @@ export function UserTypeManager() {
         }
       >
         <form id="profile-form" onSubmit={handleSaveProfile}>
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             <Select
               label="Employment Type"
               value={profileType}
@@ -747,32 +755,34 @@ export function UserTypeManager() {
               />
             </Grid>
 
-            <div className="p-4 bg-ui-bg-secondary rounded-lg">
-              <Typography variant="h4" className="font-medium text-sm mb-3 text-ui-text">
-                Hour Overrides (leave empty to use type defaults)
-              </Typography>
-              <Grid cols={2} gap="lg">
-                <Input
-                  label="Max Hours per Week"
-                  type="number"
-                  value={profileMaxWeekly}
-                  onChange={(e) => setProfileMaxWeekly(e.target.value)}
-                  placeholder="Default"
-                  min={1}
-                  max={168}
-                />
+            <Card padding="md" className="bg-ui-bg-secondary">
+              <Stack gap="sm">
+                <Typography variant="label">
+                  Hour Overrides (leave empty to use type defaults)
+                </Typography>
+                <Grid cols={2} gap="lg">
+                  <Input
+                    label="Max Hours per Week"
+                    type="number"
+                    value={profileMaxWeekly}
+                    onChange={(e) => setProfileMaxWeekly(e.target.value)}
+                    placeholder="Default"
+                    min={1}
+                    max={168}
+                  />
 
-                <Input
-                  label="Max Hours per Day"
-                  type="number"
-                  value={profileMaxDaily}
-                  onChange={(e) => setProfileMaxDaily(e.target.value)}
-                  placeholder="Default"
-                  min={1}
-                  max={24}
-                />
-              </Grid>
-            </div>
+                  <Input
+                    label="Max Hours per Day"
+                    type="number"
+                    value={profileMaxDaily}
+                    onChange={(e) => setProfileMaxDaily(e.target.value)}
+                    placeholder="Default"
+                    min={1}
+                    max={24}
+                  />
+                </Grid>
+              </Stack>
+            </Card>
 
             <Grid cols={2} gap="lg">
               <Input
@@ -792,109 +802,110 @@ export function UserTypeManager() {
 
             {/* Equity Compensation Section (Employees Only) */}
             {profileType === "employee" && (
-              <div className="p-4 bg-brand-subtle border border-brand-border rounded-lg">
-                <Flex justify="between" align="center" className="mb-3">
-                  <Flex align="center" gap="xs">
-                    <Icon icon={Gem} size="sm" className="text-brand-active" />
-                    <Typography variant="h4" className="font-medium text-sm text-brand-active">
-                      Equity Compensation
-                    </Typography>
-                  </Flex>
-                  <label>
-                    <Flex align="center" gap="sm">
-                      <input
-                        type="checkbox"
-                        checked={profileHasEquity}
-                        onChange={(e) => setProfileHasEquity(e.target.checked)}
-                        className="w-4 h-4"
-                      />
-                      <Typography variant="caption" className="font-medium text-brand-active">
-                        Has Equity
+              <Card padding="md" className="bg-brand-subtle border-brand-border">
+                <Stack gap="sm">
+                  <Flex justify="between" align="center">
+                    <Flex align="center" gap="xs">
+                      <Icon icon={Gem} size="sm" className="text-brand-active" />
+                      <Typography variant="label" className="text-brand-active">
+                        Equity Compensation
                       </Typography>
                     </Flex>
-                  </label>
-                </Flex>
-
-                {profileHasEquity && (
-                  <Flex direction="column" gap="lg">
-                    <Grid cols={2} gap="lg">
-                      <Input
-                        label="Equity Percentage (%)"
-                        type="number"
-                        value={profileEquityPercentage}
-                        onChange={(e) => setProfileEquityPercentage(e.target.value)}
-                        placeholder="e.g., 0.5 for 0.5%"
-                        step="0.001"
-                        min={0}
-                      />
-
-                      <Input
-                        label="Equity Hour Value ($)"
-                        type="number"
-                        value={profileEquityHourlyValue}
-                        onChange={(e) => setProfileEquityHourlyValue(e.target.value)}
-                        placeholder="Est. value per hour"
-                        step="0.01"
-                        min={0}
-                      />
-                    </Grid>
-
-                    <Grid cols={3} gap="lg">
-                      <Input
-                        label="Required Hours/Week"
-                        type="number"
-                        value={profileRequiredEquityWeekly}
-                        onChange={(e) => setProfileRequiredEquityWeekly(e.target.value)}
-                        placeholder="e.g., 10"
-                        min={0}
-                        max={168}
-                      />
-
-                      <Input
-                        label="Required Hours/Month"
-                        type="number"
-                        value={profileRequiredEquityMonthly}
-                        onChange={(e) => setProfileRequiredEquityMonthly(e.target.value)}
-                        placeholder="e.g., 40"
-                        min={0}
-                      />
-
-                      <Input
-                        label="Max Equity Hours/Week"
-                        type="number"
-                        value={profileMaxEquityWeekly}
-                        onChange={(e) => setProfileMaxEquityWeekly(e.target.value)}
-                        placeholder="e.g., 20"
-                        min={0}
-                        max={168}
-                      />
-                    </Grid>
-
-                    <Textarea
-                      label="Equity Notes"
-                      value={profileEquityNotes}
-                      onChange={(e) => setProfileEquityNotes(e.target.value)}
-                      placeholder="Additional notes about equity arrangement..."
-                      rows={2}
-                    />
-
-                    <Flex
-                      align="start"
-                      gap="sm"
-                      className="text-xs text-brand-hover bg-brand-subtle p-2 rounded"
-                    >
-                      <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
-                      <span>
-                        Tip: Equity hours are non-paid hours compensated with equity. Set required
-                        hours/week OR hours/month (not both). Max hours/week prevents overwork.
-                      </span>
-                    </Flex>
+                    <label>
+                      <Flex align="center" gap="sm">
+                        <input
+                          type="checkbox"
+                          checked={profileHasEquity}
+                          onChange={(e) => setProfileHasEquity(e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        <Typography variant="label" className="text-brand-active">
+                          Has Equity
+                        </Typography>
+                      </Flex>
+                    </label>
                   </Flex>
-                )}
-              </div>
+
+                  {profileHasEquity && (
+                    <Stack gap="lg">
+                      <Grid cols={2} gap="lg">
+                        <Input
+                          label="Equity Percentage (%)"
+                          type="number"
+                          value={profileEquityPercentage}
+                          onChange={(e) => setProfileEquityPercentage(e.target.value)}
+                          placeholder="e.g., 0.5 for 0.5%"
+                          step="0.001"
+                          min={0}
+                        />
+
+                        <Input
+                          label="Equity Hour Value ($)"
+                          type="number"
+                          value={profileEquityHourlyValue}
+                          onChange={(e) => setProfileEquityHourlyValue(e.target.value)}
+                          placeholder="Est. value per hour"
+                          step="0.01"
+                          min={0}
+                        />
+                      </Grid>
+
+                      <Grid cols={3} gap="lg">
+                        <Input
+                          label="Required Hours/Week"
+                          type="number"
+                          value={profileRequiredEquityWeekly}
+                          onChange={(e) => setProfileRequiredEquityWeekly(e.target.value)}
+                          placeholder="e.g., 10"
+                          min={0}
+                          max={168}
+                        />
+
+                        <Input
+                          label="Required Hours/Month"
+                          type="number"
+                          value={profileRequiredEquityMonthly}
+                          onChange={(e) => setProfileRequiredEquityMonthly(e.target.value)}
+                          placeholder="e.g., 40"
+                          min={0}
+                        />
+
+                        <Input
+                          label="Max Equity Hours/Week"
+                          type="number"
+                          value={profileMaxEquityWeekly}
+                          onChange={(e) => setProfileMaxEquityWeekly(e.target.value)}
+                          placeholder="e.g., 20"
+                          min={0}
+                          max={168}
+                        />
+                      </Grid>
+
+                      <Textarea
+                        label="Equity Notes"
+                        value={profileEquityNotes}
+                        onChange={(e) => setProfileEquityNotes(e.target.value)}
+                        placeholder="Additional notes about equity arrangement..."
+                        rows={2}
+                      />
+
+                      <Card padding="sm" className="bg-brand-subtle">
+                        <Flex align="start" gap="sm" className="text-brand-hover">
+                          <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
+                          <span>
+                            Tip: Equity hours are non-paid hours compensated with equity. Set
+                            required hours/week OR hours/month (not both). Max hours/week prevents
+                            overwork.
+                          </span>
+                        </Flex>
+                      </Card>
+                    </Stack>
+                  )}
+                </Stack>
+              </Card>
             )}
 
-            <Flex direction="column" gap="md">
+            <Stack gap="md">
               <label>
                 <Flex align="center" gap="sm">
                   <input
@@ -903,13 +914,11 @@ export function UserTypeManager() {
                     onChange={(e) => setProfileIsActive(e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <Typography variant="small" className="font-medium">
-                    Active Employment
-                  </Typography>
+                  <Typography variant="label">Active Employment</Typography>
                 </Flex>
               </label>
-            </Flex>
-          </Flex>
+            </Stack>
+          </Stack>
         </form>
       </Dialog>
     </Flex>

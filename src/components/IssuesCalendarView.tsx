@@ -1,9 +1,10 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
@@ -41,30 +42,24 @@ export function IssuesCalendarView({
   const month = currentDate.getMonth();
 
   // Calculate the visible date range (including padding days)
-  const { startTimestamp, endTimestamp, firstDayOfMonth, daysInMonth } = useMemo(() => {
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysCount = lastDay.getDate();
-    const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const firstDayOfMonth = firstDay.getDay(); // 0 = Sunday
+  const daysInMonth = lastDay.getDate();
 
-    // Start from the beginning of the first week row
-    // (subtract days to get to previous Sunday if needed, though here we just render empty cells,
-    // but for data fetching we might want to include them if we were rendering them)
-    // The current UI renders empty cells for previous month days:
-    // for (let i = 0; i < firstDayOfMonth; i++) { ... }
-    // So we strictly need data starting from the 1st of the month.
-    // However, to be safe and cover full days, we use start of 1st day to end of last day.
+  // Start from the beginning of the first week row
+  // (subtract days to get to previous Sunday if needed, though here we just render empty cells,
+  // but for data fetching we might want to include them if we were rendering them)
+  // The current UI renders empty cells for previous month days:
+  // for (let i = 0; i < firstDayOfMonth; i++) { ... }
+  // So we strictly need data starting from the 1st of the month.
+  // However, to be safe and cover full days, we use start of 1st day to end of last day.
 
-    const start = new Date(year, month, 1, 0, 0, 0, 0);
-    const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+  const start = new Date(year, month, 1, 0, 0, 0, 0);
+  const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
-    return {
-      startTimestamp: start.getTime(),
-      endTimestamp: end.getTime(),
-      firstDayOfMonth: firstDayOfWeek,
-      daysInMonth: daysCount,
-    };
-  }, [year, month]);
+  const startTimestamp = start.getTime();
+  const endTimestamp = end.getTime();
 
   const issues = useQuery(api.issues.listIssuesByDateRange, {
     projectId,
@@ -74,7 +69,7 @@ export function IssuesCalendarView({
   });
 
   // Group issues by date
-  const issuesByDate = useMemo(() => {
+  const issuesByDate = (() => {
     const byDate: Record<string, typeof issues> = {};
     issues?.forEach((issue: Doc<"issues">) => {
       if (issue.dueDate) {
@@ -84,7 +79,7 @@ export function IssuesCalendarView({
       }
     });
     return byDate;
-  }, [issues]);
+  })();
 
   const previousMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -149,7 +144,7 @@ export function IssuesCalendarView({
           )}
         </Flex>
 
-        <div className="space-y-1">
+        <Stack gap="xs">
           {(dayIssues ?? []).slice(0, 3).map((issue: Doc<"issues">) => (
             <Tooltip key={issue._id} content={issue.title}>
               <button
@@ -162,7 +157,7 @@ export function IssuesCalendarView({
                   <FlexItem flex="1" className="min-w-0">
                     <Flex align="center" gap="xs">
                       <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
-                      <Typography variant="muted" className="text-xs truncate">
+                      <Typography variant="caption" className="truncate">
                         {issue.title}
                       </Typography>
                     </Flex>
@@ -172,11 +167,11 @@ export function IssuesCalendarView({
             </Tooltip>
           ))}
           {dayIssues.length > 3 && (
-            <Typography variant="muted" className="text-xs pl-1.5">
+            <Typography variant="caption" color="secondary" className="pl-1.5">
               +{dayIssues.length - 3} more
             </Typography>
           )}
-        </div>
+        </Stack>
       </div>,
     );
   }
@@ -191,9 +186,7 @@ export function IssuesCalendarView({
         gap="lg"
         className="mb-6 sm:flex-row sm:items-center"
       >
-        <Typography variant="h2" className="text-xl sm:text-2xl font-bold">
-          Issues Calendar
-        </Typography>
+        <Typography variant="h2">Issues Calendar</Typography>
 
         {/* Month Navigation */}
         <Flex
@@ -226,10 +219,7 @@ export function IssuesCalendarView({
             </button>
           </Tooltip>
 
-          <Typography
-            variant="h3"
-            className="text-lg sm:text-xl font-semibold w-full sm:min-w-48 text-center"
-          >
+          <Typography variant="h3" className="w-full sm:min-w-48 text-center">
             {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
           </Typography>
 
@@ -285,26 +275,36 @@ export function IssuesCalendarView({
       </div>
 
       {/* Legend */}
-      <Flex align="center" gap="xl" className="mt-4 text-sm">
+      <Flex align="center" gap="xl" className="mt-4">
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-status-error" />
-          <Typography variant="muted">Highest</Typography>
+          <Typography variant="small" color="secondary">
+            Highest
+          </Typography>
         </Flex>
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-status-warning" />
-          <Typography variant="muted">High</Typography>
+          <Typography variant="small" color="secondary">
+            High
+          </Typography>
         </Flex>
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-accent-ring" />
-          <Typography variant="muted">Medium</Typography>
+          <Typography variant="small" color="secondary">
+            Medium
+          </Typography>
         </Flex>
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-brand-ring" />
-          <Typography variant="muted">Low</Typography>
+          <Typography variant="small" color="secondary">
+            Low
+          </Typography>
         </Flex>
         <Flex align="center" gap="sm">
           <div className="w-3 h-3 rounded-full bg-ui-text-secondary" />
-          <Typography variant="muted">Lowest</Typography>
+          <Typography variant="small" color="secondary">
+            Lowest
+          </Typography>
         </Flex>
       </Flex>
 

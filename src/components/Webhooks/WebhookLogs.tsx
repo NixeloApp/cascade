@@ -7,11 +7,13 @@ import { BarChart3, Check, RefreshCw, X } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Metadata, MetadataItem } from "../ui/Metadata";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 type WebhookExecution = Doc<"webhookExecutions">;
@@ -87,26 +89,25 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       className="sm:max-w-5xl"
     >
       {!executions || executions.length === 0 ? (
-        <div className="text-center py-12">
-          <Icon icon={BarChart3} size="xl" className="mx-auto mb-3 text-ui-text-tertiary" />
-          <Typography variant="h5" className="mb-1">
-            No delivery logs yet
-          </Typography>
+        <Stack align="center" gap="sm" className="text-center py-12">
+          <Icon icon={BarChart3} size="xl" className="text-ui-text-tertiary" />
+          <Typography variant="h5">No delivery logs yet</Typography>
           <Typography variant="caption">
             Webhook deliveries will appear here once triggered
           </Typography>
-        </div>
+        </Stack>
       ) : (
-        <div className="space-y-4">
-          <Typography variant="caption" className="mb-4">
+        <Stack gap="md">
+          <Typography variant="caption">
             Showing {executions.length} most recent deliveries
           </Typography>
 
-          <div className="space-y-3">
+          <Stack gap="sm">
             {executions.map((execution) => (
-              <div
+              <Card
                 key={execution._id}
-                className="border border-ui-border rounded-lg p-4 hover:border-ui-border-secondary transition-colors"
+                padding="md"
+                className="hover:border-ui-border-secondary transition-colors"
               >
                 {/* Header */}
                 <Flex justify="between" align="center" className="mb-3">
@@ -174,34 +175,30 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
                 {/* Expandable Details */}
                 {selectedExecution === execution._id && (
-                  <div className="mt-3 pt-3 border-t border-ui-border space-y-3">
+                  <Stack gap="sm" className="mt-3 pt-3 border-t border-ui-border">
                     {/* Request Payload */}
-                    <div>
-                      <Typography variant="label" className="mb-1">
-                        Request Payload:
-                      </Typography>
+                    <Stack gap="xs">
+                      <Typography variant="label">Request Payload:</Typography>
                       <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto">
                         {JSON.stringify(JSON.parse(execution.requestPayload), null, 2)}
                       </pre>
-                    </div>
+                    </Stack>
 
                     {/* Response Body */}
                     {execution.responseBody && (
-                      <div>
-                        <Typography variant="label" className="mb-1">
-                          Response Body:
-                        </Typography>
+                      <Stack gap="xs">
+                        <Typography variant="label">Response Body:</Typography>
                         <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto max-h-48">
                           {execution.responseBody}
                         </pre>
-                      </div>
+                      </Stack>
                     )}
-                  </div>
+                  </Stack>
                 )}
-              </div>
+              </Card>
             ))}
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       )}
     </Dialog>
   );

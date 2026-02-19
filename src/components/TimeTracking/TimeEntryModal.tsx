@@ -8,11 +8,14 @@ import { formatDateForInput, formatDurationHuman } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
+import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import {
   calculateEntryTimes,
@@ -78,10 +81,8 @@ function TagsInput({
   onRemoveTag: (tag: string) => void;
 }) {
   return (
-    <div>
-      <label htmlFor="time-entry-tags" className="block text-sm font-medium text-ui-text mb-1">
-        Tags
-      </label>
+    <Stack gap="sm">
+      <Label htmlFor="time-entry-tags">Tags</Label>
       <Flex gap="sm">
         <input
           id="time-entry-tags"
@@ -102,32 +103,30 @@ function TagsInput({
         </Button>
       </Flex>
       {tags.length > 0 && (
-        <div className="mt-2">
-          <Flex gap="sm" className="flex-wrap">
-            {tags.map((tag) => (
-              <Flex
-                key={tag}
-                as="span"
-                inline
-                align="center"
-                gap="xs"
-                className="px-2 py-1 bg-brand-indigo-track text-brand-indigo-text text-xs rounded"
+        <Flex gap="sm" wrap>
+          {tags.map((tag) => (
+            <Flex
+              key={tag}
+              as="span"
+              inline
+              align="center"
+              gap="xs"
+              className="px-2 py-1 bg-brand-indigo-track text-brand-indigo-text text-xs rounded"
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() => onRemoveTag(tag)}
+                className="hover:text-brand-active"
+                aria-label={`Remove tag ${tag}`}
               >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => onRemoveTag(tag)}
-                  className="hover:text-brand-active"
-                  aria-label={`Remove tag ${tag}`}
-                >
-                  ×
-                </button>
-              </Flex>
-            ))}
-          </Flex>
-        </div>
+                ×
+              </button>
+            </Flex>
+          ))}
+        </Flex>
       )}
-    </div>
+    </Stack>
   );
 }
 
@@ -152,11 +151,9 @@ function DurationModeFields({
   onClearDuration: () => void;
 }) {
   return (
-    <>
-      <div>
-        <label htmlFor="time-entry-date" className="block text-sm font-medium text-ui-text mb-1">
-          Date *
-        </label>
+    <Stack gap="md">
+      <Stack gap="xs">
+        <Label htmlFor="time-entry-date">Date *</Label>
         <input
           id="time-entry-date"
           type="date"
@@ -166,29 +163,24 @@ function DurationModeFields({
           className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
           required
         />
-      </div>
-      <div>
-        <label
-          htmlFor="time-entry-duration"
-          className="block text-sm font-medium text-ui-text mb-1"
-        >
-          Duration *
-        </label>
-        <input
-          id="time-entry-duration"
-          type="text"
-          value={durationInput}
-          onChange={(e) => onDurationChange(e.target.value)}
-          placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
-          className={cn(
-            "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-ring bg-ui-bg text-ui-text",
-            isDurationInputValid ? "border-ui-border" : "border-status-error",
-          )}
-        />
-        <Typography className="text-xs text-ui-text-tertiary mt-1">
-          Accepts: 1:30, 1.5, 1h 30m, 90m
-        </Typography>
-        <Flex gap="sm" className="mt-2">
+      </Stack>
+      <Stack gap="sm">
+        <Stack gap="xs">
+          <Label htmlFor="time-entry-duration">Duration *</Label>
+          <input
+            id="time-entry-duration"
+            type="text"
+            value={durationInput}
+            onChange={(e) => onDurationChange(e.target.value)}
+            placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
+            className={cn(
+              "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-ring bg-ui-bg text-ui-text",
+              isDurationInputValid ? "border-ui-border" : "border-status-error",
+            )}
+          />
+          <Typography variant="caption">Accepts: 1:30, 1.5, 1h 30m, 90m</Typography>
+        </Stack>
+        <Flex gap="sm">
           <Button type="button" variant="secondary" size="sm" onClick={() => onQuickIncrement(15)}>
             +15m
           </Button>
@@ -205,14 +197,14 @@ function DurationModeFields({
           )}
         </Flex>
         {durationSeconds > 0 && (
-          <div className="mt-3 p-3 bg-brand-indigo-track border border-brand-indigo-border rounded-lg">
-            <Typography variant="mono" className="text-sm font-medium text-brand-indigo-text">
+          <Card padding="sm" className="bg-brand-indigo-track border-brand-indigo-border">
+            <Typography variant="mono" className="text-brand-indigo-text">
               Duration: {formatDurationHuman(durationSeconds)}
             </Typography>
-          </div>
+          </Card>
         )}
-      </div>
-    </>
+      </Stack>
+    </Stack>
   );
 }
 
@@ -235,14 +227,9 @@ function TimeRangeModeFields({
   onEndTimeChange: (value: string) => void;
 }) {
   return (
-    <>
-      <div>
-        <label
-          htmlFor="time-entry-date-range"
-          className="block text-sm font-medium text-ui-text mb-1"
-        >
-          Date *
-        </label>
+    <Stack gap="md">
+      <Stack gap="xs">
+        <Label htmlFor="time-entry-date-range">Date *</Label>
         <input
           id="time-entry-date-range"
           type="date"
@@ -252,12 +239,10 @@ function TimeRangeModeFields({
           className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
           required
         />
-      </div>
+      </Stack>
       <Grid cols={2} gap="lg">
-        <div>
-          <label htmlFor="time-entry-start" className="block text-sm font-medium text-ui-text mb-1">
-            Start Time *
-          </label>
+        <Stack gap="xs">
+          <Label htmlFor="time-entry-start">Start Time *</Label>
           <input
             id="time-entry-start"
             type="time"
@@ -266,11 +251,9 @@ function TimeRangeModeFields({
             className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
             required
           />
-        </div>
-        <div>
-          <label htmlFor="time-entry-end" className="block text-sm font-medium text-ui-text mb-1">
-            End Time *
-          </label>
+        </Stack>
+        <Stack gap="xs">
+          <Label htmlFor="time-entry-end">End Time *</Label>
           <input
             id="time-entry-end"
             type="time"
@@ -279,16 +262,16 @@ function TimeRangeModeFields({
             className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
             required
           />
-        </div>
+        </Stack>
       </Grid>
       {timeRangeDuration > 0 && (
-        <div className="p-3 bg-brand-indigo-track border border-brand-indigo-border rounded-lg">
-          <Typography variant="mono" className="text-sm font-medium text-brand-indigo-text">
+        <Card padding="sm" className="bg-brand-indigo-track border-brand-indigo-border">
+          <Typography variant="mono" className="text-brand-indigo-text">
             Duration: {formatDurationHuman(timeRangeDuration)}
           </Typography>
-        </div>
+        </Card>
       )}
-    </>
+    </Stack>
   );
 }
 
@@ -417,7 +400,6 @@ export function TimeEntryModal({
           e.preventDefault();
           handleSubmit();
         }}
-        className="space-y-4"
       >
         {/* Mode Toggle */}
         <Flex gap="xs" className="p-1 bg-ui-bg-secondary rounded-lg">
@@ -445,13 +427,8 @@ export function TimeEntryModal({
         </Flex>
 
         {/* Project Selection */}
-        <div>
-          <label
-            htmlFor="time-entry-project"
-            className="block text-sm font-medium text-ui-text mb-1"
-          >
-            Project
-          </label>
+        <Stack gap="xs">
+          <Label htmlFor="time-entry-project">Project</Label>
           <Select
             value={state.projectId || "none"}
             onValueChange={(value) => {
@@ -471,17 +448,12 @@ export function TimeEntryModal({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Stack>
 
         {/* Issue Selection */}
         {state.projectId && projectIssues && projectIssues.length > 0 && (
-          <div>
-            <label
-              htmlFor="time-entry-issue"
-              className="block text-sm font-medium text-ui-text mb-1"
-            >
-              Issue
-            </label>
+          <Stack gap="xs">
+            <Label htmlFor="time-entry-issue">Issue</Label>
             <Select
               value={state.issueId || "none"}
               onValueChange={(value) =>
@@ -502,7 +474,7 @@ export function TimeEntryModal({
                   ))}
               </SelectContent>
             </Select>
-          </div>
+          </Stack>
         )}
 
         {/* Description */}
@@ -515,13 +487,8 @@ export function TimeEntryModal({
         />
 
         {/* Activity */}
-        <div>
-          <label
-            htmlFor="time-entry-activity"
-            className="block text-sm font-medium text-ui-text mb-1"
-          >
-            Activity
-          </label>
+        <Stack gap="xs">
+          <Label htmlFor="time-entry-activity">Activity</Label>
           <Select
             value={state.activity || "none"}
             onValueChange={(value) => actions.setActivity(value === "none" ? "" : value)}
@@ -538,23 +505,21 @@ export function TimeEntryModal({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Stack>
 
         {/* Billable */}
         {billingEnabled && (
-          <div>
-            <label className="cursor-pointer">
-              <Flex align="center" gap="sm">
-                <input
-                  type="checkbox"
-                  checked={state.billable}
-                  onChange={(e) => actions.setBillable(e.target.checked)}
-                  className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
-                />
-                <Typography variant="label">Billable time</Typography>
-              </Flex>
-            </label>
-          </div>
+          <label className="cursor-pointer">
+            <Flex align="center" gap="sm">
+              <input
+                type="checkbox"
+                checked={state.billable}
+                onChange={(e) => actions.setBillable(e.target.checked)}
+                className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
+              />
+              <Typography variant="label">Billable time</Typography>
+            </Flex>
+          </label>
         )}
 
         {/* Tags */}

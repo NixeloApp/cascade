@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { AuthPageLayout } from "@/components/Auth/AuthPageLayout";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Stack } from "@/components/ui/Stack";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
@@ -50,10 +51,10 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
   if (status === "loading") {
     return (
       <AuthPageLayout title="Unsubscribing...">
-        <Flex direction="column" align="center" gap="lg" className="py-8">
+        <Stack align="center" gap="lg" className="py-8">
           <LoadingSpinner size="lg" />
           <Typography color="secondary">Processing your request</Typography>
-        </Flex>
+        </Stack>
       </AuthPageLayout>
     );
   }
@@ -61,7 +62,7 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
   if (status === "success") {
     return (
       <AuthPageLayout title="Unsubscribed">
-        <Flex direction="column" align="center" gap="lg" className="py-8">
+        <Stack align="center" gap="lg" className="py-8">
           <Flex
             align="center"
             justify="center"
@@ -69,15 +70,15 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
           >
             <Icon icon={CheckCircle} size="lg" className="text-status-success" />
           </Flex>
-          <div className="text-center">
+          <Stack align="center" gap="sm">
             <Typography color="secondary">
               You've been unsubscribed from email notifications.
             </Typography>
-            <Typography variant="muted" className="mt-2">
+            <Typography variant="muted">
               You can update preferences anytime in your account settings.
             </Typography>
-          </div>
-        </Flex>
+          </Stack>
+        </Stack>
       </AuthPageLayout>
     );
   }
@@ -85,7 +86,7 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
   if (status === "invalid") {
     return (
       <AuthPageLayout title="Invalid link">
-        <Flex direction="column" align="center" gap="lg" className="py-8">
+        <Stack align="center" gap="lg" className="py-8">
           <Flex
             align="center"
             justify="center"
@@ -96,14 +97,14 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
           <Typography color="secondary" className="text-center">
             This unsubscribe link is invalid or has expired.
           </Typography>
-        </Flex>
+        </Stack>
       </AuthPageLayout>
     );
   }
 
   return (
     <AuthPageLayout title="Something went wrong">
-      <Flex direction="column" align="center" gap="lg" className="py-8">
+      <Stack align="center" gap="lg" className="py-8">
         <Flex align="center" justify="center" className="w-12 h-12 rounded-full bg-status-error-bg">
           <Icon icon={XCircle} size="lg" className="text-status-error" />
         </Flex>
@@ -115,7 +116,7 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
             {errorMessage}
           </Typography>
         )}
-      </Flex>
+      </Stack>
     </AuthPageLayout>
   );
 }

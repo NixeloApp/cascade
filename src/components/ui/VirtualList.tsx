@@ -5,14 +5,7 @@
  * Perfect for Kanban columns with 50+ cards.
  */
 
-import {
-  type CSSProperties,
-  type ElementType,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useRef,
-} from "react";
+import { type CSSProperties, type ElementType, forwardRef, useEffect, useRef } from "react";
 import * as ReactWindow from "react-window";
 import { cn } from "@/lib/utils";
 
@@ -104,31 +97,6 @@ function VirtualListInner<T>(
     }
   }, [items.length]);
 
-  const handleScroll = useCallback(
-    ({ scrollOffset }: { scrollOffset: number }) => {
-      onScroll?.(scrollOffset);
-
-      // Check if we're near the end
-      if (onEndReached) {
-        const totalHeight = items.length * itemHeight;
-        const scrollBottom = scrollOffset + height;
-        const distanceFromEnd = totalHeight - scrollBottom;
-
-        if (distanceFromEnd <= endReachedThreshold) {
-          // Only call if not already called since last items change
-          if (!endReachedCalledRef.current) {
-            endReachedCalledRef.current = true;
-            onEndReached();
-          }
-        } else if (distanceFromEnd > endReachedThreshold * 2) {
-          // Reset when user scrolls back up far enough
-          endReachedCalledRef.current = false;
-        }
-      }
-    },
-    [onScroll, onEndReached, items.length, itemHeight, height, endReachedThreshold],
-  );
-
   const itemData: ItemData<T> = {
     items,
     renderItem,
@@ -144,7 +112,27 @@ function VirtualListInner<T>(
       itemSize={itemHeight}
       itemData={itemData}
       overscanCount={overscan}
-      onScroll={handleScroll}
+      onScroll={({ scrollOffset }: { scrollOffset: number }) => {
+        onScroll?.(scrollOffset);
+
+        // Check if we're near the end
+        if (onEndReached) {
+          const totalHeight = items.length * itemHeight;
+          const scrollBottom = scrollOffset + height;
+          const distanceFromEnd = totalHeight - scrollBottom;
+
+          if (distanceFromEnd <= endReachedThreshold) {
+            // Only call if not already called since last items change
+            if (!endReachedCalledRef.current) {
+              endReachedCalledRef.current = true;
+              onEndReached();
+            }
+          } else if (distanceFromEnd > endReachedThreshold * 2) {
+            // Reset when user scrolls back up far enough
+            endReachedCalledRef.current = false;
+          }
+        }
+      }}
     >
       {ItemRenderer}
     </FixedSizeList>

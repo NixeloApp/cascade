@@ -244,6 +244,9 @@
   --max-width-chat-bubble: 85%;
   --max-width-chat-bubble-md: 80%;
 
+  /* Timer Widget */
+  --max-width-timer-description: 9.375rem; /* 37.5 * 0.25rem = 150px */
+
   /* Feature Card Radius (landing) */
   --radius-feature: 10px;
 

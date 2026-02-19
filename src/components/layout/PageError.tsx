@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 
 interface PageErrorProps {
@@ -15,19 +16,15 @@ export function PageError({ title, message, action }: PageErrorProps): ReactNode
 
   return (
     <Flex align="center" justify="center" className="py-20">
-      <div className="text-center max-w-md">
-        <Typography variant="h3" className="mb-2">
-          {title}
-        </Typography>
-        <Typography variant="muted" className="mb-6">
-          {message}
-        </Typography>
+      <Stack align="center" gap="md" className="text-center max-w-md">
+        <Typography variant="h3">{title}</Typography>
+        <Typography variant="muted">{message}</Typography>
         {action ?? (
           <Button variant="outline" onClick={() => navigate({ to: ".." })}>
             Go back
           </Button>
         )}
-      </div>
+      </Stack>
     </Flex>
   );
 }

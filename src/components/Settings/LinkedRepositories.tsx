@@ -5,8 +5,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Github, Trash2 } from "@/lib/icons";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 /**
@@ -36,21 +39,17 @@ export function LinkedRepositories() {
   };
 
   return (
-    <div>
-      <Typography variant="h4" className="text-sm font-semibold text-ui-text mb-4">
-        Linked Repositories
-      </Typography>
+    <Stack gap="md">
+      <Typography variant="h4">Linked Repositories</Typography>
 
       {/* Project selector */}
-      <div className="mb-4">
-        <label htmlFor="project-selector" className="block text-sm font-medium text-ui-text mb-2">
-          Select Project
-        </label>
+      <Stack gap="xs">
+        <Label htmlFor="project-selector">Select Project</Label>
         <Select
           value={selectedWorkspace || ""}
           onValueChange={(value) => setSelectedWorkspace(value as Id<"projects">)}
         >
-          <SelectTrigger className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text">
+          <SelectTrigger className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg">
             <SelectValue placeholder="-- Select a project --" />
           </SelectTrigger>
           <SelectContent>
@@ -62,53 +61,52 @@ export function LinkedRepositories() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </Stack>
 
       {/* Repository list */}
       {selectedWorkspace && (
-        <Flex direction="column" gap="sm">
+        <Stack gap="sm">
           {repositories && repositories.length === 0 && (
-            <Typography className="text-sm text-ui-text-secondary italic">
+            <Typography variant="small" color="secondary" className="italic">
               No repositories linked to this project yet.
             </Typography>
           )}
           {repositories?.map((repo: Doc<"githubRepositories">) => (
-            <Flex
-              key={repo._id}
-              justify="between"
-              align="center"
-              className="p-3 bg-ui-bg-secondary rounded-lg"
-            >
-              <Flex gap="md" align="center">
-                <Github className="h-5 w-5 text-ui-text-tertiary" />
-                <div>
-                  <Typography className="text-sm font-medium text-ui-text">
-                    {repo.repoFullName}
-                  </Typography>
-                  <Typography className="text-xs text-ui-text-secondary">
-                    {repo.syncPRs && "PRs"} {repo.syncPRs && repo.autoLinkCommits && "• "}
-                    {repo.autoLinkCommits && "Auto-link commits"}
-                  </Typography>
-                </div>
+            <Card key={repo._id} padding="sm" className="bg-ui-bg-secondary">
+              <Flex justify="between" align="center">
+                <Flex gap="md" align="center">
+                  <Github className="h-5 w-5 text-ui-text-tertiary" />
+                  <Stack gap="none">
+                    <Typography variant="label">{repo.repoFullName}</Typography>
+                    <Typography variant="caption" color="secondary">
+                      {repo.syncPRs && "PRs"} {repo.syncPRs && repo.autoLinkCommits && "• "}
+                      {repo.autoLinkCommits && "Auto-link commits"}
+                    </Typography>
+                  </Stack>
+                </Flex>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUnlink(repo._id)}
+                  aria-label={`Unlink ${repo.repoFullName}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </Flex>
-              <Button variant="ghost" size="sm" onClick={() => handleUnlink(repo._id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </Flex>
+            </Card>
           ))}
-        </Flex>
+        </Stack>
       )}
 
       {selectedWorkspace && (
         <Button
           variant="secondary"
           size="sm"
-          className="mt-4"
           onClick={() => toast.info("Repository linking UI coming soon")}
         >
           + Link New Repository
         </Button>
       )}
-    </div>
+    </Stack>
   );
 }

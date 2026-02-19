@@ -3,7 +3,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
@@ -19,6 +19,7 @@ import {
 import { Flex, FlexItem } from "./ui/Flex";
 import { Checkbox, Input } from "./ui/form";
 import { Icon } from "./ui/Icon";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 export interface BoardFilters {
@@ -95,9 +96,11 @@ function FilterDropdown<T>({
           </DropdownMenuCheckboxItem>
         ))}
         {(!items || items.length === 0) && (
-          <Typography variant="small" color="secondary" className="px-2 py-1.5">
-            {emptyMessage}
-          </Typography>
+          <div className="px-2 py-1.5">
+            <Typography variant="small" color="secondary">
+              {emptyMessage}
+            </Typography>
+          </div>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -133,14 +136,12 @@ function SavedFiltersDropdown({
             key={filter._id}
             align="center"
             justify="between"
-            className="px-2 py-1.5 hover:bg-ui-bg-secondary rounded cursor-pointer"
+            className="hover:bg-ui-bg-secondary rounded cursor-pointer"
           >
-            <button
-              type="button"
-              onClick={() => onLoadFilter(filter)}
-              className="flex-1 text-left text-sm"
-            >
-              {filter.name}
+            <button type="button" onClick={() => onLoadFilter(filter)} className="flex-1 text-left">
+              <Typography variant="small" as="span">
+                {filter.name}
+              </Typography>
               {filter.isPublic && (
                 <Typography variant="caption" color="tertiary" as="span" className="ml-1">
                   (public)
@@ -205,7 +206,7 @@ function SaveFilterDialog({
         </>
       }
     >
-      <div className="space-y-4">
+      <Stack gap="md">
         <Input
           label="Filter Name"
           type="text"
@@ -218,7 +219,7 @@ function SaveFilterDialog({
           checked={isPublic}
           onChange={(e) => onIsPublicChange(e.target.checked)}
         />
-      </div>
+      </Stack>
     </Dialog>
   );
 }
@@ -256,13 +257,10 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
     }
   };
 
-  const handleLoadFilter = useCallback(
-    (savedFilter: EnrichedSavedFilter) => {
-      onFilterChange(savedFilter.filters as BoardFilters);
-      toast.success("Filter applied");
-    },
-    [onFilterChange],
-  );
+  const handleLoadFilter = (savedFilter: EnrichedSavedFilter) => {
+    onFilterChange(savedFilter.filters as BoardFilters);
+    toast.success("Filter applied");
+  };
 
   const handleDeleteFilter = async (id: Id<"savedFilters">) => {
     try {
@@ -277,30 +275,27 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
     onFilterChange({});
   };
 
-  const toggleArrayFilter = useCallback(
-    <K extends keyof BoardFilters>(
-      key: K,
-      value: BoardFilters[K] extends (infer U)[] | undefined ? U : never,
-    ) => {
-      const currentArray = (filters[key] ?? []) as (typeof value)[];
-      const newArray = currentArray.includes(value)
-        ? currentArray.filter((v) => v !== value)
-        : [...currentArray, value];
+  const toggleArrayFilter = <K extends keyof BoardFilters>(
+    key: K,
+    value: BoardFilters[K] extends (infer U)[] | undefined ? U : never,
+  ) => {
+    const currentArray = (filters[key] ?? []) as (typeof value)[];
+    const newArray = currentArray.includes(value)
+      ? currentArray.filter((v) => v !== value)
+      : [...currentArray, value];
 
-      onFilterChange({
-        ...filters,
-        [key]: newArray.length > 0 ? newArray : undefined,
-      });
-    },
-    [filters, onFilterChange],
-  );
+    onFilterChange({
+      ...filters,
+      [key]: newArray.length > 0 ? newArray : undefined,
+    });
+  };
 
   const activeFilterCount = countActiveFilters(filters);
   const hasActiveFilters = activeFilterCount > 0;
 
   return (
-    <div className="bg-ui-bg-soft border-b border-ui-border px-4 py-2.5">
-      <Flex align="center" gap="sm" className="flex-wrap">
+    <div className="bg-ui-bg-soft border-b border-ui-border">
+      <Flex align="center" gap="sm" wrap>
         {/* Type Filter */}
         <FilterDropdown
           label="Type"
@@ -382,7 +377,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
             variant="ghost"
             size="sm"
             onClick={handleClearFilters}
-            className="h-8 px-2 text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover transition-default"
+            className="text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover transition-default"
           >
             <X className="w-4 h-4 mr-1" />
             Clear ({activeFilterCount})
@@ -395,7 +390,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
             variant="ghost"
             size="sm"
             onClick={() => setShowSaveDialog(true)}
-            className="h-8 px-3 text-ui-text-secondary hover:text-brand hover:bg-ui-bg-hover transition-default"
+            className="text-ui-text-secondary hover:text-brand hover:bg-ui-bg-hover transition-default"
           >
             Save Filter
           </Button>

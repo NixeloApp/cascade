@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
-import * as React from "react";
+import type * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button, type ButtonProps } from "./Button";
 
@@ -39,12 +39,12 @@ export function Pagination({
   className,
   ...props
 }: PaginationProps) {
-  const pages = React.useMemo(() => {
-    const range = (start: number, end: number) =>
-      Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  const range = (start: number, end: number) =>
+    Array.from({ length: end - start + 1 }, (_, i) => start + i);
 
-    const totalPageNumbers = siblingCount * 2 + 3 + (showEdges ? 2 : 0);
+  const totalPageNumbers = siblingCount * 2 + 3 + (showEdges ? 2 : 0);
 
+  const pages = (() => {
     if (totalPageNumbers >= totalPages) {
       return range(1, totalPages);
     }
@@ -72,7 +72,7 @@ export function Pagination({
       "dots-right",
       totalPages,
     ];
-  }, [totalPages, currentPage, siblingCount, showEdges]);
+  })();
 
   if (totalPages <= 1) {
     return null;

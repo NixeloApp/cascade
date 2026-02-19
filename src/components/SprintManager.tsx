@@ -15,11 +15,13 @@ import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Input } from "./ui/form/Input";
 import { Textarea } from "./ui/form/Textarea";
 import { Grid } from "./ui/Grid";
 import { SkeletonProjectCard } from "./ui/Skeleton";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 interface SprintManagerProps {
@@ -44,7 +46,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
   const progress = sprint.status === "active" ? getProgressPercentage() : 0;
 
   return (
-    <div className="card-subtle p-4 animate-fade-in">
+    <Card padding="md" className="animate-fade-in">
       <Flex
         direction="column"
         align="start"
@@ -52,8 +54,8 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         gap="lg"
         className="sm:flex-row sm:items-center"
       >
-        <FlexItem flex="1" className="w-full sm:w-auto">
-          <Flex wrap align="center" gap="sm" className="sm:gap-3 mb-2">
+        <Flex direction="column" className="flex-1 w-full sm:w-auto">
+          <Flex wrap align="center" gap="sm" className="mb-2">
             <Typography variant="h5">{sprint.name}</Typography>
             <Badge size="md" className={getStatusColor(sprint.status)}>
               {sprint.status}
@@ -63,15 +65,15 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
             </Badge>
           </Flex>
           {sprint.goal && (
-            <Typography variant="muted" className="mb-2">
+            <Typography variant="small" color="secondary" className="mb-2">
               {sprint.goal}
             </Typography>
           )}
 
           {/* Progress bar for active sprints - issue-based */}
           {sprint.status === "active" && (
-            <div className="mt-3 mb-2">
-              <Flex justify="between" className="mb-1">
+            <Stack gap="xs" className="mt-3 mb-2">
+              <Flex justify="between">
                 <Typography variant="caption">
                   {sprint.completedCount} of {sprint.issueCount} completed
                 </Typography>
@@ -81,11 +83,11 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
               </Flex>
               <div className="h-1.5 bg-ui-bg-tertiary rounded-pill overflow-hidden">
                 <div
-                  className="h-full bg-brand rounded-pill transition-default"
+                  className="size-full bg-brand rounded-pill transition-default"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-            </div>
+            </Stack>
           )}
 
           {sprint.startDate && sprint.endDate && (
@@ -93,7 +95,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
               {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
             </Typography>
           )}
-        </FlexItem>
+        </Flex>
         {canEdit && (
           <Flex direction="column" gap="sm" className="sm:flex-row w-full sm:w-auto">
             {sprint.status === "future" && (
@@ -113,7 +115,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
           </Flex>
         )}
       </Flex>
-    </div>
+    </Card>
   );
 }
 
@@ -231,27 +233,27 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
 
   if (!sprints) {
     return (
-      <div>
-        <Flex align="center" justify="between" className="mb-6">
+      <Stack gap="lg">
+        <Flex align="center" justify="between">
           <Typography variant="h4">Sprint Management</Typography>
         </Flex>
-        <div className="space-y-4">
+        <Stack gap="md">
           <SkeletonProjectCard />
           <SkeletonProjectCard />
           <SkeletonProjectCard />
-        </div>
-      </div>
+        </Stack>
+      </Stack>
     );
   }
 
   return (
-    <div>
+    <Stack gap="lg">
       <Flex
         direction="column"
         align="start"
         justify="between"
         gap="md"
-        className="sm:flex-row sm:items-center mb-6"
+        className="sm:flex-row sm:items-center"
       >
         <Typography variant="h4">Sprint Management</Typography>
         {canEdit && (
@@ -264,8 +266,8 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
 
       {/* Create Sprint Form */}
       {showCreateForm && (
-        <div className="card-subtle p-4 mb-6 animate-scale-in">
-          <form onSubmit={(e) => void handleCreateSprint(e)} className="space-y-4">
+        <Card padding="md" className="animate-scale-in">
+          <Stack as="form" gap="md" onSubmit={(e: React.FormEvent) => void handleCreateSprint(e)}>
             <Input
               label="Sprint Name"
               type="text"
@@ -282,10 +284,8 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             />
 
             {/* Duration Presets */}
-            <div className="space-y-2">
-              <Typography variant="label" className="block text-ui-text">
-                Sprint Duration
-              </Typography>
+            <Stack gap="sm">
+              <Typography variant="label">Sprint Duration</Typography>
               <Grid cols={2} colsSm={5} gap="sm">
                 {SPRINT_DURATION_PRESETS.map((preset) => (
                   <button
@@ -302,13 +302,13 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                     <Typography variant="label" className="block">
                       {preset.label}
                     </Typography>
-                    <Typography variant="caption" className="text-ui-text-secondary">
+                    <Typography variant="caption" color="secondary">
                       {preset.description}
                     </Typography>
                   </button>
                 ))}
               </Grid>
-            </div>
+            </Stack>
 
             {/* Custom date inputs (shown when "Custom" is selected) */}
             {selectedPreset === "custom" && (
@@ -353,12 +353,12 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                 Cancel
               </Button>
             </Flex>
-          </form>
-        </div>
+          </Stack>
+        </Card>
       )}
 
       {/* Sprints List */}
-      <div className="space-y-4">
+      <Stack gap="md">
         {sprints.length === 0 ? (
           <EmptyState
             icon={Trophy}
@@ -381,81 +381,81 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             />
           ))
         )}
-      </div>
+      </Stack>
 
       {/* Start Sprint Modal */}
       {startingSprintId && (
         <Flex align="center" justify="center" className="fixed inset-0 z-modal bg-overlay p-4">
-          <div className="card p-6 max-w-lg w-full animate-scale-in">
-            <Typography variant="h4" className="mb-4">
-              Start Sprint
-            </Typography>
-            <Typography variant="muted" className="mb-6">
-              Choose how long this sprint should run.
-            </Typography>
+          <Card padding="lg" className="max-w-lg w-full animate-scale-in">
+            <Stack gap="lg">
+              <Stack gap="sm">
+                <Typography variant="h4">Start Sprint</Typography>
+                <Typography variant="small" color="secondary">
+                  Choose how long this sprint should run.
+                </Typography>
+              </Stack>
 
-            {/* Duration Presets */}
-            <div className="space-y-2 mb-6">
-              <Typography variant="label" className="block text-ui-text">
-                Sprint Duration
-              </Typography>
-              <Grid cols={2} colsSm={3} gap="sm">
-                {SPRINT_DURATION_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => setStartPreset(preset.id)}
-                    className={cn(
-                      "p-3 rounded-lg border text-left transition-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
-                      startPreset === preset.id
-                        ? "border-brand bg-ui-bg-secondary"
-                        : "border-ui-border-secondary bg-ui-bg hover:border-ui-border-hover",
-                    )}
-                  >
-                    <Typography variant="label" className="block">
-                      {preset.label}
-                    </Typography>
-                    <Typography variant="caption" className="text-ui-text-secondary">
-                      {preset.description}
-                    </Typography>
-                  </button>
-                ))}
-              </Grid>
-            </div>
+              {/* Duration Presets */}
+              <Stack gap="sm">
+                <Typography variant="label">Sprint Duration</Typography>
+                <Grid cols={2} colsSm={3} gap="sm">
+                  {SPRINT_DURATION_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setStartPreset(preset.id)}
+                      className={cn(
+                        "p-3 rounded-lg border text-left transition-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
+                        startPreset === preset.id
+                          ? "border-brand bg-ui-bg-secondary"
+                          : "border-ui-border-secondary bg-ui-bg hover:border-ui-border-hover",
+                      )}
+                    >
+                      <Typography variant="label" className="block">
+                        {preset.label}
+                      </Typography>
+                      <Typography variant="caption" color="secondary">
+                        {preset.description}
+                      </Typography>
+                    </button>
+                  ))}
+                </Grid>
+              </Stack>
 
-            {/* Custom date inputs */}
-            {startPreset === "custom" && (
-              <Flex direction="column" gap="md" className="sm:flex-row mb-6">
-                <FlexItem flex="1">
-                  <Input
-                    label="Start Date"
-                    type="date"
-                    value={startCustomStart}
-                    onChange={(e) => setStartCustomStart(e.target.value)}
-                  />
-                </FlexItem>
-                <FlexItem flex="1">
-                  <Input
-                    label="End Date"
-                    type="date"
-                    value={startCustomEnd}
-                    onChange={(e) => setStartCustomEnd(e.target.value)}
-                  />
-                </FlexItem>
+              {/* Custom date inputs */}
+              {startPreset === "custom" && (
+                <Flex direction="column" gap="md" className="sm:flex-row">
+                  <FlexItem flex="1">
+                    <Input
+                      label="Start Date"
+                      type="date"
+                      value={startCustomStart}
+                      onChange={(e) => setStartCustomStart(e.target.value)}
+                    />
+                  </FlexItem>
+                  <FlexItem flex="1">
+                    <Input
+                      label="End Date"
+                      type="date"
+                      value={startCustomEnd}
+                      onChange={(e) => setStartCustomEnd(e.target.value)}
+                    />
+                  </FlexItem>
+                </Flex>
+              )}
+
+              <Flex gap="sm" justify="end">
+                <Button variant="secondary" onClick={closeStartSprintModal}>
+                  Cancel
+                </Button>
+                <Button variant="success" onClick={() => void handleStartSprint()}>
+                  Start Sprint
+                </Button>
               </Flex>
-            )}
-
-            <Flex gap="sm" justify="end">
-              <Button variant="secondary" onClick={closeStartSprintModal}>
-                Cancel
-              </Button>
-              <Button variant="success" onClick={() => void handleStartSprint()}>
-                Start Sprint
-              </Button>
-            </Flex>
-          </div>
+            </Stack>
+          </Card>
         </Flex>
       )}
-    </div>
+    </Stack>
   );
 }

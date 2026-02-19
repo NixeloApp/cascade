@@ -1,10 +1,11 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useMemo } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { CheckCircle, MapPin, TrendingUp, Zap } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { BarChart } from "./Analytics/BarChart";
@@ -49,79 +50,58 @@ export function AnalyticsDashboard({ projectId }: Props) {
     limit: 10,
   });
 
-  // Memoize chart data to avoid recalculation on every render
-  const statusChartData = useMemo(
-    () =>
-      analytics
-        ? Object.entries(analytics.issuesByStatus).map(([status, count]) => ({
-            label: status,
-            value: count,
-          }))
-        : [],
-    [analytics],
-  );
+  const statusChartData = analytics
+    ? Object.entries(analytics.issuesByStatus).map(([status, count]) => ({
+        label: status,
+        value: count,
+      }))
+    : [];
 
-  const typeChartData = useMemo(
-    () =>
-      analytics
-        ? [
-            { label: "Task", value: analytics.issuesByType.task },
-            { label: "Bug", value: analytics.issuesByType.bug },
-            { label: "Story", value: analytics.issuesByType.story },
-            { label: "Epic", value: analytics.issuesByType.epic },
-          ]
-        : [],
-    [analytics],
-  );
+  const typeChartData = analytics
+    ? [
+        { label: "Task", value: analytics.issuesByType.task },
+        { label: "Bug", value: analytics.issuesByType.bug },
+        { label: "Story", value: analytics.issuesByType.story },
+        { label: "Epic", value: analytics.issuesByType.epic },
+      ]
+    : [];
 
-  const priorityChartData = useMemo(
-    () =>
-      analytics
-        ? [
-            { label: "Highest", value: analytics.issuesByPriority.highest },
-            { label: "High", value: analytics.issuesByPriority.high },
-            { label: "Medium", value: analytics.issuesByPriority.medium },
-            { label: "Low", value: analytics.issuesByPriority.low },
-            { label: "Lowest", value: analytics.issuesByPriority.lowest },
-          ]
-        : [],
-    [analytics],
-  );
+  const priorityChartData = analytics
+    ? [
+        { label: "Highest", value: analytics.issuesByPriority.highest },
+        { label: "High", value: analytics.issuesByPriority.high },
+        { label: "Medium", value: analytics.issuesByPriority.medium },
+        { label: "Low", value: analytics.issuesByPriority.low },
+        { label: "Lowest", value: analytics.issuesByPriority.lowest },
+      ]
+    : [];
 
-  const velocityChartData = useMemo(
-    () =>
-      velocity
-        ? velocity.velocityData.map((v) => ({
-            label: v.sprintName,
-            value: v.points,
-          }))
-        : [],
-    [velocity],
-  );
+  const velocityChartData = velocity
+    ? velocity.velocityData.map((v) => ({
+        label: v.sprintName,
+        value: v.points,
+      }))
+    : [];
 
-  const assigneeChartData = useMemo(
-    () =>
-      analytics
-        ? Object.values(analytics.issuesByAssignee).map((a) => ({
-            label: a.name,
-            value: a.count,
-          }))
-        : [],
-    [analytics],
-  );
+  const assigneeChartData = analytics
+    ? Object.values(analytics.issuesByAssignee).map((a) => ({
+        label: a.name,
+        value: a.count,
+      }))
+    : [];
 
   if (!(analytics && velocity)) {
     return (
       <PageLayout fullHeight className="bg-ui-bg-secondary">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <Stack gap="lg" className="max-w-7xl mx-auto">
           {/* Header Skeleton */}
-          <div>
-            <Skeleton className="h-6 sm:h-8 w-48 sm:w-64 mb-2" />
+          <Stack gap="xs">
+            <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
             <Skeleton className="h-3 sm:h-4 w-64 sm:w-96" />
-          </div>
+          </Stack>
 
           {/* Metric Cards Skeleton */}
-          <Grid cols={2} colsMd={4} gap="md" className="sm:gap-4">
+          <Grid cols={2} colsMd={4} gap="md">
             <SkeletonStatCard />
             <SkeletonStatCard />
             <SkeletonStatCard />
@@ -129,32 +109,32 @@ export function AnalyticsDashboard({ projectId }: Props) {
           </Grid>
 
           {/* Charts Skeleton */}
-          <Grid cols={1} colsLg={2} gap="lg" className="sm:gap-6">
-            <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
+          <Grid cols={1} colsLg={2} gap="lg">
+            <Card variant="elevated" padding="lg">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
-            </div>
-            <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
+            </Card>
+            <Card variant="elevated" padding="lg">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
-            </div>
-            <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
+            </Card>
+            <Card variant="elevated" padding="lg">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
-            </div>
-            <div className="bg-ui-bg rounded-lg shadow p-4 sm:p-6">
+            </Card>
+            <Card variant="elevated" padding="lg">
               <Skeleton className="h-5 sm:h-6 w-36 sm:w-48 mb-4" />
               <Skeleton className="h-48 sm:h-64 w-full" />
-            </div>
+            </Card>
           </Grid>
-        </div>
+        </Stack>
       </PageLayout>
     );
   }
 
   return (
     <PageLayout fullHeight className="bg-ui-bg-secondary">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <Stack gap="lg" className="max-w-7xl mx-auto">
         {/* Header */}
         <PageHeader
           title="Analytics Dashboard"
@@ -163,7 +143,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
         />
 
         {/* Key Metrics */}
-        <Grid cols={2} colsMd={4} gap="md" className="sm:gap-4">
+        <Grid cols={2} colsMd={4} gap="md">
           <MetricCard
             title="Total Issues"
             value={analytics.totalIssues}
@@ -193,7 +173,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
         </Grid>
 
         {/* Charts Grid */}
-        <Grid cols={1} colsLg={2} gap="lg" className="sm:gap-6">
+        <Grid cols={1} colsLg={2} gap="lg">
           {/* Issues by Status */}
           <ChartCard title="Issues by Status">
             <BarChart data={statusChartData} color="bg-status-info" />
@@ -230,7 +210,7 @@ export function AnalyticsDashboard({ projectId }: Props) {
 
         {/* Recent Activity */}
         <RecentActivity activities={recentActivity} />
-      </div>
+      </Stack>
     </PageLayout>
   );
 }

@@ -196,14 +196,12 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
           <FlexItem flex="1" className="min-w-0">
             <Flex align="start" justify="between" gap="sm">
               <FlexItem flex="1" className="min-w-0">
-                <Typography variant="p" className={cn(compact ? "text-sm" : "text-base", "m-0")}>
+                <Typography variant={compact ? "small" : "p"} className="m-0">
                   <strong>{activity.userName}</strong>{" "}
                   <span className={getActionColorClass(activity.action)}>
                     {formatActivityMessage(activity)}
                   </span>
-                  {activity.issueKey && (
-                    <code className="ml-1 font-mono text-sm">{activity.issueKey}</code>
-                  )}
+                  {activity.issueKey && <code className="ml-1 font-mono">{activity.issueKey}</code>}
                 </Typography>
                 {!compact && activity.field && activity.newValue && (
                   <Typography variant="muted" className="mt-1 truncate text-ui-text-secondary">
@@ -212,11 +210,8 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
                 )}
               </FlexItem>
               <Typography
-                variant="muted"
-                className={cn(
-                  compact ? "text-xs" : "text-sm",
-                  "flex-shrink-0 text-ui-text-tertiary",
-                )}
+                variant={compact ? "meta" : "small"}
+                className="shrink-0 text-ui-text-tertiary"
               >
                 {formatRelativeTime(activity._creationTime)}
               </Typography>

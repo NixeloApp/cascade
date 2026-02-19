@@ -11,7 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import type { SwimlanConfig } from "@/lib/swimlane-utils";
@@ -68,9 +68,9 @@ const SwimlanRowComponent = function SwimlanRow({
 }: SwimlanRowProps) {
   const totalIssues = getSwimlanIssueCount(issuesByStatus);
 
-  const handleToggle = useCallback(() => {
+  const handleToggle = () => {
     onToggleCollapse(config.id);
-  }, [config.id, onToggleCollapse]);
+  };
 
   return (
     <div className="mb-4">

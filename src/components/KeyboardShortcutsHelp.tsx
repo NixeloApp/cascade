@@ -10,7 +10,7 @@
  */
 
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/Input";
@@ -233,7 +233,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter shortcuts based on search query
-  const filteredCategories = useMemo(() => {
+  const filteredCategories = (() => {
     if (!searchQuery.trim()) {
       return SHORTCUT_CATEGORIES;
     }
@@ -243,7 +243,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       ...category,
       items: category.items.filter((item) => item.description.toLowerCase().includes(query)),
     })).filter((category) => category.items.length > 0);
-  }, [searchQuery]);
+  })();
 
   const hasResults = filteredCategories.length > 0;
 

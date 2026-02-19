@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { EnrichedIssue } from "../../convex/lib/issueHelpers";
 
 // Type for the smart query return data
@@ -222,6 +222,28 @@ function getLoadMoreArgs(
   return "skip";
 }
 
+function findDoneStatusesWithMore(
+  statusCounts: Record<string, { total: number; loaded: number; hidden: number }>,
+): string[] {
+  const result: string[] = [];
+  for (const [status, counts] of Object.entries(statusCounts)) {
+    if (counts.hidden > 0) {
+      result.push(status);
+    }
+  }
+  return result;
+}
+
+function calculateHiddenDoneCount(
+  statusCounts: Record<string, { total: number; loaded: number; hidden: number }>,
+): number {
+  let total = 0;
+  for (const counts of Object.values(statusCounts)) {
+    total += counts.hidden;
+  }
+  return total;
+}
+
 export function useSmartBoardData({
   projectId,
   teamId,
@@ -284,34 +306,16 @@ export function useSmartBoardData({
   }
 
   // Build issues by status
-  const issuesByStatus = useMemo(() => {
-    return mergeIssuesByStatus(smartData?.issuesByStatus, additionalDoneIssues);
-  }, [smartData, additionalDoneIssues]);
+  const issuesByStatus = mergeIssuesByStatus(smartData?.issuesByStatus, additionalDoneIssues);
 
   // Build status counts from countsData.byStatus
-  const statusCounts = useMemo(() => {
-    return calculateStatusCounts(countsData, issuesByStatus);
-  }, [countsData, issuesByStatus]);
+  const statusCounts = calculateStatusCounts(countsData, issuesByStatus);
 
   // Find done statuses that have more items to load
-  const doneStatusesWithMore = useMemo(() => {
-    const result: string[] = [];
-    for (const [status, counts] of Object.entries(statusCounts)) {
-      if (counts.hidden > 0) {
-        result.push(status);
-      }
-    }
-    return result;
-  }, [statusCounts]);
+  const doneStatusesWithMore = findDoneStatusesWithMore(statusCounts);
 
   // Calculate total hidden done count from accurate statusCounts
-  const hiddenDoneCount = useMemo(() => {
-    let total = 0;
-    for (const counts of Object.values(statusCounts)) {
-      total += counts.hidden;
-    }
-    return total;
-  }, [statusCounts]);
+  const hiddenDoneCount = calculateHiddenDoneCount(statusCounts);
 
   // Helper for loadMoreDone
   const findOldestIssue = useCallback(() => {

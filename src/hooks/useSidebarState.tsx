@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const STORAGE_KEY = "sidebar-collapsed";
 
@@ -25,17 +25,17 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   }, [isCollapsed]);
 
   // Close mobile sidebar on route change (handled by consumers)
-  const closeMobile = useCallback(() => {
+  const closeMobile = () => {
     setIsMobileOpen(false);
-  }, []);
+  };
 
-  const toggleCollapse = useCallback(() => {
+  const toggleCollapse = () => {
     setIsCollapsed((prev) => !prev);
-  }, []);
+  };
 
-  const toggleMobile = useCallback(() => {
+  const toggleMobile = () => {
     setIsMobileOpen((prev) => !prev);
-  }, []);
+  };
 
   return (
     <SidebarContext.Provider

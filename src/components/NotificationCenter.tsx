@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { Bell } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -32,18 +32,15 @@ export function NotificationCenter() {
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
   const removeNotification = useMutation(api.notifications.softDeleteNotification);
 
-  const handleMarkAsRead = useCallback(
-    async (id: Id<"notifications">) => {
-      try {
-        await markAsRead({ id });
-      } catch (error) {
-        showError(error, "Failed to mark notification as read");
-      }
-    },
-    [markAsRead],
-  );
+  const handleMarkAsRead = async (id: Id<"notifications">) => {
+    try {
+      await markAsRead({ id });
+    } catch (error) {
+      showError(error, "Failed to mark notification as read");
+    }
+  };
 
-  const handleMarkAllAsRead = useCallback(async () => {
+  const handleMarkAllAsRead = async () => {
     setIsLoading(true);
     try {
       await markAllAsRead({});
@@ -52,18 +49,15 @@ export function NotificationCenter() {
     } finally {
       setIsLoading(false);
     }
-  }, [markAllAsRead]);
+  };
 
-  const handleDelete = useCallback(
-    async (id: Id<"notifications">) => {
-      try {
-        await removeNotification({ id });
-      } catch (error) {
-        showError(error, "Failed to delete notification");
-      }
-    },
-    [removeNotification],
-  );
+  const handleDelete = async (id: Id<"notifications">) => {
+    try {
+      await removeNotification({ id });
+    } catch (error) {
+      showError(error, "Failed to delete notification");
+    }
+  };
 
   const dynamicLabel =
     unreadCount != null && unreadCount > 0
@@ -108,9 +102,7 @@ export function NotificationCenter() {
           justify="between"
           className="p-4 border-b border-ui-border sticky top-0 bg-ui-bg rounded-t-lg"
         >
-          <Typography variant="h3" className="text-lg font-semibold">
-            Notifications
-          </Typography>
+          <Typography variant="h3">Notifications</Typography>
           {unreadCount != null && unreadCount > 0 && (
             <Button
               variant="ghost"

@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { Flex } from "../ui/Flex";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface FilterCheckboxGroupProps<T extends string> {
@@ -19,25 +21,23 @@ export function FilterCheckboxGroup<T extends string>({
   maxHeight,
 }: FilterCheckboxGroupProps<T>) {
   return (
-    <div>
-      <Typography variant="label" className="block text-sm font-medium mb-2">
-        {label}
-      </Typography>
-      <div className={cn("space-y-2", maxHeight)}>
+    <Stack gap="sm">
+      <Typography variant="label">{label}</Typography>
+      <Stack gap="sm" className={cn(maxHeight)}>
         {options.map((option) => (
-          <label key={option} className="flex items-center gap-2 cursor-pointer">
+          <Flex as="label" key={option} align="center" gap="sm" className="cursor-pointer">
             <input
               type="checkbox"
               checked={selectedValues.includes(option)}
               onChange={() => onToggle(option)}
               className="rounded"
             />
-            <Typography variant="p" className="text-sm capitalize">
+            <Typography variant="small" className="capitalize">
               {renderLabel ? renderLabel(option) : option}
             </Typography>
-          </label>
+          </Flex>
         ))}
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }

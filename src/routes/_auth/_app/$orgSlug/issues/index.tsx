@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { CreateIssueModal } from "@/components/CreateIssueModal";
 import { IssueCard } from "@/components/IssueCard";
 import { IssueDetailModal } from "@/components/IssueDetailModal";
@@ -38,14 +38,12 @@ function AllIssuesPage() {
   const isLoading = status === "LoadingFirstPage";
 
   // Client-side search filtering
-  const filteredIssues = useMemo(() => {
-    if (!searchQuery.trim()) return issues;
-    const query = searchQuery.toLowerCase();
-    return issues.filter(
-      (issue) =>
-        issue.title.toLowerCase().includes(query) || issue.key.toLowerCase().includes(query),
-    );
-  }, [issues, searchQuery]);
+  const filteredIssues = !searchQuery.trim()
+    ? issues
+    : issues.filter((issue) => {
+        const query = searchQuery.toLowerCase();
+        return issue.title.toLowerCase().includes(query) || issue.key.toLowerCase().includes(query);
+      });
 
   const handleIssueClick = (id: Id<"issues">) => {
     setSelectedIssueId(id);

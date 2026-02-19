@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { AlertTriangle, CheckCircle, Gem, TrendingUp, XCircle, Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -144,64 +145,62 @@ export function HourComplianceDashboard() {
         <Grid cols={2} colsMd={5} gap="lg">
           <Card>
             <CardBody>
-              <div className="text-center">
-                <Typography variant="h3" className="text-2xl">
-                  {summary.complianceRate.toFixed(1)}%
-                </Typography>
+              <Stack align="center" gap="xs">
+                <Typography variant="h3">{summary.complianceRate.toFixed(1)}%</Typography>
                 <Typography variant="caption">Compliance Rate</Typography>
-              </div>
+              </Stack>
             </CardBody>
           </Card>
 
           <Card>
             <CardBody>
-              <div className="text-center">
-                <Typography variant="h3" className="text-2xl" color="success">
+              <Stack align="center" gap="xs">
+                <Typography variant="h3" color="success">
                   {summary.compliant}
                 </Typography>
                 <Typography variant="caption">
                   <Icon icon={CheckCircle} size="sm" className="inline mr-1" /> Compliant
                 </Typography>
-              </div>
+              </Stack>
             </CardBody>
           </Card>
 
           <Card>
             <CardBody>
-              <div className="text-center">
-                <Typography variant="h3" className="text-2xl" color="warning">
+              <Stack align="center" gap="xs">
+                <Typography variant="h3" color="warning">
                   {summary.underHours}
                 </Typography>
                 <Typography variant="caption">
                   <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Under Hours
                 </Typography>
-              </div>
+              </Stack>
             </CardBody>
           </Card>
 
           <Card>
             <CardBody>
-              <div className="text-center">
-                <Typography variant="h3" className="text-2xl" color="error">
+              <Stack align="center" gap="xs">
+                <Typography variant="h3" color="error">
                   {summary.overHours}
                 </Typography>
                 <Typography variant="caption">
                   <Icon icon={XCircle} size="sm" className="inline mr-1" /> Over Hours
                 </Typography>
-              </div>
+              </Stack>
             </CardBody>
           </Card>
 
           <Card>
             <CardBody>
-              <div className="text-center">
-                <Typography variant="h3" className="text-2xl" color="brand">
+              <Stack align="center" gap="xs">
+                <Typography variant="h3" color="brand">
                   {summary.equityUnder}
                 </Typography>
                 <Typography variant="caption">
                   <Icon icon={Gem} size="sm" className="inline mr-1" /> Equity Short
                 </Typography>
-              </div>
+              </Stack>
             </CardBody>
           </Card>
         </Grid>
@@ -251,9 +250,11 @@ export function HourComplianceDashboard() {
 
           {/* Records List */}
           {!records ? (
-            <Typography variant="muted" className="text-center py-8">
-              Loading...
-            </Typography>
+            <Flex justify="center" align="center" className="min-h-32">
+              <Typography variant="small" color="secondary">
+                Loading...
+              </Typography>
+            </Flex>
           ) : records.length === 0 ? (
             <EmptyState
               icon={TrendingUp}
@@ -265,21 +266,22 @@ export function HourComplianceDashboard() {
               }}
             />
           ) : (
-            <div className="space-y-3">
+            <Stack gap="sm">
               {records?.map((record) => (
-                <div
+                <Card
                   key={record._id}
-                  className="p-4 border border-ui-border rounded-lg hover:bg-ui-bg-tertiary transition-colors"
+                  padding="md"
+                  className="hover:bg-ui-bg-tertiary transition-colors"
                 >
                   <Flex justify="between" align="start">
                     <FlexItem flex="1">
                       <Flex gap="md" align="center" className="mb-2">
                         <Icon icon={getStatusIcon(record.status)} size="md" />
-                        <div>
+                        <Stack gap="xs">
                           <Typography variant="label">
                             {record.user?.name || record.user?.email || "Unknown User"}
                           </Typography>
-                          <Flex gap="sm" className="mt-1">
+                          <Flex gap="sm">
                             <Badge size="sm" className={cn(getStatusColor(record.status))}>
                               {getStatusLabel(record.status)}
                             </Badge>
@@ -288,67 +290,67 @@ export function HourComplianceDashboard() {
                             </Badge>
                             {record.reviewedBy && <Badge variant="accent">Reviewed</Badge>}
                           </Flex>
-                        </div>
+                        </Stack>
                       </Flex>
 
                       <Grid cols={2} colsMd={4} gap="md" className="mt-3">
-                        <div>
+                        <Stack gap="none">
                           <Typography variant="meta">Period:</Typography>
-                          <Typography variant="small" className="font-medium">
+                          <Typography variant="label">
                             {formatDate(record.periodStart)} - {formatDate(record.periodEnd)}
                           </Typography>
-                        </div>
+                        </Stack>
 
-                        <div>
+                        <Stack gap="none">
                           <Typography variant="meta">Hours Worked:</Typography>
-                          <Typography variant="small" className="font-medium">
+                          <Typography variant="label">
                             {record.totalHoursWorked.toFixed(1)}h
                           </Typography>
-                        </div>
+                        </Stack>
 
                         {record.hoursDeficit && (
-                          <div>
+                          <Stack gap="none">
                             <Typography variant="meta">Deficit:</Typography>
-                            <Typography variant="small" color="warning" className="font-medium">
+                            <Typography variant="label" color="warning">
                               -{record.hoursDeficit.toFixed(1)}h
                             </Typography>
-                          </div>
+                          </Stack>
                         )}
 
                         {record.hoursExcess && (
-                          <div>
+                          <Stack gap="none">
                             <Typography variant="meta">Excess:</Typography>
-                            <Typography variant="small" color="error" className="font-medium">
+                            <Typography variant="label" color="error">
                               +{record.hoursExcess.toFixed(1)}h
                             </Typography>
-                          </div>
+                          </Stack>
                         )}
 
                         {record.equityHoursDeficit && (
-                          <div>
+                          <Stack gap="none">
                             <Typography variant="meta">Equity Short:</Typography>
-                            <Typography variant="small" color="brand" className="font-medium">
+                            <Typography variant="label" color="brand">
                               -{record.equityHoursDeficit.toFixed(1)}h
                             </Typography>
-                          </div>
+                          </Stack>
                         )}
 
                         {record.totalEquityHours && (
-                          <div>
+                          <Stack gap="none">
                             <Typography variant="meta">Equity Hours:</Typography>
-                            <Typography variant="small" className="font-medium">
+                            <Typography variant="label">
                               {record.totalEquityHours.toFixed(1)}h
                             </Typography>
-                          </div>
+                          </Stack>
                         )}
                       </Grid>
 
                       {record.reviewNotes && (
-                        <Flex className="mt-3 p-2 bg-accent-subtle rounded">
+                        <Card padding="sm" className="mt-3 bg-accent-subtle">
                           <Typography variant="small">
                             <strong>Review Notes:</strong> {record.reviewNotes}
                           </Typography>
-                        </Flex>
+                        </Card>
                       )}
                     </FlexItem>
 
@@ -364,9 +366,9 @@ export function HourComplianceDashboard() {
                       )}
                     </Flex>
                   </Flex>
-                </div>
+                </Card>
               ))}
-            </div>
+            </Stack>
           )}
         </CardBody>
       </Card>
@@ -402,7 +404,7 @@ export function HourComplianceDashboard() {
         }
       >
         <form id="review-form" onSubmit={handleReview}>
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             <Textarea
               label="Review Notes (Optional)"
               value={reviewNotes}
@@ -410,7 +412,7 @@ export function HourComplianceDashboard() {
               placeholder="Add notes about this compliance record..."
               rows={4}
             />
-          </Flex>
+          </Stack>
         </form>
       </Dialog>
     </Flex>

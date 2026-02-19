@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +11,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Input, Textarea } from "@/components/ui/form";
 import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { Key, Plus, Settings, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -38,7 +39,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
   const [newConnectionName, setNewConnectionName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreate = useCallback(async () => {
+  const handleCreate = async () => {
     if (!newConnectionName.trim()) {
       showError(new Error("Please enter a name"), "Invalid name");
       return;
@@ -59,55 +60,49 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [createConnection, organizationId, newConnectionType, newConnectionName]);
+  };
 
-  const handleDelete = useCallback(
-    async (connectionId: Id<"ssoConnections">) => {
-      if (!window.confirm("Are you sure you want to delete this SSO connection?")) {
-        return;
-      }
+  const handleDelete = async (connectionId: Id<"ssoConnections">) => {
+    if (!window.confirm("Are you sure you want to delete this SSO connection?")) {
+      return;
+    }
 
-      setIsLoading(true);
-      try {
-        const result = await removeConnection({ connectionId });
-        if (result.success) {
-          showSuccess("SSO connection deleted");
-        } else {
-          showError(new Error(result.error || "Failed to delete"), "Error");
-        }
-      } catch (error) {
-        showError(error, "Failed to delete connection");
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    try {
+      const result = await removeConnection({ connectionId });
+      if (result.success) {
+        showSuccess("SSO connection deleted");
+      } else {
+        showError(new Error(result.error || "Failed to delete"), "Error");
       }
-    },
-    [removeConnection],
-  );
+    } catch (error) {
+      showError(error, "Failed to delete connection");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleToggle = useCallback(
-    async (connectionId: Id<"ssoConnections">, currentState: boolean) => {
-      setIsLoading(true);
-      try {
-        const result = await setEnabled({ connectionId, isEnabled: !currentState });
-        if (result.success) {
-          showSuccess(currentState ? "SSO connection disabled" : "SSO connection enabled");
-        } else {
-          showError(new Error(result.error || "Failed to update"), "Error");
-        }
-      } catch (error) {
-        showError(error, "Failed to update connection");
-      } finally {
-        setIsLoading(false);
+  const handleToggle = async (connectionId: Id<"ssoConnections">, currentState: boolean) => {
+    setIsLoading(true);
+    try {
+      const result = await setEnabled({ connectionId, isEnabled: !currentState });
+      if (result.success) {
+        showSuccess(currentState ? "SSO connection disabled" : "SSO connection enabled");
+      } else {
+        showError(new Error(result.error || "Failed to update"), "Error");
       }
-    },
-    [setEnabled],
-  );
+    } catch (error) {
+      showError(error, "Failed to update connection");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (connections === undefined) {
     return (
       <Card>
         <CardBody>
-          <Flex align="center" justify="center" className="py-8">
+          <Flex align="center" justify="center" className="min-h-32">
             <LoadingSpinner size="md" />
           </Flex>
         </CardBody>
@@ -116,14 +111,14 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       <Flex align="center" justify="between">
-        <div>
+        <Stack gap="xs">
           <Typography variant="h4">Single Sign-On (SSO)</Typography>
           <Typography variant="caption">
             Configure SAML or OIDC authentication for your organization
           </Typography>
-        </div>
+        </Stack>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Icon icon={Plus} size="sm" />
           Add Connection
@@ -133,25 +128,25 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
       {connections.length === 0 ? (
         <Card>
           <CardBody>
-            <Flex direction="column" align="center" gap="md" className="py-8">
+            <Stack align="center" gap="md" className="min-h-32 justify-center">
               <Icon icon={Key} size="xl" className="text-ui-text-tertiary" />
-              <Typography variant="muted" className="text-center">
+              <Typography variant="small" color="secondary" className="text-center">
                 No SSO connections configured.
                 <br />
                 Add a SAML or OIDC connection to enable enterprise sign-in.
               </Typography>
-            </Flex>
+            </Stack>
           </CardBody>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <Stack gap="md">
           {connections.map((connection) => (
             <Card key={connection._id}>
               <CardBody>
                 <Flex align="center" justify="between">
                   <Flex align="center" gap="md">
                     <Icon icon={Key} size="lg" className="text-brand" />
-                    <div>
+                    <Stack gap="xs">
                       <Flex align="center" gap="sm">
                         <Typography variant="label">{connection.name}</Typography>
                         <Badge variant={connection.type === "saml" ? "brand" : "accent"} size="sm">
@@ -166,7 +161,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
                           Domains: {connection.verifiedDomains.join(", ")}
                         </Typography>
                       )}
-                    </div>
+                    </Stack>
                   </Flex>
 
                   <Flex gap="sm">
@@ -202,7 +197,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
               </CardBody>
             </Card>
           ))}
-        </div>
+        </Stack>
       )}
 
       <Alert variant="info">
@@ -231,7 +226,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
           </>
         }
       >
-        <div className="space-y-4">
+        <Stack gap="md">
           <Input
             label="Connection Name"
             value={newConnectionName}
@@ -239,10 +234,8 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
             placeholder="e.g., Okta, Azure AD, Google Workspace"
           />
 
-          <div>
-            <Typography variant="label" className="mb-2">
-              Connection Type
-            </Typography>
+          <Stack gap="sm">
+            <Typography variant="label">Connection Type</Typography>
             <Flex gap="sm">
               <Button
                 variant={newConnectionType === "saml" ? "primary" : "secondary"}
@@ -259,8 +252,8 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
                 OIDC
               </Button>
             </Flex>
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       </Dialog>
 
       {/* Configuration Dialog */}
@@ -274,7 +267,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
           }}
         />
       )}
-    </div>
+    </Stack>
   );
 }
 
@@ -324,44 +317,35 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   }, [connection]);
 
   // Parse domains from comma-separated string
-  const parseDomains = useCallback(
-    () =>
-      domains
-        .split(",")
-        .map((d) => d.trim())
-        .filter((d) => d.length > 0),
-    [domains],
-  );
+  const parseDomains = () =>
+    domains
+      .split(",")
+      .map((d) => d.trim())
+      .filter((d) => d.length > 0);
 
   // Save SAML configuration
-  const saveSamlConfig = useCallback(
-    () =>
-      updateSamlConfig({
-        connectionId,
-        config: {
-          idpEntityId: idpEntityId || undefined,
-          idpSsoUrl: idpSsoUrl || undefined,
-          idpCertificate: idpCertificate || undefined,
-        },
-      }),
-    [updateSamlConfig, connectionId, idpEntityId, idpSsoUrl, idpCertificate],
-  );
+  const saveSamlConfig = () =>
+    updateSamlConfig({
+      connectionId,
+      config: {
+        idpEntityId: idpEntityId || undefined,
+        idpSsoUrl: idpSsoUrl || undefined,
+        idpCertificate: idpCertificate || undefined,
+      },
+    });
 
   // Save OIDC configuration
-  const saveOidcConfig = useCallback(
-    () =>
-      updateOidcConfig({
-        connectionId,
-        config: {
-          issuer: issuer || undefined,
-          clientId: clientId || undefined,
-          clientSecret: clientSecret || undefined,
-        },
-      }),
-    [updateOidcConfig, connectionId, issuer, clientId, clientSecret],
-  );
+  const saveOidcConfig = () =>
+    updateOidcConfig({
+      connectionId,
+      config: {
+        issuer: issuer || undefined,
+        clientId: clientId || undefined,
+        clientSecret: clientSecret || undefined,
+      },
+    });
 
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     if (!connection) return;
 
     setIsLoading(true);
@@ -388,20 +372,12 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
     } finally {
       setIsLoading(false);
     }
-  }, [
-    connection,
-    saveSamlConfig,
-    saveOidcConfig,
-    updateDomains,
-    connectionId,
-    parseDomains,
-    onOpenChange,
-  ]);
+  };
 
   if (!connection) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange} title="Configure SSO">
-        <Flex align="center" justify="center" className="py-8">
+        <Flex align="center" justify="center" className="min-h-32">
           <LoadingSpinner size="md" />
         </Flex>
       </Dialog>
@@ -425,7 +401,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
         </>
       }
     >
-      <div className="space-y-4">
+      <Stack gap="md">
         {connection.type === "saml" ? (
           <>
             <Input
@@ -472,19 +448,19 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
           </>
         )}
 
-        <div className="border-t border-ui-border pt-4">
+        <Stack gap="sm" className="border-t border-ui-border pt-4">
           <Input
             label="Verified Domains"
             value={domains}
             onChange={(e) => setDomains(e.target.value)}
             placeholder="acme.com, acme.io"
           />
-          <Typography variant="caption" className="mt-1">
+          <Typography variant="caption">
             Comma-separated list of domains. Users with these email domains will be routed to this
             SSO connection.
           </Typography>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
     </Dialog>
   );
 }

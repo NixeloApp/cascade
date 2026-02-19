@@ -6,7 +6,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface UseAIChatOptions {
   projectId?: Id<"projects">;
@@ -82,7 +82,7 @@ export function useAIChat({
     }
   }, [inputMessage?.length, inputMessage]); // Only depend on length
 
-  const copyToClipboard = useCallback(async (content: string, messageId: string) => {
+  async function copyToClipboard(content: string, messageId: string) {
     try {
       await navigator.clipboard.writeText(content);
       setCopiedMessageId(messageId);
@@ -90,9 +90,9 @@ export function useAIChat({
     } catch {
       // Silently fail if clipboard access is denied
     }
-  }, []);
+  }
 
-  const handleSendMessage = useCallback(async () => {
+  async function handleSendMessage() {
     if (!(inputMessage.trim() && chatId) || isSending) return;
 
     const message = inputMessage.trim();
@@ -111,17 +111,14 @@ export function useAIChat({
     } finally {
       setIsSending(false);
     }
-  }, [inputMessage, chatId, isSending, sendMessage, projectId]);
+  }
 
-  const handleKeyPress = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSendMessage();
-      }
-    },
-    [handleSendMessage],
-  );
+  function handleKeyPress(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  }
 
   return {
     // State

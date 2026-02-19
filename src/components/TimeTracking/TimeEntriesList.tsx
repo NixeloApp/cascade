@@ -3,9 +3,11 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Clock, FileText, Folder, Lock, Plus, Trash } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Stack } from "@/components/ui/Stack";
 import { formatCurrency, formatDate } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -70,29 +72,30 @@ export function TimeEntriesList({
   // Define the structure of the time entry returned by the API
   type TimeEntryWithDetails = FunctionReturnType<typeof api.timeTracking.listTimeEntries>[number];
 
-  // Group entries by date
-  const groupedEntries = useMemo(() => {
-    if (!entries) return [];
+  // Group entries by date inline using ISO date string as key for stable parsing
+  const groupedEntries = entries
+    ? (() => {
+        const grouped: Record<string, TimeEntryWithDetails[]> = {};
+        const typedEntries: TimeEntryWithDetails[] = entries;
 
-    const grouped: Record<string, TimeEntryWithDetails[]> = {};
-    const typedEntries: TimeEntryWithDetails[] = entries;
+        typedEntries.forEach((entry) => {
+          // Use ISO date string (YYYY-MM-DD) as key for stable parsing
+          const dateKey = new Date(entry.date).toISOString().split("T")[0];
+          if (!grouped[dateKey]) {
+            grouped[dateKey] = [];
+          }
+          grouped[dateKey].push(entry);
+        });
 
-    typedEntries.forEach((entry) => {
-      const dateKey = formatDate(entry.date); // Assuming entry.date is number (timestamp)
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = [];
-      }
-      grouped[dateKey].push(entry);
-    });
-
-    return Object.entries(grouped)
-      .map(([date, group]) => ({
-        date,
-        entries: group.sort((a, b) => b.startTime - a.startTime),
-        duration: group.reduce((sum, e) => sum + (e.duration || 0), 0),
-      }))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [entries]);
+        return Object.entries(grouped)
+          .map(([isoDate, group]) => ({
+            date: isoDate, // ISO format: YYYY-MM-DD
+            entries: group.sort((a, b) => b.startTime - a.startTime),
+            duration: group.reduce((sum, e) => sum + (e.duration || 0), 0),
+          }))
+          .sort((a, b) => b.date.localeCompare(a.date)); // ISO strings sort correctly
+      })()
+    : [];
 
   if (!entries) {
     return (
@@ -126,19 +129,19 @@ export function TimeEntriesList({
         </Button>
       </Flex>
 
-      {groupedEntries.map(({ date, entries: dateEntries, duration }) => (
-        <div key={date} className="space-y-3">
+      {groupedEntries.map(({ date: isoDate, entries: dateEntries, duration }) => (
+        <Stack key={isoDate} gap="sm">
           {/* Date header */}
-          <Flex justify="between" align="end" className="text-ui-text-secondary px-1">
-            <Typography variant="label" as="span">
-              {formatDate(new Date(date).getTime())}
+          <Flex justify="between" align="end" className="px-1">
+            <Typography variant="label" color="secondary" as="span">
+              {formatDate(new Date(`${isoDate}T00:00:00`).getTime())}
             </Typography>
-            <Typography variant="small" as="span">
+            <Typography variant="small" color="secondary" as="span">
               {formatDurationDisplay(duration)}
             </Typography>
           </Flex>
 
-          <div className="bg-ui-bg border border-ui-border rounded-lg divide-y divide-ui-border">
+          <Card padding="none" className="divide-y divide-ui-border">
             {dateEntries.map((entry) => (
               <Flex
                 align="start"
@@ -148,45 +151,49 @@ export function TimeEntriesList({
               >
                 {/* Details */}
                 <FlexItem flex="1" className="min-w-0">
-                  {entry.description && (
-                    <Typography className="text-sm font-medium text-ui-text">
-                      {entry.description}
-                    </Typography>
-                  )}
-
-                  <Flex align="center" gap="md" className="mt-1 text-xs text-ui-text-secondary">
-                    {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
-
-                    {entry.project && (
-                      <Flex align="center" gap="xs" className="inline-flex">
-                        <Folder className="w-3 h-3" />
-                        {entry.project.name}
-                      </Flex>
+                  <Stack gap="xs">
+                    {entry.description && (
+                      <Typography variant="label">{entry.description}</Typography>
                     )}
 
-                    {entry.issue && (
-                      <Flex align="center" gap="xs" className="inline-flex">
-                        <FileText className="w-3 h-3" />
-                        {entry.issue.key}
-                      </Flex>
-                    )}
+                    <Flex align="center" gap="md">
+                      {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
 
-                    {entry.billable && <Badge variant="success">Billable</Badge>}
+                      {entry.project && (
+                        <Flex align="center" gap="xs">
+                          <Folder className="w-3 h-3" />
+                          <Typography variant="meta" color="secondary">
+                            {entry.project.name}
+                          </Typography>
+                        </Flex>
+                      )}
 
-                    {entry.isLocked && (
-                      <Flex align="center" gap="xs" className="inline-flex text-status-warning">
-                        <Lock className="w-3 h-3" />
-                        Locked
-                      </Flex>
-                    )}
-                  </Flex>
+                      {entry.issue && (
+                        <Flex align="center" gap="xs">
+                          <FileText className="w-3 h-3" />
+                          <Typography variant="meta" color="secondary">
+                            {entry.issue.key}
+                          </Typography>
+                        </Flex>
+                      )}
+
+                      {entry.billable && <Badge variant="success">Billable</Badge>}
+
+                      {entry.isLocked && (
+                        <Flex align="center" gap="xs" className="text-status-warning">
+                          <Lock className="w-3 h-3" />
+                          <Typography variant="meta" color="warning">
+                            Locked
+                          </Typography>
+                        </Flex>
+                      )}
+                    </Flex>
+                  </Stack>
                 </FlexItem>
 
                 {/* Duration and cost */}
                 <FlexItem shrink={false} className="text-right">
-                  <Typography variant="label" className="text-ui-text">
-                    {formatDurationDisplay(entry.duration)}
-                  </Typography>
+                  <Typography variant="label">{formatDurationDisplay(entry.duration)}</Typography>
                   {entry.totalCost !== undefined && entry.totalCost > 0 && (
                     <Typography variant="caption" color="secondary">
                       {formatCurrency(entry.totalCost, entry.currency)}
@@ -210,8 +217,8 @@ export function TimeEntriesList({
                 )}
               </Flex>
             ))}
-          </div>
-        </div>
+          </Card>
+        </Stack>
       ))}
 
       {/* Time Entry Modal */}

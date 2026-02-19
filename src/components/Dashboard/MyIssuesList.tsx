@@ -13,6 +13,7 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { SkeletonList } from "../ui/Skeleton";
+import { Stack } from "../ui/Stack";
 
 type IssueFilter = "assigned" | "created" | "all";
 
@@ -75,18 +76,14 @@ export function MyIssuesList({
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="p-6 pb-2">
-        <Typography
-          variant="h3"
-          className="text-xl font-bold"
-          data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}
-        >
+      <Stack gap="xs" className="pb-2 pt-6 px-6">
+        <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
           Feed
         </Typography>
-        <Typography variant="small" color="tertiary" className="text-sm mt-1">
+        <Typography variant="small" color="tertiary">
           Track your active contributions
         </Typography>
-      </div>
+      </Stack>
       <Flex
         justify="between"
         align="stretch"
@@ -161,8 +158,9 @@ export function MyIssuesList({
                   <FlexItem flex="1">
                     <Flex gap="sm" align="center" className="mb-1.5">
                       <Typography
-                        variant="small"
-                        className="font-mono text-xs text-ui-text-tertiary group-hover:text-brand transition-colors"
+                        variant="inlineCode"
+                        color="tertiary"
+                        className="group-hover:text-brand transition-colors"
                       >
                         {issue.key}
                       </Typography>
@@ -174,12 +172,12 @@ export function MyIssuesList({
                       </Badge>
                     </Flex>
                     <Typography
-                      variant="h4"
-                      className="font-bold text-ui-text mb-1 group-hover:text-brand:text-brand-muted transition-colors"
+                      variant="label"
+                      className="mb-1 group-hover:text-brand transition-colors"
                     >
                       {issue.title}
                     </Typography>
-                    <Metadata size="xs" gap="xs" className="uppercase tracking-wider font-bold">
+                    <Metadata size="xs" gap="xs" className="uppercase tracking-wider">
                       <MetadataItem>{issue.projectName}</MetadataItem>
                       <MetadataItem>{issue.status}</MetadataItem>
                     </Metadata>

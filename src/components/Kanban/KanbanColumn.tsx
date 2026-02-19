@@ -2,7 +2,7 @@ import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element
 import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -93,12 +93,9 @@ const KanbanIssueItem = memo(
     onToggleSelect: (issueId: Id<"issues">) => void;
     canEdit: boolean;
   }) => {
-    const style = useMemo(
-      () => ({
-        animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + index * ANIMATION.STAGGER_DELAY}ms`,
-      }),
-      [columnIndex, index],
-    );
+    const style = {
+      animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + index * ANIMATION.STAGGER_DELAY}ms`,
+    };
 
     return (
       <div className="animate-scale-in" style={style}>
@@ -376,15 +373,11 @@ const KanbanColumnComponent = function KanbanColumn({
   const columnRef = useRef<HTMLElement>(null);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
 
-  // Issues are now pre-filtered by status from parent - memoize sorting
-  const stateIssues = useMemo(() => {
+  // Issues are now pre-filtered by status from parent
+  const stateIssues =
     // "todo" and "inprogress" columns are already sorted by order from the server.
     // "done" columns are sorted by updatedAt, so we need to resort them if we want order-based sorting.
-    if (state.category !== "done") {
-      return issues;
-    }
-    return [...issues].sort((a, b) => a.order - b.order);
-  }, [issues, state.category]);
+    state.category !== "done" ? issues : [...issues].sort((a, b) => a.order - b.order);
 
   // WIP limit checks
   const wipLimit = state.wipLimit ?? 0;
@@ -416,14 +409,11 @@ const KanbanColumnComponent = function KanbanColumn({
     });
   }, [state.id, onIssueDrop]);
 
-  const handleCreateIssue = useCallback(() => onCreateIssue?.(state.id), [onCreateIssue, state.id]);
+  const handleCreateIssue = () => onCreateIssue?.(state.id);
 
-  const handleLoadMore = useCallback(() => onLoadMore?.(state.id), [onLoadMore, state.id]);
+  const handleLoadMore = () => onLoadMore?.(state.id);
 
-  const handleToggleCollapse = useCallback(
-    () => onToggleCollapse?.(state.id),
-    [onToggleCollapse, state.id],
-  );
+  const handleToggleCollapse = () => onToggleCollapse?.(state.id);
 
   // Render collapsed column view
   if (isCollapsed) {

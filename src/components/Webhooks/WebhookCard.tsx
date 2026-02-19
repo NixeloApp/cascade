@@ -2,7 +2,9 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Pencil, Trash } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface WebhookCardProps {
@@ -24,32 +26,32 @@ interface WebhookCardProps {
  */
 export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
   return (
-    <div className="p-4 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary transition-colors">
+    <Card padding="md" variant="flat" className="hover:bg-ui-bg-tertiary transition-colors">
       <Flex justify="between" align="start">
         <FlexItem flex="1">
-          <Flex gap="sm" align="center" className="mb-2">
-            <Typography variant="h4" className="font-medium text-ui-text">
-              {webhook.name}
-            </Typography>
-            <Badge variant={webhook.isActive ? "success" : "neutral"} size="sm">
-              {webhook.isActive ? "Active" : "Inactive"}
-            </Badge>
-          </Flex>
-          <Typography className="text-sm text-ui-text-secondary mb-2 font-mono break-all">
-            {webhook.url}
-          </Typography>
-          <Flex wrap gap="xs">
-            {webhook.events.map((event) => (
-              <Badge key={event} variant="brand" size="sm">
-                {event}
+          <Stack gap="sm">
+            <Flex gap="sm" align="center">
+              <Typography variant="h4">{webhook.name}</Typography>
+              <Badge variant={webhook.isActive ? "success" : "neutral"} size="sm">
+                {webhook.isActive ? "Active" : "Inactive"}
               </Badge>
-            ))}
-          </Flex>
-          {webhook.lastTriggered && (
-            <Typography className="text-xs text-ui-text-tertiary mt-2">
-              Last triggered: {new Date(webhook.lastTriggered).toLocaleString()}
+            </Flex>
+            <Typography variant="mono" color="secondary" className="break-all">
+              {webhook.url}
             </Typography>
-          )}
+            <Flex wrap gap="xs">
+              {webhook.events.map((event) => (
+                <Badge key={event} variant="brand" size="sm">
+                  {event}
+                </Badge>
+              ))}
+            </Flex>
+            {webhook.lastTriggered && (
+              <Typography variant="meta" color="tertiary">
+                Last triggered: {new Date(webhook.lastTriggered).toLocaleString()}
+              </Typography>
+            )}
+          </Stack>
         </FlexItem>
 
         <Flex gap="sm" className="ml-4">
@@ -71,6 +73,6 @@ export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
           </Button>
         </Flex>
       </Flex>
-    </div>
+    </Card>
   );
 }

@@ -6,7 +6,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { SuggestionType } from "../config";
 
@@ -46,7 +46,7 @@ export function useAISuggestions({ projectId }: UseAISuggestionsOptions): UseAIS
   const unreadCount =
     suggestions?.filter((s: Doc<"aiSuggestions">) => !(s.accepted || s.dismissed)).length || 0;
 
-  const handleGenerateInsights = useCallback(async () => {
+  async function handleGenerateInsights() {
     if (!projectId || isGenerating) return;
 
     setIsGenerating(true);
@@ -58,31 +58,25 @@ export function useAISuggestions({ projectId }: UseAISuggestionsOptions): UseAIS
     } finally {
       setIsGenerating(false);
     }
-  }, [projectId, isGenerating, generateInsights]);
+  }
 
-  const handleAcceptSuggestion = useCallback(
-    async (suggestionId: Id<"aiSuggestions">) => {
-      try {
-        await acceptSuggestion({ suggestionId });
-        toast.success("Suggestion accepted");
-      } catch {
-        toast.error("Failed to accept suggestion");
-      }
-    },
-    [acceptSuggestion],
-  );
+  async function handleAcceptSuggestion(suggestionId: Id<"aiSuggestions">) {
+    try {
+      await acceptSuggestion({ suggestionId });
+      toast.success("Suggestion accepted");
+    } catch {
+      toast.error("Failed to accept suggestion");
+    }
+  }
 
-  const handleDismissSuggestion = useCallback(
-    async (suggestionId: Id<"aiSuggestions">) => {
-      try {
-        await dismissSuggestion({ suggestionId });
-        toast.success("Suggestion dismissed");
-      } catch {
-        toast.error("Failed to dismiss suggestion");
-      }
-    },
-    [dismissSuggestion],
-  );
+  async function handleDismissSuggestion(suggestionId: Id<"aiSuggestions">) {
+    try {
+      await dismissSuggestion({ suggestionId });
+      toast.success("Suggestion dismissed");
+    } catch {
+      toast.error("Failed to dismiss suggestion");
+    }
+  }
 
   return {
     // State

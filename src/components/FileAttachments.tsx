@@ -6,10 +6,12 @@ import { Archive, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { Metadata, MetadataTimestamp } from "./ui/Metadata";
+import { Stack } from "./ui/Stack";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
@@ -133,7 +135,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <Stack gap="md">
       {/* Upload Area */}
       <section
         aria-label="File upload area"
@@ -174,83 +176,82 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
 
       {/* Attachments List */}
       {attachments && attachments.length > 0 && (
-        <div className="space-y-2">
-          <Typography variant="h4" className="text-sm font-medium text-ui-text">
-            Attachments ({attachments.length})
-          </Typography>
+        <Stack gap="sm">
+          <Typography variant="label">Attachments ({attachments.length})</Typography>
           {attachments.map((attachment: Attachment) => (
-            <Flex
+            <Card
               key={attachment.storageId}
-              align="center"
-              justify="between"
-              className="p-3 bg-ui-bg-soft rounded-lg border border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default group"
+              padding="sm"
+              className="bg-ui-bg-soft hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default group"
             >
-              <Flex align="center" gap="md" className="flex-1 min-w-0">
-                <Icon icon={getFileIcon(attachment.filename)} size="lg" className="shrink-0" />
-                <FlexItem flex="1" className="min-w-0">
-                  <a
-                    href={attachment.url || "#"}
-                    download={attachment.filename}
-                    className="text-sm font-medium text-ui-text hover:text-brand truncate block transition-colors duration-default"
-                  >
-                    {attachment.filename}
-                  </a>
-                  <Metadata>
-                    <MetadataTimestamp date={attachment.uploadedAt} format="absolute" />
-                  </Metadata>
-                </FlexItem>
-              </Flex>
-              <Flex align="center" gap="sm" className="shrink-0">
-                <Tooltip content="Download">
-                  <a
-                    href={attachment.url || "#"}
-                    download={attachment.filename}
-                    className="p-1.5 text-ui-text-tertiary hover:text-ui-text rounded-md hover:bg-ui-bg-tertiary transition-colors duration-default opacity-0 group-hover:opacity-100"
-                  >
-                    <span className="sr-only">Download {attachment.filename}</span>
-                    <svg
-                      aria-hidden="true"
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              <Flex align="center" justify="between">
+                <Flex align="center" gap="md" className="flex-1 min-w-0">
+                  <Icon icon={getFileIcon(attachment.filename)} size="lg" className="shrink-0" />
+                  <FlexItem flex="1" className="min-w-0">
+                    <a
+                      href={attachment.url || "#"}
+                      download={attachment.filename}
+                      className="text-sm font-medium text-ui-text hover:text-brand truncate block transition-colors duration-default"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                      />
-                    </svg>
-                  </a>
-                </Tooltip>
-                <Tooltip content="Delete">
-                  <button
-                    type="button"
-                    onClick={() => setDeleteConfirm(attachment.storageId)}
-                    className="p-1.5 text-ui-text-tertiary hover:text-status-error rounded-md hover:bg-status-error-bg transition-colors duration-default opacity-0 group-hover:opacity-100"
-                    aria-label="Delete attachment"
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      {attachment.filename}
+                    </a>
+                    <Metadata>
+                      <MetadataTimestamp date={attachment.uploadedAt} format="absolute" />
+                    </Metadata>
+                  </FlexItem>
+                </Flex>
+                <Flex align="center" gap="sm" className="shrink-0">
+                  <Tooltip content="Download">
+                    <a
+                      href={attachment.url || "#"}
+                      download={attachment.filename}
+                      className="p-1.5 text-ui-text-tertiary hover:text-ui-text rounded-md hover:bg-ui-bg-tertiary transition-colors duration-default opacity-0 group-hover:opacity-100"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
-                </Tooltip>
+                      <span className="sr-only">Download {attachment.filename}</span>
+                      <svg
+                        aria-hidden="true"
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                    </a>
+                  </Tooltip>
+                  <Tooltip content="Delete">
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirm(attachment.storageId)}
+                      className="p-1.5 text-ui-text-tertiary hover:text-status-error rounded-md hover:bg-status-error-bg transition-colors duration-default opacity-0 group-hover:opacity-100"
+                      aria-label="Delete attachment"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </Tooltip>
+                </Flex>
               </Flex>
-            </Flex>
+            </Card>
           ))}
-        </div>
+        </Stack>
       )}
 
       {/* Delete Confirmation */}
@@ -263,6 +264,6 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
         variant="danger"
         confirmLabel="Delete"
       />
-    </div>
+    </Stack>
   );
 }

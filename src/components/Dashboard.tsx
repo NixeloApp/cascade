@@ -90,9 +90,9 @@ export function Dashboard() {
           {showStats && (
             <Flex direction="column" justify="end" className="h-full">
               <Typography
-                variant="small"
+                variant="label"
                 color="tertiary"
-                className="uppercase tracking-widest mb-2 font-bold"
+                className="uppercase tracking-widest mb-2"
               >
                 Overview
               </Typography>

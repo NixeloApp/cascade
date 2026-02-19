@@ -18,7 +18,7 @@ import {
   MoreHorizontal,
   XCircle,
 } from "lucide-react";
-import { memo, useCallback, useState } from "react";
+import { useState } from "react";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -117,13 +117,13 @@ export function InboxList({ projectId }: InboxListProps) {
   const bulkSnooze = useMutation(api.inbox.bulkSnooze);
 
   // Clear selection when tab changes
-  const handleTabChange = useCallback((tab: string) => {
+  const handleTabChange = (tab: string) => {
     setActiveTab(tab as "open" | "closed");
     setSelectedIds(new Set());
-  }, []);
+  };
 
   // Toggle selection for an item
-  const handleToggleSelect = useCallback((id: Id<"inboxIssues">) => {
+  const handleToggleSelect = (id: Id<"inboxIssues">) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -133,21 +133,21 @@ export function InboxList({ projectId }: InboxListProps) {
       }
       return next;
     });
-  }, []);
+  };
 
   // Select all items
-  const handleSelectAll = useCallback(() => {
+  const handleSelectAll = () => {
     if (!inboxIssues) return;
     const triageable = inboxIssues.filter(
       (item) => item.status === "pending" || item.status === "snoozed",
     );
     setSelectedIds(new Set(triageable.map((item) => item._id)));
-  }, [inboxIssues]);
+  };
 
   // Clear selection
-  const handleClearSelection = useCallback(() => {
+  const handleClearSelection = () => {
     setSelectedIds(new Set());
-  }, []);
+  };
 
   // Bulk accept
   const handleBulkAccept = async () => {
@@ -227,7 +227,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
         {/* Bulk Actions Bar */}
         {activeTab === "open" && triageableCount > 0 && (
-          <Flex align="center" gap="md" className="mb-4 p-2 bg-ui-bg-secondary rounded-container">
+          <Flex align="center" gap="md" className="mb-4 p-3 bg-ui-bg-secondary rounded-container">
             <Checkbox
               checked={selectedIds.size === triageableCount && triageableCount > 0}
               onCheckedChange={(checked) => {
@@ -240,7 +240,7 @@ export function InboxList({ projectId }: InboxListProps) {
             />
             {selectedIds.size > 0 ? (
               <>
-                <Typography variant="small" className="text-ui-text-secondary">
+                <Typography variant="small" color="secondary">
                   {selectedIds.size} selected
                 </Typography>
                 <FlexItem grow />
@@ -258,7 +258,7 @@ export function InboxList({ projectId }: InboxListProps) {
                 </Button>
               </>
             ) : (
-              <Typography variant="small" className="text-ui-text-tertiary">
+              <Typography variant="small" color="tertiary">
                 Select items for bulk actions
               </Typography>
             )}
@@ -307,7 +307,7 @@ export function InboxList({ projectId }: InboxListProps) {
 // Issue List
 // =============================================================================
 
-const InboxIssueList = memo(function InboxIssueList({
+function InboxIssueList({
   items,
   projectId,
   selectedIds,
@@ -331,13 +331,13 @@ const InboxIssueList = memo(function InboxIssueList({
       ))}
     </Flex>
   );
-});
+}
 
 // =============================================================================
 // Issue Row
 // =============================================================================
 
-const InboxIssueRow = memo(function InboxIssueRow({
+function InboxIssueRow({
   item,
   projectId,
   isSelected,
@@ -532,4 +532,4 @@ const InboxIssueRow = memo(function InboxIssueRow({
       </DropdownMenu>
     </Flex>
   );
-});
+}

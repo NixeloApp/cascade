@@ -9,7 +9,6 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useMemo } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useUserFuzzySearch } from "@/hooks/useFuzzySearch";
 import { Flex } from "../ui/Flex";
@@ -61,14 +60,13 @@ export function AssigneeSearchDropdown({
   // Step 2: Apply fuzzy search on loaded data
   // Map our custom member format to the standard name/email format the hook expects
   // We need to ensure T includes name/email for useUserFuzzySearch
-  const searchItems = useMemo(() => {
-    if (!members) return [];
-    return members.map((m) => ({
-      ...m,
-      name: m.userName,
-      email: m.userEmail ?? undefined,
-    }));
-  }, [members]);
+  const searchItems = !members
+    ? []
+    : members.map((m) => ({
+        ...m,
+        name: m.userName,
+        email: m.userEmail ?? undefined,
+      }));
 
   const { results, search, query, clear, isDebouncing } = useUserFuzzySearch(searchItems);
 

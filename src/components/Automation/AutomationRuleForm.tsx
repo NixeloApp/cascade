@@ -7,6 +7,7 @@ import { FormDialog } from "../ui/FormDialog";
 import { Input } from "../ui/form/Input";
 import { Select } from "../ui/form/Select";
 import { Textarea } from "../ui/form/Textarea";
+import { Stack } from "../ui/Stack";
 
 interface AutomationRuleFormProps {
   projectId: Id<"projects">;
@@ -119,7 +120,7 @@ export function AutomationRuleForm({
       isLoading={isLoading}
       size="lg"
     >
-      <div className="space-y-4">
+      <Stack gap="md">
         {/* Name */}
         <Input
           label="Rule Name *"
@@ -178,7 +179,7 @@ export function AutomationRuleForm({
           className="font-mono text-sm"
           placeholder='{"label": "urgent"}'
         />
-      </div>
+      </Stack>
     </FormDialog>
   );
 }

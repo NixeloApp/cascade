@@ -9,11 +9,13 @@ import { FormInput } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 type PumbleWebhook = Doc<"pumbleWebhooks">;
@@ -49,9 +51,9 @@ export function PumbleIntegration() {
   const projects: Project[] = projectsResult?.page ?? [];
 
   return (
-    <div className="bg-ui-bg rounded-lg shadow-card border border-ui-border">
+    <Card padding="none">
       {/* Header */}
-      <div className="p-6 border-b border-ui-border">
+      <Card padding="lg" className="border-b border-ui-border rounded-b-none border-x-0 border-t-0">
         <Flex justify="between" align="start">
           <Flex gap="md" align="center">
             <FlexItem shrink={false}>
@@ -76,14 +78,12 @@ export function PumbleIntegration() {
                 </svg>
               </Flex>
             </FlexItem>
-            <div>
-              <Typography variant="h3" className="text-lg font-semibold text-ui-text">
-                Pumble Integration
-              </Typography>
-              <Typography className="mt-1 text-sm text-ui-text-secondary">
+            <Stack gap="xs">
+              <Typography variant="h3">Pumble Integration</Typography>
+              <Typography variant="small" color="secondary">
                 Send notifications to Pumble channels when issues are created or updated
               </Typography>
-            </div>
+            </Stack>
           </Flex>
           <Button
             onClick={() => setShowAddModal(true)}
@@ -93,31 +93,31 @@ export function PumbleIntegration() {
             Add Webhook
           </Button>
         </Flex>
-      </div>
+      </Card>
 
       {/* Content */}
-      <div className="p-6">
+      <Stack gap="lg" className="p-6">
         {webhooks === undefined ? (
           <Flex align="center" justify="center" className="py-12">
-            <div className="text-ui-text-tertiary">Loading webhooks...</div>
+            <Typography color="tertiary">Loading webhooks...</Typography>
           </Flex>
         ) : webhooks.length === 0 ? (
           <EmptyState onAddWebhook={() => setShowAddModal(true)} />
         ) : (
-          <Flex direction="column" gap="lg">
+          <Stack gap="lg">
             {webhooks.map((webhook) => (
               <WebhookCard key={webhook._id} webhook={webhook} projects={projects} />
             ))}
-          </Flex>
+          </Stack>
         )}
 
         {/* Documentation Link */}
-        <div className="mt-6 pt-6 border-t border-ui-border">
+        <div className="pt-6 border-t border-ui-border">
           <a
             href="https://help.pumble.com/hc/en-us/articles/360041954051-Incoming-webhooks"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-accent hover:text-accent-hover:text-accent-muted"
+            className="text-sm text-accent hover:text-accent-hover"
           >
             <Flex gap="xs" align="center">
               <span>How to create a Pumble incoming webhook</span>
@@ -138,7 +138,7 @@ export function PumbleIntegration() {
             </Flex>
           </a>
         </div>
-      </div>
+      </Stack>
 
       {/* Add Webhook Modal */}
       <AddWebhookModal
@@ -146,18 +146,14 @@ export function PumbleIntegration() {
         onOpenChange={setShowAddModal}
         projects={projects || []}
       />
-    </div>
+    </Card>
   );
 }
 
 function EmptyState({ onAddWebhook }: { onAddWebhook: () => void }) {
   return (
-    <div className="text-center py-12">
-      <Flex
-        align="center"
-        justify="center"
-        className="mx-auto w-16 h-16 bg-accent-subtle rounded-full mb-4"
-      >
+    <Stack gap="md" align="center" className="text-center py-12">
+      <Flex align="center" justify="center" className="w-16 h-16 bg-accent-subtle rounded-full">
         <svg
           className="w-8 h-8 text-accent"
           fill="none"
@@ -174,17 +170,15 @@ function EmptyState({ onAddWebhook }: { onAddWebhook: () => void }) {
           />
         </svg>
       </Flex>
-      <Typography variant="h3" className="text-lg font-medium text-ui-text mb-2">
-        No Pumble webhooks configured
-      </Typography>
-      <Typography className="text-sm text-ui-text-secondary mb-6 max-w-md mx-auto">
+      <Typography variant="h3">No Pumble webhooks configured</Typography>
+      <Typography variant="small" color="secondary" className="max-w-md">
         Connect Nixelo to Pumble channels to receive notifications when issues are created, updated,
         or assigned.
       </Typography>
       <Button onClick={onAddWebhook} variant="primary" className="bg-accent hover:bg-accent-hover">
         Add Your First Webhook
       </Button>
-    </div>
+    </Stack>
   );
 }
 
@@ -239,68 +233,68 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
     : "No URL";
 
   return (
-    <div className="border border-ui-border rounded-lg p-4 hover:border-accent-muted:border-accent-hover transition-colors">
-      <Flex justify="between" align="start" className="mb-3">
-        <FlexItem flex="1">
-          <Flex gap="sm" align="center" className="mb-1">
-            <Typography variant="h4" className="font-medium text-ui-text">
-              {webhook.name}
-            </Typography>
-            {webhook.isActive ? (
-              <Badge variant="success" size="sm">
-                Active
-              </Badge>
-            ) : (
-              <Badge variant="neutral" size="sm">
-                Inactive
-              </Badge>
-            )}
-          </Flex>
-          <Typography className="text-sm text-ui-text-secondary font-mono">{maskedUrl}</Typography>
-          {project && (
-            <Typography className="text-xs text-ui-text-tertiary mt-1">
-              Project: {project.name}
-            </Typography>
-          )}
-        </FlexItem>
-      </Flex>
+    <Card padding="md" className="hover:border-accent-hover transition-colors">
+      <Stack gap="md">
+        <Flex justify="between" align="start">
+          <FlexItem flex="1">
+            <Stack gap="xs">
+              <Flex gap="sm" align="center">
+                <Typography variant="h4">{webhook.name}</Typography>
+                {webhook.isActive ? (
+                  <Badge variant="success" size="sm">
+                    Active
+                  </Badge>
+                ) : (
+                  <Badge variant="neutral" size="sm">
+                    Inactive
+                  </Badge>
+                )}
+              </Flex>
+              <Typography variant="small" color="secondary" className="font-mono">
+                {maskedUrl}
+              </Typography>
+              {project && <Typography variant="caption">Project: {project.name}</Typography>}
+            </Stack>
+          </FlexItem>
+        </Flex>
 
-      {/* Events */}
-      <Flex className="flex-wrap gap-1.5 mb-3">
-        {webhook.events.map((event: string) => (
-          <Badge key={event} variant="accent" size="sm">
-            {event.replace("issue.", "")}
-          </Badge>
-        ))}
-      </Flex>
+        {/* Events */}
+        <Flex wrap className="gap-1.5">
+          {webhook.events.map((event: string) => (
+            <Badge key={event} variant="accent" size="sm">
+              {event.replace("issue.", "")}
+            </Badge>
+          ))}
+        </Flex>
 
-      {/* Stats */}
-      {webhook.lastMessageAt && (
-        <Typography variant="caption" color="tertiary" className="mb-3">
-          Last triggered: {new Date(webhook.lastMessageAt).toLocaleDateString()}
-        </Typography>
-      )}
+        {/* Stats */}
+        {webhook.lastMessageAt && (
+          <Typography variant="caption" color="tertiary">
+            Last triggered: {new Date(webhook.lastMessageAt).toLocaleDateString()}
+          </Typography>
+        )}
 
-      {/* Actions */}
-      <Flex gap="sm" align="center" className="pt-3 border-t border-ui-border">
-        <Button
-          onClick={handleTest}
-          variant="ghost"
-          size="sm"
-          className="text-accent hover:bg-accent-subtle:bg-accent-active/20"
-        >
-          Test Webhook
-        </Button>
-        <Button onClick={handleToggleActive} variant="secondary" size="sm">
-          {webhook.isActive ? "Disable" : "Enable"}
-        </Button>
-        <Button onClick={() => setShowEditModal(true)} variant="secondary" size="sm">
-          Edit
-        </Button>
-        <Button onClick={handleDelete} variant="danger" size="sm" className="ml-auto">
-          Delete
-        </Button>
-      </Flex>
+        {/* Actions */}
+        <Flex gap="sm" align="center" className="pt-3 border-t border-ui-border">
+          <Button
+            onClick={handleTest}
+            variant="ghost"
+            size="sm"
+            className="text-accent hover:bg-accent-subtle"
+          >
+            Test Webhook
+          </Button>
+          <Button onClick={handleToggleActive} variant="secondary" size="sm">
+            {webhook.isActive ? "Disable" : "Enable"}
+          </Button>
+          <Button onClick={() => setShowEditModal(true)} variant="secondary" size="sm">
+            Edit
+          </Button>
+          <Button onClick={handleDelete} variant="danger" size="sm" className="ml-auto">
+            Delete
+          </Button>
+        </Flex>
+      </Stack>
 
       {/* Edit Modal */}
       <EditWebhookModal
@@ -309,7 +303,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
         webhook={webhook}
         projects={projects}
       />
-    </div>
+    </Card>
   );
 }
 
@@ -377,12 +371,13 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
       title="Add Pumble Webhook"
       className="sm:max-w-2xl"
     >
-      <form
-        onSubmit={(e) => {
+      <Stack
+        gap="lg"
+        as="form"
+        onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-6"
       >
         {/* Name */}
         <form.Field name="name">
@@ -412,10 +407,8 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
         </form.Field>
 
         {/* Project */}
-        <div>
-          <label htmlFor="project-select" className="block text-sm font-medium text-ui-text mb-1">
-            Project (Optional)
-          </label>
+        <Stack gap="xs">
+          <Label htmlFor="project-select">Project (Optional)</Label>
           <select
             id="project-select"
             value={projectId || ""}
@@ -431,16 +424,14 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
               </option>
             ))}
           </select>
-          <Typography variant="muted" className="mt-1">
+          <Typography variant="caption">
             Leave empty to receive notifications from all projects
           </Typography>
-        </div>
+        </Stack>
 
         {/* Events */}
-        <div>
-          <Label required className="block mb-3">
-            Events to Send
-          </Label>
+        <Stack gap="sm">
+          <Label required>Events to Send</Label>
           <Grid cols={2} gap="md">
             {AVAILABLE_EVENTS.map((event) => (
               <Checkbox
@@ -452,11 +443,11 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
             ))}
           </Grid>
           {selectedEvents.length === 0 && (
-            <Typography variant="small" color="error" className="mt-1">
+            <Typography variant="small" color="error">
               Select at least one event
             </Typography>
           )}
-        </div>
+        </Stack>
 
         {/* Actions - kept inside form due to form.Subscribe */}
         <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
@@ -483,7 +474,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
             )}
           </form.Subscribe>
         </Flex>
-      </form>
+      </Stack>
     </Dialog>
   );
 }
@@ -541,12 +532,13 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title="Edit Webhook" className="sm:max-w-2xl">
-      <form
-        onSubmit={(e) => {
+      <Stack
+        gap="lg"
+        as="form"
+        onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-6"
       >
         {/* Name */}
         <form.Field name="name">
@@ -574,10 +566,8 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
         </form.Field>
 
         {/* Events */}
-        <div>
-          <Label required className="block mb-3">
-            Events to Send
-          </Label>
+        <Stack gap="sm">
+          <Label required>Events to Send</Label>
           <Grid cols={2} gap="md">
             {AVAILABLE_EVENTS.map((event) => (
               <Checkbox
@@ -589,11 +579,11 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
             ))}
           </Grid>
           {selectedEvents.length === 0 && (
-            <Typography variant="small" color="error" className="mt-1">
+            <Typography variant="small" color="error">
               Select at least one event
             </Typography>
           )}
-        </div>
+        </Stack>
 
         {/* Actions - kept inside form due to form.Subscribe */}
         <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
@@ -620,7 +610,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
             )}
           </form.Subscribe>
         </Flex>
-      </form>
+      </Stack>
     </Dialog>
   );
 }
