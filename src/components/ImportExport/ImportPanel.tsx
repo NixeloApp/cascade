@@ -11,6 +11,7 @@ import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface ImportPanelProps {
@@ -157,11 +158,11 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
       <Card padding="md" className="bg-status-warning/10 border border-status-warning/30">
         <Flex gap="md" align="start">
           <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
-          <div className="text-status-warning">
-            <Typography variant="p" className="font-semibold mb-1">
+          <Stack gap="sm" className="text-status-warning">
+            <Typography variant="p" className="font-semibold">
               Import Requirements
             </Typography>
-            <ul className="list-disc list-inside space-y-1 text-status-warning/90">
+            <ul className="list-disc list-inside text-status-warning/90">
               <li>CSV must have a header row with column names</li>
               <li>
                 Required column: <code className="bg-status-warning/20 px-1 rounded">title</code>
@@ -169,7 +170,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
               <li>Optional: type, priority, description, labels, estimated hours, due date</li>
               <li>All imported issues will be created in the first workflow state</li>
             </ul>
-          </div>
+          </Stack>
         </Flex>
       </Card>
 

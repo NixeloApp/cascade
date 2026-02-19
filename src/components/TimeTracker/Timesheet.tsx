@@ -30,9 +30,11 @@ export function Timesheet() {
 
   if (!timesheet) {
     return (
-      <Flex justify="center" align="center" className="p-8">
-        <LoadingSpinner />
-      </Flex>
+      <Card padding="xl" variant="ghost">
+        <Flex justify="center" align="center">
+          <LoadingSpinner />
+        </Flex>
+      </Card>
     );
   }
 
@@ -79,136 +81,148 @@ export function Timesheet() {
     .reduce((sum: number, e: TimeEntryWithHours) => sum + e.hours * (e.hourlyRate ?? 0), 0);
 
   return (
-    <Stack gap="lg" className="p-6">
-      {/* Header */}
-      <Stack gap="md">
-        <Flex justify="between" align="center">
-          <Stack gap="xs">
-            <Typography variant="h2">My Timesheet</Typography>
-            <Typography variant="small" color="tertiary">
-              Week of {formatDate(timesheet.startDate)}
-            </Typography>
-          </Stack>
-          <Flex gap="lg">
-            <Stack align="end" gap="none">
+    <Card padding="lg" variant="ghost">
+      <Stack gap="lg">
+        {/* Header */}
+        <Stack gap="md">
+          <Flex justify="between" align="center">
+            <Stack gap="xs">
+              <Typography variant="h2">My Timesheet</Typography>
               <Typography variant="small" color="tertiary">
-                Total Hours
-              </Typography>
-              <Typography variant="h3">{formatHours(timesheet.totalHours)}</Typography>
-            </Stack>
-            <Stack align="end" gap="none">
-              <Typography variant="small" color="tertiary">
-                Billable
-              </Typography>
-              <Typography variant="h3" color="success">
-                {formatHours(timesheet.billableHours)}
+                Week of {formatDate(timesheet.startDate)}
               </Typography>
             </Stack>
-            {billableRevenue > 0 && (
+            <Flex gap="lg">
               <Stack align="end" gap="none">
                 <Typography variant="small" color="tertiary">
-                  Revenue
+                  Total Hours
                 </Typography>
-                <Typography variant="h3" color="brand">
-                  ${billableRevenue.toFixed(2)}
+                <Typography variant="h3">{formatHours(timesheet.totalHours)}</Typography>
+              </Stack>
+              <Stack align="end" gap="none">
+                <Typography variant="small" color="tertiary">
+                  Billable
+                </Typography>
+                <Typography variant="h3" color="success">
+                  {formatHours(timesheet.billableHours)}
                 </Typography>
               </Stack>
-            )}
-          </Flex>
-        </Flex>
-
-        {/* Progress bar */}
-        <Stack gap="xs">
-          <Progress value={Math.min((timesheet.totalHours / 40) * 100, 100)} />
-          <Typography variant="caption" color="tertiary">
-            {formatHours(timesheet.totalHours)} / 40 hours (full-time week)
-          </Typography>
-        </Stack>
-      </Stack>
-
-      {/* Calendar Grid */}
-      <Grid cols={7} gap="lg">
-        {weekDays.map((day) => {
-          const isToday = day.date.toDateString() === new Date().toDateString();
-          const dayHours = day.entries.reduce(
-            (sum: number, e: TimeEntryWithHours) => sum + e.hours,
-            0,
-          );
-
-          return (
-            <Card
-              key={day.dayKey}
-              padding="sm"
-              className={cn(isToday && "border-brand-ring bg-brand-subtle")}
-            >
-              {/* Day header */}
-              <Stack gap="none" className="mb-2">
-                <Typography variant="label">
-                  {day.date.toLocaleDateString("en-US", { weekday: "short" })}
-                </Typography>
-                <Typography variant="caption" color="tertiary">
-                  {day.date.getDate()}
-                </Typography>
-                {dayHours > 0 && (
-                  <Typography variant="caption" color="brand" className="mt-1">
-                    {formatHours(dayHours)}h
+              {billableRevenue > 0 && (
+                <Stack align="end" gap="none">
+                  <Typography variant="small" color="tertiary">
+                    Revenue
                   </Typography>
-                )}
-              </Stack>
+                  <Typography variant="h3" color="brand">
+                    ${billableRevenue.toFixed(2)}
+                  </Typography>
+                </Stack>
+              )}
+            </Flex>
+          </Flex>
 
-              {/* Time entries */}
-              <Stack gap="sm">
-                {day.entries.map((entry: TimeEntryWithHours) => (
-                  <Card key={entry._id} padding="sm" className="bg-ui-bg-secondary">
-                    <Flex justify="between" align="start" className="mb-1">
-                      <FlexItem flex="1" className="min-w-0">
-                        <Typography variant="mono" className="truncate block">
-                          {entry.projectKey}
-                        </Typography>
-                        <Typography variant="caption" color="secondary" className="truncate block">
-                          {entry.issueKey}
-                        </Typography>
-                      </FlexItem>
-                      {entry.billable && (
-                        <DollarSign className="w-3 h-3 text-status-success shrink-0" />
-                      )}
-                    </Flex>
-                    <Flex justify="between" align="center">
-                      <Typography variant="mono" className="text-sm font-medium">
-                        {formatHours(entry.hours)}h
-                      </Typography>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(entry._id)}
-                        className="p-1 min-w-0 text-ui-text-tertiary hover:text-status-error"
-                        aria-label="Delete entry"
-                      >
-                        <Icon icon={Trash2} size="xs" />
-                      </Button>
-                    </Flex>
-                    {entry.description && (
-                      <Typography variant="caption" color="tertiary" className="mt-1 line-clamp-1">
-                        {entry.description}
-                      </Typography>
-                    )}
-                  </Card>
-                ))}
-              </Stack>
-            </Card>
-          );
-        })}
-      </Grid>
-
-      {/* Empty state */}
-      {timesheet.totalHours === 0 && (
-        <Stack gap="md" align="center" className="py-12">
-          <Calendar className="w-12 h-12 text-ui-text-tertiary" />
-          <Typography color="secondary">
-            No time entries this week. Start a timer to begin tracking!
-          </Typography>
+          {/* Progress bar */}
+          <Stack gap="xs">
+            <Progress value={Math.min((timesheet.totalHours / 40) * 100, 100)} />
+            <Typography variant="caption" color="tertiary">
+              {formatHours(timesheet.totalHours)} / 40 hours (full-time week)
+            </Typography>
+          </Stack>
         </Stack>
-      )}
-    </Stack>
+
+        {/* Calendar Grid */}
+        <Grid cols={7} gap="lg">
+          {weekDays.map((day) => {
+            const isToday = day.date.toDateString() === new Date().toDateString();
+            const dayHours = day.entries.reduce(
+              (sum: number, e: TimeEntryWithHours) => sum + e.hours,
+              0,
+            );
+
+            return (
+              <Card
+                key={day.dayKey}
+                padding="sm"
+                className={cn(isToday && "border-brand-ring bg-brand-subtle")}
+              >
+                {/* Day header */}
+                <Stack gap="none" className="mb-2">
+                  <Typography variant="label">
+                    {day.date.toLocaleDateString("en-US", { weekday: "short" })}
+                  </Typography>
+                  <Typography variant="caption" color="tertiary">
+                    {day.date.getDate()}
+                  </Typography>
+                  {dayHours > 0 && (
+                    <Typography variant="caption" color="brand" className="mt-1">
+                      {formatHours(dayHours)}h
+                    </Typography>
+                  )}
+                </Stack>
+
+                {/* Time entries */}
+                <Stack gap="sm">
+                  {day.entries.map((entry: TimeEntryWithHours) => (
+                    <Card key={entry._id} padding="sm" className="bg-ui-bg-secondary">
+                      <Flex justify="between" align="start" className="mb-1">
+                        <FlexItem flex="1" className="min-w-0">
+                          <Typography variant="mono" className="truncate block">
+                            {entry.projectKey}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="secondary"
+                            className="truncate block"
+                          >
+                            {entry.issueKey}
+                          </Typography>
+                        </FlexItem>
+                        {entry.billable && (
+                          <DollarSign className="w-3 h-3 text-status-success shrink-0" />
+                        )}
+                      </Flex>
+                      <Flex justify="between" align="center">
+                        <Typography variant="mono" className="text-sm font-medium">
+                          {formatHours(entry.hours)}h
+                        </Typography>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(entry._id)}
+                          className="p-1 min-w-0 text-ui-text-tertiary hover:text-status-error"
+                          aria-label="Delete entry"
+                        >
+                          <Icon icon={Trash2} size="xs" />
+                        </Button>
+                      </Flex>
+                      {entry.description && (
+                        <Typography
+                          variant="caption"
+                          color="tertiary"
+                          className="mt-1 line-clamp-1"
+                        >
+                          {entry.description}
+                        </Typography>
+                      )}
+                    </Card>
+                  ))}
+                </Stack>
+              </Card>
+            );
+          })}
+        </Grid>
+
+        {/* Empty state */}
+        {timesheet.totalHours === 0 && (
+          <Card padding="xl" variant="ghost">
+            <Stack gap="md" align="center">
+              <Calendar className="w-12 h-12 text-ui-text-tertiary" />
+              <Typography color="secondary">
+                No time entries this week. Start a timer to begin tracking!
+              </Typography>
+            </Stack>
+          </Card>
+        )}
+      </Stack>
+    </Card>
   );
 }

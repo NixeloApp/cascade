@@ -1,5 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
@@ -52,38 +53,40 @@ export function ImportExportModal({
     >
       <Stack gap="lg">
         {/* Mode Selection */}
-        <Flex gap="sm" className="bg-ui-bg-tertiary rounded-lg p-1">
-          <button
-            type="button"
-            onClick={() => setMode("export")}
-            className={cn(
-              "flex-1 px-4 py-2 rounded-md font-medium transition-colors",
-              mode === "export"
-                ? "bg-ui-bg text-brand-indigo-text shadow-sm"
-                : "text-ui-text-secondary hover:text-ui-text",
-            )}
-          >
-            <Flex align="center" justify="center" gap="xs">
-              <Icon icon={Download} size="sm" />
-              Export
-            </Flex>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("import")}
-            className={cn(
-              "flex-1 px-4 py-2 rounded-md font-medium transition-colors",
-              mode === "import"
-                ? "bg-ui-bg text-brand-indigo-text shadow-sm"
-                : "text-ui-text-secondary hover:text-ui-text",
-            )}
-          >
-            <Flex align="center" justify="center" gap="xs">
-              <Icon icon={Upload} size="sm" />
-              Import
-            </Flex>
-          </button>
-        </Flex>
+        <Card padding="xs" variant="ghost" className="bg-ui-bg-tertiary">
+          <Flex gap="sm">
+            <button
+              type="button"
+              onClick={() => setMode("export")}
+              className={cn(
+                "flex-1 px-4 py-2 rounded-md font-medium transition-colors",
+                mode === "export"
+                  ? "bg-ui-bg text-brand-indigo-text shadow-sm"
+                  : "text-ui-text-secondary hover:text-ui-text",
+              )}
+            >
+              <Flex align="center" justify="center" gap="xs">
+                <Icon icon={Download} size="sm" />
+                Export
+              </Flex>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("import")}
+              className={cn(
+                "flex-1 px-4 py-2 rounded-md font-medium transition-colors",
+                mode === "import"
+                  ? "bg-ui-bg text-brand-indigo-text shadow-sm"
+                  : "text-ui-text-secondary hover:text-ui-text",
+              )}
+            >
+              <Flex align="center" justify="center" gap="xs">
+                <Icon icon={Upload} size="sm" />
+                Import
+              </Flex>
+            </button>
+          </Flex>
+        </Card>
 
         {/* Panel Content */}
         {mode === "export" ? (
