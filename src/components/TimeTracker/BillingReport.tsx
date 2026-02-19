@@ -3,6 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
+import { Button } from "../ui/Button";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -108,15 +109,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
               <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
-          <button
-            type="button"
-            className="px-4 py-2 bg-brand text-brand-foreground rounded-md hover:bg-brand-hover"
-          >
-            <Flex align="center" gap="sm">
-              <Download className="w-4 h-4" />
-              Export
-            </Flex>
-          </button>
+          <Button leftIcon={<Download className="w-4 h-4" />}>Export</Button>
         </Flex>
       </Flex>
 

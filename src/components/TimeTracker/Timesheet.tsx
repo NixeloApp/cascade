@@ -181,9 +181,7 @@ export function Timesheet() {
                         )}
                       </Flex>
                       <Flex justify="between" align="center">
-                        <Typography variant="mono" className="text-sm font-medium">
-                          {formatHours(entry.hours)}h
-                        </Typography>
+                        <Typography variant="label">{formatHours(entry.hours)}h</Typography>
                         <Button
                           variant="ghost"
                           size="sm"

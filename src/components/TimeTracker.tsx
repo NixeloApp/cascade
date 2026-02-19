@@ -91,42 +91,49 @@ function TimeEntriesList({
   entries: (Doc<"timeEntries"> & { totalCost?: number })[];
 }) {
   return (
-    <Stack gap="sm" className="p-4 border-t border-ui-border bg-ui-bg-secondary">
-      {entries.map((entry) => {
-        const hours = formatHours(entry.duration);
-        const entryDate = formatDate(entry.date);
+    <Card
+      padding="md"
+      radius="none"
+      variant="ghost"
+      className="border-t border-ui-border bg-ui-bg-secondary"
+    >
+      <Stack gap="sm">
+        {entries.map((entry) => {
+          const hours = formatHours(entry.duration);
+          const entryDate = formatDate(entry.date);
 
-        return (
-          <Card key={entry._id} padding="sm">
-            <Flex align="start" justify="between">
-              <Stack gap="xs">
-                <Typography variant="large" as="div">
-                  {hours}h
-                </Typography>
-                {entry.description && (
-                  <Typography variant="caption">{entry.description}</Typography>
+          return (
+            <Card key={entry._id} padding="sm">
+              <Flex align="start" justify="between">
+                <Stack gap="xs">
+                  <Typography variant="large" as="div">
+                    {hours}h
+                  </Typography>
+                  {entry.description && (
+                    <Typography variant="caption">{entry.description}</Typography>
+                  )}
+                  <Flex align="center" gap="sm">
+                    <time
+                      className="text-xs text-ui-text-tertiary"
+                      dateTime={new Date(entry.date).toISOString()}
+                    >
+                      {entryDate}
+                    </time>
+                    {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
+                    {entry.billable && <Badge variant="success">Billable</Badge>}
+                  </Flex>
+                </Stack>
+                {entry.totalCost && (
+                  <Typography variant="label" as="div">
+                    {formatCurrency(entry.totalCost)}
+                  </Typography>
                 )}
-                <Flex align="center" gap="sm">
-                  <time
-                    className="text-xs text-ui-text-tertiary"
-                    dateTime={new Date(entry.date).toISOString()}
-                  >
-                    {entryDate}
-                  </time>
-                  {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
-                  {entry.billable && <Badge variant="success">Billable</Badge>}
-                </Flex>
-              </Stack>
-              {entry.totalCost && (
-                <Typography variant="small" as="div" className="font-medium">
-                  {formatCurrency(entry.totalCost)}
-                </Typography>
-              )}
-            </Flex>
-          </Card>
-        );
-      })}
-    </Stack>
+              </Flex>
+            </Card>
+          );
+        })}
+      </Stack>
+    </Card>
   );
 }
 
