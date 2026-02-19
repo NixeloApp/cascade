@@ -16,6 +16,7 @@ import { ROUTES } from "@/config/routes";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +24,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/DropdownMenu";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
+import { Skeleton } from "./ui/Skeleton";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 interface DocumentTreeProps {
@@ -54,28 +58,32 @@ export function DocumentTree({
 
   if (tree === undefined) {
     return (
-      <Flex direction="column" gap="sm" className="p-2">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-8 bg-ui-bg-soft rounded animate-pulse" />
-        ))}
-      </Flex>
+      <Card variant="flat" padding="sm">
+        <Stack gap="sm">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-8" />
+          ))}
+        </Stack>
+      </Card>
     );
   }
 
   if (tree.length === 0) {
     return (
-      <Flex direction="column" align="center" className="p-4 text-center">
-        <FileText className="w-8 h-8 text-ui-text-tertiary mb-2" />
-        <Typography variant="small" color="secondary">
-          No documents yet
-        </Typography>
-        {onCreateDocument && (
-          <Button variant="ghost" size="sm" className="mt-2" onClick={() => onCreateDocument()}>
-            <Plus className="w-4 h-4 mr-1" />
-            New Document
-          </Button>
-        )}
-      </Flex>
+      <Card variant="flat" padding="md">
+        <Stack gap="sm" align="center" className="text-center">
+          <Icon icon={FileText} size="xl" color="tertiary" />
+          <Typography variant="small" color="secondary">
+            No documents yet
+          </Typography>
+          {onCreateDocument && (
+            <Button variant="ghost" size="sm" onClick={() => onCreateDocument()}>
+              <Plus className="w-4 h-4 mr-1" />
+              New Document
+            </Button>
+          )}
+        </Stack>
+      </Card>
     );
   }
 
@@ -172,23 +180,23 @@ function TreeNodeItem({ node, orgSlug, selectedId, onCreateDocument }: TreeNodeI
           )}
 
           {/* Title */}
-          <Typography
-            variant="small"
-            className={cn("flex-1 truncate", isSelected && "font-medium")}
-          >
-            {node.title || "Untitled"}
-          </Typography>
+          <FlexItem flex="1" className="min-w-0">
+            <Typography variant="small" className={cn("truncate", isSelected && "font-medium")}>
+              {node.title || "Untitled"}
+            </Typography>
+          </FlexItem>
 
           {/* Actions menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={(e) => e.preventDefault()}
-                className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-ui-bg-tertiary transition-all"
+                className="opacity-0 group-hover:opacity-100"
               >
-                <MoreHorizontal className="w-3.5 h-3.5" />
-              </button>
+                <Icon icon={MoreHorizontal} size="sm" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               {onCreateDocument && (

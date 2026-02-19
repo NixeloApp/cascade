@@ -69,9 +69,12 @@ export function RecentActivity({ activities }: RecentActivityProps) {
 
             <Flex direction="column" gap="none">
               {activities.map((activity: Activity) => (
-                <div
+                <Card
                   key={activity._id}
-                  className="relative rounded-lg transition-colors duration-150 hover:bg-ui-bg-secondary/30"
+                  variant="flat"
+                  padding="none"
+                  hoverable
+                  className="relative bg-transparent"
                 >
                   <Flex gap="md" align="start">
                     {/* User avatar */}
@@ -97,7 +100,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                       </Stack>
                     </FlexItem>
                   </Flex>
-                </div>
+                </Card>
               ))}
             </Flex>
           </div>

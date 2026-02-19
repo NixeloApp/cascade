@@ -353,15 +353,15 @@ export const IssueCard = memo(function IssueCard({
                   .map((l) => l.name)
                   .join(", ")}
               >
-                <span
+                <Badge
+                  variant="neutral"
+                  size="sm"
                   tabIndex={0}
                   role="button"
-                  className="rounded-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-ring pointer-events-auto"
+                  className="cursor-help pointer-events-auto"
                 >
-                  <Typography variant="caption" className="cursor-help">
-                    +{issue.labels.length - 3}
-                  </Typography>
-                </span>
+                  +{issue.labels.length - 3}
+                </Badge>
               </Tooltip>
             )}
           </Flex>

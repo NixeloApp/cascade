@@ -2,7 +2,15 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useRef, useState } from "react";
-import { Archive, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
+import {
+  Archive,
+  Download,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
+  Paperclip,
+  Trash2,
+} from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
@@ -185,67 +193,52 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
               className="bg-ui-bg-soft hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default group"
             >
               <Flex align="center" justify="between">
-                <Flex align="center" gap="md" className="flex-1 min-w-0">
-                  <Icon icon={getFileIcon(attachment.filename)} size="lg" className="shrink-0" />
-                  <FlexItem flex="1" className="min-w-0">
-                    <a
-                      href={attachment.url || "#"}
-                      download={attachment.filename}
-                      className="text-sm font-medium text-ui-text hover:text-brand truncate block transition-colors duration-default"
-                    >
-                      {attachment.filename}
-                    </a>
-                    <Metadata>
-                      <MetadataTimestamp date={attachment.uploadedAt} format="absolute" />
-                    </Metadata>
-                  </FlexItem>
-                </Flex>
-                <Flex align="center" gap="sm" className="shrink-0">
-                  <Tooltip content="Download">
-                    <a
-                      href={attachment.url || "#"}
-                      download={attachment.filename}
-                      className="p-1.5 text-ui-text-tertiary hover:text-ui-text rounded-md hover:bg-ui-bg-tertiary transition-colors duration-default opacity-0 group-hover:opacity-100"
-                    >
-                      <span className="sr-only">Download {attachment.filename}</span>
-                      <svg
-                        aria-hidden="true"
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                <FlexItem flex="1" className="min-w-0">
+                  <Flex align="center" gap="md">
+                    <Icon icon={getFileIcon(attachment.filename)} size="lg" className="shrink-0" />
+                    <FlexItem flex="1" className="min-w-0">
+                      <a
+                        href={attachment.url || "#"}
+                        download={attachment.filename}
+                        className="hover:text-brand truncate block transition-colors duration-default"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                        />
-                      </svg>
-                    </a>
+                        <Typography variant="label" className="truncate">
+                          {attachment.filename}
+                        </Typography>
+                      </a>
+                      <Metadata>
+                        <MetadataTimestamp date={attachment.uploadedAt} format="absolute" />
+                      </Metadata>
+                    </FlexItem>
+                  </Flex>
+                </FlexItem>
+                <Flex align="center" gap="xs" className="shrink-0">
+                  <Tooltip content="Download">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="opacity-0 group-hover:opacity-100"
+                    >
+                      <a
+                        href={attachment.url || "#"}
+                        download={attachment.filename}
+                        aria-label={`Download ${attachment.filename}`}
+                      >
+                        <Icon icon={Download} size="sm" />
+                      </a>
+                    </Button>
                   </Tooltip>
                   <Tooltip content="Delete">
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setDeleteConfirm(attachment.storageId)}
-                      className="p-1.5 text-ui-text-tertiary hover:text-status-error rounded-md hover:bg-status-error-bg transition-colors duration-default opacity-0 group-hover:opacity-100"
+                      className="opacity-0 group-hover:opacity-100 hover:text-status-error hover:bg-status-error-bg"
                       aria-label="Delete attachment"
                     >
-                      <svg
-                        aria-hidden="true"
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
+                      <Icon icon={Trash2} size="sm" />
+                    </Button>
                   </Tooltip>
                 </Flex>
               </Flex>

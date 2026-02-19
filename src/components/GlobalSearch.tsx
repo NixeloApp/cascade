@@ -238,7 +238,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
         {/* Content */}
         <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" wrap>
-            {result.type === "issue" && <code className="font-mono text-sm">{result.key}</code>}
+            {result.type === "issue" && <Typography variant="inlineCode">{result.key}</Typography>}
             <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
               {result.type}
             </Badge>

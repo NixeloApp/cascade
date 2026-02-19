@@ -200,9 +200,9 @@ grep -r "from.*ui/PageHeader" src/
 
 | File | Violations | Status |
 |------|------------|--------|
-| `Onboarding/LeadOnboarding.tsx` | ~33 | ⬜ |
-| `Onboarding/MemberOnboarding.tsx` | ~32 | ⬜ |
-| `Onboarding/ProjectWizard.tsx` | ~29 | ⬜ |
+| `Onboarding/LeadOnboarding.tsx` | ~33 | ✅ |
+| `Onboarding/MemberOnboarding.tsx` | ~32 | ✅ |
+| `Onboarding/ProjectWizard.tsx` | ~29 | ✅ |
 
 **Priority 6: Remaining (auto-populated by validator)**
 
@@ -277,9 +277,9 @@ Items intentionally not in scope for Phase 7:
 
 ## Stats
 
-**Last Run:** 2026-02-18
-**Files Migrated:** 135+ / ~100
-**Violations Remaining:** 321 (down from 1145)
+**Last Run:** 2026-02-19
+**Files Migrated:** 145+ / ~100
+**Violations Remaining:** 297 (down from 1145)
 
 ---
 

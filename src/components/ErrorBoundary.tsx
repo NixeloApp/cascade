@@ -3,6 +3,7 @@ import { Component, type ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Typography } from "./ui/Typography";
 
 interface Props {
@@ -44,58 +45,57 @@ export class ErrorBoundary extends Component<Props, State> {
           justify="center"
           className="min-h-screen bg-ui-bg animate-fade-in"
         >
-          <Stack align="center" gap="lg" className="max-w-md text-center px-6">
-            {/* Subtle icon */}
-            <Flex
-              align="center"
-              justify="center"
-              className="h-20 w-20 rounded-full bg-status-error-bg"
-            >
-              <AlertTriangle className="h-10 w-10 text-status-error" />
-            </Flex>
+          <Card variant="flat" padding="lg" className="max-w-md text-center">
+            <Stack align="center" gap="lg">
+              {/* Subtle icon */}
+              <Flex
+                align="center"
+                justify="center"
+                className="h-20 w-20 rounded-full bg-status-error-bg"
+              >
+                <AlertTriangle className="h-10 w-10 text-status-error" />
+              </Flex>
 
-            {/* Large error code with tight tracking */}
-            <Typography variant="h1" className="text-display tracking-tightest">
-              500
-            </Typography>
+              {/* Large error code with tight tracking */}
+              <Typography variant="h1" className="text-display tracking-tightest">
+                500
+              </Typography>
 
-            {/* Message with secondary text styling */}
-            <Stack gap="sm" align="center">
-              <Typography variant="large" color="secondary">
-                Something went wrong
-              </Typography>
-              <Typography color="tertiary">
-                We encountered an unexpected error. Please try refreshing the page.
-              </Typography>
+              {/* Message with secondary text styling */}
+              <Stack gap="sm" align="center">
+                <Typography variant="large" color="secondary">
+                  Something went wrong
+                </Typography>
+                <Typography color="tertiary">
+                  We encountered an unexpected error. Please try refreshing the page.
+                </Typography>
+              </Stack>
+
+              {/* Error details collapsible */}
+              {this.state.error && (
+                <details className="w-full text-left">
+                  <Typography
+                    as="summary"
+                    variant="small"
+                    color="secondary"
+                    className="cursor-pointer hover:text-ui-text transition-default"
+                  >
+                    View error details
+                  </Typography>
+                  <Card variant="soft" padding="md" className="mt-2 overflow-auto max-h-40">
+                    <Typography as="pre" variant="mono" color="secondary">
+                      {this.state.error.message}
+                    </Typography>
+                  </Card>
+                </details>
+              )}
+
+              {/* Reload button */}
+              <Button onClick={() => window.location.reload()} size="lg">
+                Reload page
+              </Button>
             </Stack>
-
-            {/* Error details collapsible */}
-            {this.state.error && (
-              <details className="w-full text-left">
-                <Typography
-                  as="summary"
-                  variant="small"
-                  color="secondary"
-                  className="cursor-pointer hover:text-ui-text transition-default"
-                >
-                  View error details
-                </Typography>
-                <Typography
-                  as="pre"
-                  variant="mono"
-                  color="secondary"
-                  className="mt-2 bg-ui-bg-tertiary p-4 rounded-lg overflow-auto max-h-40"
-                >
-                  {this.state.error.message}
-                </Typography>
-              </details>
-            )}
-
-            {/* Reload button */}
-            <Button onClick={() => window.location.reload()} size="lg">
-              Reload page
-            </Button>
-          </Stack>
+          </Card>
         </Flex>
       );
     }
