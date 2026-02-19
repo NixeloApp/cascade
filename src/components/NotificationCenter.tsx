@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -94,50 +95,52 @@ export function NotificationCenter() {
 
       <PopoverContent
         align="end"
-        className="w-full sm:w-96 max-w-notification p-0 bg-ui-bg border-ui-border max-h-panel flex flex-col"
+        className="w-full sm:w-96 max-w-notification p-0 bg-ui-bg border-ui-border max-h-panel"
         data-testid={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       >
-        {/* Header */}
-        <Card
-          padding="md"
-          radius="none"
-          variant="ghost"
-          className="border-x-0 border-t-0 sticky top-0 bg-ui-bg rounded-t-lg"
-        >
-          <Flex align="center" justify="between">
-            <Typography variant="h3">Notifications</Typography>
-            {unreadCount != null && unreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleMarkAllAsRead}
-                isLoading={isLoading}
-                className="text-brand hover:text-brand-hover"
-              >
-                Mark all read
-              </Button>
-            )}
-          </Flex>
-        </Card>
+        <Stack gap="none" className="h-full">
+          {/* Header */}
+          <Card
+            padding="md"
+            radius="none"
+            variant="ghost"
+            className="border-x-0 border-t-0 sticky top-0 bg-ui-bg rounded-t-lg"
+          >
+            <Flex align="center" justify="between">
+              <Typography variant="h3">Notifications</Typography>
+              {unreadCount != null && unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleMarkAllAsRead}
+                  isLoading={isLoading}
+                  className="text-brand hover:text-brand-hover"
+                >
+                  Mark all read
+                </Button>
+              )}
+            </Flex>
+          </Card>
 
-        {/* Notifications List */}
-        <FlexItem flex="1" className="overflow-y-auto">
-          {!notifications || notifications.length === 0 ? (
-            <EmptyState icon={Inbox} title="No notifications" />
-          ) : (
-            <div className="divide-y divide-ui-border">
-              {notifications.map((notification) => (
-                <NotificationItem
-                  key={notification._id}
-                  notification={notification}
-                  onMarkAsRead={handleMarkAsRead}
-                  onDelete={handleDelete}
-                  orgSlug={orgContext?.orgSlug}
-                />
-              ))}
-            </div>
-          )}
-        </FlexItem>
+          {/* Notifications List */}
+          <FlexItem flex="1" className="overflow-y-auto">
+            {!notifications || notifications.length === 0 ? (
+              <EmptyState icon={Inbox} title="No notifications" />
+            ) : (
+              <div className="divide-y divide-ui-border">
+                {notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification._id}
+                    notification={notification}
+                    onMarkAsRead={handleMarkAsRead}
+                    onDelete={handleDelete}
+                    orgSlug={orgContext?.orgSlug}
+                  />
+                ))}
+              </div>
+            )}
+          </FlexItem>
+        </Stack>
       </PopoverContent>
     </Popover>
   );
