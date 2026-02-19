@@ -204,7 +204,7 @@ function KeySequenceBadge({ sequence }: { sequence: string }) {
         <Flex key={charIndex} gap="xs" align="center">
           <KeyBadge>{char.toUpperCase()}</KeyBadge>
           {charIndex < chars.length - 1 && (
-            <Typography variant="muted" className="text-xs">
+            <Typography variant="caption" color="tertiary">
               then
             </Typography>
           )}
@@ -288,18 +288,21 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
               <div key={category.id}>
                 <Typography
                   variant="label"
-                  className="text-xs font-medium text-ui-text-secondary uppercase tracking-wider mb-2"
+                  color="secondary"
+                  className="uppercase tracking-wider mb-2"
                 >
                   {category.title}
                 </Typography>
                 <Flex direction="column" gap="xs">
                   {category.items.map((item) => (
-                    <Flex key={item.id} align="center" justify="between" className="py-1.5">
-                      <Typography variant="small" className="text-ui-text-secondary">
-                        {item.description}
-                      </Typography>
-                      <ShortcutBadge item={item} />
-                    </Flex>
+                    <Card key={item.id} padding="xs" variant="ghost" radius="none">
+                      <Flex align="center" justify="between">
+                        <Typography variant="small" color="secondary">
+                          {item.description}
+                        </Typography>
+                        <ShortcutBadge item={item} />
+                      </Flex>
+                    </Card>
                   ))}
                 </Flex>
               </div>
@@ -308,9 +311,9 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
         ) : (
           <Card padding="lg" variant="flat">
             <Flex direction="column" align="center" justify="center" className="text-center">
-              <Typography variant="small" className="text-ui-text-secondary">
+              <Typography variant="small" color="secondary">
                 No shortcuts found for{" "}
-                <Typography as="span" variant="small" className="font-medium italic">
+                <Typography as="span" variant="label" className="italic">
                   "{searchQuery}"
                 </Typography>
               </Typography>
@@ -320,8 +323,13 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       </ScrollArea>
 
       {/* Footer Tip */}
-      <Stack gap="md" className="border-t border-ui-border">
-        <Typography variant="muted" className="text-xs text-center pt-4">
+      <Card
+        padding="md"
+        radius="none"
+        variant="ghost"
+        className="border-t border-ui-border border-x-0 border-b-0"
+      >
+        <Typography variant="caption" color="tertiary" className="text-center block">
           Press{" "}
           <Typography
             as="kbd"
@@ -332,7 +340,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
           </Typography>{" "}
           to open command palette
         </Typography>
-      </Stack>
+      </Card>
     </Dialog>
   );
 }
