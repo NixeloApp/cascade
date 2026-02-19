@@ -39,9 +39,11 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
             <Typography variant="h4">{template.name}</Typography>
             {template.isDefault && (
               <Tooltip content="Default template">
-                <Badge variant="brand" size="sm" className="gap-1">
-                  <Star className="w-3 h-3" />
-                  Default
+                <Badge variant="brand" size="sm">
+                  <Flex align="center" gap="xs">
+                    <Star className="w-3 h-3" />
+                    Default
+                  </Flex>
                 </Badge>
               </Tooltip>
             )}

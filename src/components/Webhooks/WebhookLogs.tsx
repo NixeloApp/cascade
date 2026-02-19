@@ -89,13 +89,15 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       className="sm:max-w-5xl"
     >
       {!executions || executions.length === 0 ? (
-        <Stack align="center" gap="sm" className="text-center py-12">
-          <Icon icon={BarChart3} size="xl" className="text-ui-text-tertiary" />
-          <Typography variant="h5">No delivery logs yet</Typography>
-          <Typography variant="caption">
-            Webhook deliveries will appear here once triggered
-          </Typography>
-        </Stack>
+        <Card padding="xl" variant="ghost">
+          <Stack align="center" gap="sm" className="text-center">
+            <Icon icon={BarChart3} size="xl" className="text-ui-text-tertiary" />
+            <Typography variant="h5">No delivery logs yet</Typography>
+            <Typography variant="caption">
+              Webhook deliveries will appear here once triggered
+            </Typography>
+          </Stack>
+        </Card>
       ) : (
         <Stack gap="md">
           <Typography variant="caption">

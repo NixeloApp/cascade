@@ -44,9 +44,8 @@ function TimeProgress({
           </Typography>
           {remainingHours !== null && (
             <Typography
-              variant="caption"
+              variant={isOverEstimate ? "label" : "caption"}
               color={isOverEstimate ? "error" : undefined}
-              className={isOverEstimate ? "font-medium" : undefined}
             >
               {isOverEstimate ? "+" : ""}
               {Math.abs(remainingHours).toFixed(1)}h {isOverEstimate ? "over" : "remaining"}
