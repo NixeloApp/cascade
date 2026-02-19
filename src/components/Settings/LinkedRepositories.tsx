@@ -84,7 +84,12 @@ export function LinkedRepositories() {
                     </Typography>
                   </Stack>
                 </Flex>
-                <Button variant="ghost" size="sm" onClick={() => handleUnlink(repo._id)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUnlink(repo._id)}
+                  aria-label={`Unlink ${repo.repoFullName}`}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </Flex>

@@ -4,6 +4,7 @@
  */
 
 import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useRef, useState } from "react";
 import { showError, showSuccess } from "../lib/toast";
@@ -124,7 +125,7 @@ export function useFileUpload(options: FileUploadOptions = {}): FileUploadReturn
         throw new Error("Upload failed");
       }
 
-      const { storageId } = await result.json();
+      const { storageId } = (await result.json()) as { storageId: Id<"_storage"> };
 
       // Step 3: Call success callback
       await onSuccess?.(storageId, file);

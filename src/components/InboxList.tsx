@@ -227,7 +227,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
         {/* Bulk Actions Bar */}
         {activeTab === "open" && triageableCount > 0 && (
-          <Flex align="center" gap="md" className="mb-4 bg-ui-bg-secondary rounded-container">
+          <Flex align="center" gap="md" className="mb-4 p-3 bg-ui-bg-secondary rounded-container">
             <Checkbox
               checked={selectedIds.size === triageableCount && triageableCount > 0}
               onCheckedChange={(checked) => {

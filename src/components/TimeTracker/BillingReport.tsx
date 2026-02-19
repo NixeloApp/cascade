@@ -249,24 +249,30 @@ export function BillingReport({ projectId }: BillingReportProps) {
       {/* Quick Stats */}
       <Grid cols={3} gap="lg" className="mt-6 text-center">
         <Card variant="soft" className="text-center">
-          <Typography variant="h3">{billing.entries}</Typography>
-          <Typography variant="small" color="tertiary">
-            Time Entries
-          </Typography>
+          <CardBody>
+            <Typography variant="h3">{billing.entries}</Typography>
+            <Typography variant="small" color="tertiary">
+              Time Entries
+            </Typography>
+          </CardBody>
         </Card>
         <Card variant="soft" className="text-center">
-          <Typography variant="h3">{Object.keys(billing.byUser).length}</Typography>
-          <Typography variant="small" color="tertiary">
-            Team Members
-          </Typography>
+          <CardBody>
+            <Typography variant="h3">{Object.keys(billing.byUser).length}</Typography>
+            <Typography variant="small" color="tertiary">
+              Team Members
+            </Typography>
+          </CardBody>
         </Card>
         <Card variant="soft" className="text-center">
-          <Typography variant="h3">
-            {averageRate > 0 ? formatCurrency(averageRate) : "N/A"}
-          </Typography>
-          <Typography variant="small" color="tertiary">
-            Blended Rate
-          </Typography>
+          <CardBody>
+            <Typography variant="h3">
+              {averageRate > 0 ? formatCurrency(averageRate) : "N/A"}
+            </Typography>
+            <Typography variant="small" color="tertiary">
+              Blended Rate
+            </Typography>
+          </CardBody>
         </Card>
       </Grid>
     </div>

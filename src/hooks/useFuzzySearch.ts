@@ -9,7 +9,7 @@
  */
 
 import Fuse from "fuse.js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export interface FuzzySearchOptions {
   /**
@@ -169,23 +169,33 @@ export function useFuzzySearch<T>(items: T[] | undefined, options: FuzzySearchOp
     setDebouncedQuery(query);
   }, [query, options.debounce]);
 
-  // Create Fuse instance
-  const fuse =
-    !items || items.length === 0
-      ? null
-      : new Fuse(items, {
-          keys: options.keys,
-          threshold: options.threshold ?? 0.4,
-          minMatchCharLength: options.minMatchCharLength ?? 1,
-          includeScore: options.includeScore ?? true,
-          includeMatches: true, // For highlighting support
-          // Performance optimizations
-          ignoreLocation: true, // Match anywhere in the string (faster)
-          useExtendedSearch: false,
-          findAllMatches: false,
-          // Sorting
-          shouldSort: options.sortByScore ?? true,
-        });
+  // Create Fuse instance - memoized to avoid rebuilding index on every render
+  const fuse = useMemo(
+    () =>
+      !items || items.length === 0
+        ? null
+        : new Fuse(items, {
+            keys: options.keys,
+            threshold: options.threshold ?? 0.4,
+            minMatchCharLength: options.minMatchCharLength ?? 1,
+            includeScore: options.includeScore ?? true,
+            includeMatches: true, // For highlighting support
+            // Performance optimizations
+            ignoreLocation: true, // Match anywhere in the string (faster)
+            useExtendedSearch: false,
+            findAllMatches: false,
+            // Sorting
+            shouldSort: options.sortByScore ?? true,
+          }),
+    [
+      items,
+      options.keys,
+      options.threshold,
+      options.minMatchCharLength,
+      options.includeScore,
+      options.sortByScore,
+    ],
+  );
 
   // Perform search
   const results =

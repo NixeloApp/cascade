@@ -189,7 +189,7 @@ export function CreateProjectFromTemplate({
                     type="button"
                     key={template._id}
                     onClick={() => handleSelectTemplate(template._id)}
-                    className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
+                    className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
                   >
                     <Flex align="start" gap="lg">
                       <FlexItem shrink={false}>

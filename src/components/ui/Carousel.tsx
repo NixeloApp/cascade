@@ -39,7 +39,7 @@ interface CarouselContextValue {
   goToSlide: (index: number) => void;
   goToPrevious: () => void;
   goToNext: () => void;
-  registerSlide: () => number;
+  registerSlide: (count: number) => void;
 }
 
 const CarouselContext = React.createContext<CarouselContextValue | null>(null);
@@ -91,20 +91,13 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
     ref,
   ) => {
     const [internalIndex, setInternalIndex] = React.useState(0);
-    const slideCountRef = React.useRef(0);
     const [totalSlides, setTotalSlides] = React.useState(0);
 
     const activeIndex = controlledIndex ?? internalIndex;
 
-    const registerSlide = () => {
-      const index = slideCountRef.current;
-      slideCountRef.current += 1;
-      return index;
-    };
-
-    // Update total slides count after all slides are registered
-    React.useEffect(() => {
-      setTotalSlides(slideCountRef.current);
+    // Stable callback to set slide count from CarouselContent
+    const registerSlide = React.useCallback((count: number) => {
+      setTotalSlides(count);
     }, []);
 
     const goToSlide = React.useCallback(
@@ -139,11 +132,6 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       return () => clearInterval(interval);
     }, [autoPlay, totalSlides, goToNext]);
 
-    // Reset slide count when children change
-    React.useEffect(() => {
-      slideCountRef.current = 0;
-    }, []);
-
     const contextValue = {
       activeIndex,
       totalSlides,
@@ -171,7 +159,13 @@ Carousel.displayName = "Carousel";
  */
 const CarouselContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => {
-    const { activeIndex } = useCarousel();
+    const { activeIndex, registerSlide } = useCarousel();
+
+    // Count slides and register on mount/change
+    React.useEffect(() => {
+      const slideCount = React.Children.count(children);
+      registerSlide(slideCount);
+    }, [children, registerSlide]);
 
     return (
       <div ref={ref} className={cn("overflow-hidden", className)} {...props}>

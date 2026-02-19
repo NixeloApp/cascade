@@ -39,9 +39,15 @@ export function MetricCard({
           <Typography variant="h2">{value}</Typography>
           {subtitle && <Typography variant="meta">{subtitle}</Typography>}
         </Stack>
-        <Typography variant="h2" color="secondary">
-          {typeof icon === "string" ? icon : <Icon icon={icon} size="xl" />}
-        </Typography>
+        <span aria-hidden="true">
+          {typeof icon === "string" ? (
+            <Typography variant="h2" as="span" color="secondary">
+              {icon}
+            </Typography>
+          ) : (
+            <Icon icon={icon} size="xl" color="secondary" />
+          )}
+        </span>
       </Flex>
     </Card>
   );

@@ -72,14 +72,15 @@ export function TimeEntriesList({
   // Define the structure of the time entry returned by the API
   type TimeEntryWithDetails = FunctionReturnType<typeof api.timeTracking.listTimeEntries>[number];
 
-  // Group entries by date inline
+  // Group entries by date inline using ISO date string as key for stable parsing
   const groupedEntries = entries
     ? (() => {
         const grouped: Record<string, TimeEntryWithDetails[]> = {};
         const typedEntries: TimeEntryWithDetails[] = entries;
 
         typedEntries.forEach((entry) => {
-          const dateKey = formatDate(entry.date);
+          // Use ISO date string (YYYY-MM-DD) as key for stable parsing
+          const dateKey = new Date(entry.date).toISOString().split("T")[0];
           if (!grouped[dateKey]) {
             grouped[dateKey] = [];
           }
@@ -87,12 +88,12 @@ export function TimeEntriesList({
         });
 
         return Object.entries(grouped)
-          .map(([date, group]) => ({
-            date,
+          .map(([isoDate, group]) => ({
+            date: isoDate, // ISO format: YYYY-MM-DD
             entries: group.sort((a, b) => b.startTime - a.startTime),
             duration: group.reduce((sum, e) => sum + (e.duration || 0), 0),
           }))
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          .sort((a, b) => b.date.localeCompare(a.date)); // ISO strings sort correctly
       })()
     : [];
 
@@ -128,12 +129,12 @@ export function TimeEntriesList({
         </Button>
       </Flex>
 
-      {groupedEntries.map(({ date, entries: dateEntries, duration }) => (
-        <Stack key={date} gap="sm">
+      {groupedEntries.map(({ date: isoDate, entries: dateEntries, duration }) => (
+        <Stack key={isoDate} gap="sm">
           {/* Date header */}
           <Flex justify="between" align="end" className="px-1">
             <Typography variant="label" color="secondary" as="span">
-              {formatDate(new Date(date).getTime())}
+              {formatDate(new Date(`${isoDate}T00:00:00`).getTime())}
             </Typography>
             <Typography variant="small" color="secondary" as="span">
               {formatDurationDisplay(duration)}
