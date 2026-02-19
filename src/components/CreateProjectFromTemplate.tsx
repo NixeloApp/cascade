@@ -179,9 +179,11 @@ export function CreateProjectFromTemplate({
             </Typography>
 
             {!templates ? (
-              <Flex align="center" justify="center" className="py-8">
-                <LoadingSpinner />
-              </Flex>
+              <Card padding="xl" variant="ghost">
+                <Flex align="center" justify="center">
+                  <LoadingSpinner />
+                </Flex>
+              </Card>
             ) : (
               <Grid cols={1} colsMd={2} gap="lg">
                 {templates.map((template: Doc<"projectTemplates">) => (

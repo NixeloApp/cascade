@@ -12,6 +12,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
 import { Badge } from "./ui/Badge";
+import { Card } from "./ui/Card";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
@@ -97,24 +98,27 @@ export function NotificationCenter() {
         data-testid={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       >
         {/* Header */}
-        <Flex
-          align="center"
-          justify="between"
-          className="p-4 border-b border-ui-border sticky top-0 bg-ui-bg rounded-t-lg"
+        <Card
+          padding="md"
+          radius="none"
+          variant="ghost"
+          className="border-x-0 border-t-0 sticky top-0 bg-ui-bg rounded-t-lg"
         >
-          <Typography variant="h3">Notifications</Typography>
-          {unreadCount != null && unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMarkAllAsRead}
-              isLoading={isLoading}
-              className="text-brand hover:text-brand-hover"
-            >
-              Mark all read
-            </Button>
-          )}
-        </Flex>
+          <Flex align="center" justify="between">
+            <Typography variant="h3">Notifications</Typography>
+            {unreadCount != null && unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleMarkAllAsRead}
+                isLoading={isLoading}
+                className="text-brand hover:text-brand-hover"
+              >
+                Mark all read
+              </Button>
+            )}
+          </Flex>
+        </Card>
 
         {/* Notifications List */}
         <FlexItem flex="1" className="overflow-y-auto">
