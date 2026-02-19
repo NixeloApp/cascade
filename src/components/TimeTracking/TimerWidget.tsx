@@ -65,7 +65,7 @@ export function TimerWidget() {
             </div>
 
             {/* Timer display */}
-            <Typography variant="mono" className="font-semibold text-brand-indigo-text">
+            <Typography variant="label" className="text-brand-indigo-text">
               {formatDuration(currentDuration)}
             </Typography>
 

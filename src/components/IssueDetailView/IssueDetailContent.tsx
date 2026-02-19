@@ -71,10 +71,7 @@ export function IssueDetailContent({
               </Stack>
             ) : (
               <Stack gap="md">
-                <Typography
-                  variant="h1"
-                  className="text-3xl font-semibold tracking-tight border-none"
-                >
+                <Typography variant="h2" className="border-none">
                   {issueTitle}
                 </Typography>
                 <div className="prose max-w-none">
@@ -91,7 +88,7 @@ export function IssueDetailContent({
           {/* Sub-tasks Section */}
           {issueType !== "subtask" && (
             <Stack gap="md">
-              <Typography variant="label" color="tertiary" className="uppercase tracking-wider">
+              <Typography variant="label" color="tertiary">
                 Sub-tasks
               </Typography>
               <SubtasksList issueId={issueId} projectId={projectId} subtasks={subtasks} />
@@ -100,7 +97,7 @@ export function IssueDetailContent({
 
           {/* Comments Section */}
           <Stack gap="lg" className="pt-8 border-t border-ui-border/50">
-            <Typography variant="label" color="tertiary" className="uppercase tracking-widest">
+            <Typography variant="label" color="tertiary">
               Comments
             </Typography>
             <IssueComments issueId={issueId} projectId={projectId} />
