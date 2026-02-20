@@ -296,6 +296,7 @@ export const compactUpdates = authenticatedMutation({
       stateVector: args.newStateVector,
       updates: [args.mergedUpdate], // Replace all updates with single merged one
       version: yjsDoc.version + 1,
+      lastModifiedBy: ctx.userId,
       updatedAt: Date.now(),
     });
 
@@ -378,7 +379,7 @@ export const getAwareness = authenticatedQuery({
       .query("yjsAwareness")
       .withIndex("by_document", (q) => q.eq("documentId", args.documentId))
       .filter((q) => q.gt(q.field("lastSeenAt"), cutoff))
-      .collect();
+      .take(200);
 
     // Batch fetch users to avoid N+1 queries
     const userIds = awarenessRecords.map((r) => r.userId);
@@ -409,12 +410,21 @@ export const removeAwareness = authenticatedMutation({
     documentId: v.id("documents"),
   },
   handler: async (ctx, args) => {
-    // Check if document exists (although removing awareness doesn't strictly require it, good to verify)
+    // Check if document exists
     const document = await ctx.db.get(args.documentId);
     if (!document) {
-      // If document is gone, awareness should be gone too, but cleanup cron handles that.
-      // We can just try to delete awareness anyway if we want, but sticking to pattern:
-      throw new Error("Document not found");
+      // Document already deleted - just clean up awareness silently
+      // No security issue: user is authenticated and can only remove their own presence
+      const existing = await ctx.db
+        .query("yjsAwareness")
+        .withIndex("by_document_user", (q) =>
+          q.eq("documentId", args.documentId).eq("userId", ctx.userId),
+        )
+        .first();
+      if (existing) {
+        await ctx.db.delete(existing._id);
+      }
+      return { success: true };
     }
     await assertDocumentAccess(ctx, document);
 
