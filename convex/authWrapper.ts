@@ -20,43 +20,53 @@ import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
 
 /**
+ * Handler for performing password reset - exported for testing
+ */
+export const performPasswordResetHandler = async (_ctx: ActionCtx, args: { email: string }) => {
+  try {
+    const formData = new URLSearchParams();
+    formData.set("email", args.email);
+    formData.set("flow", "reset");
+
+    // Use the backend URL (CONVEX_SITE_URL) directly to avoid frontend proxy issues
+    // and circular dependencies with api.auth
+    await fetch(`${getConvexSiteUrl()}/api/auth/signin/password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData.toString(),
+    });
+  } catch (error) {
+    // Silently ignore to client - don't leak any info
+    // But log to server for debugging (e.g. timeout in CI)
+    logger.error("Password reset request failed", { error });
+  }
+};
+
+/**
  * Internal action to perform the actual password reset request (can be slow)
  */
 export const performPasswordReset = internalAction({
   args: { email: v.string() },
-  handler: async (_ctx, args) => {
-    try {
-      const formData = new URLSearchParams();
-      formData.set("email", args.email);
-      formData.set("flow", "reset");
-
-      // Use the backend URL (CONVEX_SITE_URL) directly to avoid frontend proxy issues
-      // and circular dependencies with api.auth
-      await fetch(`${getConvexSiteUrl()}/api/auth/signin/password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: formData.toString(),
-      });
-    } catch (error) {
-      // Silently ignore to client - don't leak any info
-      // But log to server for debugging (e.g. timeout in CI)
-      logger.error("Password reset request failed", { error });
-    }
-  },
+  handler: performPasswordResetHandler,
 });
+
+/**
+ * Handler for scheduling password reset - exported for testing
+ */
+export const schedulePasswordResetHandler = async (ctx: MutationCtx, args: { email: string }) => {
+  await ctx.scheduler.runAfter(0, internal.authWrapper.performPasswordReset, {
+    email: args.email,
+  });
+};
 
 /**
  * Internal mutation to schedule the password reset action asynchronously
  */
 export const schedulePasswordReset = internalMutation({
   args: { email: v.string() },
-  handler: async (ctx, args) => {
-    await ctx.scheduler.runAfter(0, internal.authWrapper.performPasswordReset, {
-      email: args.email,
-    });
-  },
+  handler: schedulePasswordResetHandler,
 });
 
 /**
