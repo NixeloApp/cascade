@@ -7,9 +7,11 @@ import { batchFetchCalendarEvents, batchFetchRecordings } from "./lib/batchHelpe
 import { requireBotApiKey } from "./lib/botAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
-import { conflict, forbidden, notFound, validation } from "./lib/errors";
+import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { simplePriorities } from "./validators";
+
+const BOT_SERVICE_TIMEOUT_MS = 30000;
 
 // ===========================================
 // Queries
@@ -826,6 +828,9 @@ export const notifyBotService = internalAction({
       return;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), BOT_SERVICE_TIMEOUT_MS);
+
     try {
       const response = await fetch(`${botServiceUrl}/api/jobs`, {
         method: "POST",
@@ -842,6 +847,7 @@ export const notifyBotService = internalAction({
           // Callback URLs for the bot to report status (must be Convex backend URL)
           callbackUrl: process.env.CONVEX_SITE_URL,
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -856,11 +862,20 @@ export const notifyBotService = internalAction({
         botServiceJobId: data.jobId,
       });
     } catch (error) {
+      const errorMessage =
+        error instanceof Error && error.name === "AbortError"
+          ? `Timeout: Bot service request exceeded ${BOT_SERVICE_TIMEOUT_MS}ms`
+          : getErrorMessage(error);
+
+      console.error(`Failed to notify bot service for job ${args.jobId}:`, error);
+
       await ctx.runMutation(internal.meetingBot.markJobFailed, {
         jobId: args.jobId,
         recordingId: args.recordingId,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: errorMessage,
       });
+    } finally {
+      clearTimeout(timeoutId);
     }
   },
 });
