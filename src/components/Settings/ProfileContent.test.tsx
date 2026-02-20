@@ -39,7 +39,7 @@ vi.mock("../../../convex/_generated/api", () => ({
   api: {
     users: {
       getCurrent: "api.users.getCurrent",
-      get: "api.users.get",
+      getUser: "api.users.getUser",
       getUserStats: "api.users.getUserStats",
       updateProfile: "api.users.updateProfile",
     },

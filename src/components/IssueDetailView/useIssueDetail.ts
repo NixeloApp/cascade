@@ -10,7 +10,7 @@ export function useIssueDetail(issueId: Id<"issues">) {
   const [description, setDescription] = useState("");
   const [hasCopied, setHasCopied] = useState(false);
 
-  const issue = useQuery(api.issues.get, { id: issueId });
+  const issue = useQuery(api.issues.getIssue, { id: issueId });
   const subtasks = useQuery(api.issues.listSubtasks, { parentId: issueId });
   const updateIssue = useMutation(api.issues.update);
 
