@@ -20,6 +20,29 @@ import { getWorkspaceRole } from "./lib/workspaceAccess";
 import { canAccessProject, getProjectRole } from "./projectAccess";
 import { boardTypes, projectRoles, workflowCategories } from "./validators";
 
+/**
+ * Create a new project.
+ *
+ * Validates inputs, checks for duplicate keys, verifies organization/workspace membership,
+ * and sets up default workflow states if not provided.
+ *
+ * @param name - Project name.
+ * @param key - Project key (e.g., "PROJ"). Must be unique.
+ * @param description - Optional description.
+ * @param boardType - Type of board (e.g., "kanban", "scrum").
+ * @param workflowStates - Optional custom workflow states. Defaults to standard Todo/In Progress/Review/Done.
+ * @param organizationId - Organization ID.
+ * @param workspaceId - Workspace ID.
+ * @param teamId - Optional Team ID. If provided, project belongs to the team.
+ * @param ownerId - Optional owner ID. Defaults to the creator.
+ * @param isPublic - Whether the project is visible to the entire organization.
+ * @param sharedWithTeamIds - Optional list of teams to share the project with.
+ *
+ * @returns The ID of the newly created project.
+ * @throws {ConvexError} "Conflict" if project key already exists.
+ * @throws {ConvexError} "Validation" if inputs are invalid or IDs don't match hierarchy.
+ * @throws {ConvexError} "Forbidden" if user is not an Organization Admin or Workspace Member.
+ */
 export const createProject = authenticatedMutation({
   args: {
     name: v.string(),
@@ -155,6 +178,16 @@ export const createProject = authenticatedMutation({
   },
 });
 
+/**
+ * Get paginated projects the current user is a member of.
+ *
+ * Includes issue counts for each project, optimized by using `efficientCount` and range queries.
+ *
+ * @param organizationId - Optional organization ID to filter by.
+ * @param paginationOpts - Pagination options (cursor, limit).
+ *
+ * @returns A paginated list of projects with extra metadata (creator name, issue count, ownership, role).
+ */
 export const getCurrentUserProjects = authenticatedQuery({
   args: {
     organizationId: v.optional(v.id("organizations")),
@@ -241,6 +274,15 @@ export const getCurrentUserProjects = authenticatedQuery({
   },
 });
 
+/**
+ * Get paginated projects belonging to a specific team.
+ *
+ * @param teamId - The team ID.
+ * @param paginationOpts - Pagination options.
+ *
+ * @returns A paginated list of projects in the team.
+ * @throws {ConvexError} "Forbidden" if user is not a member of the team or an Organization Admin.
+ */
 export const getTeamProjects = authenticatedQuery({
   args: {
     teamId: v.id("teams"),
@@ -270,6 +312,15 @@ export const getTeamProjects = authenticatedQuery({
   },
 });
 
+/**
+ * Get paginated projects in a workspace that are NOT associated with a team.
+ *
+ * @param workspaceId - The workspace ID.
+ * @param paginationOpts - Pagination options.
+ *
+ * @returns A paginated list of projects directly in the workspace.
+ * @throws {ConvexError} "Forbidden" if user is not a member of the organization.
+ */
 export const getWorkspaceProjects = authenticatedQuery({
   args: {
     workspaceId: v.id("workspaces"),
@@ -308,6 +359,16 @@ export const getWorkspaceProjects = authenticatedQuery({
   },
 });
 
+/**
+ * Get project details by ID.
+ *
+ * Includes bounded list of members and the current user's role.
+ *
+ * @param id - Project ID.
+ *
+ * @returns Project object with additional metadata (creator, members, role), or null if not found.
+ * @throws {ConvexError} "Forbidden" if the user does not have access to the project.
+ */
 export const getProject = authenticatedQuery({
   args: { id: v.id("projects") },
   handler: async (ctx, args) => {
@@ -359,7 +420,13 @@ export const getProject = authenticatedQuery({
   },
 });
 
-// Get project by key (e.g., "PROJ")
+/**
+ * Get project details by project key (e.g., "PROJ").
+ *
+ * @param key - The unique project key string.
+ *
+ * @returns Project object with metadata, or null if not found or no access.
+ */
 export const getByKey = authenticatedQuery({
   args: { key: v.string() },
   handler: async (ctx, args) => {
@@ -417,6 +484,18 @@ export const getByKey = authenticatedQuery({
   },
 });
 
+/**
+ * Update project details.
+ *
+ * Requires project admin permissions.
+ *
+ * @param name - Optional new name.
+ * @param description - Optional new description.
+ * @param isPublic - Optional visibility toggle.
+ *
+ * @returns Object containing the projectId.
+ * @throws {ConvexError} "Forbidden" if user is not a project admin.
+ */
 export const updateProject = projectAdminMutation({
   args: {
     name: v.optional(v.string()),
@@ -454,6 +533,18 @@ export const updateProject = projectAdminMutation({
   },
 });
 
+/**
+ * Soft delete a project.
+ *
+ * Marks the project as deleted and cascades the deletion to related resources.
+ * Only the project owner or creator can delete it.
+ *
+ * @param projectId - The project ID.
+ *
+ * @returns { deleted: true }.
+ * @throws {ConvexError} "Forbidden" if user is not the owner or creator.
+ * @throws {ConvexError} "NotFound" if project doesn't exist.
+ */
 export const softDeleteProject = authenticatedMutation({
   args: {
     projectId: v.id("projects"),
@@ -484,6 +575,17 @@ export const softDeleteProject = authenticatedMutation({
   },
 });
 
+/**
+ * Restore a soft-deleted project.
+ *
+ * Only the project owner or creator can restore it.
+ *
+ * @param projectId - The project ID.
+ *
+ * @returns { restored: true }.
+ * @throws {ConvexError} "Validation" if project is not deleted.
+ * @throws {ConvexError} "Forbidden" if user is not the owner or creator.
+ */
 export const restoreProject = authenticatedMutation({
   args: {
     projectId: v.id("projects"),
@@ -522,6 +624,14 @@ export const restoreProject = authenticatedMutation({
   },
 });
 
+/**
+ * Update the project's workflow states.
+ *
+ * Defines the columns and statuses available on the project board.
+ * Requires project admin permissions.
+ *
+ * @param workflowStates - Array of workflow state objects (id, name, category, order, wipLimit).
+ */
 export const updateWorkflow = projectAdminMutation({
   args: {
     workflowStates: v.array(
@@ -553,6 +663,18 @@ export const updateWorkflow = projectAdminMutation({
   },
 });
 
+/**
+ * Add a new member to the project.
+ *
+ * Finds the user by email and creates a membership record.
+ * Requires project admin permissions.
+ *
+ * @param userEmail - Email address of the user to add.
+ * @param role - Role to assign (e.g., "member", "admin").
+ *
+ * @throws {ConvexError} "NotFound" if user doesn't exist.
+ * @throws {ConvexError} "Conflict" if user is already a member.
+ */
 export const addProjectMember = projectAdminMutation({
   args: {
     userEmail: v.string(),
@@ -600,6 +722,18 @@ export const addProjectMember = projectAdminMutation({
   },
 });
 
+/**
+ * Update a project member's role.
+ *
+ * Cannot change the role of the project owner.
+ * Requires project admin permissions.
+ *
+ * @param memberId - User ID of the member.
+ * @param newRole - New role to assign.
+ *
+ * @throws {ConvexError} "Forbidden" if trying to change the project owner's role.
+ * @throws {ConvexError} "NotFound" if membership doesn't exist.
+ */
 export const updateProjectMemberRole = projectAdminMutation({
   args: {
     memberId: v.id("users"),
@@ -640,6 +774,16 @@ export const updateProjectMemberRole = projectAdminMutation({
   },
 });
 
+/**
+ * Remove a member from the project.
+ *
+ * Cannot remove the project owner.
+ * Requires project admin permissions.
+ *
+ * @param memberId - User ID of the member to remove.
+ *
+ * @throws {ConvexError} "Forbidden" if trying to remove the project owner.
+ */
 export const removeProjectMember = projectAdminMutation({
   args: {
     memberId: v.id("users"),
@@ -677,7 +821,11 @@ export const removeProjectMember = projectAdminMutation({
 });
 
 /**
- * Get user's role in a project
+ * Get the current user's role in a project.
+ *
+ * @param projectId - The project ID.
+ *
+ * @returns The role string ("admin", "member", etc.) or null if not a member.
  */
 export const getProjectUserRole = authenticatedQuery({
   args: {
