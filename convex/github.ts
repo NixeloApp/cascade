@@ -243,7 +243,7 @@ export const listRepositories = authenticatedQuery({
 });
 
 /** Create or update a GitHub pull request record. Called from GitHub webhook events. Auto-links to issues by key. */
-export const upsertPullRequest = mutation({
+export const upsertPullRequest = internalMutation({
   args: {
     repositoryId: v.id("githubRepositories"),
     prNumber: v.number(),
@@ -387,7 +387,7 @@ export const getPullRequests = authenticatedQuery({
 });
 
 /** Create or update a GitHub commit record. Called from webhooks. Auto-links to issues by key in commit message. */
-export const upsertCommit = mutation({
+export const upsertCommit = internalMutation({
   args: {
     repositoryId: v.id("githubRepositories"),
     sha: v.string(),
