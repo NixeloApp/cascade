@@ -91,43 +91,30 @@ export const listRecordings = authenticatedQuery({
     const calendarEventIds = recordings
       .map((r) => r.calendarEventId)
       .filter((id): id is Id<"calendarEvents"> => !!id);
-    const recordingIds = recordings.map((r) => r._id);
 
-    // Parallel fetch: calendar events, transcripts, summaries
-    const [calendarEventMap, allTranscripts, allSummaries] = await Promise.all([
-      batchFetchCalendarEvents(ctx, calendarEventIds),
-      Promise.all(
-        recordingIds.map((recordingId) =>
-          ctx.db
-            .query("meetingTranscripts")
-            .withIndex("by_recording", (q) => q.eq("recordingId", recordingId))
-            .first(),
-        ),
-      ),
-      Promise.all(
-        recordingIds.map((recordingId) =>
-          ctx.db
-            .query("meetingSummaries")
-            .withIndex("by_recording", (q) => q.eq("recordingId", recordingId))
-            .first(),
-        ),
-      ),
-    ]);
-
-    // Build lookup maps
-    const transcriptMap = new Map(recordingIds.map((id, i) => [id.toString(), allTranscripts[i]]));
-    const summaryMap = new Map(recordingIds.map((id, i) => [id.toString(), allSummaries[i]]));
+    // Parallel fetch: calendar events
+    const calendarEventMap = await batchFetchCalendarEvents(ctx, calendarEventIds);
 
     // Enrich with pre-fetched data (no N+1 - all fetches are parallel)
-    return recordings.map((recording) => ({
-      ...recording,
-      createdAt: recording._creationTime,
-      calendarEvent: recording.calendarEventId
-        ? (calendarEventMap.get(recording.calendarEventId) ?? null)
-        : null,
-      hasTranscript: !!transcriptMap.get(recording._id.toString()),
-      hasSummary: !!summaryMap.get(recording._id.toString()),
-    }));
+    return recordings.map((recording) => {
+      // Optimization: Deduce existence from status to avoid fetching large docs
+      // Statuses "summarizing" and "completed" imply a transcript exists.
+      // Status "completed" implies a summary exists.
+      // For "failed" status, we default to false even if partial data might exist,
+      // as users should view details for failed items.
+      const hasTranscript = recording.status === "summarizing" || recording.status === "completed";
+      const hasSummary = recording.status === "completed";
+
+      return {
+        ...recording,
+        createdAt: recording._creationTime,
+        calendarEvent: recording.calendarEventId
+          ? (calendarEventMap.get(recording.calendarEventId) ?? null)
+          : null,
+        hasTranscript,
+        hasSummary,
+      };
+    });
   },
 });
 
