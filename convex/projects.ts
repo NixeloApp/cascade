@@ -1,7 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
-import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
@@ -10,6 +9,7 @@ import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
 /** Maximum issue count to compute for a project list view */
 const MAX_ISSUE_COUNT = 1000;
 
+import { logAudit } from "./lib/audit";
 import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole } from "./lib/organizationAccess";
@@ -18,7 +18,6 @@ import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getWorkspaceRole } from "./lib/workspaceAccess";
 import { canAccessProject, getProjectRole } from "./projectAccess";
-import { isTest } from "./testConfig";
 import { boardTypes, projectRoles, workflowCategories } from "./validators";
 
 export const createProject = authenticatedMutation({
@@ -140,19 +139,17 @@ export const createProject = authenticatedMutation({
       addedBy: ctx.userId,
     });
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "project_created",
-        actorId: ctx.userId,
-        targetId: projectId,
-        targetType: "projects",
-        metadata: {
-          name: args.name,
-          key: args.key,
-          organizationId: args.organizationId,
-        },
-      });
-    }
+    await logAudit(ctx, {
+      action: "project_created",
+      actorId: ctx.userId,
+      targetId: projectId,
+      targetType: "projects",
+      metadata: {
+        name: args.name,
+        key: args.key,
+        organizationId: args.organizationId,
+      },
+    });
 
     return projectId;
   },
@@ -445,15 +442,13 @@ export const updateProject = projectAdminMutation({
 
     await ctx.db.patch(ctx.projectId, updates);
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "project_updated",
-        actorId: ctx.userId,
-        targetId: ctx.projectId,
-        targetType: "projects",
-        metadata: updates as Record<string, string | number | boolean>,
-      });
-    }
+    await logAudit(ctx, {
+      action: "project_updated",
+      actorId: ctx.userId,
+      targetId: ctx.projectId,
+      targetType: "projects",
+      metadata: updates as Record<string, string | number | boolean>,
+    });
 
     return { projectId: ctx.projectId };
   },
@@ -477,15 +472,13 @@ export const softDeleteProject = authenticatedMutation({
     await ctx.db.patch(args.projectId, softDeleteFields(ctx.userId));
     await cascadeSoftDelete(ctx, "projects", args.projectId, ctx.userId, deletedAt);
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "project_deleted",
-        actorId: ctx.userId,
-        targetId: args.projectId,
-        targetType: "projects",
-        metadata: { deletedAt },
-      });
-    }
+    await logAudit(ctx, {
+      action: "project_deleted",
+      actorId: ctx.userId,
+      targetId: args.projectId,
+      targetType: "projects",
+      metadata: { deletedAt },
+    });
 
     return { deleted: true };
   },
@@ -518,14 +511,12 @@ export const restoreProject = authenticatedMutation({
     // Note: Cascade restore not implemented yet - would need cascadeRestore function
     // For now, just restore the project itself
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "project_restored",
-        actorId: ctx.userId,
-        targetId: args.projectId,
-        targetType: "projects",
-      });
-    }
+    await logAudit(ctx, {
+      action: "project_restored",
+      actorId: ctx.userId,
+      targetId: args.projectId,
+      targetType: "projects",
+    });
 
     return { restored: true };
   },
@@ -552,15 +543,13 @@ export const updateWorkflow = projectAdminMutation({
       updatedAt: Date.now(),
     });
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "workflow_updated",
-        actorId: ctx.userId,
-        targetId: ctx.projectId,
-        targetType: "projects",
-        metadata: { workflowStates: JSON.stringify(args.workflowStates) },
-      });
-    }
+    await logAudit(ctx, {
+      action: "workflow_updated",
+      actorId: ctx.userId,
+      targetId: ctx.projectId,
+      targetType: "projects",
+      metadata: { workflowStates: JSON.stringify(args.workflowStates) },
+    });
   },
 });
 
@@ -598,18 +587,16 @@ export const addProjectMember = projectAdminMutation({
       addedBy: ctx.userId,
     });
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "member_added",
-        actorId: ctx.userId,
-        targetId: ctx.projectId,
-        targetType: "projects",
-        metadata: {
-          memberId: user._id,
-          role: args.role,
-        },
-      });
-    }
+    await logAudit(ctx, {
+      action: "member_added",
+      actorId: ctx.userId,
+      targetId: ctx.projectId,
+      targetType: "projects",
+      metadata: {
+        memberId: user._id,
+        role: args.role,
+      },
+    });
   },
 });
 
@@ -640,18 +627,16 @@ export const updateProjectMemberRole = projectAdminMutation({
       role: args.newRole,
     });
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "member_role_updated",
-        actorId: ctx.userId,
-        targetId: ctx.projectId,
-        targetType: "projects",
-        metadata: {
-          memberId: args.memberId,
-          newRole: args.newRole,
-        },
-      });
-    }
+    await logAudit(ctx, {
+      action: "member_role_updated",
+      actorId: ctx.userId,
+      targetId: ctx.projectId,
+      targetType: "projects",
+      metadata: {
+        memberId: args.memberId,
+        newRole: args.newRole,
+      },
+    });
   },
 });
 
@@ -678,17 +663,15 @@ export const removeProjectMember = projectAdminMutation({
     if (membership) {
       await ctx.db.delete(membership._id);
 
-      if (!isTest) {
-        await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-          action: "member_removed",
-          actorId: ctx.userId,
-          targetId: ctx.projectId,
-          targetType: "projects",
-          metadata: {
-            memberId: args.memberId,
-          },
-        });
-      }
+      await logAudit(ctx, {
+        action: "member_removed",
+        actorId: ctx.userId,
+        targetId: ctx.projectId,
+        targetType: "projects",
+        metadata: {
+          memberId: args.memberId,
+        },
+      });
     }
   },
 });

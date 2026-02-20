@@ -9,6 +9,7 @@ import {
   internalQuery,
 } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
+import { logAudit } from "./lib/audit";
 import { notFound, validation } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -41,19 +42,17 @@ export const createWebhook = projectAdminMutation({
       createdBy: ctx.userId,
     });
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "webhook_created",
-        actorId: ctx.userId,
-        targetId: webhookId,
-        targetType: "webhooks",
-        metadata: {
-          projectId: ctx.projectId,
-          name: args.name,
-          events: args.events,
-        },
-      });
-    }
+    await logAudit(ctx, {
+      action: "webhook_created",
+      actorId: ctx.userId,
+      targetId: webhookId,
+      targetType: "webhooks",
+      metadata: {
+        projectId: ctx.projectId,
+        name: args.name,
+        events: args.events,
+      },
+    });
 
     return webhookId;
   },
@@ -113,15 +112,13 @@ export const updateWebhook = authenticatedMutation({
 
     await ctx.db.patch(args.id, updates);
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "webhook_updated",
-        actorId: ctx.userId,
-        targetId: args.id,
-        targetType: "webhooks",
-        metadata: updates,
-      });
-    }
+    await logAudit(ctx, {
+      action: "webhook_updated",
+      actorId: ctx.userId,
+      targetId: args.id,
+      targetType: "webhooks",
+      metadata: updates,
+    });
   },
 });
 
@@ -140,14 +137,12 @@ export const softDeleteWebhook = authenticatedMutation({
 
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
 
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "webhook_deleted",
-        actorId: ctx.userId,
-        targetId: args.id,
-        targetType: "webhooks",
-      });
-    }
+    await logAudit(ctx, {
+      action: "webhook_deleted",
+      actorId: ctx.userId,
+      targetId: args.id,
+      targetType: "webhooks",
+    });
   },
 });
 
