@@ -204,6 +204,10 @@ export const listForDigest = internalQuery({
       if (notification._creationTime < args.startTime) {
         break;
       }
+      // Skip soft-deleted notifications
+      if (notification.isDeleted) {
+        continue;
+      }
       notifications.push(notification);
       if (notifications.length >= MAX_DIGEST_NOTIFICATIONS) {
         break;
