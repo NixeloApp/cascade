@@ -81,6 +81,7 @@ import type * as lib_e2eCrypto from "../lib/e2eCrypto.js";
 import type * as lib_encryption from "../lib/encryption.js";
 import type * as lib_env from "../lib/env.js";
 import type * as lib_errors from "../lib/errors.js";
+import type * as lib_fileValidators from "../lib/fileValidators.js";
 import type * as lib_issueCalculation from "../lib/issueCalculation.js";
 import type * as lib_issueHelpers from "../lib/issueHelpers.js";
 import type * as lib_logger from "../lib/logger.js";
@@ -228,6 +229,7 @@ declare const fullApi: ApiFromModules<{
   "lib/encryption": typeof lib_encryption;
   "lib/env": typeof lib_env;
   "lib/errors": typeof lib_errors;
+  "lib/fileValidators": typeof lib_fileValidators;
   "lib/issueCalculation": typeof lib_issueCalculation;
   "lib/issueHelpers": typeof lib_issueHelpers;
   "lib/logger": typeof lib_logger;
