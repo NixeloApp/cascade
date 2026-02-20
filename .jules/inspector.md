@@ -19,3 +19,7 @@
 ## 2024-05-22 - Silent Security Wrappers
 **Learning:** Security wrappers like `securePasswordReset` (which return generic success to prevent enumeration) must still log internal errors server-side. Swallowing exceptions completely creates a black hole for debugging critical auth failures.
 **Action:** Always include server-side logging (e.g., `logger.error`) in the catch block of security-sensitive endpoints that return generic client responses.
+
+## 2026-02-20 - Crash in Error Handler
+**Learning:** When handling errors for list processing (e.g., `importIssuesJSON`), accessing properties of the failed item (like `issue.title`) inside the `catch` block can cause a second crash if the item is `null` or invalid. This aborts the entire batch and hides the original error.
+**Action:** Validate list items (e.g., `typeof item === 'object'`) before processing, and use safe access patterns (optional chaining) when extracting data for error reports.
