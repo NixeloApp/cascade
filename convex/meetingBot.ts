@@ -98,7 +98,11 @@ export const listRecordings = authenticatedQuery({
     // Enrich with pre-fetched data (no N+1 - all fetches are parallel)
     return recordings.map((recording) => {
       // Optimization: Deduce existence from status to avoid fetching large docs
-      const hasTranscript = ["summarizing", "completed"].includes(recording.status);
+      // Statuses "summarizing" and "completed" imply a transcript exists.
+      // Status "completed" implies a summary exists.
+      // For "failed" status, we default to false even if partial data might exist,
+      // as users should view details for failed items.
+      const hasTranscript = recording.status === "summarizing" || recording.status === "completed";
       const hasSummary = recording.status === "completed";
 
       return {
