@@ -11,10 +11,10 @@ function updateSingleIssue(
   newOrder: number,
   now: number,
 ) {
-  const existingIssue = localStore.getQuery(api.issues.get, { id: issueId });
+  const existingIssue = localStore.getQuery(api.issues.getIssue, { id: issueId });
   if (existingIssue) {
     localStore.setQuery(
-      api.issues.get,
+      api.issues.getIssue,
       { id: issueId },
       { ...existingIssue, status: newStatus, order: newOrder, updatedAt: now },
     );

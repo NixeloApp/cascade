@@ -497,7 +497,7 @@ export const listTeamIssues = authenticatedQuery({
   },
 });
 
-export const get = query({
+export const getIssue = query({
   args: { id: v.id("issues") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);

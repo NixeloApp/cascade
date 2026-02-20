@@ -56,7 +56,7 @@ export const getInternalByEmail = internalQuery({
  * Note: Does not check if requester should see this user.
  * For team contexts, ensure proper access checks.
  */
-export const get = authenticatedQuery({
+export const getUser = authenticatedQuery({
   args: { id: v.id("users") },
   returns: v.union(
     v.null(),

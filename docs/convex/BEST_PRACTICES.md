@@ -447,7 +447,7 @@ export const sendNotification = action({
   args: { userId: v.id("users"), message: v.string() },
   handler: async (ctx, args) => {
     // Actions can call queries/mutations
-    const user = await ctx.runQuery(internal.users.get, { id: args.userId });
+    const user = await ctx.runQuery(internal.users.getUser, { id: args.userId });
     if (!user) {
       throw new ConvexError({ code: "NOT_FOUND", resource: "user" });
     }

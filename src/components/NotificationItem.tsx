@@ -70,7 +70,7 @@ export function NotificationItem({
 }: NotificationItemProps) {
   // Fetch issue details if present to resolve key for navigation
   const issue = useQuery(
-    api.issues.get,
+    api.issues.getIssue,
     notification.issueId ? { id: notification.issueId } : "skip",
   );
 

@@ -326,7 +326,7 @@ export const sendIssueNotification = action({
   },
   handler: async (ctx, args) => {
     // Get issue details
-    const issue = await ctx.runQuery(api.issues.get, {
+    const issue = await ctx.runQuery(api.issues.getIssue, {
       id: args.issueId,
     });
 
