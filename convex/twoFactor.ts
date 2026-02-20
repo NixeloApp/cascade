@@ -304,13 +304,15 @@ export const completeSetup = mutation({
 
     // Mark current session as verified
     const sessionId = await getAuthSessionId(ctx);
-    if (sessionId) {
-      await ctx.db.insert("twoFactorSessions", {
-        userId,
-        sessionId,
-        verifiedAt: Date.now(),
-      });
+    if (!sessionId) {
+      return { success: false, error: "Session ID required to complete 2FA setup" };
     }
+
+    await ctx.db.insert("twoFactorSessions", {
+      userId,
+      sessionId,
+      verifiedAt: Date.now(),
+    });
 
     return {
       success: true,
@@ -391,24 +393,26 @@ export const verifyCode = mutation({
 
     // Mark current session as verified
     const sessionId = await getAuthSessionId(ctx);
-    if (sessionId) {
-      // Check if session already exists
-      const existingSession = await ctx.db
-        .query("twoFactorSessions")
-        .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
-        .first();
+    if (!sessionId) {
+      return { success: false, error: "Session ID required" };
+    }
 
-      if (existingSession) {
-        await ctx.db.patch(existingSession._id, {
-          verifiedAt: now,
-        });
-      } else {
-        await ctx.db.insert("twoFactorSessions", {
-          userId,
-          sessionId,
-          verifiedAt: now,
-        });
-      }
+    // Check if session already exists
+    const existingSession = await ctx.db
+      .query("twoFactorSessions")
+      .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
+      .first();
+
+    if (existingSession) {
+      await ctx.db.patch(existingSession._id, {
+        verifiedAt: now,
+      });
+    } else {
+      await ctx.db.insert("twoFactorSessions", {
+        userId,
+        sessionId,
+        verifiedAt: now,
+      });
     }
 
     return { success: true };
@@ -465,24 +469,26 @@ export const verifyBackupCode = mutation({
 
     // Mark current session as verified
     const sessionId = await getAuthSessionId(ctx);
-    if (sessionId) {
-      const now = Date.now();
-      const existingSession = await ctx.db
-        .query("twoFactorSessions")
-        .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
-        .first();
+    if (!sessionId) {
+      return { success: false, error: "Session ID required" };
+    }
 
-      if (existingSession) {
-        await ctx.db.patch(existingSession._id, {
-          verifiedAt: now,
-        });
-      } else {
-        await ctx.db.insert("twoFactorSessions", {
-          userId,
-          sessionId,
-          verifiedAt: now,
-        });
-      }
+    const now = Date.now();
+    const existingSession = await ctx.db
+      .query("twoFactorSessions")
+      .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
+      .first();
+
+    if (existingSession) {
+      await ctx.db.patch(existingSession._id, {
+        verifiedAt: now,
+      });
+    } else {
+      await ctx.db.insert("twoFactorSessions", {
+        userId,
+        sessionId,
+        verifiedAt: now,
+      });
     }
 
     return {
