@@ -46,7 +46,7 @@
  * - `admin` (3): Full control including settings, members, workflow
  */
 
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { customMutation, customQuery } from "convex-helpers/server/customFunctions";
 import type { Id } from "./_generated/dataModel";
@@ -75,8 +75,19 @@ async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<"users">> {
   // Enforce 2FA verification if enabled
   const user = await ctx.db.get(userId);
   if (user?.twoFactorEnabled && user.twoFactorSecret) {
+    const sessionId = await getAuthSessionId(ctx);
+    if (!sessionId) {
+      // If no session ID (shouldn't happen for authenticated user), force verification
+      throw forbidden(undefined, "Two-factor authentication required");
+    }
+
+    const sessionVerification = await ctx.db
+      .query("twoFactorSessions")
+      .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
+      .first();
+
     const twentyFourHoursAgo = Date.now() - DAY;
-    if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
+    if (!sessionVerification || sessionVerification.verifiedAt < twentyFourHoursAgo) {
       throw forbidden(undefined, "Two-factor authentication required");
     }
   }
