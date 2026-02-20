@@ -524,7 +524,7 @@ describe("Automation Rules", () => {
       });
 
       // Check if assignee was set
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.assigneeId).toBe(assignee);
     });
 
@@ -562,7 +562,7 @@ describe("Automation Rules", () => {
       });
 
       // Check if priority was set
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.priority).toBe("highest");
     });
 
@@ -598,7 +598,7 @@ describe("Automation Rules", () => {
       });
 
       // Check if label was added
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.labels.map((l) => l.name)).toContain("automated");
     });
 
@@ -682,7 +682,7 @@ describe("Automation Rules", () => {
       });
 
       // Priority should NOT be changed
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.priority).toBe("medium");
     });
 
@@ -770,7 +770,7 @@ describe("Automation Rules", () => {
         triggerValue: "task",
       });
 
-      const task = await asUser.query(api.issues.get, { id: taskId });
+      const task = await asUser.query(api.issues.getIssue, { id: taskId });
       expect(task?.priority).toBe("medium"); // Unchanged
 
       // Create bug (should trigger)
@@ -788,7 +788,7 @@ describe("Automation Rules", () => {
         triggerValue: "bug",
       });
 
-      const bug = await asUser.query(api.issues.get, { id: bugId });
+      const bug = await asUser.query(api.issues.getIssue, { id: bugId });
       expect(bug?.priority).toBe("highest"); // Changed
     });
   });

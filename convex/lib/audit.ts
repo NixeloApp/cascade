@@ -21,7 +21,8 @@ interface ContextWithScheduler {
       functionReference: FunctionReference<"mutation" | "action">,
       // biome-ignore lint/suspicious/noExplicitAny: generic args for runAfter
       args: any,
-    ) => Promise<any>; // biome-ignore lint/suspicious/noExplicitAny: generic return type
+      // biome-ignore lint/suspicious/noExplicitAny: generic return type
+    ) => Promise<any>;
   };
 }
 

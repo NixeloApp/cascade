@@ -31,7 +31,7 @@ describe("Issue Soft Delete", () => {
     });
 
     // Verify issue is not accessible via get
-    const deletedIssue = await asUser.query(api.issues.get, { id: issueId });
+    const deletedIssue = await asUser.query(api.issues.getIssue, { id: issueId });
     expect(deletedIssue).toBeNull();
 
     // Verify issue exists in DB with isDeleted: true

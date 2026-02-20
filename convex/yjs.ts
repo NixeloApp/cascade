@@ -8,6 +8,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { batchFetchUsers } from "./lib/batchHelpers";
 
 /**
  * Get Y.js document state for a document
@@ -281,20 +282,22 @@ export const getAwareness = query({
       .filter((q) => q.gt(q.field("lastSeenAt"), cutoff))
       .collect();
 
+    // Batch fetch users to avoid N+1 queries
+    const userIds = awarenessRecords.map((r) => r.userId);
+    const userMap = await batchFetchUsers(ctx, userIds);
+
     // Get user info for each awareness record
-    const usersWithAwareness = await Promise.all(
-      awarenessRecords.map(async (record) => {
-        const user = await ctx.db.get(record.userId);
-        return {
-          userId: record.userId,
-          clientId: record.clientId,
-          awarenessData: record.awarenessData,
-          userName: user?.name || "Anonymous",
-          userImage: user?.image,
-          isCurrentUser: record.userId === userId,
-        };
-      }),
-    );
+    const usersWithAwareness = awarenessRecords.map((record) => {
+      const user = userMap.get(record.userId);
+      return {
+        userId: record.userId,
+        clientId: record.clientId,
+        awarenessData: record.awarenessData,
+        userName: user?.name || "Anonymous",
+        userImage: user?.image,
+        isCurrentUser: record.userId === userId,
+      };
+    });
 
     return usersWithAwareness;
   },

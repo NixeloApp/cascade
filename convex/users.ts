@@ -3,13 +3,9 @@ import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import {
-  internalAction,
-  internalQuery,
-  type MutationCtx,
-  type QueryCtx,
-} from "./_generated/server";
+import { internalQuery, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { sendEmail } from "./email";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
@@ -60,7 +56,7 @@ export const getInternalByEmail = internalQuery({
  * Note: Does not check if requester should see this user.
  * For team contexts, ensure proper access checks.
  */
-export const get = authenticatedQuery({
+export const getUser = authenticatedQuery({
   args: { id: v.id("users") },
   returns: v.union(
     v.null(),
@@ -182,40 +178,8 @@ export const updateProfile = authenticatedMutation({
     }
 
     if (args.email !== undefined) {
-      validate.email(args.email);
-
-      // Check if email actually changed
-      const currentUser = await ctx.db.get(ctx.userId);
-      if (currentUser?.email !== args.email) {
-        // Rate limit email change requests to prevent spam
-        await rateLimit(ctx, "emailChange", { key: ctx.userId });
-
-        // Do NOT update email immediately. Start pending verification flow.
-        const token = generateOTP();
-        const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
-
-        updates.pendingEmail = args.email;
-        updates.pendingEmailVerificationToken = token;
-        updates.pendingEmailVerificationExpires = expiresAt;
-
-        // Check if email is already taken by ANOTHER user
-        const newEmail = args.email;
-        const existingUser = await ctx.db
-          .query("users")
-          .withIndex("email", (q) => q.eq("email", newEmail))
-          .first();
-
-        // Only send verification email if the email is NOT taken
-        // If taken, we still update pending fields to prevent enumeration (attacker sees success),
-        // but we skip sending the email to prevent spamming the victim.
-        if (!existingUser || existingUser._id === ctx.userId) {
-          await ctx.scheduler.runAfter(0, internal.users.sendVerificationEmailAction, {
-            email: args.email,
-            token,
-            isTestUser: currentUser?.isTestUser,
-          });
-        }
-      }
+      const emailUpdates = await handleEmailChange(ctx, args.email);
+      Object.assign(updates, emailUpdates);
     }
 
     if (args.avatar !== undefined) {
@@ -239,49 +203,100 @@ export const updateProfile = authenticatedMutation({
 });
 
 /**
- * Internal action to send verification email for profile updates
- * Executed asynchronously to prevent timing attacks and side channels.
+ * Helper to handle email changes:
+ * - Validates email format
+ * - Checks if email actually changed
+ * - Rate limits requests
+ * - Generates OTP and expiration
+ * - Checks for uniqueness (safe against enumeration)
+ * - Sends verification email
  */
-export const sendVerificationEmailAction = internalAction({
-  args: {
-    email: v.string(),
-    token: v.string(),
-    isTestUser: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const isTestEmail = args.email.endsWith("@inbox.mailtrap.io");
-    const isSafeEnvironment =
-      process.env.NODE_ENV === "development" ||
-      process.env.NODE_ENV === "test" ||
-      !!process.env.CI ||
-      !!process.env.E2E_API_KEY;
-
-    // Store OTPs for test emails ONLY if they are test users
-    if (isTestEmail && isSafeEnvironment && args.isTestUser) {
-      try {
-        await ctx.runMutation(internal.e2e.storeTestOtp, {
-          email: args.email,
-          code: args.token,
-        });
-      } catch (e) {
-        logger.warn(`[Users] Failed to store test OTP: ${e}`);
-      }
+async function handleEmailChange(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  newEmail: string,
+): Promise<
+  | Record<string, never>
+  | {
+      pendingEmail: string;
+      pendingEmailVerificationToken: string;
+      pendingEmailVerificationExpires: number;
     }
+> {
+  validate.email(newEmail);
 
-    await ctx.runAction(internal.email.index.sendEmailAction, {
-      to: args.email,
-      subject: "Verify your new email address",
-      html: `
-        <h2>Verify your new email address</h2>
-        <p>Use the code below to verify your new email address:</p>
-        <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${args.token}</h1>
-        <p>This code expires in 15 minutes.</p>
-        <p>If you didn't request this change, you can safely ignore this email.</p>
-      `,
-      text: `Your verification code is: ${args.token}\n\nThis code expires in 15 minutes.`,
-    });
-  },
-});
+  // Check if email actually changed
+  const currentUser = await ctx.db.get(ctx.userId);
+  if (currentUser?.email === newEmail) {
+    return {};
+  }
+
+  // Rate limit email change requests to prevent spam
+  await rateLimit(ctx, "emailChange", { key: ctx.userId });
+
+  // Do NOT update email immediately. Start pending verification flow.
+  const token = generateOTP();
+  const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+  const updates = {
+    pendingEmail: newEmail,
+    pendingEmailVerificationToken: token,
+    pendingEmailVerificationExpires: expiresAt,
+  };
+
+  // Check if email is already taken by ANOTHER user
+  const existingUser = await ctx.db
+    .query("users")
+    .withIndex("email", (q) => q.eq("email", newEmail))
+    .first();
+
+  // Only send verification email if the email is NOT taken
+  // If taken, we still update pending fields to prevent enumeration (attacker sees success),
+  // but we skip sending the email to prevent spamming the victim.
+  if (!existingUser || existingUser._id === ctx.userId) {
+    await sendVerificationEmail(ctx, newEmail, token, currentUser?.isTestUser);
+  }
+
+  return updates;
+}
+
+/**
+ * Helper to send verification email for profile updates
+ */
+async function sendVerificationEmail(
+  ctx: MutationCtx,
+  email: string,
+  token: string,
+  isTestUser?: boolean,
+) {
+  const isTestEmail = email.endsWith("@inbox.mailtrap.io");
+  const isSafeEnvironment =
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test" ||
+    !!process.env.CI ||
+    !!process.env.E2E_API_KEY;
+
+  // Store OTPs for test emails ONLY if they are test users
+  if (isTestEmail && isSafeEnvironment && isTestUser) {
+    try {
+      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
+    } catch (e) {
+      logger.warn(`[Users] Failed to store test OTP: ${e}`);
+    }
+  }
+
+  await sendEmail(ctx, {
+    to: email,
+    subject: "Verify your new email address",
+    html: `
+      <h2>Verify your new email address</h2>
+      <p>Use the code below to verify your new email address:</p>
+      <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
+      <p>This code expires in 15 minutes.</p>
+      <p>If you didn't request this change, you can safely ignore this email.</p>
+    `,
+    text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.`,
+  });
+}
 
 /**
  * Verify a pending email change using the OTP token sent to the user.

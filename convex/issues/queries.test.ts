@@ -31,7 +31,7 @@ describe("issue queries", () => {
         description: "Description",
       });
 
-      const result = await ctx.asUser.query(api.issues.queries.get, { id: issueId });
+      const result = await ctx.asUser.query(api.issues.queries.getIssue, { id: issueId });
 
       expect(result).not.toBeNull();
       expect(result?.title).toBe("Test Issue");
@@ -46,7 +46,7 @@ describe("issue queries", () => {
         await runCtx.db.delete(issueId);
       });
 
-      const result = await ctx.asUser.query(api.issues.queries.get, { id: issueId });
+      const result = await ctx.asUser.query(api.issues.queries.getIssue, { id: issueId });
       expect(result).toBeNull();
     });
 
@@ -57,7 +57,7 @@ describe("issue queries", () => {
       const otherUserId = await createTestUser(t);
       const asOther = asAuthenticatedUser(t, otherUserId);
 
-      await expect(asOther.query(api.issues.queries.get, { id: issueId })).rejects.toThrow();
+      await expect(asOther.query(api.issues.queries.getIssue, { id: issueId })).rejects.toThrow();
     });
 
     it("should allow public project access for unauthenticated user", async () => {
@@ -68,7 +68,7 @@ describe("issue queries", () => {
       const issueId = await createTestIssue(t, publicProjectId, ctx.userId);
 
       // Query without authentication
-      const result = await t.query(api.issues.queries.get, { id: issueId });
+      const result = await t.query(api.issues.queries.getIssue, { id: issueId });
       expect(result).not.toBeNull();
     });
   });

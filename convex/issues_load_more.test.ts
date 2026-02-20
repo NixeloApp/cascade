@@ -33,9 +33,9 @@ describe("Load More Done Issues", () => {
     }
 
     // Get the issues to inspect timestamps
-    const issue1 = await asUser.query(api.issues.get, { id: issues[0] });
-    const issue2 = await asUser.query(api.issues.get, { id: issues[1] });
-    const issue3 = await asUser.query(api.issues.get, { id: issues[2] });
+    const issue1 = await asUser.query(api.issues.getIssue, { id: issues[0] });
+    const issue2 = await asUser.query(api.issues.getIssue, { id: issues[1] });
+    const issue3 = await asUser.query(api.issues.getIssue, { id: issues[2] });
 
     if (!(issue1 && issue2 && issue3)) throw new Error("Issues not found");
 
@@ -100,9 +100,9 @@ describe("Load More Done Issues", () => {
       await new Promise((r) => setTimeout(r, 10));
     }
 
-    const issue1 = await asUser.query(api.issues.get, { id: issues[0] });
-    const issue2 = await asUser.query(api.issues.get, { id: issues[1] });
-    const issue3 = await asUser.query(api.issues.get, { id: issues[2] });
+    const issue1 = await asUser.query(api.issues.getIssue, { id: issues[0] });
+    const issue2 = await asUser.query(api.issues.getIssue, { id: issues[1] });
+    const issue3 = await asUser.query(api.issues.getIssue, { id: issues[2] });
 
     if (!(issue1 && issue2 && issue3)) throw new Error("Issues not found");
 

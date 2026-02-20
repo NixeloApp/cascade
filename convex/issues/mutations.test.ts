@@ -35,7 +35,7 @@ describe("Issue Mutations", () => {
         dueDate: Date.now() + 7 * 24 * 60 * 60 * 1000, // 1 week from now
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Full Featured Issue");
       expect(issue?.description).toBe("A detailed description");
       expect(issue?.type).toBe("story");
@@ -62,7 +62,7 @@ describe("Issue Mutations", () => {
         priority: "high",
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.type).toBe("epic");
       await t.finishInProgressScheduledFunctions();
     });
@@ -83,7 +83,7 @@ describe("Issue Mutations", () => {
         priority: "highest",
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.type).toBe("bug");
       expect(issue?.priority).toBe("highest");
       await t.finishInProgressScheduledFunctions();
@@ -217,7 +217,7 @@ describe("Issue Mutations", () => {
         newOrder: 0,
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.status).toBe("done");
       await t.finishInProgressScheduledFunctions();
     });
@@ -283,7 +283,7 @@ describe("Issue Mutations", () => {
         storyPoints: 3,
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Updated Title");
       expect(issue?.description).toBe("Updated description");
       expect(issue?.priority).toBe("high");
@@ -320,7 +320,7 @@ describe("Issue Mutations", () => {
         dueDate: null,
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.assigneeId).toBeUndefined();
       expect(issue?.estimatedHours).toBeUndefined();
       expect(issue?.storyPoints).toBeUndefined();
@@ -350,7 +350,7 @@ describe("Issue Mutations", () => {
       });
 
       // Labels are enriched with color info when fetched via issues.get
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       const labelNames = issue?.labels.map((l: { name: string }) => l.name) ?? [];
       expect(labelNames).toContain("bug");
       expect(labelNames).toContain("urgent");
@@ -518,8 +518,8 @@ describe("Issue Mutations", () => {
 
         expect(result.updated).toBe(2);
 
-        const updated1 = await asUser.query(api.issues.get, { id: issue1 });
-        const updated2 = await asUser.query(api.issues.get, { id: issue2 });
+        const updated1 = await asUser.query(api.issues.getIssue, { id: issue1 });
+        const updated2 = await asUser.query(api.issues.getIssue, { id: issue2 });
         expect(updated1?.priority).toBe("highest");
         expect(updated2?.priority).toBe("highest");
         await t.finishInProgressScheduledFunctions();
@@ -547,8 +547,8 @@ describe("Issue Mutations", () => {
 
         expect(result.updated).toBe(2);
 
-        const updated1 = await asUser.query(api.issues.get, { id: issue1 });
-        const updated2 = await asUser.query(api.issues.get, { id: issue2 });
+        const updated1 = await asUser.query(api.issues.getIssue, { id: issue1 });
+        const updated2 = await asUser.query(api.issues.getIssue, { id: issue2 });
         expect(updated1?.assigneeId).toBe(assigneeId);
         expect(updated2?.assigneeId).toBe(assigneeId);
         await t.finishInProgressScheduledFunctions();
@@ -573,7 +573,7 @@ describe("Issue Mutations", () => {
           assigneeId: null,
         });
 
-        const updated = await asUser.query(api.issues.get, { id: issue });
+        const updated = await asUser.query(api.issues.getIssue, { id: issue });
         expect(updated?.assigneeId).toBeUndefined();
         await t.finishInProgressScheduledFunctions();
       });
@@ -598,8 +598,8 @@ describe("Issue Mutations", () => {
         });
 
         // Labels are enriched with color info when fetched via issues.get
-        const updated1 = await asUser.query(api.issues.get, { id: issue1 });
-        const updated2 = await asUser.query(api.issues.get, { id: issue2 });
+        const updated1 = await asUser.query(api.issues.getIssue, { id: issue1 });
+        const updated2 = await asUser.query(api.issues.getIssue, { id: issue2 });
         const labels1 = updated1?.labels.map((l: { name: string }) => l.name) ?? [];
         const labels2 = updated2?.labels.map((l: { name: string }) => l.name) ?? [];
         expect(labels1).toContain("important");
@@ -649,7 +649,7 @@ describe("Issue Mutations", () => {
         });
 
         // Labels are enriched with color info when fetched via issues.get
-        const issue = await asUser.query(api.issues.get, { id: issueId });
+        const issue = await asUser.query(api.issues.getIssue, { id: issueId });
         const labelNames = issue?.labels.map((l: { name: string }) => l.name) ?? [];
         const existingCount = labelNames.filter((name: string) => name === "existing").length;
         expect(existingCount).toBe(1); // No duplicate
@@ -677,8 +677,8 @@ describe("Issue Mutations", () => {
 
         expect(result.deleted).toBe(2);
 
-        const deleted1 = await asUser.query(api.issues.get, { id: issue1 });
-        const deleted2 = await asUser.query(api.issues.get, { id: issue2 });
+        const deleted1 = await asUser.query(api.issues.getIssue, { id: issue1 });
+        const deleted2 = await asUser.query(api.issues.getIssue, { id: issue2 });
         expect(deleted1).toBeNull();
         expect(deleted2).toBeNull();
         await t.finishInProgressScheduledFunctions();
@@ -715,7 +715,7 @@ describe("Issue Mutations", () => {
         expect(result.deleted).toBe(0);
 
         // Issue should still exist
-        const issue = await asAdmin.query(api.issues.get, { id: issueId });
+        const issue = await asAdmin.query(api.issues.getIssue, { id: issueId });
         expect(issue).toBeDefined();
         await t.finishInProgressScheduledFunctions();
       });
