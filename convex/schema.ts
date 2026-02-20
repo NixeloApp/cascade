@@ -463,6 +463,8 @@ const applicationTables = {
     .index("by_team_status_updated", ["teamId", "status", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_project_deleted", ["projectId", "isDeleted"])
+    .index("by_project_assignee", ["projectId", "assigneeId", "isDeleted"])
+    .index("by_project_reporter", ["projectId", "reporterId", "isDeleted"])
     .searchIndex("search_title", {
       searchField: "searchContent",
       filterFields: [
