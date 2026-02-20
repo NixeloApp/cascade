@@ -104,20 +104,6 @@ export const list = listWorkspaces;
 
 /**
  * Get a single workspace by ID
- * @deprecated Use `getWorkspace` instead which returns null if not found
- */
-export const get = authenticatedQuery({
-  args: { id: v.id("workspaces") },
-  handler: async (ctx, args) => {
-    const workspace = await ctx.db.get(args.id);
-    if (!workspace) throw notFound("workspace", args.id);
-
-    return workspace;
-  },
-});
-
-/**
- * Get a single workspace by ID
  * Returns null if not found (consistent with other APIs)
  */
 export const getWorkspace = authenticatedQuery({
@@ -125,28 +111,6 @@ export const getWorkspace = authenticatedQuery({
   handler: async (ctx, args) => {
     const workspace = await ctx.db.get(args.id);
     if (!workspace) return null;
-
-    return workspace;
-  },
-});
-
-/**
- * Get workspace by slug
- * @deprecated Use `getWorkspaceBySlug` instead which returns null if not found
- */
-export const getBySlug = organizationQuery({
-  args: {
-    slug: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const workspace = await ctx.db
-      .query("workspaces")
-      .withIndex("by_organization_slug", (q) =>
-        q.eq("organizationId", ctx.organizationId).eq("slug", args.slug),
-      )
-      .first();
-
-    if (!workspace) throw notFound("workspace");
 
     return workspace;
   },
@@ -435,5 +399,47 @@ export const getWorkspaceMembers = workspaceQuery({
   },
 });
 
-/** @deprecated Use getWorkspaceMembers instead */
+// Deprecated aliases
+/** @deprecated Use listWorkspaces */
+export const list = listWorkspaces;
+/** @deprecated Use updateWorkspace */
+export const update = updateWorkspace;
+/** @deprecated Use deleteWorkspace */
+export const remove = deleteWorkspace;
+/** @deprecated Use getWorkspace */
+export const get = authenticatedQuery({
+  args: { id: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db.get(args.id);
+    if (!workspace) throw notFound("workspace", args.id);
+    return workspace;
+  },
+});
+/** @deprecated Use getWorkspaceBySlug */
+export const getBySlug = organizationQuery({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db
+      .query("workspaces")
+      .withIndex("by_organization_slug", (q) =>
+        q.eq("organizationId", ctx.organizationId).eq("slug", args.slug),
+      )
+      .first();
+
+    if (!workspace) throw notFound("workspace");
+
+    return workspace;
+  },
+});
+/** @deprecated Use getWorkspaceStats */
+export const getStats = getWorkspaceStats;
+/** @deprecated Use addWorkspaceMember */
+export const addMember = addWorkspaceMember;
+/** @deprecated Use updateWorkspaceMemberRole */
+export const updateMemberRole = updateWorkspaceMemberRole;
+/** @deprecated Use removeWorkspaceMember */
+export const removeMember = removeWorkspaceMember;
+/** @deprecated Use getWorkspaceMembers */
 export const getMembers = getWorkspaceMembers;
