@@ -362,6 +362,54 @@ describe("Workspaces", () => {
     });
   });
 
+  describe("getWorkspace", () => {
+    it("should get workspace by ID", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const { organizationId } = await asUser.mutation(api.organizations.createOrganization, {
+        name: "Test organization",
+        timezone: "America/New_York",
+      });
+
+      const workspaceId = await asUser.mutation(api.workspaces.create, {
+        name: "Test Workspace",
+        slug: "test-workspace",
+        organizationId,
+      });
+
+      const workspace = await asUser.query(api.workspaces.getWorkspace, { id: workspaceId });
+
+      expect(workspace?.name).toBe("Test Workspace");
+      expect(workspace?.slug).toBe("test-workspace");
+      expect(workspace?.organizationId).toBe(organizationId);
+    });
+
+    it("should return null for non-existent workspace", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      // Create a workspace to get a valid ID format, then delete it
+      const { organizationId } = await asUser.mutation(api.organizations.createOrganization, {
+        name: "Test organization",
+        timezone: "America/New_York",
+      });
+
+      const workspaceId = await asUser.mutation(api.workspaces.create, {
+        name: "Temp Workspace",
+        slug: "temp-workspace",
+        organizationId,
+      });
+
+      await asUser.mutation(api.workspaces.remove, { id: workspaceId });
+
+      const workspace = await asUser.query(api.workspaces.getWorkspace, { id: workspaceId });
+      expect(workspace).toBeNull();
+    });
+  });
+
   describe("getBySlug", () => {
     it("should get workspace by slug", async () => {
       const t = convexTest(schema, modules);
@@ -404,6 +452,51 @@ describe("Workspaces", () => {
           slug: "non-existent-slug",
         });
       }).rejects.toThrow();
+    });
+  });
+
+  describe("getWorkspaceBySlug", () => {
+    it("should get workspace by slug", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const { organizationId } = await asUser.mutation(api.organizations.createOrganization, {
+        name: "Test organization",
+        timezone: "America/New_York",
+      });
+
+      await asUser.mutation(api.workspaces.create, {
+        name: "Test Workspace",
+        slug: "my-slug",
+        organizationId,
+      });
+
+      const workspace = await asUser.query(api.workspaces.getWorkspaceBySlug, {
+        organizationId,
+        slug: "my-slug",
+      });
+
+      expect(workspace?.name).toBe("Test Workspace");
+      expect(workspace?.slug).toBe("my-slug");
+    });
+
+    it("should return null for non-existent slug", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const { organizationId } = await asUser.mutation(api.organizations.createOrganization, {
+        name: "Test organization",
+        timezone: "America/New_York",
+      });
+
+      const workspace = await asUser.query(api.workspaces.getWorkspaceBySlug, {
+        organizationId,
+        slug: "non-existent-slug",
+      });
+
+      expect(workspace).toBeNull();
     });
   });
 

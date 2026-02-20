@@ -98,6 +98,7 @@ export const list = organizationQuery({
 
 /**
  * Get a single workspace by ID
+ * @deprecated Use `getWorkspace` instead which returns null if not found
  */
 export const get = authenticatedQuery({
   args: { id: v.id("workspaces") },
@@ -110,7 +111,22 @@ export const get = authenticatedQuery({
 });
 
 /**
+ * Get a single workspace by ID
+ * Returns null if not found (consistent with other APIs)
+ */
+export const getWorkspace = authenticatedQuery({
+  args: { id: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db.get(args.id);
+    if (!workspace) return null;
+
+    return workspace;
+  },
+});
+
+/**
  * Get workspace by slug
+ * @deprecated Use `getWorkspaceBySlug` instead which returns null if not found
  */
 export const getBySlug = organizationQuery({
   args: {
@@ -125,6 +141,28 @@ export const getBySlug = organizationQuery({
       .first();
 
     if (!workspace) throw notFound("workspace");
+
+    return workspace;
+  },
+});
+
+/**
+ * Get workspace by slug
+ * Returns null if not found (consistent with other APIs)
+ */
+export const getWorkspaceBySlug = organizationQuery({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db
+      .query("workspaces")
+      .withIndex("by_organization_slug", (q) =>
+        q.eq("organizationId", ctx.organizationId).eq("slug", args.slug),
+      )
+      .first();
+
+    if (!workspace) return null;
 
     return workspace;
   },
