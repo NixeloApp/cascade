@@ -1,8 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
-import type { Doc, Id } from "./_generated/dataModel";
-import type { QueryCtx } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
@@ -360,47 +359,6 @@ export const getWorkspaceProjects = authenticatedQuery({
   },
 });
 
-async function enrichProjectWithMetadata(
-  ctx: QueryCtx & { userId: Id<"users"> },
-  project: Doc<"projects">,
-) {
-  const creator = await ctx.db.get(project.createdBy);
-
-  // Get members with their roles from projectMembers table (bounded)
-  const projectMembers = await ctx.db
-    .query("projectMembers")
-    .withIndex("by_project", (q) => q.eq("projectId", project._id))
-    .filter(notDeleted)
-    .take(BOUNDED_LIST_LIMIT);
-
-  // Batch fetch all members to avoid N+1
-  const memberUserIds = projectMembers.map((m) => m.userId);
-  const memberMap = await batchFetchUsers(ctx, memberUserIds);
-
-  const members = projectMembers.map((membership) => {
-    const member = memberMap.get(membership.userId);
-    return {
-      _id: membership.userId,
-      name: member?.name || member?.email || "Unknown",
-      email: member?.email,
-      image: member?.image,
-      role: membership.role,
-      addedAt: membership._creationTime,
-    };
-  });
-
-  const userRole = await getProjectRole(ctx, project._id, ctx.userId);
-
-  return {
-    ...project,
-
-    creatorName: getUserName(creator),
-    members,
-    isOwner: project.ownerId === ctx.userId || project.createdBy === ctx.userId,
-    userRole,
-  };
-}
-
 /**
  * Get project details by ID.
  *
@@ -424,7 +382,41 @@ export const getProject = authenticatedQuery({
     const hasAccess = await canAccessProject(ctx, project._id, ctx.userId);
     if (!hasAccess) throw forbidden();
 
-    return await enrichProjectWithMetadata(ctx, project);
+    const creator = await ctx.db.get(project.createdBy);
+
+    // Get members with their roles from projectMembers table (bounded)
+    const projectMembers = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project", (q) => q.eq("projectId", project._id))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    // Batch fetch all members to avoid N+1
+    const memberUserIds = projectMembers.map((m) => m.userId);
+    const memberMap = await batchFetchUsers(ctx, memberUserIds);
+
+    const members = projectMembers.map((membership) => {
+      const member = memberMap.get(membership.userId);
+      return {
+        _id: membership.userId,
+        name: member?.name || member?.email || "Unknown",
+        email: member?.email,
+        image: member?.image,
+        role: membership.role,
+        addedAt: membership._creationTime,
+      };
+    });
+
+    const userRole = await getProjectRole(ctx, project._id, ctx.userId);
+
+    return {
+      ...project,
+
+      creatorName: getUserName(creator),
+      members,
+      isOwner: project.ownerId === ctx.userId || project.createdBy === ctx.userId,
+      userRole,
+    };
   },
 });
 
@@ -454,7 +446,41 @@ export const getByKey = authenticatedQuery({
       return null; // Return null instead of throwing for cleaner UI handling
     }
 
-    return await enrichProjectWithMetadata(ctx, project);
+    const creator = await ctx.db.get(project.createdBy);
+
+    // Get members with their roles from projectMembers table (bounded)
+    const memberships = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project", (q) => q.eq("projectId", project._id))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    // Batch fetch all members to avoid N+1
+    const memberUserIds = memberships.map((m) => m.userId);
+    const memberMap = await batchFetchUsers(ctx, memberUserIds);
+
+    const members = memberships.map((membership) => {
+      const member = memberMap.get(membership.userId);
+      return {
+        _id: membership.userId,
+        name: member?.name || member?.email || "Unknown",
+        email: member?.email,
+        image: member?.image,
+        role: membership.role,
+        addedAt: membership._creationTime,
+      };
+    });
+
+    const userRole = await getProjectRole(ctx, project._id, ctx.userId);
+
+    return {
+      ...project,
+
+      creatorName: getUserName(creator),
+      members,
+      isOwner: project.ownerId === ctx.userId || project.createdBy === ctx.userId,
+      userRole,
+    };
   },
 });
 

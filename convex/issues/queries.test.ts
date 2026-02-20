@@ -489,16 +489,16 @@ describe("issue queries", () => {
   });
 
   describe("listComments", () => {
-    it("should return empty for non-existent issue", async () => {
+    it("should throw for non-existent issue", async () => {
       const issueId = await createTestIssue(t, projectId, ctx.userId);
       await t.run(async (runCtx) => runCtx.db.delete(issueId));
 
-      const result = await ctx.asUser.query(api.issues.queries.listComments, {
-        issueId,
-        paginationOpts: { numItems: 10, cursor: null },
-      });
-
-      expect(result.page).toHaveLength(0);
+      await expect(
+        ctx.asUser.query(api.issues.queries.listComments, {
+          issueId,
+          paginationOpts: { numItems: 10, cursor: null },
+        }),
+      ).rejects.toThrow();
     });
 
     it("should return paginated comments", async () => {
