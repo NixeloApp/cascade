@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
 import type { ConvexAuthContext } from "./lib/authTypes";
 import { generateOTP } from "./lib/crypto";
+import { isAppError } from "./lib/errors";
 import { logger } from "./lib/logger";
 
 /**
@@ -36,8 +37,11 @@ export const otpPasswordReset = Resend({
     if (ctx.runMutation) {
       try {
         await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimitByEmail, { email });
-      } catch (_e) {
-        throw new Error("Too many password reset requests. Please try again later.");
+      } catch (error) {
+        if (isAppError(error) && error.data.code === "RATE_LIMITED") {
+          throw new Error("Too many password reset requests. Please try again later.");
+        }
+        throw error;
       }
     }
 
