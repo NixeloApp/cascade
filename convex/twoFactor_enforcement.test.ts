@@ -1,16 +1,16 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createTestUser } from "./testUtils";
-import type { Id } from "./_generated/dataModel";
 
 // Helper to authenticate with specific session ID
 function asAuthenticatedSession(
   t: ReturnType<typeof convexTest>,
   userId: Id<"users">,
-  sessionId: string
+  sessionId: string,
 ) {
   // convex-auth format: userId|sessionId
   const subject = `${userId}|${sessionId}`;

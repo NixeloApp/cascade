@@ -5,125 +5,30 @@
  * Stores Y.js updates and state vectors for document persistence.
  */
 
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
-import { internalMutation, type MutationCtx, type QueryCtx } from "./_generated/server";
-import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { mutation, query } from "./_generated/server";
 import { batchFetchUsers } from "./lib/batchHelpers";
-import { forbidden } from "./lib/errors";
-import { canAccessProject, canEditProject } from "./projectAccess";
-
-/**
- * Assert that the user has read access to the document.
- * Checks:
- * 1. Creator
- * 2. Project read access (if linked to project)
- * 3. Organization read access (if public)
- */
-async function assertDocumentAccess(
-  ctx: QueryCtx & { userId: Id<"users"> },
-  document: Doc<"documents">,
-) {
-  // 1. Creator always has access
-  if (document.createdBy === ctx.userId) {
-    return;
-  }
-
-  // 2. Project-level access
-  if (document.projectId) {
-    const hasAccess = await canAccessProject(ctx, document.projectId, ctx.userId);
-    if (!hasAccess) {
-      throw forbidden(undefined, "Not authorized to access this document's project");
-    }
-    return;
-  }
-
-  // 3. Public document in organization
-  if (document.isPublic) {
-    // Must be a member of the organization
-    const membership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_organization_user", (q) =>
-        q.eq("organizationId", document.organizationId).eq("userId", ctx.userId),
-      )
-      .first();
-
-    if (!membership) {
-      throw forbidden(undefined, "You are not a member of this organization");
-    }
-    return;
-  }
-
-  // Otherwise forbidden
-  throw forbidden(undefined, "Not authorized to access this document");
-}
-
-/**
- * Assert that the user has write access to the document.
- * Checks:
- * 1. Creator
- * 2. Project write access (if linked to project)
- * 3. Organization read access (if public - treating public docs as wiki-like)
- */
-async function assertDocumentWriteAccess(
-  ctx: MutationCtx & { userId: Id<"users"> },
-  document: Doc<"documents">,
-) {
-  // 1. Creator always has access
-  if (document.createdBy === ctx.userId) {
-    return;
-  }
-
-  // 2. Project-level access
-  if (document.projectId) {
-    const canEdit = await canEditProject(ctx, document.projectId, ctx.userId);
-    if (!canEdit) {
-      throw forbidden("editor", "You need editor access to this project");
-    }
-    return;
-  }
-
-  // 3. Public document in organization (RBAC enforced - only owners/admins can edit)
-  if (document.isPublic) {
-    const membership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_organization_user", (q) =>
-        q.eq("organizationId", document.organizationId).eq("userId", ctx.userId),
-      )
-      .first();
-
-    if (!membership) {
-      throw forbidden(undefined, "You are not a member of this organization");
-    }
-
-    // Enforce RBAC: only owners and admins can edit public documents
-    if (membership.role !== "owner" && membership.role !== "admin") {
-      throw forbidden("admin", "You need admin access to edit this document");
-    }
-    return;
-  }
-
-  // Otherwise forbidden
-  throw forbidden(undefined, "Not authorized to edit this document");
-}
 
 /**
  * Get Y.js document state for a document
  * Returns the state vector and pending updates
  */
-export const getDocumentState = authenticatedQuery({
+export const getDocumentState = query({
   args: {
     documentId: v.id("documents"),
   },
   handler: async (ctx, args) => {
-    // Check if document exists
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if document exists and user has access
     const document = await ctx.db.get(args.documentId);
     if (!document) {
       throw new Error("Document not found");
     }
-
-    // Check access
-    await assertDocumentAccess(ctx, document);
 
     // Get Y.js state
     const yjsDoc = await ctx.db
@@ -152,21 +57,23 @@ export const getDocumentState = authenticatedQuery({
  * Apply Y.js updates to a document
  * Used by clients to sync their local changes
  */
-export const applyUpdates = authenticatedMutation({
+export const applyUpdates = mutation({
   args: {
     documentId: v.id("documents"),
     updates: v.array(v.string()), // Base64 encoded Y.js updates
     clientVersion: v.number(), // Client's current version
   },
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     // Check if document exists
     const document = await ctx.db.get(args.documentId);
     if (!document) {
       throw new Error("Document not found");
     }
-
-    // Check write access
-    await assertDocumentWriteAccess(ctx, document);
 
     // Get current Y.js state
     const existingDoc = await ctx.db
@@ -183,7 +90,7 @@ export const applyUpdates = authenticatedMutation({
         stateVector: "", // Will be computed by client
         updates: args.updates,
         version: 1,
-        lastModifiedBy: ctx.userId,
+        lastModifiedBy: userId,
         updatedAt: now,
       });
 
@@ -217,7 +124,7 @@ export const applyUpdates = authenticatedMutation({
     await ctx.db.patch(existingDoc._id, {
       updates: updatesToStore,
       version: newVersion,
-      lastModifiedBy: ctx.userId,
+      lastModifiedBy: userId,
       updatedAt: now,
     });
 
@@ -232,19 +139,17 @@ export const applyUpdates = authenticatedMutation({
  * Update the state vector after client computes it
  * Called after client merges updates to update the stored state vector
  */
-export const updateStateVector = authenticatedMutation({
+export const updateStateVector = mutation({
   args: {
     documentId: v.id("documents"),
     stateVector: v.string(), // Base64 encoded Y.js state vector
     version: v.number(),
   },
   handler: async (ctx, args) => {
-    // Check if document exists and user has access
-    const document = await ctx.db.get(args.documentId);
-    if (!document) {
-      throw new Error("Document not found");
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
     }
-    await assertDocumentWriteAccess(ctx, document);
 
     const yjsDoc = await ctx.db
       .query("yjsDocuments")
@@ -273,19 +178,17 @@ export const updateStateVector = authenticatedMutation({
  * Compact updates by replacing with a single merged update
  * Called periodically to reduce storage and improve sync performance
  */
-export const compactUpdates = authenticatedMutation({
+export const compactUpdates = mutation({
   args: {
     documentId: v.id("documents"),
     mergedUpdate: v.string(), // Base64 encoded merged Y.js update
     newStateVector: v.string(), // Base64 encoded state vector after merge
   },
   handler: async (ctx, args) => {
-    // Check if document exists and user has access
-    const document = await ctx.db.get(args.documentId);
-    if (!document) {
-      throw new Error("Document not found");
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
     }
-    await assertDocumentWriteAccess(ctx, document);
 
     const yjsDoc = await ctx.db
       .query("yjsDocuments")
@@ -300,7 +203,6 @@ export const compactUpdates = authenticatedMutation({
       stateVector: args.newStateVector,
       updates: [args.mergedUpdate], // Replace all updates with single merged one
       version: yjsDoc.version + 1,
-      lastModifiedBy: ctx.userId,
       updatedAt: Date.now(),
     });
 
@@ -315,20 +217,17 @@ export const compactUpdates = authenticatedMutation({
 /**
  * Update user's awareness state (cursor position, selection)
  */
-export const updateAwareness = authenticatedMutation({
+export const updateAwareness = mutation({
   args: {
     documentId: v.id("documents"),
     clientId: v.number(),
     awarenessData: v.string(), // JSON string of awareness state
   },
   handler: async (ctx, args) => {
-    // Check if document exists and user has access
-    // Viewers can update awareness (presence)
-    const document = await ctx.db.get(args.documentId);
-    if (!document) {
-      throw new Error("Document not found");
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
     }
-    await assertDocumentAccess(ctx, document);
 
     const now = Date.now();
 
@@ -336,7 +235,7 @@ export const updateAwareness = authenticatedMutation({
     const existing = await ctx.db
       .query("yjsAwareness")
       .withIndex("by_document_user", (q) =>
-        q.eq("documentId", args.documentId).eq("userId", ctx.userId),
+        q.eq("documentId", args.documentId).eq("userId", userId),
       )
       .first();
 
@@ -349,7 +248,7 @@ export const updateAwareness = authenticatedMutation({
     } else {
       await ctx.db.insert("yjsAwareness", {
         documentId: args.documentId,
-        userId: ctx.userId,
+        userId,
         clientId: args.clientId,
         awarenessData: args.awarenessData,
         lastSeenAt: now,
@@ -364,17 +263,15 @@ export const updateAwareness = authenticatedMutation({
  * Get all active awareness states for a document
  * Returns other users' cursor positions
  */
-export const getAwareness = authenticatedQuery({
+export const getAwareness = query({
   args: {
     documentId: v.id("documents"),
   },
   handler: async (ctx, args) => {
-    // Check if document exists and user has access
-    const document = await ctx.db.get(args.documentId);
-    if (!document) {
-      throw new Error("Document not found");
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
     }
-    await assertDocumentAccess(ctx, document);
 
     // Get awareness states from the last 30 seconds (active users)
     const cutoff = Date.now() - 30 * 1000;
@@ -383,7 +280,7 @@ export const getAwareness = authenticatedQuery({
       .query("yjsAwareness")
       .withIndex("by_document", (q) => q.eq("documentId", args.documentId))
       .filter((q) => q.gt(q.field("lastSeenAt"), cutoff))
-      .take(200);
+      .collect();
 
     // Batch fetch users to avoid N+1 queries
     const userIds = awarenessRecords.map((r) => r.userId);
@@ -398,7 +295,7 @@ export const getAwareness = authenticatedQuery({
         awarenessData: record.awarenessData,
         userName: user?.name || "Anonymous",
         userImage: user?.image,
-        isCurrentUser: record.userId === ctx.userId,
+        isCurrentUser: record.userId === userId,
       };
     });
 
@@ -409,33 +306,20 @@ export const getAwareness = authenticatedQuery({
 /**
  * Remove user's awareness (when they leave the document)
  */
-export const removeAwareness = authenticatedMutation({
+export const removeAwareness = mutation({
   args: {
     documentId: v.id("documents"),
   },
   handler: async (ctx, args) => {
-    // Check if document exists
-    const document = await ctx.db.get(args.documentId);
-    if (!document) {
-      // Document already deleted - just clean up awareness silently
-      // No security issue: user is authenticated and can only remove their own presence
-      const existing = await ctx.db
-        .query("yjsAwareness")
-        .withIndex("by_document_user", (q) =>
-          q.eq("documentId", args.documentId).eq("userId", ctx.userId),
-        )
-        .first();
-      if (existing) {
-        await ctx.db.delete(existing._id);
-      }
-      return { success: true };
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
     }
-    await assertDocumentAccess(ctx, document);
 
     const existing = await ctx.db
       .query("yjsAwareness")
       .withIndex("by_document_user", (q) =>
-        q.eq("documentId", args.documentId).eq("userId", ctx.userId),
+        q.eq("documentId", args.documentId).eq("userId", userId),
       )
       .first();
 
@@ -450,7 +334,7 @@ export const removeAwareness = authenticatedMutation({
 /**
  * Cleanup stale awareness records (run periodically via cron)
  */
-export const cleanupStaleAwareness = internalMutation({
+export const cleanupStaleAwareness = mutation({
   args: {},
   handler: async (ctx) => {
     // Remove awareness records older than 1 minute

@@ -27,7 +27,7 @@ import { digestFrequencies } from "./validators";
 const MAX_ISSUES_FOR_STATS = 1000;
 const MAX_COMMENTS_FOR_STATS = 1000;
 // Threshold below which per-project index queries outperform a single filtered scan
-const MAX_PROJECTS_FOR_FAST_PATH = 50;
+const MAX_PROJECTS_FOR_FAST_PATH = 10;
 
 /**
  * Internal query to get user by ID (system use only)
@@ -553,36 +553,30 @@ async function countIssuesByAssigneeFast(
 ) {
   const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
 
-  // 1. Total Assigned: Parallel efficient counts on by_project_assignee index
-  // This avoids loading documents into memory
-  const totalAssignedCounts = await Promise.all(
-    projectIds.map((projectId) =>
-      efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_assignee", (q) =>
-            q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
-          ),
-        MAX_ISSUES_FOR_STATS,
-      ),
-    ),
-  );
-  const totalAssigned = totalAssignedCounts.reduce((a, b) => a + b, 0);
+  const results = await Promise.all(
+    projectIds.map(async (projectId) => {
+      // Fetch all assigned issues in this project
+      // We fetch up to MAX_ISSUES_FOR_STATS per project.
+      const issues = await ctx.db
+        .query("issues")
+        .withIndex("by_project_assignee", (q) =>
+          q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+        )
+        .take(MAX_ISSUES_FOR_STATS);
 
-  // 2. Completed: Global index scan filtered by allowed projects
-  // We can't use by_project_assignee efficiently for status filtering (no status in index).
-  // Falling back to filtered count on global index is better than loading all docs.
-  const completed = await efficientCount(
-    ctx.db
-      .query("issues")
-      .withIndex("by_assignee_status", (q) =>
-        q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
-      )
-      .filter((q) => isAllowedProject(q, projectIds)),
-    MAX_ISSUES_FOR_STATS,
+      const assigned = issues.length;
+      const completed = issues.filter((i) => i.status === "done").length;
+      return [assigned, completed] as [number, number];
+    }),
   );
 
-  return [Math.min(totalAssigned, MAX_ISSUES_FOR_STATS), Math.min(completed, MAX_ISSUES_FOR_STATS)];
+  const totalAssigned = results.reduce((acc, [a]) => acc + a, 0);
+  const totalCompleted = results.reduce((acc, [, c]) => acc + c, 0);
+  // Apply global cap to match slow-path behavior
+  return [
+    Math.min(totalAssigned, MAX_ISSUES_FOR_STATS),
+    Math.min(totalCompleted, MAX_ISSUES_FOR_STATS),
+  ];
 }
 
 /**
