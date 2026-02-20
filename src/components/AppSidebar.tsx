@@ -396,7 +396,7 @@ export function AppSidebar() {
                           setCreateTeamWorkspace({ id: workspace._id, slug: workspace.slug });
                         }}
                         className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-                        aria-label="Create new team"
+                        aria-label={`Create new team in ${workspace.name}`}
                       >
                         <Plus className="w-4 h-4 text-ui-text-tertiary" />
                       </Button>
