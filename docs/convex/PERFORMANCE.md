@@ -159,7 +159,7 @@ const admins = await ctx.db.query("users")
 
 ```typescript
 // ❌ Unnecessary: calling query from mutation
-const user = await ctx.runQuery(internal.users.get, { userId });
+const user = await ctx.runQuery(internal.users.getUser, { id: userId });
 
 // ✅ Direct DB access
 const user = await ctx.db.get(userId);

@@ -196,7 +196,7 @@ export function ProfileContent({ userId }: ProfileContentProps) {
   const [email, setEmail] = useState("");
 
   const currentUser = useQuery(api.users.getCurrent);
-  const fetchedViewUser = useQuery(api.users.get, userId ? { id: userId } : "skip");
+  const fetchedViewUser = useQuery(api.users.getUser, userId ? { id: userId } : "skip");
   const userStatsForUserId = useQuery(api.users.getUserStats, userId ? { userId } : "skip");
   const userStatsForCurrent = useQuery(
     api.users.getUserStats,
