@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { DAY, MONTH, WEEK } from "@convex/lib/timeUtils";
+import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
