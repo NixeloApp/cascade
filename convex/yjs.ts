@@ -83,7 +83,7 @@ async function assertDocumentWriteAccess(
     return;
   }
 
-  // 3. Public document in organization (Wiki style - members can edit)
+  // 3. Public document in organization (RBAC enforced - only owners/admins can edit)
   if (document.isPublic) {
     const membership = await ctx.db
       .query("organizationMembers")
@@ -95,7 +95,11 @@ async function assertDocumentWriteAccess(
     if (!membership) {
       throw forbidden(undefined, "You are not a member of this organization");
     }
-    // Organization members can edit public documents (default assumption for collaborative docs)
+
+    // Enforce RBAC: only owners and admins can edit public documents
+    if (membership.role !== "owner" && membership.role !== "admin") {
+      throw forbidden("admin", "You need admin access to edit this document");
+    }
     return;
   }
 
