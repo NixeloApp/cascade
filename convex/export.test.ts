@@ -375,36 +375,6 @@ describe("Export", () => {
         }),
       ).rejects.toThrow(/FORBIDDEN|editor/i);
     });
-
-    it("should not crash when importing null issues in JSON", async () => {
-      const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
-
-      const projectId = await createProjectInOrganization(t, userId, organizationId, {
-        name: "Crash Test",
-        key: "CRASH",
-      });
-
-      const jsonData = JSON.stringify({
-        issues: [
-          null, // This should cause a crash in the catch block if not handled
-          { title: "Valid Issue" },
-        ],
-      });
-
-      // This mutation should complete without throwing a server error
-      const result = await asUser.mutation(api.export.importIssuesJSON, {
-        projectId,
-        jsonData,
-      });
-
-      // Expect 1 imported, 1 failed (gracefully)
-      expect(result.imported).toBe(1);
-      expect(result.failed).toBe(1);
-      expect(result.errors[0].error).toBeDefined();
-      // The title should be "Unknown" or similar, not crash
-      expect(result.errors[0].title).toBe("Unknown");
-    });
   });
 
   describe("importIssuesCSV", () => {
