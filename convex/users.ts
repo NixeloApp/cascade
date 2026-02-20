@@ -211,7 +211,17 @@ export const updateProfile = authenticatedMutation({
  * - Checks for uniqueness (safe against enumeration)
  * - Sends verification email
  */
-async function handleEmailChange(ctx: MutationCtx & { userId: Id<"users"> }, newEmail: string) {
+async function handleEmailChange(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  newEmail: string,
+): Promise<
+  | Record<string, never>
+  | {
+      pendingEmail: string;
+      pendingEmailVerificationToken: string;
+      pendingEmailVerificationExpires: number;
+    }
+> {
   validate.email(newEmail);
 
   // Check if email actually changed
