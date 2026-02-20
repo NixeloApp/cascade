@@ -150,6 +150,14 @@ export function run() {
             reportError(filePath, node, `Use ${suggestion} instead of raw <${tagName}> tags.`);
           }
         }
+        // Raw button tags — use Button component
+        // Allow in test files (mocks) and example files
+        if (tagName === "button") {
+          const isAllowed = rel.includes(".test.tsx") || rel.includes(".example.tsx");
+          if (!isAllowed) {
+            reportError(filePath, node, `Use <Button> component instead of raw <button> tags.`);
+          }
+        }
         // Raw anchor tags — use Link component or Button asChild with href
         // Allow in test files, download links, and files with external links
         // Note: <a> inside <Button asChild> is allowed (Button handles the anchor)

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { type FuzzySearchResult, highlightMatches } from "@/hooks/useFuzzySearch";
@@ -209,10 +210,10 @@ export function FuzzySearchInput<T>({
 
         {/* Clear button */}
         {query.length > 0 && (
-          <button
-            type="button"
+          <Button
+            variant="unstyled"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ui-text-tertiary hover:text-ui-text transition-fast p-0.5 rounded hover:bg-ui-bg-hover"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ui-text-tertiary hover:text-ui-text transition-fast p-0.5 rounded hover:bg-ui-bg-hover h-auto"
             aria-label="Clear search"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -224,7 +225,7 @@ export function FuzzySearchInput<T>({
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button>
+          </Button>
         )}
       </div>
 
@@ -242,8 +243,8 @@ export function FuzzySearchInput<T>({
             </Typography>
           ) : (
             results.map((result, index) => (
-              <button
-                type="button"
+              <Button
+                variant="unstyled"
                 key={getKey(result.item)}
                 role="option"
                 aria-selected={index === selectedIndex}
@@ -254,7 +255,7 @@ export function FuzzySearchInput<T>({
                 }}
                 onMouseEnter={() => setSelectedIndex(index)}
                 className={cn(
-                  "w-full px-4 py-2.5 text-left flex items-center justify-between transition-fast",
+                  "w-full px-4 py-2.5 text-left flex items-center justify-between transition-fast h-auto",
                   index === selectedIndex
                     ? "bg-ui-bg-hover text-ui-text"
                     : "hover:bg-ui-bg-hover text-ui-text",
@@ -266,7 +267,7 @@ export function FuzzySearchInput<T>({
                     {((1 - result.score) * 100).toFixed(0)}%
                   </Typography>
                 )}
-              </button>
+              </Button>
             ))
           )}
         </div>

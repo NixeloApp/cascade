@@ -21,6 +21,7 @@ const buttonVariants = cva(
         link: "text-brand underline-offset-4 hover:underline active:scale-100",
         outline:
           "bg-transparent text-ui-text border border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary focus-visible:ring-brand-ring",
+        unstyled: "focus-visible:ring-brand-ring",
       },
       size: {
         sm: "h-9 px-3 text-sm",

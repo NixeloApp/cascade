@@ -89,17 +89,14 @@ function ModeToggleButton({
 }) {
   const isActive = currentMode === mode;
   return (
-    <button
-      type="button"
+    <Button
+      variant={isActive ? "secondary" : "ghost"}
       onClick={onClick}
-      className={cn(
-        "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-        isActive ? "bg-ui-bg text-ui-text shadow-sm" : "text-ui-text-secondary hover:text-ui-text",
-      )}
+      className={cn("flex-1 gap-2", isActive && "shadow-sm")}
     >
       <Icon className="w-4 h-4" />
       {label}
-    </button>
+    </Button>
   );
 }
 

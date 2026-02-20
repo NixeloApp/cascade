@@ -59,6 +59,7 @@ export function run() {
     "/IssuesCalendarView.tsx", // Calendar grid styling
     "/KanbanBoard.tsx", // Board columns with specific widths
     "/KeyboardShortcutsHelp.tsx", // kbd element styling
+    "/DocumentTree.tsx", // Tree expand/collapse button (p-0.5 h-5 w-5)
     "/LabelsManager.tsx", // Inline link button styling (p-0 h-auto)
     "/MentionInput.tsx", // Dropdown positioning
     "/NotificationCenter.tsx", // Popover with badge positioning

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/Button";
 
 const linkStyles =
   "text-sm text-brand-ring hover:text-brand-muted hover:underline font-medium cursor-pointer transition-colors";
@@ -46,16 +47,15 @@ export function AuthLinkButton({
   variant = "default",
 }: AuthLinkButtonProps) {
   const baseStyles = variant === "muted" ? mutedLinkStyles : linkStyles;
-  const disabledStyles = disabled ? "opacity-50 cursor-not-allowed" : "";
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="unstyled"
       onClick={onClick}
       disabled={disabled}
-      className={cn(baseStyles, disabledStyles, className)}
+      className={cn(baseStyles, className)}
     >
       {children}
-    </button>
+    </Button>
   );
 }

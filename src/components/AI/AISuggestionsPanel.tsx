@@ -46,8 +46,8 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
     <Flex direction="column" className="h-full bg-ui-bg">
       {/* Action Bar */}
       <div className="p-3 sm:p-4 border-b border-ui-border bg-ui-bg-secondary">
-        <button
-          type="button"
+        <Button
+          variant="unstyled"
           onClick={handleGenerateInsights}
           disabled={isGenerating}
           className="w-full px-4 py-2.5 sm:py-3 bg-linear-to-r from-brand to-accent text-brand-foreground rounded-lg text-sm sm:text-base font-medium hover:from-brand-hover hover:to-accent-hover focus:outline-none focus:ring-2 focus:ring-brand-ring disabled:opacity-50 disabled:cursor-not-allowed transition-all touch-manipulation"
@@ -67,7 +67,7 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
               </>
             )}
           </Flex>
-        </button>
+        </Button>
 
         {/* Filter Tabs */}
         <ToggleGroup

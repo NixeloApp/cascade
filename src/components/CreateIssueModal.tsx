@@ -392,13 +392,13 @@ export function CreateIssueModal({
             </Typography>
             <Flex wrap gap="sm">
               {labels.map((label: Doc<"labels">) => (
-                <button
+                <Button
                   key={label._id}
-                  type="button"
+                  variant="unstyled"
                   onClick={() => toggleLabel(label._id)}
                   aria-pressed={selectedLabels.includes(label._id)}
                   className={cn(
-                    "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-brand-foreground transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring",
+                    "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-brand-foreground transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring h-auto",
                     selectedLabels.includes(label._id)
                       ? "opacity-100 ring-2 ring-offset-2 ring-brand"
                       : "opacity-60 hover:opacity-80",
@@ -409,7 +409,7 @@ export function CreateIssueModal({
                     <Icon icon={Check} size="sm" className="mr-1" />
                   )}
                   {label.name}
-                </button>
+                </Button>
               ))}
             </Flex>
           </Stack>

@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -93,19 +94,14 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
 
         <Flex gap="sm">
           {(["week", "month", "quarter"] as const).map((range) => (
-            <button
+            <Button
               key={range}
-              type="button"
+              variant={dateRange === range ? "primary" : "secondary"}
+              size="sm"
               onClick={() => setDateRange(range)}
-              className={cn(
-                "px-3 py-1 text-sm font-medium rounded-lg transition-colors",
-                dateRange === range
-                  ? "bg-brand text-brand-foreground"
-                  : "bg-ui-bg-tertiary text-ui-text hover:bg-ui-bg-secondary",
-              )}
             >
               {ranges[range].label}
-            </button>
+            </Button>
           ))}
         </Flex>
       </Flex>

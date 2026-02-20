@@ -7,6 +7,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Flex, FlexItem } from "../ui/Flex";
 import { ResponsiveText } from "../ui/ResponsiveText";
 
@@ -112,30 +113,28 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
           className="sm:flex-row items-stretch sm:items-center justify-between sm:gap-4"
         >
           <Flex gap="lg" align="center" className="gap-2 sm:gap-4">
-            <button
-              type="button"
-              onClick={handleToday}
-              className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-ui-border rounded-md hover:bg-ui-bg-tertiary"
-            >
+            <Button variant="secondary" size="sm" onClick={handleToday}>
               Today
-            </button>
+            </Button>
             <Flex gap="sm" align="center" className="gap-1 sm:gap-2">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handlePrevious}
-                className="p-1 hover:bg-ui-bg-tertiary rounded"
+                className="h-8 w-8"
                 aria-label="Previous"
               >
                 <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleNext}
-                className="p-1 hover:bg-ui-bg-tertiary rounded"
+                className="h-8 w-8"
                 aria-label="Next"
               >
                 <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
+              </Button>
             </Flex>
             <Typography
               variant="h2"
@@ -147,42 +146,30 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
 
           {/* Time Scale Toggle */}
           <Flex className="border border-ui-border rounded-md shrink-0">
-            <button
-              type="button"
+            <Button
+              variant={timeScale === "week" ? "primary" : "ghost"}
+              size="sm"
               onClick={() => setTimeScale("week")}
-              className={cn(
-                "px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-l-md",
-                timeScale === "week"
-                  ? "bg-brand text-brand-foreground"
-                  : "bg-ui-bg text-ui-text hover:bg-ui-bg-tertiary",
-              )}
+              className="rounded-r-none border-r border-ui-border"
             >
               <ResponsiveText short="W" long="Week" />
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant={timeScale === "month" ? "primary" : "ghost"}
+              size="sm"
               onClick={() => setTimeScale("month")}
-              className={cn(
-                "px-2 sm:px-3 py-1.5 text-xs sm:text-sm border-l border-ui-border",
-                timeScale === "month"
-                  ? "bg-brand text-brand-foreground"
-                  : "bg-ui-bg text-ui-text hover:bg-ui-bg-tertiary",
-              )}
+              className="rounded-none border-r border-ui-border"
             >
               <ResponsiveText short="M" long="Month" />
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant={timeScale === "quarter" ? "primary" : "ghost"}
+              size="sm"
               onClick={() => setTimeScale("quarter")}
-              className={cn(
-                "px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-r-md border-l border-ui-border",
-                timeScale === "quarter"
-                  ? "bg-brand text-brand-foreground"
-                  : "bg-ui-bg text-ui-text hover:bg-ui-bg-tertiary",
-              )}
+              className="rounded-l-none"
             >
               <ResponsiveText short="Q" long="Quarter" />
-            </button>
+            </Button>
           </Flex>
         </Flex>
       </div>

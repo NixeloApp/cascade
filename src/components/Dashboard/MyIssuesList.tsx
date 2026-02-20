@@ -8,6 +8,7 @@ import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -92,11 +93,11 @@ export function MyIssuesList({
         align="stretch"
         className="border-b border-ui-border/50 px-4 bg-ui-bg/20"
       >
-        <button
-          type="button"
+        <Button
+          variant="unstyled"
           onClick={() => onFilterChange("assigned")}
           className={cn(
-            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider",
+            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider rounded-none",
             issueFilter === "assigned"
               ? "border-brand text-brand"
               : "border-transparent text-ui-text-tertiary hover:text-ui-text",
@@ -107,12 +108,12 @@ export function MyIssuesList({
           <Typography variant="label" as="span" className="ml-1.5 opacity-60">
             ({myIssues?.length || 0})
           </Typography>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="unstyled"
           onClick={() => onFilterChange("created")}
           className={cn(
-            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider",
+            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider rounded-none",
             issueFilter === "created"
               ? "border-brand text-brand"
               : "border-transparent text-ui-text-tertiary hover:text-ui-text",
@@ -123,7 +124,7 @@ export function MyIssuesList({
           <Typography variant="label" as="span" className="ml-1.5 opacity-60">
             ({myCreatedIssues?.length || 0})
           </Typography>
-        </button>
+        </Button>
       </Flex>
       <Card padding="md" radius="none" variant="ghost" className="flex-1 overflow-hidden">
         <Flex direction="column" className="h-full">
@@ -148,13 +149,13 @@ export function MyIssuesList({
               ref={issueNavigation.listRef}
             >
               {displayIssues.map((issue, index) => (
-                <button
+                <Button
                   key={issue._id}
-                  type="button"
+                  variant="unstyled"
                   onClick={() => navigateToWorkspace(issue.projectKey)}
                   {...issueNavigation.getItemProps(index)}
                   className={cn(
-                    "w-full text-left p-3 bg-ui-bg-secondary/20 hover:bg-ui-bg-secondary/40 rounded-lg group cursor-pointer transition-colors",
+                    "w-full text-left p-3 bg-ui-bg-secondary/20 hover:bg-ui-bg-secondary/40 rounded-lg group cursor-pointer transition-colors h-auto",
                     issueNavigation.getItemProps(index).className,
                   )}
                 >
@@ -187,7 +188,7 @@ export function MyIssuesList({
                       </Metadata>
                     </FlexItem>
                   </Flex>
-                </button>
+                </Button>
               ))}
 
               {showLoadMore && loadMore && (

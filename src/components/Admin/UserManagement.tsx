@@ -164,30 +164,30 @@ export function UserManagement() {
       {/* Tabs */}
       <div className="border-b border-ui-border">
         <Flex as="nav" gap="xl" className="-mb-px" aria-label="User management tabs">
-          <button
-            type="button"
+          <Button
+            variant="unstyled"
             onClick={() => setActiveTab("invites")}
             className={cn(
-              "py-4 px-1 border-b-2 font-medium text-sm transition-colors",
+              "py-4 px-1 border-b-2 font-medium text-sm transition-colors rounded-none",
               activeTab === "invites"
                 ? "border-brand-ring text-brand"
                 : "border-transparent text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary",
             )}
           >
             Invitations
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="unstyled"
             onClick={() => setActiveTab("users")}
             className={cn(
-              "py-4 px-1 border-b-2 font-medium text-sm transition-colors",
+              "py-4 px-1 border-b-2 font-medium text-sm transition-colors rounded-none",
               activeTab === "users"
                 ? "border-brand-ring text-brand"
                 : "border-transparent text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary",
             )}
           >
             Users
-          </button>
+          </Button>
         </Flex>
       </div>
 

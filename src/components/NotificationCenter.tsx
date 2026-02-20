@@ -71,9 +71,10 @@ export function NotificationCenter() {
       <Tooltip content="Notifications">
         <PopoverTrigger asChild>
           {/* Notification Bell Button */}
-          <button
-            type="button"
-            className="relative p-2 text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-secondary rounded-lg transition-colors"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
             aria-label={dynamicLabel}
             data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
           >
@@ -89,7 +90,7 @@ export function NotificationCenter() {
                 {unreadCount > 99 ? "99+" : unreadCount}
               </Badge>
             )}
-          </button>
+          </Button>
         </PopoverTrigger>
       </Tooltip>
 

@@ -1,5 +1,6 @@
 import { Check, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -30,14 +31,14 @@ function RoleCard({
   "data-testid": testId,
 }: RoleCardProps) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="unstyled"
       onClick={onClick}
       disabled={disabled}
       aria-pressed={selected}
       data-testid={testId}
       className={cn(
-        "relative p-8 rounded-container border-2 text-left transition-all duration-default cursor-pointer overflow-hidden group w-full",
+        "relative p-8 rounded-container border-2 text-left transition-all duration-default cursor-pointer overflow-hidden group w-full h-auto",
         "hover:shadow-card-hover hover:-translate-y-1 active:scale-98",
         selected
           ? "border-brand bg-brand-subtle/50 ring-4 ring-brand/10"
@@ -83,7 +84,7 @@ function RoleCard({
           </Typography>
         </div>
       </Flex>
-    </button>
+    </Button>
   );
 }
 

@@ -155,24 +155,20 @@ export function CreateEventModal({
                 <Label className="mb-1">Event Type</Label>
                 <Grid cols={4} gap="sm">
                   {eventTypes.map((type) => (
-                    <button
+                    <Button
                       key={type}
-                      type="button"
+                      variant={eventType === type ? "primary" : "secondary"}
+                      size="sm"
                       onClick={() => {
                         form.setFieldValue("eventType", type as (typeof eventTypes)[number]);
                         if (!selectedColor) {
                           setSelectedColor(EVENT_TYPE_DEFAULT_COLOR[type]);
                         }
                       }}
-                      className={cn(
-                        "px-3 py-2 rounded-md text-sm font-medium capitalize",
-                        eventType === type
-                          ? "bg-brand text-brand-foreground"
-                          : "bg-ui-bg-secondary text-ui-text hover:bg-ui-bg-tertiary",
-                      )}
+                      className="capitalize"
                     >
                       {type}
-                    </button>
+                    </Button>
                   ))}
                 </Grid>
               </div>
@@ -185,9 +181,10 @@ export function CreateEventModal({
                     const isActive =
                       (selectedColor ?? EVENT_TYPE_DEFAULT_COLOR[eventType as string]) === color;
                     return (
-                      <button
+                      <Button
                         key={color}
-                        type="button"
+                        variant="unstyled"
+                        size="icon"
                         onClick={() => setSelectedColor(color)}
                         className={cn(
                           "size-7 rounded-full transition-all",

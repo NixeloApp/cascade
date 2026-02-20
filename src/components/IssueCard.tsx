@@ -23,6 +23,7 @@ import { createIssueCardData, isIssueCardData } from "@/lib/kanban-dnd";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
+import { Button } from "./ui/Button";
 import { Icon } from "./ui/Icon";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
@@ -256,8 +257,8 @@ export const IssueCard = memo(function IssueCard({
       )}
     >
       {/* Primary Action Overlay Button */}
-      <button
-        type="button"
+      <Button
+        variant="unstyled"
         onClick={handleClick}
         className="absolute inset-0 w-full h-full z-0 opacity-0 cursor-pointer focus:outline-none"
         aria-label={`Open issue ${issue.key}: ${issue.title}`}

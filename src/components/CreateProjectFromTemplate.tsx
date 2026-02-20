@@ -187,11 +187,11 @@ export function CreateProjectFromTemplate({
             ) : (
               <Grid cols={1} colsMd={2} gap="lg">
                 {templates.map((template: Doc<"projectTemplates">) => (
-                  <button
-                    type="button"
+                  <Button
+                    variant="unstyled"
                     key={template._id}
                     onClick={() => handleSelectTemplate(template._id)}
-                    className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
+                    className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring h-auto"
                   >
                     <Flex align="start" gap="lg">
                       <FlexItem shrink={false}>
@@ -214,7 +214,7 @@ export function CreateProjectFromTemplate({
                         </Stack>
                       </FlexItem>
                     </Flex>
-                  </button>
+                  </Button>
                 ))}
               </Grid>
             )}

@@ -7,6 +7,7 @@ import { Folder } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -77,13 +78,13 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
         ) : (
           <Flex direction="column" gap="xs" ref={projectNavigation.listRef}>
             {projects.map((project, index) => (
-              <button
+              <Button
                 key={project._id}
-                type="button"
+                variant="unstyled"
                 onClick={() => navigateToWorkspace(project.key)}
                 {...projectNavigation.getItemProps(index)}
                 className={cn(
-                  "w-full text-left p-3 rounded-lg group cursor-pointer",
+                  "w-full text-left p-3 rounded-lg group cursor-pointer h-auto",
                   "bg-ui-bg-soft border border-transparent",
                   "hover:border-ui-border-secondary hover:bg-ui-bg-hover",
                   "transition-all duration-200",
@@ -115,7 +116,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                     </Typography>
                   </FlexItem>
                 </Flex>
-              </button>
+              </Button>
             ))}
           </Flex>
         )}

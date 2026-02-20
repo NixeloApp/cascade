@@ -149,10 +149,10 @@ export function IssuesCalendarView({
         <Stack gap="xs">
           {(dayIssues ?? []).slice(0, 3).map((issue: Doc<"issues">) => (
             <Tooltip key={issue._id} content={issue.title}>
-              <button
-                type="button"
+              <Button
+                variant="unstyled"
                 onClick={() => setSelectedIssue(issue._id)}
-                className="w-full text-left p-1.5 rounded hover:bg-ui-bg-secondary transition-colors"
+                className="w-full text-left p-1.5 rounded hover:bg-ui-bg-secondary transition-colors h-auto"
               >
                 <Flex align="center" gap="xs">
                   <div className={cn("w-2 h-2 rounded-full", getPriorityColor(issue.priority))} />
@@ -165,7 +165,7 @@ export function IssuesCalendarView({
                     </Flex>
                   </FlexItem>
                 </Flex>
-              </button>
+              </Button>
             </Tooltip>
           ))}
           {dayIssues.length > 3 && (

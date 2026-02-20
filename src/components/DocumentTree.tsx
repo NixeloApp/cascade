@@ -157,20 +157,18 @@ function TreeNodeItem({ node, orgSlug, selectedId, onCreateDocument }: TreeNodeI
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
           {/* Expand/collapse toggle */}
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleToggle}
-            className={cn(
-              "p-0.5 rounded hover:bg-ui-bg-tertiary transition-colors",
-              !hasChildren && "invisible",
-            )}
+            className={cn("h-5 w-5 p-0.5", !hasChildren && "invisible")}
           >
             {isExpanded ? (
               <ChevronDown className="w-3.5 h-3.5" />
             ) : (
               <ChevronRight className="w-3.5 h-3.5" />
             )}
-          </button>
+          </Button>
 
           {/* Document icon */}
           {hasChildren && isExpanded ? (

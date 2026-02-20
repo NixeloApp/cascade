@@ -68,11 +68,11 @@ export function SearchResultsList({
     <>
       <div className="max-h-96 overflow-y-auto divide-y divide-ui-border-secondary">
         {results.map((issue) => (
-          <button
-            type="button"
+          <Button
+            variant="unstyled"
             key={issue._id}
             onClick={() => onSelectIssue(issue._id)}
-            className="w-full p-4 hover:bg-ui-bg-secondary transition-colors text-left"
+            className="w-full p-4 hover:bg-ui-bg-secondary transition-colors text-left h-auto rounded-none"
           >
             <Flex gap="md" align="start">
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="md" className="shrink-0" />
@@ -88,7 +88,7 @@ export function SearchResultsList({
                 <Typography variant="label">{issue.title}</Typography>
               </FlexItem>
             </Flex>
-          </button>
+          </Button>
         ))}
       </div>
 

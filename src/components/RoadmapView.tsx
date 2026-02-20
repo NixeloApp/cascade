@@ -5,6 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
+import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
@@ -119,16 +120,16 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         <FlexItem shrink={false} className="w-64 pr-4">
           <Flex align="center" gap="sm" className="mb-1">
             <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
-            <button
-              type="button"
+            <Button
+              variant="unstyled"
               onClick={() => setSelectedIssue(issue._id)}
               className={cn(
-                "text-sm font-medium truncate text-left",
+                "text-sm font-medium truncate text-left p-0 h-auto",
                 isSelected ? "text-brand-hover" : "text-ui-text hover:text-brand-muted",
               )}
             >
               {issue.key}
-            </button>
+            </Button>
           </Flex>
           <Typography variant="caption">{issue.title}</Typography>
         </FlexItem>
@@ -136,8 +137,8 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         {/* Timeline Bar */}
         <FlexItem flex="1" className="relative h-8">
           {issue.dueDate && (
-            <button
-              type="button"
+            <Button
+              variant="unstyled"
               className={cn(
                 "absolute h-6 rounded-full opacity-80 hover:opacity-100 transition-opacity cursor-pointer flex items-center px-2",
                 getPriorityColor(issue.priority, "bg"),
@@ -153,7 +154,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               <Typography variant="label" className="text-brand-foreground truncate">
                 {issue.assignee?.name.split(" ")[0]}
               </Typography>
-            </button>
+            </Button>
           )}
 
           {/* Today Indicator */}

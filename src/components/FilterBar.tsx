@@ -139,7 +139,11 @@ function SavedFiltersDropdown({
             justify="between"
             className="hover:bg-ui-bg-secondary rounded cursor-pointer"
           >
-            <button type="button" onClick={() => onLoadFilter(filter)} className="flex-1 text-left">
+            <Button
+              variant="unstyled"
+              onClick={() => onLoadFilter(filter)}
+              className="flex-1 text-left h-auto p-1"
+            >
               <Typography variant="small" as="span">
                 {filter.name}
               </Typography>
@@ -148,19 +152,20 @@ function SavedFiltersDropdown({
                   (public)
                 </Typography>
               )}
-            </button>
+            </Button>
             {filter.isOwner && (
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteFilter(filter._id);
                 }}
-                className="p-1 text-ui-text-tertiary hover:text-status-error"
+                className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
                 aria-label="Delete filter"
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             )}
           </Flex>
         ))}
