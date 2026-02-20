@@ -13,6 +13,7 @@
  */
 
 import type { DatabaseReader, MutationCtx, QueryCtx } from "../_generated/server";
+import { logger } from "../lib/logger";
 import { MailtrapProvider } from "./mailtrap";
 import type { EmailProvider, EmailSendParams, EmailSendResult } from "./provider";
 import { ResendProvider } from "./resend";
@@ -238,8 +239,9 @@ export async function sendEmail(
   if (ctx) {
     try {
       selected = await selectProvider(ctx as QueryCtx);
-    } catch {
+    } catch (e) {
       // DB error - fallback to first provider
+      logger.error("Failed to select provider, falling back to default", { error: e });
       selected = getFirstProvider();
     }
   } else {
@@ -254,8 +256,9 @@ export async function sendEmail(
   if (ctx && result.success && "scheduler" in ctx) {
     try {
       await recordUsage(ctx as MutationCtx, selected.name, 1);
-    } catch {
+    } catch (e) {
       // Don't fail send because of usage tracking error
+      logger.error("Failed to record usage", { error: e });
     }
   }
 
@@ -286,8 +289,9 @@ export async function sendEmailWithProvider(
   if (ctx && result.success) {
     try {
       await recordUsage(ctx, providerName, 1);
-    } catch {
+    } catch (e) {
       // Don't fail send because of usage tracking error
+      logger.error("Failed to record usage", { error: e });
     }
   }
 
