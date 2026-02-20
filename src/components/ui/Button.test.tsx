@@ -176,21 +176,6 @@ describe("Button", () => {
 
   describe("loading state", () => {
     it("shows loading spinner when isLoading", () => {
-      render(<Button isLoading>Submit</Button>);
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
-    });
-
-    it("is disabled when loading", () => {
-      render(<Button isLoading>Submit</Button>);
-      expect(screen.getByRole("button")).toBeDisabled();
-    });
-
-    it("hides children when loading", () => {
-      render(<Button isLoading>Submit</Button>);
-      expect(screen.queryByText("Submit")).not.toBeInTheDocument();
-    });
-
-    it("shows spinner icon when loading", () => {
       render(
         <Button isLoading data-testid="btn">
           Submit
@@ -201,13 +186,24 @@ describe("Button", () => {
       expect(spinner).toBeInTheDocument();
     });
 
-    it("does not render loading text when size is icon", () => {
+    it("keeps children visible when loading (for non-icon size)", () => {
+      render(<Button isLoading>Submit</Button>);
+      expect(screen.getByText("Submit")).toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    });
+
+    it("is disabled when loading", () => {
+      render(<Button isLoading>Submit</Button>);
+      expect(screen.getByRole("button")).toBeDisabled();
+    });
+
+    it("hides children when loading if size is icon", () => {
       render(
         <Button isLoading size="icon">
-          <Plus />
+          <Plus data-testid="icon-child" />
         </Button>,
       );
-      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("icon-child")).not.toBeInTheDocument();
       const spinner = document.querySelector(".animate-spin");
       expect(spinner).toBeInTheDocument();
     });
