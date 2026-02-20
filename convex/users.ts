@@ -700,9 +700,7 @@ async function countProjectsFast(
     projectIds.map((projectId) =>
       ctx.db
         .query("projectMembers")
-        .withIndex("by_project_user", (q) =>
-          q.eq("projectId", projectId).eq("userId", userId),
-        )
+        .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", userId))
         .unique(),
     ),
   );

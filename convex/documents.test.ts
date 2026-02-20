@@ -173,7 +173,7 @@ describe("Documents", () => {
       const asOutsider = asAuthenticatedUser(t, outsider);
       await expect(async () => {
         await asOutsider.query(api.documents.getDocument, { id: docId });
-      }).rejects.toThrow("Not authorized to access this document");
+      }).rejects.toThrow("You are not a member of this organization");
     });
 
     it("should return null for deleted documents", async () => {

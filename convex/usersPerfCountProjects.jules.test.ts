@@ -3,12 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createProjectInOrganization,
-  createTestContext,
-  createTestUser,
-} from "./testUtils";
+import { createProjectInOrganization, createTestContext } from "./testUtils";
 
 describe("Users Performance - Project Counting", () => {
   it("should count projects efficiently using fast path for shared projects", async () => {
@@ -71,7 +66,7 @@ describe("Users Performance - Project Counting", () => {
     // Check schema for soft delete
     await t.run(async (ctx) => {
       // Add member
-      const memberId = await ctx.db.insert("projectMembers", {
+      await ctx.db.insert("projectMembers", {
         projectId: removedProject,
         userId: targetId,
         role: "viewer",
