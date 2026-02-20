@@ -223,7 +223,7 @@ describe("Multi-Tenant Isolation", () => {
       // User B should NOT be able to access User A's document (throws forbidden)
       const asUserB = asAuthenticatedUser(t, userOrgB);
       await expect(
-        asUserB.query(api.documents.get, {
+        asUserB.query(api.documents.getDocument, {
           id: docIdA,
         }),
       ).rejects.toThrow(/forbidden/i);
