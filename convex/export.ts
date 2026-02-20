@@ -571,7 +571,7 @@ export const importIssuesJSON = projectEditorMutation({
     for (const issue of issues) {
       try {
         // Basic validation before processing
-        if (!issue || typeof issue !== "object") {
+        if (!issue || typeof issue !== "object" || Array.isArray(issue)) {
           throw validation("issue", "Invalid issue format: must be an object");
         }
 
