@@ -6,6 +6,10 @@ import type { Doc } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
+
+/** Maximum issue count to compute for a project list view */
+const MAX_ISSUE_COUNT = 1000;
+
 import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole } from "./lib/organizationAccess";
@@ -185,30 +189,23 @@ export const getCurrentUserProjects = authenticatedQuery({
     const creatorMap = await batchFetchUsers(ctx, creatorIds);
 
     // Fetch issue counts
-    const MAX_ISSUE_COUNT = 1000;
     const issueCountsPromises = projectIds.map(async (projectId) => {
       // batch fetch
-      // Since isDeleted is optional/sparse, by_project_deleted only indexes items with isDeleted set.
-      // Active items (isDeleted: undefined) are not in that index.
-      // So we count total items (by_project) and subtract deleted items (by_project_deleted).
-      const [totalCount, deletedCount] = await Promise.all([
-        efficientCount(
-          ctx.db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
-          MAX_ISSUE_COUNT,
-        ),
-        efficientCount(
-          ctx.db
-            .query("issues")
-            .withIndex("by_project_deleted", (q) =>
-              q.eq("projectId", projectId).eq("isDeleted", true),
-            ),
-          MAX_ISSUE_COUNT,
-        ),
-      ]);
+      // Optimization: by_project_deleted index includes undefined/false values for isDeleted (active items).
+      // We can query active issues directly using a range query .lt("isDeleted", true).
+      // This matches both undefined and false (active), excluding true (deleted).
+      const count = await efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_deleted", (q) =>
+            q.eq("projectId", projectId).lt("isDeleted", true),
+          ),
+        MAX_ISSUE_COUNT,
+      );
 
       return {
         projectId,
-        count: Math.max(0, totalCount - deletedCount),
+        count,
       };
     });
     const issueCounts = await Promise.all(issueCountsPromises);
