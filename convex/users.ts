@@ -450,31 +450,40 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
 }
 
 /**
+ * Helper to count issues in specific projects using a parallelized index query.
+ * This is efficient for users who are members of a small number of projects.
+ */
+async function countByProjectParallel(
+  projectIds: Id<"projects">[],
+  limit: number,
+  // biome-ignore lint/suspicious/noExplicitAny: avoid complex Convex Query generic types
+  queryFactory: (projectId: Id<"projects">) => any,
+): Promise<number> {
+  const counts = await Promise.all(
+    projectIds.map((projectId) => efficientCount(queryFactory(projectId), limit)),
+  );
+  return counts.reduce((a, b) => a + b, 0);
+}
+
+/**
  * Helper to count issues reported by a user in specific projects (optimized for few projects).
  */
 async function countIssuesByReporterFast(
   ctx: QueryCtx,
   reporterId: Id<"users">,
   allowedProjectIds: Set<string>,
-) {
-  const counts = await Promise.all(
-    Array.from(allowedProjectIds).map((projectId) =>
-      efficientCount(
-        ctx.db.query("issues").withIndex("by_project_reporter", (q) =>
-          q
-            .eq("projectId", projectId as Id<"projects">)
-            .eq("reporterId", reporterId)
-            .lt("isDeleted", true),
-        ),
-        MAX_ISSUES_FOR_STATS,
-      ),
-    ),
-  );
-  // Apply global cap to match slow-path behavior
-  return Math.min(
-    counts.reduce((a, b) => a + b, 0),
+): Promise<number> {
+  const count = await countByProjectParallel(
+    Array.from(allowedProjectIds) as Id<"projects">[],
     MAX_ISSUES_FOR_STATS,
+    (projectId) =>
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_reporter", (q) =>
+          q.eq("projectId", projectId).eq("reporterId", reporterId).lt("isDeleted", true),
+        ),
   );
+  return Math.min(count, MAX_ISSUES_FOR_STATS);
 }
 
 /**
@@ -552,19 +561,16 @@ async function countIssuesByAssigneeFast(
 
   // 1. Total Assigned: Parallel efficient counts on by_project_assignee index
   // This avoids loading documents into memory
-  const totalAssignedCounts = await Promise.all(
-    projectIds.map((projectId) =>
-      efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_assignee", (q) =>
-            q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
-          ),
-        MAX_ISSUES_FOR_STATS,
-      ),
-    ),
+  const totalAssigned = await countByProjectParallel(
+    projectIds,
+    MAX_ISSUES_FOR_STATS,
+    (projectId) =>
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_assignee", (q) =>
+          q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+        ),
   );
-  const totalAssigned = totalAssignedCounts.reduce((a, b) => a + b, 0);
 
   // 2. Completed: Global index scan filtered by allowed projects
   // We can't use by_project_assignee efficiently for status filtering (no status in index).
