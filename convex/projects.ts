@@ -6,6 +6,10 @@ import type { Doc } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
+
+/** Maximum issue count to compute for a project list view */
+const MAX_ISSUE_COUNT = 1000;
+
 import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole } from "./lib/organizationAccess";
@@ -185,7 +189,6 @@ export const getCurrentUserProjects = authenticatedQuery({
     const creatorMap = await batchFetchUsers(ctx, creatorIds);
 
     // Fetch issue counts
-    const MAX_ISSUE_COUNT = 1000;
     const issueCountsPromises = projectIds.map(async (projectId) => {
       // batch fetch
       // Optimization: by_project_deleted index includes undefined/false values for isDeleted (active items).
