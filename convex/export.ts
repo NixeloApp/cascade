@@ -64,17 +64,6 @@ function validateJSONImportData(jsonData: string): { issues: unknown[] } {
   return { issues: data.issues };
 }
 
-// Helper: Get issue title safely for error reporting
-function getIssueTitleSafe(issue: unknown): string {
-  if (issue && typeof issue === "object" && "title" in issue) {
-    const title = (issue as { title: unknown }).title;
-    if (typeof title === "string") {
-      return title;
-    }
-  }
-  return "Unknown";
-}
-
 // Helper: Process single issue from JSON import
 async function processJSONIssue(
   ctx: MutationCtx,
@@ -570,11 +559,6 @@ export const importIssuesJSON = projectEditorMutation({
 
     for (const issue of issues) {
       try {
-        // Basic validation before processing
-        if (!issue || typeof issue !== "object" || Array.isArray(issue)) {
-          throw validation("issue", "Invalid issue format: must be an object");
-        }
-
         const issueKey = await processJSONIssue(
           ctx,
           issue,
@@ -589,7 +573,7 @@ export const importIssuesJSON = projectEditorMutation({
         imported.push(issueKey);
       } catch (error) {
         errors.push({
-          title: getIssueTitleSafe(issue),
+          title: (issue as { title?: string }).title || "Unknown",
           error: error instanceof Error ? error.message : "Import failed",
         });
       }
