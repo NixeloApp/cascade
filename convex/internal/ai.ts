@@ -63,6 +63,16 @@ export const getIssueData = internalQuery({
 });
 
 /**
+ * Internal query to fetch multiple issues (batch optimized)
+ */
+export const getIssuesData = internalQuery({
+  args: { issueIds: v.array(v.id("issues")) },
+  handler: async (ctx, args) => {
+    return await Promise.all(args.issueIds.map((id) => ctx.db.get(id)));
+  },
+});
+
+/**
  * Store embedding in issue document
  */
 export const storeIssueEmbedding = internalMutation({
