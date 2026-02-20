@@ -183,7 +183,13 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                       <Typography variant="label">Request Payload:</Typography>
                       <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto">
                         <Typography as="pre" variant="mono">
-                          {JSON.stringify(JSON.parse(execution.requestPayload), null, 2)}
+                          {(() => {
+                            try {
+                              return JSON.stringify(JSON.parse(execution.requestPayload), null, 2);
+                            } catch {
+                              return execution.requestPayload;
+                            }
+                          })()}
                         </Typography>
                       </Card>
                     </Stack>

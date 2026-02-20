@@ -54,7 +54,7 @@ interface IssueDependenciesProps {
 
 export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDependenciesProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedIssueKey, setSelectedIssueKey] = useState("");
+  const [selectedIssue, setSelectedIssue] = useState<{ id: string; key: string } | null>(null);
   const [linkType, setLinkType] = useState<"blocks" | "relates" | "duplicates">("blocks");
   const [deleteConfirm, setDeleteConfirm] = useState<Id<"issueLinks"> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,7 +69,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
   const removeLink = useMutation(api.issueLinks.remove);
 
   const handleAddLink = async () => {
-    if (!selectedIssueKey) {
+    if (!selectedIssue) {
       showError("Please select an issue");
       return;
     }
@@ -77,12 +77,12 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
     try {
       await createLink({
         fromIssueId: issueId,
-        toIssueId: selectedIssueKey as Id<"issues">,
+        toIssueId: selectedIssue.id as Id<"issues">,
         linkType,
       });
       showSuccess("Dependency added");
       setShowAddDialog(false);
-      setSelectedIssueKey("");
+      setSelectedIssue(null);
       setSearchQuery("");
     } catch (error) {
       showError(error, "Failed to add dependency");
@@ -228,7 +228,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
         onOpenChange={(open) => {
           setShowAddDialog(open);
           if (!open) {
-            setSelectedIssueKey("");
+            setSelectedIssue(null);
             setSearchQuery("");
           }
         }}
@@ -240,13 +240,13 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
               variant="secondary"
               onClick={() => {
                 setShowAddDialog(false);
-                setSelectedIssueKey("");
+                setSelectedIssue(null);
                 setSearchQuery("");
               }}
             >
               Cancel
             </Button>
-            <Button onClick={handleAddLink} disabled={!selectedIssueKey}>
+            <Button onClick={handleAddLink} disabled={!selectedIssue}>
               Add Dependency
             </Button>
           </>
@@ -282,12 +282,12 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
                     key={issue._id}
                     variant="ghost"
                     onClick={() => {
-                      setSelectedIssueKey(issue._id);
+                      setSelectedIssue({ id: issue._id, key: issue.key });
                       setSearchQuery("");
                     }}
                     className={cn(
                       "w-full p-3 justify-start text-left rounded-none hover:bg-ui-bg-tertiary border-b border-ui-border-secondary last:border-0",
-                      selectedIssueKey === issue._id && "bg-brand-subtle",
+                      selectedIssue?.id === issue._id && "bg-brand-subtle",
                     )}
                   >
                     <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
@@ -297,11 +297,11 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
             )}
 
             {/* Selected Issue */}
-            {selectedIssueKey && (
+            {selectedIssue && (
               <Typography variant="caption">
                 Selected:{" "}
                 <Typography variant="label" as="span">
-                  {selectedIssueKey}
+                  {selectedIssue.key}
                 </Typography>
               </Typography>
             )}

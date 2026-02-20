@@ -272,6 +272,15 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                       variant="ghost"
                       className="bg-ui-bg-secondary cursor-pointer hover:bg-ui-bg-tertiary transition-colors"
                       onClick={() => toggleGroup(groupKey)}
+                      onKeyDown={(e: React.KeyboardEvent) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleGroup(groupKey);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-expanded={!isCollapsed}
                     >
                       <Flex justify="between" align="center">
                         <Flex gap="sm" align="center">
@@ -381,13 +390,14 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                       <Card padding="md" radius="none" variant="ghost" className="text-center">
                         <Typography variant="small" color="secondary">
                           No labels in this group.{" "}
-                          <button
-                            type="button"
+                          <Button
+                            variant="link"
+                            size="sm"
                             onClick={() => handleCreateLabel(group._id)}
-                            className="text-brand hover:underline"
+                            className="p-0 h-auto text-brand hover:underline"
                           >
                             Add one
-                          </button>
+                          </Button>
                         </Typography>
                       </Card>
                     )}

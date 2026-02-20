@@ -145,11 +145,11 @@ export function run() {
           const rel = relPath(filePath);
           const isAllowed = ALLOW_INLINE_STRONG_FILES.some((pattern) => rel.endsWith(pattern));
           if (!isAllowed) {
-            reportError(
-              filePath,
-              node,
-              `Use <Typography variant="label"> or <Typography as="strong"> instead of raw <${tagName}> tags.`,
-            );
+            const suggestion =
+              tagName === "em" || tagName === "i"
+                ? `<Typography as="em">` // emphasis
+                : `<Typography variant="label"> or <Typography as="strong">`; // importance
+            reportError(filePath, node, `Use ${suggestion} instead of raw <${tagName}> tags.`);
           }
         }
         // Raw anchor tags — use Link component or Button with asChild

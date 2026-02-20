@@ -109,7 +109,15 @@ export function BillingReport({ projectId }: BillingReportProps) {
               <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
-          <Button leftIcon={<Download className="w-4 h-4" />}>Export</Button>
+          <Button
+            leftIcon={<Download className="w-4 h-4" />}
+            onClick={() => {
+              // TODO: Implement CSV/PDF export functionality
+              console.warn("Export functionality not yet implemented");
+            }}
+          >
+            Export
+          </Button>
         </Flex>
       </Flex>
 
