@@ -3,9 +3,13 @@ import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalQuery, type MutationCtx, type QueryCtx } from "./_generated/server";
+import {
+  internalAction,
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { sendEmail } from "./email";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
@@ -205,7 +209,11 @@ export const updateProfile = authenticatedMutation({
         // If taken, we still update pending fields to prevent enumeration (attacker sees success),
         // but we skip sending the email to prevent spamming the victim.
         if (!existingUser || existingUser._id === ctx.userId) {
-          await sendVerificationEmail(ctx, args.email, token, currentUser?.isTestUser);
+          await ctx.scheduler.runAfter(0, internal.users.sendVerificationEmailAction, {
+            email: args.email,
+            token,
+            isTestUser: currentUser?.isTestUser,
+          });
         }
       }
     }
@@ -231,43 +239,49 @@ export const updateProfile = authenticatedMutation({
 });
 
 /**
- * Helper to send verification email for profile updates
+ * Internal action to send verification email for profile updates
+ * Executed asynchronously to prevent timing attacks and side channels.
  */
-async function sendVerificationEmail(
-  ctx: MutationCtx,
-  email: string,
-  token: string,
-  isTestUser?: boolean,
-) {
-  const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-  const isSafeEnvironment =
-    process.env.NODE_ENV === "development" ||
-    process.env.NODE_ENV === "test" ||
-    !!process.env.CI ||
-    !!process.env.E2E_API_KEY;
+export const sendVerificationEmailAction = internalAction({
+  args: {
+    email: v.string(),
+    token: v.string(),
+    isTestUser: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const isTestEmail = args.email.endsWith("@inbox.mailtrap.io");
+    const isSafeEnvironment =
+      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test" ||
+      !!process.env.CI ||
+      !!process.env.E2E_API_KEY;
 
-  // Store OTPs for test emails ONLY if they are test users
-  if (isTestEmail && isSafeEnvironment && isTestUser) {
-    try {
-      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
-    } catch (e) {
-      logger.warn(`[Users] Failed to store test OTP: ${e}`);
+    // Store OTPs for test emails ONLY if they are test users
+    if (isTestEmail && isSafeEnvironment && args.isTestUser) {
+      try {
+        await ctx.runMutation(internal.e2e.storeTestOtp, {
+          email: args.email,
+          code: args.token,
+        });
+      } catch (e) {
+        logger.warn(`[Users] Failed to store test OTP: ${e}`);
+      }
     }
-  }
 
-  await sendEmail(ctx, {
-    to: email,
-    subject: "Verify your new email address",
-    html: `
-      <h2>Verify your new email address</h2>
-      <p>Use the code below to verify your new email address:</p>
-      <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
-      <p>This code expires in 15 minutes.</p>
-      <p>If you didn't request this change, you can safely ignore this email.</p>
-    `,
-    text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.`,
-  });
-}
+    await ctx.runAction(internal.email.index.sendEmailAction, {
+      to: args.email,
+      subject: "Verify your new email address",
+      html: `
+        <h2>Verify your new email address</h2>
+        <p>Use the code below to verify your new email address:</p>
+        <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${args.token}</h1>
+        <p>This code expires in 15 minutes.</p>
+        <p>If you didn't request this change, you can safely ignore this email.</p>
+      `,
+      text: `Your verification code is: ${args.token}\n\nThis code expires in 15 minutes.`,
+    });
+  },
+});
 
 /**
  * Verify a pending email change using the OTP token sent to the user.
