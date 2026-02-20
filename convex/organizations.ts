@@ -10,7 +10,7 @@ import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAcce
 import { MAX_ORG_MEMBERS } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { isReservedSlug } from "./shared/constants";
-import { isTestEnv } from "./testConfig";
+import { logAudit } from "./lib/audit";
 import {
   nullableOrganizationRoles,
   organizationMemberRoles,
@@ -271,19 +271,16 @@ export const addMember = authenticatedMutation({
     }
 
     // Audit log: membership changes are sensitive operations
-    // Skip scheduler in tests to avoid "Write outside of transaction" errors
-    if (!isTestEnv) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "organization.member_added",
-        actorId: ctx.userId,
-        targetId: args.userId,
-        targetType: "user",
-        metadata: {
-          organizationId: args.organizationId,
-          role: args.role,
-        },
-      });
-    }
+    await logAudit(ctx, {
+      action: "organization.member_added",
+      actorId: ctx.userId,
+      targetId: args.userId,
+      targetType: "user",
+      metadata: {
+        organizationId: args.organizationId,
+        role: args.role,
+      },
+    });
 
     return { success: true };
   },
@@ -324,20 +321,17 @@ export const updateMemberRole = authenticatedMutation({
     });
 
     // Audit log: role changes are sensitive operations
-    // Skip scheduler in tests to avoid "Write outside of transaction" errors
-    if (!isTestEnv) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "organization.member_role_changed",
-        actorId: ctx.userId,
-        targetId: args.userId,
-        targetType: "user",
-        metadata: {
-          organizationId: args.organizationId,
-          oldRole,
-          newRole: args.role,
-        },
-      });
-    }
+    await logAudit(ctx, {
+      action: "organization.member_role_changed",
+      actorId: ctx.userId,
+      targetId: args.userId,
+      targetType: "user",
+      metadata: {
+        organizationId: args.organizationId,
+        oldRole,
+        newRole: args.role,
+      },
+    });
 
     return { success: true };
   },
@@ -381,19 +375,16 @@ export const removeMember = authenticatedMutation({
     }
 
     // Audit log: member removal is a sensitive operation
-    // Skip scheduler in tests to avoid "Write outside of transaction" errors
-    if (!isTestEnv) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "organization.member_removed",
-        actorId: ctx.userId,
-        targetId: args.userId,
-        targetType: "user",
-        metadata: {
-          organizationId: args.organizationId,
-          role: removedRole,
-        },
-      });
-    }
+    await logAudit(ctx, {
+      action: "organization.member_removed",
+      actorId: ctx.userId,
+      targetId: args.userId,
+      targetType: "user",
+      metadata: {
+        organizationId: args.organizationId,
+        role: removedRole,
+      },
+    });
 
     return { success: true };
   },

@@ -19,7 +19,7 @@ import { MAX_PROJECTS_PER_TEAM, MAX_TEAM_MEMBERS, MAX_TEAMS_PER_ORG } from "./li
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getTeamRole } from "./lib/teamAccess";
-import { isTest } from "./testConfig";
+import { logAudit } from "./lib/audit";
 import { teamRoles } from "./validators";
 
 // ============================================================================
@@ -97,15 +97,13 @@ export const createTeam = organizationMemberMutation({
     });
 
     // Audit Log
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "team.create",
-        actorId: ctx.userId,
-        targetId: teamId,
-        targetType: "team",
-        metadata: { name: args.name, organizationId: ctx.organizationId },
-      });
-    }
+    await logAudit(ctx, {
+      action: "team.create",
+      actorId: ctx.userId,
+      targetId: teamId,
+      targetType: "team",
+      metadata: { name: args.name, organizationId: ctx.organizationId },
+    });
 
     return { teamId, slug };
   },
@@ -163,15 +161,13 @@ export const updateTeam = teamLeadMutation({
     await ctx.db.patch(ctx.teamId, updates);
 
     // Audit Log
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "team.update",
-        actorId: ctx.userId,
-        targetId: ctx.teamId,
-        targetType: "team",
-        metadata: updates,
-      });
-    }
+    await logAudit(ctx, {
+      action: "team.update",
+      actorId: ctx.userId,
+      targetId: ctx.teamId,
+      targetType: "team",
+      metadata: updates,
+    });
 
     return { success: true };
   },
@@ -193,15 +189,13 @@ export const softDeleteTeam = teamLeadMutation({
     await cascadeSoftDelete(ctx, "teams", ctx.teamId, ctx.userId, deletedAt);
 
     // Audit Log
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "team.softDelete",
-        actorId: ctx.userId,
-        targetId: ctx.teamId,
-        targetType: "team",
-        metadata: { deletedAt },
-      });
-    }
+    await logAudit(ctx, {
+      action: "team.softDelete",
+      actorId: ctx.userId,
+      targetId: ctx.teamId,
+      targetType: "team",
+      metadata: { deletedAt },
+    });
 
     return { success: true };
   },
@@ -244,14 +238,12 @@ export const restoreTeam = authenticatedMutation({
     await cascadeRestore(ctx, "teams", args.teamId);
 
     // Audit Log
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "team.restore",
-        actorId: ctx.userId,
-        targetId: args.teamId,
-        targetType: "team",
-      });
-    }
+    await logAudit(ctx, {
+      action: "team.restore",
+      actorId: ctx.userId,
+      targetId: args.teamId,
+      targetType: "team",
+    });
 
     return { success: true };
   },
@@ -303,15 +295,13 @@ export const addTeamMember = teamLeadMutation({
     });
 
     // Audit Log
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "team.member.add",
-        actorId: ctx.userId,
-        targetId: args.userId,
-        targetType: "user",
-        metadata: { teamId: ctx.teamId, role: args.role },
-      });
-    }
+    await logAudit(ctx, {
+      action: "team.member.add",
+      actorId: ctx.userId,
+      targetId: args.userId,
+      targetType: "user",
+      metadata: { teamId: ctx.teamId, role: args.role },
+    });
 
     return { success: true };
   },
@@ -341,15 +331,13 @@ export const updateTeamMemberRole = teamLeadMutation({
     });
 
     // Audit Log
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "team.member.updateRole",
-        actorId: ctx.userId,
-        targetId: args.userId,
-        targetType: "user",
-        metadata: { teamId: ctx.teamId, role: args.role },
-      });
-    }
+    await logAudit(ctx, {
+      action: "team.member.updateRole",
+      actorId: ctx.userId,
+      targetId: args.userId,
+      targetType: "user",
+      metadata: { teamId: ctx.teamId, role: args.role },
+    });
 
     return { success: true };
   },
@@ -376,15 +364,13 @@ export const removeTeamMember = teamLeadMutation({
     await ctx.db.delete(membership._id);
 
     // Audit Log
-    if (!isTest) {
-      await ctx.scheduler.runAfter(0, internal.auditLogs.log, {
-        action: "team.member.remove",
-        actorId: ctx.userId,
-        targetId: args.userId,
-        targetType: "user",
-        metadata: { teamId: ctx.teamId },
-      });
-    }
+    await logAudit(ctx, {
+      action: "team.member.remove",
+      actorId: ctx.userId,
+      targetId: args.userId,
+      targetType: "user",
+      metadata: { teamId: ctx.teamId },
+    });
 
     return { success: true };
   },
