@@ -27,7 +27,7 @@ import { digestFrequencies } from "./validators";
 const MAX_ISSUES_FOR_STATS = 1000;
 const MAX_COMMENTS_FOR_STATS = 1000;
 // Threshold below which per-project index queries outperform a single filtered scan
-const MAX_PROJECTS_FOR_FAST_PATH = 10;
+const MAX_PROJECTS_FOR_FAST_PATH = 50;
 
 /**
  * Internal query to get user by ID (system use only)
@@ -553,30 +553,42 @@ async function countIssuesByAssigneeFast(
 ) {
   const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
 
-  const results = await Promise.all(
-    projectIds.map(async (projectId) => {
-      // Fetch all assigned issues in this project
-      // We fetch up to MAX_ISSUES_FOR_STATS per project.
-      const issues = await ctx.db
-        .query("issues")
-        .withIndex("by_project_assignee", (q) =>
-          q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
-        )
-        .take(MAX_ISSUES_FOR_STATS);
-
-      const assigned = issues.length;
-      const completed = issues.filter((i) => i.status === "done").length;
-      return [assigned, completed] as [number, number];
-    }),
+  // 1. Total Assigned: Parallel efficient counts on by_project_assignee index
+  // This avoids loading documents into memory
+  const totalAssignedCounts = await Promise.all(
+    projectIds.map((projectId) =>
+      efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_assignee", (q) =>
+            q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+          ),
+        MAX_ISSUES_FOR_STATS,
+      ),
+    ),
   );
+  const totalAssigned = totalAssignedCounts.reduce((a, b) => a + b, 0);
 
-  const totalAssigned = results.reduce((acc, [a]) => acc + a, 0);
-  const totalCompleted = results.reduce((acc, [, c]) => acc + c, 0);
-  // Apply global cap to match slow-path behavior
-  return [
-    Math.min(totalAssigned, MAX_ISSUES_FOR_STATS),
-    Math.min(totalCompleted, MAX_ISSUES_FOR_STATS),
-  ];
+  // 2. Completed: Parallel filtered counts on by_project_assignee index
+  // Instead of scanning the global by_assignee_status index (which requires loading documents to check projectId),
+  // we iterate over the allowed projects (small set) and filter by status.
+  // This ensures we only touch issues in the relevant projects.
+  const completedCounts = await Promise.all(
+    projectIds.map((projectId) =>
+      efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_assignee", (q) =>
+            q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+          )
+          .filter((q) => q.eq(q.field("status"), "done")),
+        MAX_ISSUES_FOR_STATS,
+      ),
+    ),
+  );
+  const completed = completedCounts.reduce((a, b) => a + b, 0);
+
+  return [Math.min(totalAssigned, MAX_ISSUES_FOR_STATS), Math.min(completed, MAX_ISSUES_FOR_STATS)];
 }
 
 /**
