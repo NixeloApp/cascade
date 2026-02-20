@@ -43,3 +43,7 @@ Modified `convex/projectAccess.ts` to wrap the `computeProjectAccess` logic with
 ## 2025-05-24 - Merging Paginated Lists
 **Learning:** Naive array merging using `.some()` to check duplicates for paginated results (load more) becomes O(N*M) which blocks the UI thread for ~400ms when merging ~5000 items. This is especially problematic in hooks like `useSmartBoardData` that run on every data update.
 **Action:** Use `Set` for O(1) duplicate checks and bulk array construction `[...existing, ...new]` instead of iterative `push`, reducing merge time to <10ms for large datasets.
+
+## 2025-05-25 - Optimization of Project Membership Checks
+**Learning:** `countProjects` was fetching all project memberships for a user and filtering in memory against shared projects. This is inefficient (O(N) DB read) when the user is in many projects but we only share a few (O(K) check).
+**Action:** Implemented a "fast path" using `Promise.all` and indexed `by_project_user` lookups when the set of shared projects to check is small (<= 50). This reduces DB reads from O(N) to O(K) index lookups.
