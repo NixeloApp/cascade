@@ -2,9 +2,7 @@ import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
-import { type QueryCtx, query } from "./_generated/server";
-import { getSessionId } from "./lib/authAdapter";
+import { query } from "./_generated/server";
 import { DAY } from "./lib/timeUtils";
 import { sanitizeUserForCurrent } from "./lib/userUtils";
 import { otpPasswordReset } from "./otpPasswordReset";
@@ -84,8 +82,13 @@ export const getRedirectDestination = query({
       return null;
     }
 
-    if (await requiresTwoFactorVerification(ctx, user)) {
-      return ROUTES.verify2FA.path;
+    // Check if 2FA is enabled and requires verification
+    if (user.twoFactorEnabled && user.twoFactorSecret) {
+      // Consider 2FA verified if it was verified within the last 24 hours
+      const twentyFourHoursAgo = Date.now() - DAY;
+      if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
+        return ROUTES.verify2FA.path;
+      }
     }
 
     // 1. Check onboarding status
@@ -118,28 +121,3 @@ export const getRedirectDestination = query({
     return ROUTES.app.path;
   },
 });
-
-async function requiresTwoFactorVerification(ctx: QueryCtx, user: Doc<"users">) {
-  // Check if 2FA is enabled and requires verification
-  if (user.twoFactorEnabled && user.twoFactorSecret) {
-    // Consider 2FA verified if it was verified within the last 24 hours
-    const twentyFourHoursAgo = Date.now() - DAY;
-    const sessionId = await getSessionId(ctx);
-
-    if (sessionId) {
-      const sessionVerification = await ctx.db
-        .query("twoFactorSessions")
-        .withIndex("by_session_user", (q) => q.eq("sessionId", sessionId).eq("userId", user._id))
-        .first();
-
-      if (!sessionVerification || sessionVerification.verifiedAt < twentyFourHoursAgo) {
-        return true;
-      }
-    } else {
-      if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
-        return true;
-      }
-    }
-  }
-  return false;
-}

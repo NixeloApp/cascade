@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { authenticatedMutation, issueMutation, issueQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
+import { notFound } from "./lib/errors";
 import { validateAttachment } from "./lib/fileValidators";
 
 // Generate upload URL for files
@@ -56,7 +57,7 @@ export const removeAttachment = issueMutation({
 
     // Verify the attachment belongs to this issue
     if (!(issue.attachments || []).includes(args.storageId)) {
-      throw new Error("Attachment not found on this issue");
+      throw notFound("attachment", args.storageId);
     }
 
     // Remove from issue attachments array
