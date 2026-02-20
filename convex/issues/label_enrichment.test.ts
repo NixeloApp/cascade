@@ -21,20 +21,24 @@ describe("Label Enrichment", () => {
       const { organizationId } = await createOrganizationAdmin(t, userId);
       const projectId = await createProjectInOrganization(t, userId, organizationId);
 
-      // Create 250 labels
-      await t.run(async (ctx) => {
-        const labels = Array.from({ length: 250 }, (_, i) => ({
-          projectId,
-          name: `label-${i}`,
-          color: "#000000",
-          createdBy: userId,
-        }));
-        for (const label of labels) {
-          await ctx.db.insert("labels", label);
+      // Create 250 labels and capture the 240th label's ID
+      const label240Id = await t.run(async (ctx) => {
+        let capturedLabelId: Id<"labels"> | undefined;
+        for (let i = 0; i < 250; i++) {
+          const id = await ctx.db.insert("labels", {
+            projectId,
+            name: `label-${i}`,
+            color: "#000000",
+            createdBy: userId,
+          });
+          if (i === 240) capturedLabelId = id;
         }
+        return capturedLabelId;
       });
 
-      // Create an issue using the 240th label
+      if (!label240Id) throw new Error("Label 240 not created");
+
+      // Create an issue using the 240th label's ID
       const issueId = await t.run(async (ctx) => {
         const project = await ctx.db.get(projectId);
         if (!project) throw new Error("Project not found");
@@ -49,7 +53,7 @@ describe("Label Enrichment", () => {
           status: "todo",
           priority: "medium",
           reporterId: userId,
-          labels: ["label-240"],
+          labels: [label240Id],
           searchContent: "Test Issue",
           updatedAt: Date.now(),
           linkedDocuments: [],
@@ -68,8 +72,7 @@ describe("Label Enrichment", () => {
 
       expect(enriched[0].labels).toHaveLength(1);
       expect(enriched[0].labels[0].name).toBe("label-240");
-      // With current bug, color might be default gray if not found
-      // If found, it should be #000000.
+      // Label should be found and return the stored color, not a fallback gray
       expect(enriched[0].labels[0].color).toBe("#000000");
     });
   });
@@ -83,7 +86,7 @@ describe("Label Enrichment", () => {
 
       // Insert 105 labels
       const label104Id = await t.run(async (ctx) => {
-        let lastId: string | undefined;
+        let lastId: Id<"labels"> | undefined;
         for (let i = 0; i < 105; i++) {
           const id = await ctx.db.insert("labels", {
             projectId,
@@ -104,7 +107,7 @@ describe("Label Enrichment", () => {
         title: "Test Issue",
         type: "task",
         priority: "medium",
-        labels: [label104Id as Id<"labels">],
+        labels: [label104Id],
       });
 
       // Get the issue
