@@ -131,6 +131,17 @@ export const getCurrent = authenticatedQuery({
   },
 });
 
+/**
+ * Update the current user's profile information.
+ *
+ * If the email is changed, it triggers a verification flow:
+ * - A verification code is sent to the new email address.
+ * - The `email` field is NOT updated immediately.
+ * - `pendingEmail` and related fields are set.
+ * - The user must call `verifyEmailChange` with the code to complete the update.
+ *
+ * @throws {ConvexError} if name is empty or validation fails.
+ */
 export const updateProfile = authenticatedMutation({
   args: {
     name: v.optional(v.string()),
@@ -256,6 +267,17 @@ async function sendVerificationEmail(
   });
 }
 
+/**
+ * Verify a pending email change using the OTP token sent to the user.
+ *
+ * This function:
+ * 1. Checks that the token matches and hasn't expired.
+ * 2. Verifies the new email is still unique (handles race conditions).
+ * 3. Updates the user's `email` field and clears pending fields.
+ * 4. Syncs the change to `authAccounts` to maintain login consistency.
+ *
+ * @throws {ConvexError} if token is invalid/expired or email is already in use.
+ */
 export const verifyEmailChange = authenticatedMutation({
   args: { token: v.string() },
   returns: v.null(),
@@ -343,11 +365,13 @@ async function syncEmailToAuthAccounts(ctx: MutationCtx, userId: Id<"users">, ne
 }
 
 /**
- * Check if the current user is an organization admin
- * Returns true if user is:
- * - Owner or admin in any organization
- * - Creator of any project (backward compatibility)
- * - Admin in any project (backward compatibility)
+ * Check if the current user is an organization admin.
+ *
+ * This permission check is used to gate access to administrative features.
+ *
+ * Returns `true` if the user is:
+ * - An 'owner' or 'admin' in ANY organization.
+ * - (Legacy) A creator or admin of any project.
  */
 export const isOrganizationAdmin = authenticatedQuery({
   args: {},
@@ -375,6 +399,13 @@ function isAllowedProject(q: FilterBuilder<GenericTableInfo>, projectIds: Id<"pr
   return q.or(...projectIds.map((id) => q.eq(q.field("projectId"), id)));
 }
 
+/**
+ * Count issues reported by a specific user.
+ *
+ * @param ctx - Query context
+ * @param reporterId - The user who reported the issues
+ * @param allowedProjectIds - If not null, only count issues in these projects (for privacy)
+ */
 async function countIssuesByReporter(
   ctx: QueryCtx,
   reporterId: Id<"users">,
@@ -398,6 +429,15 @@ async function countIssuesByReporter(
   );
 }
 
+/**
+ * Count issues assigned to a specific user.
+ *
+ * Returns a tuple: `[totalAssigned, completedAssigned]`.
+ *
+ * @param ctx - Query context
+ * @param assigneeId - The user assigned to the issues
+ * @param allowedProjectIds - If not null, only count issues in these projects (for privacy)
+ */
 async function countIssuesByAssignee(
   ctx: QueryCtx,
   assigneeId: Id<"users">,
@@ -441,6 +481,15 @@ async function countIssuesByAssignee(
   ]);
 }
 
+/**
+ * Count comments made by a specific user.
+ *
+ * Checks that the comment's issue belongs to an allowed project.
+ *
+ * @param ctx - Query context
+ * @param userId - The user who made the comments
+ * @param allowedProjectIds - If not null, only count comments in these projects (for privacy)
+ */
 async function countComments(
   ctx: QueryCtx,
   userId: Id<"users">,
@@ -476,6 +525,13 @@ async function countComments(
   );
 }
 
+/**
+ * Count projects the user is a member of.
+ *
+ * @param ctx - Query context
+ * @param userId - The user whose memberships to count
+ * @param allowedProjectIds - If not null, only count projects in this set (for privacy)
+ */
 async function countProjects(
   ctx: QueryCtx,
   userId: Id<"users">,
@@ -499,6 +555,21 @@ async function countProjects(
   );
 }
 
+/**
+ * Get aggregated statistics for a user profile.
+ *
+ * Returns counts for:
+ * - Issues created by the user
+ * - Issues assigned to the user
+ * - Issues completed by the user
+ * - Comments made by the user
+ * - Projects the user is a member of
+ *
+ * Privacy:
+ * - If viewing your own profile, counts include all projects.
+ * - If viewing another user's profile, counts are filtered to only include
+ *   projects that are SHARED between the viewer and the target user.
+ */
 export const getUserStats = authenticatedQuery({
   args: { userId: v.id("users") },
   returns: v.object({
