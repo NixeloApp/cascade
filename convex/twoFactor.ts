@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { conflict, notFound, unauthenticated } from "./lib/errors";
 
 const APP_NAME = "Nixelo";
 const TOTP_WINDOW = 1; // Allow 1 step before/after for clock drift
@@ -222,16 +223,16 @@ export const beginSetup = mutation({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated");
+      throw unauthenticated();
     }
 
     const user = await ctx.db.get(userId);
     if (!user) {
-      throw new Error("User not found");
+      throw notFound("user", userId);
     }
 
     if (user.twoFactorEnabled) {
-      throw new Error("2FA is already enabled");
+      throw conflict("2FA is already enabled");
     }
 
     // Generate new secret
@@ -268,12 +269,12 @@ export const completeSetup = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated");
+      throw unauthenticated();
     }
 
     const user = await ctx.db.get(userId);
     if (!user) {
-      throw new Error("User not found");
+      throw notFound("user", userId);
     }
 
     if (!user.twoFactorSecret) {
@@ -324,12 +325,12 @@ export const verifyCode = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated");
+      throw unauthenticated();
     }
 
     const user = await ctx.db.get(userId);
     if (!user) {
-      throw new Error("User not found");
+      throw notFound("user", userId);
     }
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
@@ -398,12 +399,12 @@ export const verifyBackupCode = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated");
+      throw unauthenticated();
     }
 
     const user = await ctx.db.get(userId);
     if (!user) {
-      throw new Error("User not found");
+      throw notFound("user", userId);
     }
 
     if (!user.twoFactorEnabled) {
@@ -454,12 +455,12 @@ export const regenerateBackupCodes = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated");
+      throw unauthenticated();
     }
 
     const user = await ctx.db.get(userId);
     if (!user) {
-      throw new Error("User not found");
+      throw notFound("user", userId);
     }
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
@@ -502,12 +503,12 @@ export const disable = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated");
+      throw unauthenticated();
     }
 
     const user = await ctx.db.get(userId);
     if (!user) {
-      throw new Error("User not found");
+      throw notFound("user", userId);
     }
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
