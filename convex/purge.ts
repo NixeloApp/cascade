@@ -85,6 +85,8 @@ export const TABLES: TableNames[] = [
   "users",
   "authAccounts",
   "authSessions",
+  // 2FA sessions
+  "twoFactorSessions",
   "authRefreshTokens",
   "authVerificationCodes",
   "authVerifiers",
@@ -102,7 +104,7 @@ export const purgeData = internalMutation({
     }
 
     let totalDeleted = 0;
-    const TARGET_DELETES = 3000; // Max records per invocation to stay within Convex mutation time limits
+    const TARGET_DELETES = 3000; // Increased to 3000 for faster final push
     let totalTablesProcessed = 0;
 
     for (const table of TABLES) {
