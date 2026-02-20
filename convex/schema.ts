@@ -1645,6 +1645,17 @@ const applicationTables = {
   // E2E TESTING & MONITORING
   // ===========================================================================
 
+  twoFactorSessions: defineTable({
+    userId: v.id("users"),
+    sessionId: v.string(),
+    verifiedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_session", ["sessionId"])
+    .index("by_user_session", ["userId", "sessionId"])
+    .index("by_expires", ["expiresAt"]),
+
   testOtpCodes: defineTable({
     email: v.string(),
     code: v.string(),

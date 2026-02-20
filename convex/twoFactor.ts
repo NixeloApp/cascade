@@ -1,4 +1,4 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { conflict, notFound, unauthenticated } from "./lib/errors";
@@ -299,8 +299,17 @@ export const completeSetup = mutation({
     await ctx.db.patch(userId, {
       twoFactorEnabled: true,
       twoFactorBackupCodes: hashedCodes,
-      twoFactorVerifiedAt: Date.now(),
     });
+
+    // Mark current session as verified
+    const sessionId = await getAuthSessionId(ctx);
+    if (sessionId) {
+      await ctx.db.insert("twoFactorSessions", {
+        userId,
+        sessionId,
+        verifiedAt: Date.now(),
+      });
+    }
 
     return {
       success: true,
@@ -373,12 +382,33 @@ export const verifyCode = mutation({
       return { success: false, error: "Invalid verification code" };
     }
 
-    // Success - reset failed attempts and update verified timestamp
+    // Success - reset failed attempts
     await ctx.db.patch(userId, {
-      twoFactorVerifiedAt: now,
       twoFactorFailedAttempts: 0,
       twoFactorLockedUntil: undefined,
     });
+
+    // Mark current session as verified
+    const sessionId = await getAuthSessionId(ctx);
+    if (sessionId) {
+      // Check if session already exists
+      const existingSession = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
+        .first();
+
+      if (existingSession) {
+        await ctx.db.patch(existingSession._id, {
+          verifiedAt: now,
+        });
+      } else {
+        await ctx.db.insert("twoFactorSessions", {
+          userId,
+          sessionId,
+          verifiedAt: now,
+        });
+      }
+    }
 
     return { success: true };
   },
@@ -430,8 +460,29 @@ export const verifyBackupCode = mutation({
 
     await ctx.db.patch(userId, {
       twoFactorBackupCodes: newCodes,
-      twoFactorVerifiedAt: Date.now(),
     });
+
+    // Mark current session as verified
+    const sessionId = await getAuthSessionId(ctx);
+    if (sessionId) {
+      const now = Date.now();
+      const existingSession = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
+        .first();
+
+      if (existingSession) {
+        await ctx.db.patch(existingSession._id, {
+          verifiedAt: now,
+        });
+      } else {
+        await ctx.db.insert("twoFactorSessions", {
+          userId,
+          sessionId,
+          verifiedAt: now,
+        });
+      }
+    }
 
     return {
       success: true,
@@ -538,6 +589,16 @@ export const disable = mutation({
       twoFactorBackupCodes: undefined,
       twoFactorVerifiedAt: undefined,
     });
+
+    // Cleanup all sessions for this user
+    const sessions = await ctx.db
+      .query("twoFactorSessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const session of sessions) {
+      await ctx.db.delete(session._id);
+    }
 
     return { success: true };
   },

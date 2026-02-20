@@ -1,6 +1,6 @@
 import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
-import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
+import { convexAuth, getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { DAY } from "./lib/timeUtils";
@@ -84,9 +84,20 @@ export const getRedirectDestination = query({
 
     // Check if 2FA is enabled and requires verification
     if (user.twoFactorEnabled && user.twoFactorSecret) {
-      // Consider 2FA verified if it was verified within the last 24 hours
+      // Check session verification status
+      const sessionId = await getAuthSessionId(ctx);
+      if (!sessionId) {
+        // If no session ID (shouldn't happen for authenticated user), force verification
+        return ROUTES.verify2FA.path;
+      }
+
+      const sessionVerification = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
+        .first();
+
       const twentyFourHoursAgo = Date.now() - DAY;
-      if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
+      if (!sessionVerification || sessionVerification.verifiedAt < twentyFourHoursAgo) {
         return ROUTES.verify2FA.path;
       }
     }
