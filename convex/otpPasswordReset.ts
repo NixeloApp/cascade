@@ -2,9 +2,9 @@ import Resend from "@auth/core/providers/resend";
 import { render } from "@react-email/render";
 import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
+import { checkRateLimit } from "./lib/authRateLimit";
 import type { ConvexAuthContext } from "./lib/authTypes";
 import { generateOTP } from "./lib/crypto";
-import { isAppError } from "./lib/errors";
 import { logger } from "./lib/logger";
 
 /**
@@ -34,20 +34,12 @@ export const otpPasswordReset = Resend({
     ctx: ConvexAuthContext,
   ) => {
     // Check rate limit first
-    if (ctx.runMutation) {
-      try {
-        await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimitByEmail, { email });
-      } catch (error) {
-        const isRateLimitError =
-          (isAppError(error) && error.data.code === "RATE_LIMITED") ||
-          (error instanceof Error && error.message.includes("Rate limit exceeded"));
-
-        if (isRateLimitError) {
-          throw new Error("Too many password reset requests. Please try again later.");
-        }
-        throw error;
-      }
-    }
+    await checkRateLimit(
+      ctx,
+      internal.authWrapper.checkPasswordResetRateLimitByEmail,
+      { email },
+      "Too many password reset requests. Please try again later.",
+    );
 
     const isTestEmail = email.endsWith("@inbox.mailtrap.io");
     const isSafeEnvironment =

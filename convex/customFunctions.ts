@@ -51,6 +51,7 @@ import { v } from "convex/values";
 import { customMutation, customQuery } from "convex-helpers/server/customFunctions";
 import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
+import { getSessionId } from "./lib/authAdapter";
 import { forbidden, notFound, unauthenticated } from "./lib/errors";
 import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAccess";
 import { getTeamRole } from "./lib/teamAccess";
@@ -75,9 +76,24 @@ async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<"users">> {
   // Enforce 2FA verification if enabled
   const user = await ctx.db.get(userId);
   if (user?.twoFactorEnabled && user.twoFactorSecret) {
+    const sessionId = await getSessionId(ctx);
     const twentyFourHoursAgo = Date.now() - DAY;
-    if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
-      throw forbidden(undefined, "Two-factor authentication required");
+
+    if (sessionId) {
+      const sessionVerification = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_session_user", (q) => q.eq("sessionId", sessionId).eq("userId", userId))
+        .first();
+
+      if (!sessionVerification || sessionVerification.verifiedAt < twentyFourHoursAgo) {
+        throw forbidden(undefined, "Two-factor authentication required");
+      }
+    } else {
+      // Fallback for non-session authentication (e.g. API keys)
+      // Note: This relies on the legacy user-level verification timestamp
+      if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
+        throw forbidden(undefined, "Two-factor authentication required");
+      }
     }
   }
 

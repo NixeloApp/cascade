@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getSessionId } from "./lib/authAdapter";
 import { conflict, notFound, unauthenticated } from "./lib/errors";
 
 const APP_NAME = "Nixelo";
@@ -295,11 +296,32 @@ export const completeSetup = mutation({
     const backupCodes = generateBackupCodes();
     const hashedCodes = await Promise.all(backupCodes.map(hashBackupCode));
 
+    const now = Date.now();
+
+    // Mark current session as verified
+    const sessionId = await getSessionId(ctx);
+    if (sessionId) {
+      const existingSession = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_session_user", (q) => q.eq("sessionId", sessionId).eq("userId", userId))
+        .first();
+
+      if (existingSession) {
+        await ctx.db.patch(existingSession._id, { verifiedAt: now });
+      } else {
+        await ctx.db.insert("twoFactorSessions", {
+          sessionId,
+          userId,
+          verifiedAt: now,
+        });
+      }
+    }
+
     // Enable 2FA
     await ctx.db.patch(userId, {
       twoFactorEnabled: true,
       twoFactorBackupCodes: hashedCodes,
-      twoFactorVerifiedAt: Date.now(),
+      twoFactorVerifiedAt: now,
     });
 
     return {
@@ -374,6 +396,24 @@ export const verifyCode = mutation({
     }
 
     // Success - reset failed attempts and update verified timestamp
+    const sessionId = await getSessionId(ctx);
+    if (sessionId) {
+      const existingSession = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_session_user", (q) => q.eq("sessionId", sessionId).eq("userId", userId))
+        .first();
+
+      if (existingSession) {
+        await ctx.db.patch(existingSession._id, { verifiedAt: now });
+      } else {
+        await ctx.db.insert("twoFactorSessions", {
+          sessionId,
+          userId,
+          verifiedAt: now,
+        });
+      }
+    }
+
     await ctx.db.patch(userId, {
       twoFactorVerifiedAt: now,
       twoFactorFailedAttempts: 0,
@@ -428,9 +468,28 @@ export const verifyBackupCode = mutation({
     const newCodes = [...backupCodes];
     newCodes.splice(codeIndex, 1);
 
+    const now = Date.now();
+    const sessionId = await getSessionId(ctx);
+    if (sessionId) {
+      const existingSession = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_session_user", (q) => q.eq("sessionId", sessionId).eq("userId", userId))
+        .first();
+
+      if (existingSession) {
+        await ctx.db.patch(existingSession._id, { verifiedAt: now });
+      } else {
+        await ctx.db.insert("twoFactorSessions", {
+          sessionId,
+          userId,
+          verifiedAt: now,
+        });
+      }
+    }
+
     await ctx.db.patch(userId, {
       twoFactorBackupCodes: newCodes,
-      twoFactorVerifiedAt: Date.now(),
+      twoFactorVerifiedAt: now,
     });
 
     return {

@@ -14,9 +14,9 @@ import { render } from "@react-email/render";
 import type { FunctionReference } from "convex/server";
 import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
+import { checkRateLimit } from "./lib/authRateLimit";
 import type { ConvexAuthContext } from "./lib/authTypes";
 import { generateOTP } from "./lib/crypto";
-import { isAppError } from "./lib/errors";
 import { logger } from "./lib/logger";
 
 /**
@@ -73,29 +73,17 @@ export const otpVerification = Resend({
   ) => {
     try {
       // Check rate limit first
-      if (ctx.runMutation) {
-        try {
-          // Type assertion needed because codegen hasn't run to update the type definition
-          // Cast internal.authWrapper to a type that includes the new mutation
-          // This avoids 'any' and Biome suppression
-          const authWrapper = internal.authWrapper as unknown as {
-            checkEmailVerificationRateLimit: FunctionReference<"mutation">;
-          };
+      // Type assertion needed because codegen hasn't run to update the type definition
+      const authWrapper = internal.authWrapper as unknown as {
+        checkEmailVerificationRateLimit: FunctionReference<"mutation">;
+      };
 
-          await ctx.runMutation(authWrapper.checkEmailVerificationRateLimit, {
-            email,
-          });
-        } catch (error) {
-          const isRateLimitError =
-            (isAppError(error) && error.data.code === "RATE_LIMITED") ||
-            (error instanceof Error && error.message.includes("Rate limit exceeded"));
-
-          if (isRateLimitError) {
-            throw new Error("Too many verification requests. Please try again later.");
-          }
-          throw error;
-        }
-      }
+      await checkRateLimit(
+        ctx,
+        authWrapper.checkEmailVerificationRateLimit,
+        { email },
+        "Too many verification requests. Please try again later.",
+      );
 
       // Store test OTP if applicable
       await storeTestOtp(ctx, email, token);

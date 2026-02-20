@@ -569,18 +569,24 @@ async function countIssuesByAssigneeFast(
   );
   const totalAssigned = totalAssignedCounts.reduce((a, b) => a + b, 0);
 
-  // 2. Completed: Global index scan filtered by allowed projects
-  // We can't use by_project_assignee efficiently for status filtering (no status in index).
-  // Falling back to filtered count on global index is better than loading all docs.
-  const completed = await efficientCount(
-    ctx.db
-      .query("issues")
-      .withIndex("by_assignee_status", (q) =>
-        q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
-      )
-      .filter((q) => isAllowedProject(q, projectIds)),
-    MAX_ISSUES_FOR_STATS,
+  // 2. Completed: Parallel filtered counts on by_project_assignee index
+  // Instead of scanning the global by_assignee_status index (which requires loading documents to check projectId),
+  // we iterate over the allowed projects (small set) and filter by status.
+  // This ensures we only touch issues in the relevant projects.
+  const completedCounts = await Promise.all(
+    projectIds.map((projectId) =>
+      efficientCount(
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_assignee", (q) =>
+            q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+          )
+          .filter((q) => q.eq(q.field("status"), "done")),
+        MAX_ISSUES_FOR_STATS,
+      ),
+    ),
   );
+  const completed = completedCounts.reduce((a, b) => a + b, 0);
 
   return [Math.min(totalAssigned, MAX_ISSUES_FOR_STATS), Math.min(completed, MAX_ISSUES_FOR_STATS)];
 }
