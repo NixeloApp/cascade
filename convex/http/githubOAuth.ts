@@ -1,5 +1,5 @@
 import { api, internal } from "../_generated/api";
-import { httpAction } from "../_generated/server";
+import { type ActionCtx, httpAction } from "../_generated/server";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
 import { validation } from "../lib/errors";
 
@@ -36,10 +36,9 @@ const getGitHubOAuthConfig = () => {
 };
 
 /**
- * Initiate GitHub OAuth flow
- * GET /github/auth
+ * Initiate GitHub OAuth flow handler
  */
-export const initiateAuth = httpAction((_ctx, _request) => {
+export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   if (!isGitHubOAuthConfigured()) {
     return Promise.resolve(
       new Response(
@@ -73,13 +72,18 @@ export const initiateAuth = httpAction((_ctx, _request) => {
       },
     }),
   );
-});
+};
 
 /**
- * Handle OAuth callback from GitHub
- * GET /github/callback?code=xxx&state=xxx
+ * Initiate GitHub OAuth flow
+ * GET /github/auth
  */
-export const handleCallback = httpAction(async (_ctx, request) => {
+export const initiateAuth = httpAction(initiateAuthHandler);
+
+/**
+ * Handle OAuth callback from GitHub handler
+ */
+export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
@@ -254,15 +258,18 @@ export const handleCallback = httpAction(async (_ctx, request) => {
       },
     );
   }
-});
+};
 
 /**
- * List user's GitHub repositories
- * GET /github/repos
- *
- * This is called after authentication to fetch available repos
+ * Handle OAuth callback from GitHub
+ * GET /github/callback?code=xxx&state=xxx
  */
-export const listRepos = httpAction(async (ctx, _request) => {
+export const handleCallback = httpAction(handleCallbackHandler);
+
+/**
+ * List user's GitHub repositories handler
+ */
+export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
   try {
     // Get user's GitHub connection (metadata only, no tokens)
     const connection = await ctx.runQuery(api.github.getConnection);
@@ -338,4 +345,12 @@ export const listRepos = httpAction(async (ctx, _request) => {
       },
     );
   }
-});
+};
+
+/**
+ * List user's GitHub repositories
+ * GET /github/repos
+ *
+ * This is called after authentication to fetch available repos
+ */
+export const listRepos = httpAction(listReposHandler);
