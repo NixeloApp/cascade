@@ -456,7 +456,7 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
 async function countByProjectParallel(
   projectIds: Id<"projects">[],
   limit: number,
-  queryFactory: (projectId: Id<"projects">) => CountableQuery<any>,
+  queryFactory: (projectId: Id<"projects">) => CountableQuery<unknown>,
 ): Promise<number> {
   const counts = await Promise.all(
     projectIds.map((projectId) => efficientCount(queryFactory(projectId), limit)),
