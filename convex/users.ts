@@ -170,6 +170,9 @@ export const updateProfile = authenticatedMutation({
       // Check if email actually changed
       const currentUser = await ctx.db.get(ctx.userId);
       if (currentUser?.email !== args.email) {
+        // Rate limit email change requests to prevent spam
+        await rateLimit(ctx, "emailChange", { key: ctx.userId });
+
         // Do NOT update email immediately. Start pending verification flow.
         const token = generateOTP();
         const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
@@ -178,8 +181,19 @@ export const updateProfile = authenticatedMutation({
         updates.pendingEmailVerificationToken = token;
         updates.pendingEmailVerificationExpires = expiresAt;
 
-        // Send verification email
-        await sendVerificationEmail(ctx, args.email, token, currentUser?.isTestUser);
+        // Check if email is already taken by ANOTHER user
+        const newEmail = args.email;
+        const existingUser = await ctx.db
+          .query("users")
+          .withIndex("email", (q) => q.eq("email", newEmail))
+          .first();
+
+        // Only send verification email if the email is NOT taken
+        // If taken, we still update pending fields to prevent enumeration (attacker sees success),
+        // but we skip sending the email to prevent spamming the victim.
+        if (!existingUser || existingUser._id === ctx.userId) {
+          await sendVerificationEmail(ctx, args.email, token, currentUser?.isTestUser);
+        }
       }
     }
 
