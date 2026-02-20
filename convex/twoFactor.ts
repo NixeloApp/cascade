@@ -2,6 +2,7 @@ import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { conflict, notFound, unauthenticated } from "./lib/errors";
+import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 
 const APP_NAME = "Nixelo";
 const TOTP_WINDOW = 1; // Allow 1 step before/after for clock drift
@@ -590,14 +591,18 @@ export const disable = mutation({
       twoFactorVerifiedAt: undefined,
     });
 
-    // Cleanup all sessions for this user
-    const sessions = await ctx.db
-      .query("twoFactorSessions")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    // Cleanup all sessions for this user (iterative delete)
+    while (true) {
+      const sessions = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .take(MAX_PAGE_SIZE);
 
-    for (const session of sessions) {
-      await ctx.db.delete(session._id);
+      if (sessions.length === 0) break;
+
+      for (const session of sessions) {
+        await ctx.db.delete(session._id);
+      }
     }
 
     return { success: true };
