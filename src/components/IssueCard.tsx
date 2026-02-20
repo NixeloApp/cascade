@@ -294,7 +294,7 @@ export const IssueCard = memo(function IssueCard({
             )}
             <Tooltip content={getTypeLabel(issue.type)}>
               {/* Tooltip trigger needs pointer events */}
-              <div className="pointer-events-auto">
+              <div className="pointer-events-auto" tabIndex={0} role="button">
                 <Icon
                   icon={ISSUE_TYPE_ICONS[issue.type]}
                   size="sm"
@@ -311,7 +311,7 @@ export const IssueCard = memo(function IssueCard({
           <Tooltip
             content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
           >
-            <div className="pointer-events-auto">
+            <div className="pointer-events-auto" tabIndex={0} role="button">
               <Icon
                 icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
                 size="sm"
@@ -378,7 +378,13 @@ export const IssueCard = memo(function IssueCard({
           <Flex align="center" gap="sm">
             {issue.assignee && (
               <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-                <Flex align="center" gap="xs" className="pointer-events-auto">
+                <Flex
+                  align="center"
+                  gap="xs"
+                  className="pointer-events-auto"
+                  tabIndex={0}
+                  role="button"
+                >
                   {issue.assignee.image ? (
                     <img
                       src={issue.assignee.image}
