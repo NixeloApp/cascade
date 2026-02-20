@@ -86,7 +86,11 @@ export const otpVerification = Resend({
             email,
           });
         } catch (error) {
-          if (isAppError(error) && error.data.code === "RATE_LIMITED") {
+          const isRateLimitError =
+            (isAppError(error) && error.data.code === "RATE_LIMITED") ||
+            (error instanceof Error && error.message.includes("Rate limit exceeded"));
+
+          if (isRateLimitError) {
             throw new Error("Too many verification requests. Please try again later.");
           }
           throw error;

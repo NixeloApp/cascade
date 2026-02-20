@@ -38,7 +38,11 @@ export const otpPasswordReset = Resend({
       try {
         await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimitByEmail, { email });
       } catch (error) {
-        if (isAppError(error) && error.data.code === "RATE_LIMITED") {
+        const isRateLimitError =
+          (isAppError(error) && error.data.code === "RATE_LIMITED") ||
+          (error instanceof Error && error.message.includes("Rate limit exceeded"));
+
+        if (isRateLimitError) {
           throw new Error("Too many password reset requests. Please try again later.");
         }
         throw error;
