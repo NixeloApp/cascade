@@ -904,3 +904,25 @@ body {
 .transition-slow {
   transition: all var(--duration-slow) ease;
 }
+
+/* Panel height constraints (for scrollable panels, modals, popovers) */
+.max-h-panel {
+  max-height: var(--max-height-panel);
+}
+
+.max-h-panel-lg {
+  max-height: var(--max-height-panel-lg);
+}
+
+.max-h-panel-sm {
+  max-height: var(--max-height-panel-sm);
+}
+
+.max-h-panel-md {
+  max-height: var(--max-height-panel-md);
+}
+
+/* Notification popover max-width (mobile-friendly with gutters) */
+.max-w-notification {
+  max-width: var(--max-width-notification);
+}

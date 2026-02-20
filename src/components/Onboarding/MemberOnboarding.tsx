@@ -10,9 +10,9 @@ import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { KeyboardShortcut } from "@/components/ui/KeyboardShortcut";
 import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { Typography } from "../ui/Typography";
 
 interface MemberOnboardingProps {
   onComplete: () => void;

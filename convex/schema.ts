@@ -716,7 +716,9 @@ const applicationTables = {
     trigger: automationTriggers,
     triggerValue: v.optional(v.string()), // Condition value (e.g., specific status name)
     actionType: automationActionTypes,
-    actionValue: automationActionValue, // Typed discriminated union
+    // NOTE: Changed from v.string() (JSON) to typed discriminated union.
+    // Existing rules with JSON strings will fail validation - run migration if needed.
+    actionValue: automationActionValue,
     createdBy: v.id("users"),
     updatedAt: v.number(),
     executionCount: v.number(),
@@ -955,7 +957,9 @@ const applicationTables = {
     bookerName: v.string(),
     bookerEmail: v.string(),
     bookerPhone: v.optional(v.string()),
-    bookerAnswers: v.optional(bookerAnswers), // Typed array of form answers
+    // NOTE: Changed from v.string() (JSON) to typed validator.
+    // Existing records with JSON strings will fail validation - run migration if needed.
+    bookerAnswers: v.optional(bookerAnswers),
     startTime: v.number(),
     endTime: v.number(),
     timezone: v.string(),

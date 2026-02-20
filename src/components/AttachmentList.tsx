@@ -74,7 +74,8 @@ function AttachmentItem({
 }) {
   const url = useQuery(api.attachments.getAttachment, { storageId });
 
-  if (!url) {
+  // Show skeleton while loading (undefined), but handle null (deleted/expired) gracefully
+  if (url === undefined) {
     return (
       <Card padding="sm" variant="soft">
         <Flex align="center" gap="sm">
@@ -85,6 +86,11 @@ function AttachmentItem({
         </Flex>
       </Card>
     );
+  }
+
+  // File was deleted or expired - don't render anything
+  if (url === null) {
+    return null;
   }
 
   const filename = getFilenameFromUrl(url);

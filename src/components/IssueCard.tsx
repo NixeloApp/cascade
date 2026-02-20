@@ -357,7 +357,6 @@ export const IssueCard = memo(function IssueCard({
                   variant="neutral"
                   size="sm"
                   tabIndex={0}
-                  role="button"
                   className="cursor-help pointer-events-auto"
                 >
                   +{issue.labels.length - 3}

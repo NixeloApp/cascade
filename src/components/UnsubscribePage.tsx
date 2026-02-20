@@ -13,9 +13,9 @@ import { AuthPageLayout } from "@/components/Auth/AuthPageLayout";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
-import { Typography } from "./ui/Typography";
+import { Typography } from "@/components/ui/Typography";
 
 interface UnsubscribePageProps {
   token: string;

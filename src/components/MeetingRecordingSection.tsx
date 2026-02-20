@@ -331,13 +331,15 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {summary && summary.keyPoints.length > 0 && (
         <Stack gap="sm">
           <Typography variant="label">Key Points</Typography>
-          <ul className="list-disc list-inside text-ui-text-secondary marker:text-brand">
-            <Stack as="span" gap="xs" className="contents">
-              {summary.keyPoints.map((point: string) => (
-                <li key={point}>{point}</li>
-              ))}
-            </Stack>
-          </ul>
+          <Stack
+            as="ul"
+            gap="xs"
+            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
+          >
+            {summary.keyPoints.map((point: string) => (
+              <li key={point}>{point}</li>
+            ))}
+          </Stack>
         </Stack>
       )}
 

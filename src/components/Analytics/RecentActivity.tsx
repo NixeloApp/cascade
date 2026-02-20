@@ -55,12 +55,14 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
                       <strong>{activity.field}</strong> on{" "}
                     </>
                   )}
-                  <Badge
-                    variant="neutral"
-                    className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border"
-                  >
-                    {activity.issueKey}
-                  </Badge>
+                  {activity.issueKey && (
+                    <Badge
+                      variant="neutral"
+                      className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border"
+                    >
+                      {activity.issueKey}
+                    </Badge>
+                  )}
                 </Typography>
                 <Metadata className="mt-1.5">
                   <MetadataTimestamp date={activity._creationTime} format="absolute" />

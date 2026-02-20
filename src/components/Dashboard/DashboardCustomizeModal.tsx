@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Button } from "../ui/Button";
 import { Dialog, DialogTrigger } from "../ui/Dialog";
@@ -29,12 +30,18 @@ export function DashboardCustomizeModal() {
     }
   }, [userSettings]);
 
-  const handleToggle = (key: keyof typeof preferences) => {
+  const handleToggle = async (key: keyof typeof preferences) => {
+    const oldPrefs = preferences;
     const newPrefs = { ...preferences, [key]: !preferences[key] };
     setPreferences(newPrefs);
-    updateSettings({
-      dashboardLayout: newPrefs,
-    });
+    try {
+      await updateSettings({
+        dashboardLayout: newPrefs,
+      });
+    } catch {
+      // Revert optimistic update on failure
+      setPreferences(oldPrefs);
+    }
   };
 
   return (
@@ -47,7 +54,7 @@ export function DashboardCustomizeModal() {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Flex align="center" gap="xs">
-            <Settings2 className="w-4 h-4" />
+            <Icon icon={Settings2} size="sm" />
             Customize
           </Flex>
         </Button>

@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
-import { useEffect } from "react";
+import { type FormEvent, useEffect } from "react";
 import { z } from "zod";
 import { FormCheckbox, FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
@@ -141,7 +141,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
       <Stack
         as="form"
         gap="md"
-        onSubmit={(e: React.FormEvent) => {
+        onSubmit={(e: FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}

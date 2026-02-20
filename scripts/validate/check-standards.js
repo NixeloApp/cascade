@@ -150,17 +150,29 @@ export function run() {
             reportError(filePath, node, `Use ${suggestion} instead of raw <${tagName}> tags.`);
           }
         }
-        // Raw anchor tags — use Link component or Button with asChild
+        // Raw anchor tags — use Link component or Button asChild with href
         // Allow in test files, download links, and files with external links
+        // Note: <a> inside <Button asChild> is allowed (Button handles the anchor)
         if (tagName === "a") {
-          const isAllowed = ALLOW_RAW_LINKS_PATTERNS.some(
-            (pattern) => rel.endsWith(pattern) || rel.includes(pattern),
+          // Check if this <a> is inside a Button with asChild (look at parent opening tag)
+          const ancestors = node.ancestors || [];
+          const isInsideButtonAsChild = ancestors.some(
+            (ancestor) =>
+              ancestor.type === "element" &&
+              ancestor.name === "Button" &&
+              ancestor.attributes?.some((attr) => attr.name.name === "asChild"),
           );
+
+          const isAllowed =
+            isInsideButtonAsChild ||
+            ALLOW_RAW_LINKS_PATTERNS.some(
+              (pattern) => rel.endsWith(pattern) || rel.includes(pattern),
+            );
           if (!isAllowed) {
             reportError(
               filePath,
               node,
-              `Use <Link> component or <Button asChild><a>...</a></Button> instead of raw <a> tags.`,
+              `Use <Link> for internal routes or <Button asChild> with href for styled links.`,
             );
           }
         }

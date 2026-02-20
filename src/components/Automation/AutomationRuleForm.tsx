@@ -77,6 +77,12 @@ function getActionLabel(actionType: AutomationActionType): string {
   }
 }
 
+/** Validate that a string looks like a Convex ID (basic format check) */
+function isValidConvexIdFormat(value: string): boolean {
+  // Convex IDs are alphanumeric strings, typically 20+ characters
+  return /^[a-z0-9]+$/i.test(value) && value.length >= 10;
+}
+
 /** Build typed action value from form inputs */
 function buildActionValue(
   actionType: AutomationActionType,
@@ -86,6 +92,10 @@ function buildActionValue(
 
   switch (actionType) {
     case "set_assignee":
+      // Validate ID format before casting (server will do final validation)
+      if (trimmed && !isValidConvexIdFormat(trimmed)) {
+        return null;
+      }
       return {
         type: "set_assignee",
         assigneeId: trimmed ? (trimmed as Id<"users">) : null,

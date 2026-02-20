@@ -93,7 +93,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                 <Flex align="center" gap="sm">
                   {/* Project avatar/icon */}
                   <Avatar
-                    name={project.key}
+                    name={project.name}
                     size="md"
                     variant="brand"
                     className="ring-1 ring-brand/20 group-hover:ring-brand/40 transition-all"

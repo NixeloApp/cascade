@@ -433,7 +433,7 @@ export function DocumentTemplatesManager({
                       checked={field.state.value as boolean}
                       onChange={(e) => field.handleChange(e.target.checked)}
                       onBlur={field.handleBlur}
-                      className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus:ring-brand-ring:ring-brand focus:ring-2"
+                      className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus:ring-2 focus:ring-brand"
                     />
                     <Label htmlFor="isPublic">Make public (visible to all users)</Label>
                   </Flex>

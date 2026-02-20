@@ -5,8 +5,9 @@ import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
-import { formatCurrency, formatDate, formatHours } from "@/lib/formatting";
+import { formatCurrency, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { TimeEntryModal } from "./TimeTracking/TimeEntryModal";
@@ -99,7 +100,6 @@ function TimeEntriesList({
       <Stack gap="sm">
         {entries.map((entry) => {
           const hours = formatHours(entry.duration);
-          const entryDate = formatDate(entry.date);
 
           return (
             <Card key={entry._id} padding="sm">
@@ -112,17 +112,12 @@ function TimeEntriesList({
                     <Typography variant="caption">{entry.description}</Typography>
                   )}
                   <Flex align="center" gap="sm">
-                    <time
-                      className="text-xs text-ui-text-tertiary"
-                      dateTime={new Date(entry.date).toISOString()}
-                    >
-                      {entryDate}
-                    </time>
+                    <MetadataTimestamp date={entry.date} format="absolute" />
                     {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
                     {entry.billable && <Badge variant="success">Billable</Badge>}
                   </Flex>
                 </Stack>
-                {entry.totalCost && (
+                {entry.totalCost !== undefined && (
                   <Typography variant="label" as="div">
                     {formatCurrency(entry.totalCost)}
                   </Typography>

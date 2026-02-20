@@ -251,7 +251,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
             <Flex justify="center" align="center" className="min-h-32">
               <LoadingSpinner size="lg" />
             </Flex>
-          ) : totalLabels === 0 ? (
+          ) : labelGroups.length === 0 && totalLabels === 0 ? (
             <EmptyState
               icon={Tag}
               title="No labels yet"

@@ -54,7 +54,9 @@ interface IssueDependenciesProps {
 
 export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDependenciesProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedIssue, setSelectedIssue] = useState<{ id: string; key: string } | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<{ id: Id<"issues">; key: string } | null>(
+    null,
+  );
   const [linkType, setLinkType] = useState<"blocks" | "relates" | "duplicates">("blocks");
   const [deleteConfirm, setDeleteConfirm] = useState<Id<"issueLinks"> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,7 +79,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
     try {
       await createLink({
         fromIssueId: issueId,
-        toIssueId: selectedIssue.id as Id<"issues">,
+        toIssueId: selectedIssue.id,
         linkType,
       });
       showSuccess("Dependency added");

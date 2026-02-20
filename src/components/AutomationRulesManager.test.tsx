@@ -399,7 +399,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
       actionValue: {
         type: "send_notification",
         message: "High priority!",
-      } as AutomationActionValue,
+      } satisfies AutomationActionValue,
       isActive: true,
       executionCount: 10,
     };

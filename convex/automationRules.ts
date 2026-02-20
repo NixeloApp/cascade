@@ -27,6 +27,14 @@ export const create = projectAdminMutation({
     actionValue: automationActionValue,
   },
   handler: async (ctx, args) => {
+    // Enforce actionType matches actionValue.type to prevent divergence
+    if (args.actionType !== args.actionValue.type) {
+      throw validation(
+        "actionType",
+        `actionType "${args.actionType}" does not match actionValue.type "${args.actionValue.type}"`,
+      );
+    }
+
     // adminMutation handles auth + admin check
     const now = Date.now();
     return await ctx.db.insert("automationRules", {
@@ -67,6 +75,16 @@ export const update = authenticatedMutation({
     }
 
     await assertIsProjectAdmin(ctx, rule.projectId, ctx.userId);
+
+    // Enforce actionType matches actionValue.type to prevent divergence
+    const newActionType = args.actionType ?? rule.actionType;
+    const newActionValue = args.actionValue ?? rule.actionValue;
+    if (newActionType !== newActionValue.type) {
+      throw validation(
+        "actionType",
+        `actionType "${newActionType}" does not match actionValue.type "${newActionValue.type}"`,
+      );
+    }
 
     const updates: Partial<typeof rule> & { updatedAt: number } = { updatedAt: Date.now() };
     if (args.name !== undefined) updates.name = args.name;
@@ -128,6 +146,8 @@ export const executeRules = internalMutation({
 
       // Execute the action - actionValue is now typed!
       try {
+        let executed = true;
+
         switch (rule.actionValue.type) {
           case "set_assignee":
             await ctx.db.patch(args.issueId, {
@@ -165,14 +185,17 @@ export const executeRules = internalMutation({
             break;
 
           case "send_notification":
-            // TODO: Implement notification sending
+            // TODO: Implement notification sending - skip execution count until implemented
+            executed = false;
             break;
         }
 
-        // Increment execution count
-        await ctx.db.patch(rule._id, {
-          executionCount: rule.executionCount + 1,
-        });
+        // Only increment execution count if action was actually performed
+        if (executed) {
+          await ctx.db.patch(rule._id, {
+            executionCount: rule.executionCount + 1,
+          });
+        }
       } catch (error) {
         // Log error but continue with other rules
         console.error(
