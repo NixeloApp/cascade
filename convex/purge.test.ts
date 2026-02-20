@@ -65,9 +65,9 @@ describe("Purge Data", () => {
 
     // Verify data exists
     await t.run(async (ctx) => {
-      expect((await ctx.db.query("users").collect()).length).toBe(1);
-      expect((await ctx.db.query("projects").collect()).length).toBe(1);
-      expect((await ctx.db.query("auditLogs").collect()).length).toBe(1);
+      expect(await ctx.db.query("users").first()).not.toBeNull();
+      expect(await ctx.db.query("projects").first()).not.toBeNull();
+      expect(await ctx.db.query("auditLogs").first()).not.toBeNull();
     });
 
     // Purge
@@ -75,17 +75,17 @@ describe("Purge Data", () => {
 
     // Verify data is gone
     await t.run(async (ctx) => {
-      expect((await ctx.db.query("users").collect()).length).toBe(0);
-      expect((await ctx.db.query("projects").collect()).length).toBe(0);
-      expect((await ctx.db.query("auditLogs").collect()).length).toBe(0);
+      expect(await ctx.db.query("users").first()).toBeNull();
+      expect(await ctx.db.query("projects").first()).toBeNull();
+      expect(await ctx.db.query("auditLogs").first()).toBeNull();
     });
   });
 
   it("should cover all schema tables", () => {
-    // biome-ignore lint/suspicious/noExplicitAny: convenient access to private property
-    const schemaTables = Object.keys((schema as any).tables);
-    // @ts-expect-error - convenient access
-    const missingTables = schemaTables.filter((table) => !TABLES.includes(table));
+    const schemaTables = Object.keys((schema as { tables: Record<string, unknown> }).tables);
+    const missingTables = schemaTables.filter(
+      (table) => !TABLES.includes(table as (typeof TABLES)[number]),
+    );
 
     if (missingTables.length > 0) {
       console.error("Missing tables in purge list:", missingTables);
