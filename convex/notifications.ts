@@ -190,12 +190,29 @@ export const listForDigest = internalQuery({
   handler: async (ctx, args) => {
     // Limit for digest - most recent notifications since startTime
     const MAX_DIGEST_NOTIFICATIONS = 100;
-    const notifications = await ctx.db
+
+    // Optimization: Manual scan using index order to stop early.
+    // The "by_user" index is ordered by userId, then _creationTime.
+    // By iterating in descending order, we see newest items first.
+    // We can stop scanning as soon as we see an item older than startTime.
+    // This avoids scanning the entire notification history for the user when there are no recent notifications.
+    const notifications: Doc<"notifications">[] = [];
+    for await (const notification of ctx.db
       .query("notifications")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .filter((q) => q.gte(q.field("_creationTime"), args.startTime))
-      .order("desc")
-      .take(MAX_DIGEST_NOTIFICATIONS);
+      .order("desc")) {
+      if (notification._creationTime < args.startTime) {
+        break;
+      }
+      // Skip soft-deleted notifications
+      if (notification.isDeleted) {
+        continue;
+      }
+      notifications.push(notification);
+      if (notifications.length >= MAX_DIGEST_NOTIFICATIONS) {
+        break;
+      }
+    }
 
     // Batch fetch all actors and issues (avoid N+1!)
     const actorIds = notifications.map((n) => n.actorId);
