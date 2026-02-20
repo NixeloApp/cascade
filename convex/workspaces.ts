@@ -25,7 +25,7 @@ import { workspaceRoles } from "./validators";
  * Create a new workspace (department)
  * Only organization admins can create workspaces
  */
-export const create = organizationAdminMutation({
+export const createWorkspace = organizationAdminMutation({
   args: {
     name: v.string(),
     slug: v.string(),
@@ -59,10 +59,13 @@ export const create = organizationAdminMutation({
   },
 });
 
+/** @deprecated Use createWorkspace instead */
+export const create = createWorkspace;
+
 /**
  * List all workspaces for a organization
  */
-export const list = organizationQuery({
+export const listWorkspaces = organizationQuery({
   args: {},
   handler: async (ctx) => {
     const workspaces = await ctx.db
@@ -95,6 +98,9 @@ export const list = organizationQuery({
     return enriched;
   },
 });
+
+/** @deprecated Use listWorkspaces instead */
+export const list = listWorkspaces;
 
 /**
  * Get a single workspace by ID
@@ -172,7 +178,7 @@ export const getWorkspaceBySlug = organizationQuery({
  * Update workspace
  * Only organization admins can update workspaces
  */
-export const update = workspaceAdminMutation({
+export const updateWorkspace = workspaceAdminMutation({
   args: {
     name: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -195,12 +201,15 @@ export const update = workspaceAdminMutation({
   },
 });
 
+/** @deprecated Use updateWorkspace instead */
+export const update = updateWorkspace;
+
 /**
  * Delete workspace
  * Only organization admins or the workspace creator can delete workspaces
  * WARNING: This will orphan all teams and projects in this workspace
  */
-export const remove = authenticatedMutation({
+export const deleteWorkspace = authenticatedMutation({
   args: { id: v.id("workspaces") },
   handler: async (ctx, args) => {
     const workspace = await ctx.db.get(args.id);
@@ -241,10 +250,13 @@ export const remove = authenticatedMutation({
   },
 });
 
+/** @deprecated Use deleteWorkspace instead */
+export const remove = deleteWorkspace;
+
 /**
  * Get workspace stats (teams, projects count)
  */
-export const getStats = workspaceQuery({
+export const getWorkspaceStats = workspaceQuery({
   args: {},
   handler: async (ctx) => {
     // workspaceQuery handles auth + org membership check
@@ -267,6 +279,9 @@ export const getStats = workspaceQuery({
   },
 });
 
+/** @deprecated Use getWorkspaceStats instead */
+export const getStats = getWorkspaceStats;
+
 // =============================================================================
 // Workspace Members
 // =============================================================================
@@ -275,7 +290,7 @@ export const getStats = workspaceQuery({
  * Add member to workspace
  * Workspace admin or organization admin only
  */
-export const addMember = workspaceAdminMutation({
+export const addWorkspaceMember = workspaceAdminMutation({
   args: {
     userId: v.id("users"),
     role: workspaceRoles,
@@ -316,11 +331,14 @@ export const addMember = workspaceAdminMutation({
   },
 });
 
+/** @deprecated Use addWorkspaceMember instead */
+export const addMember = addWorkspaceMember;
+
 /**
  * Update workspace member role
  * Workspace admin or organization admin only
  */
-export const updateMemberRole = workspaceAdminMutation({
+export const updateWorkspaceMemberRole = workspaceAdminMutation({
   args: {
     userId: v.id("users"),
     role: workspaceRoles,
@@ -345,11 +363,14 @@ export const updateMemberRole = workspaceAdminMutation({
   },
 });
 
+/** @deprecated Use updateWorkspaceMemberRole instead */
+export const updateMemberRole = updateWorkspaceMemberRole;
+
 /**
  * Remove member from workspace
  * Workspace admin or organization admin only
  */
-export const removeMember = workspaceAdminMutation({
+export const removeWorkspaceMember = workspaceAdminMutation({
   args: {
     userId: v.id("users"),
   },
@@ -376,11 +397,14 @@ export const removeMember = workspaceAdminMutation({
   },
 });
 
+/** @deprecated Use removeWorkspaceMember instead */
+export const removeMember = removeWorkspaceMember;
+
 /**
  * Get workspace members
  * Any workspace member can view
  */
-export const getMembers = workspaceQuery({
+export const getWorkspaceMembers = workspaceQuery({
   args: {},
   handler: async (ctx) => {
     const memberships = await ctx.db
@@ -410,3 +434,6 @@ export const getMembers = workspaceQuery({
     return members;
   },
 });
+
+/** @deprecated Use getWorkspaceMembers instead */
+export const getMembers = getWorkspaceMembers;
