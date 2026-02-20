@@ -1,10 +1,9 @@
-
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
+import { MAX_HEALTH_CHECK_RECORDS } from "./lib/queryLimits";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { MAX_HEALTH_CHECK_RECORDS } from "./lib/queryLimits";
 
 describe("OAuth Health Check", () => {
   let t: ReturnType<typeof convexTest>;
@@ -41,8 +40,8 @@ describe("OAuth Health Check", () => {
 
       for (let i = 0; i < totalRecords; i++) {
         await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {
-            success: true,
-            latencyMs: i,
+          success: true,
+          latencyMs: i,
         });
       }
 
@@ -56,7 +55,7 @@ describe("OAuth Health Check", () => {
       // The last inserted one has latencyMs = totalRecords - 1.
       // So we expect latencyMs from 5 to totalRecords - 1.
 
-      const latencies = records.map(r => r.latencyMs).sort((a, b) => a - b);
+      const latencies = records.map((r) => r.latencyMs).sort((a, b) => a - b);
       expect(latencies[0]).toBe(5);
       expect(latencies[latencies.length - 1]).toBe(totalRecords - 1);
     });
