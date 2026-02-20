@@ -12,6 +12,7 @@ import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
+import { getOrganizationMemberships } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import {
@@ -77,12 +78,12 @@ export const getUser = authenticatedQuery({
     }
 
     // Check for shared organization
-    const myOrgs = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .take(MAX_PAGE_SIZE);
+    // Optimization: Use cached memberships for the current user
+    const { items: myOrgs } = await getOrganizationMemberships(ctx, ctx.userId);
 
     if (myOrgs.length > 0) {
+      // Optimization: Fetch only necessary memberships for the target user
+      // We can't easily cache for the target user (since they vary), but we limit the fetch
       const theirOrgs = await ctx.db
         .query("organizationMembers")
         .withIndex("by_user", (q) => q.eq("userId", args.id))
@@ -408,20 +409,30 @@ export const isOrganizationAdmin = authenticatedQuery({
   args: {},
   returns: v.boolean(),
   handler: async (ctx) => {
-    // Primary: Check if user is admin or owner in any organization
-    const adminMembership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user_role", (q) => q.eq("userId", ctx.userId).eq("role", "admin"))
-      .first();
+    // Optimization: Use cached memberships for the current user
+    const { items: myOrgs, hasMore } = await getOrganizationMemberships(ctx, ctx.userId);
 
-    if (adminMembership) return true;
+    const hasAdminRole = myOrgs.some((m) => m.role === "admin" || m.role === "owner");
+    if (hasAdminRole) return true;
 
-    const ownerMembership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user_role", (q) => q.eq("userId", ctx.userId).eq("role", "owner"))
-      .first();
+    // If cache was truncated, check for admin/owner role via index
+    if (hasMore) {
+      const adminMembership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user_role", (q) => q.eq("userId", ctx.userId).eq("role", "admin"))
+        .first();
 
-    return !!ownerMembership;
+      if (adminMembership) return true;
+
+      const ownerMembership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user_role", (q) => q.eq("userId", ctx.userId).eq("role", "owner"))
+        .first();
+
+      return !!ownerMembership;
+    }
+
+    return false;
   },
 });
 
