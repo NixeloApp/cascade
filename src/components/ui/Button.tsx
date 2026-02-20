@@ -89,10 +89,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         type={asChild ? undefined : type}
         {...props}
       >
-        {isLoading ? (
+        {asChild ? (
+          children
+        ) : isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            {size !== "icon" && <span>Loading...</span>}
+            {size !== "icon" && children}
           </>
         ) : (
           <>
