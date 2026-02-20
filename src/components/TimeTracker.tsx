@@ -5,8 +5,9 @@ import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
-import { formatCurrency, formatDate, formatHours } from "@/lib/formatting";
+import { formatCurrency, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { TimeEntryModal } from "./TimeTracking/TimeEntryModal";
@@ -44,9 +45,8 @@ function TimeProgress({
           </Typography>
           {remainingHours !== null && (
             <Typography
-              variant="caption"
+              variant={isOverEstimate ? "label" : "caption"}
               color={isOverEstimate ? "error" : undefined}
-              className={isOverEstimate ? "font-medium" : undefined}
             >
               {isOverEstimate ? "+" : ""}
               {Math.abs(remainingHours).toFixed(1)}h {isOverEstimate ? "over" : "remaining"}
@@ -91,42 +91,43 @@ function TimeEntriesList({
   entries: (Doc<"timeEntries"> & { totalCost?: number })[];
 }) {
   return (
-    <Stack gap="sm" className="p-4 border-t border-ui-border bg-ui-bg-secondary">
-      {entries.map((entry) => {
-        const hours = formatHours(entry.duration);
-        const entryDate = formatDate(entry.date);
+    <Card
+      padding="md"
+      radius="none"
+      variant="ghost"
+      className="border-t border-ui-border bg-ui-bg-secondary"
+    >
+      <Stack gap="sm">
+        {entries.map((entry) => {
+          const hours = formatHours(entry.duration);
 
-        return (
-          <Card key={entry._id} padding="sm">
-            <Flex align="start" justify="between">
-              <Stack gap="xs">
-                <Typography variant="large" as="div">
-                  {hours}h
-                </Typography>
-                {entry.description && (
-                  <Typography variant="caption">{entry.description}</Typography>
+          return (
+            <Card key={entry._id} padding="sm">
+              <Flex align="start" justify="between">
+                <Stack gap="xs">
+                  <Typography variant="large" as="div">
+                    {hours}h
+                  </Typography>
+                  {entry.description && (
+                    <Typography variant="caption">{entry.description}</Typography>
+                  )}
+                  <Flex align="center" gap="sm">
+                    <MetadataTimestamp date={entry.date} format="absolute" />
+                    {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
+                    {entry.billable && <Badge variant="success">Billable</Badge>}
+                  </Flex>
+                </Stack>
+                {entry.totalCost !== undefined && (
+                  <Typography variant="label" as="div">
+                    {formatCurrency(entry.totalCost)}
+                  </Typography>
                 )}
-                <Flex align="center" gap="sm">
-                  <time
-                    className="text-xs text-ui-text-tertiary"
-                    dateTime={new Date(entry.date).toISOString()}
-                  >
-                    {entryDate}
-                  </time>
-                  {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
-                  {entry.billable && <Badge variant="success">Billable</Badge>}
-                </Flex>
-              </Stack>
-              {entry.totalCost && (
-                <Typography variant="small" as="div" className="font-medium">
-                  {formatCurrency(entry.totalCost)}
-                </Typography>
-              )}
-            </Flex>
-          </Card>
-        );
-      })}
-    </Stack>
+              </Flex>
+            </Card>
+          );
+        })}
+      </Stack>
+    </Card>
   );
 }
 
@@ -184,48 +185,57 @@ export function TimeTracker({
   return (
     <Card padding="none" className="border border-ui-border">
       {/* Header */}
-      <Stack gap="sm" className="p-4 border-b border-ui-border">
-        <Flex align="center" justify="between">
-          <Typography variant="label">Time Tracking</Typography>
-          <Flex align="center" gap="sm">
-            {/* Timer Button */}
-            {isTimerRunningForThisIssue ? (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleStopTimer}
-                leftIcon={<Square className="w-4 h-4" fill="currentColor" />}
-              >
-                Stop Timer
-              </Button>
-            ) : (
-              <Button
-                variant="success"
-                size="sm"
-                onClick={handleStartTimer}
-                disabled={!!runningTimer}
-                title={runningTimer ? "Stop the current timer first" : "Start timer for this issue"}
-                leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
-              >
-                Start Timer
-              </Button>
-            )}
+      <Card
+        padding="md"
+        radius="none"
+        variant="ghost"
+        className="border-b border-ui-border border-x-0 border-t-0"
+      >
+        <Stack gap="sm">
+          <Flex align="center" justify="between">
+            <Typography variant="label">Time Tracking</Typography>
+            <Flex align="center" gap="sm">
+              {/* Timer Button */}
+              {isTimerRunningForThisIssue ? (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleStopTimer}
+                  leftIcon={<Square className="w-4 h-4" fill="currentColor" />}
+                >
+                  Stop Timer
+                </Button>
+              ) : (
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={handleStartTimer}
+                  disabled={!!runningTimer}
+                  title={
+                    runningTimer ? "Stop the current timer first" : "Start timer for this issue"
+                  }
+                  leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
+                >
+                  Start Timer
+                </Button>
+              )}
 
-            {/* Log Time Button */}
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowLogModal(true)}
-              leftIcon={<Plus className="w-4 h-4" />}
-            >
-              Log Time
-            </Button>
+              {/* Log Time Button */}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowLogModal(true)}
+                leftIcon={<Plus className="w-4 h-4" />}
+              >
+                Log Time
+              </Button>
+            </Flex>
           </Flex>
-        </Flex>
 
-        {/* Progress Bar */}
-        <TimeProgress estimatedHours={estimatedHours} totalLoggedHours={totalLoggedHours} />
-      </Stack>
+          {/* Progress Bar */}
+          <TimeProgress estimatedHours={estimatedHours} totalLoggedHours={totalLoggedHours} />
+        </Stack>
+      </Card>
 
       {/* Time Entries Toggle */}
       {totalLoggedHours > 0 && (

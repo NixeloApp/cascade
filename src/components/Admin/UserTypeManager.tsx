@@ -587,7 +587,7 @@ export function UserTypeManager() {
         open={showConfigModal}
         onOpenChange={setShowConfigModal}
         title={`Edit ${selectedType} Configuration`}
-        className="sm:max-w-2xl"
+        size="lg"
         footer={
           <>
             <Button
@@ -706,7 +706,7 @@ export function UserTypeManager() {
           }
         }}
         title={selectedUserId ? "Edit User Employment" : "Assign Employment Type"}
-        className="sm:max-w-2xl"
+        size="lg"
         footer={
           <>
             <Button

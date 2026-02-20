@@ -3,13 +3,16 @@ import { useMutation } from "convex/react";
 import { ArrowLeft, Bell, Building2, Clock, FileText, Kanban } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { KeyboardShortcut } from "@/components/ui/KeyboardShortcut";
+import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { Typography } from "../ui/Typography";
 
 interface MemberOnboardingProps {
   onComplete: () => void;
@@ -70,44 +73,38 @@ export function MemberOnboarding({
 
   if (step === "project") {
     return (
-      <div className="space-y-8">
+      <Stack gap="xl">
         {/* Back button - Mintlify-inspired */}
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-2 text-ui-text-secondary hover:text-ui-text transition-colors duration-fast group"
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <Typography variant="caption" className="font-medium">
-            Back
-          </Typography>
-        </button>
+        <Button variant="ghost" size="sm" onClick={onBack} className="self-start group">
+          <Flex align="center" gap="xs">
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            <Typography variant="caption" className="font-medium">
+              Back
+            </Typography>
+          </Flex>
+        </Button>
 
         {/* Header */}
-        <div className="text-center">
+        <Stack gap="md" className="text-center">
           <Flex
             inline
             align="center"
             justify="center"
-            className="w-16 h-16 rounded-full bg-brand-indigo-track mb-4"
+            className="w-16 h-16 rounded-full bg-brand-indigo-track mx-auto"
           >
-            <Building2 className="w-8 h-8 text-brand" />
+            <Icon icon={Building2} size="xl" className="text-brand" />
           </Flex>
-          <Typography
-            variant="h1"
-            className="text-3xl font-bold mb-3"
-            data-testid={TEST_IDS.ONBOARDING.NAME_PROJECT_HEADING}
-          >
-            Name Your Project
-          </Typography>
-          <Typography variant="p" color="secondary" className="text-lg">
-            Create a project for your team to collaborate
-          </Typography>
-        </div>
+          <Stack gap="sm">
+            <Typography variant="h1" data-testid={TEST_IDS.ONBOARDING.NAME_PROJECT_HEADING}>
+              Name Your Project
+            </Typography>
+            <Typography variant="lead">Create a project for your team to collaborate</Typography>
+          </Stack>
+        </Stack>
 
         {/* Project Name Input */}
-        <div className="max-w-md mx-auto space-y-4">
-          <div>
+        <Stack gap="md" className="max-w-md mx-auto">
+          <Stack gap="xs">
             <Input
               type="text"
               placeholder="e.g., Acme Corp, My Team, Design Studio"
@@ -125,152 +122,125 @@ export function MemberOnboarding({
               autoFocus
             />
             {projectError && (
-              <Typography variant="p" className="text-status-error text-sm mt-2 text-center">
+              <Typography variant="small" color="error" className="text-center">
                 {projectError}
               </Typography>
             )}
-          </div>
+          </Stack>
 
           <Button
             variant="primary"
             size="lg"
             onClick={handleCreateOrganization}
             disabled={isCreating || !projectName.trim()}
-            className="w-full h-12 text-lg font-semibold transition-all duration-300 hover:shadow-xl active:scale-95"
+            className="w-full"
           >
             {isCreating ? "Creating..." : "Create Project"}
           </Button>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <Stack gap="xl">
       {/* Back button - Mintlify-inspired */}
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => setStep("project")}
-        className="flex items-center gap-2 text-ui-text-secondary hover:text-ui-text transition-colors duration-fast group"
+        className="self-start group"
       >
-        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-        <Typography variant="caption" className="font-medium">
-          Back
-        </Typography>
-      </button>
+        <Flex align="center" gap="xs">
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <Typography variant="caption" className="font-medium">
+            Back
+          </Typography>
+        </Flex>
+      </Button>
 
       {/* Header */}
-      <div className="text-center">
-        <Typography
-          variant="h2"
-          className="mb-3 text-3xl"
-          data-testid={TEST_IDS.ONBOARDING.ALL_SET_HEADING}
-        >
+      <Stack gap="sm" className="text-center">
+        <Typography variant="h2" data-testid={TEST_IDS.ONBOARDING.ALL_SET_HEADING}>
           You're ready
         </Typography>
         <Typography variant="lead">Here's what you can do in Nixelo</Typography>
-      </div>
+      </Stack>
 
       {/* What you can do */}
-      <div className="space-y-4">
-        <Grid cols={1} colsSm={2} gap="md">
-          <Flex
-            align="start"
-            gap="md"
-            className="p-4 rounded-container bg-ui-bg-soft border border-ui-border hover:border-ui-border-secondary transition-colors duration-fast"
-          >
+      <Grid cols={1} colsSm={2} gap="md">
+        <Card variant="soft" padding="md" hoverable>
+          <Flex align="start" gap="md">
             <Flex
               align="center"
               justify="center"
               className="w-9 h-9 rounded-lg bg-palette-blue-bg shrink-0"
             >
-              <Kanban className="w-5 h-5 text-palette-blue" />
+              <Icon icon={Kanban} size="md" className="text-palette-blue" />
             </Flex>
-            <div>
-              <Typography variant="h4" className="font-medium text-ui-text text-sm">
-                Work on Issues
-              </Typography>
-              <Typography className="text-xs text-ui-text-secondary mt-0.5">
-                Drag issues across the board as you progress
-              </Typography>
-            </div>
+            <Stack gap="none">
+              <Typography variant="label">Work on Issues</Typography>
+              <Typography variant="meta">Drag issues across the board as you progress</Typography>
+            </Stack>
           </Flex>
+        </Card>
 
-          <Flex
-            align="start"
-            gap="md"
-            className="p-4 rounded-container bg-ui-bg-soft border border-ui-border hover:border-ui-border-secondary transition-colors duration-fast"
-          >
+        <Card variant="soft" padding="md" hoverable>
+          <Flex align="start" gap="md">
             <Flex
               align="center"
               justify="center"
               className="w-9 h-9 rounded-lg bg-status-success-bg shrink-0"
             >
-              <FileText className="w-5 h-5 text-status-success" />
+              <Icon icon={FileText} size="md" className="text-status-success" />
             </Flex>
-            <div>
-              <Typography variant="h4" className="font-medium text-ui-text text-sm">
-                Collaborate on Docs
-              </Typography>
-              <Typography className="text-xs text-ui-text-secondary mt-0.5">
-                Edit documents together in real-time
-              </Typography>
-            </div>
+            <Stack gap="none">
+              <Typography variant="label">Collaborate on Docs</Typography>
+              <Typography variant="meta">Edit documents together in real-time</Typography>
+            </Stack>
           </Flex>
+        </Card>
 
-          <Flex
-            align="start"
-            gap="md"
-            className="p-4 rounded-container bg-ui-bg-soft border border-ui-border hover:border-ui-border-secondary transition-colors duration-fast"
-          >
+        <Card variant="soft" padding="md" hoverable>
+          <Flex align="start" gap="md">
             <Flex
               align="center"
               justify="center"
               className="w-9 h-9 rounded-lg bg-status-warning-bg shrink-0"
             >
-              <Clock className="w-5 h-5 text-status-warning" />
+              <Icon icon={Clock} size="md" className="text-status-warning" />
             </Flex>
-            <div>
-              <Typography variant="h4" className="font-medium text-ui-text text-sm">
-                Track Time
-              </Typography>
-              <Typography className="text-xs text-ui-text-secondary mt-0.5">
-                Log time spent on tasks
-              </Typography>
-            </div>
+            <Stack gap="none">
+              <Typography variant="label">Track Time</Typography>
+              <Typography variant="meta">Log time spent on tasks</Typography>
+            </Stack>
           </Flex>
+        </Card>
 
-          <Flex
-            align="start"
-            gap="md"
-            className="p-4 rounded-container bg-ui-bg-soft border border-ui-border hover:border-ui-border-secondary transition-colors duration-fast"
-          >
+        <Card variant="soft" padding="md" hoverable>
+          <Flex align="start" gap="md">
             <Flex
               align="center"
               justify="center"
               className="w-9 h-9 rounded-lg bg-palette-purple-bg shrink-0"
             >
-              <Bell className="w-5 h-5 text-palette-purple" />
+              <Icon icon={Bell} size="md" className="text-palette-purple" />
             </Flex>
-            <div>
-              <Typography variant="h4" className="font-medium text-ui-text text-sm">
-                Stay Updated
-              </Typography>
-              <Typography className="text-xs text-ui-text-secondary mt-0.5">
-                Get notified when mentioned or assigned
-              </Typography>
-            </div>
+            <Stack gap="none">
+              <Typography variant="label">Stay Updated</Typography>
+              <Typography variant="meta">Get notified when mentioned or assigned</Typography>
+            </Stack>
           </Flex>
-        </Grid>
-      </div>
+        </Card>
+      </Grid>
 
       {/* Keyboard shortcuts tip */}
-      <div className="bg-ui-bg rounded-xl p-4 text-center">
-        <Typography className="text-sm text-ui-text-secondary">
+      <Card padding="md" radius="full" className="text-center">
+        <Typography variant="small" color="secondary">
           <strong>Pro tip:</strong> Press <KeyboardShortcut shortcut="Ctrl+K" variant="subtle" /> or{" "}
           <KeyboardShortcut shortcut="Cmd+K" variant="subtle" /> to open the command palette
         </Typography>
-      </div>
+      </Card>
 
       {/* Continue */}
       <Flex justify="center">
@@ -284,6 +254,6 @@ export function MemberOnboarding({
           Go to Dashboard
         </Button>
       </Flex>
-    </div>
+    </Stack>
   );
 }

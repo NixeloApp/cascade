@@ -122,8 +122,8 @@ describe("AttachmentList", () => {
 
     render(<AttachmentList attachmentIds={["storage-1" as Id<"_storage">]} issueId={issueId} />);
 
-    // Check for skeletons/loading indicators
-    const skeletons = document.querySelectorAll(".animate-pulse");
+    // Check for skeletons/loading indicators (Skeleton uses animate-shimmer)
+    const skeletons = document.querySelectorAll(".animate-shimmer");
     expect(skeletons.length).toBeGreaterThan(0);
   });
 });

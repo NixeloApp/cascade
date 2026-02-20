@@ -54,7 +54,9 @@ interface IssueDependenciesProps {
 
 export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDependenciesProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedIssueKey, setSelectedIssueKey] = useState("");
+  const [selectedIssue, setSelectedIssue] = useState<{ id: Id<"issues">; key: string } | null>(
+    null,
+  );
   const [linkType, setLinkType] = useState<"blocks" | "relates" | "duplicates">("blocks");
   const [deleteConfirm, setDeleteConfirm] = useState<Id<"issueLinks"> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,7 +71,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
   const removeLink = useMutation(api.issueLinks.remove);
 
   const handleAddLink = async () => {
-    if (!selectedIssueKey) {
+    if (!selectedIssue) {
       showError("Please select an issue");
       return;
     }
@@ -77,12 +79,12 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
     try {
       await createLink({
         fromIssueId: issueId,
-        toIssueId: selectedIssueKey as Id<"issues">,
+        toIssueId: selectedIssue.id,
         linkType,
       });
       showSuccess("Dependency added");
       setShowAddDialog(false);
-      setSelectedIssueKey("");
+      setSelectedIssue(null);
       setSearchQuery("");
     } catch (error) {
       showError(error, "Failed to add dependency");
@@ -215,9 +217,11 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
 
       {/* Empty State */}
       {links && links.outgoing.length === 0 && links.incoming.length === 0 && (
-        <Flex justify="center" className="py-6">
-          <Typography variant="caption">No dependencies yet</Typography>
-        </Flex>
+        <Card padding="lg" variant="ghost">
+          <Flex justify="center">
+            <Typography variant="caption">No dependencies yet</Typography>
+          </Flex>
+        </Card>
       )}
 
       {/* Add Dependency Sheet (side panel to avoid nested dialog issue) */}
@@ -226,7 +230,7 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
         onOpenChange={(open) => {
           setShowAddDialog(open);
           if (!open) {
-            setSelectedIssueKey("");
+            setSelectedIssue(null);
             setSearchQuery("");
           }
         }}
@@ -238,71 +242,73 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
               variant="secondary"
               onClick={() => {
                 setShowAddDialog(false);
-                setSelectedIssueKey("");
+                setSelectedIssue(null);
                 setSearchQuery("");
               }}
             >
               Cancel
             </Button>
-            <Button onClick={handleAddLink} disabled={!selectedIssueKey}>
+            <Button onClick={handleAddLink} disabled={!selectedIssue}>
               Add Dependency
             </Button>
           </>
         }
       >
-        <Stack gap="md" className="p-6">
-          {/* Link Type */}
-          <Select
-            label="Relationship Type"
-            value={linkType}
-            onChange={(e) => setLinkType(e.target.value as "blocks" | "relates" | "duplicates")}
-          >
-            <option value="blocks">Blocks</option>
-            <option value="relates">Relates to</option>
-            <option value="duplicates">Duplicates</option>
-          </Select>
+        <Card padding="lg" variant="ghost">
+          <Stack gap="md">
+            {/* Link Type */}
+            <Select
+              label="Relationship Type"
+              value={linkType}
+              onChange={(e) => setLinkType(e.target.value as "blocks" | "relates" | "duplicates")}
+            >
+              <option value="blocks">Blocks</option>
+              <option value="relates">Relates to</option>
+              <option value="duplicates">Duplicates</option>
+            </Select>
 
-          {/* Search Issues */}
-          <Input
-            label="Search Issue"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Type to search..."
-          />
+            {/* Search Issues */}
+            <Input
+              label="Search Issue"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Type to search..."
+            />
 
-          {/* Search Results - already filtered by backend (excludeIssueId) */}
-          {searchResults?.page && searchResults.page.length > 0 && (
-            <div className="max-h-48 overflow-y-auto border border-ui-border rounded-lg">
-              {searchResults.page.map((issue: Issue) => (
-                <button
-                  type="button"
-                  key={issue._id}
-                  onClick={() => {
-                    setSelectedIssueKey(issue._id);
-                    setSearchQuery("");
-                  }}
-                  className={cn(
-                    "w-full p-3 text-left hover:bg-ui-bg-tertiary border-b border-ui-border-secondary last:border-0",
-                    selectedIssueKey === issue._id && "bg-brand-subtle",
-                  )}
-                >
-                  <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
-                </button>
-              ))}
-            </div>
-          )}
+            {/* Search Results - already filtered by backend (excludeIssueId) */}
+            {searchResults?.page && searchResults.page.length > 0 && (
+              <Card padding="none" className="max-h-48 overflow-y-auto">
+                {searchResults.page.map((issue: Issue) => (
+                  <Button
+                    key={issue._id}
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedIssue({ id: issue._id, key: issue.key });
+                      setSearchQuery("");
+                    }}
+                    className={cn(
+                      "w-full p-3 justify-start text-left rounded-none hover:bg-ui-bg-tertiary border-b border-ui-border-secondary last:border-0",
+                      selectedIssue?.id === issue._id && "bg-brand-subtle",
+                    )}
+                  >
+                    <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
+                  </Button>
+                ))}
+              </Card>
+            )}
 
-          {/* Selected Issue */}
-          {selectedIssueKey && (
-            <Typography variant="caption">
-              Selected:{" "}
-              <Typography variant="label" as="span">
-                {selectedIssueKey}
+            {/* Selected Issue */}
+            {selectedIssue && (
+              <Typography variant="caption">
+                Selected:{" "}
+                <Typography variant="label" as="span">
+                  {selectedIssue.key}
+                </Typography>
               </Typography>
-            </Typography>
-          )}
-        </Stack>
+            )}
+          </Stack>
+        </Card>
       </Sheet>
 
       {/* Delete Confirmation */}

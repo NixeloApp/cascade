@@ -42,7 +42,7 @@ export function MarkdownPreviewModal({
       onOpenChange={onOpenChange}
       title="Preview Markdown Import"
       description="Preview content before importing"
-      className="sm:max-w-4xl"
+      size="xl"
       footer={
         <>
           <Button onClick={() => onOpenChange(false)} variant="secondary">

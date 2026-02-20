@@ -4,6 +4,7 @@ import { authenticatedMutation, projectAdminMutation, projectQuery } from "./cus
 import { notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { assertIsProjectAdmin } from "./projectAccess";
+import { automationActionTypes, automationActionValue, automationTriggers } from "./validators";
 
 export const list = projectQuery({
   args: {},
@@ -20,12 +21,20 @@ export const create = projectAdminMutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
-    trigger: v.string(),
+    trigger: automationTriggers,
     triggerValue: v.optional(v.string()),
-    actionType: v.string(),
-    actionValue: v.string(),
+    actionType: automationActionTypes,
+    actionValue: automationActionValue,
   },
   handler: async (ctx, args) => {
+    // Enforce actionType matches actionValue.type to prevent divergence
+    if (args.actionType !== args.actionValue.type) {
+      throw validation(
+        "actionType",
+        `actionType "${args.actionType}" does not match actionValue.type "${args.actionValue.type}"`,
+      );
+    }
+
     // adminMutation handles auth + admin check
     const now = Date.now();
     return await ctx.db.insert("automationRules", {
@@ -50,10 +59,10 @@ export const update = authenticatedMutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     isActive: v.optional(v.boolean()),
-    trigger: v.optional(v.string()),
+    trigger: v.optional(automationTriggers),
     triggerValue: v.optional(v.string()),
-    actionType: v.optional(v.string()),
-    actionValue: v.optional(v.string()),
+    actionType: v.optional(automationActionTypes),
+    actionValue: v.optional(automationActionValue),
   },
   handler: async (ctx, args) => {
     const rule = await ctx.db.get(args.id);
@@ -66,6 +75,16 @@ export const update = authenticatedMutation({
     }
 
     await assertIsProjectAdmin(ctx, rule.projectId, ctx.userId);
+
+    // Enforce actionType matches actionValue.type to prevent divergence
+    const newActionType = args.actionType ?? rule.actionType;
+    const newActionValue = args.actionValue ?? rule.actionValue;
+    if (newActionType !== newActionValue.type) {
+      throw validation(
+        "actionType",
+        `actionType "${newActionType}" does not match actionValue.type "${newActionValue.type}"`,
+      );
+    }
 
     const updates: Partial<typeof rule> & { updatedAt: number } = { updatedAt: Date.now() };
     if (args.name !== undefined) updates.name = args.name;
@@ -105,7 +124,7 @@ export const executeRules = internalMutation({
   args: {
     projectId: v.id("projects"),
     issueId: v.id("issues"),
-    trigger: v.string(),
+    trigger: automationTriggers,
     triggerValue: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -125,30 +144,30 @@ export const executeRules = internalMutation({
         continue;
       }
 
-      // Execute the action
+      // Execute the action - actionValue is now typed!
       try {
-        const actionParams = JSON.parse(rule.actionValue);
+        let executed = true;
 
-        switch (rule.actionType) {
+        switch (rule.actionValue.type) {
           case "set_assignee":
             await ctx.db.patch(args.issueId, {
-              assigneeId: actionParams.assigneeId || null,
+              assigneeId: rule.actionValue.assigneeId ?? undefined,
               updatedAt: Date.now(),
             });
             break;
 
           case "set_priority":
             await ctx.db.patch(args.issueId, {
-              priority: actionParams.priority,
+              priority: rule.actionValue.priority,
               updatedAt: Date.now(),
             });
             break;
 
           case "add_label": {
             const currentLabels = issue.labels || [];
-            if (!currentLabels.includes(actionParams.label)) {
+            if (!currentLabels.includes(rule.actionValue.label)) {
               await ctx.db.patch(args.issueId, {
-                labels: [...currentLabels, actionParams.label],
+                labels: [...currentLabels, rule.actionValue.label],
                 updatedAt: Date.now(),
               });
             }
@@ -159,19 +178,30 @@ export const executeRules = internalMutation({
             await ctx.db.insert("issueComments", {
               issueId: args.issueId,
               authorId: rule.createdBy,
-              content: actionParams.comment,
+              content: rule.actionValue.comment,
               mentions: [],
               updatedAt: Date.now(),
             });
             break;
+
+          case "send_notification":
+            // TODO: Implement notification sending - skip execution count until implemented
+            executed = false;
+            break;
         }
 
-        // Increment execution count
-        await ctx.db.patch(rule._id, {
-          executionCount: rule.executionCount + 1,
-        });
-      } catch {
-        // Continue with other rules even if action fails
+        // Only increment execution count if action was actually performed
+        if (executed) {
+          await ctx.db.patch(rule._id, {
+            executionCount: rule.executionCount + 1,
+          });
+        }
+      } catch (error) {
+        // Log error but continue with other rules
+        console.error(
+          `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
+          error,
+        );
       }
     }
   },

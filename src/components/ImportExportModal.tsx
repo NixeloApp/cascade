@@ -1,10 +1,11 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Download, Upload } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { ExportPanel } from "./ImportExport/ExportPanel";
 import { ImportPanel } from "./ImportExport/ImportPanel";
 import { Dialog } from "./ui/Dialog";
@@ -48,42 +49,30 @@ export function ImportExportModal({
       onOpenChange={onOpenChange}
       title="Import / Export Issues"
       description="Manage issue import and export"
-      className="sm:max-w-4xl"
+      size="xl"
     >
       <Stack gap="lg">
         {/* Mode Selection */}
-        <Flex gap="sm" className="bg-ui-bg-tertiary rounded-lg p-1">
-          <button
-            type="button"
-            onClick={() => setMode("export")}
-            className={cn(
-              "flex-1 px-4 py-2 rounded-md font-medium transition-colors",
-              mode === "export"
-                ? "bg-ui-bg text-brand-indigo-text shadow-sm"
-                : "text-ui-text-secondary hover:text-ui-text",
-            )}
-          >
-            <Flex align="center" justify="center" gap="xs">
-              <Icon icon={Download} size="sm" />
+        <Card padding="xs" variant="ghost" className="bg-ui-bg-tertiary">
+          <Flex gap="sm">
+            <Button
+              variant={mode === "export" ? "secondary" : "ghost"}
+              onClick={() => setMode("export")}
+              leftIcon={<Icon icon={Download} size="sm" />}
+              className="flex-1"
+            >
               Export
-            </Flex>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("import")}
-            className={cn(
-              "flex-1 px-4 py-2 rounded-md font-medium transition-colors",
-              mode === "import"
-                ? "bg-ui-bg text-brand-indigo-text shadow-sm"
-                : "text-ui-text-secondary hover:text-ui-text",
-            )}
-          >
-            <Flex align="center" justify="center" gap="xs">
-              <Icon icon={Upload} size="sm" />
+            </Button>
+            <Button
+              variant={mode === "import" ? "secondary" : "ghost"}
+              onClick={() => setMode("import")}
+              leftIcon={<Icon icon={Upload} size="sm" />}
+              className="flex-1"
+            >
               Import
-            </Flex>
-          </button>
-        </Flex>
+            </Button>
+          </Flex>
+        </Card>
 
         {/* Panel Content */}
         {mode === "export" ? (

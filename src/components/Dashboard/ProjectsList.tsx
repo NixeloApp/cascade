@@ -5,10 +5,12 @@ import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Folder } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { SkeletonProjectCard } from "../ui/Skeleton";
 
 interface Project {
@@ -76,13 +78,13 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
         ) : (
           <Flex direction="column" gap="xs" ref={projectNavigation.listRef}>
             {projects.map((project, index) => (
-              <button
+              <Button
                 key={project._id}
-                type="button"
+                variant="unstyled"
                 onClick={() => navigateToWorkspace(project.key)}
                 {...projectNavigation.getItemProps(index)}
                 className={cn(
-                  "w-full text-left p-3 rounded-lg group cursor-pointer",
+                  "w-full text-left p-3 rounded-lg group cursor-pointer h-auto",
                   "bg-ui-bg-soft border border-transparent",
                   "hover:border-ui-border-secondary hover:bg-ui-bg-hover",
                   "transition-all duration-200",
@@ -91,14 +93,13 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
               >
                 <Flex align="center" gap="sm">
                   {/* Project avatar/icon */}
-                  <Flex
-                    align="center"
-                    justify="center"
-                    className="w-8 h-8 rounded-md bg-brand/10 text-brand font-semibold text-xs shrink-0 ring-1 ring-brand/20 group-hover:ring-brand/40 transition-all"
-                  >
-                    {project.key.substring(0, 2).toUpperCase()}
-                  </Flex>
-                  <Flex direction="column" className="flex-1 min-w-0">
+                  <Avatar
+                    name={project.name}
+                    size="md"
+                    variant="brand"
+                    className="ring-1 ring-brand/20 group-hover:ring-brand/40 transition-all"
+                  />
+                  <FlexItem flex="1" className="min-w-0">
                     <Flex justify="between" align="center" gap="sm">
                       <Typography
                         variant="label"
@@ -106,19 +107,16 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                       >
                         {project.name}
                       </Typography>
-                      <Badge
-                        variant="neutral"
-                        className="text-xs uppercase tracking-tighter bg-ui-bg-tertiary/50 shrink-0"
-                      >
+                      <Badge variant="neutral" size="sm" className="uppercase">
                         {project.role}
                       </Badge>
                     </Flex>
                     <Typography variant="small" color="secondary">
                       {project.myIssues} assigned issues
                     </Typography>
-                  </Flex>
+                  </FlexItem>
                 </Flex>
-              </button>
+              </Button>
             ))}
           </Flex>
         )}

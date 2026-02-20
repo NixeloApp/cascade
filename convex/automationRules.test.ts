@@ -22,7 +22,7 @@ describe("Automation Rules", () => {
         trigger: "issue_created",
         triggerValue: "bug",
         actionType: "set_assignee",
-        actionValue: JSON.stringify({ assigneeId: userId }),
+        actionValue: { type: "set_assignee", assigneeId: userId },
       });
 
       const rules = await asUser.query(api.automationRules.list, { projectId });
@@ -90,7 +90,7 @@ describe("Automation Rules", () => {
         name: "Test Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       // Member views rules
@@ -116,7 +116,7 @@ describe("Automation Rules", () => {
         trigger: "issue_created",
         triggerValue: "bug",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       const rule = await t.run(async (ctx) => {
@@ -145,7 +145,7 @@ describe("Automation Rules", () => {
         name: "Simple Rule",
         trigger: "issue_created",
         actionType: "add_label",
-        actionValue: JSON.stringify({ label: "automated" }),
+        actionValue: { type: "add_label", label: "automated" },
       });
 
       const rule = await t.run(async (ctx) => {
@@ -182,7 +182,7 @@ describe("Automation Rules", () => {
           name: "Rule",
           trigger: "issue_created",
           actionType: "set_priority",
-          actionValue: JSON.stringify({ priority: "high" }),
+          actionValue: { type: "set_priority", priority: "high" },
         });
       }).rejects.toThrow(/FORBIDDEN|admin/i);
     });
@@ -198,7 +198,7 @@ describe("Automation Rules", () => {
           name: "Rule",
           trigger: "issue_created",
           actionType: "set_priority",
-          actionValue: JSON.stringify({ priority: "high" }),
+          actionValue: { type: "set_priority", priority: "high" },
         });
       }).rejects.toThrow("Not authenticated");
     });
@@ -217,14 +217,14 @@ describe("Automation Rules", () => {
         name: "Original Name",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "medium" }),
+        actionValue: { type: "set_priority", priority: "medium" },
       });
 
       await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         name: "Updated Name",
         description: "Added description",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       const rule = await t.run(async (ctx) => {
@@ -233,7 +233,7 @@ describe("Automation Rules", () => {
 
       expect(rule?.name).toBe("Updated Name");
       expect(rule?.description).toBe("Added description");
-      expect(rule?.actionValue).toBe(JSON.stringify({ priority: "high" }));
+      expect(rule?.actionValue).toEqual({ type: "set_priority", priority: "high" });
     });
 
     it("should toggle isActive status", async () => {
@@ -248,7 +248,7 @@ describe("Automation Rules", () => {
         name: "Test Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       // Deactivate
@@ -287,7 +287,7 @@ describe("Automation Rules", () => {
         description: "Original Description",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "medium" }),
+        actionValue: { type: "set_priority", priority: "medium" },
       });
 
       // Update only name
@@ -326,7 +326,7 @@ describe("Automation Rules", () => {
         name: "Test Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       // Editor tries to update - should be forbidden (requires admin)
@@ -350,7 +350,7 @@ describe("Automation Rules", () => {
         name: "Test Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       await expect(async () => {
@@ -374,7 +374,7 @@ describe("Automation Rules", () => {
         name: "Temp Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
       await t.run(async (ctx) => {
         await ctx.db.delete(ruleId);
@@ -402,7 +402,7 @@ describe("Automation Rules", () => {
         name: "To Delete",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       await asUser.mutation(api.automationRules.remove, { id: ruleId });
@@ -436,7 +436,7 @@ describe("Automation Rules", () => {
         name: "Test Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       // Editor tries to delete - should be forbidden (requires admin)
@@ -457,7 +457,7 @@ describe("Automation Rules", () => {
         name: "Test Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
 
       await expect(async () => {
@@ -478,7 +478,7 @@ describe("Automation Rules", () => {
         name: "Temp Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "high" }),
+        actionValue: { type: "set_priority", priority: "high" },
       });
       await t.run(async (ctx) => {
         await ctx.db.delete(ruleId);
@@ -505,7 +505,7 @@ describe("Automation Rules", () => {
         name: "Auto-assign",
         trigger: "issue_created",
         actionType: "set_assignee",
-        actionValue: JSON.stringify({ assigneeId: assignee }),
+        actionValue: { type: "set_assignee", assigneeId: assignee },
       });
 
       // Create issue
@@ -542,7 +542,7 @@ describe("Automation Rules", () => {
         trigger: "issue_created",
         triggerValue: "bug",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "highest" }),
+        actionValue: { type: "set_priority", priority: "highest" },
       });
 
       // Create bug issue
@@ -579,7 +579,7 @@ describe("Automation Rules", () => {
         name: "Auto-label",
         trigger: "issue_created",
         actionType: "add_label",
-        actionValue: JSON.stringify({ label: "automated" }),
+        actionValue: { type: "add_label", label: "automated" },
       });
 
       // Create issue
@@ -615,9 +615,7 @@ describe("Automation Rules", () => {
         name: "Auto-comment",
         trigger: "issue_created",
         actionType: "add_comment",
-        actionValue: JSON.stringify({
-          comment: "This issue was automatically created",
-        }),
+        actionValue: { type: "add_comment", comment: "This issue was automatically created" },
       });
 
       // Create issue
@@ -659,7 +657,7 @@ describe("Automation Rules", () => {
         name: "Inactive Rule",
         trigger: "issue_created",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "highest" }),
+        actionValue: { type: "set_priority", priority: "highest" },
       });
 
       // Deactivate rule
@@ -701,7 +699,7 @@ describe("Automation Rules", () => {
         name: "Test Rule",
         trigger: "issue_created",
         actionType: "add_label",
-        actionValue: JSON.stringify({ label: "automated" }),
+        actionValue: { type: "add_label", label: "automated" },
       });
 
       // Create first issue
@@ -754,7 +752,7 @@ describe("Automation Rules", () => {
         trigger: "issue_created",
         triggerValue: "bug",
         actionType: "set_priority",
-        actionValue: JSON.stringify({ priority: "highest" }),
+        actionValue: { type: "set_priority", priority: "highest" },
       });
 
       // Create task (should NOT trigger)

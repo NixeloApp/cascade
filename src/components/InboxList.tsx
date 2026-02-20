@@ -23,6 +23,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Checkbox } from "./ui/Checkbox";
 import {
   DropdownMenu,
@@ -33,7 +34,9 @@ import {
 } from "./ui/DropdownMenu";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 import { Typography } from "./ui/Typography";
 
@@ -199,107 +202,111 @@ export function InboxList({ projectId }: InboxListProps) {
   ).length;
 
   return (
-    <Flex direction="column" className="h-full p-4">
-      <Flex align="center" justify="between" className="mb-4">
-        <Typography variant="h3">Inbox</Typography>
-        {counts.open > 0 && <Badge variant="secondary">{counts.open} to review</Badge>}
-      </Flex>
+    <Card variant="flat" padding="md" className="h-full">
+      <Stack gap="md">
+        <Flex align="center" justify="between">
+          <Typography variant="h3">Inbox</Typography>
+          {counts.open > 0 && <Badge variant="secondary">{counts.open} to review</Badge>}
+        </Flex>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="open">
-            Open
-            {counts.open > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {counts.open}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="closed">
-            Closed
-            {counts.closed > 0 && (
-              <Badge variant="outline" className="ml-2">
-                {counts.closed}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="open">
+              Open
+              {counts.open > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {counts.open}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="closed">
+              Closed
+              {counts.closed > 0 && (
+                <Badge variant="outline" className="ml-2">
+                  {counts.closed}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Bulk Actions Bar */}
-        {activeTab === "open" && triageableCount > 0 && (
-          <Flex align="center" gap="md" className="mb-4 p-3 bg-ui-bg-secondary rounded-container">
-            <Checkbox
-              checked={selectedIds.size === triageableCount && triageableCount > 0}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  handleSelectAll();
-                } else {
-                  handleClearSelection();
-                }
-              }}
-            />
-            {selectedIds.size > 0 ? (
-              <>
-                <Typography variant="small" color="secondary">
-                  {selectedIds.size} selected
-                </Typography>
-                <FlexItem grow />
-                <Button variant="secondary" size="sm" onClick={handleBulkAccept}>
-                  Accept All
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleBulkSnooze}>
-                  Snooze 1 Week
-                </Button>
-                <Button variant="danger" size="sm" onClick={handleBulkDecline}>
-                  Decline All
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleClearSelection}>
-                  Clear
-                </Button>
-              </>
+          {/* Bulk Actions Bar */}
+          {activeTab === "open" && triageableCount > 0 && (
+            <Card variant="soft" padding="sm">
+              <Flex align="center" gap="md">
+                <Checkbox
+                  checked={selectedIds.size === triageableCount && triageableCount > 0}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      handleSelectAll();
+                    } else {
+                      handleClearSelection();
+                    }
+                  }}
+                />
+                {selectedIds.size > 0 ? (
+                  <>
+                    <Typography variant="small" color="secondary">
+                      {selectedIds.size} selected
+                    </Typography>
+                    <FlexItem grow />
+                    <Button variant="secondary" size="sm" onClick={handleBulkAccept}>
+                      Accept All
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleBulkSnooze}>
+                      Snooze 1 Week
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={handleBulkDecline}>
+                      Decline All
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleClearSelection}>
+                      Clear
+                    </Button>
+                  </>
+                ) : (
+                  <Typography variant="small" color="tertiary">
+                    Select items for bulk actions
+                  </Typography>
+                )}
+              </Flex>
+            </Card>
+          )}
+
+          <TabsContent value="open" className="flex-1 overflow-auto">
+            {inboxIssues.length === 0 ? (
+              <EmptyState
+                icon={Inbox}
+                title="No pending items"
+                description="All inbox issues have been triaged. New submissions will appear here."
+              />
             ) : (
-              <Typography variant="small" color="tertiary">
-                Select items for bulk actions
-              </Typography>
+              <InboxIssueList
+                items={inboxIssues}
+                projectId={projectId}
+                selectedIds={selectedIds}
+                onToggleSelect={handleToggleSelect}
+              />
             )}
-          </Flex>
-        )}
+          </TabsContent>
 
-        <TabsContent value="open" className="flex-1 overflow-auto">
-          {inboxIssues.length === 0 ? (
-            <EmptyState
-              icon={Inbox}
-              title="No pending items"
-              description="All inbox issues have been triaged. New submissions will appear here."
-            />
-          ) : (
-            <InboxIssueList
-              items={inboxIssues}
-              projectId={projectId}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelect}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="closed" className="flex-1 overflow-auto">
-          {inboxIssues.length === 0 ? (
-            <EmptyState
-              icon={CheckCircle2}
-              title="No closed items"
-              description="Accepted, declined, and duplicate issues will appear here."
-            />
-          ) : (
-            <InboxIssueList
-              items={inboxIssues}
-              projectId={projectId}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelect}
-            />
-          )}
-        </TabsContent>
-      </Tabs>
-    </Flex>
+          <TabsContent value="closed" className="flex-1 overflow-auto">
+            {inboxIssues.length === 0 ? (
+              <EmptyState
+                icon={CheckCircle2}
+                title="No closed items"
+                description="Accepted, declined, and duplicate issues will appear here."
+              />
+            ) : (
+              <InboxIssueList
+                items={inboxIssues}
+                projectId={projectId}
+                selectedIds={selectedIds}
+                onToggleSelect={handleToggleSelect}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+      </Stack>
+    </Card>
   );
 }
 
@@ -319,7 +326,7 @@ function InboxIssueList({
   onToggleSelect: (id: Id<"inboxIssues">) => void;
 }) {
   return (
-    <Flex direction="column" gap="sm">
+    <Stack gap="sm">
       {items.map((item) => (
         <InboxIssueRow
           key={item._id}
@@ -329,7 +336,7 @@ function InboxIssueList({
           onToggleSelect={onToggleSelect}
         />
       ))}
-    </Flex>
+    </Stack>
   );
 }
 
@@ -417,119 +424,120 @@ function InboxIssueRow({
   const isOpen = item.status === "pending" || item.status === "snoozed";
 
   return (
-    <Flex
-      align="center"
-      gap="md"
+    <Card
+      padding="sm"
       className={cn(
-        "p-3 rounded-lg border border-ui-border bg-ui-bg hover:bg-ui-bg-hover transition-colors",
+        "hover:bg-ui-bg-hover transition-colors",
         item.status === "snoozed" && "opacity-75",
       )}
     >
-      {/* Selection Checkbox (only for triageable items) */}
-      {isOpen && (
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={() => onToggleSelect(item._id)}
-          aria-label={`Select ${item.issue.title}`}
-        />
-      )}
+      <Flex align="center" gap="md">
+        {/* Selection Checkbox (only for triageable items) */}
+        {isOpen && (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelect(item._id)}
+            aria-label={`Select ${item.issue.title}`}
+          />
+        )}
 
-      {/* Status Badge */}
-      <div className={cn("p-1.5 rounded", config.color)}>
-        <StatusIcon className="w-4 h-4" />
-      </div>
-
-      {/* Issue Info */}
-      <FlexItem flex="1" className="min-w-0">
-        <Flex direction="column" gap="xs">
-          <Flex align="center" gap="sm">
-            <Typography variant="label" className="text-ui-text-secondary">
-              {item.issue.key}
-            </Typography>
-            <Typography className="truncate">{item.issue.title}</Typography>
-          </Flex>
-
-          <Flex align="center" gap="sm" className="text-xs text-ui-text-tertiary">
-            <span>
-              Submitted {new Date(item.createdAt).toLocaleDateString()}
-              {item.createdByUser?.name && ` by ${item.createdByUser.name}`}
-            </span>
-
-            {item.status === "snoozed" && item.snoozedUntil && (
-              <Badge variant="outline" className="text-xs">
-                Until {new Date(item.snoozedUntil).toLocaleDateString()}
-              </Badge>
-            )}
-
-            {item.status === "duplicate" && item.duplicateOfIssue && (
-              <Badge variant="outline" className="text-xs">
-                Duplicate of {item.duplicateOfIssue.key}
-              </Badge>
-            )}
-
-            {item.status === "declined" && item.declineReason && (
-              <Badge variant="outline" className="text-xs">
-                {item.declineReason}
-              </Badge>
-            )}
-          </Flex>
+        {/* Status Badge */}
+        <Flex align="center" justify="center" className={cn("size-7 rounded", config.color)}>
+          <Icon icon={StatusIcon} size="sm" />
         </Flex>
-      </FlexItem>
 
-      {/* Quick Actions */}
-      {isOpen && (
-        <Flex gap="xs">
-          <Button size="sm" variant="ghost" onClick={handleAccept}>
-            <CheckCircle2 className="w-4 h-4 mr-1" />
-            Accept
-          </Button>
-          <Button size="sm" variant="ghost" onClick={handleDecline}>
-            <XCircle className="w-4 h-4 mr-1" />
-            Decline
-          </Button>
-        </Flex>
-      )}
+        {/* Issue Info */}
+        <FlexItem flex="1" className="min-w-0">
+          <Flex direction="column" gap="xs">
+            <Flex align="center" gap="sm">
+              <Typography variant="label" className="text-ui-text-secondary">
+                {item.issue.key}
+              </Typography>
+              <Typography className="truncate">{item.issue.title}</Typography>
+            </Flex>
 
-      {/* More Actions */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="ghost" aria-label="More actions">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {isOpen && (
-            <>
-              {item.status === "snoozed" ? (
-                <DropdownMenuItem onClick={handleUnsnooze}>
-                  <Clock className="w-4 h-4 mr-2" />
-                  Unsnooze
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={handleSnooze}>
-                  <Clock className="w-4 h-4 mr-2" />
-                  Snooze 1 day
-                </DropdownMenuItem>
+            <Flex align="center" gap="sm">
+              <Typography variant="caption" color="tertiary">
+                Submitted {new Date(item.createdAt).toLocaleDateString()}
+                {item.createdByUser?.name && ` by ${item.createdByUser.name}`}
+              </Typography>
+
+              {item.status === "snoozed" && item.snoozedUntil && (
+                <Badge variant="outline" size="sm">
+                  Until {new Date(item.snoozedUntil).toLocaleDateString()}
+                </Badge>
               )}
-              <DropdownMenuSeparator />
-            </>
-          )}
 
-          {!isOpen && (
-            <>
-              <DropdownMenuItem onClick={handleReopen}>
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                Reopen
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          )}
+              {item.status === "duplicate" && item.duplicateOfIssue && (
+                <Badge variant="outline" size="sm">
+                  Duplicate of {item.duplicateOfIssue.key}
+                </Badge>
+              )}
 
-          <DropdownMenuItem onClick={handleDelete} className="text-status-error">
-            Remove from inbox
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </Flex>
+              {item.status === "declined" && item.declineReason && (
+                <Badge variant="outline" size="sm">
+                  {item.declineReason}
+                </Badge>
+              )}
+            </Flex>
+          </Flex>
+        </FlexItem>
+
+        {/* Quick Actions */}
+        {isOpen && (
+          <Flex gap="xs">
+            <Button size="sm" variant="ghost" onClick={handleAccept}>
+              <CheckCircle2 className="w-4 h-4 mr-1" />
+              Accept
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleDecline}>
+              <XCircle className="w-4 h-4 mr-1" />
+              Decline
+            </Button>
+          </Flex>
+        )}
+
+        {/* More Actions */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="ghost" aria-label="More actions">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {isOpen && (
+              <>
+                {item.status === "snoozed" ? (
+                  <DropdownMenuItem onClick={handleUnsnooze}>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Unsnooze
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={handleSnooze}>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Snooze 1 day
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+              </>
+            )}
+
+            {!isOpen && (
+              <>
+                <DropdownMenuItem onClick={handleReopen}>
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Reopen
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+
+            <DropdownMenuItem onClick={handleDelete} className="text-status-error">
+              Remove from inbox
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </Flex>
+    </Card>
   );
 }

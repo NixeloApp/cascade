@@ -9,6 +9,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Input } from "../ui/form";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface DangerZoneProps {
@@ -55,23 +56,23 @@ export function DangerZone({
   }
 
   return (
-    <Card className="border-status-error/30 bg-status-error-bg/30">
-      <div className="p-6">
-        <Flex justify="between" align="center" className="mb-6">
-          <div>
-            <Typography variant="large" className="font-semibold tracking-tight text-status-error">
+    <Card padding="lg" className="border-status-error/30 bg-status-error-bg/30">
+      <Stack gap="lg">
+        <Flex justify="between" align="center">
+          <Stack gap="xs">
+            <Typography variant="h4" color="error">
               Danger Zone
             </Typography>
-            <Typography variant="small" color="secondary" className="mt-0.5">
+            <Typography variant="small" color="secondary">
               Irreversible actions that affect the entire project
             </Typography>
-          </div>
+          </Stack>
         </Flex>
 
-        <div className="p-5 bg-status-error/5 border border-status-error/15 rounded-lg transition-default">
+        <Card padding="md" className="bg-status-error/5 border-status-error/15">
           <Flex justify="between" align="start" gap="lg">
             <FlexItem flex="1">
-              <Typography variant="small" className="font-semibold text-status-error-text">
+              <Typography variant="label" color="error">
                 Delete this project
               </Typography>
               <Typography variant="small" color="secondary" className="mt-1.5 leading-relaxed">
@@ -87,44 +88,50 @@ export function DangerZone({
           </Flex>
 
           {showConfirm && (
-            <div className="mt-5 pt-5 border-t border-status-error/15">
-              <Typography variant="small" className="mb-3 text-status-error-text">
-                To confirm, type{" "}
-                <code className="font-semibold bg-status-error/10 px-1.5 py-0.5 rounded">
-                  {projectKey}
-                </code>{" "}
-                below:
-              </Typography>
-              <Input
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder={`Type ${projectKey} to confirm`}
-                className="mb-4"
-              />
-              <Flex gap="sm">
-                <Button
-                  variant="danger"
-                  onClick={handleDelete}
-                  disabled={confirmText !== projectKey || isDeleting}
-                  isLoading={isDeleting}
-                >
-                  I understand, delete this project
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setShowConfirm(false);
-                    setConfirmText("");
-                  }}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </Button>
-              </Flex>
-            </div>
+            <Card
+              padding="md"
+              variant="ghost"
+              radius="none"
+              className="mt-5 border-t border-status-error/15"
+            >
+              <Stack gap="md">
+                <Typography variant="small" color="error">
+                  To confirm, type{" "}
+                  <code className="font-semibold bg-status-error/10 px-1.5 py-0.5 rounded">
+                    {projectKey}
+                  </code>{" "}
+                  below:
+                </Typography>
+                <Input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder={`Type ${projectKey} to confirm`}
+                />
+                <Flex gap="sm">
+                  <Button
+                    variant="danger"
+                    onClick={handleDelete}
+                    disabled={confirmText !== projectKey || isDeleting}
+                    isLoading={isDeleting}
+                  >
+                    I understand, delete this project
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setShowConfirm(false);
+                      setConfirmText("");
+                    }}
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </Button>
+                </Flex>
+              </Stack>
+            </Card>
           )}
-        </div>
-      </div>
+        </Card>
+      </Stack>
     </Card>
   );
 }

@@ -11,6 +11,7 @@ import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface ExportPanelProps {
@@ -108,14 +109,15 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
   return (
     <Flex direction="column" gap="lg">
       <div>
-        <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
+        <Typography variant="label" className="text-ui-text mb-3">
           Select Export Format
         </Typography>
         <Grid cols={2} gap="md">
           <Card
+            padding="md"
             onClick={() => setExportFormat("csv")}
             className={cn(
-              "p-4 cursor-pointer transition-all",
+              "cursor-pointer transition-all",
               exportFormat === "csv" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
             )}
           >
@@ -133,9 +135,10 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
           </Card>
 
           <Card
+            padding="md"
             onClick={() => setExportFormat("json")}
             className={cn(
-              "p-4 cursor-pointer transition-all",
+              "cursor-pointer transition-all",
               exportFormat === "json" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
             )}
           >
@@ -154,14 +157,12 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
         </Grid>
       </div>
 
-      <div className="bg-brand-subtle border border-brand-border rounded-lg p-4">
+      <Card padding="md" className="bg-brand-subtle border border-brand-border">
         <Flex gap="md" align="start">
           <Icon icon={Info} size="lg" className="text-brand" />
-          <div className="text-brand-active">
-            <Typography variant="p" className="font-semibold mb-1">
-              Export Information
-            </Typography>
-            <ul className="list-disc list-inside space-y-1 text-brand-hover">
+          <Stack gap="xs" className="text-brand-active">
+            <Typography variant="label">Export Information</Typography>
+            <ul className="list-disc list-inside text-brand-hover">
               <li>CSV format is compatible with Excel, Google Sheets</li>
               <li>JSON format includes full issue data and metadata</li>
               <li>
@@ -170,9 +171,9 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
                   : "All issues in this project will be exported"}
               </li>
             </ul>
-          </div>
+          </Stack>
         </Flex>
-      </div>
+      </Card>
 
       <Button onClick={handleExport} disabled={isExporting} className="w-full">
         {isExporting ? (

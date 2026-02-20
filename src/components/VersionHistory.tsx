@@ -8,9 +8,11 @@ import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "./ui/Metadata";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 /**
@@ -96,7 +98,8 @@ export function VersionHistory({
       onOpenChange={onOpenChange}
       title="Version History"
       description="View and restore previous versions of this document"
-      className="sm:max-w-2xl max-h-panel flex flex-col bg-ui-bg-soft border-ui-border"
+      size="lg"
+      className="flex flex-col bg-ui-bg-soft border-ui-border"
       footer={
         <Typography variant="meta">
           Tip: Versions are saved automatically every minute when you edit. Up to 50 recent versions
@@ -106,11 +109,13 @@ export function VersionHistory({
     >
       <FlexItem flex="1" className="overflow-auto scrollbar-subtle">
         {versions === undefined ? (
-          <Flex align="center" justify="center" className="py-12">
-            <LoadingSpinner size="lg" />
-          </Flex>
+          <Card padding="xl" variant="ghost">
+            <Flex align="center" justify="center">
+              <LoadingSpinner size="lg" />
+            </Flex>
+          </Card>
         ) : versions.length === 0 ? (
-          <div className="text-center py-12">
+          <Card padding="xl" variant="ghost" className="text-center">
             <Clock className="w-12 h-12 text-ui-text-tertiary mx-auto mb-4" />
             <Typography variant="h5" className="mb-2">
               No version history yet
@@ -119,64 +124,65 @@ export function VersionHistory({
               Versions are automatically saved as you edit. Make some changes to create the first
               version.
             </Typography>
-          </div>
+          </Card>
         ) : (
-          <div className="space-y-2 py-2">
-            {versions.map((version: DocumentVersion, index: number) => {
-              const isLatest = index === 0;
-              const isSelected = selectedVersionId === version._id;
+          <Card padding="xs" variant="ghost" radius="none">
+            <Stack gap="sm">
+              {versions.map((version: DocumentVersion, index: number) => {
+                const isLatest = index === 0;
+                const isSelected = selectedVersionId === version._id;
 
-              return (
-                <div
-                  key={version._id}
-                  className={cn(
-                    "p-4 rounded-container border transition-default",
-                    isSelected
-                      ? "border-brand-ring bg-brand-subtle"
-                      : "border-ui-border bg-ui-bg hover:border-ui-border-secondary hover:bg-ui-bg-hover",
-                  )}
-                >
-                  <Flex align="start" justify="between">
-                    <FlexItem flex="1">
-                      <Flex align="center" gap="sm" className="mb-1.5">
-                        {isLatest && (
-                          <Badge variant="success" size="sm">
-                            Current
-                          </Badge>
-                        )}
-                        <Typography variant="small" className="font-medium tracking-tight">
-                          {version.title}
-                        </Typography>
-                      </Flex>
-                      <Metadata>
-                        <MetadataItem icon={<Clock className="w-3.5 h-3.5" />}>
-                          {formatDate(version._creationTime)}
-                        </MetadataItem>
-                        <MetadataItem>by {version.createdByName}</MetadataItem>
-                      </Metadata>
-                      {version.changeDescription && (
-                        <Typography variant="caption" className="mt-2">
-                          {version.changeDescription}
-                        </Typography>
-                      )}
-                    </FlexItem>
-
-                    {!isLatest && (
-                      <Button
-                        onClick={() => handleRestore(version._id)}
-                        size="sm"
-                        variant="outline"
-                        className="ml-4 border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                        Restore
-                      </Button>
+                return (
+                  <Card
+                    key={version._id}
+                    padding="md"
+                    className={cn(
+                      "transition-default",
+                      isSelected
+                        ? "border-brand-ring bg-brand-subtle"
+                        : "hover:border-ui-border-secondary hover:bg-ui-bg-hover",
                     )}
-                  </Flex>
-                </div>
-              );
-            })}
-          </div>
+                  >
+                    <Flex align="start" justify="between">
+                      <FlexItem flex="1">
+                        <Flex align="center" gap="sm" className="mb-1.5">
+                          {isLatest && (
+                            <Badge variant="success" size="sm">
+                              Current
+                            </Badge>
+                          )}
+                          <Typography variant="label">{version.title}</Typography>
+                        </Flex>
+                        <Metadata>
+                          <MetadataItem icon={<Clock className="w-3.5 h-3.5" />}>
+                            {formatDate(version._creationTime)}
+                          </MetadataItem>
+                          <MetadataItem>by {version.createdByName}</MetadataItem>
+                        </Metadata>
+                        {version.changeDescription && (
+                          <Typography variant="caption" className="mt-2">
+                            {version.changeDescription}
+                          </Typography>
+                        )}
+                      </FlexItem>
+
+                      {!isLatest && (
+                        <Button
+                          onClick={() => handleRestore(version._id)}
+                          size="sm"
+                          variant="outline"
+                          className="ml-4 border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                          Restore
+                        </Button>
+                      )}
+                    </Flex>
+                  </Card>
+                );
+              })}
+            </Stack>
+          </Card>
         )}
       </FlexItem>
     </Dialog>

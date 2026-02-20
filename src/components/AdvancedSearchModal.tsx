@@ -85,7 +85,7 @@ export function AdvancedSearchModal({
       open={open}
       onOpenChange={onOpenChange}
       title="Advanced Search"
-      className="sm:max-w-4xl"
+      size="xl"
       footer={
         <Button onClick={() => onOpenChange(false)} variant="secondary">
           Close

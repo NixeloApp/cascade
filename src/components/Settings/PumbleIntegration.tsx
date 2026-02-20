@@ -96,49 +96,53 @@ export function PumbleIntegration() {
       </Card>
 
       {/* Content */}
-      <Stack gap="lg" className="p-6">
-        {webhooks === undefined ? (
-          <Flex align="center" justify="center" className="py-12">
-            <Typography color="tertiary">Loading webhooks...</Typography>
-          </Flex>
-        ) : webhooks.length === 0 ? (
-          <EmptyState onAddWebhook={() => setShowAddModal(true)} />
-        ) : (
-          <Stack gap="lg">
-            {webhooks.map((webhook) => (
-              <WebhookCard key={webhook._id} webhook={webhook} projects={projects} />
-            ))}
-          </Stack>
-        )}
+      <Card padding="lg" radius="none" variant="ghost">
+        <Stack gap="lg">
+          {webhooks === undefined ? (
+            <Card padding="xl" variant="flat">
+              <Flex align="center" justify="center">
+                <Typography color="tertiary">Loading webhooks...</Typography>
+              </Flex>
+            </Card>
+          ) : webhooks.length === 0 ? (
+            <EmptyState onAddWebhook={() => setShowAddModal(true)} />
+          ) : (
+            <Stack gap="lg">
+              {webhooks.map((webhook) => (
+                <WebhookCard key={webhook._id} webhook={webhook} projects={projects} />
+              ))}
+            </Stack>
+          )}
 
-        {/* Documentation Link */}
-        <div className="pt-6 border-t border-ui-border">
-          <a
-            href="https://help.pumble.com/hc/en-us/articles/360041954051-Incoming-webhooks"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-accent hover:text-accent-hover"
-          >
-            <Flex gap="xs" align="center">
-              <span>How to create a Pumble incoming webhook</span>
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-            </Flex>
-          </a>
-        </div>
-      </Stack>
+          {/* Documentation Link */}
+          <Stack gap="md" className="border-t border-ui-border pt-6">
+            <a
+              href="https://help.pumble.com/hc/en-us/articles/360041954051-Incoming-webhooks"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-accent hover:text-accent-hover"
+            >
+              <Flex gap="xs" align="center">
+                <span>How to create a Pumble incoming webhook</span>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </Flex>
+            </a>
+          </Stack>
+        </Stack>
+      </Card>
 
       {/* Add Webhook Modal */}
       <AddWebhookModal
@@ -152,33 +156,39 @@ export function PumbleIntegration() {
 
 function EmptyState({ onAddWebhook }: { onAddWebhook: () => void }) {
   return (
-    <Stack gap="md" align="center" className="text-center py-12">
-      <Flex align="center" justify="center" className="w-16 h-16 bg-accent-subtle rounded-full">
-        <svg
-          className="w-8 h-8 text-accent"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          role="img"
-          aria-label="Chat message icon"
+    <Card padding="xl" variant="flat">
+      <Stack gap="md" align="center" className="text-center">
+        <Flex align="center" justify="center" className="w-16 h-16 bg-accent-subtle rounded-full">
+          <svg
+            className="w-8 h-8 text-accent"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            role="img"
+            aria-label="Chat message icon"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+        </Flex>
+        <Typography variant="h3">No Pumble webhooks configured</Typography>
+        <Typography variant="small" color="secondary" className="max-w-md">
+          Connect Nixelo to Pumble channels to receive notifications when issues are created,
+          updated, or assigned.
+        </Typography>
+        <Button
+          onClick={onAddWebhook}
+          variant="primary"
+          className="bg-accent hover:bg-accent-hover"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-      </Flex>
-      <Typography variant="h3">No Pumble webhooks configured</Typography>
-      <Typography variant="small" color="secondary" className="max-w-md">
-        Connect Nixelo to Pumble channels to receive notifications when issues are created, updated,
-        or assigned.
-      </Typography>
-      <Button onClick={onAddWebhook} variant="primary" className="bg-accent hover:bg-accent-hover">
-        Add Your First Webhook
-      </Button>
-    </Stack>
+          Add Your First Webhook
+        </Button>
+      </Stack>
+    </Card>
   );
 }
 
@@ -275,7 +285,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
         )}
 
         {/* Actions */}
-        <Flex gap="sm" align="center" className="pt-3 border-t border-ui-border">
+        <Flex gap="sm" align="center" className="pt-4 border-t border-ui-border">
           <Button
             onClick={handleTest}
             variant="ghost"
@@ -365,12 +375,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Add Pumble Webhook"
-      className="sm:max-w-2xl"
-    >
+    <Dialog open={open} onOpenChange={onOpenChange} title="Add Pumble Webhook" size="lg">
       <Stack
         gap="lg"
         as="form"
@@ -531,7 +536,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Edit Webhook" className="sm:max-w-2xl">
+    <Dialog open={open} onOpenChange={onOpenChange} title="Edit Webhook" size="lg">
       <Stack
         gap="lg"
         as="form"

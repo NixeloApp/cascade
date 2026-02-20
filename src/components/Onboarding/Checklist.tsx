@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, Rocket, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/Button";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Progress } from "../ui/Progress";
@@ -94,24 +95,21 @@ export function OnboardingChecklist() {
           </div>
         </Flex>
         <Flex gap="xs" align="center">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 hover:bg-ui-bg-hover rounded-md transition-colors duration-fast"
+            className="h-7 w-7"
           >
             {isExpanded ? (
               <ChevronDown className="w-4 h-4 text-ui-text-tertiary" />
             ) : (
               <ChevronUp className="w-4 h-4 text-ui-text-tertiary" />
             )}
-          </button>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="p-1.5 hover:bg-ui-bg-hover rounded-md transition-colors duration-fast"
-          >
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleDismiss} className="h-7 w-7">
             <X className="w-4 h-4 text-ui-text-tertiary" />
-          </button>
+          </Button>
         </Flex>
       </Flex>
 

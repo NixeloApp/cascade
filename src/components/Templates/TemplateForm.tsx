@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
-import { useEffect } from "react";
+import { type FormEvent, useEffect } from "react";
 import { z } from "zod";
 import { FormCheckbox, FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
@@ -12,6 +12,7 @@ import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Stack } from "../ui/Stack";
 
 // =============================================================================
 // Schema
@@ -135,14 +136,15 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
       open={open}
       onOpenChange={onOpenChange}
       title={template ? "Edit Template" : "Create Template"}
-      className="sm:max-w-2xl"
+      size="lg"
     >
-      <form
-        onSubmit={(e) => {
+      <Stack
+        as="form"
+        gap="md"
+        onSubmit={(e: FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-4"
       >
         <Grid cols={1} colsSm={2} gap="lg">
           <form.Field name="name">
@@ -288,7 +290,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
             </Flex>
           )}
         </form.Subscribe>
-      </form>
+      </Stack>
     </Dialog>
   );
 }

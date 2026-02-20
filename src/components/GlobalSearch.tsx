@@ -100,11 +100,11 @@ function SearchTab({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="unstyled"
       onClick={onClick}
       className={cn(
-        "pb-2 px-1 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+        "pb-2 px-1 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap rounded-none h-auto",
         isActive
           ? "border-brand-ring text-brand"
           : "border-transparent text-ui-text-secondary hover:text-ui-text",
@@ -112,7 +112,7 @@ function SearchTab({
     >
       {label}
       {showCount && ` (${count})`}
-    </button>
+    </Button>
   );
 }
 
@@ -238,7 +238,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
         {/* Content */}
         <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" wrap>
-            {result.type === "issue" && <code className="font-mono text-sm">{result.key}</code>}
+            {result.type === "issue" && <Typography variant="inlineCode">{result.key}</Typography>}
             <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
               {result.type}
             </Badge>

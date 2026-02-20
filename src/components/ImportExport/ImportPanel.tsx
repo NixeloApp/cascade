@@ -11,6 +11,7 @@ import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface ImportPanelProps {
@@ -89,14 +90,15 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
   return (
     <Flex direction="column" gap="lg">
       <div>
-        <Typography variant="h3" className="text-sm font-semibold text-ui-text mb-3">
+        <Typography variant="label" className="text-ui-text mb-3">
           Select Import Format
         </Typography>
         <Grid cols={2} gap="md">
           <Card
+            padding="md"
             onClick={() => setImportFormat("csv")}
             className={cn(
-              "p-4 cursor-pointer transition-all",
+              "cursor-pointer transition-all",
               importFormat === "csv" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
             )}
           >
@@ -114,9 +116,10 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
           </Card>
 
           <Card
+            padding="md"
             onClick={() => setImportFormat("json")}
             className={cn(
-              "p-4 cursor-pointer transition-all",
+              "cursor-pointer transition-all",
               importFormat === "json" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
             )}
           >
@@ -152,14 +155,12 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
         )}
       </div>
 
-      <div className="bg-status-warning/10 border border-status-warning/30 rounded-lg p-4">
+      <Card padding="md" className="bg-status-warning/10 border border-status-warning/30">
         <Flex gap="md" align="start">
           <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
-          <div className="text-status-warning">
-            <Typography variant="p" className="font-semibold mb-1">
-              Import Requirements
-            </Typography>
-            <ul className="list-disc list-inside space-y-1 text-status-warning/90">
+          <Stack gap="sm" className="text-status-warning">
+            <Typography variant="label">Import Requirements</Typography>
+            <ul className="list-disc list-inside text-status-warning/90">
               <li>CSV must have a header row with column names</li>
               <li>
                 Required column: <code className="bg-status-warning/20 px-1 rounded">title</code>
@@ -167,9 +168,9 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
               <li>Optional: type, priority, description, labels, estimated hours, due date</li>
               <li>All imported issues will be created in the first workflow state</li>
             </ul>
-          </div>
+          </Stack>
         </Flex>
-      </div>
+      </Card>
 
       <Button onClick={handleImport} disabled={!importData || isImporting} className="w-full">
         {isImporting ? (

@@ -25,15 +25,18 @@ export function OfflineTab() {
       <Card padding="lg">
         <Stack gap="lg">
           <Flex gap="lg" align="center">
-            <div
-              className={cn("p-3 rounded-lg", isOnline ? "bg-status-success" : "bg-status-error")}
+            <Card
+              padding="sm"
+              radius="md"
+              variant="ghost"
+              className={cn(isOnline ? "bg-status-success" : "bg-status-error")}
             >
               {isOnline ? (
                 <Wifi className="h-6 w-6 text-brand-foreground" />
               ) : (
                 <WifiOff className="h-6 w-6 text-brand-foreground" />
               )}
-            </div>
+            </Card>
             <Stack gap="xs">
               <Typography variant="h3">Connection Status</Typography>
               <Typography

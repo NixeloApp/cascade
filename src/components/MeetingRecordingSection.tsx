@@ -9,10 +9,12 @@ import { CheckCircle, Clock, FileText, Mic, MicOff, Play, XCircle } from "@/lib/
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Collapsible, CollapsibleContent, CollapsibleHeader } from "./ui/Collapsible";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
 import { Metadata, MetadataItem } from "./ui/Metadata";
+import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
 // Status badge configuration - extracted to reduce component complexity
@@ -101,7 +103,7 @@ function NoRecordingState({
   isScheduling: boolean;
 }) {
   return (
-    <div className="bg-ui-bg-secondary rounded-lg p-4">
+    <Card variant="soft" padding="md">
       <Typography variant="muted" className="mb-3">
         Schedule a bot to join this meeting and automatically generate transcripts and summaries.
       </Typography>
@@ -113,57 +115,59 @@ function NoRecordingState({
       >
         {isScheduling ? "Scheduling..." : "Enable AI Notes"}
       </Button>
-    </div>
+    </Card>
   );
 }
 
 function ScheduledState({ onCancel }: { onCancel: () => void }) {
   return (
-    <div className="bg-brand-subtle rounded-lg p-4">
+    <Card padding="md" className="bg-brand-subtle">
       <Flex justify="between" align="center">
-        <div>
+        <Stack gap="xs">
           <Typography variant="label">Bot scheduled to join</Typography>
           <Typography variant="meta">
             "Nixelo Notetaker" will join when the meeting starts
           </Typography>
-        </div>
+        </Stack>
         <Button onClick={onCancel} variant="ghost" size="sm">
           <MicOff className="w-4 h-4 mr-1" />
           Cancel
         </Button>
       </Flex>
-    </div>
+    </Card>
   );
 }
 
 function FailedState({ errorMessage, onRetry }: { errorMessage?: string; onRetry: () => void }) {
   return (
-    <div className="bg-status-error-bg rounded-lg p-4">
-      <Typography variant="label" color="error">
-        Recording failed
-      </Typography>
-      <Typography variant="meta" className="mt-1">
-        {errorMessage || "An error occurred during recording"}
-      </Typography>
-      <Button onClick={onRetry} variant="secondary" size="sm" className="mt-3">
-        Try Again
-      </Button>
-    </div>
+    <Card padding="md" className="bg-status-error-bg">
+      <Stack gap="sm">
+        <Typography variant="label" color="error">
+          Recording failed
+        </Typography>
+        <Typography variant="meta">
+          {errorMessage || "An error occurred during recording"}
+        </Typography>
+        <Button onClick={onRetry} variant="secondary" size="sm">
+          Try Again
+        </Button>
+      </Stack>
+    </Card>
   );
 }
 
 function InProgressState({ status }: { status: string }) {
   const message = IN_PROGRESS_MESSAGES[status] || "Processing...";
   return (
-    <div className="bg-ui-bg-secondary rounded-lg p-4">
+    <Card variant="soft" padding="md">
       <Flex gap="md" align="center">
         <LoadingSpinner size="sm" />
-        <div>
+        <Stack gap="xs">
           <Typography variant="label">{message}</Typography>
           <Typography variant="meta">This may take a few minutes</Typography>
-        </div>
+        </Stack>
       </Flex>
-    </div>
+    </Card>
   );
 }
 
@@ -274,13 +278,15 @@ export function MeetingRecordingSection({
           AI Meeting Notes
         </CollapsibleHeader>
 
-        <CollapsibleContent className="space-y-4">
-          <RecordingStatusContent
-            recording={recording}
-            isScheduling={isScheduling}
-            onSchedule={handleScheduleRecording}
-            onCancel={handleCancelRecording}
-          />
+        <CollapsibleContent>
+          <Stack gap="md">
+            <RecordingStatusContent
+              recording={recording}
+              isScheduling={isScheduling}
+              onSchedule={handleScheduleRecording}
+              onCancel={handleCancelRecording}
+            />
+          </Stack>
         </CollapsibleContent>
       </Collapsible>
 
@@ -310,74 +316,71 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
   const { summary, transcript } = recording;
 
   return (
-    <div className="space-y-4">
+    <Stack gap="md">
       {/* Executive Summary */}
       {summary && (
-        <div className="bg-ui-bg-secondary rounded-lg p-4">
+        <Card variant="soft" padding="md">
           <Typography variant="label" className="mb-2">
             Summary
           </Typography>
           <Typography variant="muted">{summary.executiveSummary}</Typography>
-        </div>
+        </Card>
       )}
 
       {/* Key Points */}
       {summary && summary.keyPoints.length > 0 && (
-        <div>
-          <Typography variant="label" className="mb-2">
-            Key Points
-          </Typography>
-          <ul className="list-disc list-inside space-y-1 text-ui-text-secondary marker:text-brand">
+        <Stack gap="sm">
+          <Typography variant="label">Key Points</Typography>
+          <Stack
+            as="ul"
+            gap="xs"
+            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
+          >
             {summary.keyPoints.map((point: string) => (
               <li key={point}>{point}</li>
             ))}
-          </ul>
-        </div>
+          </Stack>
+        </Stack>
       )}
 
       {/* Action Items */}
       {summary && summary.actionItems.length > 0 && (
-        <div>
-          <Typography variant="label" className="mb-2">
-            Action Items
-          </Typography>
-          <ul className="space-y-2">
+        <Stack gap="sm">
+          <Typography variant="label">Action Items</Typography>
+          <Stack as="ul" gap="sm">
             {summary.actionItems.map(
               (
                 item: { description: string; assignee?: string; dueDate?: string },
                 index: number,
               ) => (
-                <li
-                  key={`action-${index}-${item.description.slice(0, 20)}`}
-                  className="bg-status-warning-bg rounded p-2"
-                >
-                  <Flex justify="between" align="start">
-                    <Typography variant="small">{item.description}</Typography>
-                    {item.assignee && (
-                      <Badge size="sm" className="ml-2 shrink-0">
-                        {item.assignee}
-                      </Badge>
+                <li key={`action-${index}-${item.description.slice(0, 20)}`}>
+                  <Card padding="sm" className="bg-status-warning-bg">
+                    <Flex justify="between" align="start">
+                      <Typography variant="small">{item.description}</Typography>
+                      {item.assignee && (
+                        <Badge size="sm" className="ml-2 shrink-0">
+                          {item.assignee}
+                        </Badge>
+                      )}
+                    </Flex>
+                    {item.dueDate && (
+                      <Typography variant="meta" className="mt-1 block">
+                        Due: {item.dueDate}
+                      </Typography>
                     )}
-                  </Flex>
-                  {item.dueDate && (
-                    <Typography variant="meta" className="mt-1 block">
-                      Due: {item.dueDate}
-                    </Typography>
-                  )}
+                  </Card>
                 </li>
               ),
             )}
-          </ul>
-        </div>
+          </Stack>
+        </Stack>
       )}
 
       {/* Decisions */}
       {summary && summary.decisions.length > 0 && (
-        <div>
-          <Typography variant="label" className="mb-2">
-            Decisions Made
-          </Typography>
-          <ul className="space-y-1">
+        <Stack gap="sm">
+          <Typography variant="label">Decisions Made</Typography>
+          <Stack as="ul" gap="xs">
             {summary.decisions.map((decision: string) => (
               <Flex as="li" key={decision} align="start" gap="sm">
                 <CheckCircle className="w-4 h-4 text-status-success shrink-0 mt-0.5" />
@@ -386,8 +389,8 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
                 </Typography>
               </Flex>
             ))}
-          </ul>
-        </div>
+          </Stack>
+        </Stack>
       )}
 
       {/* Transcript Toggle */}
@@ -397,11 +400,11 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
             {showTranscript ? "Hide Transcript" : "Show Full Transcript"}
           </CollapsibleHeader>
           <CollapsibleContent>
-            <div className="bg-ui-bg-secondary rounded-lg p-4 max-h-96 overflow-y-auto">
-              <pre className="text-xs text-ui-text-secondary whitespace-pre-wrap font-sans">
+            <Card variant="soft" padding="md" className="max-h-96 overflow-y-auto">
+              <Typography as="pre" variant="mono" color="secondary" className="whitespace-pre-wrap">
                 {transcript.fullText}
-              </pre>
-            </div>
+              </Typography>
+            </Card>
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -418,6 +421,6 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
           )}
         </Metadata>
       )}
-    </div>
+    </Stack>
   );
 }

@@ -1,9 +1,15 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import type {
+  AutomationActionType,
+  AutomationActionValue,
+  AutomationTrigger,
+} from "@convex/validators";
 import { useMutation } from "convex/react";
 import { ArrowRight, Pause, Pencil, Play, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
@@ -15,10 +21,10 @@ interface AutomationRuleCardProps {
     _id: Id<"automationRules">;
     name: string;
     description?: string;
-    trigger: string;
+    trigger: AutomationTrigger;
     triggerValue?: string;
-    actionType: string;
-    actionValue: string;
+    actionType: AutomationActionType;
+    actionValue: AutomationActionValue;
     isActive: boolean;
     executionCount: number;
   };
@@ -114,33 +120,36 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
         </FlexItem>
 
         <Flex gap="sm" align="center" className="shrink-0">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleToggle}
-            className="hover:bg-ui-bg-secondary rounded transition-colors"
+            className="h-8 w-8"
             title={rule.isActive ? "Disable rule" : "Enable rule"}
             aria-label={rule.isActive ? "Disable rule" : "Enable rule"}
           >
             <Icon icon={rule.isActive ? Pause : Play} size="sm" />
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onEdit}
-            className="hover:bg-ui-bg-secondary rounded transition-colors"
+            className="h-8 w-8"
             title="Edit rule"
             aria-label="Edit rule"
           >
             <Icon icon={Pencil} size="sm" />
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onDelete}
-            className="hover:bg-ui-bg-secondary rounded transition-colors"
+            className="h-8 w-8"
             title="Delete rule"
             aria-label="Delete rule"
           >
             <Icon icon={Trash2} size="sm" />
-          </button>
+          </Button>
         </Flex>
       </Flex>
     </Card>

@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
@@ -87,7 +88,7 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
           onValueChange={setSearch}
           className="text-ui-text"
         />
-        <CommandList className="max-h-panel-sm sm:max-h-panel-md">
+        <CommandList className="max-h-[50vh] sm:max-h-[60vh]">
           <CommandEmpty className="text-ui-text-secondary">No commands found</CommandEmpty>
           {Object.entries(groupedCommands).map(([group, cmds]) => (
             <CommandGroup
@@ -116,15 +117,18 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
             </CommandGroup>
           ))}
         </CommandList>
-        <Flex
-          wrap
-          gap="md"
-          className="px-4 py-2 border-t border-ui-border bg-ui-bg-secondary text-ui-text-tertiary text-xs"
+        <Card
+          padding="sm"
+          radius="none"
+          variant="ghost"
+          className="border-t border-ui-border bg-ui-bg-secondary"
         >
-          <ShortcutHint keys="up+down">Navigate</ShortcutHint>
-          <ShortcutHint keys="Enter">Select</ShortcutHint>
-          <ShortcutHint keys="Esc">Close</ShortcutHint>
-        </Flex>
+          <Flex wrap gap="md" className="text-ui-text-tertiary text-xs">
+            <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+            <ShortcutHint keys="Enter">Select</ShortcutHint>
+            <ShortcutHint keys="Esc">Close</ShortcutHint>
+          </Flex>
+        </Card>
       </Command>
     </CommandDialog>
   );

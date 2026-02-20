@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "./ui/Avatar";
-import { FlexItem } from "./ui/Flex";
+import { Command, CommandItem, CommandList } from "./ui/Command";
 import { Typography } from "./ui/Typography";
 
 interface MentionInputProps {
@@ -38,6 +38,13 @@ export function MentionInput({
       (member.userName || "").toLowerCase().includes(mentionSearch.toLowerCase()),
     ) || [];
 
+  // Reset selection when mention search changes (Derived State Pattern)
+  const [prevMentionSearch, setPrevMentionSearch] = useState(mentionSearch);
+  if (mentionSearch !== prevMentionSearch) {
+    setPrevMentionSearch(mentionSearch);
+    setSelectedIndex(0);
+  }
+
   useEffect(() => {
     // Adjust textarea height
     if (textareaRef.current) {
@@ -60,7 +67,6 @@ export function MentionInput({
     if (mentionMatch) {
       setMentionSearch(mentionMatch[1]);
       setShowSuggestions(true);
-      setSelectedIndex(0);
     } else {
       setShowSuggestions(false);
     }
@@ -137,35 +143,6 @@ export function MentionInput({
     }
   };
 
-  // Display text with mentions rendered nicely
-  const _renderValue = () => {
-    if (!value) return null;
-
-    const mentionPattern = /@\[([^\]]+)\]\(([^)]+)\)/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-
-    match = mentionPattern.exec(value);
-    while (match !== null) {
-      // Add text before mention
-      if (match.index > lastIndex) {
-        parts.push(value.substring(lastIndex, match.index));
-      }
-      // Add mention
-      parts.push(`@${match[1]}`);
-      lastIndex = match.index + match[0].length;
-      match = mentionPattern.exec(value);
-    }
-
-    // Add remaining text
-    if (lastIndex < value.length) {
-      parts.push(value.substring(lastIndex));
-    }
-
-    return parts.join("");
-  };
-
   return (
     <div className="relative">
       <textarea
@@ -183,32 +160,28 @@ export function MentionInput({
 
       {/* Mention Suggestions Dropdown */}
       {showSuggestions && filteredMembers.length > 0 && (
-        <div className="absolute bottom-full left-0 mb-2 w-64 bg-ui-bg border border-ui-border rounded-lg shadow-lg max-h-panel overflow-y-auto z-50">
-          {filteredMembers.map((member, index: number) => (
-            <button
-              type="button"
-              key={member._id}
-              onClick={() => insertMention(member.userName || "Unknown", member.userId)}
-              className={cn(
-                "w-full px-4 py-2 text-left hover:bg-ui-bg-tertiary flex items-center gap-3",
-                index === selectedIndex && "bg-ui-bg-tertiary",
-              )}
-            >
-              {/* Avatar */}
-              <Avatar name={member.userName} size="md" />
-
-              {/* User Info */}
-              <FlexItem flex="1" className="min-w-0">
-                <Typography variant="label" className="truncate">
-                  {member.userName}
-                </Typography>
-                <Typography variant="caption" className="capitalize">
-                  User
-                </Typography>
-              </FlexItem>
-            </button>
-          ))}
-        </div>
+        <Command className="absolute bottom-full left-0 mb-2 w-64 border border-ui-border rounded-lg shadow-lg z-50">
+          <CommandList className="max-h-48">
+            {filteredMembers.map((member, index) => (
+              <CommandItem
+                key={member._id}
+                value={member.userName || ""}
+                onSelect={() => insertMention(member.userName || "Unknown", member.userId)}
+                className={cn(index === selectedIndex && "bg-ui-bg-hover")}
+              >
+                <Avatar name={member.userName} size="md" />
+                <div className="min-w-0">
+                  <Typography variant="label" className="truncate">
+                    {member.userName}
+                  </Typography>
+                  <Typography variant="caption" className="capitalize">
+                    User
+                  </Typography>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
       )}
 
       {/* Helper text */}

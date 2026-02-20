@@ -191,19 +191,19 @@ export function DocumentTemplatesManager({
         <div className="mb-6">
           <Flex gap="sm" className="overflow-x-auto pb-2">
             {categoryFilters.map((cat) => (
-              <button
+              <Button
                 key={cat.value}
-                type="button"
+                variant="unstyled"
                 onClick={() => setSelectedCategory(cat.value)}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
+                  "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors h-auto",
                   selectedCategory === cat.value
                     ? "bg-brand text-brand-foreground"
                     : "bg-ui-bg-tertiary text-ui-text hover:bg-ui-bg-secondary",
                 )}
               >
                 {cat.label}
-              </button>
+              </Button>
             ))}
           </Flex>
         </div>
@@ -226,14 +226,14 @@ export function DocumentTemplatesManager({
                 <Typography variant="label">Built-in Templates</Typography>
                 <Grid cols={1} colsMd={2} colsLg={3} gap="lg">
                   {builtInTemplates.map((template: Doc<"documentTemplates">) => (
-                    <button
+                    <Button
                       key={template._id}
-                      type="button"
+                      variant="unstyled"
                       onClick={() => onSelectTemplate?.(template._id)}
-                      className="p-4 bg-linear-to-br from-brand-subtle to-brand-subtle rounded-lg hover:shadow-card-hover transition-all text-left border-2 border-transparent hover:border-brand-muted"
+                      className="p-4 bg-linear-to-br from-brand-subtle to-brand-subtle rounded-lg hover:shadow-card-hover transition-all text-left border-2 border-transparent hover:border-brand-muted h-auto"
                     >
                       <Flex align="start" gap="md">
-                        <Typography variant="label" className="text-3xl">
+                        <Typography variant="h2" as="span">
                           {template.icon}
                         </Typography>
                         <FlexItem flex="1">
@@ -254,7 +254,7 @@ export function DocumentTemplatesManager({
                           </Stack>
                         </FlexItem>
                       </Flex>
-                    </button>
+                    </Button>
                   ))}
                 </Grid>
               </Stack>
@@ -272,12 +272,12 @@ export function DocumentTemplatesManager({
                       className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary transition-colors"
                     >
                       <Flex align="start" gap="md">
-                        <button
-                          type="button"
+                        <Button
+                          variant="unstyled"
                           onClick={() => onSelectTemplate?.(template._id)}
-                          className="flex items-start gap-3 flex-1 text-left"
+                          className="flex items-start gap-3 flex-1 text-left h-auto"
                         >
-                          <Typography variant="label" className="text-2xl">
+                          <Typography variant="h3" as="span">
                             {template.icon}
                           </Typography>
                           <FlexItem flex="1">
@@ -304,7 +304,7 @@ export function DocumentTemplatesManager({
                               </Flex>
                             </Stack>
                           </FlexItem>
-                        </button>
+                        </Button>
 
                         <Flex gap="xs">
                           <Button
@@ -365,7 +365,7 @@ export function DocumentTemplatesManager({
         open={showModal}
         onOpenChange={(open) => !open && resetForm()}
         title={editingId ? "Edit Template" : "Create Template"}
-        className="sm:max-w-2xl"
+        size="lg"
       >
         <form
           onSubmit={(e) => {
@@ -433,7 +433,7 @@ export function DocumentTemplatesManager({
                       checked={field.state.value as boolean}
                       onChange={(e) => field.handleChange(e.target.checked)}
                       onBlur={field.handleBlur}
-                      className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus:ring-brand-ring:ring-brand focus:ring-2"
+                      className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus:ring-2 focus:ring-brand"
                     />
                     <Label htmlFor="isPublic">Make public (visible to all users)</Label>
                   </Flex>

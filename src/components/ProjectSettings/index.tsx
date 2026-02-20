@@ -1,7 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
-import { Flex } from "../ui/Flex";
-import { Typography } from "../ui/Typography";
+import { Card, CardBody, CardHeader } from "../ui/Card";
+import { Stack } from "../ui/Stack";
 import { DangerZone } from "./DangerZone";
 import { GeneralSettings } from "./GeneralSettings";
 import { MemberManagement } from "./MemberManagement";
@@ -42,45 +42,41 @@ export function ProjectSettings({
   orgSlug,
 }: ProjectSettingsProps) {
   return (
-    <div className="max-w-3xl mx-auto py-6">
-      <Flex direction="column" gap="xl">
-        {/* Page header with Mintlify-inspired typography */}
-        <div className="pb-2 border-b border-ui-border">
-          <Typography variant="h2" className="text-2xl font-semibold tracking-tight">
-            Project Settings
-          </Typography>
-          <Typography variant="p" color="secondary" className="mt-1.5">
-            Manage your project configuration and team
-          </Typography>
-        </div>
-
-        <GeneralSettings
-          projectId={projectId}
-          name={name}
-          projectKey={projectKey}
-          description={description}
-        />
-
-        <MemberManagement
-          projectId={projectId}
-          members={members}
-          createdBy={createdBy}
-          ownerId={ownerId}
-        />
-
-        <WorkflowSettings projectId={projectId} workflowStates={workflowStates} />
-
-        {isOwner && (
-          <DangerZone
+    <Card padding="lg" className="max-w-3xl mx-auto">
+      <CardHeader
+        title="Project Settings"
+        description="Manage your project configuration and team"
+      />
+      <CardBody>
+        <Stack gap="xl">
+          <GeneralSettings
             projectId={projectId}
-            projectName={name}
+            name={name}
             projectKey={projectKey}
-            isOwner={isOwner}
-            orgSlug={orgSlug}
+            description={description}
           />
-        )}
-      </Flex>
-    </div>
+
+          <MemberManagement
+            projectId={projectId}
+            members={members}
+            createdBy={createdBy}
+            ownerId={ownerId}
+          />
+
+          <WorkflowSettings projectId={projectId} workflowStates={workflowStates} />
+
+          {isOwner && (
+            <DangerZone
+              projectId={projectId}
+              projectName={name}
+              projectKey={projectKey}
+              isOwner={isOwner}
+              orgSlug={orgSlug}
+            />
+          )}
+        </Stack>
+      </CardBody>
+    </Card>
   );
 }
 

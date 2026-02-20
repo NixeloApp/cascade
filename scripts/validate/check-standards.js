@@ -18,6 +18,36 @@ export function run() {
     "src/components/Kanban", // Contains complex drag-and-drop logic that uses raw divs
   ];
 
+  // Files/directories where raw <a> tags are allowed (external links, downloads, etc.)
+  const ALLOW_RAW_LINKS_PATTERNS = [
+    ".test.tsx", // Test files mock elements
+    "/AttachmentList.tsx", // Download links
+    "/FileAttachments.tsx", // Download links
+    "/ApiKeysManager.tsx", // External docs links
+    "/PumbleIntegration.tsx", // External integration links
+    "/CustomFieldValues.tsx", // URL field type
+    "/EventDetailsModal.tsx", // External event links (Google Meet, etc.)
+    "/onboarding.tsx", // External link to docs
+    "src/components/Landing/", // Landing page navigation (public-facing)
+    "src/components/Auth/", // Auth page legal links
+  ];
+
+  // Files where <strong> for inline emphasis is allowed (inside Typography)
+  // These use <strong> for semantic emphasis within text, which is valid HTML
+  const ALLOW_INLINE_STRONG_FILES = [
+    "/ActivityFeed.tsx", // User names in activity messages
+    "/RecentActivity.tsx", // User names in activity messages
+    "/Greeting.tsx", // Emphasized counts and names
+    "/FocusZone.tsx", // Emphasized text
+    "/MemberOnboarding.tsx", // Emphasized text in onboarding
+    "/ApiKeysManager.tsx", // Emphasized warnings
+    "/HourComplianceDashboard.tsx", // Emphasized data
+    "/EmailVerificationRequired.tsx", // Emphasized email
+    "/ResetPasswordForm.tsx", // Emphasized email
+    "/forgot-password.tsx", // Emphasized email
+    "/invite.$token.tsx", // Emphasized names
+  ];
+
   let errorCount = 0;
   const errors = [];
 
@@ -107,6 +137,52 @@ export function run() {
             node,
             `Use <Typography> component instead of raw <${tagName}> tags.`,
           );
+        }
+        // Inline text styling tags — use Typography with appropriate variant
+        // Allow <strong> for inline emphasis within text (semantically correct for accessibility)
+        if (["strong", "b", "em", "i"].includes(tagName)) {
+          const isAllowed = ALLOW_INLINE_STRONG_FILES.some((pattern) => rel.endsWith(pattern));
+          if (!isAllowed) {
+            const suggestion =
+              tagName === "em" || tagName === "i"
+                ? `<Typography as="em">` // emphasis
+                : `<Typography variant="label"> or <Typography as="strong">`; // importance
+            reportError(filePath, node, `Use ${suggestion} instead of raw <${tagName}> tags.`);
+          }
+        }
+        // Raw button tags — use Button component
+        // Allow in test files (mocks) and example files
+        if (tagName === "button") {
+          const isAllowed = rel.includes(".test.tsx") || rel.includes(".example.tsx");
+          if (!isAllowed) {
+            reportError(filePath, node, `Use <Button> component instead of raw <button> tags.`);
+          }
+        }
+        // Raw anchor tags — use Link component or Button asChild with href
+        // Allow in test files, download links, and files with external links
+        // Note: <a> inside <Button asChild> is allowed (Button handles the anchor)
+        if (tagName === "a") {
+          // Check if this <a> is inside a Button with asChild (look at parent opening tag)
+          const ancestors = node.ancestors || [];
+          const isInsideButtonAsChild = ancestors.some(
+            (ancestor) =>
+              ancestor.type === "element" &&
+              ancestor.name === "Button" &&
+              ancestor.attributes?.some((attr) => attr.name.name === "asChild"),
+          );
+
+          const isAllowed =
+            isInsideButtonAsChild ||
+            ALLOW_RAW_LINKS_PATTERNS.some(
+              (pattern) => rel.endsWith(pattern) || rel.includes(pattern),
+            );
+          if (!isAllowed) {
+            reportError(
+              filePath,
+              node,
+              `Use <Link> for internal routes or <Button asChild> with href for styled links.`,
+            );
+          }
         }
         // Flex standard
         if (tagName === "div" || tagName === "span") {

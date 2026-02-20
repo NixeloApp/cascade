@@ -88,6 +88,76 @@ export const personas = literals("team_lead", "team_member");
 export const bookingFieldTypes = literals("text", "email", "phone");
 
 // =============================================================================
+// Automation Rules
+// =============================================================================
+
+/** Available trigger types for automation rules */
+export const automationTriggers = literals(
+  "status_changed",
+  "assignee_changed",
+  "priority_changed",
+  "issue_created",
+  "label_added",
+);
+
+/** Available action types for automation rules */
+export const automationActionTypes = literals(
+  "set_assignee",
+  "set_priority",
+  "add_label",
+  "add_comment",
+  "send_notification",
+);
+
+/**
+ * Typed action value for automation rules.
+ * Uses discriminated union based on actionType.
+ */
+export const automationActionValue = v.union(
+  v.object({
+    type: v.literal("set_assignee"),
+    assigneeId: v.union(v.id("users"), v.null()),
+  }),
+  v.object({
+    type: v.literal("set_priority"),
+    priority: issuePriorities,
+  }),
+  v.object({
+    type: v.literal("add_label"),
+    label: v.string(),
+  }),
+  v.object({
+    type: v.literal("add_comment"),
+    comment: v.string(),
+  }),
+  v.object({
+    type: v.literal("send_notification"),
+    message: v.string(),
+    recipients: v.optional(v.array(v.id("users"))),
+  }),
+);
+
+// =============================================================================
+// Booking Answers
+// =============================================================================
+
+/**
+ * Individual booking form answer.
+ * Matches the question structure in bookingPages.questions.
+ */
+export const bookingAnswer = v.object({
+  label: v.string(),
+  type: bookingFieldTypes,
+  value: v.string(),
+});
+
+/**
+ * Array of booking form answers.
+ * Replaces the old JSON string approach.
+ */
+export const bookerAnswers = v.array(bookingAnswer);
+
+// =============================================================================
 // ProseMirror / BlockNote Content
 // =============================================================================
 
@@ -285,3 +355,12 @@ export type CalendarEventColor = Infer<typeof calendarEventColors>;
 export type GoogleCalendarEvent = Infer<typeof googleCalendarEvent>;
 export type InboxIssueStatus = Infer<typeof inboxIssueStatuses>;
 export type InboxIssueSource = Infer<typeof inboxIssueSources>;
+
+// Automation rules types
+export type AutomationTrigger = Infer<typeof automationTriggers>;
+export type AutomationActionType = Infer<typeof automationActionTypes>;
+export type AutomationActionValue = Infer<typeof automationActionValue>;
+
+// Booking types
+export type BookingAnswer = Infer<typeof bookingAnswer>;
+export type BookerAnswers = Infer<typeof bookerAnswers>;

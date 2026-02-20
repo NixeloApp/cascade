@@ -167,7 +167,7 @@ export function UserRatesManagement() {
         open={showAddRate}
         onOpenChange={(open) => !open && handleCloseModal()}
         title="Set Hourly Rate"
-        className="sm:max-w-md"
+        size="sm"
         footer={
           <>
             <Button onClick={handleCloseModal} variant="secondary">

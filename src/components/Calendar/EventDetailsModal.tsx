@@ -39,12 +39,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
 
   if (!event) {
     return (
-      <Dialog
-        open={open}
-        onOpenChange={onOpenChange}
-        title="Event Details"
-        className="sm:max-w-2xl"
-      >
+      <Dialog open={open} onOpenChange={onOpenChange} title="Event Details" size="lg">
         <Flex justify="center" className="p-8">
           <LoadingSpinner size="lg" />
         </Flex>

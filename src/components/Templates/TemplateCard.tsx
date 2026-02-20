@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Tooltip } from "../ui/Tooltip";
@@ -30,19 +31,19 @@ interface TemplateCardProps {
  */
 export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
   return (
-    <div className="p-4 bg-ui-bg-secondary rounded-lg hover:bg-ui-bg-tertiary transition-colors">
+    <Card padding="md" className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary transition-colors">
       <Flex justify="between" align="start">
         <FlexItem flex="1">
           <Flex gap="sm" align="center" className="mb-2">
             <Icon icon={ISSUE_TYPE_ICONS[template.type]} size="md" />
-            <Typography variant="h4" className="font-medium text-ui-text">
-              {template.name}
-            </Typography>
+            <Typography variant="h4">{template.name}</Typography>
             {template.isDefault && (
               <Tooltip content="Default template">
-                <Badge variant="brand" size="sm" className="gap-1">
-                  <Star className="w-3 h-3" />
-                  Default
+                <Badge variant="brand" size="sm">
+                  <Flex align="center" gap="xs">
+                    <Star className="w-3 h-3" />
+                    Default
+                  </Flex>
                 </Badge>
               </Tooltip>
             )}
@@ -58,14 +59,14 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
               </Badge>
             )}
           </Flex>
-          <Typography className="text-sm text-ui-text-secondary mb-1">
+          <Typography variant="small" color="secondary" className="mb-1">
             <Typography variant="label" as="span">
               Title:
             </Typography>{" "}
             {template.titleTemplate}
           </Typography>
           {template.descriptionTemplate && (
-            <Typography className="text-xs text-ui-text-tertiary line-clamp-2">
+            <Typography variant="caption" color="tertiary" className="line-clamp-2">
               {template.descriptionTemplate}
             </Typography>
           )}
@@ -129,6 +130,6 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
           </Button>
         </Flex>
       </Flex>
-    </div>
+    </Card>
   );
 }

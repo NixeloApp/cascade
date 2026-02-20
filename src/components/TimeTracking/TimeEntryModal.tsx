@@ -52,17 +52,14 @@ function ModeToggleButton({
 }) {
   const isActive = currentMode === mode;
   return (
-    <button
-      type="button"
+    <Button
+      variant={isActive ? "secondary" : "ghost"}
       onClick={onClick}
-      className={cn(
-        "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-        isActive ? "bg-ui-bg text-ui-text shadow-sm" : "text-ui-text-secondary hover:text-ui-text",
-      )}
+      className={cn("flex-1 gap-2", isActive && "shadow-sm")}
     >
       <Icon className="w-4 h-4" />
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -114,14 +111,15 @@ function TagsInput({
               className="px-2 py-1 bg-brand-indigo-track text-brand-indigo-text text-xs rounded"
             >
               {tag}
-              <button
-                type="button"
+              <Button
+                variant="unstyled"
+                size="icon"
                 onClick={() => onRemoveTag(tag)}
-                className="hover:text-brand-active"
+                className="hover:text-brand-active h-4 w-4 p-0"
                 aria-label={`Remove tag ${tag}`}
               >
                 ×
-              </button>
+              </Button>
             </Flex>
           ))}
         </Flex>
@@ -376,7 +374,7 @@ export function TimeEntryModal({
       open={open}
       onOpenChange={onOpenChange}
       title={computed.isTimerMode ? "Start Timer" : "Log Time"}
-      className="sm:max-w-2xl"
+      size="lg"
       footer={
         <>
           <Button type="button" onClick={() => onOpenChange(false)} variant="secondary">

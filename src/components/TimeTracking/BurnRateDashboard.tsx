@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -77,9 +78,11 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
 
   if (!(burnRate && teamCosts)) {
     return (
-      <Flex justify="center" align="center" className="p-8">
-        <LoadingSpinner />
-      </Flex>
+      <Card padding="xl" variant="ghost">
+        <Flex justify="center" align="center">
+          <LoadingSpinner />
+        </Flex>
+      </Card>
     );
   }
 
@@ -91,19 +94,14 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
 
         <Flex gap="sm">
           {(["week", "month", "quarter"] as const).map((range) => (
-            <button
+            <Button
               key={range}
-              type="button"
+              variant={dateRange === range ? "primary" : "secondary"}
+              size="sm"
               onClick={() => setDateRange(range)}
-              className={cn(
-                "px-3 py-1 text-sm font-medium rounded-lg transition-colors",
-                dateRange === range
-                  ? "bg-brand text-brand-foreground"
-                  : "bg-ui-bg-tertiary text-ui-text hover:bg-ui-bg-secondary",
-              )}
             >
               {ranges[range].label}
-            </button>
+            </Button>
           ))}
         </Flex>
       </Flex>
@@ -247,7 +245,7 @@ function MetricCard({ label, value, icon, color }: MetricCardProps) {
   };
 
   return (
-    <div className={cn("p-4 border rounded-lg", colorClasses[color])}>
+    <Card padding="md" className={cn("border", colorClasses[color])}>
       <Flex align="center" gap="sm" className="mb-2">
         <Icon icon={icon} size="lg" />
         <Typography variant="caption" className="font-medium">
@@ -257,6 +255,6 @@ function MetricCard({ label, value, icon, color }: MetricCardProps) {
       <Typography variant="h3" className="text-ui-text">
         {value}
       </Typography>
-    </div>
+    </Card>
   );
 }

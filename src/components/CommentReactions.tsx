@@ -37,13 +37,13 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
         const hasReacted = currentUserId && reaction.userIds.includes(currentUserId);
         return (
           <Tooltip key={reaction.emoji} content={hasReacted ? "Remove reaction" : "Add reaction"}>
-            <button
-              type="button"
+            <Button
+              variant="unstyled"
               onClick={() => handleToggle(reaction.emoji)}
               aria-label={`${reaction.emoji} reaction, ${reaction.userIds.length} vote${reaction.userIds.length === 1 ? "" : "s"}`}
               aria-pressed={hasReacted}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-default border",
+                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-default border h-auto",
                 hasReacted
                   ? "bg-brand-subtle border-brand-border text-brand-subtle-foreground"
                   : "bg-ui-bg-soft border-ui-border text-ui-text-secondary hover:border-ui-border-secondary hover:bg-ui-bg-hover",
@@ -51,7 +51,7 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
             >
               <span>{reaction.emoji}</span>
               <span>{reaction.userIds.length}</span>
-            </button>
+            </Button>
           </Tooltip>
         );
       })}

@@ -4,6 +4,7 @@
 
 import { Bot } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { AI_CONFIG } from "./config";
@@ -59,8 +60,8 @@ export function AIAssistantButton({
     unreadCount > AI_CONFIG.badge.maxCount ? `${AI_CONFIG.badge.maxCount}+` : unreadCount;
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="unstyled"
       onClick={onClick}
       className={cn(
         "fixed",
@@ -82,6 +83,6 @@ export function AIAssistantButton({
           {displayCount}
         </Flex>
       )}
-    </button>
+    </Button>
   );
 }

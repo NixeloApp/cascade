@@ -23,6 +23,7 @@ import { createIssueCardData, isIssueCardData } from "@/lib/kanban-dnd";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
+import { Button } from "./ui/Button";
 import { Icon } from "./ui/Icon";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
@@ -256,8 +257,8 @@ export const IssueCard = memo(function IssueCard({
       )}
     >
       {/* Primary Action Overlay Button */}
-      <button
-        type="button"
+      <Button
+        variant="unstyled"
         onClick={handleClick}
         className="absolute inset-0 w-full h-full z-0 opacity-0 cursor-pointer focus:outline-none"
         aria-label={`Open issue ${issue.key}: ${issue.title}`}
@@ -353,15 +354,14 @@ export const IssueCard = memo(function IssueCard({
                   .map((l) => l.name)
                   .join(", ")}
               >
-                <span
+                <Badge
+                  variant="neutral"
+                  size="sm"
                   tabIndex={0}
-                  role="button"
-                  className="rounded-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-ring pointer-events-auto"
+                  className="cursor-help pointer-events-auto"
                 >
-                  <Typography variant="caption" className="cursor-help">
-                    +{issue.labels.length - 3}
-                  </Typography>
-                </span>
+                  +{issue.labels.length - 3}
+                </Badge>
               </Tooltip>
             )}
           </Flex>

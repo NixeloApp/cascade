@@ -288,12 +288,12 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
               <Typography variant="label">Sprint Duration</Typography>
               <Grid cols={2} colsSm={5} gap="sm">
                 {SPRINT_DURATION_PRESETS.map((preset) => (
-                  <button
+                  <Button
                     key={preset.id}
-                    type="button"
+                    variant="ghost"
                     onClick={() => setSelectedPreset(preset.id)}
                     className={cn(
-                      "p-3 rounded-lg border text-left transition-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
+                      "h-auto p-3 rounded-lg border text-left justify-start items-start flex-col",
                       selectedPreset === preset.id
                         ? "border-brand bg-ui-bg-secondary"
                         : "border-ui-border-secondary bg-ui-bg hover:border-ui-border-hover",
@@ -305,7 +305,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                     <Typography variant="caption" color="secondary">
                       {preset.description}
                     </Typography>
-                  </button>
+                  </Button>
                 ))}
               </Grid>
             </Stack>
@@ -385,11 +385,29 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
 
       {/* Start Sprint Modal */}
       {startingSprintId && (
-        <Flex align="center" justify="center" className="fixed inset-0 z-modal bg-overlay p-4">
-          <Card padding="lg" className="max-w-lg w-full animate-scale-in">
+        <Flex
+          align="center"
+          justify="center"
+          className="fixed inset-0 z-modal bg-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeStartSprintModal();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") closeStartSprintModal();
+          }}
+        >
+          <Card
+            padding="lg"
+            className="max-w-lg w-full m-4 animate-scale-in"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="start-sprint-title"
+          >
             <Stack gap="lg">
               <Stack gap="sm">
-                <Typography variant="h4">Start Sprint</Typography>
+                <Typography variant="h4" id="start-sprint-title">
+                  Start Sprint
+                </Typography>
                 <Typography variant="small" color="secondary">
                   Choose how long this sprint should run.
                 </Typography>
@@ -400,12 +418,12 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                 <Typography variant="label">Sprint Duration</Typography>
                 <Grid cols={2} colsSm={3} gap="sm">
                   {SPRINT_DURATION_PRESETS.map((preset) => (
-                    <button
+                    <Button
                       key={preset.id}
-                      type="button"
+                      variant="ghost"
                       onClick={() => setStartPreset(preset.id)}
                       className={cn(
-                        "p-3 rounded-lg border text-left transition-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
+                        "h-auto p-3 rounded-lg border text-left justify-start items-start flex-col",
                         startPreset === preset.id
                           ? "border-brand bg-ui-bg-secondary"
                           : "border-ui-border-secondary bg-ui-bg hover:border-ui-border-hover",
@@ -417,7 +435,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                       <Typography variant="caption" color="secondary">
                         {preset.description}
                       </Typography>
-                    </button>
+                    </Button>
                   ))}
                 </Grid>
               </Stack>

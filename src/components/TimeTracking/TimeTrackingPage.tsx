@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Label } from "../ui/Label";
@@ -63,44 +64,44 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
       {/* Tabs */}
       <div className="border-b border-ui-border">
         <Flex as="nav" gap="lg" className="-mb-px">
-          <button
-            type="button"
+          <Button
+            variant="unstyled"
             onClick={() => setActiveTab("entries")}
             className={cn(
-              "pb-3 px-1 text-sm font-medium border-b-2 transition-colors",
+              "pb-3 px-1 text-sm font-medium border-b-2 transition-colors rounded-none",
               activeTab === "entries"
                 ? "border-brand-indigo-border text-brand-indigo-text"
                 : "border-transparent text-ui-text-secondary hover:text-ui-text",
             )}
           >
             Time Entries
-          </button>
+          </Button>
           {canSeeSensitiveTabs && (
             <>
-              <button
-                type="button"
+              <Button
+                variant="unstyled"
                 onClick={() => setActiveTab("burn-rate")}
                 className={cn(
-                  "pb-3 px-1 text-sm font-medium border-b-2 transition-colors",
+                  "pb-3 px-1 text-sm font-medium border-b-2 transition-colors rounded-none",
                   activeTab === "burn-rate"
                     ? "border-brand-indigo-border text-brand-indigo-text"
                     : "border-transparent text-ui-text-secondary hover:text-ui-text",
                 )}
               >
                 Burn Rate & Costs
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="unstyled"
                 onClick={() => setActiveTab("rates")}
                 className={cn(
-                  "pb-3 px-1 text-sm font-medium border-b-2 transition-colors",
+                  "pb-3 px-1 text-sm font-medium border-b-2 transition-colors rounded-none",
                   activeTab === "rates"
                     ? "border-brand-indigo-border text-brand-indigo-text"
                     : "border-transparent text-ui-text-secondary hover:text-ui-text",
                 )}
               >
                 Hourly Rates
-              </button>
+              </Button>
             </>
           )}
         </Flex>

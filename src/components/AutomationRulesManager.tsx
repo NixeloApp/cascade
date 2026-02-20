@@ -1,5 +1,10 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import type {
+  AutomationActionType,
+  AutomationActionValue,
+  AutomationTrigger,
+} from "@convex/validators";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { showError, showSuccess } from "@/lib/toast";
@@ -21,10 +26,10 @@ type AutomationRule = {
   _id: Id<"automationRules">;
   name: string;
   description?: string;
-  trigger: string;
+  trigger: AutomationTrigger;
   triggerValue?: string;
-  actionType: string;
-  actionValue: string;
+  actionType: AutomationActionType;
+  actionValue: AutomationActionValue;
   isActive: boolean;
   executionCount: number;
 };

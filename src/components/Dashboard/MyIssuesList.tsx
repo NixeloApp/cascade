@@ -8,6 +8,8 @@ import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
@@ -76,24 +78,26 @@ export function MyIssuesList({
 
   return (
     <Flex direction="column" className="h-full">
-      <Stack gap="xs" className="pb-2 pt-6 px-6">
-        <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
-          Feed
-        </Typography>
-        <Typography variant="small" color="tertiary">
-          Track your active contributions
-        </Typography>
-      </Stack>
+      <Card padding="lg" radius="none" variant="ghost" className="pb-2">
+        <Stack gap="xs">
+          <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
+            Feed
+          </Typography>
+          <Typography variant="small" color="tertiary">
+            Track your active contributions
+          </Typography>
+        </Stack>
+      </Card>
       <Flex
         justify="between"
         align="stretch"
         className="border-b border-ui-border/50 px-4 bg-ui-bg/20"
       >
-        <button
-          type="button"
+        <Button
+          variant="unstyled"
           onClick={() => onFilterChange("assigned")}
           className={cn(
-            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider",
+            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider rounded-none",
             issueFilter === "assigned"
               ? "border-brand text-brand"
               : "border-transparent text-ui-text-tertiary hover:text-ui-text",
@@ -104,12 +108,12 @@ export function MyIssuesList({
           <Typography variant="label" as="span" className="ml-1.5 opacity-60">
             ({myIssues?.length || 0})
           </Typography>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="unstyled"
           onClick={() => onFilterChange("created")}
           className={cn(
-            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider",
+            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider rounded-none",
             issueFilter === "created"
               ? "border-brand text-brand"
               : "border-transparent text-ui-text-tertiary hover:text-ui-text",
@@ -120,84 +124,86 @@ export function MyIssuesList({
           <Typography variant="label" as="span" className="ml-1.5 opacity-60">
             ({myCreatedIssues?.length || 0})
           </Typography>
-        </button>
+        </Button>
       </Flex>
-      <Flex direction="column" className="p-4 flex-1 overflow-hidden">
-        {!displayIssues ? (
-          /* Loading skeleton */
-          <SkeletonList items={5} />
-        ) : displayIssues.length === 0 ? (
-          <EmptyState
-            icon={Inbox}
-            title="Inbox Clear"
-            description="No pending items in your feed."
-            action={{
-              label: "Explore Projects",
-              onClick: navigateToWorkspaces,
-            }}
-          />
-        ) : (
-          <Flex
-            direction="column"
-            gap="xs"
-            className="flex-1 overflow-y-auto pr-2 custom-scrollbar"
-            ref={issueNavigation.listRef}
-          >
-            {displayIssues.map((issue, index) => (
-              <button
-                key={issue._id}
-                type="button"
-                onClick={() => navigateToWorkspace(issue.projectKey)}
-                {...issueNavigation.getItemProps(index)}
-                className={cn(
-                  "w-full text-left p-3 bg-ui-bg-secondary/20 hover:bg-ui-bg-secondary/40 rounded-lg group cursor-pointer transition-colors",
-                  issueNavigation.getItemProps(index).className,
-                )}
-              >
-                <Flex justify="between" align="start">
-                  <FlexItem flex="1">
-                    <Flex gap="sm" align="center" className="mb-1.5">
+      <Card padding="md" radius="none" variant="ghost" className="flex-1 overflow-hidden">
+        <Flex direction="column" className="h-full">
+          {!displayIssues ? (
+            /* Loading skeleton */
+            <SkeletonList items={5} />
+          ) : displayIssues.length === 0 ? (
+            <EmptyState
+              icon={Inbox}
+              title="Inbox Clear"
+              description="No pending items in your feed."
+              action={{
+                label: "Explore Projects",
+                onClick: navigateToWorkspaces,
+              }}
+            />
+          ) : (
+            <Flex
+              direction="column"
+              gap="xs"
+              className="flex-1 overflow-y-auto pr-2 custom-scrollbar"
+              ref={issueNavigation.listRef}
+            >
+              {displayIssues.map((issue, index) => (
+                <Button
+                  key={issue._id}
+                  variant="unstyled"
+                  onClick={() => navigateToWorkspace(issue.projectKey)}
+                  {...issueNavigation.getItemProps(index)}
+                  className={cn(
+                    "w-full text-left p-3 bg-ui-bg-secondary/20 hover:bg-ui-bg-secondary/40 rounded-lg group cursor-pointer transition-colors h-auto",
+                    issueNavigation.getItemProps(index).className,
+                  )}
+                >
+                  <Flex justify="between" align="start">
+                    <FlexItem flex="1">
+                      <Flex gap="sm" align="center" className="mb-1.5">
+                        <Typography
+                          variant="inlineCode"
+                          color="tertiary"
+                          className="group-hover:text-brand transition-colors"
+                        >
+                          {issue.key}
+                        </Typography>
+                        <Badge
+                          variant="neutral"
+                          className="text-xs uppercase font-bold bg-ui-bg-tertiary/50"
+                        >
+                          {issue.priority}
+                        </Badge>
+                      </Flex>
                       <Typography
-                        variant="inlineCode"
-                        color="tertiary"
-                        className="group-hover:text-brand transition-colors"
+                        variant="label"
+                        className="mb-1 group-hover:text-brand transition-colors"
                       >
-                        {issue.key}
+                        {issue.title}
                       </Typography>
-                      <Badge
-                        variant="neutral"
-                        className="text-xs uppercase font-bold bg-ui-bg-tertiary/50"
-                      >
-                        {issue.priority}
-                      </Badge>
-                    </Flex>
-                    <Typography
-                      variant="label"
-                      className="mb-1 group-hover:text-brand transition-colors"
-                    >
-                      {issue.title}
-                    </Typography>
-                    <Metadata size="xs" gap="xs" className="uppercase tracking-wider">
-                      <MetadataItem>{issue.projectName}</MetadataItem>
-                      <MetadataItem>{issue.status}</MetadataItem>
-                    </Metadata>
-                  </FlexItem>
-                </Flex>
-              </button>
-            ))}
+                      <Metadata size="xs" gap="xs" className="uppercase tracking-wider">
+                        <MetadataItem>{issue.projectName}</MetadataItem>
+                        <MetadataItem>{issue.status}</MetadataItem>
+                      </Metadata>
+                    </FlexItem>
+                  </Flex>
+                </Button>
+              ))}
 
-            {showLoadMore && loadMore && (
-              <div className="pt-4">
-                <LoadMoreButton
-                  onClick={() => loadMore(20)}
-                  isLoading={isLoadingMore}
-                  className="w-full"
-                />
-              </div>
-            )}
-          </Flex>
-        )}
-      </Flex>
+              {showLoadMore && loadMore && (
+                <div className="pt-4">
+                  <LoadMoreButton
+                    onClick={() => loadMore(20)}
+                    isLoading={isLoadingMore}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </Flex>
+          )}
+        </Flex>
+      </Card>
     </Flex>
   );
 }

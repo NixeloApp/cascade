@@ -1,5 +1,6 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { TEST_IDS } from "@/lib/test-ids";
+import { Button } from "../ui/Button";
 
 interface GoogleAuthButtonProps {
   redirectTo?: string;
@@ -10,9 +11,9 @@ export function GoogleAuthButton({ redirectTo, text }: GoogleAuthButtonProps) {
   const { signIn } = useAuthActions();
 
   return (
-    <button
-      type="button"
-      className="w-full px-4 py-3 rounded-container bg-ui-bg-soft border border-ui-border text-ui-text font-medium hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-default shadow-soft hover:shadow-card disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+    <Button
+      variant="secondary"
+      className="w-full px-4 py-3 gap-3"
       onClick={() => void signIn("google", redirectTo ? { redirectTo } : undefined)}
       data-testid={TEST_IDS.AUTH.GOOGLE_BUTTON}
     >
@@ -35,6 +36,6 @@ export function GoogleAuthButton({ redirectTo, text }: GoogleAuthButtonProps) {
         />
       </svg>
       <span>{text}</span>
-    </button>
+    </Button>
   );
 }

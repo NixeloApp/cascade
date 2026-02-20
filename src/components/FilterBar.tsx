@@ -9,6 +9,7 @@ import { ChevronDown, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import {
   DropdownMenu,
@@ -96,11 +97,11 @@ function FilterDropdown<T>({
           </DropdownMenuCheckboxItem>
         ))}
         {(!items || items.length === 0) && (
-          <div className="px-2 py-1.5">
+          <Card padding="xs" radius="none" variant="ghost">
             <Typography variant="small" color="secondary">
               {emptyMessage}
             </Typography>
-          </div>
+          </Card>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -138,7 +139,11 @@ function SavedFiltersDropdown({
             justify="between"
             className="hover:bg-ui-bg-secondary rounded cursor-pointer"
           >
-            <button type="button" onClick={() => onLoadFilter(filter)} className="flex-1 text-left">
+            <Button
+              variant="unstyled"
+              onClick={() => onLoadFilter(filter)}
+              className="flex-1 text-left h-auto p-1"
+            >
               <Typography variant="small" as="span">
                 {filter.name}
               </Typography>
@@ -147,19 +152,20 @@ function SavedFiltersDropdown({
                   (public)
                 </Typography>
               )}
-            </button>
+            </Button>
             {filter.isOwner && (
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteFilter(filter._id);
                 }}
-                className="p-1 text-ui-text-tertiary hover:text-status-error"
+                className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
                 aria-label="Delete filter"
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             )}
           </Flex>
         ))}
@@ -196,7 +202,7 @@ function SaveFilterDialog({
       onOpenChange={onOpenChange}
       title="Save Filter"
       description="Save current filter settings"
-      className="sm:max-w-md"
+      size="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onCancel}>

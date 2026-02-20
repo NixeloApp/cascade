@@ -5,6 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
+import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
@@ -12,6 +13,7 @@ import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { Card } from "./ui/Card";
+import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { Skeleton } from "./ui/Skeleton";
@@ -118,16 +120,16 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         <FlexItem shrink={false} className="w-64 pr-4">
           <Flex align="center" gap="sm" className="mb-1">
             <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
-            <button
-              type="button"
+            <Button
+              variant="unstyled"
               onClick={() => setSelectedIssue(issue._id)}
               className={cn(
-                "text-sm font-medium truncate text-left",
+                "text-sm font-medium truncate text-left p-0 h-auto",
                 isSelected ? "text-brand-hover" : "text-ui-text hover:text-brand-muted",
               )}
             >
               {issue.key}
-            </button>
+            </Button>
           </Flex>
           <Typography variant="caption">{issue.title}</Typography>
         </FlexItem>
@@ -135,8 +137,8 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         {/* Timeline Bar */}
         <FlexItem flex="1" className="relative h-8">
           {issue.dueDate && (
-            <button
-              type="button"
+            <Button
+              variant="unstyled"
               className={cn(
                 "absolute h-6 rounded-full opacity-80 hover:opacity-100 transition-opacity cursor-pointer flex items-center px-2",
                 getPriorityColor(issue.priority, "bg"),
@@ -152,7 +154,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               <Typography variant="label" className="text-brand-foreground truncate">
                 {issue.assignee?.name.split(" ")[0]}
               </Typography>
-            </button>
+            </Button>
           )}
 
           {/* Today Indicator */}
@@ -186,40 +188,55 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           {/* Skeleton Timeline */}
           <Card padding="none" className="flex-1 overflow-hidden">
             {/* Skeleton Dates Header */}
-            <Flex className="shrink-0 border-b border-ui-border bg-ui-bg-secondary p-4">
-              <FlexItem shrink={false} className="w-64">
-                <Skeleton className="h-5 w-24" />
-              </FlexItem>
-              <FlexItem flex="1" className="grid grid-cols-6 gap-2">
-                {[1, 2, 3, 4, 5, 6].map((id) => (
-                  <Skeleton key={id} className="h-5 w-full" />
-                ))}
-              </FlexItem>
-            </Flex>
+            <Card
+              variant="soft"
+              padding="md"
+              radius="none"
+              className="shrink-0 border-b border-ui-border"
+            >
+              <Flex>
+                <FlexItem shrink={false} className="w-64">
+                  <Skeleton className="h-5 w-24" />
+                </FlexItem>
+                <Grid cols={6} gap="sm" className="flex-1">
+                  {[1, 2, 3, 4, 5, 6].map((id) => (
+                    <Skeleton key={id} className="h-5 w-full" />
+                  ))}
+                </Grid>
+              </Flex>
+            </Card>
 
             {/* Skeleton Rows */}
             <Stack className="flex-1 overflow-auto">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <Flex align="center" className="border-b border-ui-border" key={i}>
-                  <FlexItem shrink={false} className="w-64 pr-4">
-                    <Flex align="center" gap="sm">
-                      <Skeleton className="h-4 w-4 rounded-full" />
-                      <Skeleton className="h-4 w-16" />
-                    </Flex>
-                    <Skeleton className="h-3 w-32" />
-                  </FlexItem>
-                  <FlexItem flex="1" className="relative h-8">
-                    <div
-                      className="absolute h-6"
-                      style={{
-                        left: `${(i * 13) % 70}%`, // Deterministic position
-                        width: `${10 + ((i * 3) % 10)}%`,
-                      }}
-                    >
-                      <Skeleton className="h-full w-full rounded-full opacity-50" />
-                    </div>
-                  </FlexItem>
-                </Flex>
+                <Card
+                  key={i}
+                  padding="none"
+                  radius="none"
+                  variant="ghost"
+                  className="border-b border-ui-border"
+                >
+                  <Flex align="center">
+                    <FlexItem shrink={false} className="w-64 pr-4">
+                      <Flex align="center" gap="sm">
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                        <Skeleton className="h-4 w-16" />
+                      </Flex>
+                      <Skeleton className="h-3 w-32" />
+                    </FlexItem>
+                    <FlexItem flex="1" className="relative h-8">
+                      <div
+                        className="absolute h-6"
+                        style={{
+                          left: `${(i * 13) % 70}%`, // Deterministic position
+                          width: `${10 + ((i * 3) % 10)}%`,
+                        }}
+                      >
+                        <Skeleton className="h-full w-full rounded-full opacity-50" />
+                      </div>
+                    </FlexItem>
+                  </Flex>
+                </Card>
               ))}
             </Stack>
           </Card>
@@ -277,32 +294,41 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         {/* Timeline Container */}
         <Card padding="none" className="flex-1 overflow-hidden">
           {/* Timeline Header (Fixed) */}
-          <Flex className="shrink-0 border-b border-ui-border bg-ui-bg-secondary p-4">
-            <Typography variant="label" className="w-64 shrink-0">
-              Issue
-            </Typography>
-            <FlexItem flex="1" className="grid grid-cols-6">
-              {timelineMonths.map((month) => (
-                <Typography
-                  key={month.getTime()}
-                  variant="label"
-                  className="text-center border-l border-ui-border px-2"
-                >
-                  {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                </Typography>
-              ))}
-            </FlexItem>
-          </Flex>
+          <Card
+            variant="soft"
+            padding="md"
+            radius="none"
+            className="shrink-0 border-b border-ui-border"
+          >
+            <Flex>
+              <Typography variant="label" className="w-64 shrink-0">
+                Issue
+              </Typography>
+              <FlexItem flex="1" className="grid grid-cols-6">
+                {timelineMonths.map((month) => (
+                  <Typography
+                    key={month.getTime()}
+                    variant="label"
+                    className="text-center border-l border-ui-border px-2"
+                  >
+                    {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                  </Typography>
+                ))}
+              </FlexItem>
+            </Flex>
+          </Card>
 
           {/* Timeline Body (Virtualized) */}
           <FlexItem flex="1">
             {filteredIssues.length === 0 ? (
-              <Stack gap="xs" align="center" className="p-12 text-center">
-                <Typography color="secondary">No issues with due dates to display</Typography>
-                <Typography variant="small" color="secondary">
-                  Add due dates to issues to see them on the roadmap
-                </Typography>
-              </Stack>
+              <Card padding="xl" className="text-center">
+                <Stack gap="xs" align="center">
+                  <Typography color="secondary">No issues with due dates to display</Typography>
+                  <Typography variant="small" color="secondary">
+                    Add due dates to issues to see them on the roadmap
+                  </Typography>
+                </Stack>
+              </Card>
             ) : (
               <List<RowData>
                 listRef={listRef}

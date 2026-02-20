@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -21,23 +22,25 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
     <header className="sticky top-0 z-40 bg-ui-bg/80 backdrop-blur-md border-b border-ui-border/50 px-4 sm:px-6 py-3 flex justify-between items-center gap-2 transition-all duration-default">
       <Flex align="center" gap="sm" className="sm:gap-4">
         {/* Mobile Hamburger Menu */}
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={toggleMobile}
-          className="lg:hidden p-2 text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover rounded-lg transition-all duration-default"
+          className="lg:hidden"
           aria-label="Toggle sidebar menu"
           aria-expanded={isMobileOpen}
         >
           <Menu className="w-5 h-5" />
-        </button>
+        </Button>
       </Flex>
 
       <Flex align="center" gap="sm" className="sm:gap-3 shrink-0">
         {onShowCommandPalette && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onShowCommandPalette}
-            className="flex items-center gap-2 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-ui-text-secondary bg-ui-bg-soft border border-ui-border/50 rounded-lg hover:bg-ui-bg-hover hover:border-ui-border hover:text-ui-text transition-all duration-default"
+            className="gap-2 px-2 sm:px-3 text-xs sm:text-sm"
             aria-label="Open command palette"
             data-tour="command-palette"
           >
@@ -62,15 +65,16 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
             >
               ⌘K
             </Typography>
-          </button>
+          </Button>
         )}
 
         {onShowShortcutsHelp && (
           <Tooltip content="Keyboard shortcuts">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onShowShortcutsHelp}
-              className="hidden sm:flex items-center justify-center p-2 text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover rounded-lg transition-all duration-default"
+              className="hidden sm:flex"
               aria-label="Keyboard shortcuts"
               data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
             >
@@ -88,7 +92,7 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
                   d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-            </button>
+            </Button>
           </Tooltip>
         )}
 

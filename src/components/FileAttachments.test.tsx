@@ -107,8 +107,25 @@ describe("FileAttachments", () => {
     expect(screen.getByRole("link", { name: "Download document.pdf" })).toBeInTheDocument();
 
     // Check Delete buttons
-    // They should be accessible by aria-label
-    const deleteButtons = screen.getAllByRole("button", { name: "Delete attachment" });
-    expect(deleteButtons).toHaveLength(2);
+    // They should be accessible by unique aria-label per file
+    expect(screen.getByRole("button", { name: "Delete test-image.png" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete document.pdf" })).toBeInTheDocument();
+  });
+
+  it("should render unavailable state when url is null", () => {
+    vi.mocked(useQuery).mockReturnValue([
+      {
+        storageId: "storage-3" as Id<"_storage">,
+        filename: "missing.pdf",
+        url: null,
+        uploadedAt: Date.now(),
+      },
+    ]);
+
+    render(<FileAttachments issueId={issueId} />);
+
+    expect(screen.getByText("missing.pdf (unavailable)")).toBeInTheDocument();
+    // No download link should exist for this attachment
+    expect(screen.queryByRole("link", { name: "Download missing.pdf" })).not.toBeInTheDocument();
   });
 });

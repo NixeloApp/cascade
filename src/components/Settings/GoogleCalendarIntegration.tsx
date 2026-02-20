@@ -121,9 +121,9 @@ export function GoogleCalendarIntegration() {
     <Card padding="lg">
       <Flex justify="between" align="start">
         <Flex gap="lg" align="center">
-          <div className="p-3 bg-brand-ring rounded-lg">
+          <Card padding="sm" radius="md" variant="ghost" className="bg-brand-ring">
             <Calendar className="h-6 w-6 text-brand-foreground" />
-          </div>
+          </Card>
           <Stack gap="xs">
             <Typography variant="h3">Google Calendar</Typography>
             <Typography variant="small" color="secondary">

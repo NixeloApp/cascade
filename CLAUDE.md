@@ -96,7 +96,9 @@ This project uses **Tailwind CSS v4** with a `@theme` block in `src/index.css` â
 - **Tier 1** (`:root`): Raw color primitives (`--p-indigo-500`, `--p-gray-200`, etc.). Never use directly in components.
 - **Tier 2** (`@theme`): Semantic tokens (`--color-ui-bg`, `--color-brand`, `--color-status-error`, etc.) using `light-dark()` for automatic dark mode. Use these via Tailwind classes: `bg-ui-bg`, `text-brand`, `border-status-error`.
 
-**Non-color tokens in `@theme`:** Panel heights (`max-h-panel`, `max-h-panel-lg`), blur (`blur-glow`), z-index (`z-toast-critical`), text sizes (`text-caption`), spacing, radius, scale. Check `src/index.css` before adding arbitrary values.
+**Non-color tokens in `@theme`:** blur (`blur-glow`), z-index (`z-toast-critical`), text sizes (`text-caption`), spacing, radius, scale. Check `src/index.css` before adding arbitrary values.
+
+**Dialog sizes:** Use the `size` prop (`sm`, `md`, `lg`, `xl`, `2xl`, `full`) instead of className overrides. Each size controls both width and max-height.
 
 **Rule:** Never use arbitrary bracket syntax (`w-[Npx]`, `max-h-[Xvh]`) for values used in more than one place. Define a token in the `@theme` block instead. The validator will flag violations.
 

@@ -154,8 +154,8 @@ export const CustomWidth: Story = {
           open={open}
           onOpenChange={setOpen}
           title="Wide Dialog"
-          description="This dialog uses a custom width class."
-          className="sm:max-w-2xl"
+          description="This dialog uses the lg size variant."
+          size="lg"
         >
           <p>This dialog is wider than the default. Use className to customize the size.</p>
         </Dialog>
@@ -252,7 +252,7 @@ export const SettingsDialog: Story = {
           onOpenChange={setOpen}
           title="Settings"
           description="Configure your preferences"
-          className="sm:max-w-xl"
+          size="lg"
           footer={
             <>
               <Button variant="secondary" onClick={() => setOpen(false)}>
@@ -296,7 +296,7 @@ export const InviteUsers: Story = {
           onOpenChange={setOpen}
           title="Invite Team Members"
           description="Send invitations to collaborate on this project"
-          className="sm:max-w-md"
+          size="sm"
           footer={
             <>
               <Button variant="secondary" onClick={() => setOpen(false)}>

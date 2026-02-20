@@ -51,9 +51,11 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
 
   if (comments === undefined) {
     return (
-      <Flex justify="center" className="py-8">
-        <LoadingSpinner size="md" />
-      </Flex>
+      <Card padding="xl" variant="ghost">
+        <Flex justify="center">
+          <LoadingSpinner size="md" />
+        </Flex>
+      </Card>
     );
   }
 

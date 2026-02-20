@@ -127,7 +127,7 @@ export function CreateProjectFromTemplate({
       open={open}
       onOpenChange={onOpenChange}
       title={step === "select" ? "Choose a Template" : "Configure Project"}
-      className="sm:max-w-4xl"
+      size="xl"
       footer={
         step === "configure" ? (
           <Flex direction="column" gap="sm" className="sm:flex-row sm:justify-between w-full">
@@ -179,17 +179,19 @@ export function CreateProjectFromTemplate({
             </Typography>
 
             {!templates ? (
-              <Flex align="center" justify="center" className="py-8">
-                <LoadingSpinner />
-              </Flex>
+              <Card padding="xl" variant="ghost">
+                <Flex align="center" justify="center">
+                  <LoadingSpinner />
+                </Flex>
+              </Card>
             ) : (
               <Grid cols={1} colsMd={2} gap="lg">
                 {templates.map((template: Doc<"projectTemplates">) => (
-                  <button
-                    type="button"
+                  <Button
+                    variant="unstyled"
                     key={template._id}
                     onClick={() => handleSelectTemplate(template._id)}
-                    className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring"
+                    className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring h-auto"
                   >
                     <Flex align="start" gap="lg">
                       <FlexItem shrink={false}>
@@ -212,7 +214,7 @@ export function CreateProjectFromTemplate({
                         </Stack>
                       </FlexItem>
                     </Flex>
-                  </button>
+                  </Button>
                 ))}
               </Grid>
             )}

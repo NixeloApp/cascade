@@ -11,6 +11,7 @@ import { Bot, Lightbulb, MessageSquare } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Sheet } from "../ui/Sheet";
@@ -83,11 +84,11 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
 
           {/* Tabs */}
           <Flex className="border-b border-ui-border bg-ui-bg-secondary">
-            <button
-              type="button"
+            <Button
+              variant="unstyled"
               onClick={() => handleTabChange("chat")}
               className={cn(
-                "flex-1 px-4 py-3 font-medium text-sm transition-colors",
+                "flex-1 px-4 py-3 font-medium text-sm transition-colors rounded-none",
                 activeTab === "chat"
                   ? "text-brand border-b-2 border-brand bg-ui-bg"
                   : "text-ui-text-tertiary hover:text-ui-text",
@@ -99,12 +100,12 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
                   {chats.length}
                 </Badge>
               )}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="unstyled"
               onClick={() => handleTabChange("suggestions")}
               className={cn(
-                "flex-1 px-4 py-3 font-medium text-sm transition-colors relative",
+                "flex-1 px-4 py-3 font-medium text-sm transition-colors relative rounded-none",
                 activeTab === "suggestions"
                   ? "text-brand border-b-2 border-brand bg-ui-bg"
                   : "text-ui-text-tertiary hover:text-ui-text",
@@ -116,7 +117,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
                   {unreadSuggestions}
                 </Badge>
               )}
-            </button>
+            </Button>
           </Flex>
         </>
       }

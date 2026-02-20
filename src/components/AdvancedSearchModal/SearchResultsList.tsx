@@ -3,6 +3,8 @@ import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Typography } from "../ui/Typography";
@@ -34,7 +36,7 @@ export function SearchResultsList({
 }: SearchResultsListProps) {
   if (searchQuery.length < 2) {
     return (
-      <div className="p-8 text-center text-ui-text-tertiary">
+      <Card padding="xl" variant="ghost" className="text-center text-ui-text-tertiary">
         <svg
           aria-hidden="true"
           className="w-16 h-16 mx-auto mb-4 text-ui-text-tertiary"
@@ -50,15 +52,15 @@ export function SearchResultsList({
           />
         </svg>
         <Typography variant="muted">Start typing to search issues</Typography>
-      </div>
+      </Card>
     );
   }
 
   if (results.length === 0) {
     return (
-      <div className="p-8 text-center text-ui-text-tertiary">
+      <Card padding="xl" variant="ghost" className="text-center text-ui-text-tertiary">
         <Typography variant="muted">No issues found matching your criteria</Typography>
-      </div>
+      </Card>
     );
   }
 
@@ -66,42 +68,41 @@ export function SearchResultsList({
     <>
       <div className="max-h-96 overflow-y-auto divide-y divide-ui-border-secondary">
         {results.map((issue) => (
-          <button
-            type="button"
+          <Button
+            variant="unstyled"
             key={issue._id}
             onClick={() => onSelectIssue(issue._id)}
-            className="w-full p-4 hover:bg-ui-bg-secondary transition-colors text-left"
+            className="w-full p-4 hover:bg-ui-bg-secondary transition-colors text-left h-auto rounded-none"
           >
             <Flex gap="md" align="start">
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="md" className="shrink-0" />
               <FlexItem flex="1" className="min-w-0">
                 <Flex gap="sm" align="center" className="mb-1">
-                  <Typography variant="muted" className="text-sm font-mono">
+                  <Typography variant="inlineCode" color="secondary">
                     {issue.key}
                   </Typography>
                   <Badge size="sm" className={cn(getPriorityColor(issue.priority, "bg"))}>
                     {issue.priority}
                   </Badge>
                 </Flex>
-                <Typography variant="h4" className="text-sm font-medium text-ui-text">
-                  {issue.title}
-                </Typography>
+                <Typography variant="label">{issue.title}</Typography>
               </FlexItem>
             </Flex>
-          </button>
+          </Button>
         ))}
       </div>
 
       {hasMore && (
-        <div className="p-4 border-t border-ui-border bg-ui-bg-secondary">
-          <button
-            type="button"
-            onClick={onLoadMore}
-            className="w-full px-4 py-2 text-sm font-medium text-brand bg-brand-subtle hover:bg-brand-subtle:bg-brand-active/30 rounded-lg transition-colors"
-          >
+        <Card
+          padding="md"
+          radius="none"
+          variant="ghost"
+          className="border-t border-ui-border bg-ui-bg-secondary"
+        >
+          <Button variant="secondary" size="sm" onClick={onLoadMore} className="w-full">
             Load More ({total - results.length} remaining)
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
     </>
   );

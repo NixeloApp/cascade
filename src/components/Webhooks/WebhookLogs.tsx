@@ -80,22 +80,32 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
     return `${duration}ms`;
   };
 
+  const formatJson = (payload: string) => {
+    try {
+      return JSON.stringify(JSON.parse(payload), null, 2);
+    } catch {
+      return payload;
+    }
+  };
+
   return (
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
       title="Webhook Delivery Logs"
       description="View recent webhook delivery attempts and their status"
-      className="sm:max-w-5xl"
+      size="2xl"
     >
       {!executions || executions.length === 0 ? (
-        <Stack align="center" gap="sm" className="text-center py-12">
-          <Icon icon={BarChart3} size="xl" className="text-ui-text-tertiary" />
-          <Typography variant="h5">No delivery logs yet</Typography>
-          <Typography variant="caption">
-            Webhook deliveries will appear here once triggered
-          </Typography>
-        </Stack>
+        <Card padding="xl" variant="ghost">
+          <Stack align="center" gap="sm" className="text-center">
+            <Icon icon={BarChart3} size="xl" className="text-ui-text-tertiary" />
+            <Typography variant="h5">No delivery logs yet</Typography>
+            <Typography variant="caption">
+              Webhook deliveries will appear here once triggered
+            </Typography>
+          </Stack>
+        </Card>
       ) : (
         <Stack gap="md">
           <Typography variant="caption">
@@ -163,14 +173,14 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
                 {/* Error message */}
                 {execution.error && (
-                  <div className="bg-status-error-bg border border-status-error/30 rounded p-3 mt-3">
+                  <Card padding="sm" className="bg-status-error-bg border-status-error/30 mt-3">
                     <Typography variant="caption" className="text-status-error-text mb-1">
                       Error:
                     </Typography>
                     <Typography variant="mono" className="text-status-error-text/90">
                       {String(execution.error)}
                     </Typography>
-                  </div>
+                  </Card>
                 )}
 
                 {/* Expandable Details */}
@@ -179,18 +189,22 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                     {/* Request Payload */}
                     <Stack gap="xs">
                       <Typography variant="label">Request Payload:</Typography>
-                      <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto">
-                        {JSON.stringify(JSON.parse(execution.requestPayload), null, 2)}
-                      </pre>
+                      <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto">
+                        <Typography as="pre" variant="mono">
+                          {formatJson(execution.requestPayload)}
+                        </Typography>
+                      </Card>
                     </Stack>
 
                     {/* Response Body */}
                     {execution.responseBody && (
                       <Stack gap="xs">
                         <Typography variant="label">Response Body:</Typography>
-                        <pre className="bg-ui-bg-secondary border border-ui-border rounded p-3 text-xs overflow-x-auto max-h-48">
-                          {execution.responseBody}
-                        </pre>
+                        <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto max-h-48">
+                          <Typography as="pre" variant="mono">
+                            {execution.responseBody}
+                          </Typography>
+                        </Card>
                       </Stack>
                     )}
                   </Stack>

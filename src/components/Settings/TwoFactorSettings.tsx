@@ -101,38 +101,42 @@ function SetupWizardView({
           etc.)
         </Typography>
 
-        <Stack align="center" gap="md" className="py-4">
-          {otpauthUrl && (
-            <Card padding="md" className="bg-ui-bg">
-              <QRCodeSVG value={otpauthUrl} size={200} />
-            </Card>
-          )}
+        <Card padding="md" variant="ghost" radius="none">
+          <Stack align="center" gap="md">
+            {otpauthUrl && (
+              <Card padding="md" className="bg-ui-bg">
+                <QRCodeSVG value={otpauthUrl} size={200} />
+              </Card>
+            )}
 
-          <Stack align="center" gap="xs">
-            <Typography variant="caption">Can&apos;t scan? Enter this code manually:</Typography>
-            <code className="font-mono text-sm bg-ui-bg-secondary p-2 rounded select-all">
-              {secret}
-            </code>
+            <Stack align="center" gap="xs">
+              <Typography variant="caption">Can&apos;t scan? Enter this code manually:</Typography>
+              <code className="font-mono text-sm bg-ui-bg-secondary p-2 rounded select-all">
+                {secret}
+              </code>
+            </Stack>
           </Stack>
-        </Stack>
+        </Card>
 
-        <Stack gap="sm" className="border-t border-ui-border pt-4">
-          <Typography variant="label">
-            Enter the 6-digit code from your authenticator app:
-          </Typography>
-          <Flex gap="sm">
-            <Input
-              value={verificationCode}
-              onChange={(e) => onCodeChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="000000"
-              className="font-mono text-center text-lg tracking-widest"
-              maxLength={6}
-            />
-            <Button onClick={onVerify} disabled={isLoading || verificationCode.length !== 6}>
-              {isLoading ? <LoadingSpinner size="sm" /> : "Verify"}
-            </Button>
-          </Flex>
-        </Stack>
+        <Card padding="md" variant="ghost" radius="none" className="border-t border-ui-border">
+          <Stack gap="sm">
+            <Typography variant="label">
+              Enter the 6-digit code from your authenticator app:
+            </Typography>
+            <Flex gap="sm">
+              <Input
+                value={verificationCode}
+                onChange={(e) => onCodeChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                className="font-mono text-center text-lg tracking-widest"
+                maxLength={6}
+              />
+              <Button onClick={onVerify} disabled={isLoading || verificationCode.length !== 6}>
+                {isLoading ? <LoadingSpinner size="sm" /> : "Verify"}
+              </Button>
+            </Flex>
+          </Stack>
+        </Card>
 
         <Button variant="ghost" onClick={onCancel} className="self-start">
           Cancel Setup

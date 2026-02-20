@@ -18,6 +18,7 @@ import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { Input, Select } from "./ui/form";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
 interface LabelsManagerProps {
@@ -246,7 +247,11 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         />
 
         <CardBody>
-          {!labelGroups || totalLabels === 0 ? (
+          {labelGroups === undefined ? (
+            <Flex justify="center" align="center" className="min-h-32">
+              <LoadingSpinner size="lg" />
+            </Flex>
+          ) : labelGroups.length === 0 && totalLabels === 0 ? (
             <EmptyState
               icon={Tag}
               title="No labels yet"
@@ -264,127 +269,152 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                 const isUngrouped = group._id === null;
 
                 return (
-                  <div
-                    key={groupKey}
-                    className="border border-ui-border rounded-lg overflow-hidden"
-                  >
+                  <Card key={groupKey} padding="none" className="overflow-hidden">
                     {/* Group Header */}
-                    <Flex
-                      justify="between"
-                      align="center"
-                      className="p-3 bg-ui-bg-secondary cursor-pointer hover:bg-ui-bg-tertiary transition-colors"
+                    <Card
+                      padding="sm"
+                      radius="none"
+                      variant="ghost"
+                      className="bg-ui-bg-secondary cursor-pointer hover:bg-ui-bg-tertiary transition-colors"
                       onClick={() => toggleGroup(groupKey)}
+                      onKeyDown={(e: React.KeyboardEvent) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleGroup(groupKey);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-expanded={!isCollapsed}
                     >
-                      <Flex gap="sm" align="center">
-                        {isCollapsed ? (
-                          <ChevronRight className="w-4 h-4 text-ui-text-secondary" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-ui-text-secondary" />
-                        )}
-                        <strong>{group.name}</strong>
-                        <Typography variant="caption" color="tertiary">
-                          ({group.labels.length})
-                        </Typography>
-                        {group.description && (
-                          <Typography
-                            variant="caption"
-                            color="tertiary"
-                            className="hidden sm:inline"
-                          >
-                            — {group.description}
+                      <Flex justify="between" align="center">
+                        <Flex gap="sm" align="center">
+                          {isCollapsed ? (
+                            <ChevronRight className="w-4 h-4 text-ui-text-secondary" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-ui-text-secondary" />
+                          )}
+                          <Typography variant="label">{group.name}</Typography>
+                          <Typography variant="caption" color="tertiary">
+                            ({group.labels.length})
                           </Typography>
-                        )}
-                      </Flex>
+                          {group.description && (
+                            <Typography
+                              variant="caption"
+                              color="tertiary"
+                              className="hidden sm:inline"
+                            >
+                              — {group.description}
+                            </Typography>
+                          )}
+                        </Flex>
 
-                      <Flex gap="sm" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCreateLabel(group._id)}
-                          leftIcon={<Plus className="w-3 h-3" />}
+                        <Flex
+                          gap="sm"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e: React.KeyboardEvent) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.stopPropagation();
+                            }
+                          }}
                         >
-                          Add
-                        </Button>
-                        {!isUngrouped && group._id && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditGroup(group)}
-                              leftIcon={<Pencil className="w-3 h-3" />}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => groupDeleteConfirm.confirmDelete(group._id)}
-                              leftIcon={<Trash className="w-3 h-3" />}
-                            >
-                              Delete
-                            </Button>
-                          </>
-                        )}
-                      </Flex>
-                    </Flex>
-
-                    {/* Labels in Group */}
-                    {!isCollapsed && group.labels.length > 0 && (
-                      <Flex direction="column" className="divide-y divide-ui-border">
-                        {group.labels.map((label) => (
-                          <Flex
-                            key={label._id}
-                            justify="between"
-                            align="center"
-                            className="p-3 hover:bg-ui-bg-secondary transition-colors"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCreateLabel(group._id)}
+                            leftIcon={<Plus className="w-3 h-3" />}
                           >
-                            <Flex gap="md" align="center">
-                              <Badge
-                                className="text-brand-foreground"
-                                style={{ backgroundColor: label.color }}
-                              >
-                                {label.name}
-                              </Badge>
-                              <code className="text-xs text-ui-text-tertiary">{label.color}</code>
-                            </Flex>
-
-                            <Flex gap="sm">
+                            Add
+                          </Button>
+                          {!isUngrouped && group._id && (
+                            <>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleEditLabel(label)}
-                                leftIcon={<Pencil className="w-4 h-4" />}
+                                onClick={() => handleEditGroup(group)}
+                                leftIcon={<Pencil className="w-3 h-3" />}
                               >
                                 Edit
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => labelDeleteConfirm.confirmDelete(label._id)}
-                                leftIcon={<Trash className="w-4 h-4" />}
+                                onClick={() => groupDeleteConfirm.confirmDelete(group._id)}
+                                leftIcon={<Trash className="w-3 h-3" />}
                               >
                                 Delete
                               </Button>
+                            </>
+                          )}
+                        </Flex>
+                      </Flex>
+                    </Card>
+
+                    {/* Labels in Group */}
+                    {!isCollapsed && group.labels.length > 0 && (
+                      <Flex direction="column" className="divide-y divide-ui-border">
+                        {group.labels.map((label) => (
+                          <Card
+                            key={label._id}
+                            padding="sm"
+                            radius="none"
+                            variant="ghost"
+                            className="hover:bg-ui-bg-secondary transition-colors"
+                          >
+                            <Flex justify="between" align="center">
+                              <Flex gap="md" align="center">
+                                <Badge
+                                  className="text-brand-foreground"
+                                  style={{ backgroundColor: label.color }}
+                                >
+                                  {label.name}
+                                </Badge>
+                                <Typography variant="inlineCode" color="tertiary">
+                                  {label.color}
+                                </Typography>
+                              </Flex>
+
+                              <Flex gap="sm">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditLabel(label)}
+                                  leftIcon={<Pencil className="w-4 h-4" />}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => labelDeleteConfirm.confirmDelete(label._id)}
+                                  leftIcon={<Trash className="w-4 h-4" />}
+                                >
+                                  Delete
+                                </Button>
+                              </Flex>
                             </Flex>
-                          </Flex>
+                          </Card>
                         ))}
                       </Flex>
                     )}
 
                     {/* Empty Group State */}
                     {!isCollapsed && group.labels.length === 0 && (
-                      <Typography variant="small" color="secondary" className="p-4 text-center">
-                        No labels in this group.{" "}
-                        <button
-                          type="button"
-                          onClick={() => handleCreateLabel(group._id)}
-                          className="text-brand hover:underline"
-                        >
-                          Add one
-                        </button>
-                      </Typography>
+                      <Card padding="md" radius="none" variant="ghost" className="text-center">
+                        <Typography variant="small" color="secondary">
+                          No labels in this group.{" "}
+                          <Button
+                            variant="link"
+                            size="sm"
+                            onClick={() => handleCreateLabel(group._id)}
+                            className="p-0 h-auto text-brand hover:underline"
+                          >
+                            Add one
+                          </Button>
+                        </Typography>
+                      </Card>
                     )}
-                  </div>
+                  </Card>
                 );
               })}
             </Flex>
@@ -397,7 +427,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         open={labelModal.isOpen}
         onOpenChange={(open) => !open && handleCloseLabelModal()}
         title={labelForm.editingId ? "Edit Label" : "Create Label"}
-        className="sm:max-w-md"
+        size="sm"
         footer={
           <>
             <Button
@@ -472,7 +502,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         open={groupModal.isOpen}
         onOpenChange={(open) => !open && handleCloseGroupModal()}
         title={groupForm.editingId ? "Edit Group" : "Create Group"}
-        className="sm:max-w-md"
+        size="sm"
         footer={
           <>
             <Button
