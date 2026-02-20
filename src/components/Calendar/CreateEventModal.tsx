@@ -127,7 +127,7 @@ export function CreateEventModal({
       onOpenChange={onOpenChange}
       title="Create Event"
       description="Add a new event to your calendar"
-      className="sm:max-w-2xl"
+      size="lg"
     >
       <form
         onSubmit={(e) => {

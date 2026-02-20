@@ -37,7 +37,7 @@ export function IssueDetailModal({
         onOpenChange={onOpenChange}
         title="Loading issue details"
         description="Loading content..."
-        className="sm:max-w-4xl"
+        size="xl"
       >
         <Stack as="output" aria-live="polite" aria-busy="true" gap="lg" className="block">
           <span className="sr-only">Loading...</span>
@@ -59,7 +59,8 @@ export function IssueDetailModal({
       onOpenChange={onOpenChange}
       title={issue.title}
       description={`${issue.key} - View and edit issue details`}
-      className="sm:max-w-5xl max-h-panel-lg overflow-y-auto bg-ui-bg-elevated border border-ui-border shadow-elevated"
+      size="2xl"
+      className="overflow-y-auto bg-ui-bg-elevated border border-ui-border shadow-elevated"
       data-testid={TEST_IDS.ISSUE.DETAIL_MODAL}
     >
       {/* Additional issue metadata with icon, badge, and edit button */}

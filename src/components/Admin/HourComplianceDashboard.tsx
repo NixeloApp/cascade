@@ -383,7 +383,6 @@ export function HourComplianceDashboard() {
           }
         }}
         title="Review Compliance Record"
-        className="sm:max-w-lg"
         footer={
           <>
             <Button

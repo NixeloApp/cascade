@@ -246,7 +246,7 @@ export function CreateIssueModal({
       onOpenChange={onOpenChange}
       title="Create Issue"
       description="Form to create a new issue"
-      className="sm:max-w-2xl"
+      size="lg"
     >
       <Stack
         as="form"

@@ -351,12 +351,7 @@ function GenerateKeyModal({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Generate API Key"
-      className="sm:max-w-2xl"
-    >
+    <Dialog open={open} onOpenChange={onOpenChange} title="Generate API Key" size="lg">
       <Stack gap="lg">
         {!generatedKey ? (
           <>
@@ -501,7 +496,7 @@ function UsageStatsModal({
       open={open}
       onOpenChange={onOpenChange}
       title="API Key Usage Statistics"
-      className="sm:max-w-2xl"
+      size="lg"
       footer={
         <Button variant="secondary" onClick={() => onOpenChange(false)}>
           Close

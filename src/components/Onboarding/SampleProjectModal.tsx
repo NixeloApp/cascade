@@ -33,12 +33,7 @@ export function SampleProjectModal({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Welcome to Nixelo!"
-      className="sm:max-w-md"
-    >
+    <Dialog open={open} onOpenChange={onOpenChange} title="Welcome to Nixelo!" size="sm">
       <div className="space-y-4">
         <Typography className="text-ui-text-secondary leading-relaxed">
           Would you like us to create a sample project with demo issues to help you explore Nixelo?

@@ -365,7 +365,7 @@ export function DocumentTemplatesManager({
         open={showModal}
         onOpenChange={(open) => !open && resetForm()}
         title={editingId ? "Edit Template" : "Create Template"}
-        className="sm:max-w-2xl"
+        size="lg"
       >
         <form
           onSubmit={(e) => {

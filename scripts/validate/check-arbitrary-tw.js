@@ -20,6 +20,8 @@ const ALLOWED_PATTERNS = [
   /rounded-\[inherit\]/, // Inherit border-radius
   /top-\[60%\]/, // NavigationMenu indicator position
   /scale-\[0\.9[0-9]\]/, // Active/press scale states (0.95-0.99)
+  /max-h-\[\d+vh\]/, // Panel/modal heights (industry standard - no tokens needed)
+  /max-w-\[calc\(100vw/, // Mobile-friendly width with gutters
 ];
 
 export function run() {

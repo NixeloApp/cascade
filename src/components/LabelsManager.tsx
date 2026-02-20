@@ -427,7 +427,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         open={labelModal.isOpen}
         onOpenChange={(open) => !open && handleCloseLabelModal()}
         title={labelForm.editingId ? "Edit Label" : "Create Label"}
-        className="sm:max-w-md"
+        size="sm"
         footer={
           <>
             <Button
@@ -502,7 +502,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         open={groupModal.isOpen}
         onOpenChange={(open) => !open && handleCloseGroupModal()}
         title={groupForm.editingId ? "Edit Group" : "Create Group"}
-        className="sm:max-w-md"
+        size="sm"
         footer={
           <>
             <Button

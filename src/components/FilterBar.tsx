@@ -197,7 +197,7 @@ function SaveFilterDialog({
       onOpenChange={onOpenChange}
       title="Save Filter"
       description="Save current filter settings"
-      className="sm:max-w-md"
+      size="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onCancel}>

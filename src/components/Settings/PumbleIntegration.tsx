@@ -375,12 +375,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Add Pumble Webhook"
-      className="sm:max-w-2xl"
-    >
+    <Dialog open={open} onOpenChange={onOpenChange} title="Add Pumble Webhook" size="lg">
       <Stack
         gap="lg"
         as="form"
@@ -541,7 +536,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Edit Webhook" className="sm:max-w-2xl">
+    <Dialog open={open} onOpenChange={onOpenChange} title="Edit Webhook" size="lg">
       <Stack
         gap="lg"
         as="form"

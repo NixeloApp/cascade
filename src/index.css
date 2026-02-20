@@ -216,15 +216,8 @@
   --color-scrollbar-thumb-hover: light-dark(rgba(0, 0, 0, 0.3), rgba(255, 255, 255, 0.3));
   --color-scrollbar-track: transparent;
 
-  /* Scrollable Panel Heights */
-  --max-height-panel: 80vh;
-  --max-height-panel-lg: 85vh;
-  --max-height-panel-sm: 50vh;
-  --max-height-panel-md: 60vh;
-
   /* Modal/Dialog Max Widths (mobile-friendly with gutters) */
   --max-width-dialog-mobile: calc(100% - 2rem);
-  --max-width-notification: calc(100vw - 2rem);
   --max-width-toast: 90%;
 
   /* Auth Content Width */
@@ -905,24 +898,3 @@ body {
   transition: all var(--duration-slow) ease;
 }
 
-/* Panel height constraints (for scrollable panels, modals, popovers) */
-.max-h-panel {
-  max-height: var(--max-height-panel);
-}
-
-.max-h-panel-lg {
-  max-height: var(--max-height-panel-lg);
-}
-
-.max-h-panel-sm {
-  max-height: var(--max-height-panel-sm);
-}
-
-.max-h-panel-md {
-  max-height: var(--max-height-panel-md);
-}
-
-/* Notification popover max-width (mobile-friendly with gutters) */
-.max-w-notification {
-  max-width: var(--max-width-notification);
-}

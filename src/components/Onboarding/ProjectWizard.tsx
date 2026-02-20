@@ -115,7 +115,7 @@ export function ProjectWizard({
       onOpenChange={onOpenChange}
       title="Create New Project"
       description="Set up your project in a few easy steps"
-      className="sm:max-w-2xl"
+      size="lg"
     >
       <Stack gap="lg">
         {/* Mintlify-inspired step indicator */}

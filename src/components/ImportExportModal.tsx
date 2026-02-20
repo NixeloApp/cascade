@@ -49,7 +49,7 @@ export function ImportExportModal({
       onOpenChange={onOpenChange}
       title="Import / Export Issues"
       description="Manage issue import and export"
-      className="sm:max-w-4xl"
+      size="xl"
     >
       <Stack gap="lg">
         {/* Mode Selection */}

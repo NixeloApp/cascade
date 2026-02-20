@@ -183,7 +183,7 @@ export function MentionInput({
 
       {/* Mention Suggestions Dropdown */}
       {showSuggestions && filteredMembers.length > 0 && (
-        <div className="absolute bottom-full left-0 mb-2 w-64 bg-ui-bg border border-ui-border rounded-lg shadow-lg max-h-panel overflow-y-auto z-50">
+        <div className="absolute bottom-full left-0 mb-2 w-64 bg-ui-bg border border-ui-border rounded-lg shadow-lg max-h-[80vh] overflow-y-auto z-50">
           {filteredMembers.map((member, index: number) => (
             <button
               type="button"

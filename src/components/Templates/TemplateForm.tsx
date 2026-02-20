@@ -136,7 +136,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
       open={open}
       onOpenChange={onOpenChange}
       title={template ? "Edit Template" : "Create Template"}
-      className="sm:max-w-2xl"
+      size="lg"
     >
       <Stack
         as="form"

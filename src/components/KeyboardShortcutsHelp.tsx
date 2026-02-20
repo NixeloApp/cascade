@@ -263,7 +263,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       onOpenChange={handleOpenChange}
       title="Keyboard Shortcuts"
       description="Available keyboard shortcuts for navigation and actions"
-      className="sm:max-w-md"
+      size="sm"
     >
       {/* Search Input */}
       <Stack gap="md">
@@ -281,7 +281,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       </Stack>
 
       {/* Shortcuts List */}
-      <ScrollArea className="max-h-panel-md">
+      <ScrollArea className="max-h-[60vh]">
         {hasResults ? (
           <Flex direction="column" gap="md">
             {filteredCategories.map((category) => (

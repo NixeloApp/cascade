@@ -15,9 +15,10 @@ export function UserProfile({ userId, open, onOpenChange }: UserProfileProps) {
       open={open}
       onOpenChange={onOpenChange}
       title="User Profile"
-      className="sm:max-w-4xl p-0 gap-0 overflow-hidden"
+      size="xl"
+      className="p-0 gap-0 overflow-hidden"
     >
-      <Card padding="lg" variant="ghost" radius="none" className="max-h-panel overflow-y-auto pt-0">
+      <Card padding="lg" variant="ghost" radius="none" className="overflow-y-auto pt-0">
         <ProfileContent userId={userId} />
       </Card>
     </Dialog>

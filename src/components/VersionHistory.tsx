@@ -98,7 +98,8 @@ export function VersionHistory({
       onOpenChange={onOpenChange}
       title="Version History"
       description="View and restore previous versions of this document"
-      className="sm:max-w-2xl max-h-panel flex flex-col bg-ui-bg-soft border-ui-border"
+      size="lg"
+      className="flex flex-col bg-ui-bg-soft border-ui-border"
       footer={
         <Typography variant="meta">
           Tip: Versions are saved automatically every minute when you edit. Up to 50 recent versions

@@ -127,7 +127,7 @@ export function CreateProjectFromTemplate({
       open={open}
       onOpenChange={onOpenChange}
       title={step === "select" ? "Choose a Template" : "Configure Project"}
-      className="sm:max-w-4xl"
+      size="xl"
       footer={
         step === "configure" ? (
           <Flex direction="column" gap="sm" className="sm:flex-row sm:justify-between w-full">

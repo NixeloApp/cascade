@@ -117,7 +117,6 @@ export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookF
       onOpenChange={onOpenChange}
       title={webhook ? "Edit Webhook" : "Create Webhook"}
       description="Configure webhook URL and events to trigger notifications"
-      className="sm:max-w-lg"
     >
       <Stack
         as="form"

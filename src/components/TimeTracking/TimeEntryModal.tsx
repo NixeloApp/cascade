@@ -376,7 +376,7 @@ export function TimeEntryModal({
       open={open}
       onOpenChange={onOpenChange}
       title={computed.isTimerMode ? "Start Timer" : "Log Time"}
-      className="sm:max-w-2xl"
+      size="lg"
       footer={
         <>
           <Button type="button" onClick={() => onOpenChange(false)} variant="secondary">

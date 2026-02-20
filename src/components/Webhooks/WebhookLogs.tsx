@@ -94,7 +94,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
       onOpenChange={onOpenChange}
       title="Webhook Delivery Logs"
       description="View recent webhook delivery attempts and their status"
-      className="sm:max-w-5xl"
+      size="2xl"
     >
       {!executions || executions.length === 0 ? (
         <Card padding="xl" variant="ghost">

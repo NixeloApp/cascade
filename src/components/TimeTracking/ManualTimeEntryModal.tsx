@@ -235,12 +235,7 @@ export function ManualTimeEntryModal({
   const isDurationInputValid = durationInput.trim() === "" || durationSeconds > 0;
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Log Time Manually"
-      className="sm:max-w-2xl"
-    >
+    <Dialog open={open} onOpenChange={onOpenChange} title="Log Time Manually" size="lg">
       <form
         onSubmit={(e) => {
           e.preventDefault();
