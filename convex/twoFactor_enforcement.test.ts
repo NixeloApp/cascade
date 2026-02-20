@@ -32,17 +32,22 @@ describe("Two Factor Enforcement", () => {
   it("should allow authenticated queries when 2FA is verified", async () => {
     const t = convexTest(schema, modules);
     const userId = await createTestUser(t);
+    const sessionId = "test-session-123";
 
     // Enable 2FA and verify it
     await t.run(async (ctx) => {
       await ctx.db.patch(userId, {
         twoFactorEnabled: true,
         twoFactorSecret: "SECRET",
-        twoFactorVerifiedAt: Date.now(),
+      });
+      await ctx.db.insert("twoFactorSessions", {
+        userId,
+        sessionId,
+        verifiedAt: Date.now(),
       });
     });
 
-    const asUser = asAuthenticatedUser(t, userId);
+    const asUser = t.withIdentity({ subject: `${userId}|${sessionId}` });
     const user = await asUser.query(api.users.getCurrent);
     expect(user).not.toBeNull();
   });
