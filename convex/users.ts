@@ -12,6 +12,7 @@ import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
+import { getOrganizationMemberships } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import {
@@ -77,12 +78,12 @@ export const getUser = authenticatedQuery({
     }
 
     // Check for shared organization
-    const myOrgs = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .take(MAX_PAGE_SIZE);
+    // Optimization: Use cached memberships for the current user
+    const { items: myOrgs } = await getOrganizationMemberships(ctx, ctx.userId);
 
     if (myOrgs.length > 0) {
+      // Optimization: Fetch only necessary memberships for the target user
+      // We can't easily cache for the target user (since they vary), but we limit the fetch
       const theirOrgs = await ctx.db
         .query("organizationMembers")
         .withIndex("by_user", (q) => q.eq("userId", args.id))
@@ -408,26 +409,93 @@ export const isOrganizationAdmin = authenticatedQuery({
   args: {},
   returns: v.boolean(),
   handler: async (ctx) => {
-    // Primary: Check if user is admin or owner in any organization
-    const adminMembership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user_role", (q) => q.eq("userId", ctx.userId).eq("role", "admin"))
-      .first();
+    // Optimization: Use cached memberships for the current user
+    const { items: myOrgs, hasMore } = await getOrganizationMemberships(ctx, ctx.userId);
 
-    if (adminMembership) return true;
+    const hasAdminRole = myOrgs.some((m) => m.role === "admin" || m.role === "owner");
+    if (hasAdminRole) return true;
 
-    const ownerMembership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user_role", (q) => q.eq("userId", ctx.userId).eq("role", "owner"))
-      .first();
+    // If cache was truncated, check for admin/owner role via index
+    if (hasMore) {
+      const adminMembership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user_role", (q) => q.eq("userId", ctx.userId).eq("role", "admin"))
+        .first();
 
-    return !!ownerMembership;
+      if (adminMembership) return true;
+
+      const ownerMembership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user_role", (q) => q.eq("userId", ctx.userId).eq("role", "owner"))
+        .first();
+
+      return !!ownerMembership;
+    }
+
+    return false;
   },
 });
 
 // Helper to construct allowed project filter
 function isAllowedProject(q: FilterBuilder<GenericTableInfo>, projectIds: Id<"projects">[]) {
   return q.or(...projectIds.map((id) => q.eq(q.field("projectId"), id)));
+}
+
+/**
+ * Helper to count issues reported by a user without project restrictions.
+ */
+async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"users">) {
+  return await efficientCount(
+    ctx.db
+      .query("issues")
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true)),
+  );
+}
+
+/**
+ * Helper to count issues reported by a user in specific projects (optimized for few projects).
+ */
+async function countIssuesByReporterFast(
+  ctx: QueryCtx,
+  reporterId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  const counts = await Promise.all(
+    Array.from(allowedProjectIds).map((projectId) =>
+      efficientCount(
+        ctx.db.query("issues").withIndex("by_project_reporter", (q) =>
+          q
+            .eq("projectId", projectId as Id<"projects">)
+            .eq("reporterId", reporterId)
+            .lt("isDeleted", true),
+        ),
+        MAX_ISSUES_FOR_STATS,
+      ),
+    ),
+  );
+  // Apply global cap to match slow-path behavior
+  return Math.min(
+    counts.reduce((a, b) => a + b, 0),
+    MAX_ISSUES_FOR_STATS,
+  );
+}
+
+/**
+ * Helper to count issues reported by a user in specific projects (filtered scan).
+ */
+async function countIssuesByReporterFiltered(
+  ctx: QueryCtx,
+  reporterId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
+  return await efficientCount(
+    ctx.db
+      .query("issues")
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true))
+      .filter((q) => isAllowedProject(q, projectIds)),
+    MAX_ISSUES_FOR_STATS,
+  );
 }
 
 /**
@@ -442,46 +510,102 @@ async function countIssuesByReporter(
   reporterId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (allowedProjectIds) {
-    if (allowedProjectIds.size === 0) return 0;
+  if (!allowedProjectIds) {
+    return countIssuesByReporterUnrestricted(ctx, reporterId);
+  }
 
-    // Optimization: If fewer projects than threshold, query each project individually
-    // using the by_project_reporter index. This is O(P) instead of O(TotalIssues).
-    if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
-      const counts = await Promise.all(
-        Array.from(allowedProjectIds).map((projectId) =>
-          efficientCount(
-            ctx.db.query("issues").withIndex("by_project_reporter", (q) =>
-              q
-                .eq("projectId", projectId as Id<"projects">)
-                .eq("reporterId", reporterId)
-                .lt("isDeleted", true),
-            ),
-            MAX_ISSUES_FOR_STATS,
-          ),
-        ),
-      );
-      // Apply global cap to match slow-path behavior
-      return Math.min(
-        counts.reduce((a, b) => a + b, 0),
-        MAX_ISSUES_FOR_STATS,
-      );
-    }
+  if (allowedProjectIds.size === 0) return 0;
 
-    const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
-    return await efficientCount(
+  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
+    return countIssuesByReporterFast(ctx, reporterId, allowedProjectIds);
+  }
+
+  return countIssuesByReporterFiltered(ctx, reporterId, allowedProjectIds);
+}
+
+/**
+ * Helper to count issues assigned to a user without project restrictions.
+ */
+async function countIssuesByAssigneeUnrestricted(ctx: QueryCtx, assigneeId: Id<"users">) {
+  return await Promise.all([
+    efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true))
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true)),
+    ),
+    efficientCount(
+      ctx.db
+        .query("issues")
+        .withIndex("by_assignee_status", (q) =>
+          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+        ),
+    ),
+  ]);
+}
+
+/**
+ * Helper to count issues assigned to a user in specific projects (optimized for few projects).
+ */
+async function countIssuesByAssigneeFast(
+  ctx: QueryCtx,
+  assigneeId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
+
+  const results = await Promise.all(
+    projectIds.map(async (projectId) => {
+      // Fetch all assigned issues in this project
+      // We fetch up to MAX_ISSUES_FOR_STATS per project.
+      const issues = await ctx.db
+        .query("issues")
+        .withIndex("by_project_assignee", (q) =>
+          q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+        )
+        .take(MAX_ISSUES_FOR_STATS);
+
+      const assigned = issues.length;
+      const completed = issues.filter((i) => i.status === "done").length;
+      return [assigned, completed] as [number, number];
+    }),
+  );
+
+  const totalAssigned = results.reduce((acc, [a]) => acc + a, 0);
+  const totalCompleted = results.reduce((acc, [, c]) => acc + c, 0);
+  // Apply global cap to match slow-path behavior
+  return [
+    Math.min(totalAssigned, MAX_ISSUES_FOR_STATS),
+    Math.min(totalCompleted, MAX_ISSUES_FOR_STATS),
+  ];
+}
+
+/**
+ * Helper to count issues assigned to a user in specific projects (filtered scan).
+ */
+async function countIssuesByAssigneeFiltered(
+  ctx: QueryCtx,
+  assigneeId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
+  return await Promise.all([
+    efficientCount(
+      ctx.db
+        .query("issues")
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true))
         .filter((q) => isAllowedProject(q, projectIds)),
       MAX_ISSUES_FOR_STATS,
-    );
-  }
-  return await efficientCount(
-    ctx.db
-      .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true)),
-  );
+    ),
+    efficientCount(
+      ctx.db
+        .query("issues")
+        .withIndex("by_assignee_status", (q) =>
+          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+        )
+        .filter((q) => isAllowedProject(q, projectIds)),
+      MAX_ISSUES_FOR_STATS,
+    ),
+  ]);
 }
 
 /**
@@ -498,74 +622,17 @@ async function countIssuesByAssignee(
   assigneeId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (allowedProjectIds) {
-    if (allowedProjectIds.size === 0) return [0, 0];
-
-    // Optimization: If fewer projects than threshold, query each project individually
-    // using the by_project_assignee index.
-    if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
-      const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
-
-      const results = await Promise.all(
-        projectIds.map(async (projectId) => {
-          // Fetch all assigned issues in this project
-          // We fetch up to MAX_ISSUES_FOR_STATS per project.
-          const issues = await ctx.db
-            .query("issues")
-            .withIndex("by_project_assignee", (q) =>
-              q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
-            )
-            .take(MAX_ISSUES_FOR_STATS);
-
-          const assigned = issues.length;
-          const completed = issues.filter((i) => i.status === "done").length;
-          return [assigned, completed];
-        }),
-      );
-
-      const totalAssigned = results.reduce((acc, [a]) => acc + a, 0);
-      const totalCompleted = results.reduce((acc, [, c]) => acc + c, 0);
-      // Apply global cap to match slow-path behavior
-      return [
-        Math.min(totalAssigned, MAX_ISSUES_FOR_STATS),
-        Math.min(totalCompleted, MAX_ISSUES_FOR_STATS),
-      ];
-    }
-
-    const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
-    return await Promise.all([
-      efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true))
-          .filter((q) => isAllowedProject(q, projectIds)),
-        MAX_ISSUES_FOR_STATS,
-      ),
-      efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_assignee_status", (q) =>
-            q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
-          )
-          .filter((q) => isAllowedProject(q, projectIds)),
-        MAX_ISSUES_FOR_STATS,
-      ),
-    ]);
+  if (!allowedProjectIds) {
+    return countIssuesByAssigneeUnrestricted(ctx, assigneeId);
   }
-  return await Promise.all([
-    efficientCount(
-      ctx.db
-        .query("issues")
-        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true)),
-    ),
-    efficientCount(
-      ctx.db
-        .query("issues")
-        .withIndex("by_assignee_status", (q) =>
-          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
-        ),
-    ),
-  ]);
+
+  if (allowedProjectIds.size === 0) return [0, 0];
+
+  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
+    return countIssuesByAssigneeFast(ctx, assigneeId, allowedProjectIds);
+  }
+
+  return countIssuesByAssigneeFiltered(ctx, assigneeId, allowedProjectIds);
 }
 
 /**
