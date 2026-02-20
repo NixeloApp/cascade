@@ -688,6 +688,28 @@ async function countComments(
 }
 
 /**
+ * Helper to count projects a user is a member of (optimized for few projects).
+ */
+async function countProjectsFast(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  allowedProjectIds: Set<string>,
+): Promise<number> {
+  const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
+  const checks = await Promise.all(
+    projectIds.map((projectId) =>
+      ctx.db
+        .query("projectMembers")
+        .withIndex("by_project_user", (q) =>
+          q.eq("projectId", projectId).eq("userId", userId),
+        )
+        .unique(),
+    ),
+  );
+  return checks.filter((m) => m && !m.isDeleted).length;
+}
+
+/**
  * Count projects the user is a member of.
  *
  * @param ctx - Query context
@@ -700,6 +722,10 @@ async function countProjects(
   allowedProjectIds: Set<string> | null,
 ) {
   if (allowedProjectIds) {
+    if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
+      return countProjectsFast(ctx, userId, allowedProjectIds);
+    }
+
     const projectMembershipsAll = await ctx.db
       .query("projectMembers")
       .withIndex("by_user", (q) => q.eq("userId", userId))
