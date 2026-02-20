@@ -78,7 +78,7 @@ export const checkPasswordResetRateLimit = internalMutation({
 });
 
 /**
- * Check rate limit for password reset by email (for OTPPasswordReset provider)
+ * Check rate limit for password reset by email (for otpPasswordReset provider)
  * Uses distinct bucket from IP-based rate limiting for independent thresholds
  */
 export const checkPasswordResetRateLimitByEmail = internalMutation({
@@ -89,7 +89,7 @@ export const checkPasswordResetRateLimitByEmail = internalMutation({
 });
 
 /**
- * Check rate limit for email verification (for OTPVerification provider)
+ * Check rate limit for email verification (for otpVerification provider)
  */
 export const checkEmailVerificationRateLimit = internalMutation({
   args: { email: v.string() },

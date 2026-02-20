@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sendEmail } from "./email";
-import { OTPVerification } from "./OTPVerification";
+import { otpVerification } from "./otpVerification";
 
 // Mock the email module
 vi.mock("./email", () => ({
@@ -16,9 +16,9 @@ vi.mock("../emails/VerifyEmail", () => ({
   VerifyEmail: vi.fn(() => null),
 }));
 
-const sendVerificationRequest = (OTPVerification as any).options
-  ? (OTPVerification as any).options.sendVerificationRequest
-  : (OTPVerification as any).sendVerificationRequest;
+const sendVerificationRequest = (otpVerification as any).options
+  ? (otpVerification as any).options.sendVerificationRequest
+  : (otpVerification as any).sendVerificationRequest;
 
 describe("OTP Verification Rate Limit", () => {
   beforeEach(() => {

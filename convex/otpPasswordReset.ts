@@ -18,7 +18,7 @@ import { logger } from "./lib/logger";
  * For test emails (@inbox.mailtrap.io), the plaintext OTP is stored in the
  * testOtpCodes table so E2E tests can retrieve it via /e2e/get-latest-otp.
  */
-export const OTPPasswordReset = Resend({
+export const otpPasswordReset = Resend({
   id: "otp-password-reset",
   apiKey: "unused", // Required by interface but we use our own email system
 
@@ -55,7 +55,7 @@ export const OTPPasswordReset = Resend({
         await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "reset" });
       } catch (e) {
         // Log but don't fail, attempt to send email anyway
-        logger.error(`[OTPPasswordReset] Failed to store test OTP: ${e}`);
+        logger.error(`[otpPasswordReset] Failed to store test OTP: ${e}`);
       }
     }
 
@@ -74,7 +74,7 @@ export const OTPPasswordReset = Resend({
       // For test emails, don't fail - OTP is stored in testOtpCodes
       if (isTestEmail) {
         logger.warn(
-          `[OTPPasswordReset] Email send failed for test user, continuing: ${result.error}`,
+          `[otpPasswordReset] Email send failed for test user, continuing: ${result.error}`,
         );
         return;
       }

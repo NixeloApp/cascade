@@ -1,7 +1,7 @@
 import { getFunctionName } from "convex/server";
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { OTPPasswordReset } from "./OTPPasswordReset";
+import { otpPasswordReset } from "./otpPasswordReset";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -19,9 +19,9 @@ vi.mock("../emails/VerifyEmail", () => ({
 }));
 
 // Access the sendVerificationRequest function
-const sendVerificationRequest = (OTPPasswordReset as any).options
-  ? (OTPPasswordReset as any).options.sendVerificationRequest
-  : (OTPPasswordReset as any).sendVerificationRequest;
+const sendVerificationRequest = (otpPasswordReset as any).options
+  ? (otpPasswordReset as any).options.sendVerificationRequest
+  : (otpPasswordReset as any).sendVerificationRequest;
 
 describe("OTP Security", () => {
   const originalEnv = process.env;
