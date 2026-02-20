@@ -1,5 +1,10 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import type {
+  AutomationActionType,
+  AutomationActionValue,
+  AutomationTrigger,
+} from "@convex/validators";
 import { useMutation } from "convex/react";
 import { ArrowRight, Pause, Pencil, Play, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -15,10 +20,10 @@ interface AutomationRuleCardProps {
     _id: Id<"automationRules">;
     name: string;
     description?: string;
-    trigger: string;
+    trigger: AutomationTrigger;
     triggerValue?: string;
-    actionType: string;
-    actionValue: string;
+    actionType: AutomationActionType;
+    actionValue: AutomationActionValue;
     isActive: boolean;
     executionCount: number;
   };

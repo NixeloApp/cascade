@@ -1,11 +1,12 @@
 // Helper to create properly typed mock IDs
 import type { Id, TableNames } from "@convex/_generated/dataModel";
+import type { AutomationActionValue } from "@convex/validators";
 import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { showError, showSuccess } from "@/lib/toast";
-import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
+import { render, screen, waitFor } from "@/test/custom-render";
 import { AutomationRulesManager } from "./AutomationRulesManager";
 
 function mockId<T extends TableNames>(id: string): Id<T> {
@@ -150,10 +151,8 @@ describe("AutomationRulesManager - Component Behavior", () => {
       render(<AutomationRulesManager projectId={mockProjectId} />);
 
       await user.click(screen.getByRole("button", { name: /Create Rule/i }));
-      // Leave name empty
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: '{"test":"value"}' },
-      });
+      // Leave name empty, but fill label value
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "urgent");
 
       // Get the submit button inside the dialog (the second one)
       const submitButtons = screen.getAllByRole("button", { name: /Create Rule/i });
@@ -173,7 +172,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "Test Rule",
       );
-      // Leave actionValue empty
+      // Leave action value empty
       // Click the dialog's save button (exact match without the + prefix)
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
@@ -191,9 +190,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "   ",
       );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: '{"test":"value"}' },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "urgent");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       expect(showError).toHaveBeenCalled();
@@ -209,18 +206,17 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "Test Rule",
       );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "   " },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "   ");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       expect(showError).toHaveBeenCalled();
     });
   });
 
-  describe("JSON Validation Logic", () => {
-    it("should reject invalid JSON in actionValue", async () => {
+  describe("Typed Action Value Logic", () => {
+    it("should accept valid label name", async () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
+      mockUpdateRule.mockResolvedValue({ _id: "rule1" });
 
       render(<AutomationRulesManager projectId={mockProjectId} />);
 
@@ -229,9 +225,37 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "Test Rule",
       );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "not valid json" },
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "urgent");
+      await user.click(screen.getByRole("button", { name: "Create Rule" }));
+
+      await waitFor(() => {
+        expect(mockUpdateRule).toHaveBeenCalledWith(
+          expect.objectContaining({
+            actionValue: { type: "add_label", label: "urgent" },
+          }),
+        );
+        expect(showError).not.toHaveBeenCalled();
       });
+    });
+
+    it("should reject invalid priority value", async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      mockUpdateRule.mockResolvedValue({ _id: "rule1" });
+
+      render(<AutomationRulesManager projectId={mockProjectId} />);
+
+      await user.click(screen.getByRole("button", { name: /Create Rule/i }));
+      await user.type(
+        screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
+        "Test Rule",
+      );
+
+      // Change to set_priority action
+      const actionSelect = screen.getAllByRole("combobox")[1];
+      await user.selectOptions(actionSelect, "set_priority");
+
+      // Enter invalid priority
+      await user.type(screen.getByPlaceholderText(/lowest, low, medium, high/i), "invalid");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {
@@ -240,7 +264,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
       });
     });
 
-    it("should accept valid JSON in actionValue", async () => {
+    it("should accept valid priority value", async () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       mockUpdateRule.mockResolvedValue({ _id: "rule1" });
 
@@ -251,56 +275,20 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "Test Rule",
       );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: '{"label":"urgent"}' },
-      });
+
+      // Change to set_priority action
+      const actionSelect = screen.getAllByRole("combobox")[1];
+      await user.selectOptions(actionSelect, "set_priority");
+
+      await user.type(screen.getByPlaceholderText(/lowest, low, medium, high/i), "high");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {
-        expect(mockUpdateRule).toHaveBeenCalled();
-        expect(showError).not.toHaveBeenCalled();
-      });
-    });
-
-    it("should accept empty object as valid JSON", async () => {
-      const user = userEvent.setup({ pointerEventsCheck: 0 });
-      mockUpdateRule.mockResolvedValue({ _id: "rule1" });
-
-      render(<AutomationRulesManager projectId={mockProjectId} />);
-
-      await user.click(screen.getByRole("button", { name: /Create Rule/i }));
-      await user.type(
-        screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
-        "Test Rule",
-      );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "{}" },
-      });
-      await user.click(screen.getByRole("button", { name: "Create Rule" }));
-
-      await waitFor(() => {
-        expect(mockUpdateRule).toHaveBeenCalled();
-      });
-    });
-
-    it("should accept complex nested JSON", async () => {
-      const user = userEvent.setup({ pointerEventsCheck: 0 });
-      mockUpdateRule.mockResolvedValue({ _id: "rule1" });
-
-      render(<AutomationRulesManager projectId={mockProjectId} />);
-
-      await user.click(screen.getByRole("button", { name: /Create Rule/i }));
-      await user.type(
-        screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
-        "Test",
-      );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: '{"data":{"nested":"value"},"array":[1,2,3]}' },
-      });
-      await user.click(screen.getByRole("button", { name: "Create Rule" }));
-
-      await waitFor(() => {
-        expect(mockUpdateRule).toHaveBeenCalled();
+        expect(mockUpdateRule).toHaveBeenCalledWith(
+          expect.objectContaining({
+            actionValue: { type: "set_priority", priority: "high" },
+          }),
+        );
       });
     });
   });
@@ -317,9 +305,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "  Trimmed Name  ",
       );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "{}" },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "label");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {
@@ -343,9 +329,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         "Test",
       );
       // Leave description empty
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "{}" },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "label");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {
@@ -369,9 +353,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         "Test",
       );
       await user.type(screen.getByPlaceholderText(/Optional description/i), "   ");
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "{}" },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "label");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {
@@ -395,9 +377,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         "Test",
       );
       // Leave trigger value empty
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "{}" },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "label");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {
@@ -415,10 +395,13 @@ describe("AutomationRulesManager - Component Behavior", () => {
       _id: mockId<"automationRules">("rule1"),
       name: "Existing Rule",
       description: "A description",
-      trigger: "priority_changed",
+      trigger: "priority_changed" as const,
       triggerValue: "high",
-      actionType: "send_notification",
-      actionValue: '{"message":"High priority!"}',
+      actionType: "send_notification" as const,
+      actionValue: {
+        type: "send_notification",
+        message: "High priority!",
+      } as AutomationActionValue,
       isActive: true,
       executionCount: 10,
     };
@@ -434,7 +417,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
       expect(screen.getByDisplayValue("Existing Rule")).toBeInTheDocument();
       expect(screen.getByDisplayValue("A description")).toBeInTheDocument();
       expect(screen.getByDisplayValue("high")).toBeInTheDocument();
-      expect(screen.getByDisplayValue('{"message":"High priority!"}')).toBeInTheDocument();
+      expect(screen.getByDisplayValue("High priority!")).toBeInTheDocument();
     });
 
     it("should show 'Edit Automation Rule' title in edit mode", async () => {
@@ -475,7 +458,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
       expect(actionSelect.value).toBe("send_notification");
     });
 
-    it("should call updateRule instead of createRule when saving in edit mode", async () => {
+    it("should call updateRule when saving in edit mode", async () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue([existingRule]);
       mockUpdateRule.mockResolvedValue({});
@@ -486,7 +469,6 @@ describe("AutomationRulesManager - Component Behavior", () => {
       await user.click(screen.getByRole("button", { name: /Update Rule/i }));
 
       await waitFor(() => {
-        expect(mockUpdateRule).toHaveBeenCalled();
         expect(mockUpdateRule).toHaveBeenCalled();
       });
     });
@@ -521,10 +503,10 @@ describe("AutomationRulesManager - Component Behavior", () => {
       _id: mockId<"automationRules">("rule1"),
       name: "Auto Label High Priority",
       description: "Adds urgent label to high priority items",
-      trigger: "priority_changed",
+      trigger: "priority_changed" as const,
       triggerValue: "high",
-      actionType: "add_label",
-      actionValue: '{"label":"urgent"}',
+      actionType: "add_label" as const,
+      actionValue: { type: "add_label", label: "urgent" } as AutomationActionValue,
       isActive: true,
       executionCount: 42,
     };
@@ -604,9 +586,9 @@ describe("AutomationRulesManager - Component Behavior", () => {
     const activeRule = {
       _id: mockId<"automationRules">("rule1"),
       name: "Test Rule",
-      trigger: "status_changed",
-      actionType: "add_label",
-      actionValue: "{}",
+      trigger: "status_changed" as const,
+      actionType: "add_label" as const,
+      actionValue: { type: "add_label", label: "test" } as AutomationActionValue,
       isActive: true,
       executionCount: 0,
     };
@@ -614,7 +596,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
     it("should show pause icon for active rules", () => {
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue([activeRule]);
 
-      const { container } = render(<AutomationRulesManager projectId={mockProjectId} />);
+      render(<AutomationRulesManager projectId={mockProjectId} />);
 
       // Icon is rendered as SVG, check for aria-label instead
       expect(screen.getByRole("button", { name: /Disable rule/i })).toBeInTheDocument();
@@ -624,7 +606,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
       const inactiveRule = { ...activeRule, isActive: false };
       (useQuery as ReturnType<typeof vi.fn>).mockReturnValue([inactiveRule]);
 
-      const { container } = render(<AutomationRulesManager projectId={mockProjectId} />);
+      render(<AutomationRulesManager projectId={mockProjectId} />);
 
       // Icon is rendered as SVG, check for aria-label instead
       expect(screen.getByRole("button", { name: /Enable rule/i })).toBeInTheDocument();
@@ -707,9 +689,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "Test",
       );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "{}" },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "label");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {
@@ -723,9 +703,9 @@ describe("AutomationRulesManager - Component Behavior", () => {
       const rule = {
         _id: mockId<"automationRules">("rule1"),
         name: "Test",
-        trigger: "status_changed",
-        actionType: "add_label",
-        actionValue: "{}",
+        trigger: "status_changed" as const,
+        actionType: "add_label" as const,
+        actionValue: { type: "add_label", label: "test" } as AutomationActionValue,
         isActive: true,
         executionCount: 0,
       };
@@ -754,9 +734,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "Test",
       );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "{}" },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "label");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {
@@ -776,9 +754,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
         screen.getByPlaceholderText(/e.g., Auto-assign high priority issues/i),
         "Test",
       );
-      fireEvent.change(screen.getByPlaceholderText(/\{"label": "urgent"\}/i), {
-        target: { value: "{}" },
-      });
+      await user.type(screen.getByPlaceholderText(/Enter label name/i), "label");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
       await waitFor(() => {

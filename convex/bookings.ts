@@ -7,6 +7,7 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate, validateEmail } from "./lib/constrainedValidators";
 import { conflict, notFound, rateLimited, requireOwned, validation } from "./lib/errors";
 import { MINUTE } from "./lib/timeUtils";
+import { bookerAnswers } from "./validators";
 
 /**
  * Bookings - Handle meeting bookings via booking pages
@@ -20,7 +21,7 @@ export const createBooking = mutation({
     bookerName: v.string(),
     bookerEmail: v.string(),
     bookerPhone: v.optional(v.string()),
-    bookerAnswers: v.optional(v.string()), // JSON string
+    bookerAnswers: v.optional(bookerAnswers), // Typed array of form answers
     startTime: v.number(), // Unix timestamp
     timezone: v.string(),
   },

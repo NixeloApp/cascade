@@ -4,6 +4,12 @@ import { authenticatedMutation, projectAdminMutation, projectQuery } from "./cus
 import { notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { assertIsProjectAdmin } from "./projectAccess";
+import {
+  type AutomationActionValue,
+  automationActionTypes,
+  automationActionValue,
+  automationTriggers,
+} from "./validators";
 
 export const list = projectQuery({
   args: {},
@@ -20,10 +26,10 @@ export const create = projectAdminMutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
-    trigger: v.string(),
+    trigger: automationTriggers,
     triggerValue: v.optional(v.string()),
-    actionType: v.string(),
-    actionValue: v.string(),
+    actionType: automationActionTypes,
+    actionValue: automationActionValue,
   },
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check
@@ -50,10 +56,10 @@ export const update = authenticatedMutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     isActive: v.optional(v.boolean()),
-    trigger: v.optional(v.string()),
+    trigger: v.optional(automationTriggers),
     triggerValue: v.optional(v.string()),
-    actionType: v.optional(v.string()),
-    actionValue: v.optional(v.string()),
+    actionType: v.optional(automationActionTypes),
+    actionValue: v.optional(automationActionValue),
   },
   handler: async (ctx, args) => {
     const rule = await ctx.db.get(args.id);
@@ -105,7 +111,7 @@ export const executeRules = internalMutation({
   args: {
     projectId: v.id("projects"),
     issueId: v.id("issues"),
-    trigger: v.string(),
+    trigger: automationTriggers,
     triggerValue: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -125,30 +131,30 @@ export const executeRules = internalMutation({
         continue;
       }
 
-      // Execute the action
+      // Execute the action - actionValue is now typed!
       try {
-        const actionParams = JSON.parse(rule.actionValue);
+        const action = rule.actionValue as AutomationActionValue;
 
-        switch (rule.actionType) {
+        switch (action.type) {
           case "set_assignee":
             await ctx.db.patch(args.issueId, {
-              assigneeId: actionParams.assigneeId || null,
+              assigneeId: action.assigneeId ?? undefined,
               updatedAt: Date.now(),
             });
             break;
 
           case "set_priority":
             await ctx.db.patch(args.issueId, {
-              priority: actionParams.priority,
+              priority: action.priority,
               updatedAt: Date.now(),
             });
             break;
 
           case "add_label": {
             const currentLabels = issue.labels || [];
-            if (!currentLabels.includes(actionParams.label)) {
+            if (!currentLabels.includes(action.label)) {
               await ctx.db.patch(args.issueId, {
-                labels: [...currentLabels, actionParams.label],
+                labels: [...currentLabels, action.label],
                 updatedAt: Date.now(),
               });
             }
@@ -159,10 +165,14 @@ export const executeRules = internalMutation({
             await ctx.db.insert("issueComments", {
               issueId: args.issueId,
               authorId: rule.createdBy,
-              content: actionParams.comment,
+              content: action.comment,
               mentions: [],
               updatedAt: Date.now(),
             });
+            break;
+
+          case "send_notification":
+            // TODO: Implement notification sending
             break;
         }
 

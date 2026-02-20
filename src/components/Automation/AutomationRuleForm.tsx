@@ -1,5 +1,10 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import type {
+  AutomationActionType,
+  AutomationActionValue,
+  AutomationTrigger,
+} from "@convex/validators";
 import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { showError, showSuccess } from "@/lib/toast";
@@ -15,18 +20,117 @@ interface AutomationRuleFormProps {
     _id: Id<"automationRules">;
     name: string;
     description?: string;
-    trigger: string;
+    trigger: AutomationTrigger;
     triggerValue?: string;
-    actionType: string;
-    actionValue: string;
+    actionType: AutomationActionType;
+    actionValue: AutomationActionValue;
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const TRIGGERS: { value: AutomationTrigger; label: string }[] = [
+  { value: "status_changed", label: "Status Changed" },
+  { value: "assignee_changed", label: "Assignee Changed" },
+  { value: "priority_changed", label: "Priority Changed" },
+  { value: "issue_created", label: "Issue Created" },
+  { value: "label_added", label: "Label Added" },
+];
+
+const ACTION_TYPES: { value: AutomationActionType; label: string }[] = [
+  { value: "set_assignee", label: "Set Assignee" },
+  { value: "set_priority", label: "Set Priority" },
+  { value: "add_label", label: "Add Label" },
+  { value: "add_comment", label: "Add Comment" },
+  { value: "send_notification", label: "Send Notification" },
+];
+
+/** Get placeholder text for action value based on action type */
+function getActionPlaceholder(actionType: AutomationActionType): string {
+  switch (actionType) {
+    case "set_assignee":
+      return "Enter user ID (or leave empty to unassign)";
+    case "set_priority":
+      return "lowest, low, medium, high, or highest";
+    case "add_label":
+      return "Enter label name";
+    case "add_comment":
+      return "Enter comment text";
+    case "send_notification":
+      return "Enter notification message";
+  }
+}
+
+/** Get label for action value input based on action type */
+function getActionLabel(actionType: AutomationActionType): string {
+  switch (actionType) {
+    case "set_assignee":
+      return "Assignee User ID";
+    case "set_priority":
+      return "Priority *";
+    case "add_label":
+      return "Label Name *";
+    case "add_comment":
+      return "Comment Text *";
+    case "send_notification":
+      return "Notification Message *";
+  }
+}
+
+/** Build typed action value from form inputs */
+function buildActionValue(
+  actionType: AutomationActionType,
+  value: string,
+): AutomationActionValue | null {
+  const trimmed = value.trim();
+
+  switch (actionType) {
+    case "set_assignee":
+      return {
+        type: "set_assignee",
+        assigneeId: trimmed ? (trimmed as Id<"users">) : null,
+      };
+    case "set_priority": {
+      const priorities = ["lowest", "low", "medium", "high", "highest"] as const;
+      if (!priorities.includes(trimmed as (typeof priorities)[number])) {
+        return null;
+      }
+      return {
+        type: "set_priority",
+        priority: trimmed as (typeof priorities)[number],
+      };
+    }
+    case "add_label":
+      if (!trimmed) return null;
+      return { type: "add_label", label: trimmed };
+    case "add_comment":
+      if (!trimmed) return null;
+      return { type: "add_comment", comment: trimmed };
+    case "send_notification":
+      if (!trimmed) return null;
+      return { type: "send_notification", message: trimmed };
+  }
+}
+
+/** Extract display value from typed action value */
+function getActionDisplayValue(actionValue: AutomationActionValue): string {
+  switch (actionValue.type) {
+    case "set_assignee":
+      return actionValue.assigneeId ?? "";
+    case "set_priority":
+      return actionValue.priority;
+    case "add_label":
+      return actionValue.label;
+    case "add_comment":
+      return actionValue.comment;
+    case "send_notification":
+      return actionValue.message;
+  }
+}
+
 /**
- * Extracted form component for creating/editing automation rules
- * Separated from AutomationRulesManager for better reusability
+ * Form component for creating/editing automation rules
+ * Uses typed validators instead of raw JSON strings
  */
 export function AutomationRuleForm({
   projectId,
@@ -36,10 +140,14 @@ export function AutomationRuleForm({
 }: AutomationRuleFormProps) {
   const [name, setName] = useState(rule?.name || "");
   const [description, setDescription] = useState(rule?.description || "");
-  const [trigger, setTrigger] = useState(rule?.trigger || "status_changed");
+  const [trigger, setTrigger] = useState<AutomationTrigger>(rule?.trigger || "status_changed");
   const [triggerValue, setTriggerValue] = useState(rule?.triggerValue || "");
-  const [actionType, setActionType] = useState(rule?.actionType || "add_label");
-  const [actionValue, setActionValue] = useState(rule?.actionValue || "");
+  const [actionType, setActionType] = useState<AutomationActionType>(
+    rule?.actionType || "add_label",
+  );
+  const [actionValueInput, setActionValueInput] = useState(
+    rule?.actionValue ? getActionDisplayValue(rule.actionValue) : "",
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const createRule = useMutation(api.automationRules.create);
@@ -54,28 +162,31 @@ export function AutomationRuleForm({
         setTrigger(rule.trigger);
         setTriggerValue(rule.triggerValue || "");
         setActionType(rule.actionType);
-        setActionValue(rule.actionValue);
+        setActionValueInput(getActionDisplayValue(rule.actionValue));
       } else {
         setName("");
         setDescription("");
         setTrigger("status_changed");
         setTriggerValue("");
         setActionType("add_label");
-        setActionValue("");
+        setActionValueInput("");
       }
     }
   }, [rule, open]);
 
   const handleSave = async () => {
-    if (!(name.trim() && actionValue.trim())) {
-      showError(new Error("Please fill in all required fields"), "Validation Error");
+    if (!name.trim()) {
+      showError(new Error("Please enter a rule name"), "Validation Error");
+      return;
+    }
+
+    const actionValue = buildActionValue(actionType, actionValueInput);
+    if (!actionValue) {
+      showError(new Error("Please enter a valid action value"), "Validation Error");
       return;
     }
 
     try {
-      // Validate JSON for action value
-      JSON.parse(actionValue);
-
       setIsLoading(true);
 
       if (rule) {
@@ -86,7 +197,7 @@ export function AutomationRuleForm({
           trigger,
           triggerValue: triggerValue.trim() || undefined,
           actionType,
-          actionValue: actionValue.trim(),
+          actionValue,
         });
         showSuccess("Rule updated");
       } else {
@@ -97,7 +208,7 @@ export function AutomationRuleForm({
           trigger,
           triggerValue: triggerValue.trim() || undefined,
           actionType,
-          actionValue: actionValue.trim(),
+          actionValue,
         });
         showSuccess("Rule created");
       }
@@ -143,13 +254,13 @@ export function AutomationRuleForm({
         <Select
           label="Trigger Event *"
           value={trigger}
-          onChange={(e) => setTrigger(e.target.value)}
+          onChange={(e) => setTrigger(e.target.value as AutomationTrigger)}
         >
-          <option value="status_changed">Status Changed</option>
-          <option value="assignee_changed">Assignee Changed</option>
-          <option value="priority_changed">Priority Changed</option>
-          <option value="issue_created">Issue Created</option>
-          <option value="label_added">Label Added</option>
+          {TRIGGERS.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
         </Select>
 
         {/* Trigger Value */}
@@ -158,27 +269,43 @@ export function AutomationRuleForm({
           type="text"
           value={triggerValue}
           onChange={(e) => setTriggerValue(e.target.value)}
-          placeholder="Optional trigger condition"
+          placeholder="Optional trigger condition (e.g., specific status name)"
         />
 
         {/* Action Type */}
-        <Select label="Action *" value={actionType} onChange={(e) => setActionType(e.target.value)}>
-          <option value="set_assignee">Set Assignee</option>
-          <option value="set_priority">Set Priority</option>
-          <option value="add_label">Add Label</option>
-          <option value="add_comment">Add Comment</option>
-          <option value="send_notification">Send Notification</option>
+        <Select
+          label="Action *"
+          value={actionType}
+          onChange={(e) => {
+            setActionType(e.target.value as AutomationActionType);
+            setActionValueInput(""); // Reset value when type changes
+          }}
+        >
+          {ACTION_TYPES.map((a) => (
+            <option key={a.value} value={a.value}>
+              {a.label}
+            </option>
+          ))}
         </Select>
 
-        {/* Action Value */}
-        <Textarea
-          label="Action Value (JSON) *"
-          value={actionValue}
-          onChange={(e) => setActionValue(e.target.value)}
-          rows={3}
-          className="font-mono text-sm"
-          placeholder='{"label": "urgent"}'
-        />
+        {/* Action Value - dynamic based on action type */}
+        {actionType === "add_comment" ? (
+          <Textarea
+            label={getActionLabel(actionType)}
+            value={actionValueInput}
+            onChange={(e) => setActionValueInput(e.target.value)}
+            rows={3}
+            placeholder={getActionPlaceholder(actionType)}
+          />
+        ) : (
+          <Input
+            label={getActionLabel(actionType)}
+            type="text"
+            value={actionValueInput}
+            onChange={(e) => setActionValueInput(e.target.value)}
+            placeholder={getActionPlaceholder(actionType)}
+          />
+        )}
       </Stack>
     </FormDialog>
   );

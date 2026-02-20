@@ -4,8 +4,12 @@ import { v } from "convex/values";
 import { issueActivityFields, issuesFields, projectsFields } from "./schemaFields";
 import {
   auditMetadata,
+  automationActionTypes,
+  automationActionValue,
+  automationTriggers,
   blockNoteContent,
   boardTypes,
+  bookerAnswers,
   bookingFieldTypes,
   calendarEventColors,
   calendarProviders,
@@ -709,10 +713,10 @@ const applicationTables = {
     name: v.string(),
     description: v.optional(v.string()),
     isActive: v.boolean(),
-    trigger: v.string(), // "status_changed", "assignee_changed"
-    triggerValue: v.optional(v.string()),
-    actionType: v.string(), // "set_assignee", "add_label", "send_notification"
-    actionValue: v.string(), // JSON string
+    trigger: automationTriggers,
+    triggerValue: v.optional(v.string()), // Condition value (e.g., specific status name)
+    actionType: automationActionTypes,
+    actionValue: automationActionValue, // Typed discriminated union
     createdBy: v.id("users"),
     updatedAt: v.number(),
     executionCount: v.number(),
@@ -951,7 +955,7 @@ const applicationTables = {
     bookerName: v.string(),
     bookerEmail: v.string(),
     bookerPhone: v.optional(v.string()),
-    bookerAnswers: v.optional(v.string()), // JSON
+    bookerAnswers: v.optional(bookerAnswers), // Typed array of form answers
     startTime: v.number(),
     endTime: v.number(),
     timezone: v.string(),
