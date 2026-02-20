@@ -37,6 +37,6 @@ describe("Documents Breadcrumbs Security", () => {
       await asUserA.query(api.documents.getBreadcrumbs, {
         id: docId,
       });
-    }, "Not authorized to access this document");
+    }, "You are not a member of this organization");
   });
 });
