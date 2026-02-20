@@ -56,7 +56,7 @@ export const getInternalByEmail = internalQuery({
  * Note: Does not check if requester should see this user.
  * For team contexts, ensure proper access checks.
  */
-export const get = authenticatedQuery({
+export const getUser = authenticatedQuery({
   args: { id: v.id("users") },
   returns: v.union(
     v.null(),
@@ -178,36 +178,8 @@ export const updateProfile = authenticatedMutation({
     }
 
     if (args.email !== undefined) {
-      validate.email(args.email);
-
-      // Check if email actually changed
-      const currentUser = await ctx.db.get(ctx.userId);
-      if (currentUser?.email !== args.email) {
-        // Rate limit email change requests to prevent spam
-        await rateLimit(ctx, "emailChange", { key: ctx.userId });
-
-        // Do NOT update email immediately. Start pending verification flow.
-        const token = generateOTP();
-        const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
-
-        updates.pendingEmail = args.email;
-        updates.pendingEmailVerificationToken = token;
-        updates.pendingEmailVerificationExpires = expiresAt;
-
-        // Check if email is already taken by ANOTHER user
-        const newEmail = args.email;
-        const existingUser = await ctx.db
-          .query("users")
-          .withIndex("email", (q) => q.eq("email", newEmail))
-          .first();
-
-        // Only send verification email if the email is NOT taken
-        // If taken, we still update pending fields to prevent enumeration (attacker sees success),
-        // but we skip sending the email to prevent spamming the victim.
-        if (!existingUser || existingUser._id === ctx.userId) {
-          await sendVerificationEmail(ctx, args.email, token, currentUser?.isTestUser);
-        }
-      }
+      const emailUpdates = await handleEmailChange(ctx, args.email);
+      Object.assign(updates, emailUpdates);
     }
 
     if (args.avatar !== undefined) {
@@ -229,6 +201,63 @@ export const updateProfile = authenticatedMutation({
     await ctx.db.patch(ctx.userId, updates);
   },
 });
+
+/**
+ * Helper to handle email changes:
+ * - Validates email format
+ * - Checks if email actually changed
+ * - Rate limits requests
+ * - Generates OTP and expiration
+ * - Checks for uniqueness (safe against enumeration)
+ * - Sends verification email
+ */
+async function handleEmailChange(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  newEmail: string,
+): Promise<
+  | Record<string, never>
+  | {
+      pendingEmail: string;
+      pendingEmailVerificationToken: string;
+      pendingEmailVerificationExpires: number;
+    }
+> {
+  validate.email(newEmail);
+
+  // Check if email actually changed
+  const currentUser = await ctx.db.get(ctx.userId);
+  if (currentUser?.email === newEmail) {
+    return {};
+  }
+
+  // Rate limit email change requests to prevent spam
+  await rateLimit(ctx, "emailChange", { key: ctx.userId });
+
+  // Do NOT update email immediately. Start pending verification flow.
+  const token = generateOTP();
+  const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+  const updates = {
+    pendingEmail: newEmail,
+    pendingEmailVerificationToken: token,
+    pendingEmailVerificationExpires: expiresAt,
+  };
+
+  // Check if email is already taken by ANOTHER user
+  const existingUser = await ctx.db
+    .query("users")
+    .withIndex("email", (q) => q.eq("email", newEmail))
+    .first();
+
+  // Only send verification email if the email is NOT taken
+  // If taken, we still update pending fields to prevent enumeration (attacker sees success),
+  // but we skip sending the email to prevent spamming the victim.
+  if (!existingUser || existingUser._id === ctx.userId) {
+    await sendVerificationEmail(ctx, newEmail, token, currentUser?.isTestUser);
+  }
+
+  return updates;
+}
 
 /**
  * Helper to send verification email for profile updates

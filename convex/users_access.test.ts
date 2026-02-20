@@ -92,14 +92,14 @@ describe("Users Access Control", () => {
     // User 1 fetches User 2 (Different Org) - Should NOT see email
     const user2SeenByUser1 = await t
       .withIdentity({ subject: user1 })
-      .query(api.users.get, { id: user2 });
+      .query(api.users.getUser, { id: user2 });
     expect(user2SeenByUser1?.name).toBe("User 2");
     expect(user2SeenByUser1?.email).toBeUndefined();
 
     // User 1 fetches User 3 (Same Org) - Should see email
     const user3SeenByUser1 = await t
       .withIdentity({ subject: user1 })
-      .query(api.users.get, { id: user3 });
+      .query(api.users.getUser, { id: user3 });
     expect(user3SeenByUser1?.name).toBe("User 3");
     expect(user3SeenByUser1?.email).toBe("user3@example.com");
   });

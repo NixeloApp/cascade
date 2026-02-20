@@ -27,7 +27,7 @@ describe("Issues", () => {
       expect(issueId).toBeDefined();
 
       // Verify issue was created
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Test Issue");
       expect(issue?.description).toBe("This is a test issue");
       expect(issue?.type).toBe("task");
@@ -58,8 +58,8 @@ describe("Issues", () => {
         priority: "high",
       });
 
-      const issue1 = await asUser.query(api.issues.get, { id: issue1Id });
-      const issue2 = await asUser.query(api.issues.get, { id: issue2Id });
+      const issue1 = await asUser.query(api.issues.getIssue, { id: issue1Id });
+      const issue2 = await asUser.query(api.issues.getIssue, { id: issue2Id });
 
       expect(issue1?.key).toBe("AUTO-1");
       expect(issue2?.key).toBe("AUTO-2");
@@ -79,7 +79,7 @@ describe("Issues", () => {
         priority: "medium",
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.status).toBe("todo"); // Default first workflow state
       await t.finishInProgressScheduledFunctions();
     });
@@ -99,7 +99,7 @@ describe("Issues", () => {
         assigneeId,
       });
 
-      const issue = await asReporter.query(api.issues.get, { id: issueId });
+      const issue = await asReporter.query(api.issues.getIssue, { id: issueId });
       expect(issue?.assigneeId).toBe(assigneeId);
       await t.finishInProgressScheduledFunctions();
     });
@@ -167,7 +167,7 @@ describe("Issues", () => {
         priority: "high",
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue).toBeDefined();
       expect(issue?.title).toBe("Detailed Issue");
       expect(issue?.description).toBe("Detailed description");
@@ -192,7 +192,7 @@ describe("Issues", () => {
       // Delete the issue using bulkDelete
       await asUser.mutation(api.issues.bulkDelete, { issueIds: [issueId] });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue).toBeNull();
       await t.finishInProgressScheduledFunctions();
     });
@@ -214,7 +214,7 @@ describe("Issues", () => {
       // Try to access as outsider
       const asOutsider = asAuthenticatedUser(t, outsider);
       await expect(async () => {
-        await asOutsider.query(api.issues.get, { id: issueId });
+        await asOutsider.query(api.issues.getIssue, { id: issueId });
       }).rejects.toThrow("Not authorized");
       await t.finishInProgressScheduledFunctions();
     });
@@ -242,7 +242,7 @@ describe("Issues", () => {
         priority: "high",
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Updated Title");
       expect(issue?.description).toBe("Updated description");
       expect(issue?.priority).toBe("high");
@@ -304,7 +304,7 @@ describe("Issues", () => {
         newOrder: 0,
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.status).toBe("inprogress");
 
       // Verify activity was logged
@@ -342,7 +342,7 @@ describe("Issues", () => {
         newOrder: 0,
       });
 
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.status).toBe("custom_status");
       await t.finishInProgressScheduledFunctions();
     });
@@ -484,8 +484,8 @@ describe("Issues", () => {
         newStatus: "done",
       });
 
-      const issue1 = await asUser.query(api.issues.get, { id: issue1Id });
-      const issue2 = await asUser.query(api.issues.get, { id: issue2Id });
+      const issue1 = await asUser.query(api.issues.getIssue, { id: issue1Id });
+      const issue2 = await asUser.query(api.issues.getIssue, { id: issue2Id });
 
       expect(issue1?.status).toBe("done");
       expect(issue2?.status).toBe("done");
@@ -516,8 +516,8 @@ describe("Issues", () => {
         priority: "highest",
       });
 
-      const issue1 = await asUser.query(api.issues.get, { id: issue1Id });
-      const issue2 = await asUser.query(api.issues.get, { id: issue2Id });
+      const issue1 = await asUser.query(api.issues.getIssue, { id: issue1Id });
+      const issue2 = await asUser.query(api.issues.getIssue, { id: issue2Id });
 
       expect(issue1?.priority).toBe("highest");
       expect(issue2?.priority).toBe("highest");
@@ -549,8 +549,8 @@ describe("Issues", () => {
         assigneeId,
       });
 
-      const issue1 = await asReporter.query(api.issues.get, { id: issue1Id });
-      const issue2 = await asReporter.query(api.issues.get, { id: issue2Id });
+      const issue1 = await asReporter.query(api.issues.getIssue, { id: issue1Id });
+      const issue2 = await asReporter.query(api.issues.getIssue, { id: issue2Id });
 
       expect(issue1?.assigneeId).toBe(assigneeId);
       expect(issue2?.assigneeId).toBe(assigneeId);
@@ -591,7 +591,7 @@ describe("Issues", () => {
       expect(result.updated).toBe(0);
 
       // Issue should remain unchanged
-      const issue = await asAdmin.query(api.issues.get, { id: issueId });
+      const issue = await asAdmin.query(api.issues.getIssue, { id: issueId });
       expect(issue?.status).toBe("todo");
       await t.finishInProgressScheduledFunctions();
     });

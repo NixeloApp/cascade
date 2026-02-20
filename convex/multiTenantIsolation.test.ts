@@ -121,7 +121,7 @@ describe("Multi-Tenant Isolation", () => {
       // User B should NOT be able to access User A's issue (throws forbidden)
       const asUserB = asAuthenticatedUser(t, userOrgB);
       await expect(
-        asUserB.query(api.issues.queries.get, {
+        asUserB.query(api.issues.queries.getIssue, {
           id: issueIdA,
         }),
       ).rejects.toThrow(/forbidden/i);

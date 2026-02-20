@@ -97,7 +97,7 @@ describe("Label Enrichment", () => {
       });
 
       // Get the issue
-      const issue = await asUser.query(api.issues.get, { id: issueId });
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
 
       if (!issue) throw new Error("Issue not found");
 
