@@ -395,7 +395,7 @@ export function AppSidebar() {
                           e.stopPropagation();
                           setCreateTeamWorkspace({ id: workspace._id, slug: workspace.slug });
                         }}
-                        className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                        className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
                         aria-label="Create new team"
                       >
                         <Plus className="w-4 h-4 text-ui-text-tertiary" />
@@ -636,7 +636,7 @@ function CollapsibleSection({
             e.stopPropagation();
             onAdd();
           }}
-          className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+          className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
           aria-label={`Add new ${label.toLowerCase().slice(0, -1)}`}
         >
           <Plus className="w-4 h-4 text-ui-text-tertiary" />
