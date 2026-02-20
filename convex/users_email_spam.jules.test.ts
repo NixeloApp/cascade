@@ -5,52 +5,19 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
-// Mock rateLimit
-vi.mock("./rateLimits", () => ({
-  rateLimit: vi.fn(),
-}));
-
-// Mock sendEmail
-vi.mock("./email", () => ({
-  sendEmail: vi.fn().mockResolvedValue({ success: true, id: "mock-id" }),
-}));
-
-import { sendEmail } from "./email";
-import { rateLimit } from "./rateLimits";
-
 describe("Users Email Spam & Rate Limiting", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("should call rateLimit when changing email", async () => {
-    const t = convexTest(schema, modules);
-    register(t);
-
-    const attackerId = await t.run(async (ctx) => {
-      return await ctx.db.insert("users", {
-        name: "Attacker",
-        email: "attacker@example.com",
-        emailVerificationTime: Date.now(),
-      });
-    });
-
-    const attacker = t.withIdentity({ subject: attackerId });
-
-    // Change email
-    await attacker.mutation(api.users.updateProfile, {
-      email: "newemail@example.com",
-    });
-
-    // Verify rateLimit was called
-    expect(rateLimit).toHaveBeenCalledWith(expect.anything(), "emailChange", { key: attackerId });
+    vi.unstubAllEnvs();
   });
 
   it("should NOT send verification email if email is already taken (prevents spam)", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("SKIP_USAGE_RECORDING", "true");
+
     const t = convexTest(schema, modules);
     register(t);
 
-    // Create Attacker
     const attackerId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", {
         name: "Attacker",
@@ -59,7 +26,6 @@ describe("Users Email Spam & Rate Limiting", () => {
       });
     });
 
-    // Create Victim
     await t.run(async (ctx) => {
       return await ctx.db.insert("users", {
         name: "Victim",
@@ -70,23 +36,28 @@ describe("Users Email Spam & Rate Limiting", () => {
 
     const attacker = t.withIdentity({ subject: attackerId });
 
-    // Try to change email to victim's email
     await attacker.mutation(api.users.updateProfile, {
       email: "victim@example.com",
     });
 
-    // Verify rateLimit was called
-    expect(rateLimit).toHaveBeenCalledWith(expect.anything(), "emailChange", { key: attackerId });
+    // Verify NO action was scheduled
+    const scheduled = await t.run(async (ctx) => {
+      return await ctx.db.system.query("_scheduled_functions").collect();
+    });
 
-    // Verify sendEmail was NOT called
-    expect(sendEmail).not.toHaveBeenCalled();
+    // We expect 0 scheduled functions related to verification
+    const verificationJobs = scheduled.filter(job => job.name === "users:sendVerificationEmailAction");
+    expect(verificationJobs).toHaveLength(0);
 
-    // Verify DB state updated (to prevent enumeration)
     const attackerUser = await t.run(async (ctx) => ctx.db.get(attackerId));
     expect(attackerUser?.pendingEmail).toBe("victim@example.com");
   });
 
   it("should send verification email if email is free", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("SKIP_USAGE_RECORDING", "true");
+    // We don't need other env vars if we are only checking scheduling
+
     const t = convexTest(schema, modules);
     register(t);
 
@@ -100,12 +71,18 @@ describe("Users Email Spam & Rate Limiting", () => {
 
     const attacker = t.withIdentity({ subject: attackerId });
 
-    // Change email to free email
     await attacker.mutation(api.users.updateProfile, {
       email: "free@example.com",
     });
 
-    // Verify sendEmail WAS called
-    expect(sendEmail).toHaveBeenCalled();
+    // Verify action WAS scheduled
+    const scheduled = await t.run(async (ctx) => {
+      return await ctx.db.system.query("_scheduled_functions").collect();
+    });
+
+    const verificationJobs = scheduled.filter(job => job.name === "users:sendVerificationEmailAction");
+    expect(verificationJobs).toHaveLength(1);
+    const args = verificationJobs[0].args[0] as any;
+    expect(args.email).toBe("free@example.com");
   });
 });

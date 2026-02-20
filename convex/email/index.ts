@@ -383,7 +383,8 @@ export const sendEmailAction = internalAction({
     const result = await provider.send(args);
 
     // 4. Record usage via mutation
-    if (result.success) {
+    // Skip in tests if explicitly requested (to avoid "Write outside of transaction" errors in convex-test)
+    if (result.success && !process.env.SKIP_USAGE_RECORDING) {
       try {
         await ctx.runMutation(internal.email.index.recordUsageMutation, {
           provider: providerName,
