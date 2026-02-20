@@ -7,7 +7,7 @@ import { internalQuery, type MutationCtx, type QueryCtx } from "./_generated/ser
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { sendEmail } from "./email";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
-import { efficientCount } from "./lib/boundedQueries";
+import { type CountableQuery, efficientCount } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
@@ -456,8 +456,7 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
 async function countByProjectParallel(
   projectIds: Id<"projects">[],
   limit: number,
-  // biome-ignore lint/suspicious/noExplicitAny: avoid complex Convex Query generic types
-  queryFactory: (projectId: Id<"projects">) => any,
+  queryFactory: (projectId: Id<"projects">) => CountableQuery<any>,
 ): Promise<number> {
   const counts = await Promise.all(
     projectIds.map((projectId) => efficientCount(queryFactory(projectId), limit)),
