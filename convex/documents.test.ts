@@ -24,7 +24,7 @@ describe("Documents", () => {
 
       expect(docId).toBeDefined();
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.title).toBe("Public Document");
       expect(doc?.isPublic).toBe(true);
       expect(doc?.createdBy).toBe(userId);
@@ -40,7 +40,7 @@ describe("Documents", () => {
         organizationId,
       });
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.title).toBe("Private Document");
       expect(doc?.isPublic).toBe(false);
     });
@@ -55,7 +55,7 @@ describe("Documents", () => {
         organizationId,
       });
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.title).toBe("Document Without Project");
       expect(doc?.projectId).toBeUndefined();
     });
@@ -83,7 +83,7 @@ describe("Documents", () => {
         organizationId,
       });
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.updatedAt).toBeDefined();
     });
   });
@@ -99,7 +99,7 @@ describe("Documents", () => {
         organizationId,
       });
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.title).toBe("My Private Doc");
       expect(doc?.createdBy).toBe(userId);
     });
@@ -121,7 +121,7 @@ describe("Documents", () => {
       // Try to access as other user - should throw error
       const asOther = asAuthenticatedUser(t, other);
       await expect(async () => {
-        await asOther.query(api.documents.get, { id: docId });
+        await asOther.query(api.documents.getDocument, { id: docId });
       }).rejects.toThrow("Not authorized to access this document");
     });
 
@@ -151,7 +151,7 @@ describe("Documents", () => {
 
       // Access as member
       const asMember = asAuthenticatedUser(t, member);
-      const doc = await asMember.query(api.documents.get, { id: docId });
+      const doc = await asMember.query(api.documents.getDocument, { id: docId });
       expect(doc?.title).toBe("Public Project Doc");
     });
 
@@ -172,7 +172,7 @@ describe("Documents", () => {
       // Access as outsider (not in organization)
       const asOutsider = asAuthenticatedUser(t, outsider);
       await expect(async () => {
-        await asOutsider.query(api.documents.get, { id: docId });
+        await asOutsider.query(api.documents.getDocument, { id: docId });
       }).rejects.toThrow("You are not a member of this organization");
     });
 
@@ -190,7 +190,7 @@ describe("Documents", () => {
       await asUser.mutation(api.documents.deleteDocument, { id: docId });
 
       // Try to get the deleted document
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc).toBeNull();
     });
   });
@@ -297,7 +297,7 @@ describe("Documents", () => {
         title: "Updated Title",
       });
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.title).toBe("Updated Title");
     });
 
@@ -311,7 +311,7 @@ describe("Documents", () => {
         organizationId,
       });
 
-      const docBefore = await asUser.query(api.documents.get, { id: docId });
+      const docBefore = await asUser.query(api.documents.getDocument, { id: docId });
       const updatedAtBefore = docBefore?.updatedAt;
 
       // Wait a bit to ensure different timestamp
@@ -322,7 +322,7 @@ describe("Documents", () => {
         title: "Updated",
       });
 
-      const docAfter = await asUser.query(api.documents.get, { id: docId });
+      const docAfter = await asUser.query(api.documents.getDocument, { id: docId });
       expect(docAfter?.updatedAt).toBeGreaterThan(updatedAtBefore || 0);
     });
 
@@ -381,7 +381,7 @@ describe("Documents", () => {
 
       await asUser.mutation(api.documents.togglePublic, { id: docId });
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.isPublic).toBe(true);
     });
 
@@ -397,7 +397,7 @@ describe("Documents", () => {
 
       await asUser.mutation(api.documents.togglePublic, { id: docId });
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.isPublic).toBe(false);
     });
 
@@ -434,7 +434,7 @@ describe("Documents", () => {
 
       await asUser.mutation(api.documents.deleteDocument, { id: docId });
 
-      const doc = await asUser.query(api.documents.get, { id: docId });
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc).toBeNull();
     });
 

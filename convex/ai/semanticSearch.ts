@@ -48,21 +48,23 @@ export const searchSimilarIssues = action({
     // Convert vector search results to typed format
     const typedResults = asVectorResults<"issues">(results);
 
-    // Fetch full issue details
-    const issues = await Promise.all(
-      typedResults.map(async (result) => {
-        const issue = await ctx.runQuery(internal.internal.ai.getIssueData, {
-          issueId: result._id,
-        });
+    // Fetch full issue details (batch fetch)
+    const issueIds = typedResults.map((result) => result._id);
+    const issueDocs = await ctx.runQuery(internal.internal.ai.getIssuesData, {
+      issueIds,
+    });
+
+    const issues = issueDocs
+      .map((issue, index) => {
         if (!issue) return null;
         return {
           ...issue,
-          similarity: result._score,
+          similarity: typedResults[index]._score,
         };
-      }),
-    );
+      })
+      .filter((i): i is Doc<"issues"> & { similarity: number } => i !== null);
 
-    return issues.filter((i): i is Doc<"issues"> & { similarity: number } => i !== null);
+    return issues;
   },
 });
 
@@ -94,24 +96,28 @@ export const getRelatedIssues = action({
     // Convert to typed results
     const results = asVectorResults<"issues">(rawResults);
 
-    // Filter out the original issue and fetch details
-    const relatedIssues = await Promise.all(
-      results
-        .filter((result) => result._id !== args.issueId)
-        .slice(0, args.limit || 5)
-        .map(async (result) => {
-          const relatedIssue = await ctx.runQuery(internal.internal.ai.getIssueData, {
-            issueId: result._id,
-          });
-          if (!relatedIssue) return null;
-          return {
-            ...relatedIssue,
-            similarity: result._score,
-          };
-        }),
-    );
+    // Filter out the original issue
+    const filteredResults = results
+      .filter((result) => result._id !== args.issueId)
+      .slice(0, args.limit || 5);
 
-    return relatedIssues.filter((i): i is Doc<"issues"> & { similarity: number } => i !== null);
+    // Fetch details (batch fetch)
+    const issueIds = filteredResults.map((result) => result._id);
+    const issueDocs = await ctx.runQuery(internal.internal.ai.getIssuesData, {
+      issueIds,
+    });
+
+    const relatedIssues = issueDocs
+      .map((issue, index) => {
+        if (!issue) return null;
+        return {
+          ...issue,
+          similarity: filteredResults[index]._score,
+        };
+      })
+      .filter((i): i is Doc<"issues"> & { similarity: number } => i !== null);
+
+    return relatedIssues;
   },
 });
 
@@ -146,22 +152,25 @@ export const findPotentialDuplicates = action({
 
     const threshold = args.threshold || 0.85; // High similarity threshold
 
-    // Fetch issues above threshold
-    const duplicates = await Promise.all(
-      results
-        .filter((result) => result._score >= threshold)
-        .map(async (result) => {
-          const issue = await ctx.runQuery(internal.internal.ai.getIssueData, {
-            issueId: result._id,
-          });
-          if (!issue) return null;
-          return {
-            ...issue,
-            similarity: result._score,
-          };
-        }),
-    );
+    // Filter results above threshold
+    const filteredResults = results.filter((result) => result._score >= threshold);
 
-    return duplicates.filter((i): i is Doc<"issues"> & { similarity: number } => i !== null);
+    // Fetch issues (batch fetch)
+    const issueIds = filteredResults.map((result) => result._id);
+    const issueDocs = await ctx.runQuery(internal.internal.ai.getIssuesData, {
+      issueIds,
+    });
+
+    const duplicates = issueDocs
+      .map((issue, index) => {
+        if (!issue) return null;
+        return {
+          ...issue,
+          similarity: filteredResults[index]._score,
+        };
+      })
+      .filter((i): i is Doc<"issues"> & { similarity: number } => i !== null);
+
+    return duplicates;
   },
 });

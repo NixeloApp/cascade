@@ -12,7 +12,16 @@
  * Total free capacity: 19,000 emails/month
  */
 
-import type { DatabaseReader, MutationCtx, QueryCtx } from "../_generated/server";
+import { v } from "convex/values";
+import { internal } from "../_generated/api";
+import {
+  type DatabaseReader,
+  internalAction,
+  internalMutation,
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx,
+} from "../_generated/server";
 import { logger } from "../lib/logger";
 import { MailtrapProvider } from "./mailtrap";
 import type { EmailProvider, EmailSendParams, EmailSendResult } from "./provider";
@@ -300,3 +309,92 @@ export async function sendEmailWithProvider(
 
 // Re-export types
 export type { EmailSendParams, EmailSendResult };
+
+// =============================================================================
+// Internal Actions/Mutations for Async Sending
+// =============================================================================
+
+/**
+ * Internal query to select provider (exposed for actions)
+ */
+export const selectProviderQuery = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const { name } = await selectProvider(ctx);
+    return { name };
+  },
+});
+
+/**
+ * Internal mutation to record usage (exposed for actions)
+ */
+export const recordUsageMutation = internalMutation({
+  args: { provider: v.string(), count: v.number() },
+  handler: async (ctx, args) => {
+    await recordUsage(ctx, args.provider, args.count);
+  },
+});
+
+/**
+ * Internal action to send email asynchronously
+ * Supports provider rotation and usage tracking
+ */
+export const sendEmailAction = internalAction({
+  args: {
+    to: v.union(v.string(), v.array(v.string())),
+    subject: v.string(),
+    html: v.string(),
+    text: v.optional(v.string()),
+    from: v.optional(v.string()),
+    replyTo: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 1. Select provider via query
+    let providerName = "mailtrap"; // Default
+    try {
+      const result = await ctx.runQuery(internal.email.index.selectProviderQuery, {});
+      providerName = result.name;
+    } catch (e) {
+      logger.error("Failed to select provider in action, falling back to default", { error: e });
+      providerName = PROVIDERS_BY_PRIORITY[0];
+    }
+
+    // 2. Instantiate provider
+    const config = PROVIDER_CONFIG[providerName];
+    if (!config) {
+      throw new Error(`Unknown provider: ${providerName}`);
+    }
+    const provider = config.factory();
+
+    // 3. Send email
+    // Check for test environment/emails same as sendEmail
+    const recipients = Array.isArray(args.to) ? args.to : [args.to];
+    const isTestEmail = recipients.some((email) => email.endsWith("@inbox.mailtrap.io"));
+    const isTestEnv = process.env.NODE_ENV === "test";
+
+    if (isTestEmail || isTestEnv) {
+      return {
+        id: "mock-email-id",
+        success: true,
+        provider: "mock",
+      };
+    }
+
+    const result = await provider.send(args);
+
+    // 4. Record usage via mutation
+    // Skip in tests if explicitly requested (to avoid "Write outside of transaction" errors in convex-test)
+    if (result.success && !process.env.SKIP_USAGE_RECORDING) {
+      try {
+        await ctx.runMutation(internal.email.index.recordUsageMutation, {
+          provider: providerName,
+          count: 1,
+        });
+      } catch (e) {
+        logger.error("Failed to record usage in action", { error: e });
+      }
+    }
+
+    return { ...result, provider: providerName };
+  },
+});

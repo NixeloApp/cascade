@@ -38,7 +38,7 @@ interface PlateEditorProps {
  * Main editor component - renders the Plate editor with document sync
  */
 export function PlateEditor({ documentId }: PlateEditorProps) {
-  const document = useQuery(api.documents.get, { id: documentId });
+  const document = useQuery(api.documents.getDocument, { id: documentId });
   const updateTitle = useMutation(api.documents.updateTitle);
   const togglePublic = useMutation(api.documents.togglePublic);
   const userId = useQuery(api.presence.getUserId);

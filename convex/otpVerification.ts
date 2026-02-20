@@ -16,6 +16,7 @@ import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
 import type { ConvexAuthContext } from "./lib/authTypes";
 import { generateOTP } from "./lib/crypto";
+import { isAppError } from "./lib/errors";
 import { logger } from "./lib/logger";
 
 /**
@@ -84,8 +85,15 @@ export const otpVerification = Resend({
           await ctx.runMutation(authWrapper.checkEmailVerificationRateLimit, {
             email,
           });
-        } catch (_e) {
-          throw new Error("Too many verification requests. Please try again later.");
+        } catch (error) {
+          const isRateLimitError =
+            (isAppError(error) && error.data.code === "RATE_LIMITED") ||
+            (error instanceof Error && error.message.includes("Rate limit exceeded"));
+
+          if (isRateLimitError) {
+            throw new Error("Too many verification requests. Please try again later.");
+          }
+          throw error;
         }
       }
 

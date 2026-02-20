@@ -175,7 +175,11 @@ export const list = authenticatedQuery({
   },
 });
 
-export const get = authenticatedQuery({
+/**
+ * Get a document by ID.
+ * Returns null if the document is not found or user doesn't have access.
+ */
+export const getDocument = authenticatedQuery({
   args: { id: v.id("documents") },
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
@@ -213,6 +217,11 @@ export const get = authenticatedQuery({
     };
   },
 });
+
+/**
+ * @deprecated Use `getDocument` instead.
+ */
+export const get = getDocument;
 
 export const updateTitle = authenticatedMutation({
   args: {

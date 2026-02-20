@@ -47,7 +47,7 @@ describe("documents", () => {
     expect(docId).toBeDefined();
 
     // Verify document was created
-    const doc = await t.query(api.documents.get, { id: docId });
+    const doc = await t.query(api.documents.getDocument, { id: docId });
     expect(doc?.title).toBe("Test Document");
     expect(doc?.createdBy).toBe(userId);
   });
@@ -162,7 +162,7 @@ export default defineConfig({
 ```typescript
 it("should return null for non-existent document", async () => {
   const t = convexTest(schema, modules);
-  const doc = await t.query(api.documents.get, {
+  const doc = await t.query(api.documents.getDocument, {
     id: "invalid-id" as any,
   });
   expect(doc).toBeNull();
@@ -187,7 +187,7 @@ it("should update document title", async () => {
     title: "Updated",
   });
 
-  const doc = await t.query(api.documents.get, { id: docId });
+  const doc = await t.query(api.documents.getDocument, { id: docId });
   expect(doc?.title).toBe("Updated");
 });
 ```
