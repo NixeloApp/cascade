@@ -4,12 +4,7 @@ import { authenticatedMutation, projectAdminMutation, projectQuery } from "./cus
 import { notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { assertIsProjectAdmin } from "./projectAccess";
-import {
-  type AutomationActionValue,
-  automationActionTypes,
-  automationActionValue,
-  automationTriggers,
-} from "./validators";
+import { automationActionTypes, automationActionValue, automationTriggers } from "./validators";
 
 export const list = projectQuery({
   args: {},
@@ -133,28 +128,26 @@ export const executeRules = internalMutation({
 
       // Execute the action - actionValue is now typed!
       try {
-        const action = rule.actionValue as AutomationActionValue;
-
-        switch (action.type) {
+        switch (rule.actionValue.type) {
           case "set_assignee":
             await ctx.db.patch(args.issueId, {
-              assigneeId: action.assigneeId ?? undefined,
+              assigneeId: rule.actionValue.assigneeId ?? undefined,
               updatedAt: Date.now(),
             });
             break;
 
           case "set_priority":
             await ctx.db.patch(args.issueId, {
-              priority: action.priority,
+              priority: rule.actionValue.priority,
               updatedAt: Date.now(),
             });
             break;
 
           case "add_label": {
             const currentLabels = issue.labels || [];
-            if (!currentLabels.includes(action.label)) {
+            if (!currentLabels.includes(rule.actionValue.label)) {
               await ctx.db.patch(args.issueId, {
-                labels: [...currentLabels, action.label],
+                labels: [...currentLabels, rule.actionValue.label],
                 updatedAt: Date.now(),
               });
             }
@@ -165,7 +158,7 @@ export const executeRules = internalMutation({
             await ctx.db.insert("issueComments", {
               issueId: args.issueId,
               authorId: rule.createdBy,
-              content: action.comment,
+              content: rule.actionValue.comment,
               mentions: [],
               updatedAt: Date.now(),
             });
@@ -180,8 +173,12 @@ export const executeRules = internalMutation({
         await ctx.db.patch(rule._id, {
           executionCount: rule.executionCount + 1,
         });
-      } catch {
-        // Continue with other rules even if action fails
+      } catch (error) {
+        // Log error but continue with other rules
+        console.error(
+          `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
+          error,
+        );
       }
     }
   },

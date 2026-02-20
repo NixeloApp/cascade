@@ -18,6 +18,7 @@ import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
 import { Input, Select } from "./ui/form";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Typography } from "./ui/Typography";
 
 interface LabelsManagerProps {
@@ -246,7 +247,11 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         />
 
         <CardBody>
-          {!labelGroups || totalLabels === 0 ? (
+          {labelGroups === undefined ? (
+            <Flex justify="center" align="center" className="min-h-32">
+              <LoadingSpinner size="lg" />
+            </Flex>
+          ) : totalLabels === 0 ? (
             <EmptyState
               icon={Tag}
               title="No labels yet"
@@ -304,7 +309,15 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           )}
                         </Flex>
 
-                        <Flex gap="sm" onClick={(e) => e.stopPropagation()}>
+                        <Flex
+                          gap="sm"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e: React.KeyboardEvent) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.stopPropagation();
+                            }
+                          }}
+                        >
                           <Button
                             variant="ghost"
                             size="sm"

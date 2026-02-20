@@ -251,8 +251,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
       );
 
       // Change to set_priority action
-      const actionSelect = screen.getAllByRole("combobox")[1];
-      await user.selectOptions(actionSelect, "set_priority");
+      await user.selectOptions(screen.getByLabelText(/^Action/), "set_priority");
 
       // Enter invalid priority
       await user.type(screen.getByPlaceholderText(/lowest, low, medium, high/i), "invalid");
@@ -277,8 +276,7 @@ describe("AutomationRulesManager - Component Behavior", () => {
       );
 
       // Change to set_priority action
-      const actionSelect = screen.getAllByRole("combobox")[1];
-      await user.selectOptions(actionSelect, "set_priority");
+      await user.selectOptions(screen.getByLabelText(/^Action/), "set_priority");
 
       await user.type(screen.getByPlaceholderText(/lowest, low, medium, high/i), "high");
       await user.click(screen.getByRole("button", { name: "Create Rule" }));
@@ -450,9 +448,8 @@ describe("AutomationRulesManager - Component Behavior", () => {
 
       await user.click(screen.getByTitle(/Edit rule/i));
 
-      const selects = screen.getAllByRole("combobox");
-      const triggerSelect = selects[0] as HTMLSelectElement;
-      const actionSelect = selects[1] as HTMLSelectElement;
+      const triggerSelect = screen.getByLabelText(/Trigger Event/i) as HTMLSelectElement;
+      const actionSelect = screen.getByLabelText(/^Action/i) as HTMLSelectElement;
 
       expect(triggerSelect.value).toBe("priority_changed");
       expect(actionSelect.value).toBe("send_notification");

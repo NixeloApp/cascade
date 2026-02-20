@@ -21,7 +21,6 @@ export function run() {
   // Files/directories where raw <a> tags are allowed (external links, downloads, etc.)
   const ALLOW_RAW_LINKS_PATTERNS = [
     ".test.tsx", // Test files mock elements
-    ".test.ts",
     "/AttachmentList.tsx", // Download links
     "/FileAttachments.tsx", // Download links
     "/ApiKeysManager.tsx", // External docs links
@@ -142,7 +141,6 @@ export function run() {
         // Inline text styling tags — use Typography with appropriate variant
         // Allow <strong> for inline emphasis within text (semantically correct for accessibility)
         if (["strong", "b", "em", "i"].includes(tagName)) {
-          const rel = relPath(filePath);
           const isAllowed = ALLOW_INLINE_STRONG_FILES.some((pattern) => rel.endsWith(pattern));
           if (!isAllowed) {
             const suggestion =
@@ -155,7 +153,6 @@ export function run() {
         // Raw anchor tags — use Link component or Button with asChild
         // Allow in test files, download links, and files with external links
         if (tagName === "a") {
-          const rel = relPath(filePath);
           const isAllowed = ALLOW_RAW_LINKS_PATTERNS.some(
             (pattern) => rel.endsWith(pattern) || rel.includes(pattern),
           );

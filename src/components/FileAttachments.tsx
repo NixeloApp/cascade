@@ -225,7 +225,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                         variant="ghost"
                         size="sm"
                         asChild
-                        className="opacity-0 group-hover:opacity-100"
+                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                       >
                         <a
                           href={attachment.url}
@@ -242,7 +242,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => setDeleteConfirm(attachment.storageId)}
-                      className="opacity-0 group-hover:opacity-100 hover:text-status-error hover:bg-status-error-bg"
+                      className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-status-error hover:bg-status-error-bg"
                       aria-label={`Delete ${attachment.filename}`}
                     >
                       <Icon icon={Trash2} size="sm" />
