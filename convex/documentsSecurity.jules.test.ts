@@ -67,3 +67,189 @@ describe("Documents Security - Private Project Isolation", () => {
     expect(leakedDoc).toBeUndefined();
   });
 });
+
+describe("Documents Security - Access Revocation", () => {
+  it("should prevent updating comments after losing document access", async () => {
+    const t = convexTest(schema, modules);
+    const owner = await createTestUser(t, { name: "Owner" });
+    const member = await createTestUser(t, { name: "Member" });
+    const { organizationId } = await createOrganizationAdmin(t, owner);
+
+    const asOwner = asAuthenticatedUser(t, owner);
+
+    // Add member to organization
+    await asOwner.mutation(api.organizations.addMember, {
+      organizationId,
+      userId: member,
+      role: "member",
+    });
+
+    // Create a document
+    const docId = await asOwner.mutation(api.documents.create, {
+      title: "Team Document",
+      isPublic: true,
+      organizationId,
+    });
+
+    // Member adds a comment
+    const asMember = asAuthenticatedUser(t, member);
+    const commentId = await asMember.mutation(api.documents.addComment, {
+      documentId: docId,
+      content: "Initial comment",
+    });
+
+    // Remove member from organization
+    await asOwner.mutation(api.organizations.removeMember, {
+      organizationId,
+      userId: member,
+    });
+
+    // Member tries to update their comment
+    // EXPECTED: Should fail because they no longer have access to the document
+    await expect(async () => {
+      await asMember.mutation(api.documents.updateComment, {
+        commentId,
+        content: "Updated content",
+      });
+    }).rejects.toThrow("Not authorized");
+  });
+
+  it("should prevent deleting comments after losing document access", async () => {
+    const t = convexTest(schema, modules);
+    const owner = await createTestUser(t, { name: "Owner" });
+    const member = await createTestUser(t, { name: "Member" });
+    const { organizationId } = await createOrganizationAdmin(t, owner);
+
+    const asOwner = asAuthenticatedUser(t, owner);
+
+    // Add member to organization
+    await asOwner.mutation(api.organizations.addMember, {
+      organizationId,
+      userId: member,
+      role: "member",
+    });
+
+    // Create a document
+    const docId = await asOwner.mutation(api.documents.create, {
+      title: "Team Document",
+      isPublic: true,
+      organizationId,
+    });
+
+    // Member adds a comment
+    const asMember = asAuthenticatedUser(t, member);
+    const commentId = await asMember.mutation(api.documents.addComment, {
+      documentId: docId,
+      content: "To be deleted",
+    });
+
+    // Remove member from organization
+    await asOwner.mutation(api.organizations.removeMember, {
+      organizationId,
+      userId: member,
+    });
+
+    // Member tries to delete their comment
+    // EXPECTED: Should fail
+    await expect(async () => {
+      await asMember.mutation(api.documents.deleteComment, {
+        commentId,
+      });
+    }).rejects.toThrow("Not authorized");
+  });
+
+  it("should prevent adding reactions after losing document access", async () => {
+    const t = convexTest(schema, modules);
+    const owner = await createTestUser(t, { name: "Owner" });
+    const member = await createTestUser(t, { name: "Member" });
+    const { organizationId } = await createOrganizationAdmin(t, owner);
+
+    const asOwner = asAuthenticatedUser(t, owner);
+
+    // Add member to organization
+    await asOwner.mutation(api.organizations.addMember, {
+      organizationId,
+      userId: member,
+      role: "member",
+    });
+
+    // Create a document
+    const docId = await asOwner.mutation(api.documents.create, {
+      title: "Team Document",
+      isPublic: true,
+      organizationId,
+    });
+
+    // Member adds a comment
+    const asMember = asAuthenticatedUser(t, member);
+    const commentId = await asMember.mutation(api.documents.addComment, {
+      documentId: docId,
+      content: "React to me",
+    });
+
+    // Remove member from organization
+    await asOwner.mutation(api.organizations.removeMember, {
+      organizationId,
+      userId: member,
+    });
+
+    // Member tries to add reaction
+    // EXPECTED: Should fail
+    await expect(async () => {
+      await asMember.mutation(api.documents.addCommentReaction, {
+        commentId,
+        emoji: "👍",
+      });
+    }).rejects.toThrow("Not authorized");
+  });
+
+  it("should prevent removing reactions after losing document access", async () => {
+    const t = convexTest(schema, modules);
+    const owner = await createTestUser(t, { name: "Owner" });
+    const member = await createTestUser(t, { name: "Member" });
+    const { organizationId } = await createOrganizationAdmin(t, owner);
+
+    const asOwner = asAuthenticatedUser(t, owner);
+
+    // Add member to organization
+    await asOwner.mutation(api.organizations.addMember, {
+      organizationId,
+      userId: member,
+      role: "member",
+    });
+
+    // Create a document
+    const docId = await asOwner.mutation(api.documents.create, {
+      title: "Team Document",
+      isPublic: true,
+      organizationId,
+    });
+
+    // Member adds a comment and reaction
+    const asMember = asAuthenticatedUser(t, member);
+    const commentId = await asMember.mutation(api.documents.addComment, {
+      documentId: docId,
+      content: "React to me",
+    });
+
+    await asMember.mutation(api.documents.addCommentReaction, {
+      commentId,
+      emoji: "👍",
+    });
+
+    // Remove member from organization
+    await asOwner.mutation(api.organizations.removeMember, {
+      organizationId,
+      userId: member,
+    });
+
+    // Member tries to remove reaction
+    // EXPECTED: Should fail
+    await expect(async () => {
+      await asMember.mutation(api.documents.removeCommentReaction, {
+        commentId,
+        emoji: "👍",
+      });
+    }).rejects.toThrow("Not authorized");
+  });
+});
