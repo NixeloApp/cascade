@@ -82,8 +82,8 @@ describe("Purge Data", () => {
   });
 
   it("should cover all schema tables", () => {
-    // @ts-expect-error - convenient access to private property
-    const schemaTables = Object.keys(schema.tables);
+    // biome-ignore lint/suspicious/noExplicitAny: convenient access to private property
+    const schemaTables = Object.keys((schema as any).tables);
     // @ts-expect-error - convenient access
     const missingTables = schemaTables.filter((table) => !TABLES.includes(table));
 
