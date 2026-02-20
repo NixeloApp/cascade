@@ -25,6 +25,8 @@ import { digestFrequencies } from "./validators";
 // Limits for user stats queries
 const MAX_ISSUES_FOR_STATS = 1000;
 const MAX_COMMENTS_FOR_STATS = 1000;
+// Threshold below which per-project index queries outperform a single filtered scan
+const MAX_PROJECTS_FOR_FAST_PATH = 10;
 
 /**
  * Internal query to get user by ID (system use only)
@@ -383,9 +385,9 @@ async function countIssuesByReporter(
   if (allowedProjectIds) {
     if (allowedProjectIds.size === 0) return 0;
 
-    // Optimization: If fewer than 10 shared projects, query each project individually
+    // Optimization: If fewer projects than threshold, query each project individually
     // using the by_project_reporter index. This is O(P) instead of O(TotalIssues).
-    if (allowedProjectIds.size <= 10) {
+    if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
       const counts = await Promise.all(
         Array.from(allowedProjectIds).map((projectId) =>
           efficientCount(
@@ -399,7 +401,11 @@ async function countIssuesByReporter(
           ),
         ),
       );
-      return counts.reduce((a, b) => a + b, 0);
+      // Apply global cap to match slow-path behavior
+      return Math.min(
+        counts.reduce((a, b) => a + b, 0),
+        MAX_ISSUES_FOR_STATS,
+      );
     }
 
     const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
@@ -426,9 +432,9 @@ async function countIssuesByAssignee(
   if (allowedProjectIds) {
     if (allowedProjectIds.size === 0) return [0, 0];
 
-    // Optimization: If fewer than 10 shared projects, query each project individually
+    // Optimization: If fewer projects than threshold, query each project individually
     // using the by_project_assignee index.
-    if (allowedProjectIds.size <= 10) {
+    if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
       const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
 
       const results = await Promise.all(
@@ -450,7 +456,11 @@ async function countIssuesByAssignee(
 
       const totalAssigned = results.reduce((acc, [a]) => acc + a, 0);
       const totalCompleted = results.reduce((acc, [, c]) => acc + c, 0);
-      return [totalAssigned, totalCompleted];
+      // Apply global cap to match slow-path behavior
+      return [
+        Math.min(totalAssigned, MAX_ISSUES_FOR_STATS),
+        Math.min(totalCompleted, MAX_ISSUES_FOR_STATS),
+      ];
     }
 
     const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
