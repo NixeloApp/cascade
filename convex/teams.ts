@@ -1,7 +1,6 @@
 import { type PaginationResult, paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
-import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
   authenticatedMutation,
@@ -11,6 +10,7 @@ import {
   teamLeadMutation,
   teamQuery,
 } from "./customFunctions";
+import { logAudit } from "./lib/audit";
 import { batchFetchTeams, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
@@ -19,7 +19,6 @@ import { MAX_PROJECTS_PER_TEAM, MAX_TEAM_MEMBERS, MAX_TEAMS_PER_ORG } from "./li
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getTeamRole } from "./lib/teamAccess";
-import { logAudit } from "./lib/audit";
 import { teamRoles } from "./validators";
 
 // ============================================================================

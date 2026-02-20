@@ -1,7 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
-import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
@@ -10,6 +9,7 @@ import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
 /** Maximum issue count to compute for a project list view */
 const MAX_ISSUE_COUNT = 1000;
 
+import { logAudit } from "./lib/audit";
 import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole } from "./lib/organizationAccess";
@@ -17,9 +17,7 @@ import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getWorkspaceRole } from "./lib/workspaceAccess";
-import { logAudit } from "./lib/audit";
 import { canAccessProject, getProjectRole } from "./projectAccess";
-import { isTest } from "./testConfig";
 import { boardTypes, projectRoles, workflowCategories } from "./validators";
 
 export const createProject = authenticatedMutation({

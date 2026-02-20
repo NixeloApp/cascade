@@ -1,12 +1,11 @@
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { type ApiAuthContext, hashApiKey } from "./lib/apiAuth";
+import { logAudit } from "./lib/audit";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, requireOwned, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
-import { logAudit } from "./lib/audit";
 
 /**
  * API Key Management
