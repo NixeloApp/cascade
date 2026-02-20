@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { initiateAuthHandler, handleCallbackHandler } from "./githubOAuth";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
-import { type ActionCtx } from "../_generated/server";
+import { handleCallbackHandler, initiateAuthHandler } from "./githubOAuth";
 
 // Mock env library
 vi.mock("../lib/env", () => ({
@@ -39,7 +39,6 @@ describe("GitHub OAuth Flow", () => {
       expect(response.status).toBe(302);
 
       const location = response.headers.get("Location");
-      // biome-ignore lint/style/noNonNullAssertion: testing convenience
       expect(location).toBeDefined();
       // biome-ignore lint/style/noNonNullAssertion: testing convenience
       const url = new URL(location!);
@@ -139,7 +138,10 @@ describe("GitHub OAuth Flow", () => {
     it("should handle token exchange error in JSON", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ error: "bad_verification_code", error_description: "The code is invalid" }),
+        json: async () => ({
+          error: "bad_verification_code",
+          error_description: "The code is invalid",
+        }),
       } as Response);
 
       const request = new Request("https://api.convex.site/github/callback?code=auth_code");
