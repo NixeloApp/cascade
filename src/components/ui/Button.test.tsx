@@ -184,6 +184,7 @@ describe("Button", () => {
       const btn = screen.getByTestId("btn");
       const spinner = btn.querySelector(".animate-spin");
       expect(spinner).toBeInTheDocument();
+      expect(spinner).toHaveAttribute("aria-hidden", "true");
     });
 
     it("keeps children visible when loading (for non-icon size)", () => {
