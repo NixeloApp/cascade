@@ -102,8 +102,7 @@ export const listRecordings = authenticatedQuery({
       // Status "completed" implies a summary exists.
       // For "failed" status, we default to false even if partial data might exist,
       // as users should view details for failed items.
-      const hasTranscript =
-        recording.status === "summarizing" || recording.status === "completed";
+      const hasTranscript = recording.status === "summarizing" || recording.status === "completed";
       const hasSummary = recording.status === "completed";
 
       return {
