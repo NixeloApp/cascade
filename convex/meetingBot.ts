@@ -418,7 +418,16 @@ export const cancelRecording = authenticatedMutation({
   },
 });
 
-/** Update a recording's status and metadata. Called by the bot service via API key auth. */
+/**
+ * Update a recording's status and metadata.
+ *
+ * This mutation acts as a webhook receiver for the external bot service.
+ * It updates the recording status (e.g., 'recording', 'transcribing', 'completed')
+ * and metadata like duration and start/end times.
+ *
+ * Security:
+ * - Requires a valid `apiKey` argument matching the configured `BOT_SERVICE_API_KEY`.
+ */
 export const updateRecordingStatus = mutation({
   args: {
     apiKey: v.string(),
@@ -750,7 +759,13 @@ export const createIssueFromActionItem = authenticatedMutation({
 // Internal Functions (called by scheduler)
 // ===========================================
 
-/** Trigger a pending bot job to join a meeting. Called by the Convex scheduler at the scheduled start time. */
+/**
+ * Trigger a pending bot job to join a meeting.
+ *
+ * This is the entry point for the bot lifecycle, called by the Convex scheduler at the scheduled start time.
+ * It transitions the job from 'pending' to 'queued' and the recording status to 'joining',
+ * then dispatches the job to the external bot service via `notifyBotService`.
+ */
 export const triggerBotJob = internalMutation({
   args: { recordingId: v.id("meetingRecordings") },
   handler: async (ctx, args) => {
@@ -789,7 +804,26 @@ export const triggerBotJob = internalMutation({
   },
 });
 
-/** Send an HTTP request to the external bot service to start a recording job. */
+/**
+ * Send an HTTP request to the external bot service to start a recording job.
+ *
+ * This action communicates with the configured bot service to initiate the recording process.
+ *
+ * Configuration:
+ * - Requires `BOT_SERVICE_URL` and `BOT_SERVICE_API_KEY` environment variables.
+ * - If not configured, marks the job as failed immediately.
+ *
+ * Behavior:
+ * - Sends a POST request to `${BOT_SERVICE_URL}/api/jobs`.
+ * - Payload includes job details and `callbackUrl` (this Convex deployment's URL).
+ * - Enforces a 30-second timeout using AbortController to prevent hanging actions.
+ * - Updates the job with the external service's job ID on success.
+ *
+ * Error Handling:
+ * - Catches network errors and timeouts.
+ * - Logs failures and marks the job as failed via `markJobFailed`.
+ * - Failures will trigger automatic retries (handled by `markJobFailed`).
+ */
 export const notifyBotService = internalAction({
   args: {
     jobId: v.id("meetingBotJobs"),
