@@ -197,7 +197,7 @@ describe("Y.js Backend", () => {
         organizationId,
       });
 
-      const docBefore = await asUser.query(api.documents.get, { id: docId });
+      const docBefore = await asUser.query(api.documents.getDocument, { id: docId });
       const beforeTimestamp = docBefore?.updatedAt;
 
       // Wait a bit
@@ -209,7 +209,7 @@ describe("Y.js Backend", () => {
         clientVersion: 0,
       });
 
-      const docAfter = await asUser.query(api.documents.get, { id: docId });
+      const docAfter = await asUser.query(api.documents.getDocument, { id: docId });
       expect(docAfter?.updatedAt).toBeGreaterThan(beforeTimestamp || 0);
     });
   });
