@@ -235,6 +235,7 @@ export function IpRestrictionsSettings() {
                           size="sm"
                           onClick={() => handleRemoveIp(entry._id)}
                           className="text-status-error hover:bg-status-error/10"
+                          aria-label={`Remove IP ${entry.ipRange}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
