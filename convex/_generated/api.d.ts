@@ -8,8 +8,6 @@
  * @module
  */
 
-import type * as otpPasswordReset from "../otpPasswordReset.js";
-import type * as otpVerification from "../otpVerification.js";
 import type * as ai_actions from "../ai/actions.js";
 import type * as ai_chat from "../ai/chat.js";
 import type * as ai_config from "../ai/config.js";
@@ -109,6 +107,8 @@ import type * as oauthHealthCheck from "../oauthHealthCheck.js";
 import type * as offlineSync from "../offlineSync.js";
 import type * as onboarding from "../onboarding.js";
 import type * as organizations from "../organizations.js";
+import type * as otpPasswordReset from "../otpPasswordReset.js";
+import type * as otpVerification from "../otpVerification.js";
 import type * as presence from "../presence.js";
 import type * as projectAccess from "../projectAccess.js";
 import type * as projectMembers from "../projectMembers.js";
@@ -155,8 +155,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  otpPasswordReset: typeof otpPasswordReset;
-  otpVerification: typeof otpVerification;
   "ai/actions": typeof ai_actions;
   "ai/chat": typeof ai_chat;
   "ai/config": typeof ai_config;
@@ -256,6 +254,8 @@ declare const fullApi: ApiFromModules<{
   offlineSync: typeof offlineSync;
   onboarding: typeof onboarding;
   organizations: typeof organizations;
+  otpPasswordReset: typeof otpPasswordReset;
+  otpVerification: typeof otpVerification;
   presence: typeof presence;
   projectAccess: typeof projectAccess;
   projectMembers: typeof projectMembers;
