@@ -3,6 +3,7 @@ import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { getSessionId } from "./lib/authAdapter";
 import { DAY } from "./lib/timeUtils";
 import { sanitizeUserForCurrent } from "./lib/userUtils";
 import { otpPasswordReset } from "./otpPasswordReset";
@@ -86,8 +87,21 @@ export const getRedirectDestination = query({
     if (user.twoFactorEnabled && user.twoFactorSecret) {
       // Consider 2FA verified if it was verified within the last 24 hours
       const twentyFourHoursAgo = Date.now() - DAY;
-      if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
-        return ROUTES.verify2FA.path;
+      const sessionId = await getSessionId(ctx);
+
+      if (sessionId) {
+        const sessionVerification = await ctx.db
+          .query("twoFactorSessions")
+          .withIndex("by_session_user", (q) => q.eq("sessionId", sessionId).eq("userId", userId))
+          .first();
+
+        if (!sessionVerification || sessionVerification.verifiedAt < twentyFourHoursAgo) {
+          return ROUTES.verify2FA.path;
+        }
+      } else {
+        if (!user.twoFactorVerifiedAt || user.twoFactorVerifiedAt < twentyFourHoursAgo) {
+          return ROUTES.verify2FA.path;
+        }
       }
     }
 
