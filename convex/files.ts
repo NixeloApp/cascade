@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { authenticatedMutation, issueMutation, issueQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
+import { validateAttachment } from "./lib/fileValidators";
 
 // Generate upload URL for files
 export const generateUploadUrl = authenticatedMutation({
@@ -19,6 +20,9 @@ export const addAttachment = issueMutation({
     size: v.number(),
   },
   handler: async (ctx, args) => {
+    // Validate file type before linking
+    await validateAttachment(ctx, args.storageId);
+
     const issue = ctx.issue;
 
     // Add to issue attachments array
