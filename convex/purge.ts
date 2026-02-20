@@ -85,6 +85,7 @@ export const TABLES: TableNames[] = [
   "users",
   "authAccounts",
   "authSessions",
+  "twoFactorSessions",
   "authRefreshTokens",
   "authVerificationCodes",
   "authVerifiers",
