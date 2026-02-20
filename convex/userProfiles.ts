@@ -6,6 +6,7 @@ import { batchFetchUsers } from "./lib/batchHelpers";
 import { forbidden, notFound } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { sanitizeUserForAuth } from "./lib/userUtils";
 import { employmentTypes } from "./validators";
 
 // Limits for user profile queries
@@ -347,8 +348,8 @@ export const listUserProfiles = authenticatedQuery({
     const profilesWithUsers = profiles.map((profile) => ({
       ...profile,
       createdAt: profile._creationTime,
-      user: userMap.get(profile.userId) ?? null,
-      manager: profile.managerId ? (userMap.get(profile.managerId) ?? null) : null,
+      user: sanitizeUserForAuth(userMap.get(profile.userId)),
+      manager: profile.managerId ? sanitizeUserForAuth(userMap.get(profile.managerId)) : null,
     }));
 
     return profilesWithUsers;
@@ -376,7 +377,7 @@ export const getUsersWithoutProfiles = authenticatedQuery({
     // Filter users without profiles
     const usersWithoutProfiles = allUsers.filter((user) => !profileUserIds.has(user._id));
 
-    return usersWithoutProfiles;
+    return usersWithoutProfiles.map((user) => sanitizeUserForAuth(user)).filter((u) => u !== null);
   },
 });
 
