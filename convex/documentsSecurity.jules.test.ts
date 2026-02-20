@@ -46,11 +46,19 @@ describe("Documents Security - Private Project Isolation", () => {
       });
     });
 
+    // Positive control: admin (project member) should still be able to access
+    const docForAdmin = await asAdmin.query(api.documents.getDocument, { id: docId });
+    expect(docForAdmin?._id).toBe(docId);
+
+    const adminListResult = await asAdmin.query(api.documents.list, { organizationId });
+    const adminDoc = adminListResult.documents.find((d) => d._id === docId);
+    expect(adminDoc).toBeDefined();
+
     // 4. Vulnerability Check 1: getDocument
     // Attacker should NOT be able to see the document because they are not in the project
     await expect(async () => {
       await asAttacker.query(api.documents.getDocument, { id: docId });
-    }).rejects.toThrow(/Not authorized/);
+    }).rejects.toThrow("Not authorized to access this document");
 
     // 5. Vulnerability Check 2: list
     // Attacker should NOT see the document in the list

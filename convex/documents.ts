@@ -142,9 +142,11 @@ export const list = authenticatedQuery({
     });
 
     // Filter by access (specifically project access)
+    // Pre-build org IDs set to avoid N+1 membership queries
+    const myOrgIds = args.organizationId ? new Set<string>([args.organizationId]) : undefined;
     const allDocuments = [];
     for (const doc of combinedDocuments) {
-      if (await canAccessDocument(ctx, doc)) {
+      if (await canAccessDocument(ctx, doc, myOrgIds)) {
         allDocuments.push(doc);
       }
     }
@@ -601,10 +603,13 @@ export const listChildren = authenticatedQuery({
       .filter(notDeleted)
       .take(BOUNDED_RELATION_LIMIT);
 
+    // Pre-build org IDs set to avoid N+1 membership queries
+    const myOrgIds = new Set<string>([args.organizationId]);
+
     // Filter by access
     const accessible = [];
     for (const doc of documents) {
-      if (await canAccessDocument(ctx, doc)) {
+      if (await canAccessDocument(ctx, doc, myOrgIds)) {
         accessible.push(doc);
       }
     }
@@ -625,7 +630,7 @@ export const listChildren = authenticatedQuery({
     const childCountMap = new Map<Id<"documents">, number>();
     for (const child of allChildren) {
       if (child.parentId && parentIds.includes(child.parentId)) {
-        if (await canAccessDocument(ctx, child)) {
+        if (await canAccessDocument(ctx, child, myOrgIds)) {
           childCountMap.set(child.parentId, (childCountMap.get(child.parentId) ?? 0) + 1);
         }
       }
@@ -670,10 +675,13 @@ export const getTree = authenticatedQuery({
       .filter(notDeleted)
       .take(BOUNDED_RELATION_LIMIT);
 
+    // Pre-build org IDs set to avoid N+1 membership queries
+    const myOrgIds = new Set<string>([args.organizationId]);
+
     // Filter by access
     const accessible = [];
     for (const doc of allDocs) {
-      if (await canAccessDocument(ctx, doc)) {
+      if (await canAccessDocument(ctx, doc, myOrgIds)) {
         accessible.push(doc);
       }
     }
