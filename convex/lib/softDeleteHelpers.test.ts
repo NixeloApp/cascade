@@ -13,6 +13,7 @@ import {
   restoreFields,
   softDeleteFields,
 } from "./softDeleteHelpers";
+import { HOUR, MONTH, SECOND } from "./timeUtils";
 
 describe("softDeleteHelpers", () => {
   describe("softDeleteFields", () => {
@@ -132,13 +133,10 @@ describe("softDeleteHelpers", () => {
   });
 
   describe("isEligibleForPermanentDeletion", () => {
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-    const ONE_HOUR = 60 * 60 * 1000;
-
     it("should return true when deletion exceeds threshold", () => {
       const record = {
         isDeleted: true,
-        deletedAt: Date.now() - THIRTY_DAYS - 1000, // 30 days + 1 second ago
+        deletedAt: Date.now() - MONTH - SECOND, // 30 days + 1 second ago
       };
 
       expect(isEligibleForPermanentDeletion(record)).toBe(true);
@@ -147,7 +145,7 @@ describe("softDeleteHelpers", () => {
     it("should return false when deletion is recent", () => {
       const record = {
         isDeleted: true,
-        deletedAt: Date.now() - ONE_HOUR, // 1 hour ago
+        deletedAt: Date.now() - HOUR, // 1 hour ago
       };
 
       expect(isEligibleForPermanentDeletion(record)).toBe(false);
@@ -156,7 +154,7 @@ describe("softDeleteHelpers", () => {
     it("should return false for non-deleted record", () => {
       const record = {
         isDeleted: false,
-        deletedAt: Date.now() - THIRTY_DAYS - 1000,
+        deletedAt: Date.now() - MONTH - SECOND,
       };
 
       expect(isEligibleForPermanentDeletion(record)).toBe(false);
@@ -165,14 +163,14 @@ describe("softDeleteHelpers", () => {
     it("should use custom threshold", () => {
       const record = {
         isDeleted: true,
-        deletedAt: Date.now() - ONE_HOUR - 1000, // Just over 1 hour ago
+        deletedAt: Date.now() - HOUR - SECOND, // Just over 1 hour ago
       };
 
       // With default 30-day threshold - not eligible
       expect(isEligibleForPermanentDeletion(record)).toBe(false);
 
       // With 1-hour threshold - eligible
-      expect(isEligibleForPermanentDeletion(record, ONE_HOUR)).toBe(true);
+      expect(isEligibleForPermanentDeletion(record, HOUR)).toBe(true);
     });
 
     it("should return false when just under threshold", () => {
@@ -180,7 +178,7 @@ describe("softDeleteHelpers", () => {
       // The function uses Date.now() internally, so exact threshold is flaky
       const record = {
         isDeleted: true,
-        deletedAt: Date.now() - THIRTY_DAYS + 1000, // 1 second under threshold
+        deletedAt: Date.now() - MONTH + SECOND, // 1 second under threshold
       };
 
       // Not eligible when under threshold (must be > not >=)

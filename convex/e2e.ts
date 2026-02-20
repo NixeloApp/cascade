@@ -20,6 +20,7 @@ import { constantTimeEqual } from "./lib/apiAuth";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { getConvexSiteUrl } from "./lib/env";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { MONTH } from "./lib/timeUtils";
 import type { CalendarEventColor } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
@@ -3620,7 +3621,7 @@ export const createGoogleOAuthSessionInternal = internalMutation({
     // Create a new auth session
     const sessionId = await ctx.db.insert("authSessions", {
       userId,
-      expirationTime: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
+      expirationTime: Date.now() + MONTH,
     });
 
     // Generate tokens - using a simple but unique format
