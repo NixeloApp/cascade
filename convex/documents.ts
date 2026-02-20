@@ -811,10 +811,7 @@ export const getBreadcrumbs = authenticatedQuery({
     }
 
     // Check access
-    const isCreator = document.createdBy === ctx.userId;
-    if (!isCreator && !document.isPublic) {
-      throw forbidden(undefined, "Not authorized to access this document");
-    }
+    await assertDocumentAccess(ctx, document);
 
     // Build path by collecting all ancestor IDs first, then batch fetch
     const ancestorIds: Id<"documents">[] = [];
