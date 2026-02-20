@@ -12,7 +12,7 @@ import {
   efficientCount,
   safeCollect,
 } from "../lib/boundedQueries";
-import { forbidden } from "../lib/errors";
+import { forbidden, notFound } from "../lib/errors";
 import {
   type EnrichedIssue,
   enrichComments,
@@ -544,12 +544,12 @@ export const listComments = query({
     const issue = await ctx.db.get(args.issueId);
 
     if (!issue || issue.isDeleted) {
-      return { page: [], isDone: true, continueCursor: "" };
+      throw notFound("issue", args.issueId);
     }
 
     const project = await ctx.db.get(issue.projectId as Id<"projects">);
     if (!project) {
-      return { page: [], isDone: true, continueCursor: "" };
+      throw notFound("project");
     }
 
     if (userId) {

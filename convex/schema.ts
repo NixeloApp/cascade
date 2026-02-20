@@ -1662,19 +1662,6 @@ const applicationTables = {
     errorCode: v.optional(v.string()),
     timestamp: v.number(),
   }).index("by_timestamp", ["timestamp"]),
-
-  // ===========================================================================
-  // SECURITY & 2FA SESSIONS
-  // ===========================================================================
-
-  twoFactorSessions: defineTable({
-    sessionId: v.string(),
-    userId: v.id("users"),
-    verifiedAt: v.number(),
-  })
-    .index("by_session", ["sessionId"])
-    .index("by_user", ["userId"])
-    .index("by_session_user", ["sessionId", "userId"]),
 };
 
 // =============================================================================

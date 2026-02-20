@@ -110,3 +110,8 @@
 2. **Timing Attack:** The execution difference (attempting `fetch` vs skipping it) allowed attackers to enumerate registered emails by observing response times (or error states).
 **Learning:** Sending emails or performing external I/O must always be done in Actions, not Mutations. To avoid timing attacks when logic is conditional (e.g. "send if not taken"), decouple the side effect from the request response by scheduling an asynchronous action.
 **Prevention:** Refactored `updateProfile` to use `ctx.scheduler.runAfter` to schedule a new `sendVerificationEmailAction`. This ensures the mutation returns immediately and consistently for all inputs, while the email sending happens asynchronously in the background.
+
+## 2026-02-20 - Cross-Tenant Access via Public Document Breadcrumbs
+**Vulnerability:** The `getBreadcrumbs` query allowed authenticated users to access the breadcrumb path (titles of ancestor documents) of any "public" document, even if that document belonged to a different organization. This bypassed the implicit organization boundary expected for public documents.
+**Learning:** `isPublic` flags on resources (like documents) often imply "public to the organization", not "public to the world". Access control checks must explicitly verify organization membership unless global access is intended.
+**Prevention:** Refactored `getBreadcrumbs` to use the same `assertDocumentAccess` helper as `getDocument`, ensuring consistent enforcement of organization membership for public documents.
