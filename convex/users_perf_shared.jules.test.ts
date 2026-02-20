@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -53,11 +54,11 @@ describe("Users Performance Optimization (Shared Projects)", () => {
 
     // Helper to create issue
     const createIssue = async (
-      projectId: any,
+      projectId: Id<"projects">,
       title: string,
       status: string,
-      reporter: any,
-      assignee: any,
+      reporter: Id<"users">,
+      assignee: Id<"users">,
     ) => {
       await t.run(async (ctx) => {
         const p = await ctx.db.get(projectId);
