@@ -103,3 +103,10 @@
 **Vulnerability:** The Pumble integration used a custom `fetch` implementation with weak validation (`.includes("pumble.com")`) that could be bypassed for SSRF. It also did not prevent DNS rebinding or private IP access, unlike the main webhook delivery system.
 **Learning:** Ad-hoc implementation of security-critical logic (like safe HTTP fetching) often leads to vulnerabilities. Security features like SSRF protection should be encapsulated in reusable helpers and used consistently across the codebase.
 **Prevention:** Extracted the robust SSRF protection logic from `webhookHelpers.ts` into a reusable `safeFetch` helper and applied it to the Pumble integration, ensuring consistent protection against SSRF, DNS rebinding, and private IP access.
+
+## 2026-03-05 - User Enumeration via Timing Attack in Email Updates
+**Vulnerability:** The `updateProfile` mutation synchronously called `sendEmail` (which uses `fetch`) when a user changed their email to a new address. If the email was already taken, the sending logic was skipped. This created two vulnerabilities:
+1. **Crash:** `fetch` is illegal in Convex mutations, causing the mutation to fail for valid new emails in production.
+2. **Timing Attack:** The execution difference (attempting `fetch` vs skipping it) allowed attackers to enumerate registered emails by observing response times (or error states).
+**Learning:** Sending emails or performing external I/O must always be done in Actions, not Mutations. To avoid timing attacks when logic is conditional (e.g. "send if not taken"), decouple the side effect from the request response by scheduling an asynchronous action.
+**Prevention:** Refactored `updateProfile` to use `ctx.scheduler.runAfter` to schedule a new `sendVerificationEmailAction`. This ensures the mutation returns immediately and consistently for all inputs, while the email sending happens asynchronously in the background.
