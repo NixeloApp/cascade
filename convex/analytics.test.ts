@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
@@ -62,7 +63,7 @@ describe("Analytics", () => {
 
       // Create sprint with dates
       const startDate = Date.now();
-      const endDate = startDate + 14 * 24 * 60 * 60 * 1000; // 2 weeks
+      const endDate = startDate + 2 * WEEK; // 2 weeks
       const sprintId = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
@@ -348,7 +349,7 @@ describe("Analytics", () => {
       await asUser.mutation(api.sprints.startSprint, {
         sprintId: activeSprintId,
         startDate: Date.now(),
-        endDate: Date.now() + 14 * 24 * 60 * 60 * 1000,
+        endDate: Date.now() + 2 * WEEK,
       });
 
       // Create future sprint

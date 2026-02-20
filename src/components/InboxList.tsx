@@ -8,6 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
+import { DAY, WEEK } from "@convex/lib/timeUtils";
 import { useMutation, useQuery } from "convex/react";
 import {
   AlertTriangle,
@@ -180,7 +181,7 @@ export function InboxList({ projectId }: InboxListProps) {
   const handleBulkSnooze = async () => {
     try {
       const ids = Array.from(selectedIds);
-      const oneWeekFromNow = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      const oneWeekFromNow = Date.now() + WEEK;
       const result = await bulkSnooze({ ids, projectId, until: oneWeekFromNow });
       showSuccess(`Snoozed ${result.snoozed} issue(s) for 1 week`);
       setSelectedIds(new Set());
@@ -385,7 +386,7 @@ function InboxIssueRow({
 
   const handleSnooze = async () => {
     // Snooze for 1 day by default
-    const until = Date.now() + 24 * 60 * 60 * 1000;
+    const until = Date.now() + DAY;
     try {
       await snooze({ id: item._id, projectId, until });
       showSuccess("Issue snoozed for 1 day");

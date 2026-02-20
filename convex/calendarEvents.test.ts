@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { DAY, HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
@@ -15,8 +16,8 @@ describe("calendarEvents", () => {
       const now = Date.now();
       const eventId = await asUser.mutation(api.calendarEvents.create, {
         title: "Team Meeting",
-        startTime: now + 3600000, // 1 hour from now
-        endTime: now + 7200000, // 2 hours from now
+        startTime: now + 3600000, // 1 HOUR from now
+        endTime: now + 7200000, // 2 HOURs from now
         allDay: false,
         eventType: "meeting",
       });
@@ -274,36 +275,35 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const day = 24 * 60 * 60 * 1000;
 
       // Create events at different times
       await asUser.mutation(api.calendarEvents.create, {
         title: "Event 1",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
 
       await asUser.mutation(api.calendarEvents.create, {
         title: "Event 2",
-        startTime: now + 2 * day,
-        endTime: now + 2 * day + 3600000,
+        startTime: now + 2 * DAY,
+        endTime: now + 2 * DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
 
       await asUser.mutation(api.calendarEvents.create, {
         title: "Event Outside Range",
-        startTime: now + 10 * day,
-        endTime: now + 10 * day + 3600000,
+        startTime: now + 10 * DAY,
+        endTime: now + 10 * DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
 
       const events = await asUser.query(api.calendarEvents.listByDateRange, {
         startDate: now,
-        endDate: now + 5 * day,
+        endDate: now + 5 * DAY,
       });
 
       expect(events.length).toBe(2);
@@ -320,27 +320,26 @@ describe("calendarEvents", () => {
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
       const now = Date.now();
-      const day = 24 * 60 * 60 * 1000;
 
       await asUser1.mutation(api.calendarEvents.create, {
         title: "User 1 Event",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "personal",
       });
 
       await asUser2.mutation(api.calendarEvents.create, {
         title: "User 2 Event",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "personal",
       });
 
       const user1Events = await asUser1.query(api.calendarEvents.listByDateRange, {
         startDate: now,
-        endDate: now + 5 * day,
+        endDate: now + 5 * DAY,
       });
 
       expect(user1Events.length).toBe(1);
@@ -355,12 +354,11 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const day = 24 * 60 * 60 * 1000;
 
       await asUser.mutation(api.calendarEvents.create, {
         title: "Upcoming Event",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
@@ -376,12 +374,11 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const day = 24 * 60 * 60 * 1000;
 
       const eventId = await asUser.mutation(api.calendarEvents.create, {
         title: "Cancelled Event",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
@@ -401,12 +398,11 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const day = 24 * 60 * 60 * 1000;
 
       const eventId = await asUser.mutation(api.calendarEvents.create, {
         title: "Cancelled Event",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
@@ -430,12 +426,11 @@ describe("calendarEvents", () => {
       const asAttendee = asAuthenticatedUser(t, attendeeId);
 
       const now = Date.now();
-      const day = 24 * 60 * 60 * 1000;
 
       await asOrganizer.mutation(api.calendarEvents.create, {
         title: "Invited Event",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "meeting",
         attendeeIds: [attendeeId],
@@ -447,26 +442,25 @@ describe("calendarEvents", () => {
   });
 
   describe("getUpcoming", () => {
-    it("should return events in next 7 days", async () => {
+    it("should return events in next 7 DAYs", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const day = 24 * 60 * 60 * 1000;
 
       await asUser.mutation(api.calendarEvents.create, {
         title: "Tomorrow Event",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
 
       await asUser.mutation(api.calendarEvents.create, {
         title: "Next Week Event",
-        startTime: now + 10 * day, // Outside 7 day window
-        endTime: now + 10 * day + 3600000,
+        startTime: now + 10 * DAY, // Outside 7 DAY window
+        endTime: now + 10 * DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
@@ -482,14 +476,13 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const hour = 60 * 60 * 1000;
 
       // Create multiple events
       for (let i = 0; i < 5; i++) {
         await asUser.mutation(api.calendarEvents.create, {
           title: `Event ${i + 1}`,
-          startTime: now + (i + 1) * hour,
-          endTime: now + (i + 2) * hour,
+          startTime: now + (i + 1) * HOUR,
+          endTime: now + (i + 2) * HOUR,
           allDay: false,
           eventType: "meeting",
         });
@@ -505,12 +498,11 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const day = 24 * 60 * 60 * 1000;
 
       const eventId = await asUser.mutation(api.calendarEvents.create, {
         title: "Cancelled Upcoming",
-        startTime: now + day,
-        endTime: now + day + 3600000,
+        startTime: now + DAY,
+        endTime: now + DAY + 3600000,
         allDay: false,
         eventType: "meeting",
       });
@@ -530,29 +522,28 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const hour = 60 * 60 * 1000;
 
       // Create in reverse order
       await asUser.mutation(api.calendarEvents.create, {
         title: "Third",
-        startTime: now + 3 * hour,
-        endTime: now + 4 * hour,
+        startTime: now + 3 * HOUR,
+        endTime: now + 4 * HOUR,
         allDay: false,
         eventType: "meeting",
       });
 
       await asUser.mutation(api.calendarEvents.create, {
         title: "First",
-        startTime: now + hour,
-        endTime: now + 2 * hour,
+        startTime: now + HOUR,
+        endTime: now + 2 * HOUR,
         allDay: false,
         eventType: "meeting",
       });
 
       await asUser.mutation(api.calendarEvents.create, {
         title: "Second",
-        startTime: now + 2 * hour,
-        endTime: now + 3 * hour,
+        startTime: now + 2 * HOUR,
+        endTime: now + 3 * HOUR,
         allDay: false,
         eventType: "meeting",
       });
@@ -588,16 +579,16 @@ describe("calendarEvents", () => {
     });
   });
 
-  describe("all-day events", () => {
-    it("should handle all-day events", async () => {
+  describe("all-DAY events", () => {
+    it("should handle all-DAY events", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startOfDay = today.getTime();
-      const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
+      const toDAY = new Date();
+      toDAY.setHours(0, 0, 0, 0);
+      const startOfDay = toDAY.getTime();
+      const endOfDay = startOfDay + DAY - 1;
 
       const eventId = await asUser.mutation(api.calendarEvents.create, {
         title: "All Day Event",

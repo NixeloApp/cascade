@@ -1,5 +1,7 @@
 // Offline state management and IndexedDB wrapper
 
+import { DAY, WEEK } from "@convex/lib/timeUtils";
+
 const DB_NAME = "NixeloOfflineDB";
 const DB_VERSION = 1;
 
@@ -128,7 +130,7 @@ class OfflineDB {
 
   async clearSyncedMutations(olderThan?: number): Promise<number> {
     const db = await this.open();
-    const cutoff = olderThan || Date.now() - 24 * 60 * 60 * 1000; // Default: 24 hours
+    const cutoff = olderThan || Date.now() - DAY;
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(["mutations"], "readwrite");
@@ -200,7 +202,7 @@ class OfflineDB {
 
   async clearOldCache(olderThan?: number): Promise<number> {
     const db = await this.open();
-    const cutoff = olderThan || Date.now() - 7 * 24 * 60 * 60 * 1000; // Default: 7 days
+    const cutoff = olderThan || Date.now() - WEEK;
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(["cachedData"], "readwrite");

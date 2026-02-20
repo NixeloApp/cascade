@@ -9,6 +9,7 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { getSiteUrl } from "./lib/env";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { WEEK } from "./lib/timeUtils";
 import { inviteRoles, projectRoles } from "./validators";
 
 // Helper: Check if user is a organization admin
@@ -263,7 +264,7 @@ export const sendInvite = authenticatedMutation({
       projectRole: args.projectId ? effectiveProjectRole : undefined,
       invitedBy: ctx.userId,
       token,
-      expiresAt: now + 7 * 24 * 60 * 60 * 1000, // 7 days
+      expiresAt: now + WEEK,
       status: "pending",
       updatedAt: now,
     });
@@ -351,7 +352,7 @@ export const resendInvite = authenticatedMutation({
     }
 
     // Extend expiration by another 7 days
-    const newExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    const newExpiresAt = Date.now() + WEEK;
 
     await ctx.db.patch(args.inviteId, {
       expiresAt: newExpiresAt,

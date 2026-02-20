@@ -10,6 +10,7 @@ import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { internalAction } from "../_generated/server";
 import { getSiteUrl } from "../lib/env";
+import { DAY, WEEK } from "../lib/timeUtils";
 import { digestFrequencies } from "../validators";
 import { sendEmail } from "./index";
 
@@ -283,10 +284,7 @@ export const sendDigestEmail = internalAction({
 
     // Calculate time range
     const now = Date.now();
-    const timeRange =
-      frequency === "daily"
-        ? 24 * 60 * 60 * 1000 // 24 hours
-        : 7 * 24 * 60 * 60 * 1000; // 7 days
+    const timeRange = frequency === "daily" ? DAY : WEEK;
     const startTime = now - timeRange;
 
     // Get notifications from the time range

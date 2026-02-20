@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY, MONTH, WEEK } from "@convex/lib/timeUtils";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
@@ -45,13 +46,12 @@ export function BillingReport({ projectId }: BillingReportProps) {
   // Calculate date range parameters inline
   const dateRangeParams = (() => {
     const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
 
     switch (dateRange) {
       case "week":
-        return { startDate: now - 7 * day, endDate: now };
+        return { startDate: now - WEEK, endDate: now };
       case "month":
-        return { startDate: now - 30 * day, endDate: now };
+        return { startDate: now - MONTH, endDate: now };
       default:
         return {};
     }

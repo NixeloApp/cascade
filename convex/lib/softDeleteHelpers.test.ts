@@ -13,7 +13,7 @@ import {
   restoreFields,
   softDeleteFields,
 } from "./softDeleteHelpers";
-import { HOUR, MONTH, SECOND } from "./timeUtils";
+import { DAY, HOUR, MONTH, SECOND } from "./timeUtils";
 
 describe("softDeleteHelpers", () => {
   describe("softDeleteFields", () => {
@@ -301,7 +301,7 @@ describe("softDeleteHelpers", () => {
     });
 
     it("should handle very old deleted record", () => {
-      const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
+      const oneYearAgo = Date.now() - 365 * DAY;
       const record = {
         isDeleted: true,
         deletedAt: oneYearAgo,
@@ -309,7 +309,7 @@ describe("softDeleteHelpers", () => {
 
       expect(isEligibleForPermanentDeletion(record)).toBe(true);
       const timeSince = getTimeSinceDeletion(record);
-      expect(timeSince).toBeGreaterThan(364 * 24 * 60 * 60 * 1000);
+      expect(timeSince).toBeGreaterThan(364 * DAY);
     });
 
     it("should handle partial SoftDeletable object", () => {

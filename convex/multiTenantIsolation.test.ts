@@ -8,6 +8,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "./testUtils";
@@ -255,7 +256,7 @@ describe("Multi-Tenant Isolation", () => {
         projectId: projectIdA,
         name: "Secret Sprint from Org A",
         startDate: now,
-        endDate: now + 14 * 24 * 60 * 60 * 1000, // 2 weeks
+        endDate: now + 2 * WEEK, // 2 weeks
       });
 
       // User B should NOT be able to list sprints from User A's project (throws forbidden)

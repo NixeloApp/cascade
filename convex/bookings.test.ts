@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { DAY, HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createTestUser, expectThrowsAsync } from "./testUtils";
@@ -33,7 +34,7 @@ describe("Bookings", () => {
     await createBookingPage(t, hostId, "test-page");
 
     // Booking time: 24 hours from now
-    const startTime = Date.now() + 24 * 60 * 60 * 1000;
+    const startTime = Date.now() + DAY;
 
     const bookingId = await t.mutation(api.bookings.createBooking, {
       bookingPageSlug: "test-page",
@@ -64,7 +65,7 @@ describe("Bookings", () => {
     await createBookingPage(t, hostId, "overlap-page");
 
     // Base booking: T to T+30
-    const baseTime = Date.now() + 24 * 60 * 60 * 1000;
+    const baseTime = Date.now() + DAY;
 
     // Create first booking
     await t.mutation(api.bookings.createBooking, {
@@ -98,7 +99,7 @@ describe("Bookings", () => {
     }, "This time slot is no longer available");
 
     // Setup for Containment Test
-    const containBaseTime = baseTime + 5 * 60 * 60 * 1000; // Far away
+    const containBaseTime = baseTime + 5 * HOUR; // Far away
 
     // Create a short duration page for the "inner" booking
     await t.run(async (ctx) => {
@@ -177,7 +178,7 @@ describe("Bookings", () => {
         bookingPageSlug: "notice-page",
         bookerName: "Guest",
         bookerEmail: "guest@example.com",
-        startTime: now + 60 * 60 * 1000,
+        startTime: now + HOUR,
         timezone: "UTC",
       });
     }, "Requires at least 24 hours notice");
@@ -209,7 +210,7 @@ describe("Bookings", () => {
         bookingPageSlug: "inactive-page",
         bookerName: "Guest",
         bookerEmail: "guest@example.com",
-        startTime: Date.now() + 24 * 60 * 60 * 1000,
+        startTime: Date.now() + DAY,
         timezone: "UTC",
       });
     }, "bookingPage"); // Expect not found error for bookingPage

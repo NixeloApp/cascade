@@ -20,11 +20,11 @@ import { constantTimeEqual } from "./lib/apiAuth";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { getConvexSiteUrl } from "./lib/env";
 import { notDeleted } from "./lib/softDeleteHelpers";
-import { MONTH } from "./lib/timeUtils";
+import { DAY, HOUR, MONTH, WEEK } from "./lib/timeUtils";
 import type { CalendarEventColor } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
-const TEST_USER_EXPIRATION_MS = 60 * 60 * 1000;
+const TEST_USER_EXPIRATION_MS = HOUR;
 
 import { api } from "./_generated/api";
 
@@ -2810,14 +2810,13 @@ export const seedScreenshotDataInternal = internalMutation({
       .first();
 
     if (!sprint) {
-      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
       const sprintId = await ctx.db.insert("sprints", {
         projectId,
         name: "Sprint 1",
         goal: "Launch MVP features",
         status: "active",
-        startDate: now - sevenDaysMs,
-        endDate: now + sevenDaysMs,
+        startDate: now - WEEK,
+        endDate: now + WEEK,
         createdBy: userId,
         updatedAt: now,
       });
@@ -2827,7 +2826,6 @@ export const seedScreenshotDataInternal = internalMutation({
     const sprintId = sprint?._id;
 
     // 7. Create issues (idempotent by key)
-    const DAY_MS = 24 * 60 * 60 * 1000;
     const issueDefinitions: Array<{
       key: string;
       title: string;
@@ -2846,7 +2844,7 @@ export const seedScreenshotDataInternal = internalMutation({
         priority: "high",
         assigned: true,
         inSprint: true,
-        dueDate: now - 2 * DAY_MS,
+        dueDate: now - 2 * DAY,
       },
       {
         key: "DEMO-2",
@@ -2856,7 +2854,7 @@ export const seedScreenshotDataInternal = internalMutation({
         priority: "highest",
         assigned: true,
         inSprint: true,
-        dueDate: now + 1 * DAY_MS,
+        dueDate: now + 1 * DAY,
       },
       {
         key: "DEMO-3",
@@ -2866,7 +2864,7 @@ export const seedScreenshotDataInternal = internalMutation({
         priority: "medium",
         assigned: true,
         inSprint: true,
-        dueDate: now + 3 * DAY_MS,
+        dueDate: now + 3 * DAY,
       },
       {
         key: "DEMO-4",
@@ -2876,7 +2874,7 @@ export const seedScreenshotDataInternal = internalMutation({
         priority: "medium",
         assigned: false,
         inSprint: false,
-        dueDate: now + 7 * DAY_MS,
+        dueDate: now + 7 * DAY,
       },
       {
         key: "DEMO-5",
@@ -3163,9 +3161,8 @@ export const seedScreenshotDataInternal = internalMutation({
 
       if (!existing) {
         const startTime =
-          todayMs + cal.dayOffset * DAY_MS + cal.startHour * 3600000 + cal.startMin * 60000;
-        const endTime =
-          todayMs + cal.dayOffset * DAY_MS + cal.endHour * 3600000 + cal.endMin * 60000;
+          todayMs + cal.dayOffset * DAY + cal.startHour * 3600000 + cal.startMin * 60000;
+        const endTime = todayMs + cal.dayOffset * DAY + cal.endHour * 3600000 + cal.endMin * 60000;
 
         await ctx.db.insert("calendarEvents", {
           title: cal.title,
@@ -3236,7 +3233,7 @@ export const seedScreenshotDataInternal = internalMutation({
     ];
 
     for (const entry of timeEntryDefs) {
-      const entryDate = todayMs + entry.dayOffset * DAY_MS;
+      const entryDate = todayMs + entry.dayOffset * DAY;
       const existing = await ctx.db
         .query("timeEntries")
         .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", entryDate))
