@@ -82,12 +82,9 @@ export const getUser = authenticatedQuery({
     const { items: myOrgs } = await getOrganizationMemberships(ctx, ctx.userId);
 
     if (myOrgs.length > 0) {
-      // Optimization: Fetch only necessary memberships for the target user
-      // We can't easily cache for the target user (since they vary), but we limit the fetch
-      const theirOrgs = await ctx.db
-        .query("organizationMembers")
-        .withIndex("by_user", (q) => q.eq("userId", args.id))
-        .take(MAX_PAGE_SIZE);
+      // Optimization: Fetch memberships for the target user (cached per request)
+      // This helper enforces MAX_PAGE_SIZE limit internally
+      const { items: theirOrgs } = await getOrganizationMemberships(ctx, args.id);
 
       const myOrgIds = new Set(myOrgs.map((m) => m.organizationId));
       const hasSharedOrg = theirOrgs.some((m) => myOrgIds.has(m.organizationId));
