@@ -6,7 +6,7 @@
 
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -594,8 +594,8 @@ describe("Y.js Backend", () => {
       });
       expect(records).toHaveLength(1);
 
-      // Run cleanup
-      const result = await asUser.mutation(api.yjs.cleanupStaleAwareness, {});
+      // Run cleanup - using internal mutation via test harness, not client
+      const result = await t.mutation(internal.yjs.cleanupStaleAwareness, {});
       expect(result.deleted).toBeGreaterThanOrEqual(1);
 
       // Verify it's gone
