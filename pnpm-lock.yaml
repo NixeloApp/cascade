@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  axios: ^1.13.5
+
 importers:
 
   .:
@@ -4623,8 +4626,8 @@ packages:
     resolution: {integrity: sha512-BASOg+YwO2C+346x3LZOeoovTIoTrRqEsqMa6fmfAV0P+U9mFr9NsyOEpiYvFjbc64NMrSswhV50WdXzdb/Z5A==}
     engines: {node: '>=4'}
 
-  axios@1.9.0:
-    resolution: {integrity: sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==}
+  axios@1.13.5:
+    resolution: {integrity: sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==}
 
   b4a@1.7.4:
     resolution: {integrity: sha512-u20zJLDaSWpxaZ+zaAkEIB2dZZ1o+DF4T/MRbmsvGp9nletHOyiai19OzX1fF8xUBYsO1bPXxODvcd0978pnug==}
@@ -10702,7 +10705,7 @@ snapshots:
       '@boxyhq/saml20': 1.12.1
       '@googleapis/admin': 23.5.0(encoding@0.1.13)
       '@libsql/sqlite3': 0.3.1(encoding@0.1.13)
-      axios: 1.9.0
+      axios: 1.13.5
       encoding: 0.1.13
       ipaddr.js: 2.2.0
       jose: 6.0.11
@@ -14188,7 +14191,7 @@ snapshots:
 
   axe-core@4.11.1: {}
 
-  axios@1.9.0:
+  axios@1.13.5:
     dependencies:
       follow-redirects: 1.15.11
       form-data: 4.0.5
