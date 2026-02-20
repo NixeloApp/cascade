@@ -8,8 +8,8 @@
  * @module
  */
 
-import type * as OTPPasswordReset from "../OTPPasswordReset.js";
-import type * as OTPVerification from "../OTPVerification.js";
+import type * as otpPasswordReset from "../otpPasswordReset.js";
+import type * as otpVerification from "../otpVerification.js";
 import type * as ai_actions from "../ai/actions.js";
 import type * as ai_chat from "../ai/chat.js";
 import type * as ai_config from "../ai/config.js";
@@ -155,8 +155,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  OTPPasswordReset: typeof OTPPasswordReset;
-  OTPVerification: typeof OTPVerification;
+  otpPasswordReset: typeof otpPasswordReset;
+  otpVerification: typeof otpVerification;
   "ai/actions": typeof ai_actions;
   "ai/chat": typeof ai_chat;
   "ai/config": typeof ai_config;

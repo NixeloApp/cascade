@@ -56,7 +56,7 @@ async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string
  * When MAILTRAP_MODE=sandbox, emails land in the Mailtrap inbox.
  * E2E tests use Mailtrap API to fetch emails and extract OTP codes.
  */
-export const OTPVerification = Resend({
+export const otpVerification = Resend({
   id: "otp-verification",
   apiKey: "unused", // Required by interface but we use our own email system
 
@@ -111,7 +111,7 @@ export const OTPVerification = Resend({
         // E2E tests can retrieve the OTP via /e2e/get-latest-otp endpoint instead
         if (isTestEmail) {
           logger.warn(
-            `[OTPVerification] Email send failed for test user, continuing: ${result.error}`,
+            `[otpVerification] Email send failed for test user, continuing: ${result.error}`,
           );
           return; // Don't throw - OTP is already stored in testOtpCodes
         }
@@ -121,7 +121,7 @@ export const OTPVerification = Resend({
       const isTestEmail = email.endsWith("@inbox.mailtrap.io");
       // For test emails, don't fail on email send errors
       if (isTestEmail) {
-        logger.warn(`[OTPVerification] Email send failed for test user, continuing: ${err}`);
+        logger.warn(`[otpVerification] Email send failed for test user, continuing: ${err}`);
         return; // Don't throw - OTP is already stored in testOtpCodes
       }
       // Fail fast so users aren't stuck without a verification code.

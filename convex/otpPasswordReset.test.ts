@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
-import { OTPPasswordReset } from "./OTPPasswordReset";
+import { otpPasswordReset } from "./otpPasswordReset";
 
 // Mock internal object
 vi.mock("./_generated/api", () => ({
@@ -37,10 +37,10 @@ vi.mock("../emails/PasswordResetEmail", () => ({
   PasswordResetEmail: vi.fn((props) => ({ props })),
 }));
 
-describe("OTPPasswordReset", () => {
+describe("otpPasswordReset", () => {
   // Access the custom sendVerificationRequest method from the provider
-  const sendVerificationRequest = (OTPPasswordReset as any).options.sendVerificationRequest;
-  const generateVerificationToken = (OTPPasswordReset as any).options.generateVerificationToken;
+  const sendVerificationRequest = (otpPasswordReset as any).options.sendVerificationRequest;
+  const generateVerificationToken = (otpPasswordReset as any).options.generateVerificationToken;
 
   const mockCtx = {
     runMutation: vi.fn(),

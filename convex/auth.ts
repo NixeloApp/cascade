@@ -5,8 +5,8 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { DAY } from "./lib/timeUtils";
 import { sanitizeUserForCurrent } from "./lib/userUtils";
-import { OTPPasswordReset } from "./OTPPasswordReset";
-import { OTPVerification } from "./OTPVerification";
+import { otpPasswordReset } from "./otpPasswordReset";
+import { otpVerification } from "./otpVerification";
 import { ROUTES } from "./shared/routes";
 
 // All OTP emails use the universal email provider system
@@ -15,8 +15,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Google,
     Password({
-      reset: OTPPasswordReset,
-      verify: OTPVerification,
+      reset: otpPasswordReset,
+      verify: otpVerification,
     }),
   ],
   callbacks: {

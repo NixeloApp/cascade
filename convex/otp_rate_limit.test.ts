@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { OTPPasswordReset } from "./OTPPasswordReset";
+import { otpPasswordReset } from "./otpPasswordReset";
 
 // Mock internal object because codegen hasn't run
 vi.mock("./_generated/api", () => ({
@@ -43,7 +43,7 @@ describe("OTP Rate Limiting", () => {
     const token = "123456";
 
     // Access custom implementation
-    const sendVerificationRequest = (OTPPasswordReset as any).options.sendVerificationRequest;
+    const sendVerificationRequest = (otpPasswordReset as any).options.sendVerificationRequest;
 
     // Call once
     await sendVerificationRequest({ identifier: email, token }, mockCtx as any);
