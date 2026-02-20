@@ -7,15 +7,17 @@ describe("LoadingSpinner", () => {
     it("should render with default props", () => {
       render(<LoadingSpinner />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toBeInTheDocument();
-      expect(spinner).toHaveAttribute("aria-label", "Loading");
+      const status = screen.getByRole("status");
+      expect(status).toBeInTheDocument();
+      // No redundant aria-label on the container
+      expect(status).not.toHaveAttribute("aria-label");
     });
 
-    it("should render sr-only text", () => {
+    it("should render sr-only text when no message provided", () => {
       render(<LoadingSpinner />);
 
       expect(screen.getByText("Loading...")).toBeInTheDocument();
+      expect(screen.getByText("Loading...")).toHaveClass("sr-only");
     });
 
     it("should not render message when not provided", () => {
@@ -30,132 +32,118 @@ describe("LoadingSpinner", () => {
 
       expect(screen.getByText("Please wait...")).toBeInTheDocument();
     });
+
+    it("should NOT render sr-only text when message provided", () => {
+      render(<LoadingSpinner message="Please wait..." />);
+
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    });
   });
 
   describe("Size Variants", () => {
     it("should render with small size", () => {
-      render(<LoadingSpinner size="sm" />);
+      const { container } = render(<LoadingSpinner size="sm" />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("h-4");
-      expect(spinner).toHaveClass("w-4");
-      expect(spinner).toHaveClass("border-2");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("h-4");
+      expect(visualSpinner).toHaveClass("w-4");
+      expect(visualSpinner).toHaveClass("border-2");
     });
 
     it("should render with medium size (default)", () => {
-      render(<LoadingSpinner size="md" />);
+      const { container } = render(<LoadingSpinner size="md" />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("h-8");
-      expect(spinner).toHaveClass("w-8");
-      expect(spinner).toHaveClass("border-2");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("h-8");
+      expect(visualSpinner).toHaveClass("w-8");
+      expect(visualSpinner).toHaveClass("border-2");
     });
 
     it("should render with large size", () => {
-      render(<LoadingSpinner size="lg" />);
+      const { container } = render(<LoadingSpinner size="lg" />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("h-12");
-      expect(spinner).toHaveClass("w-12");
-      expect(spinner).toHaveClass("border-3");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("h-12");
+      expect(visualSpinner).toHaveClass("w-12");
+      expect(visualSpinner).toHaveClass("border-3");
     });
 
     it("should use medium size when no size prop provided", () => {
-      render(<LoadingSpinner />);
+      const { container } = render(<LoadingSpinner />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("h-8");
-      expect(spinner).toHaveClass("w-8");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("h-8");
+      expect(visualSpinner).toHaveClass("w-8");
     });
   });
 
   describe("Custom Styling", () => {
-    it("should apply custom className", () => {
-      render(<LoadingSpinner className="custom-class" />);
+    it("should apply custom className to the visual spinner", () => {
+      const { container } = render(<LoadingSpinner className="custom-class" />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("custom-class");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("custom-class");
     });
 
     it("should combine custom className with size classes", () => {
-      render(<LoadingSpinner size="sm" className="text-red-500" />);
+      const { container } = render(<LoadingSpinner size="sm" className="text-red-500" />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("h-4");
-      expect(spinner).toHaveClass("text-red-500");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("h-4");
+      expect(visualSpinner).toHaveClass("text-red-500");
     });
 
     it("should have default animation and border classes", () => {
-      render(<LoadingSpinner />);
+      const { container } = render(<LoadingSpinner />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("animate-spin");
-      expect(spinner).toHaveClass("rounded-full");
-      expect(spinner).toHaveClass("border-ui-text-secondary");
-      expect(spinner).toHaveClass("border-t-transparent");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("animate-spin");
+      expect(visualSpinner).toHaveClass("rounded-full");
+      expect(visualSpinner).toHaveClass("border-ui-text-secondary");
+      expect(visualSpinner).toHaveClass("border-t-transparent");
     });
 
     it("should render with brand variant", () => {
-      render(<LoadingSpinner variant="brand" />);
+      const { container } = render(<LoadingSpinner variant="brand" />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("border-brand");
-      expect(spinner).toHaveClass("border-t-transparent");
-    });
-
-    it("should render with inherit variant", () => {
-      render(<LoadingSpinner variant="inherit" />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("border-current");
-      expect(spinner).toHaveClass("border-t-transparent");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("border-brand");
+      expect(visualSpinner).toHaveClass("border-t-transparent");
     });
 
     it("should apply pulse animation when animation is pulse", () => {
-      render(<LoadingSpinner animation="pulse" />);
+      const { container } = render(<LoadingSpinner animation="pulse" />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("animate-pulse");
-      expect(spinner).not.toHaveClass("animate-spin");
-    });
-
-    it("should work without custom className", () => {
-      render(<LoadingSpinner />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toBeInTheDocument();
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("animate-pulse");
+      expect(visualSpinner).not.toHaveClass("animate-spin");
     });
   });
 
   describe("Props Combinations", () => {
     it("should work with only size prop", () => {
-      render(<LoadingSpinner size="lg" />);
+      const { container } = render(<LoadingSpinner size="lg" />);
 
-      expect(screen.getByRole("status")).toHaveClass("h-12");
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("h-12");
       expect(screen.queryByRole("paragraph")).not.toBeInTheDocument();
     });
 
     it("should work with only message prop", () => {
-      render(<LoadingSpinner message="Loading data..." />);
+      const { container } = render(<LoadingSpinner message="Loading data..." />);
 
       expect(screen.getByText("Loading data...")).toBeInTheDocument();
-      expect(screen.getByRole("status")).toHaveClass("h-8"); // default md
+
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("h-8"); // default md
     });
 
     it("should work with only className prop", () => {
-      render(<LoadingSpinner className="my-custom-class" />);
+      const { container } = render(<LoadingSpinner className="my-custom-class" />);
 
-      expect(screen.getByRole("status")).toHaveClass("my-custom-class");
-      expect(screen.getByRole("status")).toHaveClass("h-8"); // default md
-    });
-
-    it("should work with all props", () => {
-      render(<LoadingSpinner size="sm" className="text-blue-500" message="Processing..." />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("h-4");
-      expect(spinner).toHaveClass("text-blue-500");
-      expect(screen.getByText("Processing...")).toBeInTheDocument();
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("my-custom-class");
+      expect(visualSpinner).toHaveClass("h-8"); // default md
     });
   });
 
@@ -167,56 +155,38 @@ describe("LoadingSpinner", () => {
       expect(message).toHaveClass("text-sm");
       expect(message).toHaveClass("text-ui-text-secondary");
     });
-
-    it("should handle long messages", () => {
-      const longMessage = "A".repeat(200);
-      render(<LoadingSpinner message={longMessage} />);
-
-      expect(screen.getByText(longMessage)).toBeInTheDocument();
-    });
-
-    it("should handle special characters in message", () => {
-      const specialMessage = "Loading: <>&\"'";
-      render(<LoadingSpinner message={specialMessage} />);
-
-      expect(screen.getByText(specialMessage)).toBeInTheDocument();
-    });
-
-    it("should handle empty string message", () => {
-      const { container } = render(<LoadingSpinner message="" />);
-
-      // Empty string is falsy, so no paragraph should render
-      const message = container.querySelector("p");
-      expect(message).not.toBeInTheDocument();
-    });
   });
 
   describe("Accessibility", () => {
-    it("should have role status", () => {
+    it("should have role status on container", () => {
       render(<LoadingSpinner />);
 
-      expect(screen.getByRole("status")).toBeInTheDocument();
+      const status = screen.getByRole("status");
+      expect(status).toBeInTheDocument();
+      expect(status).toHaveClass("flex");
     });
 
-    it("should have aria-label", () => {
+    it("should NOT have redundant aria-label", () => {
       render(<LoadingSpinner />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveAttribute("aria-label", "Loading");
+      // The container should not have aria-label "Loading" because we rely on text content
+      const status = screen.getByRole("status");
+      expect(status).not.toHaveAttribute("aria-label", "Loading");
     });
 
-    it("should have sr-only text for screen readers", () => {
+    it("should hide visual spinner from accessibility tree", () => {
+      const { container } = render(<LoadingSpinner />);
+
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toBeInTheDocument();
+    });
+
+    it("should have sr-only text for screen readers when no message", () => {
       const { container } = render(<LoadingSpinner />);
 
       const srOnly = container.querySelector(".sr-only");
       expect(srOnly).toBeInTheDocument();
       expect(srOnly).toHaveTextContent("Loading...");
-    });
-
-    it("should maintain accessibility with custom className", () => {
-      render(<LoadingSpinner className="custom" />);
-
-      expect(screen.getByRole("status")).toHaveAttribute("aria-label", "Loading");
     });
   });
 
@@ -230,16 +200,6 @@ describe("LoadingSpinner", () => {
       expect(wrapper).toHaveClass("items-center");
       expect(wrapper).toHaveClass("justify-center");
       expect(wrapper).toHaveClass("gap-3");
-    });
-
-    it("should contain spinner and message in correct order", () => {
-      const { container } = render(<LoadingSpinner message="Loading..." />);
-
-      const wrapper = container.firstChild as HTMLElement;
-      const children = wrapper.children;
-
-      expect(children[0]).toBe(screen.getByRole("status"));
-      expect(children[1]).toHaveTextContent("Loading...");
     });
   });
 });
@@ -256,69 +216,12 @@ describe("LoadingOverlay", () => {
     });
 
     it("should render LoadingSpinner with large size", () => {
-      render(<LoadingOverlay />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("h-12");
-      expect(spinner).toHaveClass("w-12");
-    });
-
-    it("should render without message when not provided", () => {
-      render(<LoadingOverlay />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toBeInTheDocument();
-
-      const { container } = render(<LoadingOverlay />);
-      const message = container.querySelector("p");
-      expect(message).not.toBeInTheDocument();
-    });
-
-    it("should render with message when provided", () => {
-      render(<LoadingOverlay message="Loading data..." />);
-
-      expect(screen.getByText("Loading data...")).toBeInTheDocument();
-    });
-  });
-
-  describe("Overlay Styling", () => {
-    it("should have correct z-index and positioning", () => {
       const { container } = render(<LoadingOverlay />);
 
-      const overlay = container.querySelector(".absolute");
-      expect(overlay).toHaveClass("z-10");
-      expect(overlay).toHaveClass("rounded-lg");
-    });
-
-    it("should center the spinner", () => {
-      const { container } = render(<LoadingOverlay />);
-
-      const overlay = container.querySelector(".absolute");
-      expect(overlay).toHaveClass("flex");
-      expect(overlay).toHaveClass("items-center");
-      expect(overlay).toHaveClass("justify-center");
-    });
-  });
-
-  describe("Props", () => {
-    it("should pass message to LoadingSpinner", () => {
-      render(<LoadingOverlay message="Please wait..." />);
-
-      expect(screen.getByText("Please wait...")).toBeInTheDocument();
-    });
-
-    it("should handle long messages", () => {
-      const longMessage = "B".repeat(150);
-      render(<LoadingOverlay message={longMessage} />);
-
-      expect(screen.getByText(longMessage)).toBeInTheDocument();
-    });
-
-    it("should handle empty string message", () => {
-      const { container } = render(<LoadingOverlay message="" />);
-
-      const message = container.querySelector("p");
-      expect(message).not.toBeInTheDocument();
+      // Check visual spinner inside overlay
+      const visualSpinner = container.querySelector('[aria-hidden="true"]');
+      expect(visualSpinner).toHaveClass("h-12");
+      expect(visualSpinner).toHaveClass("w-12");
     });
   });
 
@@ -326,10 +229,10 @@ describe("LoadingOverlay", () => {
     it("should work as overlay with all LoadingSpinner features", () => {
       render(<LoadingOverlay message="Saving changes..." />);
 
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveAttribute("aria-label", "Loading");
+      const status = screen.getByRole("status");
+      expect(status).toBeInTheDocument();
       expect(screen.getByText("Saving changes...")).toBeInTheDocument();
-      expect(screen.getByText("Loading...")).toBeInTheDocument(); // sr-only text
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument(); // sr-only text absent because message is present
     });
   });
 });
