@@ -54,13 +54,12 @@ export function LoadingSpinner({
   message,
 }: LoadingSpinnerProps) {
   return (
-    <Flex direction="column" align="center" justify="center" gap="md">
-      <output
+    <Flex direction="column" align="center" justify="center" gap="md" role="status">
+      <div
         className={cn(spinnerVariants({ size, variant, animation }), className)}
-        aria-label="Loading"
-      >
-        <span className="sr-only">Loading...</span>
-      </output>
+        aria-hidden="true"
+      />
+      {!message && <span className="sr-only">Loading...</span>}
       {message && (
         <Typography variant="small" className="text-ui-text-secondary">
           {message}
