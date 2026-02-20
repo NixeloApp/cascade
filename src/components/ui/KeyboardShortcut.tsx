@@ -1,4 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import type { LucideIcon } from "lucide-react";
+import type * as React from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -69,58 +71,79 @@ export function KeyboardShortcut({
 
   return (
     <Flex as="span" inline align="center" gap="xs" className={className}>
-      {keysWithIds.map(({ key, id }, index) => (
-        <span key={id} className="contents">
-          <kbd className={cn(keyVariants({ size, variant }))}>{formatKey(key, size ?? "sm")}</kbd>
-          {index < keysWithIds.length - 1 && (
-            <span className="text-ui-text-tertiary mx-0.5">+</span>
-          )}
-        </span>
-      ))}
+      {keysWithIds.map(({ key, id }, index) => {
+        const { content, label } = getKeyData(key, size ?? "sm");
+        return (
+          <span key={id} className="contents">
+            <kbd className={cn(keyVariants({ size, variant }))} aria-label={label} title={label}>
+              {content}
+            </kbd>
+            {index < keysWithIds.length - 1 && (
+              <span aria-hidden="true" className="text-ui-text-tertiary mx-0.5">
+                +
+              </span>
+            )}
+          </span>
+        );
+      })}
     </Flex>
   );
 }
 
 /**
  * Format key for display (handle common abbreviations)
- * Returns either a string or a React element (icon)
+ * Returns content (icon or text) and label for screen readers
  */
-function formatKey(key: string, size: "sm" | "md"): React.ReactNode {
+function getKeyData(key: string, size: "sm" | "md"): { content: React.ReactNode; label: string } {
   const lowerKey = key.toLowerCase();
   const iconSize = size === "sm" ? "xs" : "sm";
 
   // Keys that use icons
-  const iconKeys: Record<string, React.ReactNode> = {
-    cmd: <Icon icon={Command} size={iconSize} />,
-    command: <Icon icon={Command} size={iconSize} />,
-    enter: <Icon icon={CornerDownLeft} size={iconSize} />,
-    return: <Icon icon={CornerDownLeft} size={iconSize} />,
-    backspace: <Icon icon={Delete} size={iconSize} />,
-    up: <Icon icon={ArrowUp} size={iconSize} />,
-    down: <Icon icon={ArrowDown} size={iconSize} />,
-    left: <Icon icon={ArrowLeft} size={iconSize} />,
-    right: <Icon icon={ArrowRight} size={iconSize} />,
+  const iconKeys: Record<string, { icon: LucideIcon; label: string }> = {
+    cmd: { icon: Command, label: "Command" },
+    command: { icon: Command, label: "Command" },
+    enter: { icon: CornerDownLeft, label: "Enter" },
+    return: { icon: CornerDownLeft, label: "Enter" },
+    backspace: { icon: Delete, label: "Backspace" },
+    up: { icon: ArrowUp, label: "Up Arrow" },
+    down: { icon: ArrowDown, label: "Down Arrow" },
+    left: { icon: ArrowLeft, label: "Left Arrow" },
+    right: { icon: ArrowRight, label: "Right Arrow" },
   };
 
   if (iconKeys[lowerKey]) {
-    return iconKeys[lowerKey];
+    const { icon: IconComponent, label } = iconKeys[lowerKey];
+    return {
+      content: <Icon icon={IconComponent} size={iconSize} aria-hidden="true" />,
+      label,
+    };
   }
 
   // Keys that use text labels
-  const textKeys: Record<string, string> = {
-    ctrl: "Ctrl",
-    control: "Ctrl",
-    alt: "Alt",
-    option: "Opt",
-    shift: "Shift",
-    esc: "Esc",
-    escape: "Esc",
-    tab: "Tab",
-    space: "Space",
-    delete: "Del",
+  const textKeys: Record<string, { display: string; label: string }> = {
+    ctrl: { display: "Ctrl", label: "Control" },
+    control: { display: "Ctrl", label: "Control" },
+    alt: { display: "Alt", label: "Alt" },
+    option: { display: "Opt", label: "Option" },
+    shift: { display: "Shift", label: "Shift" },
+    esc: { display: "Esc", label: "Escape" },
+    escape: { display: "Esc", label: "Escape" },
+    tab: { display: "Tab", label: "Tab" },
+    space: { display: "Space", label: "Space" },
+    delete: { display: "Del", label: "Delete" },
   };
 
-  return textKeys[lowerKey] || key;
+  if (textKeys[lowerKey]) {
+    return {
+      content: textKeys[lowerKey].display,
+      label: textKeys[lowerKey].label,
+    };
+  }
+
+  return {
+    content: key,
+    label: key,
+  };
 }
 
 /**

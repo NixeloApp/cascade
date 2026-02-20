@@ -66,7 +66,12 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
   };
 
   return (
-    <CommandDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <CommandDialog
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title="Command Palette"
+      description="Search for commands, navigation, and items"
+    >
       <Command
         data-testid={TEST_IDS.EDITOR.COMMAND_PALETTE}
         className="bg-ui-bg"
@@ -87,6 +92,7 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
           value={search}
           onValueChange={setSearch}
           className="text-ui-text"
+          aria-label="Command menu"
         />
         <CommandList className="max-h-[50vh] sm:max-h-[60vh]">
           <CommandEmpty className="text-ui-text-secondary">No commands found</CommandEmpty>
