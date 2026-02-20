@@ -80,6 +80,14 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
     return `${duration}ms`;
   };
 
+  const formatJson = (payload: string) => {
+    try {
+      return JSON.stringify(JSON.parse(payload), null, 2);
+    } catch {
+      return payload;
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -183,13 +191,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                       <Typography variant="label">Request Payload:</Typography>
                       <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto">
                         <Typography as="pre" variant="mono">
-                          {(() => {
-                            try {
-                              return JSON.stringify(JSON.parse(execution.requestPayload), null, 2);
-                            } catch {
-                              return execution.requestPayload;
-                            }
-                          })()}
+                          {formatJson(execution.requestPayload)}
                         </Typography>
                       </Card>
                     </Stack>
