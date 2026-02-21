@@ -23,10 +23,12 @@ describe("html utils", () => {
   });
 
   describe("escapeScriptJson", () => {
-    it("should escape < characters in JSON", () => {
+    it("should escape <, >, and / characters in JSON", () => {
       const data = { content: "</script><script>alert(1)</script>" };
       const json = escapeScriptJson(data);
-      expect(json).toContain("\\u003c/script>");
+      expect(json).toContain("\\u003c");
+      expect(json).toContain("\\u003e");
+      expect(json).toContain("\\u002f");
       expect(json).not.toContain("</script>");
     });
 
@@ -37,7 +39,13 @@ describe("html utils", () => {
 
     it("should handle arrays", () => {
       const data = ["<foo>", "bar"];
-      expect(escapeScriptJson(data)).toBe('["\\u003cfoo>","bar"]');
+      const json = escapeScriptJson(data);
+      expect(json).toContain("\\u003cfoo\\u003e");
+      expect(JSON.parse(json)).toEqual(data);
+    });
+
+    it("should handle undefined gracefully", () => {
+      expect(escapeScriptJson(undefined)).toBe("null");
     });
   });
 });

@@ -23,8 +23,13 @@ export function escapeHtml(unsafe: string): string {
 
 /**
  * Escape JSON for safe usage in HTML <script> tags.
- * Escapes < to \u003c to prevent breaking out of the script tag.
+ * Escapes <, >, and / to prevent breaking out of the script tag
+ * and for defense-in-depth against legacy comment terminators.
  */
 export function escapeScriptJson(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, "\\u003c");
+  const json = JSON.stringify(data) ?? "null";
+  return json
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\//g, "\\u002f");
 }
