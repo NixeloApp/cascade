@@ -701,34 +701,27 @@ export const listChildren = authenticatedQuery({
     // Sort by order
     accessible.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-    // Batch fetch all children counts to avoid N+1
-    // Get all children in one query
-    const parentIds = accessible.map((doc) => doc._id);
-    const allChildren = await ctx.db
-      .query("documents")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
-      .filter((q) => q.and(notDeleted(q), q.neq(q.field("parentId"), undefined)))
-      .take(BOUNDED_RELATION_LIMIT);
+    // Check if each document has children
+    // Optimization: Parallel queries to check for existence of children
+    const withChildInfo = await Promise.all(
+      accessible.map(async (doc) => {
+        // We only need to know if there's at least one child to show the expand arrow
+        const firstChild = await ctx.db
+          .query("documents")
+          .withIndex("by_organization_parent", (q) =>
+            q.eq("organizationId", args.organizationId).eq("parentId", doc._id),
+          )
+          .filter(notDeleted)
+          .first();
 
-    // Count children per parent
-    const childCountMap = new Map<Id<"documents">, number>();
-    for (const child of allChildren) {
-      if (child.parentId && parentIds.includes(child.parentId)) {
-        if (await canAccessDocument(ctx, child, myOrgIds)) {
-          childCountMap.set(child.parentId, (childCountMap.get(child.parentId) ?? 0) + 1);
-        }
-      }
-    }
-
-    const withChildInfo = accessible.map((doc) => {
-      const accessibleChildCount = childCountMap.get(doc._id) ?? 0;
-      return {
-        ...doc,
-        hasChildren: accessibleChildCount > 0,
-        childCount: accessibleChildCount,
-        isOwner: doc.createdBy === ctx.userId,
-      };
-    });
+        return {
+          ...doc,
+          hasChildren: !!firstChild,
+          childCount: firstChild ? 1 : 0, // Approximate, sufficient for UI
+          isOwner: doc.createdBy === ctx.userId,
+        };
+      }),
+    );
 
     return withChildInfo;
   },
