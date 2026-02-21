@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { DAY } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "./testUtils";
@@ -25,7 +26,6 @@ describe("Issues Date Range", () => {
     });
 
     const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
 
     // Create issues
     // 1. Inside sprint, inside date range
@@ -60,19 +60,19 @@ describe("Issues Date Range", () => {
 
       // Target Range: now to now + 5 days
       // Issue 1: Inside sprint, inside range (now + 3 days) - LATER
-      await createIssue("In Sprint, Late", now + 3 * day, true);
+      await createIssue("In Sprint, Late", now + 3 * DAY, true);
 
       // Issue 0: Inside sprint, inside range (now + 1 day) - EARLIER
-      await createIssue("In Sprint, Early", now + day, true);
+      await createIssue("In Sprint, Early", now + DAY, true);
 
       // Issue 2: Inside sprint, outside range (now + 10 days)
-      await createIssue("In Sprint, Out Range", now + 10 * day, true);
+      await createIssue("In Sprint, Out Range", now + 10 * DAY, true);
 
       // Issue 3: Outside sprint, inside range (now + 2 days)
-      await createIssue("Out Sprint, In Range", now + 2 * day, false);
+      await createIssue("Out Sprint, In Range", now + 2 * DAY, false);
 
       // Issue 4: Outside sprint, outside range
-      await createIssue("Out Sprint, Out Range", now + 10 * day, false);
+      await createIssue("Out Sprint, Out Range", now + 10 * DAY, false);
 
       // Issue 5: Inside sprint, no due date
       // (This one should be filtered out by range check, as range implies existing due date)
@@ -83,7 +83,7 @@ describe("Issues Date Range", () => {
     const issuesByDate = await ctx.asUser.query(api.issues.queries.listIssuesByDateRange, {
       projectId,
       from: now,
-      to: now + 5 * day,
+      to: now + 5 * DAY,
     });
 
     // Should find Issue 0, Issue 1 and Issue 3
@@ -97,7 +97,7 @@ describe("Issues Date Range", () => {
       projectId,
       sprintId,
       from: now,
-      to: now + 5 * day,
+      to: now + 5 * DAY,
     });
 
     // Should find BOTH issues in correct order (by due date ascending)

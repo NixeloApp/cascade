@@ -1,3 +1,4 @@
+import { HOUR } from "@convex/lib/timeUtils";
 import userEvent from "@testing-library/user-event";
 import type { ReactMutation } from "convex/react";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
@@ -375,7 +376,7 @@ describe("NotificationCenter", () => {
         title: "Notification 3",
         message: "Test",
         isRead: false,
-        _creationTime: now - 2 * 60 * 60 * 1000, // 2 hours
+        _creationTime: now - 2 * HOUR, // 2 hours
       },
     ];
 

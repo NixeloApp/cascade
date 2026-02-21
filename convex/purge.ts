@@ -52,6 +52,7 @@ export const TABLES: TableNames[] = [
   "offlineSyncQueue",
   "testOtpCodes",
   "oauthHealthChecks",
+  "oauthTokenHealthChecks",
   "aiChats",
   "aiMessages",
   "aiSuggestions",

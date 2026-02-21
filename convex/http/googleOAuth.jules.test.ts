@@ -95,7 +95,8 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("access_denied");
+      // Security: Error page should NOT expose internal error details
+      expect(text).not.toContain("access_denied");
     });
 
     it("should return HTML error if config is missing (throws)", async () => {
@@ -111,7 +112,8 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("Missing required environment variable");
+      // Security: Error page should NOT expose internal error details
+      expect(text).not.toContain("Missing required environment variable");
     });
 
     it("should return 400 if code is missing", async () => {

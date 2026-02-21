@@ -13,6 +13,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "./testUtils";
@@ -89,7 +90,7 @@ describe("Sprint Workflow Integration", () => {
 
       // Step 3: Start the sprint
       const now = Date.now();
-      const twoWeeksLater = now + 14 * 24 * 60 * 60 * 1000;
+      const twoWeeksLater = now + 2 * WEEK;
 
       await asUser.mutation(api.sprints.startSprint, {
         sprintId,
@@ -176,7 +177,7 @@ describe("Sprint Workflow Integration", () => {
       await asUser.mutation(api.sprints.startSprint, {
         sprintId: sprint1Id,
         startDate: now,
-        endDate: now + 14 * 24 * 60 * 60 * 1000,
+        endDate: now + 2 * WEEK,
       });
 
       // Complete one issue
@@ -343,14 +344,14 @@ describe("Sprint Workflow Integration", () => {
       await asUser.mutation(api.sprints.startSprint, {
         sprintId: sprint1Id,
         startDate: now,
-        endDate: now + 14 * 24 * 60 * 60 * 1000,
+        endDate: now + 2 * WEEK,
       });
 
       // Start sprint 2 - this should automatically complete sprint 1
       await asUser.mutation(api.sprints.startSprint, {
         sprintId: sprint2Id,
         startDate: now,
-        endDate: now + 14 * 24 * 60 * 60 * 1000,
+        endDate: now + 2 * WEEK,
       });
 
       // Verify only sprint 2 is active
@@ -418,7 +419,7 @@ describe("Sprint Workflow Integration", () => {
       await asUser.mutation(api.sprints.startSprint, {
         sprintId,
         startDate: now,
-        endDate: now + 14 * 24 * 60 * 60 * 1000,
+        endDate: now + 2 * WEEK,
       });
 
       // Verify sprint has correct issue count

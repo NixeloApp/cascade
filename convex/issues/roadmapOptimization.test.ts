@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
+import { DAY } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "../testUtils";
@@ -14,7 +15,6 @@ describe("Roadmap Issues Optimization", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
 
     // 1. Bug due today
     await asUser.mutation(api.issues.create, {
@@ -31,7 +31,7 @@ describe("Roadmap Issues Optimization", () => {
       title: "Story Tomorrow",
       type: "story",
       priority: "medium",
-      dueDate: now + oneDay,
+      dueDate: now + DAY,
     });
 
     // 3. Task due next year
@@ -40,7 +40,7 @@ describe("Roadmap Issues Optimization", () => {
       title: "Task Next Year",
       type: "task",
       priority: "low",
-      dueDate: now + 365 * oneDay,
+      dueDate: now + 365 * DAY,
     });
 
     // 4. Epic due next week
@@ -49,7 +49,7 @@ describe("Roadmap Issues Optimization", () => {
       title: "Epic Next Week",
       type: "epic",
       priority: "medium",
-      dueDate: now + 7 * oneDay,
+      dueDate: now + 7 * DAY,
     });
 
     // 5. Subtask due today (should be excluded)

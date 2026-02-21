@@ -74,7 +74,7 @@ crons.daily(
 );
 
 /**
- * OAuth Health Check
+ * OAuth Health Check (Synthetic)
  * Runs every 15 minutes to verify Google OAuth is working
  * Catches issues like expired refresh tokens or API outages
  */
@@ -82,6 +82,19 @@ crons.interval(
   "oauth health check",
   { minutes: 15 },
   internal.oauthHealthCheck.checkGoogleOAuthHealth,
+);
+
+/**
+ * OAuth Token Health Monitor
+ * Runs every hour to check all user OAuth tokens
+ * Auto-refreshes expiring tokens before they expire
+ * Reports aggregated health statistics
+ */
+crons.interval(
+  "oauth token health monitor",
+  { hours: 1 },
+  internal.oauthTokenMonitor.performTokenHealthCheck,
+  {}, // Use default autoRefresh=true
 );
 
 /**
