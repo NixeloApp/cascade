@@ -719,6 +719,8 @@ export const addProjectMember = projectAdminMutation({
         role: args.role,
       },
     });
+
+    return { success: true };
   },
 });
 
@@ -771,6 +773,8 @@ export const updateProjectMemberRole = projectAdminMutation({
         newRole: args.newRole,
       },
     });
+
+    return { success: true };
   },
 });
 
@@ -817,6 +821,8 @@ export const removeProjectMember = projectAdminMutation({
         },
       });
     }
+
+    return { success: true };
   },
 });
 

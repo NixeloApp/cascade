@@ -508,11 +508,12 @@ describe("Projects", () => {
           teamId,
         });
 
-        await asAdmin.mutation(api.projects.addProjectMember, {
+        const result = await asAdmin.mutation(api.projects.addProjectMember, {
           projectId,
           userEmail: "newmember@test.com",
           role: "editor",
         });
+        expect(result).toEqual({ success: true });
 
         // Verify member was added
         const asNewMember = asAuthenticatedUser(t, newMemberId);
@@ -588,11 +589,12 @@ describe("Projects", () => {
           role: "viewer",
         });
 
-        await asAdmin.mutation(api.projects.updateProjectMemberRole, {
+        const result = await asAdmin.mutation(api.projects.updateProjectMemberRole, {
           projectId,
           memberId: memberId,
           newRole: "editor",
         });
+        expect(result).toEqual({ success: true });
 
         // Verify role was updated
         const asMember = asAuthenticatedUser(t, memberId);
@@ -629,10 +631,11 @@ describe("Projects", () => {
           role: "editor",
         });
 
-        await asAdmin.mutation(api.projects.removeProjectMember, {
+        const result = await asAdmin.mutation(api.projects.removeProjectMember, {
           projectId,
           memberId: memberId,
         });
+        expect(result).toEqual({ success: true });
 
         // Verify member was removed
         const asMember = asAuthenticatedUser(t, memberId);
