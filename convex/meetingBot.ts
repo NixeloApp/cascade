@@ -749,8 +749,11 @@ export const createIssueFromActionItem = authenticatedMutation({
     const recording = await ctx.db.get(summary.recordingId);
     if (!recording) throw notFound("recording", summary.recordingId);
 
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden(undefined, "Not authorized to access this recording");
+    // Security Check: ensure user has write access to the recording/summary
+    if (recording.projectId) {
+      await assertCanEditProject(ctx, recording.projectId, ctx.userId);
+    } else if (recording.createdBy !== ctx.userId) {
+      throw forbidden(undefined, "Not authorized to modify this recording");
     }
 
     const actionItem = summary.actionItems[args.actionItemIndex];
