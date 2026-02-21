@@ -19,7 +19,7 @@ interface CreateWorkspaceModalProps {
 
 export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorkspaceModalProps) {
   const { organizationId } = useOrganization();
-  const createWorkspace = useMutation(api.workspaces.createWorkspace);
+  const createWorkspace = useMutation(api.workspaces.create);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

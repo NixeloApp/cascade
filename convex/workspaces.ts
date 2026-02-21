@@ -59,6 +59,9 @@ export const createWorkspace = organizationAdminMutation({
   },
 });
 
+/** @deprecated Use createWorkspace instead */
+export const create = createWorkspace;
+
 /**
  * List all workspaces for a organization
  */
@@ -96,6 +99,23 @@ export const listWorkspaces = organizationQuery({
   },
 });
 
+/** @deprecated Use listWorkspaces instead */
+export const list = listWorkspaces;
+
+/**
+ * Get a single workspace by ID
+ * @deprecated Use `getWorkspace` instead which returns null if not found
+ */
+export const get = authenticatedQuery({
+  args: { id: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db.get(args.id);
+    if (!workspace) throw notFound("workspace", args.id);
+
+    return workspace;
+  },
+});
+
 /**
  * Get a single workspace by ID
  * Returns null if not found (consistent with other APIs)
@@ -105,6 +125,28 @@ export const getWorkspace = authenticatedQuery({
   handler: async (ctx, args) => {
     const workspace = await ctx.db.get(args.id);
     if (!workspace) return null;
+
+    return workspace;
+  },
+});
+
+/**
+ * Get workspace by slug
+ * @deprecated Use `getWorkspaceBySlug` instead which returns null if not found
+ */
+export const getBySlug = organizationQuery({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db
+      .query("workspaces")
+      .withIndex("by_organization_slug", (q) =>
+        q.eq("organizationId", ctx.organizationId).eq("slug", args.slug),
+      )
+      .first();
+
+    if (!workspace) throw notFound("workspace");
 
     return workspace;
   },
@@ -159,6 +201,9 @@ export const updateWorkspace = workspaceAdminMutation({
   },
 });
 
+/** @deprecated Use updateWorkspace instead */
+export const update = updateWorkspace;
+
 /**
  * Delete workspace
  * Only organization admins or the workspace creator can delete workspaces
@@ -205,6 +250,9 @@ export const deleteWorkspace = authenticatedMutation({
   },
 });
 
+/** @deprecated Use deleteWorkspace instead */
+export const remove = deleteWorkspace;
+
 /**
  * Get workspace stats (teams, projects count)
  */
@@ -230,6 +278,9 @@ export const getWorkspaceStats = workspaceQuery({
     };
   },
 });
+
+/** @deprecated Use getWorkspaceStats instead */
+export const getStats = getWorkspaceStats;
 
 // =============================================================================
 // Workspace Members
@@ -280,6 +331,9 @@ export const addWorkspaceMember = workspaceAdminMutation({
   },
 });
 
+/** @deprecated Use addWorkspaceMember instead */
+export const addMember = addWorkspaceMember;
+
 /**
  * Update workspace member role
  * Workspace admin or organization admin only
@@ -308,6 +362,9 @@ export const updateWorkspaceMemberRole = workspaceAdminMutation({
     return { success: true };
   },
 });
+
+/** @deprecated Use updateWorkspaceMemberRole instead */
+export const updateMemberRole = updateWorkspaceMemberRole;
 
 /**
  * Remove member from workspace
@@ -339,6 +396,9 @@ export const removeWorkspaceMember = workspaceAdminMutation({
     return { success: true };
   },
 });
+
+/** @deprecated Use removeWorkspaceMember instead */
+export const removeMember = removeWorkspaceMember;
 
 /**
  * Get workspace members
@@ -375,49 +435,5 @@ export const getWorkspaceMembers = workspaceQuery({
   },
 });
 
-// Deprecated aliases
-/** @deprecated Use createWorkspace */
-export const create = createWorkspace;
-/** @deprecated Use listWorkspaces */
-export const list = listWorkspaces;
-/** @deprecated Use updateWorkspace */
-export const update = updateWorkspace;
-/** @deprecated Use deleteWorkspace */
-export const remove = deleteWorkspace;
-/** @deprecated Use getWorkspace */
-export const get = authenticatedQuery({
-  args: { id: v.id("workspaces") },
-  handler: async (ctx, args) => {
-    const workspace = await ctx.db.get(args.id);
-    if (!workspace) throw notFound("workspace", args.id);
-    return workspace;
-  },
-});
-/** @deprecated Use getWorkspaceBySlug */
-export const getBySlug = organizationQuery({
-  args: {
-    slug: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const workspace = await ctx.db
-      .query("workspaces")
-      .withIndex("by_organization_slug", (q) =>
-        q.eq("organizationId", ctx.organizationId).eq("slug", args.slug),
-      )
-      .first();
-
-    if (!workspace) throw notFound("workspace");
-
-    return workspace;
-  },
-});
-/** @deprecated Use getWorkspaceStats */
-export const getStats = getWorkspaceStats;
-/** @deprecated Use addWorkspaceMember */
-export const addMember = addWorkspaceMember;
-/** @deprecated Use updateWorkspaceMemberRole */
-export const updateMemberRole = updateWorkspaceMemberRole;
-/** @deprecated Use removeWorkspaceMember */
-export const removeMember = removeWorkspaceMember;
-/** @deprecated Use getWorkspaceMembers */
+/** @deprecated Use getWorkspaceMembers instead */
 export const getMembers = getWorkspaceMembers;
