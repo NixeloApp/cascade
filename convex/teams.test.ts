@@ -373,7 +373,7 @@ describe("Teams", () => {
         isPrivate: false,
       });
 
-      const team = await asOwner.query(api.teams.getTeam, { teamId });
+      const team = await asOwner.query(api.teams.getTeam, { id: teamId });
 
       expect(team).not.toBeNull();
       expect(team?.name).toBe("Test Team");
@@ -396,7 +396,7 @@ describe("Teams", () => {
 
       await asOwner.mutation(api.teams.softDeleteTeam, { teamId });
 
-      const team = await asOwner.query(api.teams.getTeam, { teamId });
+      const team = await asOwner.query(api.teams.getTeam, { id: teamId });
       expect(team).toBeNull();
 
       await t.finishInProgressScheduledFunctions();
@@ -421,7 +421,7 @@ describe("Teams", () => {
       });
 
       const asMember = asAuthenticatedUser(t, memberId);
-      const team = await asMember.query(api.teams.getTeam, { teamId });
+      const team = await asMember.query(api.teams.getTeam, { id: teamId });
       expect(team).toBeNull();
 
       await t.finishInProgressScheduledFunctions();

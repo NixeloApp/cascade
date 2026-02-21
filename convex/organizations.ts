@@ -398,7 +398,8 @@ export const removeMember = authenticatedMutation({
  */
 export const getOrganization = authenticatedQuery({
   args: {
-    organizationId: v.id("organizations"),
+    id: v.optional(v.id("organizations")),
+    organizationId: v.optional(v.id("organizations")),
   },
   returns: v.union(
     v.null(),
@@ -421,11 +422,16 @@ export const getOrganization = authenticatedQuery({
     }),
   ),
   handler: async (ctx, args) => {
-    const organization = await ctx.db.get(args.organizationId);
+    const id = args.id ?? args.organizationId;
+    if (!id) {
+      throw validation("id", "Either id or organizationId must be provided");
+    }
+
+    const organization = await ctx.db.get(id);
     if (!organization) return null;
 
     // Check if user is a member
-    const role = await getOrganizationRole(ctx, args.organizationId, ctx.userId);
+    const role = await getOrganizationRole(ctx, id, ctx.userId);
     if (!role) return null;
 
     return {

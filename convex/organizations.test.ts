@@ -190,7 +190,7 @@ describe("organizations", () => {
         timezone: "UTC",
       });
 
-      const byId = await asUser.query(api.organizations.getOrganization, { organizationId });
+      const byId = await asUser.query(api.organizations.getOrganization, { id: organizationId });
       expect(byId?.name).toBe("My organization");
 
       const bySlug = await asUser.query(api.organizations.getOrganizationBySlug, { slug });
@@ -212,7 +212,7 @@ describe("organizations", () => {
       );
 
       const asOther = asAuthenticatedUser(t, otherId);
-      const byId = await asOther.query(api.organizations.getOrganization, { organizationId });
+      const byId = await asOther.query(api.organizations.getOrganization, { id: organizationId });
       expect(byId).toBeNull();
 
       const bySlug = await asOther.query(api.organizations.getOrganizationBySlug, { slug });
