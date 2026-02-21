@@ -10,7 +10,11 @@ vi.mock("../lib/env", () => ({
   getGoogleClientSecret: vi.fn(),
   isGoogleOAuthConfigured: vi.fn(),
   getConvexSiteUrl: vi.fn(),
-  validation: (_type: string, msg: string) => new Error(msg),
+}));
+
+// Mock errors library
+vi.mock("../lib/errors", () => ({
+  validation: (_field: string, msg: string) => new Error(msg),
 }));
 
 // Mock fetchWithTimeout

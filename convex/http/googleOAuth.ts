@@ -14,18 +14,28 @@ const escapeHtml = (unsafe: string) => {
 };
 
 /**
+ * Type guard for record-like objects
+ */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/**
  * Extracts a meaningful error message from a Response object
  */
 const extractErrorMessage = async (response: Response, fallback: string): Promise<string> => {
   try {
     const text = await response.text();
     try {
-      const json = JSON.parse(text);
+      const json: unknown = JSON.parse(text);
       if (typeof json === "string") return json;
-      if (json.error_description) return json.error_description;
-      if (json.error && typeof json.error === "string") return json.error;
-      if (json.error?.message) return json.error.message;
-      if (json.message) return json.message;
+      if (isRecord(json)) {
+        if (typeof json.error_description === "string") return json.error_description;
+        if (typeof json.error === "string") return json.error;
+        if (isRecord(json.error) && typeof json.error.message === "string") {
+          return json.error.message;
+        }
+        if (typeof json.message === "string") return json.message;
+      }
       return fallback;
     } catch {
       return text || fallback;
