@@ -9,6 +9,7 @@ import type { PaginationOptions, PaginationResult } from "convex/server";
 import { asyncMap } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { AuthenticatedUser, sanitizeUserForAuth } from "./userUtils";
 import { BOUNDED_LIST_LIMIT } from "./boundedQueries";
 import { notFound, validation } from "./errors";
 import { fetchPaginatedQuery } from "./queryHelpers";
@@ -32,16 +33,6 @@ export async function getIssueWithProject(
     );
   }
   return issue as Doc<"issues"> & { projectId: Id<"projects"> };
-}
-
-/**
- * Minimal user info for display
- */
-export interface UserInfo {
-  _id: Id<"users">;
-  name: string;
-  email?: string;
-  image?: string;
 }
 
 /**
@@ -73,8 +64,8 @@ export interface ReactionInfo {
  * Enriched issue with related data
  */
 export interface EnrichedIssue extends Omit<Doc<"issues">, "labels"> {
-  assignee: UserInfo | null;
-  reporter: UserInfo | null;
+  assignee: AuthenticatedUser | null;
+  reporter: AuthenticatedUser | null;
   epic: EpicInfo | null;
   labels: LabelInfo[];
 }
@@ -83,21 +74,8 @@ export interface EnrichedIssue extends Omit<Doc<"issues">, "labels"> {
  * Enriched comment with author and reactions
  */
 export interface EnrichedComment extends Doc<"issueComments"> {
-  author: UserInfo | null;
+  author: AuthenticatedUser | null;
   reactions: ReactionInfo[];
-}
-
-/**
- * Convert a user document to UserInfo
- */
-function toUserInfo(user: Doc<"users"> | null): UserInfo | null {
-  if (!user) return null;
-  return {
-    _id: user._id,
-    name: user.name || user.email || "Unknown",
-    email: user.email,
-    image: user.image,
-  };
 }
 
 /**
@@ -218,8 +196,8 @@ export async function enrichIssue(ctx: QueryCtx, issue: Doc<"issues">): Promise<
 
   return {
     ...issue,
-    assignee: toUserInfo(assignee),
-    reporter: toUserInfo(reporter),
+    assignee: sanitizeUserForAuth(assignee),
+    reporter: sanitizeUserForAuth(reporter),
     epic: toEpicInfo(epic),
     labels: labelInfos,
   };
@@ -336,9 +314,9 @@ export async function enrichIssues(
   return issues.map((issue) => ({
     ...issue,
     assignee: issue.assigneeId
-      ? toUserInfo(userMap.get(issue.assigneeId.toString()) ?? null)
+      ? sanitizeUserForAuth(userMap.get(issue.assigneeId.toString()) ?? null)
       : null,
-    reporter: toUserInfo(userMap.get(issue.reporterId.toString()) ?? null),
+    reporter: sanitizeUserForAuth(userMap.get(issue.reporterId.toString()) ?? null),
     epic: issue.epicId ? toEpicInfo(epicMap.get(issue.epicId.toString()) ?? null) : null,
     labels: getLabelInfos(issue, labelsByProject),
   }));
@@ -392,7 +370,7 @@ export async function enrichComments(
 
     return {
       ...comment,
-      author: toUserInfo(author),
+      author: sanitizeUserForAuth(author),
       reactions: formattedReactions,
     };
   });

@@ -13,7 +13,7 @@ import type { Doc } from "../_generated/dataModel";
  */
 export type PublicUser = {
   _id: Doc<"users">["_id"];
-  name?: string;
+  name: string;
   image?: string;
   email?: undefined;
 };
