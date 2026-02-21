@@ -14,7 +14,7 @@ vi.mock("../lib/fetchWithTimeout", () => ({
 }));
 
 // Mock crypto.randomUUID
-global.crypto.randomUUID = vi.fn(() => "test-uuid-state");
+global.crypto.randomUUID = vi.fn(() => "test-uuid-state") as any;
 
 describe("GitHub OAuth Security", () => {
   let mockCtx: ActionCtx;
