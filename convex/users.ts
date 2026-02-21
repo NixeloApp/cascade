@@ -453,11 +453,10 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
  * Helper to count issues in specific projects using a parallelized index query.
  * This is efficient for users who are members of a small number of projects.
  */
-async function countByProjectParallel(
+async function countByProjectParallel<T>(
   projectIds: Id<"projects">[],
   limit: number,
-  // biome-ignore lint/suspicious/noExplicitAny: generic query factory
-  queryFactory: (projectId: Id<"projects">) => CountableQuery<any>,
+  queryFactory: (projectId: Id<"projects">) => CountableQuery<T>,
 ): Promise<number> {
   const counts = await Promise.all(
     projectIds.map((projectId) => efficientCount(queryFactory(projectId), limit)),
