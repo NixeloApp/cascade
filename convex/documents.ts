@@ -920,12 +920,7 @@ export const addComment = authenticatedMutation({
     }
 
     // Verify document exists and user has access
-    const document = await ctx.db.get(args.documentId);
-    if (!document || document.isDeleted) {
-      throw notFound("document", args.documentId);
-    }
-
-    await assertDocumentAccess(ctx, document);
+    await getAccessibleDocument(ctx, args.documentId);
 
     // If replying, verify parent comment exists
     if (args.parentId) {
@@ -961,12 +956,7 @@ export const listComments = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     // Verify document exists and user has access
-    const document = await ctx.db.get(args.documentId);
-    if (!document || document.isDeleted) {
-      throw notFound("document", args.documentId);
-    }
-
-    await assertDocumentAccess(ctx, document);
+    await getAccessibleDocument(ctx, args.documentId);
 
     // Get all comments for this document (bounded)
     const comments = await ctx.db
@@ -1009,11 +999,7 @@ export const updateComment = authenticatedMutation({
       throw notFound("comment", args.commentId);
     }
 
-    const document = await ctx.db.get(comment.documentId);
-    if (!document || document.isDeleted) {
-      throw notFound("document", comment.documentId);
-    }
-    await assertDocumentAccess(ctx, document);
+    await getAccessibleDocument(ctx, comment.documentId);
 
     // Only author can edit
     if (comment.authorId !== ctx.userId) {
@@ -1039,11 +1025,7 @@ export const deleteComment = authenticatedMutation({
       throw notFound("comment", args.commentId);
     }
 
-    const document = await ctx.db.get(comment.documentId);
-    if (!document || document.isDeleted) {
-      throw notFound("document", comment.documentId);
-    }
-    await assertDocumentAccess(ctx, document);
+    await getAccessibleDocument(ctx, comment.documentId);
 
     // Only author can delete
     if (comment.authorId !== ctx.userId) {
@@ -1068,11 +1050,7 @@ export const addCommentReaction = authenticatedMutation({
       throw notFound("comment", args.commentId);
     }
 
-    const document = await ctx.db.get(comment.documentId);
-    if (!document || document.isDeleted) {
-      throw notFound("document", comment.documentId);
-    }
-    await assertDocumentAccess(ctx, document);
+    await getAccessibleDocument(ctx, comment.documentId);
 
     // Check if reaction already exists
     const existing = await ctx.db
@@ -1107,11 +1085,7 @@ export const removeCommentReaction = authenticatedMutation({
       throw notFound("comment", args.commentId);
     }
 
-    const document = await ctx.db.get(comment.documentId);
-    if (!document || document.isDeleted) {
-      throw notFound("document", comment.documentId);
-    }
-    await assertDocumentAccess(ctx, document);
+    await getAccessibleDocument(ctx, comment.documentId);
 
     const reaction = await ctx.db
       .query("documentCommentReactions")
@@ -1191,6 +1165,19 @@ async function assertDocumentAccess(
   if (!allowed) {
     throw forbidden(undefined, "Not authorized to access this document");
   }
+}
+
+// Helper: Fetch document, ensure it exists/not-deleted, and verify access
+async function getAccessibleDocument(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  documentId: Id<"documents">,
+): Promise<Doc<"documents">> {
+  const document = await ctx.db.get(documentId);
+  if (!document || document.isDeleted) {
+    throw notFound("document", documentId);
+  }
+  await assertDocumentAccess(ctx, document);
+  return document;
 }
 
 // Helper: Filter accessible documents for comments
