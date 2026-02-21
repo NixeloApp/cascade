@@ -8,6 +8,7 @@ import { requireBotApiKey } from "./lib/botAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
 import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
+import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { simplePriorities } from "./validators";
 
@@ -849,27 +850,27 @@ export const notifyBotService = internalAction({
       return;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), BOT_SERVICE_TIMEOUT_MS);
-
     try {
-      const response = await fetch(`${botServiceUrl}/api/jobs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${botServiceApiKey}`,
+      const response = await fetchWithTimeout(
+        `${botServiceUrl}/api/jobs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${botServiceApiKey}`,
+          },
+          body: JSON.stringify({
+            jobId: args.jobId,
+            recordingId: args.recordingId,
+            meetingUrl: args.meetingUrl,
+            platform: args.platform,
+            botName: "Nixelo Notetaker",
+            // Callback URLs for the bot to report status (must be Convex backend URL)
+            callbackUrl: process.env.CONVEX_SITE_URL,
+          }),
         },
-        body: JSON.stringify({
-          jobId: args.jobId,
-          recordingId: args.recordingId,
-          meetingUrl: args.meetingUrl,
-          platform: args.platform,
-          botName: "Nixelo Notetaker",
-          // Callback URLs for the bot to report status (must be Convex backend URL)
-          callbackUrl: process.env.CONVEX_SITE_URL,
-        }),
-        signal: controller.signal,
-      });
+        BOT_SERVICE_TIMEOUT_MS,
+      );
 
       if (!response.ok) {
         throw validation("botService", `Bot service responded with ${response.status}`);
@@ -884,7 +885,8 @@ export const notifyBotService = internalAction({
       });
     } catch (error) {
       const errorMessage =
-        error instanceof Error && error.name === "AbortError"
+        (error instanceof Error && error.name === "FetchTimeoutError") ||
+        (error instanceof Error && error.name === "AbortError")
           ? `Timeout: Bot service request exceeded ${BOT_SERVICE_TIMEOUT_MS}ms`
           : getErrorMessage(error);
 
@@ -895,8 +897,6 @@ export const notifyBotService = internalAction({
         recordingId: args.recordingId,
         error: errorMessage,
       });
-    } finally {
-      clearTimeout(timeoutId);
     }
   },
 });

@@ -19,6 +19,7 @@ import { type ActionCtx, httpAction, internalMutation, internalQuery } from "./_
 import { constantTimeEqual } from "./lib/apiAuth";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { getConvexSiteUrl } from "./lib/env";
+import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import type { CalendarEventColor } from "./validators";
 
@@ -3388,7 +3389,7 @@ export const googleOAuthLoginEndpoint = httpAction(async (ctx: ActionCtx, reques
     }
 
     // Step 1: Exchange refresh token for access token
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
@@ -3419,9 +3420,12 @@ export const googleOAuthLoginEndpoint = httpAction(async (ctx: ActionCtx, reques
     const accessToken = tokens.access_token;
 
     // Step 2: Fetch user profile from Google
-    const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const userInfoResponse = await fetchWithTimeout(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
 
     if (!userInfoResponse.ok) {
       return new Response(

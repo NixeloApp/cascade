@@ -15,6 +15,7 @@ import {
   type MutationCtx,
 } from "./_generated/server";
 import { getConvexSiteUrl } from "./lib/env";
+import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
@@ -30,7 +31,7 @@ export const performPasswordResetHandler = async (_ctx: ActionCtx, args: { email
 
     // Use the backend URL (CONVEX_SITE_URL) directly to avoid frontend proxy issues
     // and circular dependencies with api.auth
-    const response = await fetch(`${getConvexSiteUrl()}/api/auth/signin/password`, {
+    const response = await fetchWithTimeout(`${getConvexSiteUrl()}/api/auth/signin/password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

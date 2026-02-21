@@ -6,6 +6,7 @@
  */
 
 import { validation } from "../lib/errors";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import type { AIConfig } from "./config";
 
 export interface AIMessage {
@@ -26,21 +27,25 @@ export interface AIResponse {
  * Anthropic Claude provider
  */
 async function callAnthropic(config: AIConfig, messages: AIMessage[]): Promise<AIResponse> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": config.apiKey,
-      "anthropic-version": "2023-06-01",
+  const response = await fetchWithTimeout(
+    "https://api.anthropic.com/v1/messages",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": config.apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages: messages.filter((m) => m.role !== "system"),
+        system: messages.find((m) => m.role === "system")?.content,
+        max_tokens: config.maxTokens || 4096,
+        temperature: config.temperature || 0.7,
+      }),
     },
-    body: JSON.stringify({
-      model: config.model,
-      messages: messages.filter((m) => m.role !== "system"),
-      system: messages.find((m) => m.role === "system")?.content,
-      max_tokens: config.maxTokens || 4096,
-      temperature: config.temperature || 0.7,
-    }),
-  });
+    60000,
+  );
 
   if (!response.ok) {
     const error = await response.text();

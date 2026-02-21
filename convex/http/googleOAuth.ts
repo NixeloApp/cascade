@@ -2,6 +2,7 @@ import { api, internal } from "../_generated/api";
 import { httpAction } from "../_generated/server";
 import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "../lib/env";
 import { validation } from "../lib/errors";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 /**
  * Google OAuth Integration
@@ -149,7 +150,7 @@ export const handleCallback = httpAction(async (_ctx, request) => {
 
   try {
     // Exchange authorization code for tokens
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -172,11 +173,14 @@ export const handleCallback = httpAction(async (_ctx, request) => {
     const { access_token, refresh_token, expires_in } = tokens;
 
     // Get user info from Google
-    const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
+    const userInfoResponse = await fetchWithTimeout(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
       },
-    });
+    );
 
     const userInfo = await userInfoResponse.json();
     const email = userInfo.email;
@@ -307,13 +311,14 @@ export const triggerSync = httpAction(async (ctx, _request) => {
     }
 
     // Fetch events from Google Calendar API
-    const eventsResponse = await fetch(
+    const eventsResponse = await fetchWithTimeout(
       `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date().toISOString()}&maxResults=100`,
       {
         headers: {
           Authorization: `Bearer ${tokens.accessToken}`,
         },
       },
+      30000,
     );
 
     if (!eventsResponse.ok) {
