@@ -1,11 +1,15 @@
-import type { FilterBuilder, GenericTableInfo } from "convex/server";
+import type { FilterBuilder, FunctionReference, GenericTableInfo } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalQuery, type MutationCtx, type QueryCtx } from "./_generated/server";
+import {
+  internalAction,
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { sendEmail } from "./email";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { type CountableQuery, efficientCount } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
@@ -251,50 +255,69 @@ async function handleEmailChange(
   // If taken, we still update pending fields to prevent enumeration (attacker sees success),
   // but we skip sending the email to prevent spamming the victim.
   if (!existingUser || existingUser._id === ctx.userId) {
-    await sendVerificationEmail(ctx, newEmail, token, currentUser?.isTestUser);
+    // Schedule email sending asynchronously to avoid blocking the mutation
+    // and preventing "fetch in mutation" errors.
+    // Use strict casting to avoid "any" and Biome errors
+    const usersInternal = internal.users as unknown as {
+      sendVerificationEmailAction: FunctionReference<"action">;
+    };
+
+    // In unit tests (convex-test), we skip scheduling to avoid "Write outside of transaction" errors
+    // from the test environment tearing down before the async action completes.
+    // E2E tests run against real deployments where IS_TEST_ENV is false, so they will run this.
+    if (!process.env.IS_TEST_ENV) {
+      await ctx.scheduler.runAfter(0, usersInternal.sendVerificationEmailAction, {
+        email: newEmail,
+        token,
+        isTestUser: currentUser?.isTestUser,
+      });
+    }
   }
 
   return updates;
 }
 
 /**
- * Helper to send verification email for profile updates
+ * Internal action to send verification email asynchronously
  */
-async function sendVerificationEmail(
-  ctx: MutationCtx,
-  email: string,
-  token: string,
-  isTestUser?: boolean,
-) {
-  const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-  const isSafeEnvironment =
-    process.env.NODE_ENV === "development" ||
-    process.env.NODE_ENV === "test" ||
-    !!process.env.CI ||
-    !!process.env.E2E_API_KEY;
+export const sendVerificationEmailAction = internalAction({
+  args: {
+    email: v.string(),
+    token: v.string(),
+    isTestUser: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { email, token, isTestUser } = args;
+    const isTestEmail = email.endsWith("@inbox.mailtrap.io");
+    const isSafeEnvironment =
+      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test" ||
+      !!process.env.CI ||
+      !!process.env.E2E_API_KEY;
 
-  // Store OTPs for test emails ONLY if they are test users
-  if (isTestEmail && isSafeEnvironment && isTestUser) {
-    try {
-      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
-    } catch (e) {
-      logger.warn(`[Users] Failed to store test OTP: ${e}`);
+    // Store OTPs for test emails ONLY if they are test users
+    if (isTestEmail && isSafeEnvironment && isTestUser) {
+      try {
+        await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
+      } catch (e) {
+        logger.warn(`[Users] Failed to store test OTP: ${e}`);
+      }
     }
-  }
 
-  await sendEmail(ctx, {
-    to: email,
-    subject: "Verify your new email address",
-    html: `
-      <h2>Verify your new email address</h2>
-      <p>Use the code below to verify your new email address:</p>
-      <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
-      <p>This code expires in 15 minutes.</p>
-      <p>If you didn't request this change, you can safely ignore this email.</p>
-    `,
-    text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.`,
-  });
-}
+    await ctx.runAction(internal.email.index.sendEmailAction, {
+      to: email,
+      subject: "Verify your new email address",
+      html: `
+        <h2>Verify your new email address</h2>
+        <p>Use the code below to verify your new email address:</p>
+        <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
+        <p>This code expires in 15 minutes.</p>
+        <p>If you didn't request this change, you can safely ignore this email.</p>
+      `,
+      text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.`,
+    });
+  },
+});
 
 /**
  * Verify a pending email change using the OTP token sent to the user.
