@@ -21,11 +21,8 @@ describe("Digest Emails", () => {
     vi.clearAllMocks();
   });
 
-  it(
-    "should send daily digest when notifications exist",
-    { timeout: 10000 },
-    async () => {
-      const t = convexTest(schema, modules);
+  it("should send daily digest when notifications exist", { timeout: 10000 }, async () => {
+    const t = convexTest(schema, modules);
 
     // 1. Create user
     const userId = await t.run(async (ctx) => {
@@ -119,11 +116,8 @@ describe("Digest Emails", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
-  it(
-    "should send weekly digest",
-    { timeout: 10000 },
-    async () => {
-      const t = convexTest(schema, modules);
+  it("should send weekly digest", { timeout: 10000 }, async () => {
+    const t = convexTest(schema, modules);
 
     // 1. Create user
     const userId = await t.run(async (ctx) => {
