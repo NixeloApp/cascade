@@ -200,7 +200,9 @@ export const getCurrentUserProjects = authenticatedQuery({
     const results = await fetchPaginatedQuery<Doc<"projectMembers">>(ctx, {
       paginationOpts,
       query: (db) =>
-        db.query("projectMembers").withIndex("by_user", (q) => q.eq("userId", ctx.userId)),
+        db
+          .query("projectMembers")
+          .withIndex("by_user", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true)),
     });
 
     if (results.page.length === 0) {

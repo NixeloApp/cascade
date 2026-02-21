@@ -622,9 +622,11 @@ export const listChildren = authenticatedQuery({
     const documents = await ctx.db
       .query("documents")
       .withIndex("by_organization_parent", (q) =>
-        q.eq("organizationId", args.organizationId).eq("parentId", args.parentId),
+        q
+          .eq("organizationId", args.organizationId)
+          .eq("parentId", args.parentId)
+          .lt("isDeleted", true),
       )
-      .filter(notDeleted)
       .take(BOUNDED_RELATION_LIMIT);
 
     // Pre-build org IDs set to avoid N+1 membership queries
@@ -649,9 +651,11 @@ export const listChildren = authenticatedQuery({
         const firstChild = await ctx.db
           .query("documents")
           .withIndex("by_organization_parent", (q) =>
-            q.eq("organizationId", args.organizationId).eq("parentId", doc._id),
+            q
+              .eq("organizationId", args.organizationId)
+              .eq("parentId", doc._id)
+              .lt("isDeleted", true),
           )
-          .filter(notDeleted)
           .first();
 
         return {
@@ -699,8 +703,9 @@ export const getTree = authenticatedQuery({
     // Get all documents in org (bounded - most orgs won't have more than this)
     const allDocs = await ctx.db
       .query("documents")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
-      .filter(notDeleted)
+      .withIndex("by_organization_deleted", (q) =>
+        q.eq("organizationId", args.organizationId).lt("isDeleted", true),
+      )
       .take(BOUNDED_RELATION_LIMIT);
 
     // Pre-build org IDs set to avoid N+1 membership queries
