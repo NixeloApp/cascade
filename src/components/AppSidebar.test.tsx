@@ -1,7 +1,8 @@
 import { useLocation } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@/test/custom-render";
+import { render, screen, waitFor } from "@/test/custom-render";
 import { AppSidebar } from "./AppSidebar";
 
 // Mocks
@@ -128,7 +129,7 @@ describe("AppSidebar Accessibility", () => {
     expect(documentsLink).toHaveAttribute("aria-current", "page");
   });
 
-  it("adds aria-current='page' to active Document sub-item and NOT the parent section", () => {
+  it("adds aria-current='page' to active Document sub-item and NOT the parent section", async () => {
     // Setup documents query to return a doc
     (useQuery as any).mockImplementation((query: any) => {
       if (query === "documents.list")
@@ -151,6 +152,16 @@ describe("AppSidebar Accessibility", () => {
     expect(docLink).toHaveAttribute("aria-current", "page");
 
     // Also check title attribute for truncation
-    expect(docLink).toHaveAttribute("title", "My Doc");
+    expect(docLink).not.toHaveAttribute("title");
+
+    // Verify tooltip appears on hover
+    const user = userEvent.setup();
+    await user.hover(docLink);
+
+    await waitFor(() => {
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toBeInTheDocument();
+      expect(tooltip).toHaveTextContent("My Doc");
+    });
   });
 });
