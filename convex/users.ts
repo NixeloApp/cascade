@@ -688,6 +688,61 @@ async function countComments(
 }
 
 /**
+ * Helper to count projects the user is a member of without restrictions.
+ */
+async function countProjectsUnrestricted(ctx: QueryCtx, userId: Id<"users">) {
+  return await efficientCount(
+    ctx.db
+      .query("projectMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter(notDeleted),
+    MAX_PAGE_SIZE,
+  );
+}
+
+/**
+ * Helper to count projects using a parallelized index query (optimized for few projects).
+ */
+async function countProjectsFast(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  // Optimization: If the number of allowed projects is small, check membership directly.
+  // This avoids fetching all of the target user's memberships (potentially 1000s)
+  // when we only care about a few specific projects (e.g. shared context).
+  const membershipChecks = await Promise.all(
+    Array.from(allowedProjectIds).map((projectId) =>
+      ctx.db
+        .query("projectMembers")
+        .withIndex("by_project_user", (q) =>
+          q.eq("projectId", projectId as Id<"projects">).eq("userId", userId),
+        )
+        .filter(notDeleted)
+        .first(),
+    ),
+  );
+  return membershipChecks.filter((m) => m !== null).length;
+}
+
+/**
+ * Helper to count projects using a filtered scan (for large number of allowed projects).
+ */
+async function countProjectsFiltered(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  const projectMembershipsAll = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter(notDeleted)
+    .take(MAX_PAGE_SIZE);
+
+  return projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId)).length;
+}
+
+/**
  * Count projects the user is a member of.
  *
  * @param ctx - Query context
@@ -699,40 +754,17 @@ async function countProjects(
   userId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (allowedProjectIds) {
-    // Optimization: If the number of allowed projects is small, check membership directly.
-    // This avoids fetching all of the target user's memberships (potentially 1000s)
-    // when we only care about a few specific projects (e.g. shared context).
-    if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
-      const membershipChecks = await Promise.all(
-        Array.from(allowedProjectIds).map((projectId) =>
-          ctx.db
-            .query("projectMembers")
-            .withIndex("by_project_user", (q) =>
-              q.eq("projectId", projectId as Id<"projects">).eq("userId", userId),
-            )
-            .filter(notDeleted)
-            .first(),
-        ),
-      );
-      return membershipChecks.filter((m) => m !== null).length;
-    }
-
-    const projectMembershipsAll = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter(notDeleted)
-      .take(MAX_PAGE_SIZE);
-
-    return projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId)).length;
+  if (!allowedProjectIds) {
+    return countProjectsUnrestricted(ctx, userId);
   }
-  return await efficientCount(
-    ctx.db
-      .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter(notDeleted),
-    MAX_PAGE_SIZE,
-  );
+
+  if (allowedProjectIds.size === 0) return 0;
+
+  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
+    return countProjectsFast(ctx, userId, allowedProjectIds);
+  }
+
+  return countProjectsFiltered(ctx, userId, allowedProjectIds);
 }
 
 /**
