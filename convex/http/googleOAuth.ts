@@ -4,6 +4,15 @@ import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } fro
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
+const escapeHtml = (unsafe: string) => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 /**
  * Google OAuth Integration
  *
@@ -150,9 +159,9 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     return new Response("Missing authorization code", { status: 400 });
   }
 
-  const config = getGoogleOAuthConfig();
-
   try {
+    const config = getGoogleOAuthConfig();
+
     // Exchange authorization code for tokens
     const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -246,7 +255,10 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         headers: { "Content-Type": "text/html" },
       },
     );
-  } catch (_error) {
+  } catch (error) {
+    console.error("Google OAuth error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
     return new Response(
       `
       <!DOCTYPE html>
@@ -261,7 +273,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         <body>
           <div class="error">
             <h1>❌ Connection Failed</h1>
-            <p>An error occurred while connecting to Google Calendar.</p>
+            <p>Failed to connect to Google Calendar: ${escapeHtml(errorMessage)}</p>
             <p>Please try again or contact support if the problem persists.</p>
             <button onclick="window.close()">Close Window</button>
           </div>

@@ -98,6 +98,22 @@ describe("Google OAuth Flow", () => {
       expect(text).toContain("access_denied");
     });
 
+    it("should return HTML error if config is missing (throws)", async () => {
+      // Mock getGoogleClientId to throw, simulating missing env var
+      vi.mocked(envLib.getGoogleClientId).mockImplementation(() => {
+        throw new Error("Missing required environment variable: AUTH_GOOGLE_ID");
+      });
+
+      const request = new Request("https://api.convex.site/google/callback?code=some_code");
+      const response = await handleCallbackHandler(mockCtx, request);
+
+      // Should catch the error and return 500 HTML page
+      expect(response.status).toBe(500);
+      const text = await response.text();
+      expect(text).toContain("Connection Failed");
+      expect(text).toContain("Missing required environment variable");
+    });
+
     it("should return 400 if code is missing", async () => {
       const request = new Request("https://api.convex.site/google/callback");
       const response = await handleCallbackHandler(mockCtx, request);
