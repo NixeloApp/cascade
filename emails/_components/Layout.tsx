@@ -16,6 +16,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+// biome-ignore lint/style/useImportType: React is needed for runtime JSX in tests
 import * as React from "react";
 
 interface EmailLayoutProps {

@@ -304,7 +304,7 @@ const applicationTables = {
     .index("by_creator_updated", ["createdBy", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_organization_deleted", ["organizationId", "isDeleted"])
-    .index("by_organization_public", ["organizationId", "isPublic", "updatedAt"])
+    .index("by_organization_public", ["organizationId", "isPublic"])
     .index("by_parent", ["parentId"])
     .index("by_organization_parent", ["organizationId", "parentId"])
     .searchIndex("search_title", {
