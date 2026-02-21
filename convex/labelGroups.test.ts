@@ -183,11 +183,12 @@ describe("Label Groups", () => {
         name: "Old Name",
       });
 
-      await asUser.mutation(api.labelGroups.update, {
+      const result = await asUser.mutation(api.labelGroups.update, {
         id: groupId,
         name: "New Name",
         description: "Updated description",
       });
+      expect(result).toEqual({ success: true });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const updated = groups.find((g) => g._id === groupId);
@@ -265,7 +266,8 @@ describe("Label Groups", () => {
 
       const labelId = await createLabel(t, projectId, userId, "In Group", "#ff0000", groupId);
 
-      await asUser.mutation(api.labelGroups.remove, { id: groupId });
+      const result = await asUser.mutation(api.labelGroups.remove, { id: groupId });
+      expect(result).toEqual({ success: true });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
 
@@ -293,10 +295,11 @@ describe("Label Groups", () => {
       const group3 = await asUser.mutation(api.labelGroups.create, { projectId, name: "Third" });
 
       // Reorder: Third, First, Second
-      await asUser.mutation(api.labelGroups.reorder, {
+      const result = await asUser.mutation(api.labelGroups.reorder, {
         projectId,
         groupIds: [group3, group1, group2],
       });
+      expect(result).toEqual({ success: true });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const namedGroups = groups.filter((g) => g.name !== "Ungrouped");
@@ -358,11 +361,12 @@ describe("Label Groups", () => {
 
       const labelId = await createLabel(t, projectId, userId, "Moving", "#ff0000", group1);
 
-      await asUser.mutation(api.labelGroups.moveLabel, {
+      const result = await asUser.mutation(api.labelGroups.moveLabel, {
         projectId,
         labelId,
         groupId: group2,
       });
+      expect(result).toEqual({ success: true });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const targetGroup = groups.find((g) => g._id === group2);
@@ -386,11 +390,12 @@ describe("Label Groups", () => {
 
       const labelId = await createLabel(t, projectId, userId, "To Ungroup", "#ff0000", groupId);
 
-      await asUser.mutation(api.labelGroups.moveLabel, {
+      const result = await asUser.mutation(api.labelGroups.moveLabel, {
         projectId,
         labelId,
         groupId: null,
       });
+      expect(result).toEqual({ success: true });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const ungrouped = groups.find((g) => g.name === "Ungrouped");
@@ -419,11 +424,12 @@ describe("Label Groups", () => {
       const label3 = await createLabel(t, projectId, userId, "Label 3", "#0000ff", groupId);
 
       // Reorder: 3, 1, 2
-      await asUser.mutation(api.labelGroups.reorderLabels, {
+      const result = await asUser.mutation(api.labelGroups.reorderLabels, {
         projectId,
         groupId,
         labelIds: [label3, label1, label2],
       });
+      expect(result).toEqual({ success: true });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const group = groups.find((g) => g._id === groupId);

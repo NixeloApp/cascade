@@ -118,6 +118,8 @@ export const update = authenticatedMutation({
     if (args.groupId !== undefined) updates.groupId = args.groupId ?? undefined;
 
     await ctx.db.patch(args.id, updates);
+
+    return { success: true };
   },
 });
 
@@ -156,5 +158,7 @@ export const remove = authenticatedMutation({
     );
 
     await ctx.db.delete(args.id);
+
+    return { success: true };
   },
 });
