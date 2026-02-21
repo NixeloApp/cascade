@@ -9,7 +9,6 @@ vi.mock("../lib/env", () => ({
   getGitHubClientSecret: vi.fn(),
   isGitHubOAuthConfigured: vi.fn(),
   getConvexSiteUrl: vi.fn(),
-  validation: (_type: string, msg: string) => new Error(msg),
 }));
 
 describe("GitHub OAuth Flow", () => {
@@ -130,7 +129,7 @@ describe("GitHub OAuth Flow", () => {
       const request = new Request("https://api.convex.site/github/callback?code=auth_code");
       const response = await handleCallbackHandler(mockCtx, request);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("Failed to exchange GitHub authorization code");
     });
@@ -147,7 +146,7 @@ describe("GitHub OAuth Flow", () => {
       const request = new Request("https://api.convex.site/github/callback?code=auth_code");
       const response = await handleCallbackHandler(mockCtx, request);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("The code is invalid");
     });
@@ -167,7 +166,7 @@ describe("GitHub OAuth Flow", () => {
       const request = new Request("https://api.convex.site/github/callback?code=auth_code");
       const response = await handleCallbackHandler(mockCtx, request);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("Failed to get GitHub user info");
     });
