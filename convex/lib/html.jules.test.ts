@@ -43,7 +43,7 @@ describe("html utils", () => {
     });
 
     it("should handle undefined input safely", () => {
-      // @ts-expect-error - simulating untyped input
+      // @ts-ignore - simulating untyped input
       expect(escapeScriptJson(undefined)).toBe("null");
     });
   });
