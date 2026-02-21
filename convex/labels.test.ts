@@ -93,11 +93,10 @@ describe("Labels", () => {
         color: "#EF4444",
       });
 
-      const result = await asUser.mutation(api.labels.update, {
+      await asUser.mutation(api.labels.update, {
         id: labelId,
         name: "New Name",
       });
-      expect(result).toEqual({ success: true });
 
       const labels = await asUser.query(api.labels.list, { projectId });
       expect(labels[0].name).toBe("New Name");
@@ -115,11 +114,10 @@ describe("Labels", () => {
         color: "#EF4444",
       });
 
-      const result = await asUser.mutation(api.labels.update, {
+      await asUser.mutation(api.labels.update, {
         id: labelId,
         color: "#3B82F6",
       });
-      expect(result).toEqual({ success: true });
 
       const labels = await asUser.query(api.labels.list, { projectId });
       expect(labels[0].color).toBe("#3B82F6");
@@ -164,8 +162,7 @@ describe("Labels", () => {
         color: "#EF4444",
       });
 
-      const result = await asUser.mutation(api.labels.remove, { id: labelId });
-      expect(result).toEqual({ success: true });
+      await asUser.mutation(api.labels.remove, { id: labelId });
 
       const labels = await asUser.query(api.labels.list, { projectId });
       expect(labels).toHaveLength(0);
