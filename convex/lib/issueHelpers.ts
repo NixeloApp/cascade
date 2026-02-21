@@ -9,11 +9,11 @@ import type { PaginationOptions, PaginationResult } from "convex/server";
 import { asyncMap } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { AuthenticatedUser, sanitizeUserForAuth } from "./userUtils";
 import { BOUNDED_LIST_LIMIT } from "./boundedQueries";
 import { notFound, validation } from "./errors";
 import { fetchPaginatedQuery } from "./queryHelpers";
 import { MAX_LABELS_PER_PROJECT } from "./queryLimits";
+import { type AuthenticatedUser, sanitizeUserForAuth } from "./userUtils";
 
 /**
  * Get an issue and validate it has a projectId (for migration safety)
