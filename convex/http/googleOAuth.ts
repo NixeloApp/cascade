@@ -101,6 +101,38 @@ function handleTestCode(
 }
 
 /**
+ * Type guard for record-like objects
+ */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/**
+ * Extracts a meaningful error message from a Response object
+ */
+const extractErrorMessage = async (response: Response, fallback: string): Promise<string> => {
+  try {
+    const text = await response.text();
+    try {
+      const json: unknown = JSON.parse(text);
+      if (typeof json === "string") return json;
+      if (isRecord(json)) {
+        if (typeof json.error_description === "string") return json.error_description;
+        if (typeof json.error === "string") return json.error;
+        if (isRecord(json.error) && typeof json.error.message === "string") {
+          return json.error.message;
+        }
+        if (typeof json.message === "string") return json.message;
+      }
+      return fallback;
+    } catch {
+      return text || fallback;
+    }
+  } catch {
+    return fallback;
+  }
+};
+
+/**
  * Google OAuth Integration
  *
  * Handles OAuth flow for Google Calendar integration
@@ -264,8 +296,11 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       });
 
       if (!tokenResponse.ok) {
-        const _errorData = await tokenResponse.text();
-        throw validation("oauth", "Failed to exchange Google authorization code");
+        const errorMessage = await extractErrorMessage(
+          tokenResponse,
+          "Failed to exchange Google authorization code",
+        );
+        throw validation("oauth", errorMessage);
       }
 
       const tokens = await tokenResponse.json();
@@ -291,7 +326,11 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       );
 
       if (!userInfoResponse.ok) {
-        throw validation("oauth", "Failed to fetch user info from Google");
+        const errorMessage = await extractErrorMessage(
+          userInfoResponse,
+          "Failed to fetch user info from Google",
+        );
+        throw validation("oauth", errorMessage);
       }
 
       const userInfo = await userInfoResponse.json();
@@ -419,7 +458,11 @@ export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
     );
 
     if (!eventsResponse.ok) {
-      throw validation("googleCalendar", "Failed to fetch Google Calendar events");
+      const errorMessage = await extractErrorMessage(
+        eventsResponse,
+        "Failed to fetch Google Calendar events",
+      );
+      throw validation("googleCalendar", errorMessage);
     }
 
     const data = await eventsResponse.json();
