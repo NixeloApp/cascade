@@ -10,6 +10,7 @@ vi.mock("../lib/env", () => ({
   getGoogleClientSecret: vi.fn(),
   isGoogleOAuthConfigured: vi.fn(),
   getConvexSiteUrl: vi.fn(),
+  getSiteUrl: () => "http://localhost:5555",
   validation: (_type: string, msg: string) => new Error(msg),
 }));
 

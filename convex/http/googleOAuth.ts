@@ -1,6 +1,11 @@
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
-import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "../lib/env";
+import {
+  getGoogleClientId,
+  getGoogleClientSecret,
+  getSiteUrl,
+  isGoogleOAuthConfigured,
+} from "../lib/env";
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
@@ -224,8 +229,8 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
             <script>
               // Pass tokens to opener window for saving via authenticated mutation
               if (window.opener) {
-                // Use opener's origin for security instead of wildcard
-                const targetOrigin = window.opener.location.origin;
+                // Use embedded site URL to avoid cross-origin SecurityError
+                const targetOrigin = ${JSON.stringify(getSiteUrl())};
                 window.opener.postMessage({
                   type: 'google-calendar-connected',
                   data: ${JSON.stringify(connectionData)}

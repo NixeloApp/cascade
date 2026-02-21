@@ -1,7 +1,12 @@
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
-import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
+import {
+  getGitHubClientId,
+  getGitHubClientSecret,
+  getSiteUrl,
+  isGitHubOAuthConfigured,
+} from "../lib/env";
 import { isAppError, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
@@ -216,8 +221,8 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
             <script>
               // Pass tokens to opener window for saving via authenticated mutation
               if (window.opener) {
-                // Use opener's origin for security instead of wildcard
-                const targetOrigin = window.opener.location.origin;
+                // Use embedded site URL to avoid cross-origin SecurityError
+                const targetOrigin = ${JSON.stringify(getSiteUrl())};
                 window.opener.postMessage({
                   type: 'github-connected',
                   data: ${JSON.stringify(connectionData)}
