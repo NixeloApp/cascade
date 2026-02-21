@@ -3,9 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  createTestContext,
-} from "./testUtils";
+import { createTestContext } from "./testUtils";
 
 describe("Users Perf Optimization", () => {
   it("should return auth profile when users share an organization (optimized path)", async () => {

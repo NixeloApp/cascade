@@ -465,6 +465,7 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
 async function countByProjectParallel(
   projectIds: Id<"projects">[],
   limit: number,
+  // biome-ignore lint/suspicious/noExplicitAny: Generic query factory needs to handle different table types
   queryFactory: (projectId: Id<"projects">) => CountableQuery<any>,
 ): Promise<number> {
   const counts = await Promise.all(
