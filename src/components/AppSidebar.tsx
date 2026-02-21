@@ -492,6 +492,7 @@ function NavItem({
       {...props}
       data-tour={dataTour}
       aria-current={isActive ? "page" : undefined}
+      aria-label={isCollapsed ? label : undefined}
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-md transition-default",
         "text-sm font-medium",
@@ -563,6 +564,7 @@ function CollapsibleSection({
             search={props.search}
             data-tour={dataTour}
             aria-current={isActive ? "page" : undefined}
+            aria-label={label}
             className={cn(
               "flex items-center justify-center px-2 py-2 rounded-md transition-default",
               isActive
