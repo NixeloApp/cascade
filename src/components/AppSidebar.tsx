@@ -31,7 +31,7 @@ import {
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Tooltip, TooltipProvider } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
@@ -203,7 +203,11 @@ export function AppSidebar() {
           </Flex>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-2 scrollbar-subtle">
+          <FlexItem
+            as="nav"
+            className="flex-1 overflow-y-auto p-2 scrollbar-subtle"
+            aria-label="Main Navigation"
+          >
             <ul className="flex flex-col gap-1 list-none">
               {/* Dashboard */}
               <NavItem
@@ -439,7 +443,7 @@ export function AppSidebar() {
                 />
               )}
             </ul>
-          </nav>
+          </FlexItem>
 
           {/* Bottom section - Settings */}
           <div className="p-2 border-t border-ui-border">
