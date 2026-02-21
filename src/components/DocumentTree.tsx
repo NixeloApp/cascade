@@ -44,8 +44,7 @@ interface TreeNode {
   parentId?: Id<"documents">;
   order?: number;
   isOwner: boolean;
-  children: TreeNode[];
-  depth: number;
+  hasChildren: boolean;
 }
 
 export function DocumentTree({
@@ -54,9 +53,12 @@ export function DocumentTree({
   selectedId,
   onCreateDocument,
 }: DocumentTreeProps) {
-  const tree = useQuery(api.documents.getTree, { organizationId });
+  const rootDocs = useQuery(api.documents.listChildren, {
+    organizationId,
+    parentId: undefined,
+  });
 
-  if (tree === undefined) {
+  if (rootDocs === undefined) {
     return (
       <Card variant="flat" padding="sm">
         <Stack gap="sm">
@@ -68,7 +70,7 @@ export function DocumentTree({
     );
   }
 
-  if (tree.length === 0) {
+  if (rootDocs.length === 0) {
     return (
       <Card variant="flat" padding="md">
         <Stack gap="sm" align="center" className="text-center">
@@ -100,13 +102,15 @@ export function DocumentTree({
           New Document
         </Button>
       )}
-      {tree.map((node) => (
+      {rootDocs.map((node) => (
         <TreeNodeItem
           key={node._id}
           node={node as TreeNode}
+          organizationId={organizationId}
           orgSlug={orgSlug}
           selectedId={selectedId}
           onCreateDocument={onCreateDocument}
+          depth={0}
         />
       ))}
     </Flex>
@@ -115,16 +119,28 @@ export function DocumentTree({
 
 interface TreeNodeItemProps {
   node: TreeNode;
+  organizationId: Id<"organizations">;
   orgSlug: string;
   selectedId?: Id<"documents">;
   onCreateDocument?: (parentId?: Id<"documents">) => void;
+  depth: number;
 }
 
-function TreeNodeItem({ node, orgSlug, selectedId, onCreateDocument }: TreeNodeItemProps) {
+function TreeNodeItem({
+  node,
+  organizationId,
+  orgSlug,
+  selectedId,
+  onCreateDocument,
+  depth,
+}: TreeNodeItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const hasChildren = node.children && node.children.length > 0;
   const isSelected = selectedId === node._id;
-  const depth = node.depth ?? 0;
+
+  const children = useQuery(
+    api.documents.listChildren,
+    isExpanded ? { organizationId, parentId: node._id } : "skip",
+  );
 
   const moveDocument = useMutation(api.documents.moveDocument);
 
@@ -161,7 +177,7 @@ function TreeNodeItem({ node, orgSlug, selectedId, onCreateDocument }: TreeNodeI
             variant="ghost"
             size="icon"
             onClick={handleToggle}
-            className={cn("h-5 w-5 p-0.5", !hasChildren && "invisible")}
+            className={cn("h-5 w-5 p-0.5", !node.hasChildren && "invisible")}
           >
             {isExpanded ? (
               <ChevronDown className="w-3.5 h-3.5" />
@@ -171,7 +187,7 @@ function TreeNodeItem({ node, orgSlug, selectedId, onCreateDocument }: TreeNodeI
           </Button>
 
           {/* Document icon */}
-          {hasChildren && isExpanded ? (
+          {node.hasChildren && isExpanded ? (
             <FolderOpen className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
           ) : (
             <File className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
@@ -220,17 +236,25 @@ function TreeNodeItem({ node, orgSlug, selectedId, onCreateDocument }: TreeNodeI
       </Link>
 
       {/* Children */}
-      {hasChildren && isExpanded && (
+      {isExpanded && (
         <div>
-          {node.children?.map((child) => (
-            <TreeNodeItem
-              key={child._id}
-              node={child}
-              orgSlug={orgSlug}
-              selectedId={selectedId}
-              onCreateDocument={onCreateDocument}
-            />
-          ))}
+          {children === undefined ? (
+            <div className="pl-6 py-2">
+              <Skeleton className="h-6 w-3/4" />
+            </div>
+          ) : (
+            children.map((child) => (
+              <TreeNodeItem
+                key={child._id}
+                node={child as TreeNode}
+                organizationId={organizationId}
+                orgSlug={orgSlug}
+                selectedId={selectedId}
+                onCreateDocument={onCreateDocument}
+                depth={depth + 1}
+              />
+            ))
+          )}
         </div>
       )}
     </div>
