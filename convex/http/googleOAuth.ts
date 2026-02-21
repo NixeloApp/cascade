@@ -1,5 +1,5 @@
 import { api, internal } from "../_generated/api";
-import { httpAction } from "../_generated/server";
+import { type ActionCtx, httpAction } from "../_generated/server";
 import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "../lib/env";
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
@@ -63,13 +63,10 @@ const getGoogleOAuthConfig = () => {
 };
 
 /**
- * Initiate Google OAuth flow
- * GET /google/auth
+ * Initiate Google OAuth flow handler
  */
-export const initiateAuth = httpAction((_ctx, _request) => {
-  const config = getGoogleOAuthConfig();
-
-  if (!config.clientId) {
+export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
+  if (!isGoogleOAuthConfigured()) {
     return Promise.resolve(
       new Response(
         JSON.stringify({
@@ -83,6 +80,8 @@ export const initiateAuth = httpAction((_ctx, _request) => {
       ),
     );
   }
+
+  const config = getGoogleOAuthConfig();
 
   // Build OAuth authorization URL
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -102,13 +101,18 @@ export const initiateAuth = httpAction((_ctx, _request) => {
       },
     }),
   );
-});
+};
 
 /**
- * Handle OAuth callback from Google
- * GET /google/callback?code=xxx
+ * Initiate Google OAuth flow
+ * GET /google/auth
  */
-export const handleCallback = httpAction(async (_ctx, request) => {
+export const initiateAuth = httpAction(initiateAuthHandler);
+
+/**
+ * Handle OAuth callback from Google handler
+ */
+export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
@@ -270,16 +274,18 @@ export const handleCallback = httpAction(async (_ctx, request) => {
       },
     );
   }
-});
+};
 
 /**
- * Trigger manual sync
- * POST /google/sync
- *
- * Fetches events from Google Calendar and syncs them to Nixelo.
- * Requires an authenticated user with a connected Google Calendar.
+ * Handle OAuth callback from Google
+ * GET /google/callback?code=xxx
  */
-export const triggerSync = httpAction(async (ctx, _request) => {
+export const handleCallback = httpAction(handleCallbackHandler);
+
+/**
+ * Trigger manual sync handler
+ */
+export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
   try {
     // Get user's Google Calendar connection (metadata only, no tokens)
     const connection = await ctx.runQuery(api.googleCalendar.getConnection);
@@ -376,4 +382,13 @@ export const triggerSync = httpAction(async (ctx, _request) => {
       },
     );
   }
-});
+};
+
+/**
+ * Trigger manual sync
+ * POST /google/sync
+ *
+ * Fetches events from Google Calendar and syncs them to Nixelo.
+ * Requires an authenticated user with a connected Google Calendar.
+ */
+export const triggerSync = httpAction(triggerSyncHandler);
