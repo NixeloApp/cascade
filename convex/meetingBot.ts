@@ -88,14 +88,39 @@ export const listRecordings = authenticatedQuery({
       // Security: Ensure user has access to the project
       await assertCanAccessProject(ctx, args.projectId, ctx.userId);
 
-      recordings = await ctx.db
+      // Parallel fetch: My recordings in project
+      const myRecordingsPromise = ctx.db
         .query("meetingRecordings")
-        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+        .withIndex("by_project_creator", (q) =>
+          q.eq("projectId", args.projectId).eq("createdBy", ctx.userId),
+        )
         .order("desc")
         .take(limit);
 
-      // Security: Filter out private recordings from other users
-      recordings = recordings.filter((r) => r.isPublic || r.createdBy === ctx.userId);
+      // Parallel fetch: Public recordings in project
+      const publicRecordingsPromise = ctx.db
+        .query("meetingRecordings")
+        .withIndex("by_project_public", (q) =>
+          q.eq("projectId", args.projectId).eq("isPublic", true),
+        )
+        .order("desc")
+        .take(limit);
+
+      const [myRecordings, publicRecordings] = await Promise.all([
+        myRecordingsPromise,
+        publicRecordingsPromise,
+      ]);
+
+      // Merge, deduplicate, and sort
+      const mergedMap = new Map<string, Doc<"meetingRecordings">>();
+      for (const r of myRecordings) mergedMap.set(r._id, r);
+      for (const r of publicRecordings) mergedMap.set(r._id, r);
+
+      recordings = Array.from(mergedMap.values()).sort((a, b) => b._creationTime - a._creationTime);
+
+      if (recordings.length > limit) {
+        recordings = recordings.slice(0, limit);
+      }
     } else {
       recordings = await ctx.db
         .query("meetingRecordings")
