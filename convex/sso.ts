@@ -1,8 +1,8 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
+import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT, BOUNDED_SELECT_LIMIT } from "./lib/boundedQueries";
 
 // =============================================================================
@@ -95,7 +95,7 @@ function validateOidcConfig(
 /**
  * List all SSO connections for an organization
  */
-export const list = query({
+export const list = authenticatedQuery({
   args: {
     organizationId: v.id("organizations"),
   },
@@ -111,16 +111,11 @@ export const list = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
     // Check user has access to this organization
     const membership = await ctx.db
       .query("organizationMembers")
       .withIndex("by_organization_user", (q) =>
-        q.eq("organizationId", args.organizationId).eq("userId", userId),
+        q.eq("organizationId", args.organizationId).eq("userId", ctx.userId),
       )
       .first();
 
@@ -150,7 +145,7 @@ export const list = query({
 /**
  * Get a single SSO connection with full details (admin only)
  */
-export const get = query({
+export const get = authenticatedQuery({
   args: {
     connectionId: v.id("ssoConnections"),
   },
@@ -180,18 +175,13 @@ export const get = query({
     v.null(),
   ),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
     const connection = await ctx.db.get(args.connectionId);
     if (!connection) {
       return null;
     }
 
     // Check admin access
-    const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
+    const isAdmin = await checkOrgAdmin(ctx, ctx.userId, connection.organizationId);
     if (!isAdmin) {
       throw new Error("Admin access required");
     }
@@ -228,7 +218,7 @@ export const get = query({
 /**
  * Create a new SSO connection
  */
-export const create = mutation({
+export const create = authenticatedMutation({
   args: {
     organizationId: v.id("organizations"),
     type: ssoTypeValidator,
@@ -236,13 +226,8 @@ export const create = mutation({
   },
   returns: v.id("ssoConnections"),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
     // Check admin access
-    const isAdmin = await checkOrgAdmin(ctx, userId, args.organizationId);
+    const isAdmin = await checkOrgAdmin(ctx, ctx.userId, args.organizationId);
     if (!isAdmin) {
       throw new Error("Admin access required to create SSO connections");
     }
@@ -252,7 +237,7 @@ export const create = mutation({
       type: args.type,
       name: args.name,
       isEnabled: false, // Start disabled until configured
-      createdBy: userId,
+      createdBy: ctx.userId,
       updatedAt: Date.now(),
     });
 
@@ -263,7 +248,7 @@ export const create = mutation({
 /**
  * Update SAML configuration
  */
-export const updateSamlConfig = mutation({
+export const updateSamlConfig = authenticatedMutation({
   args: {
     connectionId: v.id("ssoConnections"),
     config: samlConfigValidator,
@@ -273,11 +258,6 @@ export const updateSamlConfig = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
     const connection = await ctx.db.get(args.connectionId);
     if (!connection) {
       return { success: false, error: "Connection not found" };
@@ -288,7 +268,7 @@ export const updateSamlConfig = mutation({
     }
 
     // Check admin access
-    const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
+    const isAdmin = await checkOrgAdmin(ctx, ctx.userId, connection.organizationId);
     if (!isAdmin) {
       return { success: false, error: "Admin access required" };
     }
@@ -305,7 +285,7 @@ export const updateSamlConfig = mutation({
 /**
  * Update OIDC configuration
  */
-export const updateOidcConfig = mutation({
+export const updateOidcConfig = authenticatedMutation({
   args: {
     connectionId: v.id("ssoConnections"),
     config: oidcConfigValidator,
@@ -315,11 +295,6 @@ export const updateOidcConfig = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
     const connection = await ctx.db.get(args.connectionId);
     if (!connection) {
       return { success: false, error: "Connection not found" };
@@ -330,7 +305,7 @@ export const updateOidcConfig = mutation({
     }
 
     // Check admin access
-    const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
+    const isAdmin = await checkOrgAdmin(ctx, ctx.userId, connection.organizationId);
     if (!isAdmin) {
       return { success: false, error: "Admin access required" };
     }
@@ -347,7 +322,7 @@ export const updateOidcConfig = mutation({
 /**
  * Enable or disable an SSO connection
  */
-export const setEnabled = mutation({
+export const setEnabled = authenticatedMutation({
   args: {
     connectionId: v.id("ssoConnections"),
     isEnabled: v.boolean(),
@@ -357,18 +332,13 @@ export const setEnabled = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
     const connection = await ctx.db.get(args.connectionId);
     if (!connection) {
       return { success: false, error: "Connection not found" };
     }
 
     // Check admin access
-    const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
+    const isAdmin = await checkOrgAdmin(ctx, ctx.userId, connection.organizationId);
     if (!isAdmin) {
       return { success: false, error: "Admin access required" };
     }
@@ -397,7 +367,7 @@ export const setEnabled = mutation({
 /**
  * Update verified domains for automatic SSO routing
  */
-export const updateDomains = mutation({
+export const updateDomains = authenticatedMutation({
   args: {
     connectionId: v.id("ssoConnections"),
     domains: v.array(v.string()),
@@ -407,18 +377,13 @@ export const updateDomains = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
     const connection = await ctx.db.get(args.connectionId);
     if (!connection) {
       return { success: false, error: "Connection not found" };
     }
 
     // Check admin access
-    const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
+    const isAdmin = await checkOrgAdmin(ctx, ctx.userId, connection.organizationId);
     if (!isAdmin) {
       return { success: false, error: "Admin access required" };
     }
@@ -485,7 +450,7 @@ export const updateDomains = mutation({
 /**
  * Delete an SSO connection
  */
-export const remove = mutation({
+export const remove = authenticatedMutation({
   args: {
     connectionId: v.id("ssoConnections"),
   },
@@ -494,18 +459,13 @@ export const remove = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
     const connection = await ctx.db.get(args.connectionId);
     if (!connection) {
       return { success: false, error: "Connection not found" };
     }
 
     // Check admin access
-    const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
+    const isAdmin = await checkOrgAdmin(ctx, ctx.userId, connection.organizationId);
     if (!isAdmin) {
       return { success: false, error: "Admin access required" };
     }
