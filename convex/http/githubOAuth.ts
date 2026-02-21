@@ -2,6 +2,7 @@ import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
 import { validation } from "../lib/errors";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 /**
  * GitHub OAuth Integration
@@ -128,7 +129,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
 
   try {
     // Exchange authorization code for access token
-    const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
+    const tokenResponse = await fetchWithTimeout("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -155,7 +156,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     const { access_token } = tokens;
 
     // Get user info from GitHub
-    const userResponse = await fetch("https://api.github.com/user", {
+    const userResponse = await fetchWithTimeout("https://api.github.com/user", {
       headers: {
         Authorization: `Bearer ${access_token}`,
         Accept: "application/vnd.github.v3+json",
@@ -294,7 +295,7 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
     }
 
     // Fetch repositories from GitHub API
-    const reposResponse = await fetch(
+    const reposResponse = await fetchWithTimeout(
       "https://api.github.com/user/repos?sort=updated&per_page=100",
       {
         headers: {
@@ -303,6 +304,7 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
           "User-Agent": "Nixelo-App",
         },
       },
+      30000,
     );
 
     if (!reposResponse.ok) {
