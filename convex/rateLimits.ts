@@ -78,10 +78,9 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
 export const rateLimit = async (
   ctx: ActionCtx | MutationCtx,
   name: string,
-  // biome-ignore lint/suspicious/noExplicitAny: generic wrapper for rateLimiter.limit
-  options?: any,
+  options?: { key?: string; count?: number; throws?: boolean; reserve?: boolean },
 ) => {
-  return await rateLimiter.limit(ctx, name, { throws: true, ...options });
+  return await rateLimiter.limit(ctx, name as any, { throws: true, ...options });
 };
 
 /**
