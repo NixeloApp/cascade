@@ -1,7 +1,7 @@
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
-import { validation } from "../lib/errors";
+import { isAppError, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 /**
@@ -229,36 +229,66 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       },
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "An error occurred";
-    return new Response(
-      `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>GitHub - Error</title>
-          <style>
-            body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-            .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
-            button { background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-            button:hover { background: #4b5563; }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h1>Connection Failed</h1>
-            <p>${errorMessage}</p>
-            <p>Please try again or contact support if the problem persists.</p>
-            <button onclick="window.close()">Close Window</button>
-          </div>
-        </body>
-      </html>
-      `,
-      {
-        status: 500,
-        headers: { "Content-Type": "text/html" },
-      },
-    );
+    return handleOAuthError(error);
   }
+};
+
+const handleOAuthError = (error: unknown) => {
+  let status = 500;
+  let errorMessage = "An unexpected error occurred";
+
+  if (isAppError(error)) {
+    errorMessage = error.data.message || errorMessage;
+    switch (error.data.code) {
+      case "VALIDATION":
+      case "CONFLICT":
+        status = 400;
+        break;
+      case "UNAUTHENTICATED":
+        status = 401;
+        break;
+      case "FORBIDDEN":
+        status = 403;
+        break;
+      case "NOT_FOUND":
+        status = 404;
+        break;
+      case "RATE_LIMITED":
+        status = 429;
+        break;
+    }
+  } else if (error instanceof Error) {
+    errorMessage = error.message;
+  }
+
+  return new Response(
+    `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>GitHub - Error</title>
+        <style>
+          body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
+          .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
+          button { background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+          button:hover { background: #4b5563; }
+        </style>
+      </head>
+      <body>
+        <div class="error">
+          <h1>Connection Failed</h1>
+          <p>${errorMessage}</p>
+          <p>Please try again or contact support if the problem persists.</p>
+          <button onclick="window.close()">Close Window</button>
+        </div>
+      </body>
+    </html>
+    `,
+    {
+      status,
+      headers: { "Content-Type": "text/html" },
+    },
+  );
 };
 
 /**
