@@ -8,12 +8,19 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { internalAction } from "../_generated/server";
 
+interface DigestResult {
+  success: boolean;
+  skipped?: boolean;
+  id?: string;
+  error?: string;
+}
+
 /**
  * Send daily digest emails to all users who have opted in
  */
 export const sendDailyDigests = internalAction({
   args: {},
-  handler: async (ctx): Promise<{ sent: number; failed: number }> => {
+  handler: async (ctx): Promise<{ sent: number; skipped: number; failed: number }> => {
     // Get all users who have daily digest enabled
     const users = await ctx.runQuery(internal.users.listWithDigestPreference, {
       frequency: "daily",
@@ -29,10 +36,25 @@ export const sendDailyDigests = internalAction({
       ),
     );
 
-    const successful = results.filter((r) => r.status === "fulfilled").length;
-    const failed = results.filter((r) => r.status === "rejected").length;
+    // Count results: sent (actually dispatched), skipped (no notifications), failed
+    let sent = 0;
+    let skipped = 0;
+    let failed = 0;
 
-    return { sent: successful, failed };
+    for (const result of results) {
+      if (result.status === "rejected") {
+        failed++;
+      } else {
+        const value = result.value as DigestResult;
+        if (value.skipped) {
+          skipped++;
+        } else {
+          sent++;
+        }
+      }
+    }
+
+    return { sent, skipped, failed };
   },
 });
 
@@ -41,7 +63,7 @@ export const sendDailyDigests = internalAction({
  */
 export const sendWeeklyDigests = internalAction({
   args: {},
-  handler: async (ctx): Promise<{ sent: number; failed: number }> => {
+  handler: async (ctx): Promise<{ sent: number; skipped: number; failed: number }> => {
     // Get all users who have weekly digest enabled
     const users = await ctx.runQuery(internal.users.listWithDigestPreference, {
       frequency: "weekly",
@@ -57,9 +79,24 @@ export const sendWeeklyDigests = internalAction({
       ),
     );
 
-    const successful = results.filter((r) => r.status === "fulfilled").length;
-    const failed = results.filter((r) => r.status === "rejected").length;
+    // Count results: sent (actually dispatched), skipped (no notifications), failed
+    let sent = 0;
+    let skipped = 0;
+    let failed = 0;
 
-    return { sent: successful, failed };
+    for (const result of results) {
+      if (result.status === "rejected") {
+        failed++;
+      } else {
+        const value = result.value as DigestResult;
+        if (value.skipped) {
+          skipped++;
+        } else {
+          sent++;
+        }
+      }
+    }
+
+    return { sent, skipped, failed };
   },
 });

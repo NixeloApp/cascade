@@ -66,7 +66,7 @@ describe("Digest Emails", () => {
     const result = await t.action(internal.email.digests.sendDailyDigests, {});
 
     // Verify
-    expect(result).toEqual({ sent: 1, failed: 0 });
+    expect(result).toEqual({ sent: 1, skipped: 0, failed: 0 });
     expect(sendEmail).toHaveBeenCalledTimes(1);
 
     // Check arguments
@@ -111,9 +111,8 @@ describe("Digest Emails", () => {
     // 3. Run action
     const result = await t.action(internal.email.digests.sendDailyDigests, {});
 
-    // Verify
-    // Counts as sent=1 because sendDigestEmail returns success even if skipped
-    expect(result).toEqual({ sent: 1, failed: 0 });
+    // Verify: skipped=1 because user had no notifications to digest
+    expect(result).toEqual({ sent: 0, skipped: 1, failed: 0 });
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
@@ -162,7 +161,7 @@ describe("Digest Emails", () => {
     const result = await t.action(internal.email.digests.sendWeeklyDigests, {});
 
     // Verify
-    expect(result).toEqual({ sent: 1, failed: 0 });
+    expect(result).toEqual({ sent: 1, skipped: 0, failed: 0 });
     expect(sendEmail).toHaveBeenCalledTimes(1);
 
     const callArgs = vi.mocked(sendEmail).mock.calls[0];
