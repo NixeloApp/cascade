@@ -18,7 +18,7 @@ describe("Document Security - Project Viewers", () => {
       timezone: "America/New_York",
     });
     // Need a workspace first
-    const workspaceId = await asOwner.mutation(api.workspaces.create, {
+    const workspaceId = await asOwner.mutation(api.workspaces.createWorkspace, {
       name: "Test Workspace",
       slug: "test-workspace",
       organizationId: orgId,
@@ -85,7 +85,7 @@ describe("Document Security - Project Viewers", () => {
       timezone: "America/New_York",
     });
     // Need a workspace first
-    const workspaceId = await asOwner.mutation(api.workspaces.create, {
+    const workspaceId = await asOwner.mutation(api.workspaces.createWorkspace, {
       name: "Test Workspace",
       slug: "test-workspace",
       organizationId: orgId,

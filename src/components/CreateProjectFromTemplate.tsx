@@ -40,7 +40,7 @@ export function CreateProjectFromTemplate({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const workspaces = useQuery(api.workspaces.list, { organizationId });
+  const workspaces = useQuery(api.workspaces.listWorkspaces, { organizationId });
 
   const templates = useQuery(api.projectTemplates.list);
   const selectedTemplate = useQuery(

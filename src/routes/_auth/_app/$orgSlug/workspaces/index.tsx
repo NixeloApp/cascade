@@ -22,7 +22,7 @@ function WorkspacesList() {
   const { organizationId, orgSlug } = useOrganization();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const workspaces = useQuery(api.workspaces.list, {
+  const workspaces = useQuery(api.workspaces.listWorkspaces, {
     organizationId,
   });
 

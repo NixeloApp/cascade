@@ -16,7 +16,7 @@ function TeamHome() {
   const { workspaceSlug, teamSlug } = Route.useParams();
   const navigate = useNavigate();
 
-  const workspace = useQuery(api.workspaces.getBySlug, {
+  const workspace = useQuery(api.workspaces.getWorkspaceBySlug, {
     organizationId,
     slug: workspaceSlug,
   });
