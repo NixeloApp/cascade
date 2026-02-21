@@ -115,3 +115,8 @@
 **Vulnerability:** The `getBreadcrumbs` query allowed authenticated users to access the breadcrumb path (titles of ancestor documents) of any "public" document, even if that document belonged to a different organization. This bypassed the implicit organization boundary expected for public documents.
 **Learning:** `isPublic` flags on resources (like documents) often imply "public to the organization", not "public to the world". Access control checks must explicitly verify organization membership unless global access is intended.
 **Prevention:** Refactored `getBreadcrumbs` to use the same `assertDocumentAccess` helper as `getDocument`, ensuring consistent enforcement of organization membership for public documents.
+
+## 2026-03-06 - OAuth CSRF via Missing State Validation
+**Vulnerability:** The GitHub OAuth integration generated a `state` parameter but failed to store it (e.g., in a cookie) or validate it in the callback handler. This allowed an attacker to trick a victim into connecting the attacker's GitHub account to the victim's Nixelo account (Connection CSRF).
+**Learning:** Generating a `state` parameter is useless if you don't verify it. OAuth `state` must be persisted (usually in a HttpOnly/Secure/Lax cookie) and compared against the value returned by the provider using constant-time comparison.
+**Prevention:** Updated `initiateAuthHandler` to store the `state` in a cookie, and `handleCallbackHandler` to validate that the cookie matches the `state` query parameter using `constantTimeEqual`.

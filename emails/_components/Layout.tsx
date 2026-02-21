@@ -16,7 +16,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-// biome-ignore lint/style/useImportType: required for React Email
+// biome-ignore lint/style/useImportType: React is needed for runtime JSX in email rendering
 import * as React from "react";
 
 interface EmailLayoutProps {
