@@ -38,7 +38,7 @@ export function SidebarTeamItem({
     location.pathname.startsWith(`/teams/${team.slug}/`);
 
   return (
-    <div className="ml-4">
+    <li className="ml-4 list-none">
       {/* Team Header */}
       <Flex align="center" gap="xs">
         <Button
@@ -73,7 +73,7 @@ export function SidebarTeamItem({
       {isExpanded && (
         <SidebarTeamProjects teamId={team._id} orgSlug={orgSlug} onNavClick={onNavClick} />
       )}
-    </div>
+    </li>
   );
 }
 
@@ -114,14 +114,14 @@ function SidebarTeamProjects({
   }
 
   return (
-    <div className="ml-6 border-l border-ui-border pl-1">
+    <ul className="ml-6 border-l border-ui-border pl-1 list-none">
       {projects.map((project) => {
         const isActive =
           location.pathname === `/${orgSlug}/projects/${project.key}` ||
           location.pathname.startsWith(`/${orgSlug}/projects/${project.key}/`);
 
         return (
-          <div key={project._id}>
+          <li key={project._id} className="list-none">
             <Tooltip content={`${project.key} - ${project.name}`}>
               <Link
                 to={ROUTES.projects.board.path}
@@ -141,20 +141,22 @@ function SidebarTeamProjects({
                 {project.key} - {project.name}
               </Link>
             </Tooltip>
-          </div>
+          </li>
         );
       })}
 
       {status === "CanLoadMore" && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => loadMore(10)}
-          className="ml-2 text-xs h-6 px-2 text-brand"
-        >
-          Load more...
-        </Button>
+        <li className="list-none">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => loadMore(10)}
+            className="ml-2 text-xs h-6 px-2 text-brand"
+          >
+            Load more...
+          </Button>
+        </li>
       )}
-    </div>
+    </ul>
   );
 }
