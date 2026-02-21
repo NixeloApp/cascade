@@ -10,6 +10,10 @@ const mockTeam = {
   slug: "engineering",
   description: "The engineering team",
   workspaceId: "workspace123" as any,
+  organizationId: "org123" as any,
+  isPrivate: false,
+  createdBy: "user123" as any,
+  updatedAt: 1234567890,
 };
 
 // Mock convex/react hooks
