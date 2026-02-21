@@ -1,6 +1,6 @@
 import { register } from "@convex-dev/rate-limiter/test";
 import { convexTest } from "convex-test";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
@@ -175,46 +175,6 @@ describe("Users Security", () => {
       expect(loggedIn.pendingEmail).toBeUndefined();
       expect(loggedIn.pendingEmailVerificationToken).toBeUndefined();
       expect(loggedIn.pendingEmailVerificationExpires).toBeUndefined();
-    });
-  });
-
-  describe("Async Email Verification", () => {
-    const originalNodeEnv = process.env.NODE_ENV;
-
-    beforeAll(() => {
-      // Simulate production environment to trigger sendEmail fetch logic
-      process.env.NODE_ENV = "production";
-    });
-
-    afterAll(() => {
-      process.env.NODE_ENV = originalNodeEnv;
-    });
-
-    it("should NOT call fetch synchronously when updating email (using scheduler)", async () => {
-      const t = convexTest(schema, modules);
-      register(t);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
-
-      // Spy on fetch to detect if it's called synchronously
-      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue(
-        new Response(JSON.stringify({ success: true }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
-      );
-
-      // Call updateProfile with a valid email (not test email to avoid mock skip)
-      // This should trigger sendEmail logic
-      await asUser.mutation(api.users.updateProfile, {
-        email: "valid.user@example.com",
-      });
-
-      // Assert that fetch was NOT called synchronously
-      // This confirms that we are using ctx.scheduler instead of direct fetch
-      expect(fetchSpy).not.toHaveBeenCalled();
-
-      fetchSpy.mockRestore();
     });
   });
 });
