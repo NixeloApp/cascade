@@ -438,3 +438,32 @@ export async function fetchPaginatedIssues(
     page: await enrichIssues(ctx, issuesResult.page),
   };
 }
+
+/**
+ * Batch enrich issues grouped by status
+ *
+ * This function takes a grouping of issues (e.g. from parallel queries),
+ * enriches them all in one batch to avoid N+1 queries, and returns
+ * the same grouping structure with enriched issues.
+ */
+export async function batchEnrichIssuesByStatus(
+  ctx: QueryCtx,
+  issuesByStatus: Record<string, Doc<"issues">[]>,
+): Promise<Record<string, EnrichedIssue[]>> {
+  // Flatten all issues to enrich in a single batch
+  const allIssues = Object.values(issuesByStatus).flat();
+  const enrichedAll = await enrichIssues(ctx, allIssues);
+
+  // Build a lookup map by issue ID for O(1) access
+  const enrichedById = new Map(enrichedAll.map((issue) => [issue._id, issue]));
+
+  // Reconstruct the status-grouped structure using the enriched issues
+  const enrichedIssuesByStatus: Record<string, EnrichedIssue[]> = {};
+  for (const [statusId, issues] of Object.entries(issuesByStatus)) {
+    enrichedIssuesByStatus[statusId] = issues
+      .map((issue) => enrichedById.get(issue._id))
+      .filter((issue): issue is EnrichedIssue => issue !== undefined);
+  }
+
+  return enrichedIssuesByStatus;
+}
