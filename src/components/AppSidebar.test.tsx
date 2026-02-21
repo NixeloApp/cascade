@@ -1,6 +1,6 @@
 import { useLocation } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import userEvent from "@testing-library/user-event";
+import { useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { AppSidebar } from "./AppSidebar";
