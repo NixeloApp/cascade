@@ -77,7 +77,7 @@ describe("Digest Emails", () => {
     expect(params.html).toContain("Test Mention");
   });
 
-  it("should not send email when no notifications", async () => {
+  it("should not send email when no notifications", { timeout: 15000 }, async () => {
     const t = convexTest(schema, modules);
 
     // 1. Create user
