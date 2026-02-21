@@ -17,15 +17,10 @@ vi.mock("../emails/VerifyEmail", () => ({
 }));
 
 // Access the internal function hidden in the provider options
-// biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
-// @ts-ignore
-const sendVerificationRequest = otpVerification.options
-  ? // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
-    // @ts-ignore
-    otpVerification.options.sendVerificationRequest
-  : // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
-    // @ts-ignore
-    otpVerification.sendVerificationRequest;
+// Using 'any' cast to bypass TypeScript type limitations for testing internal functions
+const sendVerificationRequest = (otpVerification as any).options
+  ? (otpVerification as any).options.sendVerificationRequest
+  : (otpVerification as any).sendVerificationRequest;
 
 describe("OTP Verification Environment Safety", () => {
   const originalEnv = process.env;
@@ -153,9 +148,7 @@ describe("OTP Verification Environment Safety", () => {
     const email = "user@inbox.mailtrap.io";
     const token = "123456";
 
-    // Should NOT throw
-    // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
-    // @ts-ignore
+    // Should NOT throw (email error is swallowed for test emails)
     await expect(
       sendVerificationRequest({ identifier: email, token }, mockCtx),
     ).resolves.toBeUndefined();
@@ -184,8 +177,7 @@ describe("OTP Verification Environment Safety", () => {
     const email = "regular@example.com";
     const token = "123456";
 
-    // Should THROW
-    // @ts-expect-error
+    // Should THROW (email errors propagate for regular emails)
     await expect(sendVerificationRequest({ identifier: email, token }, mockCtx)).rejects.toThrow(
       "Could not send verification email",
     );
