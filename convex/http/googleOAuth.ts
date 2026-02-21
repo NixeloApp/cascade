@@ -178,6 +178,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   }
 
   const config = getGoogleOAuthConfig();
+  const state = crypto.randomUUID();
 
   // Build OAuth authorization URL
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -187,6 +188,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   authUrl.searchParams.set("scope", config.scopes);
   authUrl.searchParams.set("access_type", "offline"); // Get refresh token
   authUrl.searchParams.set("prompt", "consent"); // Force consent to get refresh token
+  authUrl.searchParams.set("state", state);
 
   // Redirect user to Google OAuth page
   return Promise.resolve(
@@ -194,6 +196,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
       status: 302,
       headers: {
         Location: authUrl.toString(),
+        "Set-Cookie": `google-oauth-state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
       },
     }),
   );
@@ -211,6 +214,7 @@ export const initiateAuth = httpAction(initiateAuthHandler);
 export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
 
   if (error) {
@@ -221,8 +225,20 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     });
   }
 
-  if (!code) {
-    return new Response("Missing authorization code", { status: 400 });
+  // Validate state
+  const cookieHeader = request.headers.get("Cookie");
+  const storedState = cookieHeader
+    ?.split(";")
+    .find((c) => c.trim().startsWith("google-oauth-state="))
+    ?.split("=")[1];
+
+  if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
+    return new Response("Invalid state or missing authorization code", {
+      status: 400,
+      headers: {
+        "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      },
+    });
   }
 
   let email: string;
@@ -362,7 +378,10 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     `,
     {
       status: 200,
-      headers: { "Content-Type": "text/html" },
+      headers: {
+        "Content-Type": "text/html",
+        "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      },
     },
   );
 };
