@@ -19,7 +19,7 @@ import {
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { isWorkspaceEditor } from "./lib/workspaceAccess";
-import { assertCanAccessProject, assertCanEditProject, canAccessProject } from "./projectAccess";
+import { assertCanAccessProject, assertCanEditProject } from "./projectAccess";
 
 export const create = authenticatedMutation({
   args: {
@@ -135,21 +135,11 @@ export const list = authenticatedQuery({
 
     // Combine and deduplicate (user's public docs appear in both queries)
     const seenIds = new Set<string>();
-    const combinedDocuments = [...privateDocuments, ...publicDocuments].filter((doc) => {
+    const allDocuments = [...privateDocuments, ...publicDocuments].filter((doc) => {
       if (seenIds.has(doc._id)) return false;
       seenIds.add(doc._id);
       return true;
     });
-
-    // Filter by access (specifically project access)
-    // Pre-build org IDs set to avoid N+1 membership queries
-    const myOrgIds = args.organizationId ? new Set<string>([args.organizationId]) : undefined;
-    const allDocuments = [];
-    for (const doc of combinedDocuments) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        allDocuments.push(doc);
-      }
-    }
 
     // Sort by updatedAt descending
     allDocuments.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -199,7 +189,25 @@ export const getDocument = authenticatedQuery({
     }
 
     // Check if user can access this document
-    await assertDocumentAccess(ctx, document);
+    const isCreator = document.createdBy === ctx.userId;
+
+    if (!isCreator) {
+      if (!document.isPublic) {
+        throw forbidden(undefined, "Not authorized to access this document");
+      }
+
+      // If public, user MUST be a member of the organization
+      const membership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_organization_user", (q) =>
+          q.eq("organizationId", document.organizationId).eq("userId", ctx.userId),
+        )
+        .first();
+
+      if (!membership) {
+        throw forbidden(undefined, "You are not a member of this organization");
+      }
+    }
 
     const creator = await ctx.db.get(document.createdBy);
     return {
@@ -350,39 +358,14 @@ function matchesDocumentFilters(
 }
 
 // Helper: Check if user has access to view document
-async function canAccessDocument(
-  ctx: QueryCtx & { userId: Id<"users"> },
-  doc: {
-    isPublic: boolean;
-    createdBy: Id<"users">;
-    organizationId: Id<"organizations">;
-    projectId?: Id<"projects">;
-  },
-  myOrgIds?: Set<string>,
-): Promise<boolean> {
-  if (doc.createdBy === ctx.userId) return true;
-
-  // Check project access if document is linked to a project
-  if (doc.projectId) {
-    const canProject = await canAccessProject(ctx, doc.projectId, ctx.userId);
-    if (!canProject) return false;
-  }
-
+function hasDocumentAccess(
+  doc: { isPublic: boolean; createdBy: Id<"users">; organizationId: Id<"organizations"> },
+  userId: Id<"users">,
+  myOrgIds: Set<Id<"organizations">>,
+): boolean {
+  if (doc.createdBy === userId) return true;
   if (!doc.isPublic) return false;
-
-  // Check organization membership
-  if (myOrgIds) {
-    return myOrgIds.has(doc.organizationId);
-  }
-
-  const membership = await ctx.db
-    .query("organizationMembers")
-    .withIndex("by_organization_user", (q) =>
-      q.eq("organizationId", doc.organizationId).eq("userId", ctx.userId),
-    )
-    .first();
-
-  return !!membership;
+  return myOrgIds.has(doc.organizationId);
 }
 
 async function checkRateLimit(ctx: MutationCtx & { userId: Id<"users"> }) {
@@ -516,7 +499,7 @@ export const search = authenticatedQuery({
 
     for (const doc of results) {
       // Check access and filter conditions
-      if (!(await canAccessDocument(ctx, doc, myOrgIds))) continue;
+      if (!hasDocumentAccess(doc, ctx.userId, myOrgIds)) continue;
       if (args.organizationId && doc.organizationId !== args.organizationId) continue;
       if (!matchesDocumentFilters(doc, args, ctx.userId)) continue;
 
@@ -603,16 +586,8 @@ export const listChildren = authenticatedQuery({
       .filter(notDeleted)
       .take(BOUNDED_RELATION_LIMIT);
 
-    // Pre-build org IDs set to avoid N+1 membership queries
-    const myOrgIds = new Set<string>([args.organizationId]);
-
-    // Filter by access
-    const accessible = [];
-    for (const doc of documents) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        accessible.push(doc);
-      }
-    }
+    // Filter by access: user's own docs OR public docs
+    const accessible = documents.filter((doc) => doc.createdBy === ctx.userId || doc.isPublic);
 
     // Sort by order
     accessible.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -630,7 +605,7 @@ export const listChildren = authenticatedQuery({
     const childCountMap = new Map<Id<"documents">, number>();
     for (const child of allChildren) {
       if (child.parentId && parentIds.includes(child.parentId)) {
-        if (await canAccessDocument(ctx, child, myOrgIds)) {
+        if (child.createdBy === ctx.userId || child.isPublic) {
           childCountMap.set(child.parentId, (childCountMap.get(child.parentId) ?? 0) + 1);
         }
       }
@@ -675,16 +650,8 @@ export const getTree = authenticatedQuery({
       .filter(notDeleted)
       .take(BOUNDED_RELATION_LIMIT);
 
-    // Pre-build org IDs set to avoid N+1 membership queries
-    const myOrgIds = new Set<string>([args.organizationId]);
-
     // Filter by access
-    const accessible = [];
-    for (const doc of allDocs) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        accessible.push(doc);
-      }
-    }
+    const accessible = allDocs.filter((doc) => doc.createdBy === ctx.userId || doc.isPublic);
 
     // Build tree structure
     const childrenByParent = new Map<Id<"documents"> | undefined, typeof accessible>();
@@ -1176,8 +1143,23 @@ async function assertDocumentAccess(
   ctx: QueryCtx & { userId: Id<"users"> },
   document: Doc<"documents">,
 ) {
-  const allowed = await canAccessDocument(ctx, document);
-  if (!allowed) {
-    throw forbidden(undefined, "Not authorized to access this document");
+  const isCreator = document.createdBy === ctx.userId;
+
+  if (!isCreator) {
+    if (!document.isPublic) {
+      throw forbidden(undefined, "Not authorized to access this document");
+    }
+
+    // If public, user MUST be a member of the organization
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", document.organizationId).eq("userId", ctx.userId),
+      )
+      .first();
+
+    if (!membership) {
+      throw forbidden(undefined, "You are not a member of this organization");
+    }
   }
 }
