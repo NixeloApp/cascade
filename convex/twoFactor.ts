@@ -1,7 +1,8 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { conflict, notFound, unauthenticated } from "./lib/errors";
+import { query } from "./_generated/server";
+import { authenticatedMutationNo2FA } from "./customFunctions";
+import { conflict, notFound } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 
 const APP_NAME = "Nixelo";
@@ -215,21 +216,16 @@ export const getStatus = query({
 /**
  * Begin 2FA setup - generates secret and returns setup info
  */
-export const beginSetup = mutation({
+export const beginSetup = authenticatedMutationNo2FA({
   args: {},
   returns: v.object({
     secret: v.string(),
     otpauthUrl: v.string(),
   }),
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
-    const user = await ctx.db.get(userId);
+    const user = await ctx.db.get(ctx.userId);
     if (!user) {
-      throw notFound("user", userId);
+      throw notFound("user", ctx.userId);
     }
 
     if (user.twoFactorEnabled) {
@@ -240,7 +236,7 @@ export const beginSetup = mutation({
     const secret = generateSecret();
 
     // Store secret temporarily (not yet enabled)
-    await ctx.db.patch(userId, {
+    await ctx.db.patch(ctx.userId, {
       twoFactorSecret: secret,
     });
 
@@ -258,7 +254,7 @@ export const beginSetup = mutation({
 /**
  * Complete 2FA setup by verifying the first code
  */
-export const completeSetup = mutation({
+export const completeSetup = authenticatedMutationNo2FA({
   args: {
     code: v.string(),
   },
@@ -268,14 +264,9 @@ export const completeSetup = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
-    const user = await ctx.db.get(userId);
+    const user = await ctx.db.get(ctx.userId);
     if (!user) {
-      throw notFound("user", userId);
+      throw notFound("user", ctx.userId);
     }
 
     if (!user.twoFactorSecret) {
@@ -297,7 +288,7 @@ export const completeSetup = mutation({
     const hashedCodes = await Promise.all(backupCodes.map(hashBackupCode));
 
     // Enable 2FA
-    await ctx.db.patch(userId, {
+    await ctx.db.patch(ctx.userId, {
       twoFactorEnabled: true,
       twoFactorBackupCodes: hashedCodes,
     });
@@ -309,7 +300,7 @@ export const completeSetup = mutation({
     }
 
     await ctx.db.insert("twoFactorSessions", {
-      userId,
+      userId: ctx.userId,
       sessionId,
       verifiedAt: Date.now(),
     });
@@ -325,7 +316,7 @@ export const completeSetup = mutation({
  * Verify a TOTP code (for sign-in)
  * Includes rate limiting to prevent brute-force attacks
  */
-export const verifyCode = mutation({
+export const verifyCode = authenticatedMutationNo2FA({
   args: {
     code: v.string(),
   },
@@ -335,14 +326,9 @@ export const verifyCode = mutation({
     lockedUntil: v.optional(v.number()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
-    const user = await ctx.db.get(userId);
+    const user = await ctx.db.get(ctx.userId);
     if (!user) {
-      throw notFound("user", userId);
+      throw notFound("user", ctx.userId);
     }
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
@@ -368,7 +354,7 @@ export const verifyCode = mutation({
       if (failedAttempts >= MAX_VERIFICATION_ATTEMPTS) {
         // Lock the account
         const lockedUntil = now + LOCKOUT_DURATION_MS;
-        await ctx.db.patch(userId, {
+        await ctx.db.patch(ctx.userId, {
           twoFactorFailedAttempts: failedAttempts,
           twoFactorLockedUntil: lockedUntil,
         });
@@ -379,14 +365,14 @@ export const verifyCode = mutation({
         };
       }
 
-      await ctx.db.patch(userId, {
+      await ctx.db.patch(ctx.userId, {
         twoFactorFailedAttempts: failedAttempts,
       });
       return { success: false, error: "Invalid verification code" };
     }
 
     // Success - reset failed attempts
-    await ctx.db.patch(userId, {
+    await ctx.db.patch(ctx.userId, {
       twoFactorFailedAttempts: 0,
       twoFactorLockedUntil: undefined,
     });
@@ -400,7 +386,7 @@ export const verifyCode = mutation({
     // Check if session already exists
     const existingSession = await ctx.db
       .query("twoFactorSessions")
-      .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
+      .withIndex("by_user_session", (q) => q.eq("userId", ctx.userId).eq("sessionId", sessionId))
       .first();
 
     if (existingSession) {
@@ -409,7 +395,7 @@ export const verifyCode = mutation({
       });
     } else {
       await ctx.db.insert("twoFactorSessions", {
-        userId,
+        userId: ctx.userId,
         sessionId,
         verifiedAt: now,
       });
@@ -422,7 +408,7 @@ export const verifyCode = mutation({
 /**
  * Verify a backup code (consumes the code)
  */
-export const verifyBackupCode = mutation({
+export const verifyBackupCode = authenticatedMutationNo2FA({
   args: {
     code: v.string(),
   },
@@ -432,14 +418,9 @@ export const verifyBackupCode = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
-    const user = await ctx.db.get(userId);
+    const user = await ctx.db.get(ctx.userId);
     if (!user) {
-      throw notFound("user", userId);
+      throw notFound("user", ctx.userId);
     }
 
     if (!user.twoFactorEnabled) {
@@ -463,7 +444,7 @@ export const verifyBackupCode = mutation({
     const newCodes = [...backupCodes];
     newCodes.splice(codeIndex, 1);
 
-    await ctx.db.patch(userId, {
+    await ctx.db.patch(ctx.userId, {
       twoFactorBackupCodes: newCodes,
     });
 
@@ -476,7 +457,7 @@ export const verifyBackupCode = mutation({
     const now = Date.now();
     const existingSession = await ctx.db
       .query("twoFactorSessions")
-      .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
+      .withIndex("by_user_session", (q) => q.eq("userId", ctx.userId).eq("sessionId", sessionId))
       .first();
 
     if (existingSession) {
@@ -485,7 +466,7 @@ export const verifyBackupCode = mutation({
       });
     } else {
       await ctx.db.insert("twoFactorSessions", {
-        userId,
+        userId: ctx.userId,
         sessionId,
         verifiedAt: now,
       });
@@ -501,7 +482,7 @@ export const verifyBackupCode = mutation({
 /**
  * Regenerate backup codes (requires valid TOTP code)
  */
-export const regenerateBackupCodes = mutation({
+export const regenerateBackupCodes = authenticatedMutationNo2FA({
   args: {
     totpCode: v.string(),
   },
@@ -511,14 +492,9 @@ export const regenerateBackupCodes = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
-    const user = await ctx.db.get(userId);
+    const user = await ctx.db.get(ctx.userId);
     if (!user) {
-      throw notFound("user", userId);
+      throw notFound("user", ctx.userId);
     }
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
@@ -535,7 +511,7 @@ export const regenerateBackupCodes = mutation({
     const backupCodes = generateBackupCodes();
     const hashedCodes = await Promise.all(backupCodes.map(hashBackupCode));
 
-    await ctx.db.patch(userId, {
+    await ctx.db.patch(ctx.userId, {
       twoFactorBackupCodes: hashedCodes,
     });
 
@@ -549,7 +525,7 @@ export const regenerateBackupCodes = mutation({
 /**
  * Disable 2FA (requires valid TOTP code or backup code)
  */
-export const disable = mutation({
+export const disable = authenticatedMutationNo2FA({
   args: {
     code: v.string(),
     isBackupCode: v.optional(v.boolean()),
@@ -559,14 +535,9 @@ export const disable = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
-    const user = await ctx.db.get(userId);
+    const user = await ctx.db.get(ctx.userId);
     if (!user) {
-      throw notFound("user", userId);
+      throw notFound("user", ctx.userId);
     }
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
@@ -590,7 +561,7 @@ export const disable = mutation({
     }
 
     // Disable 2FA
-    await ctx.db.patch(userId, {
+    await ctx.db.patch(ctx.userId, {
       twoFactorEnabled: false,
       twoFactorSecret: undefined,
       twoFactorBackupCodes: undefined,
@@ -601,7 +572,7 @@ export const disable = mutation({
     while (true) {
       const sessions = await ctx.db
         .query("twoFactorSessions")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
         .take(MAX_PAGE_SIZE);
 
       if (sessions.length === 0) break;

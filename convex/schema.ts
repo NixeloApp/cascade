@@ -301,18 +301,13 @@ const applicationTables = {
     .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"])
     .index("by_project", ["projectId"])
-    .index("by_creator_public_updated", ["createdBy", "isPublic", "updatedAt"])
+    .index("by_creator_updated", ["createdBy", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_organization_deleted", ["organizationId", "isDeleted"])
     .index("by_organization_public", ["organizationId", "isPublic", "updatedAt"])
     .index("by_parent", ["parentId"])
     .index("by_organization_parent", ["organizationId", "parentId"])
-    .index("by_org_creator_public_updated", [
-      "organizationId",
-      "createdBy",
-      "isPublic",
-      "updatedAt",
-    ])
+    .index("by_org_creator_updated", ["organizationId", "createdBy", "updatedAt"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId", "projectId"],
@@ -1341,8 +1336,7 @@ const applicationTables = {
     .index("by_recording", ["recordingId"])
     .index("by_status", ["status"])
     .index("by_scheduled_time", ["scheduledTime"])
-    .index("by_next_attempt", ["nextAttemptAt"])
-    .index("by_status_scheduled", ["status", "scheduledTime"]),
+    .index("by_next_attempt", ["nextAttemptAt"]),
 
   // ===========================================================================
   // TIME TRACKING
