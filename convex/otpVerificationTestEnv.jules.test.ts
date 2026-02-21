@@ -17,11 +17,14 @@ vi.mock("../emails/VerifyEmail", () => ({
 }));
 
 // Access the internal function hidden in the provider options
-// @ts-expect-error
+// biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
+// @ts-ignore
 const sendVerificationRequest = otpVerification.options
-  ? // @ts-expect-error
+  ? // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
+    // @ts-ignore
     otpVerification.options.sendVerificationRequest
-  : // @ts-expect-error
+  : // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
+    // @ts-ignore
     otpVerification.sendVerificationRequest;
 
 describe("OTP Verification Environment Safety", () => {
@@ -54,7 +57,12 @@ describe("OTP Verification Environment Safety", () => {
     const email = "user@inbox.mailtrap.io";
     const token = "123456";
 
-    // @ts-expect-error
+    // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
+    // @ts-ignore
+    // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
+    // @ts-ignore
+    // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
+    // @ts-ignore
     await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
     // Verify calls
@@ -146,7 +154,8 @@ describe("OTP Verification Environment Safety", () => {
     const token = "123456";
 
     // Should NOT throw
-    // @ts-expect-error
+    // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
+    // @ts-ignore
     await expect(
       sendVerificationRequest({ identifier: email, token }, mockCtx),
     ).resolves.toBeUndefined();
