@@ -1212,7 +1212,7 @@ export const getCommentReactions = authenticatedQuery({
 
     // Optimize: Fetch reactions for all comments in parallel (avoid N+1)
     const reactionResults = await Promise.all(
-      args.commentIds.map(async (commentId) => {
+      uniqueCommentIds.map(async (commentId) => {
         const docId = commentToDocMap.get(commentId);
         // Skip if comment doesn't exist, was deleted, or document is inaccessible
         if (!docId || !accessibleDocIds.has(docId)) return null;

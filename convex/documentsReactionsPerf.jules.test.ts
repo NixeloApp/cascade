@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "./testUtils";
@@ -21,7 +22,7 @@ test("getCommentReactions fetches reactions for multiple comments correctly", as
   });
 
   // 3. Add multiple comments
-  const commentIds = [];
+  const commentIds: Id<"documentComments">[] = [];
   for (let i = 0; i < 5; i++) {
     const commentId = await user.mutation(api.documents.addComment, {
       documentId,
@@ -68,8 +69,14 @@ test("getCommentReactions fetches reactions for multiple comments correctly", as
 
   // Check Comment 1
   expect(reactions[commentIds[1]]).toHaveLength(2);
-  const emojis1 = reactions[commentIds[1]].map((r: any) => r.emoji).sort();
+  const comment1Reactions = reactions[commentIds[1]];
+  const emojis1 = comment1Reactions.map((r) => r.emoji).sort();
   expect(emojis1).toEqual(["❤️", "👍"]);
+  // Verify count and hasReacted for each reaction
+  for (const reaction of comment1Reactions) {
+    expect(reaction.count).toBe(1);
+    expect(reaction.hasReacted).toBe(true);
+  }
 
   // Check Comment 2 (empty)
   expect(reactions[commentIds[2]]).toHaveLength(0);
