@@ -215,6 +215,16 @@ async function recordUsage(ctx: MutationCtx, providerName: string, count: number
  * @param ctx - Convex context (for usage tracking and provider selection)
  * @param params - Email parameters (to, subject, html, etc.)
  *
+ * @remarks
+ * Full functionality (provider rotation and usage tracking) requires `ctx` to be a
+ * `QueryCtx` (for rotation) or `MutationCtx` (for rotation + tracking).
+ *
+ * If `ctx` is an `ActionCtx` (e.g. from auth callbacks) or `null`:
+ * - Provider rotation is disabled (falls back to Mailtrap/default)
+ * - Usage tracking is disabled
+ *
+ * To send emails from an Action with full functionality, use `internal.email.index.sendEmailAction`.
+ *
  * @example
  * await sendEmail(ctx, {
  *   to: "user@example.com",
