@@ -497,7 +497,7 @@ const applicationTables = {
     deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
-    .index("by_author", ["authorId"])
+    .index("by_author", ["authorId", "isDeleted"])
     .index("by_deleted", ["isDeleted"]),
 
   issueCommentReactions: defineTable({
