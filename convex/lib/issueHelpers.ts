@@ -13,7 +13,8 @@ import { BOUNDED_LIST_LIMIT } from "./boundedQueries";
 import { notFound, validation } from "./errors";
 import { fetchPaginatedQuery } from "./queryHelpers";
 import { MAX_LABELS_PER_PROJECT } from "./queryLimits";
-import { type AuthenticatedUser, sanitizeUserForAuth } from "./userUtils";
+import type { AuthenticatedUser } from "./userUtils";
+import { sanitizeUserForAuth } from "./userUtils";
 
 /**
  * Get an issue and validate it has a projectId (for migration safety)
