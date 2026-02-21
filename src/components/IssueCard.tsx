@@ -294,11 +294,11 @@ export const IssueCard = memo(function IssueCard({
             )}
             <Tooltip content={getTypeLabel(issue.type)}>
               {/* Tooltip trigger needs pointer events */}
-              {/* biome-ignore lint/a11y/useKeyWithClickEvents: interaction handled by parent */}
-              {/* biome-ignore lint/a11y/noStaticElementInteractions: interaction handled by parent */}
-              <div
+              <Button
+                variant="unstyled"
                 onClick={handleClick}
-                className="pointer-events-auto p-0 h-auto rounded-sm cursor-pointer"
+                className="pointer-events-auto p-0 h-auto rounded-sm"
+                tabIndex={-1}
               >
                 <Icon
                   icon={ISSUE_TYPE_ICONS[issue.type]}
@@ -307,7 +307,7 @@ export const IssueCard = memo(function IssueCard({
                   role="img"
                   aria-label={getTypeLabel(issue.type)}
                 />
-              </div>
+              </Button>
             </Tooltip>
             <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
               {issue.key}
@@ -316,11 +316,11 @@ export const IssueCard = memo(function IssueCard({
           <Tooltip
             content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
           >
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: interaction handled by parent */}
-            {/* biome-ignore lint/a11y/noStaticElementInteractions: interaction handled by parent */}
-            <div
+            <Button
+              variant="unstyled"
               onClick={handleClick}
-              className="pointer-events-auto p-0 h-auto rounded-sm cursor-pointer"
+              className="pointer-events-auto p-0 h-auto rounded-sm"
+              tabIndex={-1}
             >
               <Icon
                 icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
@@ -330,7 +330,7 @@ export const IssueCard = memo(function IssueCard({
                 role="img"
                 className={cn("cursor-help", getPriorityColor(issue.priority))}
               />
-            </div>
+            </Button>
           </Tooltip>
         </Flex>
 
@@ -364,16 +364,16 @@ export const IssueCard = memo(function IssueCard({
                   .map((l) => l.name)
                   .join(", ")}
               >
-                {/* biome-ignore lint/a11y/useKeyWithClickEvents: interaction handled by parent */}
-                {/* biome-ignore lint/a11y/noStaticElementInteractions: interaction handled by parent */}
-                <div
+                <Button
+                  variant="unstyled"
                   onClick={handleClick}
-                  className="pointer-events-auto p-0 h-auto rounded-sm cursor-pointer"
+                  className="pointer-events-auto p-0 h-auto rounded-sm"
+                  tabIndex={-1}
                 >
                   <Badge variant="neutral" size="sm" className="cursor-help">
                     +{issue.labels.length - 3}
                   </Badge>
-                </div>
+                </Button>
               </Tooltip>
             )}
           </Flex>
@@ -390,11 +390,11 @@ export const IssueCard = memo(function IssueCard({
           <Flex align="center" gap="sm">
             {issue.assignee && (
               <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-                {/* biome-ignore lint/a11y/useKeyWithClickEvents: interaction handled by parent */}
-                {/* biome-ignore lint/a11y/noStaticElementInteractions: interaction handled by parent */}
-                <div
+                <Button
+                  variant="unstyled"
                   onClick={handleClick}
-                  className="pointer-events-auto p-0 h-auto rounded-sm flex items-center gap-1 cursor-pointer"
+                  className="pointer-events-auto p-0 h-auto rounded-sm flex items-center gap-1"
+                  tabIndex={-1}
                 >
                   {issue.assignee.image ? (
                     <img
@@ -413,7 +413,7 @@ export const IssueCard = memo(function IssueCard({
                       {issue.assignee.name.charAt(0).toUpperCase()}
                     </Flex>
                   )}
-                </div>
+                </Button>
               </Tooltip>
             )}
           </Flex>
