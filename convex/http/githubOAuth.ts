@@ -135,9 +135,9 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     return new Response("Missing authorization code", { status: 400 });
   }
 
-  const config = getGitHubOAuthConfig();
-
   try {
+    const config = getGitHubOAuthConfig();
+
     // Exchange authorization code for access token
     const tokenResponse = await fetchWithTimeout("https://github.com/login/oauth/access_token", {
       method: "POST",
@@ -260,6 +260,15 @@ function getCookie(request: Request, name: string): string | null {
   return null;
 }
 
+const escapeHtml = (unsafe: string) => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 const handleOAuthError = (error: unknown) => {
   let status = 500;
   let errorMessage = "An unexpected error occurred";
@@ -304,7 +313,7 @@ const handleOAuthError = (error: unknown) => {
       <body>
         <div class="error">
           <h1>Connection Failed</h1>
-          <p>${errorMessage}</p>
+          <p>${escapeHtml(errorMessage)}</p>
           <p>Please try again or contact support if the problem persists.</p>
           <button onclick="window.close()">Close Window</button>
         </div>
