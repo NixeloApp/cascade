@@ -9,6 +9,7 @@ import {
 } from "../lib/env";
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { escapeHtml, escapeScriptJson } from "../lib/html";
 
 /** Generic error page HTML - no internal details exposed */
 const errorPageHtml = `
@@ -365,7 +366,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         <div class="success">
           <h1>Connected Successfully</h1>
           <p>Your Google Calendar has been connected to Nixelo.</p>
-          <p><strong>${result.email}</strong></p>
+          <p><strong>${escapeHtml(result.email)}</strong></p>
           <button onclick="window.close()">Close Window</button>
           <script>
             // Pass tokens to opener window for saving via authenticated mutation
@@ -374,7 +375,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
               const targetOrigin = window.opener.location.origin;
               window.opener.postMessage({
                 type: 'google-calendar-connected',
-                data: ${JSON.stringify(connectionData)}
+                data: ${escapeScriptJson(connectionData)}
               }, targetOrigin);
             }
             // Auto-close after 3 seconds

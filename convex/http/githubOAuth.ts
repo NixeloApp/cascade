@@ -4,6 +4,7 @@ import { constantTimeEqual } from "../lib/apiAuth";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
 import { isAppError, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { escapeHtml, escapeScriptJson } from "../lib/html";
 
 /**
  * GitHub OAuth Integration
@@ -112,7 +113,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         <body>
           <div class="error">
             <h1>Connection Failed</h1>
-            <p>Failed to connect to GitHub: ${errorDescription || error}</p>
+            <p>Failed to connect to GitHub: ${escapeHtml(errorDescription || error || "")}</p>
             <button onclick="window.close()">Close Window</button>
           </div>
         </body>
@@ -220,7 +221,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
             <div class="github-icon">&#128025;</div>
             <h1>Connected Successfully</h1>
             <p>Your GitHub account has been connected to Nixelo.</p>
-            <p class="username">@${githubUsername}</p>
+            <p class="username">@${escapeHtml(githubUsername)}</p>
             <button onclick="window.close()">Close Window</button>
             <script>
               // Pass tokens to opener window for saving via authenticated mutation
@@ -229,7 +230,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
                 const targetOrigin = window.opener.location.origin;
                 window.opener.postMessage({
                   type: 'github-connected',
-                  data: ${JSON.stringify(connectionData)}
+                  data: ${escapeScriptJson(connectionData)}
                 }, targetOrigin);
               }
               // Auto-close after 3 seconds
@@ -299,7 +300,7 @@ const handleOAuthError = (error: unknown) => {
       <body>
         <div class="error">
           <h1>Connection Failed</h1>
-          <p>${errorMessage}</p>
+          <p>${escapeHtml(errorMessage)}</p>
           <p>Please try again or contact support if the problem persists.</p>
           <button onclick="window.close()">Close Window</button>
         </div>
