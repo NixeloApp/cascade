@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@/test/custom-render";
-import { AppSidebar } from "./AppSidebar";
 import { useLocation } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@/test/custom-render";
+import { AppSidebar } from "./AppSidebar";
 
 // Mocks
 vi.mock("@tanstack/react-router", async () => {
@@ -11,7 +11,11 @@ vi.mock("@tanstack/react-router", async () => {
     ...actual,
     useLocation: vi.fn(),
     useNavigate: vi.fn(),
-    Link: (props: any) => <a {...props} href={props.to} aria-current={props["aria-current"]} title={props.title}>{props.children}</a>,
+    Link: (props: any) => (
+      <a {...props} href={props.to} aria-current={props["aria-current"]} title={props.title}>
+        {props.children}
+      </a>
+    ),
   };
 });
 
@@ -27,9 +31,9 @@ vi.mock("@/hooks/useOrgContext", () => ({
     organizationId: "org1",
   })),
   useOrganizationOptional: vi.fn(() => ({
-      orgSlug: "demo-org",
-      organizationName: "Demo Org",
-      organizationId: "org1",
+    orgSlug: "demo-org",
+    organizationName: "Demo Org",
+    organizationId: "org1",
   })),
 }));
 
@@ -55,26 +59,34 @@ vi.mock("@convex/_generated/api", () => ({
 
 // Mock icons to avoid rendering issues if any
 vi.mock("lucide-react", async () => {
-    const actual = await vi.importActual("lucide-react");
-    return {
-        ...actual,
-        // Mock specific icons used if needed, or rely on actual
-    };
+  const actual = await vi.importActual("lucide-react");
+  return {
+    ...actual,
+    // Mock specific icons used if needed, or rely on actual
+  };
 });
 
+const mockUseQueryImplementation = (query: any) => {
+  switch (query) {
+    case "documents.list":
+      return { documents: [] };
+    case "workspaces.list":
+    case "teams.getOrganizationTeams":
+    case "dashboard.getMyProjects":
+      return [];
+    case "users.isOrganizationAdmin":
+      return false;
+    case "users.getCurrent":
+      return { name: "Test User", email: "test@example.com" };
+    default:
+      return undefined;
+  }
+};
 
 describe("AppSidebar Accessibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useQuery as any).mockImplementation((query: any) => {
-        if (query === "documents.list") return { documents: [] };
-        if (query === "workspaces.list") return [];
-        if (query === "teams.getOrganizationTeams") return [];
-        if (query === "dashboard.getMyProjects") return [];
-        if (query === "users.isOrganizationAdmin") return false;
-        if (query === "users.getCurrent") return { name: "Test User", email: "test@example.com" };
-        return undefined;
-      });
+    (useQuery as any).mockImplementation(mockUseQueryImplementation);
   });
 
   it("adds aria-current='page' to active Dashboard link", () => {
@@ -117,14 +129,15 @@ describe("AppSidebar Accessibility", () => {
   });
 
   it("adds aria-current='page' to active Document sub-item and NOT the parent section", () => {
-      // Setup documents query to return a doc
-      (useQuery as any).mockImplementation((query: any) => {
-        if (query === "documents.list") return {
-            documents: [{ _id: "doc1", title: "My Doc", isPublic: false }]
+    // Setup documents query to return a doc
+    (useQuery as any).mockImplementation((query: any) => {
+      if (query === "documents.list")
+        return {
+          documents: [{ _id: "doc1", title: "My Doc", isPublic: false }],
         };
-        if (query === "users.isOrganizationAdmin") return false;
-        return [];
-      });
+      if (query === "users.isOrganizationAdmin") return false;
+      return [];
+    });
 
     (useLocation as any).mockReturnValue({ pathname: "/demo-org/documents/doc1" });
 
