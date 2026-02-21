@@ -1315,10 +1315,9 @@ async function fetchPrivateDocuments(
   if (organizationId) {
     return await ctx.db
       .query("documents")
-      .withIndex("by_org_creator_updated", (q) =>
-        q.eq("organizationId", organizationId).eq("createdBy", userId),
+      .withIndex("by_org_creator_public_updated", (q) =>
+        q.eq("organizationId", organizationId).eq("createdBy", userId).eq("isPublic", false),
       )
-      .filter((q) => q.eq(q.field("isPublic"), false))
       .order("desc")
       .filter(notDeleted)
       .take(limit);
@@ -1326,8 +1325,7 @@ async function fetchPrivateDocuments(
 
   return await ctx.db
     .query("documents")
-    .withIndex("by_creator_updated", (q) => q.eq("createdBy", userId))
-    .filter((q) => q.eq(q.field("isPublic"), false))
+    .withIndex("by_creator_public_updated", (q) => q.eq("createdBy", userId).eq("isPublic", false))
     .order("desc")
     .filter(notDeleted)
     .take(limit);
