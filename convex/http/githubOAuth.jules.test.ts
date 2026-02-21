@@ -227,14 +227,7 @@ describe("GitHub OAuth Flow", () => {
 
       expect(response.status).toBe(500);
       const body = await response.json();
-
-      try {
-        const errorData = JSON.parse(body.error);
-        expect(errorData.message).toBe("Failed to fetch repositories");
-      } catch (e) {
-        // Fallback if it is a string
-        expect(body.error).toBe("Failed to fetch repositories");
-      }
+      expect(body.error).toContain("Failed to fetch repositories");
     });
 
     it("should return repositories on success", async () => {
@@ -288,6 +281,11 @@ describe("GitHub OAuth Flow", () => {
         description: null,
       });
 
+      // Verify Convex interactions
+      expect(mockCtx.runQuery).toHaveBeenCalledWith(api.github.getConnection);
+      expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.github.getDecryptedGitHubTokens, {
+        userId: "user123",
+      });
       expect(fetchWithTimeout).toHaveBeenCalledWith(
         expect.stringContaining("https://api.github.com/user/repos"),
         expect.objectContaining({
