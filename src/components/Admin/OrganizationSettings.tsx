@@ -24,7 +24,7 @@ interface OrganizationSettingsFormData {
 
 export function OrganizationSettings() {
   const { organizationId, organizationName } = useOrganization();
-  const organization = useQuery(api.organizations.getOrganization, { organizationId });
+  const organization = useQuery(api.organizations.getOrganization, { id: organizationId });
   const updateOrganization = useMutation(api.organizations.updateOrganization);
 
   const [isSubmitting, setIsSubmitting] = useState(false);

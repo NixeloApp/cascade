@@ -384,14 +384,20 @@ export const removeTeamMember = teamLeadMutation({
  */
 export const getTeam = authenticatedQuery({
   args: {
-    teamId: v.id("teams"),
+    id: v.optional(v.id("teams")),
+    teamId: v.optional(v.id("teams")),
   },
   handler: async (ctx, args) => {
-    const team = await ctx.db.get(args.teamId);
+    const id = args.id ?? args.teamId;
+    if (!id) {
+      throw validation("id", "Either id or teamId must be provided");
+    }
+
+    const team = await ctx.db.get(id);
     if (!team || team.isDeleted) return null;
 
     // Check if user has access (team member or organization admin)
-    const role = await getTeamRole(ctx, args.teamId, ctx.userId);
+    const role = await getTeamRole(ctx, id, ctx.userId);
     const isAdmin = await isOrganizationAdmin(ctx, team.organizationId, ctx.userId);
 
     if (!(role || isAdmin)) return null;
