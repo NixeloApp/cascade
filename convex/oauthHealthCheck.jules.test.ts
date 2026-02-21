@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
-import { CONSECUTIVE_FAILURE_WINDOW, MAX_HEALTH_CHECK_RECORDS } from "./lib/queryLimits";
+import { MAX_HEALTH_CHECK_RECORDS } from "./lib/queryLimits";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -14,7 +14,7 @@ describe("OAuth Health Check", () => {
   const originalFetch = global.fetch;
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
     vi.unstubAllEnvs();
     global.fetch = originalFetch;
   });
@@ -54,7 +54,7 @@ describe("OAuth Health Check", () => {
         return await ctx.db.query("oauthHealthChecks").collect();
       });
 
-      expect(records.length).toBeLessThanOrEqual(MAX_HEALTH_CHECK_RECORDS);
+      expect(records.length).toBe(MAX_HEALTH_CHECK_RECORDS);
     });
   });
 
