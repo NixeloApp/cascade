@@ -82,14 +82,23 @@ export const getUser = authenticatedQuery({
     const { items: myOrgs } = await getOrganizationMemberships(ctx, ctx.userId);
 
     if (myOrgs.length > 0) {
-      // Optimization: Fetch memberships for the target user (cached per request)
-      // This helper enforces MAX_PAGE_SIZE limit internally
-      const { items: theirOrgs } = await getOrganizationMemberships(ctx, args.id);
+      // Optimization: Instead of fetching all memberships for the target user (which can be many),
+      // check if they are in any of *my* organizations.
+      // Since I am typically in few organizations, this is efficient (few index lookups).
 
-      const myOrgIds = new Set(myOrgs.map((m) => m.organizationId));
-      const hasSharedOrg = theirOrgs.some((m) => myOrgIds.has(m.organizationId));
+      // Use Promise.all for parallelism
+      const sharedOrgChecks = await Promise.all(
+        myOrgs.map((org) =>
+          ctx.db
+            .query("organizationMembers")
+            .withIndex("by_organization_user", (q) =>
+              q.eq("organizationId", org.organizationId).eq("userId", args.id),
+            )
+            .first(),
+        ),
+      );
 
-      if (hasSharedOrg) {
+      if (sharedOrgChecks.some((m) => m !== null)) {
         return sanitizeUserForAuth(user);
       }
     }
