@@ -14,7 +14,7 @@ import {
 } from "../lib/boundedQueries";
 import { forbidden, notFound } from "../lib/errors";
 import {
-  type EnrichedIssue,
+  batchEnrichIssuesByStatus,
   enrichComments,
   enrichIssue,
   enrichIssues,
@@ -821,24 +821,7 @@ export const listByProjectSmart = projectQuery({
       }),
     );
 
-    // Optimize: Batch enrichment for all issues at once
-    const allIssues: Doc<"issues">[] = [];
-    const meta: { statusId: string; count: number }[] = [];
-
-    for (const state of workflowStates) {
-      const issues = issuesByColumn[state.id] || [];
-      allIssues.push(...issues);
-      meta.push({ statusId: state.id, count: issues.length });
-    }
-
-    const enrichedAll = await enrichIssues(ctx, allIssues);
-
-    const enrichedIssuesByStatus: Record<string, EnrichedIssue[]> = {};
-    let offset = 0;
-    for (const { statusId, count } of meta) {
-      enrichedIssuesByStatus[statusId] = enrichedAll.slice(offset, offset + count);
-      offset += count;
-    }
+    const enrichedIssuesByStatus = await batchEnrichIssuesByStatus(ctx, issuesByColumn);
 
     return {
       issuesByStatus: enrichedIssuesByStatus,
@@ -905,21 +888,7 @@ export const listByTeamSmart = authenticatedQuery({
       }),
     );
 
-    // Batch enrich all issues at once to avoid N+1 queries (one enrichIssues call per status)
-    // This reduces label queries from N (per status) to 1 (total)
-    const allIssues = Object.values(issuesByColumn).flat();
-    const enrichedAll = await enrichIssues(ctx, allIssues);
-
-    // Build a lookup map by issue ID for O(1) access
-    const enrichedById = new Map(enrichedAll.map((issue) => [issue._id, issue]));
-
-    // Reconstruct the status-grouped structure using the enriched issues
-    const enrichedIssuesByStatus: Record<string, EnrichedIssue[]> = {};
-    for (const [statusId, issues] of Object.entries(issuesByColumn)) {
-      enrichedIssuesByStatus[statusId] = issues
-        .map((issue) => enrichedById.get(issue._id))
-        .filter((issue): issue is EnrichedIssue => issue !== undefined);
-    }
+    const enrichedIssuesByStatus = await batchEnrichIssuesByStatus(ctx, issuesByColumn);
 
     return {
       issuesByStatus: enrichedIssuesByStatus,
