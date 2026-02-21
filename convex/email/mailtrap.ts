@@ -15,6 +15,7 @@ import {
   getMailtrapInboxId,
   getMailtrapMode,
 } from "../lib/env";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import type { EmailProvider, EmailSendParams, EmailSendResult } from "./provider";
 
 interface MailtrapSendResponse {
@@ -54,23 +55,27 @@ export class MailtrapProvider implements EmailProvider {
       );
       const toList = Array.isArray(params.to) ? params.to : [params.to];
 
-      const response = await fetch(this.getApiUrl(), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiToken}`,
-        },
-        body: JSON.stringify({
-          from: {
-            email: fromParsed.email,
-            name: fromParsed.name || "Nixelo",
+      const response = await fetchWithTimeout(
+        this.getApiUrl(),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.apiToken}`,
           },
-          to: toList.map((email) => ({ email })),
-          subject: params.subject,
-          html: params.html,
-          text: params.text || "",
-        }),
-      });
+          body: JSON.stringify({
+            from: {
+              email: fromParsed.email,
+              name: fromParsed.name || "Nixelo",
+            },
+            to: toList.map((email) => ({ email })),
+            subject: params.subject,
+            html: params.html,
+            text: params.text || "",
+          }),
+        },
+        10000,
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
