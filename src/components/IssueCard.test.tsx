@@ -135,19 +135,36 @@ describe("IssueCard", () => {
 
     // Type icon wrapper
     const typeIcon = screen.getByLabelText("Bug");
-    const typeWrapper = typeIcon.closest("div");
-    // We expect the wrapper (closest div) to have tabIndex="0"
-    expect(typeWrapper).toHaveAttribute("tabindex", "0");
+    const typeWrapper = typeIcon.closest("button");
+    expect(typeWrapper).toBeInTheDocument();
 
     // Priority icon wrapper
     // Priority: high
     const priorityIcon = screen.getByLabelText("Priority: high");
-    const priorityWrapper = priorityIcon.closest("div");
-    expect(priorityWrapper).toHaveAttribute("tabindex", "0");
+    const priorityWrapper = priorityIcon.closest("button");
+    expect(priorityWrapper).toBeInTheDocument();
 
     // Assignee wrapper
     const assigneeImg = screen.getByAltText("Alice Johnson");
-    const assigneeWrapper = assigneeImg.closest("div");
-    expect(assigneeWrapper).toHaveAttribute("tabindex", "0");
+    const assigneeWrapper = assigneeImg.closest("button");
+    expect(assigneeWrapper).toBeInTheDocument();
+  });
+
+  it("should trigger onClick when clicking on interactive elements", async () => {
+    const handleClick = vi.fn();
+    const user = userEvent.setup();
+    render(<IssueCard issue={mockIssue} status="todo" onClick={handleClick} />);
+
+    // Click Type Icon
+    await user.click(screen.getByLabelText("Bug"));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+
+    // Click Priority Icon
+    await user.click(screen.getByLabelText("Priority: high"));
+    expect(handleClick).toHaveBeenCalledTimes(2);
+
+    // Click Assignee
+    await user.click(screen.getByAltText("Alice Johnson"));
+    expect(handleClick).toHaveBeenCalledTimes(3);
   });
 });
