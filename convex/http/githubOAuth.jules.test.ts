@@ -190,7 +190,7 @@ describe("handleCallbackHandler XSS Protection", () => {
     }
 
     expect(response.status).toBe(200);
-    expect(html).toContain("&lt;script&gt;alert(&#039;user&#039;)&lt;/script&gt;");
+    expect(html).toContain("&lt;script&gt;alert(&#39;user&#39;)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert('user')</script>");
   });
 
@@ -209,7 +209,7 @@ describe("handleCallbackHandler XSS Protection", () => {
     }
 
     expect(response.status).toBe(500);
-    expect(html).toContain("&lt;script&gt;alert(&#039;error&#039;)&lt;/script&gt;");
+    expect(html).toContain("&lt;script&gt;alert(&#39;error&#39;)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert('error')</script>");
   });
 });
