@@ -186,6 +186,8 @@ export const updateStatus = issueMutation({
         newValue: args.newStatus,
       });
     }
+
+    return { success: true };
   },
 });
 
@@ -231,6 +233,8 @@ export const updateStatusByCategory = issueMutation({
         newValue: targetState.id,
       });
     }
+
+    return { success: true };
   },
 });
 
@@ -304,6 +308,8 @@ export const update = issueMutation({
         ),
       );
     }
+
+    return { success: true };
   },
 });
 

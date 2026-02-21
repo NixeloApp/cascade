@@ -411,10 +411,11 @@ describe("Projects", () => {
         { id: "done", name: "Completed", category: "done" as const, order: 2 },
       ];
 
-      await asAdmin.mutation(api.projects.updateWorkflow, {
+      const result = await asAdmin.mutation(api.projects.updateWorkflow, {
         projectId,
         workflowStates: customWorkflow,
       });
+      expect(result).toEqual({ success: true });
 
       const project = await asAdmin.query(api.projects.getProject, { id: projectId });
       expect(project?.workflowStates).toHaveLength(3);

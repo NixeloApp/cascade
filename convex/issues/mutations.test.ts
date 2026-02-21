@@ -148,11 +148,12 @@ describe("Issue Mutations", () => {
       });
 
       // Update to same status
-      await asUser.mutation(api.issues.updateStatus, {
+      const result = await asUser.mutation(api.issues.updateStatus, {
         issueId,
         newStatus: "todo", // Same as default
         newOrder: 0,
       });
+      expect(result).toEqual({ success: true });
 
       const activities = await t.run(async (ctx) => {
         return await ctx.db
@@ -181,11 +182,12 @@ describe("Issue Mutations", () => {
         priority: "medium",
       });
 
-      await asUser.mutation(api.issues.updateStatus, {
+      const result = await asUser.mutation(api.issues.updateStatus, {
         issueId,
         newStatus: "inprogress",
         newOrder: 5,
       });
+      expect(result).toEqual({ success: true });
 
       const issue = await t.run(async (ctx) => ctx.db.get(issueId));
       expect(issue?.order).toBe(5);
@@ -211,11 +213,12 @@ describe("Issue Mutations", () => {
         priority: "medium",
       });
 
-      await asUser.mutation(api.issues.updateStatusByCategory, {
+      const result = await asUser.mutation(api.issues.updateStatusByCategory, {
         issueId,
         category: "done",
         newOrder: 0,
       });
+      expect(result).toEqual({ success: true });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.status).toBe("done");
@@ -274,7 +277,7 @@ describe("Issue Mutations", () => {
         priority: "low",
       });
 
-      await asUser.mutation(api.issues.update, {
+      const result = await asUser.mutation(api.issues.update, {
         issueId,
         title: "Updated Title",
         description: "Updated description",
@@ -282,6 +285,7 @@ describe("Issue Mutations", () => {
         estimatedHours: 4,
         storyPoints: 3,
       });
+      expect(result).toEqual({ success: true });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Updated Title");
@@ -312,13 +316,14 @@ describe("Issue Mutations", () => {
         dueDate: Date.now() + 86400000,
       });
 
-      await asUser.mutation(api.issues.update, {
+      const result = await asUser.mutation(api.issues.update, {
         issueId,
         assigneeId: null,
         estimatedHours: null,
         storyPoints: null,
         dueDate: null,
       });
+      expect(result).toEqual({ success: true });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.assigneeId).toBeUndefined();
@@ -344,10 +349,11 @@ describe("Issue Mutations", () => {
         priority: "medium",
       });
 
-      await asUser.mutation(api.issues.update, {
+      const result = await asUser.mutation(api.issues.update, {
         issueId,
         labels: ["bug", "urgent", "frontend"],
       });
+      expect(result).toEqual({ success: true });
 
       // Labels are enriched with color info when fetched via issues.get
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
