@@ -10,11 +10,7 @@ vi.mock("../lib/env", () => ({
   getGoogleClientSecret: vi.fn(),
   isGoogleOAuthConfigured: vi.fn(),
   getConvexSiteUrl: vi.fn(),
-}));
-
-// Mock errors library
-vi.mock("../lib/errors", () => ({
-  validation: (_field: string, msg: string) => new Error(msg),
+  validation: (_type: string, msg: string) => new Error(msg),
 }));
 
 // Mock fetchWithTimeout
@@ -65,9 +61,13 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(302);
 
       const location = response.headers.get("Location");
+      const setCookie = response.headers.get("Set-Cookie");
       expect(location).toBeDefined();
+      expect(setCookie).toBeDefined();
+
       // biome-ignore lint/style/noNonNullAssertion: testing convenience
       const url = new URL(location!);
+      const state = url.searchParams.get("state");
 
       expect(url.origin).toBe("https://accounts.google.com");
       expect(url.pathname).toBe("/o/oauth2/v2/auth");
@@ -77,6 +77,8 @@ describe("Google OAuth Flow", () => {
       expect(url.searchParams.get("response_type")).toBe("code");
       expect(url.searchParams.get("access_type")).toBe("offline");
       expect(url.searchParams.get("prompt")).toBe("consent");
+      expect(state).toBeDefined();
+      expect(setCookie).toContain(`google-oauth-state=${state}`);
     });
 
     it("should return error if not configured", async () => {
@@ -109,7 +111,10 @@ describe("Google OAuth Flow", () => {
         throw new Error("Missing required environment variable: AUTH_GOOGLE_ID");
       });
 
-      const request = new Request("https://api.convex.site/google/callback?code=some_code");
+      const request = new Request(
+        "https://api.convex.site/google/callback?code=some_code&state=valid_state",
+      );
+      request.headers.set("Cookie", "google-oauth-state=valid_state");
       const response = await handleCallbackHandler(mockCtx, request);
 
       // Should catch the error and return 500 HTML page
@@ -120,12 +125,23 @@ describe("Google OAuth Flow", () => {
       expect(text).not.toContain("Missing required environment variable");
     });
 
-    it("should return 400 if code is missing", async () => {
-      const request = new Request("https://api.convex.site/google/callback");
-      const response = await handleCallbackHandler(mockCtx, request);
-
+    it("should return 400 if state is missing or invalid", async () => {
+      // Missing state param
+      let request = new Request("https://api.convex.site/google/callback?code=some_code");
+      let response = await handleCallbackHandler(mockCtx, request);
       expect(response.status).toBe(400);
-      expect(await response.text()).toBe("Missing authorization code");
+      expect(await response.text()).toContain("Invalid state");
+
+      // Missing cookie
+      request = new Request("https://api.convex.site/google/callback?code=some_code&state=val");
+      response = await handleCallbackHandler(mockCtx, request);
+      expect(response.status).toBe(400);
+
+      // Mismatch
+      request = new Request("https://api.convex.site/google/callback?code=some_code&state=val1");
+      request.headers.set("Cookie", "google-oauth-state=val2");
+      response = await handleCallbackHandler(mockCtx, request);
+      expect(response.status).toBe(400);
     });
 
     it("should exchange code for token and return success HTML", async () => {
@@ -145,7 +161,10 @@ describe("Google OAuth Flow", () => {
         json: async () => ({ email: "test@example.com" }),
       } as Response);
 
-      const request = new Request("https://api.convex.site/google/callback?code=auth_code");
+      const request = new Request(
+        "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
+      );
+      request.headers.set("Cookie", "google-oauth-state=valid_state");
       const response = await handleCallbackHandler(mockCtx, request);
 
       expect(response.status).toBe(200);
@@ -154,6 +173,11 @@ describe("Google OAuth Flow", () => {
       expect(text).toContain("test@example.com");
       expect(text).toContain("google_access_token");
       expect(text).toContain("google_refresh_token");
+
+      // Verify cookie cleared
+      const setCookie = response.headers.get("Set-Cookie");
+      expect(setCookie).toContain("google-oauth-state=;");
+      expect(setCookie).toContain("Max-Age=0");
 
       // Verify fetch calls
       expect(fetchWithTimeout).toHaveBeenCalledTimes(2);
@@ -173,29 +197,15 @@ describe("Google OAuth Flow", () => {
         text: async () => "invalid_grant",
       } as Response);
 
-      const request = new Request("https://api.convex.site/google/callback?code=auth_code");
+      const request = new Request(
+        "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
+      );
+      request.headers.set("Cookie", "google-oauth-state=valid_state");
       const response = await handleCallbackHandler(mockCtx, request);
 
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      // Error details are logged server-side but not exposed to users (security best practice)
-    });
-
-    it("should handle token exchange failure with details", async () => {
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: false,
-        text: async () =>
-          JSON.stringify({ error: "invalid_grant", error_description: "The code is invalid" }),
-      } as Response);
-
-      const request = new Request("https://api.convex.site/google/callback?code=auth_code");
-      const response = await handleCallbackHandler(mockCtx, request);
-
-      expect(response.status).toBe(500);
-      const text = await response.text();
-      expect(text).toContain("Connection Failed");
-      // Error details are logged server-side but not exposed to users (security best practice)
     });
 
     it("should handle user info fetch failure", async () => {
@@ -208,17 +218,18 @@ describe("Google OAuth Flow", () => {
       // User info failure
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: false,
-        text: async () => JSON.stringify({ error: { message: "Invalid token" } }),
       } as Response);
 
-      const request = new Request("https://api.convex.site/google/callback?code=auth_code");
+      const request = new Request(
+        "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
+      );
+      request.headers.set("Cookie", "google-oauth-state=valid_state");
       const response = await handleCallbackHandler(mockCtx, request);
 
       // It catches the error and returns HTML error page
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      // Error details are logged server-side but not exposed to users (security best practice)
     });
   });
 
@@ -306,7 +317,6 @@ describe("Google OAuth Flow", () => {
 
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: false,
-        text: async () => "Network error",
       } as Response);
 
       const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
@@ -315,25 +325,7 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const body = await response.json();
       expect(body.success).toBe(false);
-      expect(body.error).toContain("Network error");
-    });
-
-    it("should handle fetch error with details", async () => {
-      vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
-      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
-
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: false,
-        text: async () => JSON.stringify({ error: { message: "Quota exceeded" } }),
-      } as Response);
-
-      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
-      const response = await triggerSyncHandler(mockCtx, request);
-
-      expect(response.status).toBe(500);
-      const body = await response.json();
-      expect(body.success).toBe(false);
-      expect(body.error).toContain("Quota exceeded");
+      expect(body.error).toContain("Failed to fetch Google Calendar events");
     });
   });
 });

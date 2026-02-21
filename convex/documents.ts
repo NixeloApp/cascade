@@ -114,43 +114,7 @@ export const list = authenticatedQuery({
     const requestedLimit = args.limit ?? DEFAULT_PAGE_SIZE;
     const limit = Math.min(requestedLimit, MAX_PAGE_SIZE);
 
-    // Fetch buffer: get more than needed to handle deduplication between private/public
-    // Buffer size scales with limit to ensure we have enough results
-    const fetchBuffer = limit * FETCH_BUFFER_MULTIPLIER;
-
-    // Get user's private documents (their own non-public docs)
-    const privateDocuments = await fetchPrivateDocuments(
-      ctx,
-      ctx.userId,
-      args.organizationId,
-      fetchBuffer,
-    );
-
-    // Get public documents (must be scoped to organization)
-    const publicDocuments = await fetchPublicDocuments(
-      ctx,
-      ctx.userId,
-      args.organizationId,
-      fetchBuffer,
-    );
-
-    // Combine and deduplicate (user's public docs appear in both queries)
-    const seenIds = new Set<string>();
-    const combinedDocuments = [...privateDocuments, ...publicDocuments].filter((doc) => {
-      if (seenIds.has(doc._id)) return false;
-      seenIds.add(doc._id);
-      return true;
-    });
-
-    // Filter by access (specifically project access)
-    // Pre-build org IDs set to avoid N+1 membership queries
-    const myOrgIds = args.organizationId ? new Set<string>([args.organizationId]) : undefined;
-    const allDocuments = [];
-    for (const doc of combinedDocuments) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        allDocuments.push(doc);
-      }
-    }
+    const allDocuments = await fetchAndMergeAccessibleDocuments(ctx, args.organizationId, limit);
 
     // Sort by updatedAt descending
     allDocuments.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -1304,6 +1268,48 @@ async function getAccessibleDocuments(
   }
 
   return { commentToDocMap, accessibleDocIds };
+}
+
+// Helper: Fetch, combine, and filter accessible documents
+async function fetchAndMergeAccessibleDocuments(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  organizationId: Id<"organizations"> | undefined,
+  limit: number,
+) {
+  // Fetch buffer: get more than needed to handle deduplication between private/public
+  // Buffer size scales with limit to ensure we have enough results
+  const fetchBuffer = limit * FETCH_BUFFER_MULTIPLIER;
+
+  // Get user's private documents (their own non-public docs)
+  const privateDocuments = await fetchPrivateDocuments(
+    ctx,
+    ctx.userId,
+    organizationId,
+    fetchBuffer,
+  );
+
+  // Get public documents (must be scoped to organization)
+  const publicDocuments = await fetchPublicDocuments(ctx, ctx.userId, organizationId, fetchBuffer);
+
+  // Combine and deduplicate (user's public docs appear in both queries)
+  const seenIds = new Set<string>();
+  const combinedDocuments = [...privateDocuments, ...publicDocuments].filter((doc) => {
+    if (seenIds.has(doc._id)) return false;
+    seenIds.add(doc._id);
+    return true;
+  });
+
+  // Filter by access (specifically project access)
+  // Pre-build org IDs set to avoid N+1 membership queries
+  const myOrgIds = organizationId ? new Set<string>([organizationId]) : undefined;
+  const accessibleDocuments = [];
+  for (const doc of combinedDocuments) {
+    if (await canAccessDocument(ctx, doc, myOrgIds)) {
+      accessibleDocuments.push(doc);
+    }
+  }
+
+  return accessibleDocuments;
 }
 
 async function fetchPrivateDocuments(

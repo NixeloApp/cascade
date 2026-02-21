@@ -1341,7 +1341,8 @@ const applicationTables = {
     .index("by_recording", ["recordingId"])
     .index("by_status", ["status"])
     .index("by_scheduled_time", ["scheduledTime"])
-    .index("by_next_attempt", ["nextAttemptAt"]),
+    .index("by_next_attempt", ["nextAttemptAt"])
+    .index("by_status_scheduled", ["status", "scheduledTime"]),
 
   // ===========================================================================
   // TIME TRACKING
