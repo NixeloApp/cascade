@@ -234,8 +234,9 @@ export const sendInvite = authenticatedMutation({
       .withIndex("email", (q) => q.eq("email", args.email))
       .first();
 
-    // For project invites, add existing users directly
-    if (existingUser && args.projectId) {
+    // For project invites, add existing users directly ONLY if they are verified
+    // This prevents unverified users from gaining access to projects by claiming an email address
+    if (existingUser && args.projectId && existingUser.emailVerificationTime) {
       return addExistingUserToProject(
         ctx,
         args.projectId,
