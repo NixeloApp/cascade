@@ -67,19 +67,6 @@ Layer 3: Entity-scoped (adds entity loading, derives project)
 - `ctx.issue` - Full issue object (issueMutation/issueViewerMutation)
 - `ctx.sprint` - Full sprint object (sprintQuery/sprintMutation)
 
-### 2. **Rate Limiting**
-
-Located in: `convex/rateLimiting.ts`
-
-**Pre-configured rate limiters:**
-
-| Limiter                       | Limit   | Use For                  |
-| ----------------------------- | ------- | ------------------------ |
-| `strictRateLimitedMutation`   | 10/min  | Creating issues, invites |
-| `moderateRateLimitedMutation` | 30/min  | Updates, comments        |
-| `lenientRateLimitedMutation`  | 100/min | Lightweight operations   |
-| `apiRateLimitedMutation`      | 60/min  | Public API endpoints     |
-
 ---
 
 ## 🚀 Quick Start
@@ -380,8 +367,15 @@ export const createIssue = mutation({
 // - Are exposed to public API
 // - Could be abused
 
-export const sendInvite = strictRateLimitedMutation({ ... });
-export const createProject = moderateRateLimitedMutation({ ... });
+import { rateLimit } from "./rateLimits";
+
+export const sendInvite = authenticatedMutation({
+  args: { ... },
+  handler: async (ctx, args) => {
+    await rateLimit(ctx, "createIssue", { key: ctx.userId, throws: true });
+    // ...
+  },
+});
 ```
 
 ### 4. **Type Safety**
