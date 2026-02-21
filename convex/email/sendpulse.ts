@@ -7,6 +7,7 @@
 
 import { getSendPulseFromEmail, getSendPulseId, getSendPulseSecret } from "../lib/env";
 import { validation } from "../lib/errors";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import type { EmailProvider, EmailSendParams, EmailSendResult } from "./provider";
 
 interface SendPulseTokenResponse {
@@ -49,17 +50,21 @@ export class SendPulseProvider implements EmailProvider {
 
     const { clientId, clientSecret } = this.getCredentials();
 
-    const response = await fetch(`${this.baseUrl}/oauth/access_token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetchWithTimeout(
+      `${this.baseUrl}/oauth/access_token`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          grant_type: "client_credentials",
+          client_id: clientId,
+          client_secret: clientSecret,
+        }),
       },
-      body: JSON.stringify({
-        grant_type: "client_credentials",
-        client_id: clientId,
-        client_secret: clientSecret,
-      }),
-    });
+      10000,
+    );
 
     if (!response.ok) {
       throw validation(
@@ -92,25 +97,29 @@ export class SendPulseProvider implements EmailProvider {
       const fromParsed = this.parseFromAddress(params.from || defaultFrom);
       const toList = Array.isArray(params.to) ? params.to : [params.to];
 
-      const response = await fetch(`${this.baseUrl}/smtp/emails`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: {
-            html: params.html,
-            text: params.text || "",
-            subject: params.subject,
-            from: {
-              name: fromParsed.name || "Nixelo",
-              email: fromParsed.email,
-            },
-            to: toList.map((email) => ({ email })),
+      const response = await fetchWithTimeout(
+        `${this.baseUrl}/smtp/emails`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-        }),
-      });
+          body: JSON.stringify({
+            email: {
+              html: params.html,
+              text: params.text || "",
+              subject: params.subject,
+              from: {
+                name: fromParsed.name || "Nixelo",
+                email: fromParsed.email,
+              },
+              to: toList.map((email) => ({ email })),
+            },
+          }),
+        },
+        10000,
+      );
 
       if (!response.ok) {
         const errorText = await response.text();

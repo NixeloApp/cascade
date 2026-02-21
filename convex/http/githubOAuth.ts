@@ -1,7 +1,9 @@
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
+import { constantTimeEqual } from "../lib/apiAuth";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
-import { validation } from "../lib/errors";
+import { isAppError, validation } from "../lib/errors";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
 /**
  * GitHub OAuth Integration
@@ -58,10 +60,11 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
 
   // Build OAuth authorization URL
   const authUrl = new URL("https://github.com/login/oauth/authorize");
+  const state = crypto.randomUUID();
   authUrl.searchParams.set("client_id", config.clientId);
   authUrl.searchParams.set("redirect_uri", config.redirectUri);
   authUrl.searchParams.set("scope", config.scopes);
-  authUrl.searchParams.set("state", crypto.randomUUID()); // CSRF protection
+  authUrl.searchParams.set("state", state); // CSRF protection
 
   // Redirect user to GitHub OAuth page
   return Promise.resolve(
@@ -69,6 +72,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
       status: 302,
       headers: {
         Location: authUrl.toString(),
+        "Set-Cookie": `github_oauth_state=${state}; HttpOnly; Path=/; Max-Age=600; Secure; SameSite=Lax`,
       },
     }),
   );
@@ -86,8 +90,15 @@ export const initiateAuth = httpAction(initiateAuthHandler);
 export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
   const errorDescription = url.searchParams.get("error_description");
+
+  // Verify CSRF state
+  const cookieState = getCookie(request, "github_oauth_state");
+  if (!state || !cookieState || !constantTimeEqual(state, cookieState)) {
+    return new Response("Invalid state parameter", { status: 400 });
+  }
 
   if (error) {
     // User denied access or error occurred
@@ -124,11 +135,11 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     return new Response("Missing authorization code", { status: 400 });
   }
 
-  const config = getGitHubOAuthConfig();
-
   try {
+    const config = getGitHubOAuthConfig();
+
     // Exchange authorization code for access token
-    const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
+    const tokenResponse = await fetchWithTimeout("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -155,7 +166,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     const { access_token } = tokens;
 
     // Get user info from GitHub
-    const userResponse = await fetch("https://api.github.com/user", {
+    const userResponse = await fetchWithTimeout("https://api.github.com/user", {
       headers: {
         Authorization: `Bearer ${access_token}`,
         Accept: "application/vnd.github.v3+json",
@@ -224,40 +235,96 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       `,
       {
         status: 200,
-        headers: { "Content-Type": "text/html" },
+        headers: {
+          "Content-Type": "text/html",
+          // Clear state cookie
+          "Set-Cookie": `github_oauth_state=; HttpOnly; Path=/; Max-Age=0; Secure; SameSite=Lax`,
+        },
       },
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "An error occurred";
-    return new Response(
-      `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>GitHub - Error</title>
-          <style>
-            body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-            .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
-            button { background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-            button:hover { background: #4b5563; }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h1>Connection Failed</h1>
-            <p>${errorMessage}</p>
-            <p>Please try again or contact support if the problem persists.</p>
-            <button onclick="window.close()">Close Window</button>
-          </div>
-        </body>
-      </html>
-      `,
-      {
-        status: 500,
-        headers: { "Content-Type": "text/html" },
-      },
-    );
+    return handleOAuthError(error);
   }
+};
+
+function getCookie(request: Request, name: string): string | null {
+  const cookieHeader = request.headers.get("Cookie");
+  if (!cookieHeader) return null;
+  const cookies = cookieHeader.split(";");
+  for (const cookie of cookies) {
+    const trimmed = cookie.trim();
+    if (trimmed.startsWith(`${name}=`)) {
+      return trimmed.substring(name.length + 1);
+    }
+  }
+  return null;
+}
+
+const escapeHtml = (unsafe: string) => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
+const handleOAuthError = (error: unknown) => {
+  let status = 500;
+  let errorMessage = "An unexpected error occurred";
+
+  if (isAppError(error)) {
+    errorMessage = error.data.message || errorMessage;
+    switch (error.data.code) {
+      case "VALIDATION":
+      case "CONFLICT":
+        status = 400;
+        break;
+      case "UNAUTHENTICATED":
+        status = 401;
+        break;
+      case "FORBIDDEN":
+        status = 403;
+        break;
+      case "NOT_FOUND":
+        status = 404;
+        break;
+      case "RATE_LIMITED":
+        status = 429;
+        break;
+    }
+  } else if (error instanceof Error) {
+    errorMessage = error.message;
+  }
+
+  return new Response(
+    `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>GitHub - Error</title>
+        <style>
+          body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
+          .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
+          button { background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+          button:hover { background: #4b5563; }
+        </style>
+      </head>
+      <body>
+        <div class="error">
+          <h1>Connection Failed</h1>
+          <p>${escapeHtml(errorMessage)}</p>
+          <p>Please try again or contact support if the problem persists.</p>
+          <button onclick="window.close()">Close Window</button>
+        </div>
+      </body>
+    </html>
+    `,
+    {
+      status,
+      headers: { "Content-Type": "text/html" },
+    },
+  );
 };
 
 /**
@@ -294,7 +361,7 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
     }
 
     // Fetch repositories from GitHub API
-    const reposResponse = await fetch(
+    const reposResponse = await fetchWithTimeout(
       "https://api.github.com/user/repos?sort=updated&per_page=100",
       {
         headers: {
@@ -303,10 +370,27 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
           "User-Agent": "Nixelo-App",
         },
       },
+      30000,
     );
 
     if (!reposResponse.ok) {
-      throw validation("github", "Failed to fetch repositories");
+      let errorMessage = "Failed to fetch repositories";
+      try {
+        const text = await reposResponse.text();
+        try {
+          const errorBody = JSON.parse(text);
+          errorMessage = errorBody.message || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+      } catch (e) {
+        console.error("Failed to read error response body:", e);
+      }
+
+      return new Response(JSON.stringify({ error: errorMessage }), {
+        status: reposResponse.status,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const repos = await reposResponse.json();
@@ -335,16 +419,35 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Failed to list repositories",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return handleListReposError(error);
   }
+};
+
+const handleListReposError = (error: unknown) => {
+  console.error("GitHub listRepos error:", error);
+  let status = 500;
+  let message = "Failed to list repositories";
+
+  if (isAppError(error)) {
+    message = error.data.message || message;
+    if (error.data.code === "VALIDATION") status = 400;
+    else if (error.data.code === "UNAUTHENTICATED") status = 401;
+    else if (error.data.code === "FORBIDDEN") status = 403;
+    else if (error.data.code === "NOT_FOUND") status = 404;
+    else if (error.data.code === "RATE_LIMITED") status = 429;
+  } else if (error instanceof Error) {
+    message = error.message;
+  }
+
+  return new Response(
+    JSON.stringify({
+      error: message,
+    }),
+    {
+      status,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 };
 
 /**

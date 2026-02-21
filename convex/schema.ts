@@ -497,7 +497,7 @@ const applicationTables = {
     deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
-    .index("by_author", ["authorId"])
+    .index("by_author", ["authorId", "isDeleted"])
     .index("by_deleted", ["isDeleted"]),
 
   issueCommentReactions: defineTable({
@@ -780,7 +780,7 @@ const applicationTables = {
     deletedBy: v.optional(v.id("users")),
   })
     .index("by_user", ["userId"])
-    .index("by_user_read", ["userId", "isRead"])
+    .index("by_user_read", ["userId", "isRead", "isDeleted"])
     .index("by_deleted", ["isDeleted"]),
 
   notificationPreferences: defineTable({
@@ -858,7 +858,8 @@ const applicationTables = {
     color: v.optional(calendarEventColors),
     updatedAt: v.number(),
   })
-    .index("by_organizer", ["organizerId"])
+    .index("by_organizer", ["organizerId", "startTime"])
+    .index("by_attendee_start", ["attendeeIds", "startTime"])
     .index("by_project", ["projectId"])
     .index("by_issue", ["issueId"])
     .index("by_start_time", ["startTime"])
@@ -1602,14 +1603,6 @@ const applicationTables = {
   // Rate limiting, auditing, testing, health checks
   // ===========================================================================
 
-  rateLimits: defineTable({
-    key: v.string(),
-    value: v.number(),
-    expiresAt: v.number(),
-  })
-    .index("by_key", ["key"])
-    .index("by_expiry", ["expiresAt"]),
-
   auditLogs: defineTable({
     action: v.string(), // "team.create", "project.delete"
     actorId: v.optional(v.id("users")),
@@ -1645,6 +1638,17 @@ const applicationTables = {
   // ===========================================================================
   // E2E TESTING & MONITORING
   // ===========================================================================
+
+  twoFactorSessions: defineTable({
+    userId: v.id("users"),
+    sessionId: v.string(),
+    verifiedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_session", ["sessionId"])
+    .index("by_user_session", ["userId", "sessionId"])
+    .index("by_expires", ["expiresAt"]),
 
   testOtpCodes: defineTable({
     email: v.string(),

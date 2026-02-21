@@ -186,6 +186,8 @@ export const updateStatus = issueMutation({
         newValue: args.newStatus,
       });
     }
+
+    return { success: true };
   },
 });
 
@@ -231,6 +233,8 @@ export const updateStatusByCategory = issueMutation({
         newValue: targetState.id,
       });
     }
+
+    return { success: true };
   },
 });
 
@@ -304,6 +308,8 @@ export const update = issueMutation({
         ),
       );
     }
+
+    return { success: true };
   },
 });
 
@@ -713,12 +719,7 @@ export const archive = issueMutation({
     }
 
     // Check if issue is in "done" category
-    const project = await ctx.db.get(issue.projectId);
-    if (!project) {
-      return { success: false, error: "Project not found" };
-    }
-
-    const state = project.workflowStates.find((s) => s.id === issue.status);
+    const state = ctx.project.workflowStates.find((s) => s.id === issue.status);
     if (!state || state.category !== "done") {
       return { success: false, error: "Only completed issues can be archived" };
     }

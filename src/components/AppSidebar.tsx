@@ -395,7 +395,7 @@ export function AppSidebar() {
                           e.stopPropagation();
                           setCreateTeamWorkspace({ id: workspace._id, slug: workspace.slug });
                         }}
-                        className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                        className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
                         aria-label="Create new team"
                       >
                         <Plus className="w-4 h-4 text-ui-text-tertiary" />
@@ -491,6 +491,8 @@ function NavItem({
       onClick={onClick}
       {...props}
       data-tour={dataTour}
+      aria-current={isActive ? "page" : undefined}
+      aria-label={isCollapsed ? label : undefined}
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-md transition-default",
         "text-sm font-medium",
@@ -535,6 +537,7 @@ type CollapsibleSectionProps = {
   | { to?: never; params?: never; search?: never }
 );
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy code
 function CollapsibleSection({
   icon: Icon,
   label,
@@ -560,6 +563,8 @@ function CollapsibleSection({
             params={props.params}
             search={props.search}
             data-tour={dataTour}
+            aria-current={isActive ? "page" : undefined}
+            aria-label={label}
             className={cn(
               "flex items-center justify-center px-2 py-2 rounded-md transition-default",
               isActive
@@ -611,6 +616,7 @@ function CollapsibleSection({
           <Link
             {...props}
             to={props.to}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex-1 flex items-center gap-2 text-sm font-medium transition-default",
               isActive ? "text-ui-text" : "text-ui-text-secondary hover:text-ui-text",
@@ -636,7 +642,7 @@ function CollapsibleSection({
             e.stopPropagation();
             onAdd();
           }}
-          className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+          className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
           aria-label={`Add new ${label.toLowerCase().slice(0, -1)}`}
         >
           <Plus className="w-4 h-4 text-ui-text-tertiary" />
@@ -672,19 +678,22 @@ function NavSubItem({
   ...props
 }: NavSubItemProps) {
   return (
-    <Link
-      to={to}
-      params={params}
-      {...props}
-      className={cn(
-        "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm truncate transition-default",
-        isActive
-          ? "bg-ui-bg-hover text-ui-text"
-          : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
-      )}
-    >
-      {Icon && <Icon className="w-4 h-4 shrink-0" />}
-      <span className="truncate">{label}</span>
-    </Link>
+    <Tooltip content={label}>
+      <Link
+        to={to}
+        params={params}
+        {...props}
+        aria-current={isActive ? "page" : undefined}
+        className={cn(
+          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm truncate transition-default",
+          isActive
+            ? "bg-ui-bg-hover text-ui-text"
+            : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
+        )}
+      >
+        {Icon && <Icon className="w-4 h-4 shrink-0" />}
+        <span className="truncate">{label}</span>
+      </Link>
+    </Tooltip>
   );
 }

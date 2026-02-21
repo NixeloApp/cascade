@@ -17,6 +17,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import {
   CONSECUTIVE_FAILURE_WINDOW,
   FETCH_BUFFER_MULTIPLIER,
@@ -170,7 +171,7 @@ export const checkGoogleOAuthHealth = internalAction({
       }
 
       // Step 1: Exchange refresh token for access token
-      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -197,11 +198,14 @@ export const checkGoogleOAuthHealth = internalAction({
       const accessToken = tokens.access_token;
 
       // Step 2: Verify access token works by fetching user info
-      const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      const userInfoResponse = await fetchWithTimeout(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
 
       if (!userInfoResponse.ok) {
         throw new Error(`User info fetch failed: ${userInfoResponse.status}`);
@@ -253,7 +257,7 @@ async function sendSlackAlert(errorMessage: string): Promise<void> {
   }
 
   try {
-    const response = await fetch(slackWebhookUrl, {
+    const response = await fetchWithTimeout(slackWebhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -529,7 +529,7 @@ export const updateProject = projectAdminMutation({
       metadata: updates as Record<string, string | number | boolean>,
     });
 
-    return { projectId: ctx.projectId };
+    return { success: true, projectId: ctx.projectId };
   },
 });
 
@@ -571,7 +571,7 @@ export const softDeleteProject = authenticatedMutation({
       metadata: { deletedAt },
     });
 
-    return { deleted: true };
+    return { success: true, deleted: true };
   },
 });
 
@@ -620,7 +620,7 @@ export const restoreProject = authenticatedMutation({
       targetType: "projects",
     });
 
-    return { restored: true };
+    return { success: true, restored: true };
   },
 });
 
@@ -660,6 +660,8 @@ export const updateWorkflow = projectAdminMutation({
       targetType: "projects",
       metadata: { workflowStates: JSON.stringify(args.workflowStates) },
     });
+
+    return { success: true };
   },
 });
 
@@ -719,6 +721,8 @@ export const addProjectMember = projectAdminMutation({
         role: args.role,
       },
     });
+
+    return { success: true };
   },
 });
 
@@ -771,6 +775,8 @@ export const updateProjectMemberRole = projectAdminMutation({
         newRole: args.newRole,
       },
     });
+
+    return { success: true };
   },
 });
 
@@ -817,6 +823,8 @@ export const removeProjectMember = projectAdminMutation({
         },
       });
     }
+
+    return { success: true };
   },
 });
 

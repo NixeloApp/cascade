@@ -9,6 +9,7 @@ import type { Id } from "../_generated/dataModel";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { getVoyageApiKey } from "../lib/env";
 import { notFound, validation } from "../lib/errors";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { assertCanAccessProject } from "../projectAccess";
 import { chatRoles } from "../validators";
 
@@ -30,17 +31,21 @@ export const generateEmbedding = internalAction({
       throw validation("VOYAGE_API_KEY", "VOYAGE_API_KEY not configured");
     }
 
-    const response = await fetch("https://api.voyageai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+    const response = await fetchWithTimeout(
+      "https://api.voyageai.com/v1/embeddings",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          input: [args.text],
+          model: "voyage-3-lite", // 512 dimensions, fast & cheap
+        }),
       },
-      body: JSON.stringify({
-        input: [args.text],
-        model: "voyage-3-lite", // 512 dimensions, fast & cheap
-      }),
-    });
+      60000,
+    );
 
     if (!response.ok) {
       const error = await response.text();

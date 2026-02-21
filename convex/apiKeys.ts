@@ -7,6 +7,7 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, requireOwned, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, WEEK } from "./lib/timeUtils";
+import { assertCanAccessProject } from "./projectAccess";
 
 /**
  * API Key Management
@@ -283,6 +284,11 @@ export const rotate = authenticatedMutation({
 
     if (oldKey.rotatedAt) {
       throw validation("keyId", "This key has already been rotated");
+    }
+
+    // Verify access if project-scoped
+    if (oldKey.projectId) {
+      await assertCanAccessProject(ctx, oldKey.projectId, ctx.userId);
     }
 
     // Generate new API key

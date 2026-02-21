@@ -1,12 +1,13 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { IssueCard } from "./IssueCard";
 
 // Create mock icon that's hoisted to be available in vi.mock
 const { MockIcon } = vi.hoisted(() => ({
-  MockIcon: () => null,
+  MockIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
 }));
 
 // Mock issue utilities
@@ -128,5 +129,63 @@ describe("IssueCard", () => {
 
     const tooltipText = await screen.findByRole("tooltip", { name: "Hidden1, Hidden2" });
     expect(tooltipText).toBeInTheDocument();
+  });
+
+  it("should display metadata icons with correct labels", () => {
+    render(<IssueCard issue={mockIssue} status="todo" />);
+
+    // Type icon
+    const typeIcon = screen.getByLabelText("Bug");
+    expect(typeIcon).toBeInTheDocument();
+    // Ensure it IS in a button but has tabIndex="-1"
+    const typeBtn = typeIcon.closest("button");
+    expect(typeBtn).toBeInTheDocument();
+    expect(typeBtn).toHaveAttribute("tabIndex", "-1");
+
+    // Priority icon
+    const priorityIcon = screen.getByLabelText("Priority: high");
+    expect(priorityIcon).toBeInTheDocument();
+    const priorityBtn = priorityIcon.closest("button");
+    expect(priorityBtn).toBeInTheDocument();
+    expect(priorityBtn).toHaveAttribute("tabIndex", "-1");
+
+    // Assignee
+    const assigneeImg = screen.getByAltText("Alice Johnson");
+    expect(assigneeImg).toBeInTheDocument();
+    const assigneeBtn = assigneeImg.closest("button");
+    expect(assigneeBtn).toBeInTheDocument();
+    expect(assigneeBtn).toHaveAttribute("tabIndex", "-1");
+  });
+
+  it("should render fallback assignee avatar with accessible label", () => {
+    const issueWithoutAvatar = {
+      ...mockIssue,
+      // biome-ignore lint/style/noNonNullAssertion: testing mock data
+      assignee: { ...mockIssue.assignee!, image: undefined },
+    };
+    render(<IssueCard issue={issueWithoutAvatar} status="todo" />);
+
+    const fallbackAvatar = screen.getByLabelText("Alice Johnson");
+    expect(fallbackAvatar).toBeInTheDocument();
+    expect(fallbackAvatar).toHaveAttribute("role", "img");
+    expect(fallbackAvatar).toHaveTextContent("A"); // Initial
+  });
+
+  it("should trigger onClick when clicking on interactive elements", async () => {
+    const handleClick = vi.fn();
+    const user = userEvent.setup();
+    render(<IssueCard issue={mockIssue} status="todo" onClick={handleClick} />);
+
+    // Click Type Icon
+    await user.click(screen.getByLabelText("Bug"));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+
+    // Click Priority Icon
+    await user.click(screen.getByLabelText("Priority: high"));
+    expect(handleClick).toHaveBeenCalledTimes(2);
+
+    // Click Assignee
+    await user.click(screen.getByAltText("Alice Johnson"));
+    expect(handleClick).toHaveBeenCalledTimes(3);
   });
 });

@@ -19,8 +19,24 @@ import {
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { isWorkspaceEditor } from "./lib/workspaceAccess";
-import { assertCanAccessProject, assertCanEditProject } from "./projectAccess";
+import { assertCanAccessProject, assertCanEditProject, canAccessProject } from "./projectAccess";
 
+/**
+ * Create a new document.
+ *
+ * Ensures the user has the necessary permissions:
+ * - Must be a member of the organization.
+ * - If linking to a project, must be a member of that project.
+ * - If creating a public document, must have edit permissions on the project.
+ * - If linking to a workspace, must be a workspace editor (unless org admin).
+ *
+ * @param title - The title of the document.
+ * @param isPublic - Whether the document is visible to all organization members.
+ * @param organizationId - The organization the document belongs to.
+ * @param workspaceId - Optional workspace context.
+ * @param projectId - Optional project context.
+ * @param parentId - Optional parent document ID (for nesting).
+ */
 export const create = authenticatedMutation({
   args: {
     title: v.string(),
@@ -70,6 +86,23 @@ export const create = authenticatedMutation({
   },
 });
 
+/**
+ * List documents with pagination and access control.
+ *
+ * Combines two sources of documents:
+ * 1. Private documents created by the current user.
+ * 2. Public documents in the organization (if organizationId is provided).
+ *
+ * Features:
+ * - Deduplicates documents that appear in both queries (e.g., user's own public docs).
+ * - Filters by project access permissions.
+ * - Sorts by `updatedAt` descending.
+ * - Supports cursor-based pagination.
+ *
+ * @param limit - Max number of documents to return (capped at MAX_PAGE_SIZE).
+ * @param cursor - Pagination cursor (document ID).
+ * @param organizationId - Filter by organization (required to see public docs).
+ */
 export const list = authenticatedQuery({
   args: {
     limit: v.optional(v.number()),
@@ -135,11 +168,21 @@ export const list = authenticatedQuery({
 
     // Combine and deduplicate (user's public docs appear in both queries)
     const seenIds = new Set<string>();
-    const allDocuments = [...privateDocuments, ...publicDocuments].filter((doc) => {
+    const combinedDocuments = [...privateDocuments, ...publicDocuments].filter((doc) => {
       if (seenIds.has(doc._id)) return false;
       seenIds.add(doc._id);
       return true;
     });
+
+    // Filter by access (specifically project access)
+    // Pre-build org IDs set to avoid N+1 membership queries
+    const myOrgIds = args.organizationId ? new Set<string>([args.organizationId]) : undefined;
+    const allDocuments = [];
+    for (const doc of combinedDocuments) {
+      if (await canAccessDocument(ctx, doc, myOrgIds)) {
+        allDocuments.push(doc);
+      }
+    }
 
     // Sort by updatedAt descending
     allDocuments.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -189,25 +232,7 @@ export const getDocument = authenticatedQuery({
     }
 
     // Check if user can access this document
-    const isCreator = document.createdBy === ctx.userId;
-
-    if (!isCreator) {
-      if (!document.isPublic) {
-        throw forbidden(undefined, "Not authorized to access this document");
-      }
-
-      // If public, user MUST be a member of the organization
-      const membership = await ctx.db
-        .query("organizationMembers")
-        .withIndex("by_organization_user", (q) =>
-          q.eq("organizationId", document.organizationId).eq("userId", ctx.userId),
-        )
-        .first();
-
-      if (!membership) {
-        throw forbidden(undefined, "You are not a member of this organization");
-      }
-    }
+    await assertDocumentAccess(ctx, document);
 
     const creator = await ctx.db.get(document.createdBy);
     return {
@@ -242,6 +267,8 @@ export const updateTitle = authenticatedMutation({
       title: args.title,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -266,6 +293,8 @@ export const togglePublic = authenticatedMutation({
       isPublic: !document.isPublic,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -285,6 +314,8 @@ export const deleteDocument = authenticatedMutation({
     const deletedAt = Date.now();
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
     await cascadeSoftDelete(ctx, "documents", args.id, ctx.userId, deletedAt);
+
+    return { success: true };
   },
 });
 
@@ -310,6 +341,8 @@ export const restoreDocument = authenticatedMutation({
       deletedAt: undefined,
       deletedBy: undefined,
     });
+
+    return { success: true };
   },
 });
 
@@ -358,14 +391,54 @@ function matchesDocumentFilters(
 }
 
 // Helper: Check if user has access to view document
-function hasDocumentAccess(
-  doc: { isPublic: boolean; createdBy: Id<"users">; organizationId: Id<"organizations"> },
-  userId: Id<"users">,
-  myOrgIds: Set<Id<"organizations">>,
-): boolean {
-  if (doc.createdBy === userId) return true;
-  if (!doc.isPublic) return false;
-  return myOrgIds.has(doc.organizationId);
+async function canAccessDocument(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  doc: {
+    isPublic: boolean;
+    createdBy: Id<"users">;
+    organizationId: Id<"organizations">;
+    projectId?: Id<"projects">;
+  },
+  myOrgIds?: Set<string>,
+): Promise<boolean> {
+  // Security: Always verify container access first, even for the creator.
+  // This ensures that removed members lose access to their creations.
+
+  // 1. Check Project Access (if linked)
+  if (doc.projectId) {
+    const canProject = await canAccessProject(ctx, doc.projectId, ctx.userId);
+    if (!canProject) return false;
+  }
+  // 2. Check Organization Access (if NOT linked to a project)
+  // Note: canAccessProject already handles org admin checks, so we only need explicit org check here
+  else {
+    let hasOrgAccess = false;
+    if (myOrgIds) {
+      hasOrgAccess = myOrgIds.has(doc.organizationId);
+    } else {
+      const membership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_organization_user", (q) =>
+          q.eq("organizationId", doc.organizationId).eq("userId", ctx.userId),
+        )
+        .first();
+      hasOrgAccess = !!membership;
+    }
+
+    if (!hasOrgAccess) return false;
+  }
+
+  // 3. Check Document Permissions
+  // If we reached here, the user has access to the CONTAINER (Project or Org).
+
+  // Creator always has access (within valid container)
+  if (doc.createdBy === ctx.userId) return true;
+
+  // Public documents are accessible (within valid container)
+  if (doc.isPublic) return true;
+
+  // Otherwise, deny (e.g. private document created by someone else)
+  return false;
 }
 
 async function checkRateLimit(ctx: MutationCtx & { userId: Id<"users"> }) {
@@ -454,6 +527,30 @@ async function validateWorkspaceIntegrity(
   }
 }
 
+/**
+ * Search for documents by title using full-text search.
+ *
+ * Implements a "fetch and filter" strategy:
+ * 1. Fetches a buffer of results from the search index (`search_title`).
+ * 2. Filters results in memory for:
+ *    - Soft deletion.
+ *    - Access permissions (project/org membership).
+ *    - Advanced filters (date range, creator, etc.).
+ *
+ * Note on Pagination:
+ * - `total` is accurate only for the current page of results.
+ * - `totalIsApproximate` indicates if there might be more results than what was fetched.
+ *
+ * @param query - The search string.
+ * @param limit - Max results to return.
+ * @param offset - Pagination offset.
+ * @param projectId - Filter by project.
+ * @param organizationId - Filter by organization.
+ * @param createdBy - Filter by creator ID or "me".
+ * @param isPublic - Filter by visibility.
+ * @param dateFrom - Filter by creation time (start).
+ * @param dateTo - Filter by creation time (end).
+ */
 export const search = authenticatedQuery({
   args: {
     query: v.string(),
@@ -499,7 +596,7 @@ export const search = authenticatedQuery({
 
     for (const doc of results) {
       // Check access and filter conditions
-      if (!hasDocumentAccess(doc, ctx.userId, myOrgIds)) continue;
+      if (!(await canAccessDocument(ctx, doc, myOrgIds))) continue;
       if (args.organizationId && doc.organizationId !== args.organizationId) continue;
       if (!matchesDocumentFilters(doc, args, ctx.userId)) continue;
 
@@ -558,7 +655,19 @@ export const search = authenticatedQuery({
 // NESTED PAGES
 // =============================================================================
 
-/** List child documents of a parent (or root documents if parentId is null) */
+/**
+ * List child documents of a parent (or root documents if parentId is null).
+ *
+ * Returns documents at a specific hierarchy level, sorted by their `order` field.
+ * Also includes metadata about children counts (`hasChildren`, `childCount`).
+ *
+ * Access Control:
+ * - Requires organization membership.
+ * - Filters each document by project access (if linked to a project).
+ *
+ * @param organizationId - The organization to list documents from.
+ * @param parentId - The parent document ID (null for root documents).
+ */
 export const listChildren = authenticatedQuery({
   args: {
     organizationId: v.id("organizations"),
@@ -586,46 +695,58 @@ export const listChildren = authenticatedQuery({
       .filter(notDeleted)
       .take(BOUNDED_RELATION_LIMIT);
 
-    // Filter by access: user's own docs OR public docs
-    const accessible = documents.filter((doc) => doc.createdBy === ctx.userId || doc.isPublic);
+    // Pre-build org IDs set to avoid N+1 membership queries
+    const myOrgIds = new Set<string>([args.organizationId]);
+
+    // Filter by access
+    const accessible = [];
+    for (const doc of documents) {
+      if (await canAccessDocument(ctx, doc, myOrgIds)) {
+        accessible.push(doc);
+      }
+    }
 
     // Sort by order
     accessible.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-    // Batch fetch all children counts to avoid N+1
-    // Get all children in one query
-    const parentIds = accessible.map((doc) => doc._id);
-    const allChildren = await ctx.db
-      .query("documents")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
-      .filter((q) => q.and(notDeleted(q), q.neq(q.field("parentId"), undefined)))
-      .take(BOUNDED_RELATION_LIMIT);
+    // Check if each document has children
+    // Optimization: Parallel queries to check for existence of children
+    const withChildInfo = await Promise.all(
+      accessible.map(async (doc) => {
+        // We only need to know if there's at least one child to show the expand arrow
+        const firstChild = await ctx.db
+          .query("documents")
+          .withIndex("by_organization_parent", (q) =>
+            q.eq("organizationId", args.organizationId).eq("parentId", doc._id),
+          )
+          .filter(notDeleted)
+          .first();
 
-    // Count children per parent
-    const childCountMap = new Map<Id<"documents">, number>();
-    for (const child of allChildren) {
-      if (child.parentId && parentIds.includes(child.parentId)) {
-        if (child.createdBy === ctx.userId || child.isPublic) {
-          childCountMap.set(child.parentId, (childCountMap.get(child.parentId) ?? 0) + 1);
-        }
-      }
-    }
-
-    const withChildInfo = accessible.map((doc) => {
-      const accessibleChildCount = childCountMap.get(doc._id) ?? 0;
-      return {
-        ...doc,
-        hasChildren: accessibleChildCount > 0,
-        childCount: accessibleChildCount,
-        isOwner: doc.createdBy === ctx.userId,
-      };
-    });
+        return {
+          ...doc,
+          hasChildren: !!firstChild,
+          childCount: firstChild ? 1 : 0, // Approximate, sufficient for UI
+          isOwner: doc.createdBy === ctx.userId,
+        };
+      }),
+    );
 
     return withChildInfo;
   },
 });
 
-/** Get document tree (all documents with hierarchy info) */
+/**
+ * Get the full document tree for an organization.
+ *
+ * Constructs a recursive structure of all documents visible to the user.
+ *
+ * Returns:
+ * - A list of root nodes.
+ * - Each node contains a `children` array with its descendants.
+ * - Each node includes a `depth` indicator (0 for root).
+ *
+ * @param organizationId - The organization ID.
+ */
 export const getTree = authenticatedQuery({
   args: {
     organizationId: v.id("organizations"),
@@ -650,8 +771,16 @@ export const getTree = authenticatedQuery({
       .filter(notDeleted)
       .take(BOUNDED_RELATION_LIMIT);
 
+    // Pre-build org IDs set to avoid N+1 membership queries
+    const myOrgIds = new Set<string>([args.organizationId]);
+
     // Filter by access
-    const accessible = allDocs.filter((doc) => doc.createdBy === ctx.userId || doc.isPublic);
+    const accessible = [];
+    for (const doc of allDocs) {
+      if (await canAccessDocument(ctx, doc, myOrgIds)) {
+        accessible.push(doc);
+      }
+    }
 
     // Build tree structure
     const childrenByParent = new Map<Id<"documents"> | undefined, typeof accessible>();
@@ -726,7 +855,19 @@ async function validateNewParent(
   }
 }
 
-/** Move a document to a new parent */
+/**
+ * Move a document to a new parent or reorder it among siblings.
+ *
+ * Validations:
+ * - User must own the document.
+ * - New parent cannot be the document itself (cycle prevention).
+ * - New parent cannot be a descendant of the document (cycle prevention).
+ * - New parent must belong to the same organization.
+ *
+ * @param id - The document to move.
+ * @param newParentId - The new parent document ID (or undefined to make it a root).
+ * @param newOrder - The new sort order index (optional).
+ */
 export const moveDocument = authenticatedMutation({
   args: {
     id: v.id("documents"),
@@ -764,6 +905,8 @@ export const moveDocument = authenticatedMutation({
       order: newOrder,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -796,6 +939,8 @@ export const reorderDocuments = authenticatedMutation({
     await Promise.all(
       args.documentIds.map((id, index) => ctx.db.patch(id, { order: index, updatedAt: now })),
     );
+
+    return { success: true };
   },
 });
 
@@ -887,12 +1032,7 @@ export const addComment = authenticatedMutation({
     }
 
     // Verify document exists and user has access
-    const document = await ctx.db.get(args.documentId);
-    if (!document || document.isDeleted) {
-      throw notFound("document", args.documentId);
-    }
-
-    await assertDocumentAccess(ctx, document);
+    await getAccessibleDocument(ctx, args.documentId);
 
     // If replying, verify parent comment exists
     if (args.parentId) {
@@ -928,12 +1068,7 @@ export const listComments = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     // Verify document exists and user has access
-    const document = await ctx.db.get(args.documentId);
-    if (!document || document.isDeleted) {
-      throw notFound("document", args.documentId);
-    }
-
-    await assertDocumentAccess(ctx, document);
+    await getAccessibleDocument(ctx, args.documentId);
 
     // Get all comments for this document (bounded)
     const comments = await ctx.db
@@ -976,6 +1111,8 @@ export const updateComment = authenticatedMutation({
       throw notFound("comment", args.commentId);
     }
 
+    await getAccessibleDocument(ctx, comment.documentId);
+
     // Only author can edit
     if (comment.authorId !== ctx.userId) {
       throw forbidden(undefined, "You can only edit your own comments");
@@ -986,6 +1123,8 @@ export const updateComment = authenticatedMutation({
       mentions: args.mentions ?? comment.mentions,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -1000,6 +1139,8 @@ export const deleteComment = authenticatedMutation({
       throw notFound("comment", args.commentId);
     }
 
+    await getAccessibleDocument(ctx, comment.documentId);
+
     // Only author can delete
     if (comment.authorId !== ctx.userId) {
       throw forbidden(undefined, "You can only delete your own comments");
@@ -1008,6 +1149,8 @@ export const deleteComment = authenticatedMutation({
     await ctx.db.patch(args.commentId, {
       isDeleted: true,
     });
+
+    return { success: true };
   },
 });
 
@@ -1022,6 +1165,8 @@ export const addCommentReaction = authenticatedMutation({
     if (!comment || comment.isDeleted) {
       throw notFound("comment", args.commentId);
     }
+
+    await getAccessibleDocument(ctx, comment.documentId);
 
     // Check if reaction already exists
     const existing = await ctx.db
@@ -1041,6 +1186,8 @@ export const addCommentReaction = authenticatedMutation({
       emoji: args.emoji,
       createdAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -1051,6 +1198,13 @@ export const removeCommentReaction = authenticatedMutation({
     emoji: v.string(),
   },
   handler: async (ctx, args) => {
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.isDeleted) {
+      throw notFound("comment", args.commentId);
+    }
+
+    await getAccessibleDocument(ctx, comment.documentId);
+
     const reaction = await ctx.db
       .query("documentCommentReactions")
       .withIndex("by_comment_user_emoji", (q) =>
@@ -1063,6 +1217,8 @@ export const removeCommentReaction = authenticatedMutation({
     }
 
     await ctx.db.delete(reaction._id);
+
+    return { success: true };
   },
 });
 
@@ -1072,15 +1228,35 @@ export const getCommentReactions = authenticatedQuery({
     commentIds: v.array(v.id("documentComments")),
   },
   handler: async (ctx, args) => {
-    // Fetch reactions for all comments at once
+    // 1. Fetch all unique comments to identify documents
+    const uniqueCommentIds = [...new Set(args.commentIds)];
+    const comments = await Promise.all(uniqueCommentIds.map((id) => ctx.db.get(id)));
+
+    // 2. Resolve documents and check access
+    const { commentToDocMap, accessibleDocIds } = await getAccessibleDocuments(ctx, comments);
+
+    // 3. Fetch reactions for all valid comments at once
     const reactionsByComment = new Map<Id<"documentComments">, Doc<"documentCommentReactions">[]>();
 
-    for (const commentId of args.commentIds) {
-      const reactions = await ctx.db
-        .query("documentCommentReactions")
-        .withIndex("by_comment", (q) => q.eq("commentId", commentId))
-        .take(BOUNDED_LIST_LIMIT);
-      reactionsByComment.set(commentId, reactions);
+    // Optimize: Fetch reactions for all comments in parallel (avoid N+1)
+    const reactionResults = await Promise.all(
+      uniqueCommentIds.map(async (commentId) => {
+        const docId = commentToDocMap.get(commentId);
+        // Skip if comment doesn't exist, was deleted, or document is inaccessible
+        if (!docId || !accessibleDocIds.has(docId)) return null;
+
+        const reactions = await ctx.db
+          .query("documentCommentReactions")
+          .withIndex("by_comment", (q) => q.eq("commentId", commentId))
+          .take(BOUNDED_LIST_LIMIT);
+        return { commentId, reactions };
+      }),
+    );
+
+    for (const result of reactionResults) {
+      if (result) {
+        reactionsByComment.set(result.commentId, result.reactions);
+      }
     }
 
     // Transform to summary format
@@ -1114,23 +1290,50 @@ async function assertDocumentAccess(
   ctx: QueryCtx & { userId: Id<"users"> },
   document: Doc<"documents">,
 ) {
-  const isCreator = document.createdBy === ctx.userId;
+  const allowed = await canAccessDocument(ctx, document);
+  if (!allowed) {
+    throw forbidden(undefined, "Not authorized to access this document");
+  }
+}
 
-  if (!isCreator) {
-    if (!document.isPublic) {
-      throw forbidden(undefined, "Not authorized to access this document");
-    }
+// Helper: Fetch document, ensure it exists/not-deleted, and verify access
+async function getAccessibleDocument(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  documentId: Id<"documents">,
+): Promise<Doc<"documents">> {
+  const document = await ctx.db.get(documentId);
+  if (!document || document.isDeleted) {
+    throw notFound("document", documentId);
+  }
+  await assertDocumentAccess(ctx, document);
+  return document;
+}
 
-    // If public, user MUST be a member of the organization
-    const membership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_organization_user", (q) =>
-        q.eq("organizationId", document.organizationId).eq("userId", ctx.userId),
-      )
-      .first();
+// Helper: Filter accessible documents for comments
+async function getAccessibleDocuments(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  comments: (Doc<"documentComments"> | null)[],
+) {
+  const documentIds = new Set<Id<"documents">>();
+  const commentToDocMap = new Map<string, Id<"documents">>();
 
-    if (!membership) {
-      throw forbidden(undefined, "You are not a member of this organization");
+  for (const comment of comments) {
+    if (comment && !comment.isDeleted) {
+      documentIds.add(comment.documentId);
+      commentToDocMap.set(comment._id, comment.documentId);
     }
   }
+
+  const uniqueDocIds = [...documentIds];
+  const documents = await Promise.all(uniqueDocIds.map((id) => ctx.db.get(id)));
+  const accessibleDocIds = new Set<string>();
+
+  for (const doc of documents) {
+    if (!doc || doc.isDeleted) continue;
+    // This throws forbidden() if user doesn't have access
+    await assertDocumentAccess(ctx, doc);
+    accessibleDocIds.add(doc._id);
+  }
+
+  return { commentToDocMap, accessibleDocIds };
 }

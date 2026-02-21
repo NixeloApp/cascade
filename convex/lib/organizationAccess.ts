@@ -17,13 +17,19 @@ const orgMembershipsCache = new WeakMap<
 >();
 
 /**
- * Get all organization memberships for a user (cached).
+ * Get all organization memberships for a user (cached per request).
  *
- * This avoids redundant DB queries when checking permissions across multiple organizations
- * or when multiple permission checks occur in the same request.
+ * This function uses a `WeakMap` keyed by the request context (`ctx`) to cache results.
+ * This prevents redundant database queries when checking permissions multiple times
+ * within a single request (e.g., checking multiple organizations or validating access
+ * in nested functions).
  *
- * @param ctx - Query or Mutation context
- * @param userId - The user ID to fetch memberships for
+ * The cache is automatically cleared when the request context is garbage collected
+ * (i.e., when the request finishes).
+ *
+ * @param ctx - Query or Mutation context used as the cache key.
+ * @param userId - The user ID to fetch memberships for.
+ * @returns A promise resolving to the user's organization memberships and a `hasMore` flag.
  */
 export async function getOrganizationMemberships(
   ctx: QueryCtx | MutationCtx,
@@ -54,6 +60,13 @@ export async function getOrganizationMemberships(
 /**
  * Retrieve a user's role within an organization.
  *
+ * This function first checks the request-scoped cache via {@link getOrganizationMemberships}.
+ * If the user has many organization memberships (more than `MAX_PAGE_SIZE`) and the role
+ * is not found in the cache, it falls back to a direct database query to ensure accuracy.
+ *
+ * @param ctx - Query or Mutation context.
+ * @param organizationId - The ID of the organization to check.
+ * @param userId - The ID of the user to check.
  * @returns The user's role — `owner`, `admin`, or `member` — if they belong to the organization, `null` otherwise.
  */
 export async function getOrganizationRole(
@@ -70,6 +83,8 @@ export async function getOrganizationRole(
   }
 
   // If not found in cache and we have more memberships than cached, fall back to DB
+  // This handles the edge case where a user is in >100 orgs and the target org
+  // wasn't in the first page of results.
   if (hasMore) {
     const directMembership = await ctx.db
       .query("organizationMembers")
@@ -109,4 +124,40 @@ export async function isOrganizationMember(
 ): Promise<boolean> {
   const role = await getOrganizationRole(ctx, organizationId, userId);
   return role !== null;
+}
+
+/**
+ * Checks if two users share at least one organization.
+ *
+ * This is useful for privacy checks where users can only see profiles of people
+ * they share an organization with.
+ *
+ * @param ctx - Query or Mutation context.
+ * @param userId1 - The first user ID.
+ * @param userId2 - The second user ID.
+ * @returns `true` if the users share at least one organization, `false` otherwise.
+ */
+export async function hasSharedOrganization(
+  ctx: QueryCtx | MutationCtx,
+  userId1: Id<"users">,
+  userId2: Id<"users">,
+): Promise<boolean> {
+  // Get memberships for the first user
+  const { items: orgs1 } = await getOrganizationMemberships(ctx, userId1);
+
+  // Optimization: If the first user has no organizations, they can't share any.
+  if (orgs1.length === 0) {
+    return false;
+  }
+
+  // Get memberships for the second user
+  const { items: orgs2 } = await getOrganizationMemberships(ctx, userId2);
+
+  if (orgs2.length === 0) {
+    return false;
+  }
+
+  // Check for intersection
+  const orgIds1 = new Set(orgs1.map((m) => m.organizationId));
+  return orgs2.some((m) => orgIds1.has(m.organizationId));
 }

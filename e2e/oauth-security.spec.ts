@@ -32,7 +32,7 @@ test.describe("OAuth Security", () => {
       // Should redirect (302) to Google OAuth
       expect(response.status()).toBe(302);
 
-      const location = response.headers()["location"];
+      const location = response.headers().location;
       expect(location).toBeTruthy();
       expect(location).toContain("accounts.google.com");
     });
@@ -47,7 +47,7 @@ test.describe("OAuth Security", () => {
         maxRedirects: 0,
       });
 
-      const location = response.headers()["location"];
+      const location = response.headers().location;
       expect(location).toBeTruthy();
 
       const redirectUrl = new URL(location);
@@ -72,7 +72,7 @@ test.describe("OAuth Security", () => {
         maxRedirects: 0,
       });
 
-      const location = response.headers()["location"];
+      const location = response.headers().location;
       const redirectUrl = new URL(location);
       const scope = redirectUrl.searchParams.get("scope") || "";
 
@@ -153,7 +153,7 @@ test.describe("OAuth Security", () => {
         maxRedirects: 0,
       });
 
-      const location = response.headers()["location"];
+      const location = response.headers().location;
       const redirectUrl = new URL(location);
       const callbackUri = redirectUrl.searchParams.get("redirect_uri");
 

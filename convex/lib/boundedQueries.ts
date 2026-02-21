@@ -98,12 +98,12 @@ export interface BoundedFilterOptions<T> {
 // =============================================================================
 
 /** Minimal query interface for bounded helpers */
-interface TakeableQuery<T> {
+export interface TakeableQuery<T> {
   take(n: number): Promise<T[]>;
 }
 
 /** Minimal query interface for count (to handle both library and test environments) */
-interface CountableQuery<T> extends TakeableQuery<T> {
+export interface CountableQuery<T> extends TakeableQuery<T> {
   count?: () => Promise<number>;
 }
 

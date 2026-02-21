@@ -1,18 +1,22 @@
-import type { FilterBuilder, GenericTableInfo } from "convex/server";
+import type { FilterBuilder, FunctionReference, GenericTableInfo } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalQuery, type MutationCtx, type QueryCtx } from "./_generated/server";
+import {
+  internalAction,
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { sendEmail } from "./email";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
-import { efficientCount } from "./lib/boundedQueries";
+import { type CountableQuery, efficientCount } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
-import { getOrganizationMemberships } from "./lib/organizationAccess";
+import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import {
@@ -78,23 +82,10 @@ export const getUser = authenticatedQuery({
     }
 
     // Check for shared organization
-    // Optimization: Use cached memberships for the current user
-    const { items: myOrgs } = await getOrganizationMemberships(ctx, ctx.userId);
+    const isShared = await hasSharedOrganization(ctx, ctx.userId, args.id);
 
-    if (myOrgs.length > 0) {
-      // Optimization: Fetch only necessary memberships for the target user
-      // We can't easily cache for the target user (since they vary), but we limit the fetch
-      const theirOrgs = await ctx.db
-        .query("organizationMembers")
-        .withIndex("by_user", (q) => q.eq("userId", args.id))
-        .take(MAX_PAGE_SIZE);
-
-      const myOrgIds = new Set(myOrgs.map((m) => m.organizationId));
-      const hasSharedOrg = theirOrgs.some((m) => myOrgIds.has(m.organizationId));
-
-      if (hasSharedOrg) {
-        return sanitizeUserForAuth(user);
-      }
+    if (isShared) {
+      return sanitizeUserForAuth(user);
     }
 
     // If no shared context, return public profile (no email)
@@ -254,50 +245,69 @@ async function handleEmailChange(
   // If taken, we still update pending fields to prevent enumeration (attacker sees success),
   // but we skip sending the email to prevent spamming the victim.
   if (!existingUser || existingUser._id === ctx.userId) {
-    await sendVerificationEmail(ctx, newEmail, token, currentUser?.isTestUser);
+    // Schedule email sending asynchronously to avoid blocking the mutation
+    // and preventing "fetch in mutation" errors.
+    // Use strict casting to avoid "any" and Biome errors
+    const usersInternal = internal.users as unknown as {
+      sendVerificationEmailAction: FunctionReference<"action">;
+    };
+
+    // In unit tests (convex-test), we skip scheduling to avoid "Write outside of transaction" errors
+    // from the test environment tearing down before the async action completes.
+    // E2E tests run against real deployments where IS_TEST_ENV is false, so they will run this.
+    if (!process.env.IS_TEST_ENV) {
+      await ctx.scheduler.runAfter(0, usersInternal.sendVerificationEmailAction, {
+        email: newEmail,
+        token,
+        isTestUser: currentUser?.isTestUser,
+      });
+    }
   }
 
   return updates;
 }
 
 /**
- * Helper to send verification email for profile updates
+ * Internal action to send verification email asynchronously
  */
-async function sendVerificationEmail(
-  ctx: MutationCtx,
-  email: string,
-  token: string,
-  isTestUser?: boolean,
-) {
-  const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-  const isSafeEnvironment =
-    process.env.NODE_ENV === "development" ||
-    process.env.NODE_ENV === "test" ||
-    !!process.env.CI ||
-    !!process.env.E2E_API_KEY;
+export const sendVerificationEmailAction = internalAction({
+  args: {
+    email: v.string(),
+    token: v.string(),
+    isTestUser: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { email, token, isTestUser } = args;
+    const isTestEmail = email.endsWith("@inbox.mailtrap.io");
+    const isSafeEnvironment =
+      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test" ||
+      !!process.env.CI ||
+      !!process.env.E2E_API_KEY;
 
-  // Store OTPs for test emails ONLY if they are test users
-  if (isTestEmail && isSafeEnvironment && isTestUser) {
-    try {
-      await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
-    } catch (e) {
-      logger.warn(`[Users] Failed to store test OTP: ${e}`);
+    // Store OTPs for test emails ONLY if they are test users
+    if (isTestEmail && isSafeEnvironment && isTestUser) {
+      try {
+        await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
+      } catch (e) {
+        logger.warn(`[Users] Failed to store test OTP: ${e}`);
+      }
     }
-  }
 
-  await sendEmail(ctx, {
-    to: email,
-    subject: "Verify your new email address",
-    html: `
-      <h2>Verify your new email address</h2>
-      <p>Use the code below to verify your new email address:</p>
-      <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
-      <p>This code expires in 15 minutes.</p>
-      <p>If you didn't request this change, you can safely ignore this email.</p>
-    `,
-    text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.`,
-  });
-}
+    await ctx.runAction(internal.email.index.sendEmailAction, {
+      to: email,
+      subject: "Verify your new email address",
+      html: `
+        <h2>Verify your new email address</h2>
+        <p>Use the code below to verify your new email address:</p>
+        <h1 style="font-size: 32px; letter-spacing: 4px; font-family: monospace;">${token}</h1>
+        <p>This code expires in 15 minutes.</p>
+        <p>If you didn't request this change, you can safely ignore this email.</p>
+      `,
+      text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.`,
+    });
+  },
+});
 
 /**
  * Verify a pending email change using the OTP token sent to the user.
@@ -442,6 +452,31 @@ function isAllowedProject(q: FilterBuilder<GenericTableInfo>, projectIds: Id<"pr
 }
 
 /**
+ * Helper to execute a counting strategy based on the set of allowed projects.
+ */
+async function executeCountStrategy<T>(
+  allowedProjectIds: Set<string> | null,
+  emptyResult: T,
+  strategies: {
+    unrestricted: () => Promise<T>;
+    fast: (ids: Set<string>) => Promise<T>;
+    filtered: (ids: Set<string>) => Promise<T>;
+  },
+): Promise<T> {
+  if (!allowedProjectIds) {
+    return strategies.unrestricted();
+  }
+
+  if (allowedProjectIds.size === 0) return emptyResult;
+
+  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
+    return strategies.fast(allowedProjectIds);
+  }
+
+  return strategies.filtered(allowedProjectIds);
+}
+
+/**
  * Helper to count issues reported by a user without project restrictions.
  */
 async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"users">) {
@@ -453,31 +488,39 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
 }
 
 /**
+ * Helper to count issues in specific projects using a parallelized index query.
+ * This is efficient for users who are members of a small number of projects.
+ */
+async function countByProjectParallel<T>(
+  projectIds: Id<"projects">[],
+  limit: number,
+  queryFactory: (projectId: Id<"projects">) => CountableQuery<T>,
+): Promise<number> {
+  const counts = await Promise.all(
+    projectIds.map((projectId) => efficientCount(queryFactory(projectId), limit)),
+  );
+  return counts.reduce((a, b) => a + b, 0);
+}
+
+/**
  * Helper to count issues reported by a user in specific projects (optimized for few projects).
  */
 async function countIssuesByReporterFast(
   ctx: QueryCtx,
   reporterId: Id<"users">,
   allowedProjectIds: Set<string>,
-) {
-  const counts = await Promise.all(
-    Array.from(allowedProjectIds).map((projectId) =>
-      efficientCount(
-        ctx.db.query("issues").withIndex("by_project_reporter", (q) =>
-          q
-            .eq("projectId", projectId as Id<"projects">)
-            .eq("reporterId", reporterId)
-            .lt("isDeleted", true),
-        ),
-        MAX_ISSUES_FOR_STATS,
-      ),
-    ),
-  );
-  // Apply global cap to match slow-path behavior
-  return Math.min(
-    counts.reduce((a, b) => a + b, 0),
+): Promise<number> {
+  const count = await countByProjectParallel(
+    Array.from(allowedProjectIds) as Id<"projects">[],
     MAX_ISSUES_FOR_STATS,
+    (projectId) =>
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_reporter", (q) =>
+          q.eq("projectId", projectId).eq("reporterId", reporterId).lt("isDeleted", true),
+        ),
   );
+  return Math.min(count, MAX_ISSUES_FOR_STATS);
 }
 
 /**
@@ -510,17 +553,11 @@ async function countIssuesByReporter(
   reporterId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (!allowedProjectIds) {
-    return countIssuesByReporterUnrestricted(ctx, reporterId);
-  }
-
-  if (allowedProjectIds.size === 0) return 0;
-
-  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
-    return countIssuesByReporterFast(ctx, reporterId, allowedProjectIds);
-  }
-
-  return countIssuesByReporterFiltered(ctx, reporterId, allowedProjectIds);
+  return await executeCountStrategy(allowedProjectIds, 0, {
+    unrestricted: () => countIssuesByReporterUnrestricted(ctx, reporterId),
+    fast: (ids) => countIssuesByReporterFast(ctx, reporterId, ids),
+    filtered: (ids) => countIssuesByReporterFiltered(ctx, reporterId, ids),
+  });
 }
 
 /**
@@ -555,31 +592,28 @@ async function countIssuesByAssigneeFast(
 
   // 1. Total Assigned: Parallel efficient counts on by_project_assignee index
   // This avoids loading documents into memory
-  const totalAssignedCounts = await Promise.all(
-    projectIds.map((projectId) =>
-      efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_assignee", (q) =>
-            q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
-          ),
-        MAX_ISSUES_FOR_STATS,
-      ),
-    ),
+  const totalAssigned = await countByProjectParallel(
+    projectIds,
+    MAX_ISSUES_FOR_STATS,
+    (projectId) =>
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_assignee", (q) =>
+          q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+        ),
   );
-  const totalAssigned = totalAssignedCounts.reduce((a, b) => a + b, 0);
 
-  // 2. Completed: Global index scan filtered by allowed projects
-  // We can't use by_project_assignee efficiently for status filtering (no status in index).
-  // Falling back to filtered count on global index is better than loading all docs.
-  const completed = await efficientCount(
+  // 2. Completed: Parallel efficient counts on by_project_assignee index with status filter
+  // Although status is not in the index, scanning the project-scoped index and filtering
+  // is significantly more efficient than scanning the global index when the user
+  // has a large history in other projects not included in allowedProjectIds.
+  const completed = await countByProjectParallel(projectIds, MAX_ISSUES_FOR_STATS, (projectId) =>
     ctx.db
       .query("issues")
-      .withIndex("by_assignee_status", (q) =>
-        q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+      .withIndex("by_project_assignee", (q) =>
+        q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
       )
-      .filter((q) => isAllowedProject(q, projectIds)),
-    MAX_ISSUES_FOR_STATS,
+      .filter((q) => q.eq(q.field("status"), "done")),
   );
 
   return [Math.min(totalAssigned, MAX_ISSUES_FOR_STATS), Math.min(completed, MAX_ISSUES_FOR_STATS)];
@@ -628,17 +662,11 @@ async function countIssuesByAssignee(
   assigneeId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (!allowedProjectIds) {
-    return countIssuesByAssigneeUnrestricted(ctx, assigneeId);
-  }
-
-  if (allowedProjectIds.size === 0) return [0, 0];
-
-  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
-    return countIssuesByAssigneeFast(ctx, assigneeId, allowedProjectIds);
-  }
-
-  return countIssuesByAssigneeFiltered(ctx, assigneeId, allowedProjectIds);
+  return await executeCountStrategy(allowedProjectIds, [0, 0], {
+    unrestricted: () => countIssuesByAssigneeUnrestricted(ctx, assigneeId),
+    fast: (ids) => countIssuesByAssigneeFast(ctx, assigneeId, ids),
+    filtered: (ids) => countIssuesByAssigneeFiltered(ctx, assigneeId, ids),
+  });
 }
 
 /**
@@ -658,8 +686,7 @@ async function countComments(
   if (allowedProjectIds) {
     const commentsAll = await ctx.db
       .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", userId))
-      .filter(notDeleted)
+      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true))
       .take(MAX_COMMENTS_FOR_STATS);
 
     // Batch fetch unique issue IDs to check project membership using batchFetchIssues
@@ -679,10 +706,64 @@ async function countComments(
   return await efficientCount(
     ctx.db
       .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", userId))
-      .filter(notDeleted),
+      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true)),
     MAX_COMMENTS_FOR_STATS,
   );
+}
+
+/**
+ * Helper to count projects the user is a member of without restrictions.
+ */
+async function countProjectsUnrestricted(ctx: QueryCtx, userId: Id<"users">) {
+  return await efficientCount(
+    ctx.db
+      .query("projectMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter(notDeleted),
+    MAX_PAGE_SIZE,
+  );
+}
+
+/**
+ * Helper to count projects using a parallelized index query (optimized for few projects).
+ */
+async function countProjectsFast(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  // Optimization: If the number of allowed projects is small, check membership directly.
+  // This avoids fetching all of the target user's memberships (potentially 1000s)
+  // when we only care about a few specific projects (e.g. shared context).
+  const membershipChecks = await Promise.all(
+    Array.from(allowedProjectIds).map((projectId) =>
+      ctx.db
+        .query("projectMembers")
+        .withIndex("by_project_user", (q) =>
+          q.eq("projectId", projectId as Id<"projects">).eq("userId", userId),
+        )
+        .filter(notDeleted)
+        .first(),
+    ),
+  );
+  return membershipChecks.filter((m) => m !== null).length;
+}
+
+/**
+ * Helper to count projects using a filtered scan (for large number of allowed projects).
+ */
+async function countProjectsFiltered(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  const projectMembershipsAll = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter(notDeleted)
+    .take(MAX_PAGE_SIZE);
+
+  return projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId)).length;
 }
 
 /**
@@ -697,22 +778,11 @@ async function countProjects(
   userId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (allowedProjectIds) {
-    const projectMembershipsAll = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter(notDeleted)
-      .take(MAX_PAGE_SIZE);
-
-    return projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId)).length;
-  }
-  return await efficientCount(
-    ctx.db
-      .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter(notDeleted),
-    MAX_PAGE_SIZE,
-  );
+  return await executeCountStrategy(allowedProjectIds, 0, {
+    unrestricted: () => countProjectsUnrestricted(ctx, userId),
+    fast: (ids) => countProjectsFast(ctx, userId, ids),
+    filtered: (ids) => countProjectsFiltered(ctx, userId, ids),
+  });
 }
 
 /**

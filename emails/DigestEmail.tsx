@@ -5,6 +5,8 @@
  */
 
 import { Button, Heading, Hr, Link, Section, Text } from "@react-email/components";
+// biome-ignore lint/correctness/noUnusedImports: React is needed for runtime JSX in tests
+import * as React from "react";
 import { EmailLayout } from "./_components/Layout";
 
 interface DigestItem {

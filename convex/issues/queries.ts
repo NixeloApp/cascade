@@ -14,7 +14,7 @@ import {
 } from "../lib/boundedQueries";
 import { forbidden, notFound } from "../lib/errors";
 import {
-  type EnrichedIssue,
+  batchEnrichIssuesByStatus,
   enrichComments,
   enrichIssue,
   enrichIssues,
@@ -821,24 +821,7 @@ export const listByProjectSmart = projectQuery({
       }),
     );
 
-    // Optimize: Batch enrichment for all issues at once
-    const allIssues: Doc<"issues">[] = [];
-    const meta: { statusId: string; count: number }[] = [];
-
-    for (const state of workflowStates) {
-      const issues = issuesByColumn[state.id] || [];
-      allIssues.push(...issues);
-      meta.push({ statusId: state.id, count: issues.length });
-    }
-
-    const enrichedAll = await enrichIssues(ctx, allIssues);
-
-    const enrichedIssuesByStatus: Record<string, EnrichedIssue[]> = {};
-    let offset = 0;
-    for (const { statusId, count } of meta) {
-      enrichedIssuesByStatus[statusId] = enrichedAll.slice(offset, offset + count);
-      offset += count;
-    }
+    const enrichedIssuesByStatus = await batchEnrichIssuesByStatus(ctx, issuesByColumn);
 
     return {
       issuesByStatus: enrichedIssuesByStatus,
@@ -905,21 +888,7 @@ export const listByTeamSmart = authenticatedQuery({
       }),
     );
 
-    // Batch enrich all issues at once to avoid N+1 queries (one enrichIssues call per status)
-    // This reduces label queries from N (per status) to 1 (total)
-    const allIssues = Object.values(issuesByColumn).flat();
-    const enrichedAll = await enrichIssues(ctx, allIssues);
-
-    // Build a lookup map by issue ID for O(1) access
-    const enrichedById = new Map(enrichedAll.map((issue) => [issue._id, issue]));
-
-    // Reconstruct the status-grouped structure using the enriched issues
-    const enrichedIssuesByStatus: Record<string, EnrichedIssue[]> = {};
-    for (const [statusId, issues] of Object.entries(issuesByColumn)) {
-      enrichedIssuesByStatus[statusId] = issues
-        .map((issue) => enrichedById.get(issue._id))
-        .filter((issue): issue is EnrichedIssue => issue !== undefined);
-    }
+    const enrichedIssuesByStatus = await batchEnrichIssuesByStatus(ctx, issuesByColumn);
 
     return {
       issuesByStatus: enrichedIssuesByStatus,
@@ -1143,55 +1112,52 @@ async function getSprintIssueCounts(
   doneThreshold: number,
   addCounts: (statusId: string, counts: { total: number; visible: number; hidden: number }) => void,
 ) {
-  // Optimization: Fetch counts in parallel using highly efficient .count() queries.
-  // This avoids loading all sprint issues (potentially large documents) into memory.
-  // We use Promise.all to parallelize the N status queries.
+  // Optimization: Fetch all issues in the sprint (bounded) and aggregate counts in memory.
+  // This reduces N queries (one per status) to a single query.
+  // Since sprints are typically small (< 200 issues), this is much faster and reduces DB ops.
 
-  await Promise.all(
-    workflowStates.map(async (state) => {
-      // 1. Get Total Count efficiently
-      const totalCount = await efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_sprint_status", (q) =>
-            q
-              .eq("projectId", projectId)
-              .eq("sprintId", sprintId)
-              .eq("status", state.id)
-              .lt("isDeleted", true),
-          ),
-      );
-
-      let visibleCount = 0;
-
-      if (state.category === "done") {
-        // 2. Get Visible Count for Done (filtered by date)
-        // We only need to check up to PAGE_SIZE items to determine visibility
-        // This avoids counting ALL recent done items if there are many
-        const visibleIssues = await ctx.db
-          .query("issues")
-          .withIndex("by_project_sprint_status_updated", (q) =>
-            q
-              .eq("projectId", projectId)
-              .eq("sprintId", sprintId)
-              .eq("status", state.id)
-              .gte("updatedAt", doneThreshold),
-          )
-          .take(DEFAULT_PAGE_SIZE + 1);
-
-        visibleCount = Math.min(visibleIssues.length, DEFAULT_PAGE_SIZE);
-      } else {
-        // For non-done columns, visible is simply total capped at page size
-        visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
-      }
-
-      addCounts(state.id, {
-        total: totalCount,
-        visible: visibleCount,
-        hidden: Math.max(0, totalCount - DEFAULT_PAGE_SIZE),
-      });
-    }),
+  const issues = await safeCollect(
+    ctx.db
+      .query("issues")
+      .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true)),
+    BOUNDED_LIST_LIMIT * 5, // Allow up to 500 issues per sprint (generous limit)
+    "sprint issue counts",
   );
+
+  // Filter by projectId for safety (though sprintId implies project)
+  const projectIssues = issues.filter((i) => i.projectId === projectId);
+
+  // Group by status
+  const issuesByStatus: Record<string, Doc<"issues">[]> = {};
+  for (const issue of projectIssues) {
+    if (!issuesByStatus[issue.status]) {
+      issuesByStatus[issue.status] = [];
+    }
+    issuesByStatus[issue.status].push(issue);
+  }
+
+  for (const state of workflowStates) {
+    const statusIssues = issuesByStatus[state.id] || [];
+    const totalCount = statusIssues.length;
+    let visibleCount = 0;
+
+    if (state.category === "done") {
+      // For done columns, filter by date (recent only)
+      // Count items updated after doneThreshold
+      const recentCount = statusIssues.filter((i) => i.updatedAt >= doneThreshold).length;
+      // Cap visible count at page size (consistent with old logic)
+      visibleCount = Math.min(recentCount, DEFAULT_PAGE_SIZE);
+    } else {
+      // For non-done columns, visible is simply total capped at page size
+      visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
+    }
+
+    addCounts(state.id, {
+      total: totalCount,
+      visible: visibleCount,
+      hidden: Math.max(0, totalCount - DEFAULT_PAGE_SIZE),
+    });
+  }
 }
 
 export const listIssuesByDateRange = authenticatedQuery({

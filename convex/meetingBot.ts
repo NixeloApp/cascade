@@ -8,7 +8,9 @@ import { requireBotApiKey } from "./lib/botAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
 import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
+import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { assertCanEditProject } from "./projectAccess";
 import { simplePriorities } from "./validators";
 
 const BOT_SERVICE_TIMEOUT_MS = 30000;
@@ -91,43 +93,30 @@ export const listRecordings = authenticatedQuery({
     const calendarEventIds = recordings
       .map((r) => r.calendarEventId)
       .filter((id): id is Id<"calendarEvents"> => !!id);
-    const recordingIds = recordings.map((r) => r._id);
 
-    // Parallel fetch: calendar events, transcripts, summaries
-    const [calendarEventMap, allTranscripts, allSummaries] = await Promise.all([
-      batchFetchCalendarEvents(ctx, calendarEventIds),
-      Promise.all(
-        recordingIds.map((recordingId) =>
-          ctx.db
-            .query("meetingTranscripts")
-            .withIndex("by_recording", (q) => q.eq("recordingId", recordingId))
-            .first(),
-        ),
-      ),
-      Promise.all(
-        recordingIds.map((recordingId) =>
-          ctx.db
-            .query("meetingSummaries")
-            .withIndex("by_recording", (q) => q.eq("recordingId", recordingId))
-            .first(),
-        ),
-      ),
-    ]);
-
-    // Build lookup maps
-    const transcriptMap = new Map(recordingIds.map((id, i) => [id.toString(), allTranscripts[i]]));
-    const summaryMap = new Map(recordingIds.map((id, i) => [id.toString(), allSummaries[i]]));
+    // Parallel fetch: calendar events
+    const calendarEventMap = await batchFetchCalendarEvents(ctx, calendarEventIds);
 
     // Enrich with pre-fetched data (no N+1 - all fetches are parallel)
-    return recordings.map((recording) => ({
-      ...recording,
-      createdAt: recording._creationTime,
-      calendarEvent: recording.calendarEventId
-        ? (calendarEventMap.get(recording.calendarEventId) ?? null)
-        : null,
-      hasTranscript: !!transcriptMap.get(recording._id.toString()),
-      hasSummary: !!summaryMap.get(recording._id.toString()),
-    }));
+    return recordings.map((recording) => {
+      // Optimization: Deduce existence from status to avoid fetching large docs
+      // Statuses "summarizing" and "completed" imply a transcript exists.
+      // Status "completed" implies a summary exists.
+      // For "failed" status, we default to false even if partial data might exist,
+      // as users should view details for failed items.
+      const hasTranscript = recording.status === "summarizing" || recording.status === "completed";
+      const hasSummary = recording.status === "completed";
+
+      return {
+        ...recording,
+        createdAt: recording._creationTime,
+        calendarEvent: recording.calendarEventId
+          ? (calendarEventMap.get(recording.calendarEventId) ?? null)
+          : null,
+        hasTranscript,
+        hasSummary,
+      };
+    });
   },
 });
 
@@ -143,7 +132,7 @@ export const getRecordingByCalendarEvent = authenticatedQuery({
     if (!recording) return null;
 
     // Check access
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+    if (!canAccessRecording(ctx, recording)) {
       return null;
     }
 
@@ -174,9 +163,7 @@ export const getRecording = authenticatedQuery({
     if (!recording) throw notFound("recording", args.recordingId);
 
     // Check access
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden(undefined, "Not authorized to view this recording");
-    }
+    assertCanAccessRecording(ctx, recording, "Not authorized to view this recording");
 
     const calendarEvent = recording.calendarEventId
       ? await ctx.db.get(recording.calendarEventId)
@@ -220,9 +207,7 @@ export const getTranscript = authenticatedQuery({
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
 
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden();
-    }
+    assertCanAccessRecording(ctx, recording);
 
     return ctx.db
       .query("meetingTranscripts")
@@ -238,9 +223,7 @@ export const getSummary = authenticatedQuery({
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
 
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden();
-    }
+    assertCanAccessRecording(ctx, recording);
 
     return ctx.db
       .query("meetingSummaries")
@@ -431,7 +414,16 @@ export const cancelRecording = authenticatedMutation({
   },
 });
 
-/** Update a recording's status and metadata. Called by the bot service via API key auth. */
+/**
+ * Update a recording's status and metadata.
+ *
+ * This mutation acts as a webhook receiver for the external bot service.
+ * It updates the recording status (e.g., 'recording', 'transcribing', 'completed')
+ * and metadata like duration and start/end times.
+ *
+ * Security:
+ * - Requires a valid `apiKey` argument matching the configured `BOT_SERVICE_API_KEY`.
+ */
 export const updateRecordingStatus = mutation({
   args: {
     apiKey: v.string(),
@@ -691,8 +683,17 @@ export const createIssueFromActionItem = authenticatedMutation({
     const summary = await ctx.db.get(args.summaryId);
     if (!summary) throw notFound("summary", args.summaryId);
 
+    // Security Check: Ensure user can access the recording
+    const recording = await ctx.db.get(summary.recordingId);
+    if (!recording) throw notFound("recording", summary.recordingId);
+
+    assertCanAccessRecording(ctx, recording, "Not authorized to access this recording");
+
     const actionItem = summary.actionItems[args.actionItemIndex];
     if (!actionItem) throw notFound("actionItem");
+
+    // Security Check: Ensure user has write access to the project
+    await assertCanEditProject(ctx, args.projectId, ctx.userId);
 
     // Get project for issue key
     const project = await ctx.db.get(args.projectId);
@@ -763,7 +764,13 @@ export const createIssueFromActionItem = authenticatedMutation({
 // Internal Functions (called by scheduler)
 // ===========================================
 
-/** Trigger a pending bot job to join a meeting. Called by the Convex scheduler at the scheduled start time. */
+/**
+ * Trigger a pending bot job to join a meeting.
+ *
+ * This is the entry point for the bot lifecycle, called by the Convex scheduler at the scheduled start time.
+ * It transitions the job from 'pending' to 'queued' and the recording status to 'joining',
+ * then dispatches the job to the external bot service via `notifyBotService`.
+ */
 export const triggerBotJob = internalMutation({
   args: { recordingId: v.id("meetingRecordings") },
   handler: async (ctx, args) => {
@@ -802,7 +809,26 @@ export const triggerBotJob = internalMutation({
   },
 });
 
-/** Send an HTTP request to the external bot service to start a recording job. */
+/**
+ * Send an HTTP request to the external bot service to start a recording job.
+ *
+ * This action communicates with the configured bot service to initiate the recording process.
+ *
+ * Configuration:
+ * - Requires `BOT_SERVICE_URL` and `BOT_SERVICE_API_KEY` environment variables.
+ * - If not configured, marks the job as failed immediately.
+ *
+ * Behavior:
+ * - Sends a POST request to `${BOT_SERVICE_URL}/api/jobs`.
+ * - Payload includes job details and `callbackUrl` (this Convex deployment's URL).
+ * - Enforces a 30-second timeout using AbortController to prevent hanging actions.
+ * - Updates the job with the external service's job ID on success.
+ *
+ * Error Handling:
+ * - Catches network errors and timeouts.
+ * - Logs failures and marks the job as failed via `markJobFailed`.
+ * - Failures will trigger automatic retries (handled by `markJobFailed`).
+ */
 export const notifyBotService = internalAction({
   args: {
     jobId: v.id("meetingBotJobs"),
@@ -828,27 +854,27 @@ export const notifyBotService = internalAction({
       return;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), BOT_SERVICE_TIMEOUT_MS);
-
     try {
-      const response = await fetch(`${botServiceUrl}/api/jobs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${botServiceApiKey}`,
+      const response = await fetchWithTimeout(
+        `${botServiceUrl}/api/jobs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${botServiceApiKey}`,
+          },
+          body: JSON.stringify({
+            jobId: args.jobId,
+            recordingId: args.recordingId,
+            meetingUrl: args.meetingUrl,
+            platform: args.platform,
+            botName: "Nixelo Notetaker",
+            // Callback URLs for the bot to report status (must be Convex backend URL)
+            callbackUrl: process.env.CONVEX_SITE_URL,
+          }),
         },
-        body: JSON.stringify({
-          jobId: args.jobId,
-          recordingId: args.recordingId,
-          meetingUrl: args.meetingUrl,
-          platform: args.platform,
-          botName: "Nixelo Notetaker",
-          // Callback URLs for the bot to report status (must be Convex backend URL)
-          callbackUrl: process.env.CONVEX_SITE_URL,
-        }),
-        signal: controller.signal,
-      });
+        BOT_SERVICE_TIMEOUT_MS,
+      );
 
       if (!response.ok) {
         throw validation("botService", `Bot service responded with ${response.status}`);
@@ -863,7 +889,8 @@ export const notifyBotService = internalAction({
       });
     } catch (error) {
       const errorMessage =
-        error instanceof Error && error.name === "AbortError"
+        (error instanceof Error && error.name === "FetchTimeoutError") ||
+        (error instanceof Error && error.name === "AbortError")
           ? `Timeout: Bot service request exceeded ${BOT_SERVICE_TIMEOUT_MS}ms`
           : getErrorMessage(error);
 
@@ -874,8 +901,6 @@ export const notifyBotService = internalAction({
         recordingId: args.recordingId,
         error: errorMessage,
       });
-    } finally {
-      clearTimeout(timeoutId);
     }
   },
 });
@@ -942,3 +967,24 @@ export const markJobFailed = internalMutation({
     }
   },
 });
+
+// ===========================================
+// Helpers
+// ===========================================
+
+function canAccessRecording(
+  ctx: { userId: Id<"users"> },
+  recording: Doc<"meetingRecordings">,
+): boolean {
+  return recording.createdBy === ctx.userId || recording.isPublic;
+}
+
+function assertCanAccessRecording(
+  ctx: { userId: Id<"users"> },
+  recording: Doc<"meetingRecordings">,
+  message?: string,
+) {
+  if (!canAccessRecording(ctx, recording)) {
+    throw forbidden(undefined, message);
+  }
+}

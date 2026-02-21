@@ -411,10 +411,11 @@ describe("Projects", () => {
         { id: "done", name: "Completed", category: "done" as const, order: 2 },
       ];
 
-      await asAdmin.mutation(api.projects.updateWorkflow, {
+      const result = await asAdmin.mutation(api.projects.updateWorkflow, {
         projectId,
         workflowStates: customWorkflow,
       });
+      expect(result).toEqual({ success: true });
 
       const project = await asAdmin.query(api.projects.getProject, { id: projectId });
       expect(project?.workflowStates).toHaveLength(3);
@@ -508,11 +509,12 @@ describe("Projects", () => {
           teamId,
         });
 
-        await asAdmin.mutation(api.projects.addProjectMember, {
+        const result = await asAdmin.mutation(api.projects.addProjectMember, {
           projectId,
           userEmail: "newmember@test.com",
           role: "editor",
         });
+        expect(result).toEqual({ success: true });
 
         // Verify member was added
         const asNewMember = asAuthenticatedUser(t, newMemberId);
@@ -588,11 +590,12 @@ describe("Projects", () => {
           role: "viewer",
         });
 
-        await asAdmin.mutation(api.projects.updateProjectMemberRole, {
+        const result = await asAdmin.mutation(api.projects.updateProjectMemberRole, {
           projectId,
           memberId: memberId,
           newRole: "editor",
         });
+        expect(result).toEqual({ success: true });
 
         // Verify role was updated
         const asMember = asAuthenticatedUser(t, memberId);
@@ -629,10 +632,11 @@ describe("Projects", () => {
           role: "editor",
         });
 
-        await asAdmin.mutation(api.projects.removeProjectMember, {
+        const result = await asAdmin.mutation(api.projects.removeProjectMember, {
           projectId,
           memberId: memberId,
         });
+        expect(result).toEqual({ success: true });
 
         // Verify member was removed
         const asMember = asAuthenticatedUser(t, memberId);
@@ -875,6 +879,7 @@ describe("Projects", () => {
       });
 
       const result = await asUser.mutation(api.projects.softDeleteProject, { projectId });
+      expect(result.success).toBe(true);
       expect(result.deleted).toBe(true);
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
@@ -932,6 +937,7 @@ describe("Projects", () => {
       await asUser.mutation(api.projects.softDeleteProject, { projectId });
 
       const result = await asUser.mutation(api.projects.restoreProject, { projectId });
+      expect(result.success).toBe(true);
       expect(result.restored).toBe(true);
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
