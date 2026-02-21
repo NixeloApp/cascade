@@ -178,6 +178,7 @@ describe("AppSidebar Accessibility", () => {
       isMobileOpen: false,
       toggleCollapse: vi.fn(),
       closeMobile: vi.fn(),
+      toggleMobile: vi.fn(),
     });
 
     render(<AppSidebar />);
