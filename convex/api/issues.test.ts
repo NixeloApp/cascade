@@ -20,6 +20,9 @@ vi.mock("../_generated/api", () => ({
         listIssuesInternal: "listIssuesInternalQuery",
       },
     },
+    ipRestrictions: {
+      checkProjectIpAllowed: "checkProjectIpAllowedQuery",
+    },
   },
 }));
 
@@ -124,6 +127,8 @@ describe("API Issues Handler", () => {
     });
 
     mockCtx.runMutation.mockResolvedValueOnce({ ok: true });
+    // Mock IP restrictions check - allow access
+    mockCtx.runQuery.mockResolvedValueOnce(true);
 
     const response = await issuesApiHandler(mockCtx, mockRequest);
     expect(response.status).toBe(403);
@@ -188,6 +193,9 @@ describe("API Issues Handler", () => {
           scopes: ["issues:read"],
         };
       }
+      if (query === "checkProjectIpAllowedQuery") {
+        return true; // Allow IP access
+      }
       if (query === "listIssuesInternalQuery") {
         return [{ id: "issue-1", title: "Test Issue" }];
       }
@@ -217,6 +225,9 @@ describe("API Issues Handler", () => {
           projectId: "project-123",
           scopes: ["issues:read"],
         };
+      }
+      if (query === "checkProjectIpAllowedQuery") {
+        return true; // Allow IP access
       }
       if (query === "listIssuesInternalQuery") {
         throw new Error("Database error");

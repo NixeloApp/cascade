@@ -81,7 +81,12 @@ describe("IP Restrictions", () => {
         name: "Test Org",
         slug: "test-org",
         timezone: "UTC",
-        settings: { defaultMaxHoursPerWeek: 40, defaultMaxHoursPerDay: 8, requiresTimeApproval: false, billingEnabled: true },
+        settings: {
+          defaultMaxHoursPerWeek: 40,
+          defaultMaxHoursPerDay: 8,
+          requiresTimeApproval: false,
+          billingEnabled: true,
+        },
         ipRestrictionsEnabled: true, // Enabled
         createdBy: userId,
         updatedAt: Date.now(),
@@ -145,7 +150,12 @@ describe("IP Restrictions", () => {
         name: "Test Org",
         slug: "test-org",
         timezone: "UTC",
-        settings: { defaultMaxHoursPerWeek: 40, defaultMaxHoursPerDay: 8, requiresTimeApproval: false, billingEnabled: true },
+        settings: {
+          defaultMaxHoursPerWeek: 40,
+          defaultMaxHoursPerDay: 8,
+          requiresTimeApproval: false,
+          billingEnabled: true,
+        },
         ipRestrictionsEnabled: true, // Enabled
         createdBy: userId,
         updatedAt: Date.now(),
@@ -209,7 +219,12 @@ describe("IP Restrictions", () => {
         name: "Test Org",
         slug: "test-org",
         timezone: "UTC",
-        settings: { defaultMaxHoursPerWeek: 40, defaultMaxHoursPerDay: 8, requiresTimeApproval: false, billingEnabled: true },
+        settings: {
+          defaultMaxHoursPerWeek: 40,
+          defaultMaxHoursPerDay: 8,
+          requiresTimeApproval: false,
+          billingEnabled: true,
+        },
         ipRestrictionsEnabled: true, // Enabled
         createdBy: userId,
         updatedAt: Date.now(),
