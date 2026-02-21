@@ -88,8 +88,8 @@ describe("Documents listChildren", () => {
 
     expect(rootDocs).toHaveLength(2);
 
-    const r1 = rootDocs.find(d => d._id === r1Id);
-    const r2 = rootDocs.find(d => d._id === r2Id);
+    const r1 = rootDocs.find((d) => d._id === r1Id);
+    const r2 = rootDocs.find((d) => d._id === r2Id);
 
     expect(r1).toBeDefined();
     expect(r1?.hasChildren).toBe(true);
