@@ -92,7 +92,6 @@ describe("OTP Verification Environment Safety", () => {
     const email = "user@inbox.mailtrap.io";
     const token = "123456";
 
-    // @ts-expect-error
     await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
     // Should only call rate limit (1 time), NOT store OTP
@@ -119,7 +118,6 @@ describe("OTP Verification Environment Safety", () => {
     const email = "regular@example.com"; // NOT mailtrap
     const token = "123456";
 
-    // @ts-expect-error
     await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
     // Should only call rate limit
