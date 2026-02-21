@@ -529,7 +529,7 @@ export const updateProject = projectAdminMutation({
       metadata: updates as Record<string, string | number | boolean>,
     });
 
-    return { projectId: ctx.projectId };
+    return { success: true, projectId: ctx.projectId };
   },
 });
 
@@ -571,7 +571,7 @@ export const softDeleteProject = authenticatedMutation({
       metadata: { deletedAt },
     });
 
-    return { deleted: true };
+    return { success: true, deleted: true };
   },
 });
 
@@ -620,7 +620,7 @@ export const restoreProject = authenticatedMutation({
       targetType: "projects",
     });
 
-    return { restored: true };
+    return { success: true, restored: true };
   },
 });
 
