@@ -31,7 +31,7 @@ import {
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Tooltip, TooltipProvider } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
@@ -203,249 +203,262 @@ export function AppSidebar() {
           </Flex>
 
           {/* Navigation */}
-          <Flex
+          <FlexItem
             as="nav"
-            direction="column"
-            gap="xs"
             className="flex-1 overflow-y-auto p-2 scrollbar-subtle"
+            aria-label="Main Navigation"
           >
-            {/* Dashboard */}
-            <NavItem
-              to={ROUTES.dashboard.path}
-              params={{ orgSlug }}
-              icon={Home}
-              label="Dashboard"
-              isActive={isActive("/dashboard")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
-              data-tour="nav-dashboard"
-            />
-            {/* Issues */}
-            <NavItem
-              to={ROUTES.issues.list.path}
-              params={{ orgSlug }}
-              icon={ListIcon}
-              label="Issues"
-              isActive={isActive("/issues")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
-              data-tour="nav-issues"
-            />
-            {/* Calendar - Links to first project's calendar */}
-            {defaultProject && (
+            <ul className="flex flex-col gap-1 list-none">
+              {/* Dashboard */}
               <NavItem
-                to={ROUTES.projects.calendar.path}
-                params={{ orgSlug, key: defaultProject.key }}
-                icon={Calendar}
-                label="General"
-                isActive={isActive("/calendar")}
+                to={ROUTES.dashboard.path}
+                params={{ orgSlug }}
+                icon={Home}
+                label="Dashboard"
+                isActive={isActive("/dashboard")}
                 isCollapsed={isCollapsed}
                 onClick={handleNavClick}
-                data-tour="nav-calendar"
+                data-tour="nav-dashboard"
               />
-            )}
-
-            {/* Products Section */}
-            {!isCollapsed && (
-              <Typography
-                variant="small"
-                color="tertiary"
-                className="px-3 mt-4 mb-2 text-caption font-bold uppercase tracking-wider"
-              >
-                Products
-              </Typography>
-            )}
-
-            <NavItem
-              to={ROUTES.assistant.path}
-              params={{ orgSlug }}
-              icon={Bot}
-              label="Assistant"
-              isActive={isActive("/assistant")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
-            />
-            <NavItem
-              to={ROUTES.analytics.path}
-              params={{ orgSlug }}
-              icon={BarChart3}
-              label="Analytics"
-              isActive={isActive("/analytics")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
-            />
-            <NavItem
-              to={ROUTES.authentication.path}
-              params={{ orgSlug }}
-              icon={ShieldCheck}
-              label="Authentication"
-              isActive={isActive("/authentication")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
-            />
-            <NavItem
-              to={ROUTES.mcp.path}
-              params={{ orgSlug }}
-              icon={Server}
-              label="MCP Server"
-              isActive={isActive("/mcp-server")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
-            />
-            <NavItem
-              to={ROUTES.addOns.path}
-              params={{ orgSlug }}
-              icon={Puzzle}
-              label="Add-ons"
-              isActive={isActive("/add-ons")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
-            />
-            {/* Documents Section */}
-            <CollapsibleSection
-              icon={FileText}
-              label="Documents"
-              isExpanded={docsExpanded}
-              onToggle={() => setDocsExpanded(!docsExpanded)}
-              isActive={isActive("/documents")}
-              isCollapsed={isCollapsed}
-              onAdd={handleCreateDocument}
-              to={ROUTES.documents.list.path}
-              params={{ orgSlug }}
-              onClick={handleNavClick}
-              data-tour="nav-documents"
-            >
-              <NavSubItem
-                to={ROUTES.documents.templates.path}
+              {/* Issues */}
+              <NavItem
+                to={ROUTES.issues.list.path}
                 params={{ orgSlug }}
-                label="Templates"
-                isActive={location.pathname.includes("/documents/templates")}
+                icon={ListIcon}
+                label="Issues"
+                isActive={isActive("/issues")}
+                isCollapsed={isCollapsed}
                 onClick={handleNavClick}
-                icon={Copy}
+                data-tour="nav-issues"
               />
-              <div className="h-px bg-ui-border my-1 mx-2" />
-              {(documents ?? []).slice(0, 10).map((doc: Doc<"documents">) => (
-                <NavSubItem
-                  key={doc._id}
-                  to={ROUTES.documents.detail.path}
-                  params={{ orgSlug, id: doc._id }}
-                  label={doc.title}
-                  isActive={location.pathname.includes(`/documents/${doc._id}`)}
+              {/* Calendar - Links to first project's calendar */}
+              {defaultProject && (
+                <NavItem
+                  to={ROUTES.projects.calendar.path}
+                  params={{ orgSlug, key: defaultProject.key }}
+                  icon={Calendar}
+                  label="General"
+                  isActive={isActive("/calendar")}
+                  isCollapsed={isCollapsed}
                   onClick={handleNavClick}
+                  data-tour="nav-calendar"
                 />
-              ))}
-              {(documents?.length ?? 0) > 10 && (
-                <Typography variant="p" color="tertiary" className="px-3 py-1 text-xs">
-                  +{(documents?.length ?? 0) - 10} more
-                </Typography>
               )}
-            </CollapsibleSection>
-            {/* Workspaces Section */}
-            <CollapsibleSection
-              icon={FolderKanban}
-              label="Workspaces"
-              isExpanded={workspacesExpanded}
-              onToggle={() => setWorkspacesExpanded(!workspacesExpanded)}
-              isActive={isActive("/workspaces")}
-              isCollapsed={isCollapsed}
-              onAdd={handleCreateWorkspace}
-              to={ROUTES.workspaces.list.path}
-              params={{ orgSlug }}
-              onClick={handleNavClick}
-              data-tour="nav-projects"
-            >
-              {workspaces?.map((workspace: Doc<"workspaces">) => {
-                // O(1) lookup from pre-computed Map instead of O(T) filter
-                const workspaceTeams = teamsByWorkspace.get(workspace._id) || [];
-                const isWorkspaceExpanded = expandedWorkspaces.has(workspace.slug);
 
-                return (
-                  <div key={workspace._id} className="ml-2 group">
-                    {/* Workspace Item */}
-                    <Flex align="center" gap="xs">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => toggleWorkspace(workspace.slug)}
-                        className="h-6 w-6 p-0.5"
-                        aria-expanded={isWorkspaceExpanded}
-                        aria-label={
-                          isWorkspaceExpanded
-                            ? `Collapse ${workspace.name}`
-                            : `Expand ${workspace.name}`
-                        }
-                      >
-                        {isWorkspaceExpanded ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <NavSubItem
-                        to={ROUTES.workspaces.detail.path}
-                        params={{ orgSlug, workspaceSlug: workspace.slug }}
-                        label={workspace.name}
-                        isActive={location.pathname.includes(`/workspaces/${workspace.slug}`)}
-                        onClick={handleNavClick}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCreateTeamWorkspace({ id: workspace._id, slug: workspace.slug });
-                        }}
-                        className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
-                        aria-label="Create new team"
-                      >
-                        <Plus className="w-4 h-4 text-ui-text-tertiary" />
-                      </Button>
-                    </Flex>
+              {/* Products Section */}
+              {!isCollapsed && (
+                <li className="list-none">
+                  <Typography
+                    variant="small"
+                    color="tertiary"
+                    className="px-3 mt-4 mb-2 text-caption font-bold uppercase tracking-wider"
+                  >
+                    Products
+                  </Typography>
+                </li>
+              )}
 
-                    {/* Teams under workspace */}
-                    {isWorkspaceExpanded &&
-                      workspaceTeams.map((team: Doc<"teams">) => (
-                        <SidebarTeamItem
-                          key={team._id}
-                          team={team}
-                          workspaceSlug={workspace.slug}
-                          orgSlug={orgSlug}
-                          isExpanded={expandedTeams.has(team.slug)}
-                          onToggle={toggleTeam}
-                          onNavClick={handleNavClick}
-                        />
-                      ))}
-                  </div>
-                );
-              })}
-            </CollapsibleSection>
-            {/* Time Tracking (admin only) */}
-            {showTimeTracking && (
               <NavItem
-                to={ROUTES.timeTracking.path}
+                to={ROUTES.assistant.path}
                 params={{ orgSlug }}
-                icon={Clock}
-                label="Time Tracking"
-                isActive={isActive("/time-tracking")}
+                icon={Bot}
+                label="Assistant"
+                isActive={isActive("/assistant")}
                 isCollapsed={isCollapsed}
                 onClick={handleNavClick}
-                data-tour="nav-timesheet"
               />
-            )}
-          </Flex>
+              <NavItem
+                to={ROUTES.analytics.path}
+                params={{ orgSlug }}
+                icon={BarChart3}
+                label="Analytics"
+                isActive={isActive("/analytics")}
+                isCollapsed={isCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.authentication.path}
+                params={{ orgSlug }}
+                icon={ShieldCheck}
+                label="Authentication"
+                isActive={isActive("/authentication")}
+                isCollapsed={isCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.mcp.path}
+                params={{ orgSlug }}
+                icon={Server}
+                label="MCP Server"
+                isActive={isActive("/mcp-server")}
+                isCollapsed={isCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.addOns.path}
+                params={{ orgSlug }}
+                icon={Puzzle}
+                label="Add-ons"
+                isActive={isActive("/add-ons")}
+                isCollapsed={isCollapsed}
+                onClick={handleNavClick}
+              />
+              {/* Documents Section */}
+              <CollapsibleSection
+                icon={FileText}
+                label="Documents"
+                isExpanded={docsExpanded}
+                onToggle={() => setDocsExpanded(!docsExpanded)}
+                isActive={isActive("/documents")}
+                isCollapsed={isCollapsed}
+                onAdd={handleCreateDocument}
+                to={ROUTES.documents.list.path}
+                params={{ orgSlug }}
+                onClick={handleNavClick}
+                data-tour="nav-documents"
+              >
+                <li className="list-none">
+                  <NavSubItem
+                    to={ROUTES.documents.templates.path}
+                    params={{ orgSlug }}
+                    label="Templates"
+                    isActive={location.pathname.includes("/documents/templates")}
+                    onClick={handleNavClick}
+                    icon={Copy}
+                  />
+                </li>
+                <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+                {(documents ?? []).slice(0, 10).map((doc: Doc<"documents">) => (
+                  <li key={doc._id} className="list-none">
+                    <NavSubItem
+                      to={ROUTES.documents.detail.path}
+                      params={{ orgSlug, id: doc._id }}
+                      label={doc.title}
+                      isActive={location.pathname.includes(`/documents/${doc._id}`)}
+                      onClick={handleNavClick}
+                    />
+                  </li>
+                ))}
+                {(documents?.length ?? 0) > 10 && (
+                  <li className="list-none">
+                    <Typography variant="p" color="tertiary" className="px-3 py-1 text-xs">
+                      +{(documents?.length ?? 0) - 10} more
+                    </Typography>
+                  </li>
+                )}
+              </CollapsibleSection>
+              {/* Workspaces Section */}
+              <CollapsibleSection
+                icon={FolderKanban}
+                label="Workspaces"
+                isExpanded={workspacesExpanded}
+                onToggle={() => setWorkspacesExpanded(!workspacesExpanded)}
+                isActive={isActive("/workspaces")}
+                isCollapsed={isCollapsed}
+                onAdd={handleCreateWorkspace}
+                to={ROUTES.workspaces.list.path}
+                params={{ orgSlug }}
+                onClick={handleNavClick}
+                data-tour="nav-projects"
+              >
+                {workspaces?.map((workspace: Doc<"workspaces">) => {
+                  // O(1) lookup from pre-computed Map instead of O(T) filter
+                  const workspaceTeams = teamsByWorkspace.get(workspace._id) || [];
+                  const isWorkspaceExpanded = expandedWorkspaces.has(workspace.slug);
+
+                  return (
+                    <li key={workspace._id} className="ml-2 group list-none">
+                      {/* Workspace Item */}
+                      <Flex align="center" gap="xs">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleWorkspace(workspace.slug)}
+                          className="h-6 w-6 p-0.5"
+                          aria-expanded={isWorkspaceExpanded}
+                          aria-label={
+                            isWorkspaceExpanded
+                              ? `Collapse ${workspace.name}`
+                              : `Expand ${workspace.name}`
+                          }
+                        >
+                          {isWorkspaceExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <NavSubItem
+                          to={ROUTES.workspaces.detail.path}
+                          params={{ orgSlug, workspaceSlug: workspace.slug }}
+                          label={workspace.name}
+                          isActive={location.pathname.includes(`/workspaces/${workspace.slug}`)}
+                          onClick={handleNavClick}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCreateTeamWorkspace({ id: workspace._id, slug: workspace.slug });
+                          }}
+                          className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
+                          aria-label="Create new team"
+                        >
+                          <Plus className="w-4 h-4 text-ui-text-tertiary" />
+                        </Button>
+                      </Flex>
+
+                      {/* Teams under workspace */}
+                      {isWorkspaceExpanded && (
+                        <ul className="list-none">
+                          {workspaceTeams.map((team: Doc<"teams">) => (
+                            <SidebarTeamItem
+                              key={team._id}
+                              team={team}
+                              workspaceSlug={workspace.slug}
+                              orgSlug={orgSlug}
+                              isExpanded={expandedTeams.has(team.slug)}
+                              onToggle={toggleTeam}
+                              onNavClick={handleNavClick}
+                            />
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </CollapsibleSection>
+              {/* Time Tracking (admin only) */}
+              {showTimeTracking && (
+                <NavItem
+                  to={ROUTES.timeTracking.path}
+                  params={{ orgSlug }}
+                  icon={Clock}
+                  label="Time Tracking"
+                  isActive={isActive("/time-tracking")}
+                  isCollapsed={isCollapsed}
+                  onClick={handleNavClick}
+                  data-tour="nav-timesheet"
+                />
+              )}
+            </ul>
+          </FlexItem>
 
           {/* Bottom section - Settings */}
           <div className="p-2 border-t border-ui-border">
-            <NavItem
-              to={ROUTES.settings.profile.path}
-              params={{ orgSlug }}
-              icon={Settings}
-              label="Settings"
-              isActive={isActive("/settings")}
-              isCollapsed={isCollapsed}
-              onClick={handleNavClick}
-              data-tour="nav-settings"
-            />
+            <ul className="list-none">
+              <NavItem
+                to={ROUTES.settings.profile.path}
+                params={{ orgSlug }}
+                icon={Settings}
+                label="Settings"
+                isActive={isActive("/settings")}
+                isCollapsed={isCollapsed}
+                onClick={handleNavClick}
+                data-tour="nav-settings"
+              />
+            </ul>
           </div>
         </Flex>
 
@@ -509,13 +522,15 @@ function NavItem({
 
   if (isCollapsed) {
     return (
-      <Tooltip content={label} side="right">
-        {content}
-      </Tooltip>
+      <li>
+        <Tooltip content={label} side="right">
+          {content}
+        </Tooltip>
+      </li>
     );
   }
 
-  return content;
+  return <li>{content}</li>;
 }
 
 // Collapsible Section Component
@@ -555,40 +570,42 @@ function CollapsibleSection({
 
   if (isCollapsed) {
     return (
-      <Tooltip content={label} side="right">
-        {isLink ? (
-          <Link
-            {...props}
-            to={props.to}
-            params={props.params}
-            search={props.search}
-            data-tour={dataTour}
-            aria-current={isActive ? "page" : undefined}
-            aria-label={label}
-            className={cn(
-              "flex items-center justify-center px-2 py-2 rounded-md transition-default",
-              isActive
-                ? "bg-ui-bg-hover text-ui-text"
-                : "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
-            )}
-          >
-            <Icon className="w-5 h-5" />
-          </Link>
-        ) : (
-          <Flex
-            align="center"
-            justify="center"
-            className="px-2 py-2 rounded-md text-ui-text-secondary transition-default hover:bg-ui-bg-hover"
-          >
-            <Icon className="w-5 h-5" />
-          </Flex>
-        )}
-      </Tooltip>
+      <li>
+        <Tooltip content={label} side="right">
+          {isLink ? (
+            <Link
+              {...props}
+              to={props.to}
+              params={props.params}
+              search={props.search}
+              data-tour={dataTour}
+              aria-current={isActive ? "page" : undefined}
+              aria-label={label}
+              className={cn(
+                "flex items-center justify-center px-2 py-2 rounded-md transition-default",
+                isActive
+                  ? "bg-ui-bg-hover text-ui-text"
+                  : "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
+              )}
+            >
+              <Icon className="w-5 h-5" />
+            </Link>
+          ) : (
+            <Flex
+              align="center"
+              justify="center"
+              className="px-2 py-2 rounded-md text-ui-text-secondary transition-default hover:bg-ui-bg-hover"
+            >
+              <Icon className="w-5 h-5" />
+            </Flex>
+          )}
+        </Tooltip>
+      </li>
     );
   }
 
   return (
-    <div>
+    <li>
       {/* Section header */}
       <Flex
         align="center"
@@ -650,12 +667,8 @@ function CollapsibleSection({
       </Flex>
 
       {/* Section children */}
-      {isExpanded && (
-        <Flex direction="column" gap="none" className="ml-4 mt-1">
-          {children}
-        </Flex>
-      )}
-    </div>
+      {isExpanded && <ul className="ml-4 mt-1 space-y-1 list-none">{children}</ul>}
+    </li>
   );
 }
 

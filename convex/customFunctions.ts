@@ -64,22 +64,13 @@ import { getProjectRole } from "./projectAccess";
 
 /**
  * Require authentication and return the user ID.
- * Does not check 2FA status.
+ * Use this in all custom functions to avoid chaining.
  */
-async function requireAuthNo2FA(ctx: QueryCtx | MutationCtx): Promise<Id<"users">> {
+async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<"users">> {
   const userId = await getAuthUserId(ctx);
   if (!userId) {
     throw unauthenticated();
   }
-  return userId;
-}
-
-/**
- * Require authentication and return the user ID.
- * Use this in all custom functions to avoid chaining.
- */
-async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<"users">> {
-  const userId = await requireAuthNo2FA(ctx);
 
   // Enforce 2FA verification if enabled
   const user = await ctx.db.get(userId);
@@ -143,18 +134,6 @@ export const authenticatedQuery = customQuery(query, {
   args: {},
   input: async (ctx) => {
     const userId = await requireAuth(ctx);
-    return { ctx: { ...ctx, userId }, args: {} };
-  },
-});
-
-/**
- * Authenticated Mutation (No 2FA Check) - requires user to be logged in.
- * Use ONLY for 2FA-related mutations (setup, verify, disable).
- */
-export const authenticatedMutationNo2FA = customMutation(mutation, {
-  args: {},
-  input: async (ctx) => {
-    const userId = await requireAuthNo2FA(ctx);
     return { ctx: { ...ctx, userId }, args: {} };
   },
 });
