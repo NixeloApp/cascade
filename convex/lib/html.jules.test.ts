@@ -6,7 +6,7 @@ describe("html utils", () => {
     it("should escape basic HTML characters", () => {
       expect(escapeHtml("<div>")).toBe("&lt;div&gt;");
       expect(escapeHtml('"quoted"')).toBe("&quot;quoted&quot;");
-      expect(escapeHtml("'single'")).toBe("&#39;single&#39;");
+      expect(escapeHtml("'single'")).toBe("&#039;single&#039;");
       expect(escapeHtml("a & b")).toBe("a &amp; b");
     });
 
@@ -26,9 +26,8 @@ describe("html utils", () => {
     it("should escape <, >, and / characters in JSON", () => {
       const data = { content: "</script><script>alert(1)</script>" };
       const json = escapeScriptJson(data);
-      expect(json).toContain("\\u003c");
-      expect(json).toContain("\\u003e");
-      expect(json).toContain("\\u002f");
+      // < -> \u003c, > -> \u003e, / -> \u002f
+      expect(json).toContain("\\u003c\\u002fscript\\u003e");
       expect(json).not.toContain("</script>");
     });
 
@@ -39,12 +38,12 @@ describe("html utils", () => {
 
     it("should handle arrays", () => {
       const data = ["<foo>", "bar"];
-      const json = escapeScriptJson(data);
-      expect(json).toContain("\\u003cfoo\\u003e");
-      expect(JSON.parse(json)).toEqual(data);
+      // < -> \u003c, > -> \u003e
+      expect(escapeScriptJson(data)).toBe('["\\u003cfoo\\u003e","bar"]');
     });
 
-    it("should handle undefined gracefully", () => {
+    it("should handle undefined input safely", () => {
+      // @ts-expect-error - simulating untyped input
       expect(escapeScriptJson(undefined)).toBe("null");
     });
   });

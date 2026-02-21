@@ -13,7 +13,13 @@
 
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import {
+  type ActionCtx,
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { BOUNDED_DELETE_BATCH, BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { encrypt } from "./lib/encryption";
 import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "./lib/env";
@@ -25,6 +31,18 @@ export type TokenStatus = "healthy" | "expiring_soon" | "expired" | "invalid" | 
 // Token expiration thresholds
 const EXPIRING_SOON_THRESHOLD = 30 * MINUTE; // 30 minutes before expiry
 const REFRESH_THRESHOLD = 15 * MINUTE; // Auto-refresh if expiring within 15 minutes
+
+// Stats interface for health check
+interface HealthCheckStats {
+  totalConnections: number;
+  healthyCount: number;
+  expiringSoonCount: number;
+  expiredCount: number;
+  invalidCount: number;
+  missingCount: number;
+  refreshedCount: number;
+  refreshFailedCount: number;
+}
 
 /**
  * Check the health of a single calendar connection's tokens
@@ -291,6 +309,73 @@ export const getTokenHealthStats = internalQuery({
 });
 
 /**
+ * Handle auto-refresh logic for expiring or expired tokens
+ */
+async function handleAutoRefresh(
+  ctx: ActionCtx,
+  connectionId: Id<"calendarConnections">,
+  stats: HealthCheckStats,
+  type: "expiring_soon" | "expired",
+): Promise<void> {
+  const refreshResult = await ctx.runAction(internal.oauthTokenMonitor.refreshConnectionToken, {
+    connectionId,
+  });
+
+  if (refreshResult.success) {
+    stats.refreshedCount++;
+    stats.healthyCount++; // Now healthy after refresh
+    if (type === "expiring_soon") {
+      stats.expiringSoonCount--;
+    } else {
+      stats.expiredCount--;
+    }
+  } else {
+    stats.refreshFailedCount++;
+    console.warn(
+      `[Token Monitor] Failed to refresh token for connection ${connectionId}: ${refreshResult.error}`,
+    );
+  }
+}
+
+/**
+ * Process a single connection for health check
+ */
+async function processConnectionHealth(
+  ctx: ActionCtx,
+  connectionId: Id<"calendarConnections">,
+  stats: HealthCheckStats,
+  autoRefresh: boolean,
+): Promise<void> {
+  const health = await ctx.runQuery(internal.oauthTokenMonitor.checkConnectionTokenHealth, {
+    connectionId,
+  });
+
+  switch (health.status) {
+    case "healthy":
+      stats.healthyCount++;
+      break;
+    case "expiring_soon":
+      stats.expiringSoonCount++;
+      if (autoRefresh && health.needsRefresh) {
+        await handleAutoRefresh(ctx, connectionId, stats, "expiring_soon");
+      }
+      break;
+    case "expired":
+      stats.expiredCount++;
+      if (autoRefresh && health.needsRefresh) {
+        await handleAutoRefresh(ctx, connectionId, stats, "expired");
+      }
+      break;
+    case "invalid":
+      stats.invalidCount++;
+      break;
+    case "missing":
+      stats.missingCount++;
+      break;
+  }
+}
+
+/**
  * Main token health check action
  * Called by cron job to monitor all user tokens
  */
@@ -305,7 +390,7 @@ export const performTokenHealthCheck = internalAction({
     // Get all calendar connections
     const connections = await ctx.runQuery(internal.oauthTokenMonitor.getAllConnections);
 
-    const stats = {
+    const stats: HealthCheckStats = {
       totalConnections: connections.length,
       healthyCount: 0,
       expiringSoonCount: 0,
@@ -318,58 +403,7 @@ export const performTokenHealthCheck = internalAction({
 
     // Check each connection's token health
     for (const connection of connections) {
-      const health = await ctx.runQuery(internal.oauthTokenMonitor.checkConnectionTokenHealth, {
-        connectionId: connection._id,
-      });
-
-      switch (health.status) {
-        case "healthy":
-          stats.healthyCount++;
-          break;
-        case "expiring_soon":
-          stats.expiringSoonCount++;
-          // Auto-refresh expiring tokens
-          if (autoRefresh && health.needsRefresh) {
-            const refreshResult = await ctx.runAction(
-              internal.oauthTokenMonitor.refreshConnectionToken,
-              { connectionId: connection._id },
-            );
-            if (refreshResult.success) {
-              stats.refreshedCount++;
-              stats.healthyCount++; // Now healthy after refresh
-              stats.expiringSoonCount--; // No longer expiring
-            } else {
-              stats.refreshFailedCount++;
-              console.warn(
-                `[Token Monitor] Failed to refresh token for connection ${connection._id}: ${refreshResult.error}`,
-              );
-            }
-          }
-          break;
-        case "expired":
-          stats.expiredCount++;
-          // Try to refresh expired tokens if we have a refresh token
-          if (autoRefresh && health.needsRefresh) {
-            const refreshResult = await ctx.runAction(
-              internal.oauthTokenMonitor.refreshConnectionToken,
-              { connectionId: connection._id },
-            );
-            if (refreshResult.success) {
-              stats.refreshedCount++;
-              stats.healthyCount++;
-              stats.expiredCount--;
-            } else {
-              stats.refreshFailedCount++;
-            }
-          }
-          break;
-        case "invalid":
-          stats.invalidCount++;
-          break;
-        case "missing":
-          stats.missingCount++;
-          break;
-      }
+      await processConnectionHealth(ctx, connection._id, stats, autoRefresh);
     }
 
     const durationMs = Date.now() - startTime;

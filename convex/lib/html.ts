@@ -5,31 +5,23 @@
  */
 
 /**
- * Escapes unsafe characters in a string for use in HTML.
- * Prevents XSS when injecting dynamic content into HTML responses.
- *
- * @param unsafe - The string to escape.
- * @returns The escaped HTML string.
+ * Escape characters for safe usage in HTML content.
+ * Replaces &, <, >, ", ' with HTML entities.
  */
 export function escapeHtml(unsafe: string): string {
-  if (!unsafe) return "";
   return unsafe
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/'/g, "&#039;");
 }
 
 /**
  * Escape JSON for safe usage in HTML <script> tags.
- * Escapes <, >, and / to prevent breaking out of the script tag
- * and for defense-in-depth against legacy comment terminators.
+ * Escapes < to \u003c to prevent breaking out of the script tag.
  */
 export function escapeScriptJson(data: unknown): string {
   const json = JSON.stringify(data) ?? "null";
-  return json
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/\//g, "\\u002f");
+  return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/\//g, "\\u002f");
 }
