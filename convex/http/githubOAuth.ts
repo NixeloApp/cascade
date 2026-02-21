@@ -1,6 +1,5 @@
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
-import { constantTimeEqual } from "../lib/apiAuth";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
 import { isAppError, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
@@ -60,11 +59,10 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
 
   // Build OAuth authorization URL
   const authUrl = new URL("https://github.com/login/oauth/authorize");
-  const state = crypto.randomUUID();
   authUrl.searchParams.set("client_id", config.clientId);
   authUrl.searchParams.set("redirect_uri", config.redirectUri);
   authUrl.searchParams.set("scope", config.scopes);
-  authUrl.searchParams.set("state", state); // CSRF protection
+  authUrl.searchParams.set("state", crypto.randomUUID()); // CSRF protection
 
   // Redirect user to GitHub OAuth page
   return Promise.resolve(
@@ -72,7 +70,6 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
       status: 302,
       headers: {
         Location: authUrl.toString(),
-        "Set-Cookie": `github_oauth_state=${state}; HttpOnly; Path=/; Max-Age=600; Secure; SameSite=Lax`,
       },
     }),
   );
@@ -90,15 +87,8 @@ export const initiateAuth = httpAction(initiateAuthHandler);
 export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
   const errorDescription = url.searchParams.get("error_description");
-
-  // Verify CSRF state
-  const cookieState = getCookie(request, "github_oauth_state");
-  if (!state || !cookieState || !constantTimeEqual(state, cookieState)) {
-    return new Response("Invalid state parameter", { status: 400 });
-  }
 
   if (error) {
     // User denied access or error occurred
@@ -135,9 +125,9 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     return new Response("Missing authorization code", { status: 400 });
   }
 
-  try {
-    const config = getGitHubOAuthConfig();
+  const config = getGitHubOAuthConfig();
 
+  try {
     // Exchange authorization code for access token
     const tokenResponse = await fetchWithTimeout("https://github.com/login/oauth/access_token", {
       method: "POST",
@@ -235,38 +225,12 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       `,
       {
         status: 200,
-        headers: {
-          "Content-Type": "text/html",
-          // Clear state cookie
-          "Set-Cookie": `github_oauth_state=; HttpOnly; Path=/; Max-Age=0; Secure; SameSite=Lax`,
-        },
+        headers: { "Content-Type": "text/html" },
       },
     );
   } catch (error) {
     return handleOAuthError(error);
   }
-};
-
-function getCookie(request: Request, name: string): string | null {
-  const cookieHeader = request.headers.get("Cookie");
-  if (!cookieHeader) return null;
-  const cookies = cookieHeader.split(";");
-  for (const cookie of cookies) {
-    const trimmed = cookie.trim();
-    if (trimmed.startsWith(`${name}=`)) {
-      return trimmed.substring(name.length + 1);
-    }
-  }
-  return null;
-}
-
-const escapeHtml = (unsafe: string) => {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 };
 
 const handleOAuthError = (error: unknown) => {
@@ -313,7 +277,7 @@ const handleOAuthError = (error: unknown) => {
       <body>
         <div class="error">
           <h1>Connection Failed</h1>
-          <p>${escapeHtml(errorMessage)}</p>
+          <p>${errorMessage}</p>
           <p>Please try again or contact support if the problem persists.</p>
           <button onclick="window.close()">Close Window</button>
         </div>
