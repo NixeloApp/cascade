@@ -7,7 +7,7 @@
 import { RateLimiter } from "@convex-dev/rate-limiter";
 
 import { components } from "./_generated/api";
-import { ActionCtx, MutationCtx } from "./_generated/server";
+import type { ActionCtx, MutationCtx } from "./_generated/server";
 
 // Helper to detect test/dev/CI environments for relaxed rate limits
 const isTestEnv =
