@@ -775,9 +775,7 @@ export const listByProjectSmart = projectQuery({
           // Use prefix of by_project_sprint_status to get all sprint issues efficiently
           // without needing a new index
           .withIndex("by_project_sprint_status", (q) =>
-            q
-              .eq("projectId", ctx.project._id)
-              .eq("sprintId", args.sprintId as Id<"sprints">),
+            q.eq("projectId", ctx.project._id).eq("sprintId", args.sprintId as Id<"sprints">),
           )
           .filter(notDeleted),
         BOUNDED_LIST_LIMIT * 5, // Allow up to 500 issues per sprint (generous limit)
