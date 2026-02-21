@@ -2,6 +2,7 @@ import { useLocation } from "@tanstack/react-router";
 import userEvent from "@testing-library/user-event";
 import { useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { AppSidebar } from "./AppSidebar";
 
@@ -13,7 +14,13 @@ vi.mock("@tanstack/react-router", async () => {
     useLocation: vi.fn(),
     useNavigate: vi.fn(),
     Link: (props: any) => (
-      <a {...props} href={props.to} aria-current={props["aria-current"]} title={props.title}>
+      <a
+        {...props}
+        href={props.to}
+        aria-current={props["aria-current"]}
+        aria-label={props["aria-label"]}
+        title={props.title}
+      >
         {props.children}
       </a>
     ),
@@ -163,5 +170,25 @@ describe("AppSidebar Accessibility", () => {
       expect(tooltip).toBeInTheDocument();
       expect(tooltip).toHaveTextContent("My Doc");
     });
+  });
+
+  it("adds aria-label to links when collapsed", () => {
+    vi.mocked(useSidebarState).mockReturnValue({
+      isCollapsed: true,
+      isMobileOpen: false,
+      toggleCollapse: vi.fn(),
+      closeMobile: vi.fn(),
+    });
+
+    render(<AppSidebar />);
+
+    const dashboardLink = screen.getByRole("link", { name: "Dashboard" });
+    expect(dashboardLink).toHaveAttribute("aria-label", "Dashboard");
+
+    const issuesLink = screen.getByRole("link", { name: "Issues" });
+    expect(issuesLink).toHaveAttribute("aria-label", "Issues");
+
+    const documentsLink = screen.getByRole("link", { name: "Documents" });
+    expect(documentsLink).toHaveAttribute("aria-label", "Documents");
   });
 });
