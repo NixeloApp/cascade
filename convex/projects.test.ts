@@ -879,6 +879,7 @@ describe("Projects", () => {
       });
 
       const result = await asUser.mutation(api.projects.softDeleteProject, { projectId });
+      expect(result.success).toBe(true);
       expect(result.deleted).toBe(true);
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
@@ -936,6 +937,7 @@ describe("Projects", () => {
       await asUser.mutation(api.projects.softDeleteProject, { projectId });
 
       const result = await asUser.mutation(api.projects.restoreProject, { projectId });
+      expect(result.success).toBe(true);
       expect(result.restored).toBe(true);
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));

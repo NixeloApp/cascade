@@ -512,6 +512,25 @@ export const acceptInvite = authenticatedMutation({
       inviteId: invite._id,
     });
 
+    // Ensure the user is a member of the organization
+    const existingOrgMember = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", invite.organizationId).eq("userId", ctx.userId),
+      )
+      .first();
+
+    if (!existingOrgMember) {
+      const orgRole = invite.role === "superAdmin" ? "admin" : "member";
+      await ctx.db.insert("organizationMembers", {
+        organizationId: invite.organizationId,
+        userId: ctx.userId,
+        role: orgRole,
+        addedBy: invite.invitedBy,
+        joinedAt: Date.now(),
+      });
+    }
+
     // If this is a project invite, add user to the project
     let projectId: Id<"projects"> | undefined;
     if (invite.projectId) {
