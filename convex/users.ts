@@ -456,6 +456,7 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
 async function countByProjectParallel(
   projectIds: Id<"projects">[],
   limit: number,
+  // biome-ignore lint/suspicious/noExplicitAny: generic query factory
   queryFactory: (projectId: Id<"projects">) => CountableQuery<any>,
 ): Promise<number> {
   const counts = await Promise.all(
@@ -571,17 +572,17 @@ async function countIssuesByAssigneeFast(
         ),
   );
 
-  // 2. Completed: Global index scan filtered by allowed projects
-  // We can't use by_project_assignee efficiently for status filtering (no status in index).
-  // Falling back to filtered count on global index is better than loading all docs.
-  const completed = await efficientCount(
+  // 2. Completed: Parallel efficient counts on by_project_assignee index with status filter
+  // Although status is not in the index, scanning the project-scoped index and filtering
+  // is significantly more efficient than scanning the global index when the user
+  // has a large history in other projects not included in allowedProjectIds.
+  const completed = await countByProjectParallel(projectIds, MAX_ISSUES_FOR_STATS, (projectId) =>
     ctx.db
       .query("issues")
-      .withIndex("by_assignee_status", (q) =>
-        q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+      .withIndex("by_project_assignee", (q) =>
+        q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
       )
-      .filter((q) => isAllowedProject(q, projectIds)),
-    MAX_ISSUES_FOR_STATS,
+      .filter((q) => q.eq(q.field("status"), "done")),
   );
 
   return [Math.min(totalAssigned, MAX_ISSUES_FOR_STATS), Math.min(completed, MAX_ISSUES_FOR_STATS)];
