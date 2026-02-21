@@ -462,6 +462,31 @@ function isAllowedProject(q: FilterBuilder<GenericTableInfo>, projectIds: Id<"pr
 }
 
 /**
+ * Helper to execute a counting strategy based on the set of allowed projects.
+ */
+async function executeCountStrategy<T>(
+  allowedProjectIds: Set<string> | null,
+  emptyResult: T,
+  strategies: {
+    unrestricted: () => Promise<T>;
+    fast: (ids: Set<string>) => Promise<T>;
+    filtered: (ids: Set<string>) => Promise<T>;
+  },
+): Promise<T> {
+  if (!allowedProjectIds) {
+    return strategies.unrestricted();
+  }
+
+  if (allowedProjectIds.size === 0) return emptyResult;
+
+  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
+    return strategies.fast(allowedProjectIds);
+  }
+
+  return strategies.filtered(allowedProjectIds);
+}
+
+/**
  * Helper to count issues reported by a user without project restrictions.
  */
 async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"users">) {
@@ -538,17 +563,11 @@ async function countIssuesByReporter(
   reporterId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (!allowedProjectIds) {
-    return countIssuesByReporterUnrestricted(ctx, reporterId);
-  }
-
-  if (allowedProjectIds.size === 0) return 0;
-
-  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
-    return countIssuesByReporterFast(ctx, reporterId, allowedProjectIds);
-  }
-
-  return countIssuesByReporterFiltered(ctx, reporterId, allowedProjectIds);
+  return await executeCountStrategy(allowedProjectIds, 0, {
+    unrestricted: () => countIssuesByReporterUnrestricted(ctx, reporterId),
+    fast: (ids) => countIssuesByReporterFast(ctx, reporterId, ids),
+    filtered: (ids) => countIssuesByReporterFiltered(ctx, reporterId, ids),
+  });
 }
 
 /**
@@ -653,17 +672,11 @@ async function countIssuesByAssignee(
   assigneeId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (!allowedProjectIds) {
-    return countIssuesByAssigneeUnrestricted(ctx, assigneeId);
-  }
-
-  if (allowedProjectIds.size === 0) return [0, 0];
-
-  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
-    return countIssuesByAssigneeFast(ctx, assigneeId, allowedProjectIds);
-  }
-
-  return countIssuesByAssigneeFiltered(ctx, assigneeId, allowedProjectIds);
+  return await executeCountStrategy(allowedProjectIds, [0, 0], {
+    unrestricted: () => countIssuesByAssigneeUnrestricted(ctx, assigneeId),
+    fast: (ids) => countIssuesByAssigneeFast(ctx, assigneeId, ids),
+    filtered: (ids) => countIssuesByAssigneeFiltered(ctx, assigneeId, ids),
+  });
 }
 
 /**
@@ -775,17 +788,11 @@ async function countProjects(
   userId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (!allowedProjectIds) {
-    return countProjectsUnrestricted(ctx, userId);
-  }
-
-  if (allowedProjectIds.size === 0) return 0;
-
-  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
-    return countProjectsFast(ctx, userId, allowedProjectIds);
-  }
-
-  return countProjectsFiltered(ctx, userId, allowedProjectIds);
+  return await executeCountStrategy(allowedProjectIds, 0, {
+    unrestricted: () => countProjectsUnrestricted(ctx, userId),
+    fast: (ids) => countProjectsFast(ctx, userId, ids),
+    filtered: (ids) => countProjectsFiltered(ctx, userId, ids),
+  });
 }
 
 /**
