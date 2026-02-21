@@ -1,4 +1,4 @@
-import { forwardRef, type InputHTMLAttributes } from "react";
+import { forwardRef, type InputHTMLAttributes, useId } from "react";
 import { cn } from "@/lib/utils";
 import { Flex } from "../Flex";
 import { Typography } from "../Typography";
@@ -23,7 +23,10 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
  */
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, label, error, helperText, id, ...props }, ref) => {
-    const checkboxId = id || label?.toLowerCase().replace(/\s+/g, "-");
+    const generatedId = useId();
+    const checkboxId = id || generatedId;
+    const errorId = `${checkboxId}-error`;
+    const helperId = `${checkboxId}-helper`;
 
     return (
       <div className="w-full">
@@ -42,9 +45,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               className,
             )}
             aria-invalid={error ? "true" : "false"}
-            aria-describedby={
-              error ? `${checkboxId}-error` : helperText ? `${checkboxId}-helper` : undefined
-            }
+            aria-describedby={error ? errorId : helperText ? helperId : undefined}
             {...props}
           />
           {label && (
@@ -54,12 +55,12 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           )}
         </Flex>
         {error && (
-          <Typography variant="small" id={`${checkboxId}-error`} className="mt-1 text-status-error">
+          <Typography variant="small" id={errorId} className="mt-1 text-status-error">
             {error}
           </Typography>
         )}
         {helperText && !error && (
-          <Typography variant="muted" id={`${checkboxId}-helper`} className="mt-1 text-xs">
+          <Typography variant="muted" id={helperId} className="mt-1 text-xs">
             {helperText}
           </Typography>
         )}
