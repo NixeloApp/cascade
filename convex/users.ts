@@ -16,6 +16,7 @@ import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
+import { constantTimeEqual } from "./lib/apiAuth";
 import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
@@ -344,7 +345,8 @@ export const verifyEmailChange = authenticatedMutation({
       throw validation("token", "Verification token expired");
     }
 
-    if (args.token !== user.pendingEmailVerificationToken) {
+    // Use constant-time comparison to prevent timing attacks on the verification token
+    if (!constantTimeEqual(args.token, user.pendingEmailVerificationToken)) {
       throw validation("token", "Invalid verification token");
     }
 
