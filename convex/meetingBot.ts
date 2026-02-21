@@ -132,7 +132,7 @@ export const getRecordingByCalendarEvent = authenticatedQuery({
     if (!recording) return null;
 
     // Check access
-    if (!canAccessRecording(ctx, recording)) {
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
       return null;
     }
 
@@ -163,7 +163,9 @@ export const getRecording = authenticatedQuery({
     if (!recording) throw notFound("recording", args.recordingId);
 
     // Check access
-    assertCanAccessRecording(ctx, recording, "Not authorized to view this recording");
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden(undefined, "Not authorized to view this recording");
+    }
 
     const calendarEvent = recording.calendarEventId
       ? await ctx.db.get(recording.calendarEventId)
@@ -207,7 +209,9 @@ export const getTranscript = authenticatedQuery({
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
 
-    assertCanAccessRecording(ctx, recording);
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden();
+    }
 
     return ctx.db
       .query("meetingTranscripts")
@@ -223,7 +227,9 @@ export const getSummary = authenticatedQuery({
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
 
-    assertCanAccessRecording(ctx, recording);
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden();
+    }
 
     return ctx.db
       .query("meetingSummaries")
@@ -687,7 +693,9 @@ export const createIssueFromActionItem = authenticatedMutation({
     const recording = await ctx.db.get(summary.recordingId);
     if (!recording) throw notFound("recording", summary.recordingId);
 
-    assertCanAccessRecording(ctx, recording, "Not authorized to access this recording");
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden(undefined, "Not authorized to access this recording");
+    }
 
     const actionItem = summary.actionItems[args.actionItemIndex];
     if (!actionItem) throw notFound("actionItem");
@@ -967,24 +975,3 @@ export const markJobFailed = internalMutation({
     }
   },
 });
-
-// ===========================================
-// Helpers
-// ===========================================
-
-function canAccessRecording(
-  ctx: { userId: Id<"users"> },
-  recording: Doc<"meetingRecordings">,
-): boolean {
-  return recording.createdBy === ctx.userId || recording.isPublic;
-}
-
-function assertCanAccessRecording(
-  ctx: { userId: Id<"users"> },
-  recording: Doc<"meetingRecordings">,
-  message?: string,
-) {
-  if (!canAccessRecording(ctx, recording)) {
-    throw forbidden(undefined, message);
-  }
-}

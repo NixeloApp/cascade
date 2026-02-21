@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import { createTestContext } from "../testUtils";
+import { createProjectInOrganization, createTestContext } from "../testUtils";
 
 // Mock the 'ai' module
 vi.mock("ai", () => ({
@@ -30,7 +30,10 @@ describe("AI Chat", () => {
     const t = convexTest(schema, modules);
     register(t); // Register rate limiter
 
-    const { asUser, userId, projectId } = await createTestContext(t);
+    const { asUser, userId, organizationId } = await createTestContext(t);
+
+    // Create a project
+    const projectId = await createProjectInOrganization(t, userId, organizationId);
 
     // Mock the AI response
     vi.mocked(generateText).mockResolvedValue({
