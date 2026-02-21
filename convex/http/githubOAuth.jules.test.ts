@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
-import {
-  handleCallbackHandler,
-  initiateAuthHandler,
-  listReposHandler,
-} from "./githubOAuth";
+import { handleCallbackHandler, initiateAuthHandler, listReposHandler } from "./githubOAuth";
 
 // Mock dependencies
 vi.mock("../lib/fetchWithTimeout", () => ({

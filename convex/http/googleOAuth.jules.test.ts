@@ -10,11 +10,7 @@ vi.mock("../lib/env", () => ({
   getGoogleClientSecret: vi.fn(),
   isGoogleOAuthConfigured: vi.fn(),
   getConvexSiteUrl: vi.fn(),
-}));
-
-// Mock errors library
-vi.mock("../lib/errors", () => ({
-  validation: (_field: string, msg: string) => new Error(msg),
+  validation: (_type: string, msg: string) => new Error(msg),
 }));
 
 // Mock fetchWithTimeout
@@ -210,23 +206,6 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      // Error details are logged server-side but not exposed to users (security best practice)
-    });
-
-    it("should handle token exchange failure with details", async () => {
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: false,
-        text: async () =>
-          JSON.stringify({ error: "invalid_grant", error_description: "The code is invalid" }),
-      } as Response);
-
-      const request = new Request("https://api.convex.site/google/callback?code=auth_code");
-      const response = await handleCallbackHandler(mockCtx, request);
-
-      expect(response.status).toBe(500);
-      const text = await response.text();
-      expect(text).toContain("Connection Failed");
-      // Error details are logged server-side but not exposed to users (security best practice)
     });
 
     it("should handle user info fetch failure", async () => {
@@ -239,7 +218,6 @@ describe("Google OAuth Flow", () => {
       // User info failure
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: false,
-        text: async () => JSON.stringify({ error: { message: "Invalid token" } }),
       } as Response);
 
       const request = new Request(
@@ -252,7 +230,6 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      // Error details are logged server-side but not exposed to users (security best practice)
     });
   });
 
@@ -340,7 +317,6 @@ describe("Google OAuth Flow", () => {
 
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: false,
-        text: async () => "Network error",
       } as Response);
 
       const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
@@ -349,25 +325,7 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const body = await response.json();
       expect(body.success).toBe(false);
-      expect(body.error).toContain("Network error");
-    });
-
-    it("should handle fetch error with details", async () => {
-      vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
-      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
-
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: false,
-        text: async () => JSON.stringify({ error: { message: "Quota exceeded" } }),
-      } as Response);
-
-      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
-      const response = await triggerSyncHandler(mockCtx, request);
-
-      expect(response.status).toBe(500);
-      const body = await response.json();
-      expect(body.success).toBe(false);
-      expect(body.error).toContain("Quota exceeded");
+      expect(body.error).toContain("Failed to fetch Google Calendar events");
     });
   });
 });

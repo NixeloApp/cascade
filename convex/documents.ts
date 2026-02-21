@@ -1312,25 +1312,16 @@ async function fetchPrivateDocuments(
   organizationId: Id<"organizations"> | undefined,
   limit: number,
 ) {
-  if (organizationId) {
-    return await ctx.db
-      .query("documents")
-      .withIndex("by_org_creator_updated", (q) =>
-        q.eq("organizationId", organizationId).eq("createdBy", userId),
-      )
-      .filter((q) => q.eq(q.field("isPublic"), false))
-      .order("desc")
-      .filter(notDeleted)
-      .take(limit);
-  }
-
-  return await ctx.db
+  let query = ctx.db
     .query("documents")
     .withIndex("by_creator_updated", (q) => q.eq("createdBy", userId))
-    .filter((q) => q.eq(q.field("isPublic"), false))
-    .order("desc")
-    .filter(notDeleted)
-    .take(limit);
+    .filter((q) => q.eq(q.field("isPublic"), false));
+
+  if (organizationId) {
+    query = query.filter((q) => q.eq(q.field("organizationId"), organizationId));
+  }
+
+  return await query.order("desc").filter(notDeleted).take(limit);
 }
 
 async function fetchPublicDocuments(
