@@ -21,6 +21,22 @@ import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { isWorkspaceEditor } from "./lib/workspaceAccess";
 import { assertCanAccessProject, assertCanEditProject, canAccessProject } from "./projectAccess";
 
+/**
+ * Create a new document.
+ *
+ * Ensures the user has the necessary permissions:
+ * - Must be a member of the organization.
+ * - If linking to a project, must be a member of that project.
+ * - If creating a public document, must have edit permissions on the project.
+ * - If linking to a workspace, must be a workspace editor (unless org admin).
+ *
+ * @param title - The title of the document.
+ * @param isPublic - Whether the document is visible to all organization members.
+ * @param organizationId - The organization the document belongs to.
+ * @param workspaceId - Optional workspace context.
+ * @param projectId - Optional project context.
+ * @param parentId - Optional parent document ID (for nesting).
+ */
 export const create = authenticatedMutation({
   args: {
     title: v.string(),
@@ -70,6 +86,23 @@ export const create = authenticatedMutation({
   },
 });
 
+/**
+ * List documents with pagination and access control.
+ *
+ * Combines two sources of documents:
+ * 1. Private documents created by the current user.
+ * 2. Public documents in the organization (if organizationId is provided).
+ *
+ * Features:
+ * - Deduplicates documents that appear in both queries (e.g., user's own public docs).
+ * - Filters by project access permissions.
+ * - Sorts by `updatedAt` descending.
+ * - Supports cursor-based pagination.
+ *
+ * @param limit - Max number of documents to return (capped at MAX_PAGE_SIZE).
+ * @param cursor - Pagination cursor (document ID).
+ * @param organizationId - Filter by organization (required to see public docs).
+ */
 export const list = authenticatedQuery({
   args: {
     limit: v.optional(v.number()),
@@ -471,6 +504,30 @@ async function validateWorkspaceIntegrity(
   }
 }
 
+/**
+ * Search for documents by title using full-text search.
+ *
+ * Implements a "fetch and filter" strategy:
+ * 1. Fetches a buffer of results from the search index (`search_title`).
+ * 2. Filters results in memory for:
+ *    - Soft deletion.
+ *    - Access permissions (project/org membership).
+ *    - Advanced filters (date range, creator, etc.).
+ *
+ * Note on Pagination:
+ * - `total` is accurate only for the current page of results.
+ * - `totalIsApproximate` indicates if there might be more results than what was fetched.
+ *
+ * @param query - The search string.
+ * @param limit - Max results to return.
+ * @param offset - Pagination offset.
+ * @param projectId - Filter by project.
+ * @param organizationId - Filter by organization.
+ * @param createdBy - Filter by creator ID or "me".
+ * @param isPublic - Filter by visibility.
+ * @param dateFrom - Filter by creation time (start).
+ * @param dateTo - Filter by creation time (end).
+ */
 export const search = authenticatedQuery({
   args: {
     query: v.string(),
@@ -575,7 +632,19 @@ export const search = authenticatedQuery({
 // NESTED PAGES
 // =============================================================================
 
-/** List child documents of a parent (or root documents if parentId is null) */
+/**
+ * List child documents of a parent (or root documents if parentId is null).
+ *
+ * Returns documents at a specific hierarchy level, sorted by their `order` field.
+ * Also includes metadata about children counts (`hasChildren`, `childCount`).
+ *
+ * Access Control:
+ * - Requires organization membership.
+ * - Filters each document by project access (if linked to a project).
+ *
+ * @param organizationId - The organization to list documents from.
+ * @param parentId - The parent document ID (null for root documents).
+ */
 export const listChildren = authenticatedQuery({
   args: {
     organizationId: v.id("organizations"),
@@ -650,7 +719,18 @@ export const listChildren = authenticatedQuery({
   },
 });
 
-/** Get document tree (all documents with hierarchy info) */
+/**
+ * Get the full document tree for an organization.
+ *
+ * Constructs a recursive structure of all documents visible to the user.
+ *
+ * Returns:
+ * - A list of root nodes.
+ * - Each node contains a `children` array with its descendants.
+ * - Each node includes a `depth` indicator (0 for root).
+ *
+ * @param organizationId - The organization ID.
+ */
 export const getTree = authenticatedQuery({
   args: {
     organizationId: v.id("organizations"),
@@ -759,7 +839,19 @@ async function validateNewParent(
   }
 }
 
-/** Move a document to a new parent */
+/**
+ * Move a document to a new parent or reorder it among siblings.
+ *
+ * Validations:
+ * - User must own the document.
+ * - New parent cannot be the document itself (cycle prevention).
+ * - New parent cannot be a descendant of the document (cycle prevention).
+ * - New parent must belong to the same organization.
+ *
+ * @param id - The document to move.
+ * @param newParentId - The new parent document ID (or undefined to make it a root).
+ * @param newOrder - The new sort order index (optional).
+ */
 export const moveDocument = authenticatedMutation({
   args: {
     id: v.id("documents"),
