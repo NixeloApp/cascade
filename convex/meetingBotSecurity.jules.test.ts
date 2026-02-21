@@ -79,7 +79,7 @@ describe("MeetingBot Security", () => {
         actionItemIndex: 0,
         projectId: victimProject,
       });
-    }).rejects.toThrow(/Not authorized to access this recording/);
+    }).rejects.toThrow(/Not authorized/);
 
     // Verify no issue was created
     const issues = await t.run(async (ctx) =>
@@ -173,5 +173,85 @@ describe("MeetingBot Security", () => {
         .collect(),
     );
     expect(issues.length).toBe(0);
+  });
+
+  it("VULNERABILITY: Attacker cannot modify public summary of another user by linking an issue from their own project", async () => {
+    const t = convexTest(schema, modules);
+
+    // Victim setup (Creates public recording)
+    const { asUser: asVictim, userId: victimId } = await createTestContext(t);
+
+    const recordingId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingRecordings", {
+        meetingUrl: "https://zoom.us/j/victim",
+        meetingPlatform: "zoom",
+        title: "Victim Public Meeting",
+        status: "completed",
+        botName: "Bot",
+        createdBy: victimId,
+        projectId: undefined, // Not linked to project
+        isPublic: true, // Publicly visible
+        updatedAt: Date.now(),
+      });
+    });
+
+    const transcriptId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingTranscripts", {
+        recordingId,
+        fullText: "Public transcript",
+        segments: [],
+        language: "en",
+        modelUsed: "whisper",
+        wordCount: 10,
+      });
+    });
+
+    const actionItemDescription = "Victim Action Item";
+    const summaryId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingSummaries", {
+        recordingId,
+        transcriptId,
+        executiveSummary: "Public Summary",
+        keyPoints: [],
+        actionItems: [
+          {
+            description: actionItemDescription,
+            assigneeUserId: victimId,
+            priority: "high",
+          },
+        ],
+        decisions: [],
+        openQuestions: [],
+        topics: [],
+        modelUsed: "gpt-4",
+      });
+    });
+
+    // Attacker setup (Has their own project)
+    const {
+      asUser: asAttacker,
+      userId: attackerId,
+      organizationId: attackerOrgId,
+    } = await createTestContext(t);
+
+    const attackerProject = await createProjectInOrganization(t, attackerId, attackerOrgId, {
+      name: "Attacker Project",
+      key: "ATTACK",
+      isPublic: false,
+    });
+
+    // Act: Attacker attempts to create issue from Victim's summary into Attacker's project
+    // This effectively writes to Victim's summary (updates issueCreated field)
+    await expect(async () => {
+      await asAttacker.mutation(api.meetingBot.createIssueFromActionItem, {
+        summaryId,
+        actionItemIndex: 0,
+        projectId: attackerProject,
+      });
+    }).rejects.toThrow(/Not authorized/);
+
+    // Verify: Summary should NOT be modified
+    const summary = await t.run(async (ctx) => ctx.db.get(summaryId));
+    expect(summary?.actionItems[0].issueCreated).toBeUndefined();
   });
 });

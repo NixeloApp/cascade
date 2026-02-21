@@ -88,14 +88,39 @@ export const listRecordings = authenticatedQuery({
       // Security: Ensure user has access to the project
       await assertCanAccessProject(ctx, args.projectId, ctx.userId);
 
-      recordings = await ctx.db
+      // Parallel fetch: My recordings in project
+      const myRecordingsPromise = ctx.db
         .query("meetingRecordings")
-        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+        .withIndex("by_project_creator", (q) =>
+          q.eq("projectId", args.projectId).eq("createdBy", ctx.userId),
+        )
         .order("desc")
         .take(limit);
 
-      // Security: Filter out private recordings from other users
-      recordings = recordings.filter((r) => r.isPublic || r.createdBy === ctx.userId);
+      // Parallel fetch: Public recordings in project
+      const publicRecordingsPromise = ctx.db
+        .query("meetingRecordings")
+        .withIndex("by_project_public", (q) =>
+          q.eq("projectId", args.projectId).eq("isPublic", true),
+        )
+        .order("desc")
+        .take(limit);
+
+      const [myRecordings, publicRecordings] = await Promise.all([
+        myRecordingsPromise,
+        publicRecordingsPromise,
+      ]);
+
+      // Merge, deduplicate, and sort
+      const mergedMap = new Map<string, Doc<"meetingRecordings">>();
+      for (const r of myRecordings) mergedMap.set(r._id, r);
+      for (const r of publicRecordings) mergedMap.set(r._id, r);
+
+      recordings = Array.from(mergedMap.values()).sort((a, b) => b._creationTime - a._creationTime);
+
+      if (recordings.length > limit) {
+        recordings = recordings.slice(0, limit);
+      }
     } else {
       recordings = await ctx.db
         .query("meetingRecordings")
@@ -282,14 +307,13 @@ export const getPendingJobs = query({
 
     // Get jobs that are pending and scheduled to start within next 5 minutes
     // Bounded to prevent memory issues with many pending jobs
-    // Optimization: Use by_status_scheduled index to efficiently find urgent jobs
-    // without scanning through future pending jobs.
-    const readyJobs = await ctx.db
+    const jobs = await ctx.db
       .query("meetingBotJobs")
-      .withIndex("by_status_scheduled", (q) =>
-        q.eq("status", "pending").lte("scheduledTime", now + 5 * 60 * 1000),
-      )
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
       .take(BOUNDED_LIST_LIMIT);
+
+    // Filter to jobs that should start soon
+    const readyJobs = jobs.filter((job) => job.scheduledTime <= now + 5 * 60 * 1000);
 
     // Batch fetch recordings to avoid N+1 queries
     const recordingIds = readyJobs.map((job) => job.recordingId);
@@ -750,8 +774,11 @@ export const createIssueFromActionItem = authenticatedMutation({
     const recording = await ctx.db.get(summary.recordingId);
     if (!recording) throw notFound("recording", summary.recordingId);
 
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden(undefined, "Not authorized to access this recording");
+    // Security Check: ensure user has write access to the recording/summary
+    if (recording.projectId) {
+      await assertCanEditProject(ctx, recording.projectId, ctx.userId);
+    } else if (recording.createdBy !== ctx.userId) {
+      throw forbidden(undefined, "Not authorized to modify this recording");
     }
 
     const actionItem = summary.actionItems[args.actionItemIndex];
