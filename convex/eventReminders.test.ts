@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
@@ -23,8 +24,8 @@ describe("Event Reminders", () => {
       return await ctx.db.insert("calendarEvents", {
         organizerId,
         title: options.title ?? "Test Event",
-        startTime: options.startTime ?? now + 60 * 60 * 1000, // 1 hour from now
-        endTime: options.endTime ?? now + 2 * 60 * 60 * 1000, // 2 hours from now
+        startTime: options.startTime ?? now + HOUR, // 1 hour from now
+        endTime: options.endTime ?? now + 2 * HOUR, // 2 hours from now
         attendeeIds: options.attendeeIds ?? [],
         allDay: false,
         eventType: "meeting",
@@ -125,7 +126,7 @@ describe("Event Reminders", () => {
       const { userId } = await createTestContext(t);
 
       const now = Date.now();
-      const startTime = now + 60 * 60 * 1000; // 1 hour from now
+      const startTime = now + HOUR; // 1 hour from now
       const eventId = await createCalendarEvent(t, userId, { startTime });
 
       await t.mutation(internal.eventReminders.createDefaultReminders, {
@@ -253,7 +254,7 @@ describe("Event Reminders", () => {
       const { userId } = await createTestContext(t);
 
       const now = Date.now();
-      const startTime = now + 60 * 60 * 1000; // 1 hour from now
+      const startTime = now + HOUR; // 1 hour from now
       const eventId = await createCalendarEvent(t, userId, { startTime });
 
       // Create an in-app reminder that is already due
@@ -290,7 +291,7 @@ describe("Event Reminders", () => {
       const { userId } = await createTestContext(t);
 
       const now = Date.now();
-      const startTime = now + 60 * 60 * 1000;
+      const startTime = now + HOUR;
       const eventId = await createCalendarEvent(t, userId, {
         startTime,
         status: "cancelled",
@@ -318,7 +319,7 @@ describe("Event Reminders", () => {
       const { userId } = await createTestContext(t);
 
       const now = Date.now();
-      const startTime = now + 60 * 60 * 1000;
+      const startTime = now + HOUR;
 
       // Create a real event then delete it
       const eventId = await createCalendarEvent(t, userId, { startTime });
@@ -395,7 +396,7 @@ describe("Event Reminders", () => {
       const { userId, asUser } = await createTestContext(t);
 
       const now = Date.now();
-      const originalStartTime = now + 60 * 60 * 1000; // 1 hour
+      const originalStartTime = now + HOUR; // 1 hour
       const eventId = await createCalendarEvent(t, userId, {
         startTime: originalStartTime,
       });
@@ -407,7 +408,7 @@ describe("Event Reminders", () => {
       });
 
       // Reschedule event to 2 hours from now
-      const newStartTime = now + 2 * 60 * 60 * 1000;
+      const newStartTime = now + 2 * HOUR;
       await t.mutation(internal.eventReminders.updateForEventTimeChange, {
         eventId,
         newStartTime,

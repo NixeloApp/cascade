@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -19,7 +20,7 @@ describe("Sprints", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
       const startDate = Date.now();
-      const endDate = startDate + 14 * 24 * 60 * 60 * 1000; // 2 weeks
+      const endDate = startDate + 2 * WEEK; // 2 weeks
 
       const sprintId = await asUser.mutation(api.sprints.create, {
         projectId,
@@ -380,7 +381,7 @@ describe("Sprints", () => {
       });
 
       const startDate = Date.now();
-      const endDate = startDate + 14 * 24 * 60 * 60 * 1000;
+      const endDate = startDate + 2 * WEEK;
 
       await asUser.mutation(api.sprints.startSprint, {
         sprintId,
@@ -413,7 +414,7 @@ describe("Sprints", () => {
       await asUser.mutation(api.sprints.startSprint, {
         sprintId: sprint1Id,
         startDate: start1,
-        endDate: start1 + 14 * 24 * 60 * 60 * 1000,
+        endDate: start1 + 2 * WEEK,
       });
 
       // Create and start second sprint
@@ -425,7 +426,7 @@ describe("Sprints", () => {
       await asUser.mutation(api.sprints.startSprint, {
         sprintId: sprint2Id,
         startDate: start2,
-        endDate: start2 + 14 * 24 * 60 * 60 * 1000,
+        endDate: start2 + 2 * WEEK,
       });
 
       // First sprint should be completed
@@ -469,7 +470,7 @@ describe("Sprints", () => {
       await asMember.mutation(api.sprints.startSprint, {
         sprintId,
         startDate,
-        endDate: startDate + 14 * 24 * 60 * 60 * 1000,
+        endDate: startDate + 2 * WEEK,
       });
 
       const sprint = await t.run(async (ctx) => {
@@ -493,7 +494,7 @@ describe("Sprints", () => {
         await t.mutation(api.sprints.startSprint, {
           sprintId,
           startDate: Date.now(),
-          endDate: Date.now() + 14 * 24 * 60 * 60 * 1000,
+          endDate: Date.now() + 2 * WEEK,
         });
       }).rejects.toThrow("Not authenticated");
     });
@@ -516,7 +517,7 @@ describe("Sprints", () => {
         await asOther.mutation(api.sprints.startSprint, {
           sprintId,
           startDate: Date.now(),
-          endDate: Date.now() + 14 * 24 * 60 * 60 * 1000,
+          endDate: Date.now() + 2 * WEEK,
         });
       }).rejects.toThrow(/FORBIDDEN|editor/i);
     });
@@ -541,7 +542,7 @@ describe("Sprints", () => {
         await asUser.mutation(api.sprints.startSprint, {
           sprintId,
           startDate: Date.now(),
-          endDate: Date.now() + 14 * 24 * 60 * 60 * 1000,
+          endDate: Date.now() + 2 * WEEK,
         });
       }).rejects.toThrow("Sprint not found");
     });
@@ -564,7 +565,7 @@ describe("Sprints", () => {
       await asUser.mutation(api.sprints.startSprint, {
         sprintId,
         startDate,
-        endDate: startDate + 14 * 24 * 60 * 60 * 1000,
+        endDate: startDate + 2 * WEEK,
       });
 
       // Complete the sprint

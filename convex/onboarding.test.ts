@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
@@ -420,7 +421,7 @@ describe("Onboarding", () => {
           role: "user",
           invitedBy: inviterId,
           token: "test-token-123",
-          expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+          expiresAt: Date.now() + WEEK,
           status: "accepted",
           updatedAt: Date.now(),
         });

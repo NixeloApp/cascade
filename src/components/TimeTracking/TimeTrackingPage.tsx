@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
+import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -44,11 +45,11 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   const now = Date.now();
   const ranges = {
     week: {
-      startDate: now - 7 * 24 * 60 * 60 * 1000,
+      startDate: now - WEEK,
       endDate: now,
     },
     month: {
-      startDate: now - 30 * 24 * 60 * 60 * 1000,
+      startDate: now - MONTH,
       endDate: now,
     },
     all: {

@@ -6,6 +6,7 @@ import { logAudit } from "./lib/audit";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, requireOwned, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { DAY, HOUR, WEEK } from "./lib/timeUtils";
 import { assertCanAccessProject } from "./projectAccess";
 
 /**
@@ -259,7 +260,7 @@ export const update = authenticatedMutation({
 });
 
 /** Default grace period for rotated keys (24 hours) */
-const DEFAULT_ROTATION_GRACE_PERIOD = 24 * 60 * 60 * 1000;
+const DEFAULT_ROTATION_GRACE_PERIOD = DAY;
 
 /**
  * Rotate an API key - creates a new key and sets up grace period for old key
@@ -340,7 +341,7 @@ export const listExpiringSoon = authenticatedQuery({
     withinMs: v.optional(v.number()), // Default: 7 days
   },
   handler: async (ctx, args) => {
-    const withinMs = args.withinMs ?? 7 * 24 * 60 * 60 * 1000; // 7 days
+    const withinMs = args.withinMs ?? WEEK;
     const now = Date.now();
     const threshold = now + withinMs;
 
@@ -358,9 +359,7 @@ export const listExpiringSoon = authenticatedQuery({
       name: key.name,
       keyPrefix: key.keyPrefix,
       expiresAt: key.expiresAt,
-      daysUntilExpiry: key.expiresAt
-        ? Math.ceil((key.expiresAt - now) / (24 * 60 * 60 * 1000))
-        : null,
+      daysUntilExpiry: key.expiresAt ? Math.ceil((key.expiresAt - now) / DAY) : null,
       wasRotated: !!key.rotatedAt,
     }));
   },
@@ -464,8 +463,8 @@ export const getUsageStats = authenticatedQuery({
 
     // Calculate stats
     const now = Date.now();
-    const oneHourAgo = now - 60 * 60 * 1000;
-    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    const oneHourAgo = now - HOUR;
+    const oneDayAgo = now - DAY;
 
     const recentLogs = logs.filter((log) => log._creationTime > oneDayAgo);
     const lastHourLogs = logs.filter((log) => log._creationTime > oneHourAgo);

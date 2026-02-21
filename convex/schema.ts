@@ -1001,7 +1001,8 @@ const applicationTables = {
   })
     .index("by_user", ["userId"])
     .index("by_provider", ["provider"])
-    .index("by_user_provider", ["userId", "provider"]),
+    .index("by_user_provider", ["userId", "provider"])
+    .index("by_expires_at", ["expiresAt"]),
 
   // ===========================================================================
   // INTEGRATIONS: GITHUB
@@ -1664,6 +1665,20 @@ const applicationTables = {
     latencyMs: v.number(),
     error: v.optional(v.string()),
     errorCode: v.optional(v.string()),
+    timestamp: v.number(),
+  }).index("by_timestamp", ["timestamp"]),
+
+  // Token health monitoring for user OAuth connections
+  oauthTokenHealthChecks: defineTable({
+    totalConnections: v.number(),
+    healthyCount: v.number(),
+    expiringSoonCount: v.number(),
+    expiredCount: v.number(),
+    invalidCount: v.number(),
+    missingCount: v.number(),
+    refreshedCount: v.number(),
+    refreshFailedCount: v.number(),
+    durationMs: v.number(),
     timestamp: v.number(),
   }).index("by_timestamp", ["timestamp"]),
 };

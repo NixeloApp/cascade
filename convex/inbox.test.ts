@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -194,7 +195,7 @@ describe("Inbox", () => {
       });
 
       const inboxIssueId = await createInboxIssue(t, projectId, issueId, userId);
-      const futureDate = Date.now() + 7 * 24 * 60 * 60 * 1000; // 1 week
+      const futureDate = Date.now() + WEEK; // 1 week
 
       await asUser.mutation(api.inbox.snooze, {
         id: inboxIssueId,

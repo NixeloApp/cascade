@@ -3,8 +3,9 @@
  *
  * Synthetic monitoring for Google OAuth to catch issues before users do.
  * Runs every 15 minutes to verify:
- * 1. Refresh token exchange works
- * 2. Access token can fetch user info
+ * 1. OAuth endpoint is available and redirects correctly (catches nginx/routing issues)
+ * 2. Refresh token exchange works
+ * 3. Access token can fetch user info
  *
  * Required environment variables:
  * - OAUTH_MONITOR_GOOGLE_CLIENT_ID
@@ -136,6 +137,7 @@ export const checkGoogleOAuthHealth = internalAction({
     const clientId = process.env.OAUTH_MONITOR_GOOGLE_CLIENT_ID;
     const clientSecret = process.env.OAUTH_MONITOR_GOOGLE_CLIENT_SECRET;
     const refreshToken = process.env.OAUTH_MONITOR_GOOGLE_REFRESH_TOKEN;
+    const convexSiteUrl = process.env.CONVEX_SITE_URL;
 
     // Skip if not configured (development environments)
     if (!(clientId && clientSecret && refreshToken)) {
@@ -146,6 +148,28 @@ export const checkGoogleOAuthHealth = internalAction({
     const startTime = Date.now();
 
     try {
+      // Step 0: Verify OAuth endpoint is accessible (catches nginx/routing issues)
+      if (convexSiteUrl) {
+        const endpointResponse = await fetch(`${convexSiteUrl}/google/auth`, {
+          method: "GET",
+          redirect: "manual", // Don't follow redirects
+        });
+
+        // Should be a 302 redirect to Google
+        if (endpointResponse.status !== 302) {
+          throw new Error(
+            `OAuth endpoint check failed: expected 302 redirect, got ${endpointResponse.status}`,
+          );
+        }
+
+        const location = endpointResponse.headers.get("location");
+        if (!location?.includes("accounts.google.com")) {
+          throw new Error(`OAuth endpoint check failed: redirect doesn't point to Google OAuth`);
+        }
+
+        console.log("[OAuth Health] ✓ Endpoint check passed");
+      }
+
       // Step 1: Exchange refresh token for access token
       const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
         method: "POST",

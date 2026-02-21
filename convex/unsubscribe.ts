@@ -9,6 +9,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { unauthenticated, validation } from "./lib/errors";
+import { MONTH } from "./lib/timeUtils";
 
 /**
  * Generate a unique unsubscribe token for a user
@@ -47,7 +48,7 @@ export const getUserFromToken = query({
     if (!tokenRecord) return null;
 
     // Check if token is expired (30 days)
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const thirtyDaysAgo = Date.now() - MONTH;
     if (tokenRecord._creationTime < thirtyDaysAgo) {
       return null;
     }
@@ -73,7 +74,7 @@ export const unsubscribe = mutation({
     }
 
     // Check if token is expired (30 days)
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const thirtyDaysAgo = Date.now() - MONTH;
     if (tokenRecord._creationTime < thirtyDaysAgo) {
       throw validation("token", "Unsubscribe link has expired");
     }

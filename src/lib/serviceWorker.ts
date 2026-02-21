@@ -1,5 +1,7 @@
 // Service Worker Registration Utility
 
+import { HOUR } from "@convex/lib/timeUtils";
+
 // Extend Navigator interface for iOS standalone mode
 interface NavigatorStandalone extends Navigator {
   standalone?: boolean;
@@ -18,12 +20,10 @@ export function register() {
         .register("/service-worker.js")
         .then((registration) => {
           // Check for updates periodically
-          setInterval(
-            () => {
-              registration.update();
-            },
-            60 * 60 * 1000,
-          ); // Check every hour
+          // Check for updates every hour
+          setInterval(() => {
+            registration.update();
+          }, HOUR);
 
           // Handle updates
           registration.addEventListener("updatefound", () => {

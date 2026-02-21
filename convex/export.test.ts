@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -60,7 +61,7 @@ describe("Export", () => {
           name: "Sprint 1",
           status: "active",
           startDate: Date.now(),
-          endDate: Date.now() + 14 * 24 * 60 * 60 * 1000,
+          endDate: Date.now() + 2 * WEEK,
           createdBy: userId,
           updatedAt: Date.now(),
         });

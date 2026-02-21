@@ -6,7 +6,7 @@ import { batchFetchBookingPages } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate, validateEmail } from "./lib/constrainedValidators";
 import { conflict, notFound, rateLimited, requireOwned, validation } from "./lib/errors";
-import { MINUTE } from "./lib/timeUtils";
+import { DAY, MINUTE } from "./lib/timeUtils";
 import { bookerAnswers } from "./validators";
 
 /**
@@ -180,7 +180,7 @@ export const getAvailableSlots = query({
 
     // Get existing bookings for this day
     const dayStart = args.date;
-    const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+    const dayEnd = dayStart + DAY;
 
     const existingBookings = await ctx.db
       .query("bookings")
