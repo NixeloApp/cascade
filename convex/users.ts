@@ -700,6 +700,24 @@ async function countProjects(
   allowedProjectIds: Set<string> | null,
 ) {
   if (allowedProjectIds) {
+    // Optimization: If the number of allowed projects is small, check membership directly.
+    // This avoids fetching all of the target user's memberships (potentially 1000s)
+    // when we only care about a few specific projects (e.g. shared context).
+    if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
+      const membershipChecks = await Promise.all(
+        Array.from(allowedProjectIds).map((projectId) =>
+          ctx.db
+            .query("projectMembers")
+            .withIndex("by_project_user", (q) =>
+              q.eq("projectId", projectId as Id<"projects">).eq("userId", userId),
+            )
+            .filter(notDeleted)
+            .first(),
+        ),
+      );
+      return membershipChecks.filter((m) => m !== null).length;
+    }
+
     const projectMembershipsAll = await ctx.db
       .query("projectMembers")
       .withIndex("by_user", (q) => q.eq("userId", userId))
