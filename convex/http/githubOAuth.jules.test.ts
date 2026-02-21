@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
-import { listReposHandler } from "./githubOAuth";
+import { handleCallbackHandler, listReposHandler } from "./githubOAuth";
 
 // Mock dependencies
 vi.mock("../lib/fetchWithTimeout", () => ({
@@ -20,6 +20,14 @@ vi.mock("../_generated/api", () => ({
       getDecryptedGitHubTokens: "getDecryptedGitHubTokens",
     },
   },
+}));
+
+// Mock Env
+vi.mock("../lib/env", () => ({
+  getGitHubClientId: () => "mock-client-id",
+  getGitHubClientSecret: () => "mock-client-secret",
+  isGitHubOAuthConfigured: () => true,
+  getConvexSiteUrl: () => "http://localhost:3000",
 }));
 
 describe("listReposHandler Error Handling", () => {
@@ -98,5 +106,83 @@ describe("listReposHandler Error Handling", () => {
 
     expect(response.status).toBe(500);
     expect(body.error).toBe("Request timed out");
+  });
+});
+
+describe("handleCallbackHandler XSS Protection", () => {
+  let mockCtx: ActionCtx;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mockCtx = {} as ActionCtx;
+    // Mock successful env var reads implicitly by the mock above
+  });
+
+  it("should escape XSS in error query parameter", async () => {
+    const xssPayload = "<script>alert(1)</script>";
+    const request = new Request(
+      `http://localhost/github/callback?error=${encodeURIComponent(xssPayload)}`,
+    );
+
+    const response = await handleCallbackHandler(mockCtx, request);
+    const html = await response.text();
+
+    expect(response.status).toBe(400);
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    expect(html).not.toContain(xssPayload);
+  });
+
+  it("should escape XSS in error_description query parameter", async () => {
+    const xssPayload = "<img src=x onerror=alert(1)>";
+    const request = new Request(
+      `http://localhost/github/callback?error=access_denied&error_description=${encodeURIComponent(xssPayload)}`,
+    );
+
+    const response = await handleCallbackHandler(mockCtx, request);
+    const html = await response.text();
+
+    expect(response.status).toBe(400);
+    expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
+    expect(html).not.toContain(xssPayload);
+  });
+
+  it("should escape XSS in GitHub username on success", async () => {
+    const request = new Request("http://localhost/github/callback?code=mock-code&state=mock-state");
+
+    // Mock successful token exchange
+    (fetchWithTimeout as any)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: "mock-token" }),
+      })
+      // Mock user info with XSS in username
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 12345,
+          login: "<script>alert('user')</script>",
+        }),
+      });
+
+    const response = await handleCallbackHandler(mockCtx, request);
+    const html = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(html).toContain("&lt;script&gt;alert(&#039;user&#039;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('user')</script>");
+  });
+
+  it("should escape XSS in error message when exception occurs", async () => {
+    const request = new Request("http://localhost/github/callback?code=mock-code");
+
+    // Mock token exchange failure with XSS in error message (unlikely from GitHub but possible from middleware)
+    (fetchWithTimeout as any).mockRejectedValue(new Error("<script>alert('error')</script>"));
+
+    const response = await handleCallbackHandler(mockCtx, request);
+    const html = await response.text();
+
+    expect(response.status).toBe(500);
+    expect(html).toContain("&lt;script&gt;alert(&#039;error&#039;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('error')</script>");
   });
 });
