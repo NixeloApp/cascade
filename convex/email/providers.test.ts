@@ -34,10 +34,10 @@ describe("Email Providers Timeout", () => {
           const signal = options?.signal;
           if (signal) {
             if (signal.aborted) {
-              const err = new Error("The operation was aborted");
-              err.name = "AbortError";
-              reject(err);
-              return;
+                const err = new Error("The operation was aborted");
+                err.name = "AbortError";
+                reject(err);
+                return;
             }
             signal.addEventListener("abort", () => {
               const err = new Error("The operation was aborted");
@@ -94,11 +94,11 @@ describe("Email Providers Timeout", () => {
         return new Promise((resolve, reject) => {
           const signal = options?.signal;
           if (signal) {
-            if (signal.aborted) {
-              const err = new Error("The operation was aborted");
-              err.name = "AbortError";
-              reject(err);
-              return;
+             if (signal.aborted) {
+                const err = new Error("The operation was aborted");
+                err.name = "AbortError";
+                reject(err);
+                return;
             }
             signal.addEventListener("abort", () => {
               const err = new Error("The operation was aborted");

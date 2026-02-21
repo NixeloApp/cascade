@@ -18,7 +18,7 @@ function TeamLayout() {
   const { organizationId, orgSlug } = useOrganization();
   const { workspaceSlug, teamSlug } = Route.useParams();
 
-  const workspace = useQuery(api.workspaces.getWorkspaceBySlug, {
+  const workspace = useQuery(api.workspaces.getBySlug, {
     organizationId,
     slug: workspaceSlug,
   });

@@ -20,7 +20,7 @@ function TeamsList() {
   const { organizationId, orgSlug } = useOrganization();
   const { workspaceSlug } = Route.useParams();
 
-  const workspace = useQuery(api.workspaces.getWorkspaceBySlug, {
+  const workspace = useQuery(api.workspaces.getBySlug, {
     organizationId,
     slug: workspaceSlug,
   });

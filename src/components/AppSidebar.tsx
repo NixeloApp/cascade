@@ -60,7 +60,7 @@ export function AppSidebar() {
   // Data
   const documentsResult = useQuery(api.documents.list, { limit: 11, organizationId });
   const documents = documentsResult?.documents;
-  const workspaces = useQuery(api.workspaces.listWorkspaces, { organizationId });
+  const workspaces = useQuery(api.workspaces.list, { organizationId });
   const teams = useQuery(api.teams.getOrganizationTeams, { organizationId });
   const myProjects = useQuery(api.dashboard.getMyProjects);
   const defaultProject = myProjects?.[0];
@@ -82,7 +82,7 @@ export function AppSidebar() {
 
   // Mutations
   const createDocument = useMutation(api.documents.create);
-  const createWorkspace = useMutation(api.workspaces.createWorkspace);
+  const createWorkspace = useMutation(api.workspaces.create);
   // const createProject = useMutation(api.projects.createProject); // TODO: Add project creation UI
 
   const isActive = (pathPart: string) => {
