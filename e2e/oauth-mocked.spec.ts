@@ -13,6 +13,11 @@
  * - User creation/login after OAuth
  * - Error handling (user denies, Google errors)
  * - State parameter validation
+ *
+ * NOTE: Some tests are skipped in CI because OAuth mocking doesn't work
+ * with Convex's server-side redirects. For CI coverage, see:
+ * - e2e/oauth-security.spec.ts - HTTP endpoint security tests (run in CI)
+ * - convex/googleOAuth.contract.test.ts - Backend contract tests (run in CI)
  */
 
 import { expect, test } from "@playwright/test";
@@ -23,9 +28,9 @@ import {
   verifyOAuthSuccess,
 } from "./utils/google-oauth-mock";
 
-// Skip in CI - OAuth mocking doesn't work with server-side redirects
+// Skip full OAuth flow tests in CI - mocking doesn't work with server-side redirects
 // The mock intercepts client-side requests but Convex OAuth uses server redirects
-test.skip(!!process.env.CI, "Skipping in CI environment");
+const skipFullFlowInCI = !!process.env.CI;
 
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
@@ -33,6 +38,9 @@ test.describe("Google OAuth Flow (Mocked)", () => {
   });
 
   test.describe("Successful OAuth Login", () => {
+    // These tests require full OAuth flow with mocking - skip in CI
+    test.skip(skipFullFlowInCI, "Full OAuth flow tests skipped in CI");
+
     test("should complete Google OAuth sign-in flow", async ({ page, baseURL }) => {
       // Setup mock
       await setupGoogleOAuthMock(page, {
@@ -93,6 +101,9 @@ test.describe("Google OAuth Flow (Mocked)", () => {
   });
 
   test.describe("OAuth Error Handling", () => {
+    // These tests require full OAuth flow with mocking - skip in CI
+    test.skip(skipFullFlowInCI, "Full OAuth flow tests skipped in CI");
+
     test("should handle user denying access", async ({ page, baseURL }) => {
       await setupGoogleOAuthMock(page, {
         shouldFail: true,
@@ -255,6 +266,9 @@ test.describe("Google OAuth Flow (Mocked)", () => {
   });
 
   test.describe("OAuth Flow Variations", () => {
+    // These tests require full OAuth flow with mocking - skip in CI
+    test.skip(skipFullFlowInCI, "Full OAuth flow tests skipped in CI");
+
     test("should handle slow network gracefully", async ({ page, baseURL }) => {
       // Setup mock with artificial delay
       await setupGoogleOAuthMock(page, {
