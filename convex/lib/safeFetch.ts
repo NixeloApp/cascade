@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "./fetchWithTimeout";
 import { validateDestinationResolved } from "./ssrf";
 
 /**
@@ -10,6 +11,7 @@ import { validateDestinationResolved } from "./ssrf";
 export async function safeFetch(
   input: string | URL | Request,
   init?: RequestInit,
+  timeoutMs = 10000,
 ): Promise<Response> {
   const urlStr = input instanceof Request ? input.url : input.toString();
   const options = init || {};
@@ -36,5 +38,5 @@ export async function safeFetch(
     redirect: "error", // Prevent redirects to internal IPs
   };
 
-  return fetch(targetUrl, newOptions);
+  return fetchWithTimeout(targetUrl, newOptions, timeoutMs);
 }

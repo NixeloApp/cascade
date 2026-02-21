@@ -1,12 +1,13 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { IssueCard } from "./IssueCard";
 
 // Create mock icon that's hoisted to be available in vi.mock
 const { MockIcon } = vi.hoisted(() => ({
-  MockIcon: (props: any) => <svg {...props} />,
+  MockIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
 }));
 
 // Mock issue utilities
@@ -130,24 +131,44 @@ describe("IssueCard", () => {
     expect(tooltipText).toBeInTheDocument();
   });
 
-  it("should be keyboard accessible for tooltips", () => {
+  it("should display metadata icons with correct labels", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    // Type icon wrapper
+    // Type icon
     const typeIcon = screen.getByLabelText("Bug");
-    const typeWrapper = typeIcon.closest("button");
-    expect(typeWrapper).toBeInTheDocument();
+    expect(typeIcon).toBeInTheDocument();
+    // Ensure it IS in a button but has tabIndex="-1"
+    const typeBtn = typeIcon.closest("button");
+    expect(typeBtn).toBeInTheDocument();
+    expect(typeBtn).toHaveAttribute("tabIndex", "-1");
 
-    // Priority icon wrapper
-    // Priority: high
+    // Priority icon
     const priorityIcon = screen.getByLabelText("Priority: high");
-    const priorityWrapper = priorityIcon.closest("button");
-    expect(priorityWrapper).toBeInTheDocument();
+    expect(priorityIcon).toBeInTheDocument();
+    const priorityBtn = priorityIcon.closest("button");
+    expect(priorityBtn).toBeInTheDocument();
+    expect(priorityBtn).toHaveAttribute("tabIndex", "-1");
 
-    // Assignee wrapper
+    // Assignee
     const assigneeImg = screen.getByAltText("Alice Johnson");
-    const assigneeWrapper = assigneeImg.closest("button");
-    expect(assigneeWrapper).toBeInTheDocument();
+    expect(assigneeImg).toBeInTheDocument();
+    const assigneeBtn = assigneeImg.closest("button");
+    expect(assigneeBtn).toBeInTheDocument();
+    expect(assigneeBtn).toHaveAttribute("tabIndex", "-1");
+  });
+
+  it("should render fallback assignee avatar with accessible label", () => {
+    const issueWithoutAvatar = {
+      ...mockIssue,
+      // biome-ignore lint/style/noNonNullAssertion: testing mock data
+      assignee: { ...mockIssue.assignee!, image: undefined },
+    };
+    render(<IssueCard issue={issueWithoutAvatar} status="todo" />);
+
+    const fallbackAvatar = screen.getByLabelText("Alice Johnson");
+    expect(fallbackAvatar).toBeInTheDocument();
+    expect(fallbackAvatar).toHaveAttribute("role", "img");
+    expect(fallbackAvatar).toHaveTextContent("A"); // Initial
   });
 
   it("should trigger onClick when clicking on interactive elements", async () => {

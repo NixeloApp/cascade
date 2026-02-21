@@ -338,7 +338,23 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
     );
 
     if (!reposResponse.ok) {
-      throw validation("github", "Failed to fetch repositories");
+      let errorMessage = "Failed to fetch repositories";
+      try {
+        const text = await reposResponse.text();
+        try {
+          const errorBody = JSON.parse(text);
+          errorMessage = errorBody.message || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+      } catch (e) {
+        console.error("Failed to read error response body:", e);
+      }
+
+      return new Response(JSON.stringify({ error: errorMessage }), {
+        status: reposResponse.status,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const repos = await reposResponse.json();
@@ -367,16 +383,35 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Failed to list repositories",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return handleListReposError(error);
   }
+};
+
+const handleListReposError = (error: unknown) => {
+  console.error("GitHub listRepos error:", error);
+  let status = 500;
+  let message = "Failed to list repositories";
+
+  if (isAppError(error)) {
+    message = error.data.message || message;
+    if (error.data.code === "VALIDATION") status = 400;
+    else if (error.data.code === "UNAUTHENTICATED") status = 401;
+    else if (error.data.code === "FORBIDDEN") status = 403;
+    else if (error.data.code === "NOT_FOUND") status = 404;
+    else if (error.data.code === "RATE_LIMITED") status = 429;
+  } else if (error instanceof Error) {
+    message = error.message;
+  }
+
+  return new Response(
+    JSON.stringify({
+      error: message,
+    }),
+    {
+      status,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 };
 
 /**

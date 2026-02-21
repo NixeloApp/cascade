@@ -780,7 +780,7 @@ const applicationTables = {
     deletedBy: v.optional(v.id("users")),
   })
     .index("by_user", ["userId"])
-    .index("by_user_read", ["userId", "isRead"])
+    .index("by_user_read", ["userId", "isRead", "isDeleted"])
     .index("by_deleted", ["isDeleted"]),
 
   notificationPreferences: defineTable({
@@ -858,7 +858,8 @@ const applicationTables = {
     color: v.optional(calendarEventColors),
     updatedAt: v.number(),
   })
-    .index("by_organizer", ["organizerId"])
+    .index("by_organizer", ["organizerId", "startTime"])
+    .index("by_attendee_start", ["attendeeIds", "startTime"])
     .index("by_project", ["projectId"])
     .index("by_issue", ["issueId"])
     .index("by_start_time", ["startTime"])

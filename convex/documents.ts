@@ -1225,16 +1225,25 @@ export const getCommentReactions = authenticatedQuery({
     // 3. Fetch reactions for all valid comments at once
     const reactionsByComment = new Map<Id<"documentComments">, Doc<"documentCommentReactions">[]>();
 
-    for (const commentId of args.commentIds) {
-      const docId = commentToDocMap.get(commentId);
-      // Skip if comment doesn't exist, was deleted, or document is inaccessible
-      if (!docId || !accessibleDocIds.has(docId)) continue;
+    // Optimize: Fetch reactions for all comments in parallel (avoid N+1)
+    const reactionResults = await Promise.all(
+      uniqueCommentIds.map(async (commentId) => {
+        const docId = commentToDocMap.get(commentId);
+        // Skip if comment doesn't exist, was deleted, or document is inaccessible
+        if (!docId || !accessibleDocIds.has(docId)) return null;
 
-      const reactions = await ctx.db
-        .query("documentCommentReactions")
-        .withIndex("by_comment", (q) => q.eq("commentId", commentId))
-        .take(BOUNDED_LIST_LIMIT);
-      reactionsByComment.set(commentId, reactions);
+        const reactions = await ctx.db
+          .query("documentCommentReactions")
+          .withIndex("by_comment", (q) => q.eq("commentId", commentId))
+          .take(BOUNDED_LIST_LIMIT);
+        return { commentId, reactions };
+      }),
+    );
+
+    for (const result of reactionResults) {
+      if (result) {
+        reactionsByComment.set(result.commentId, result.reactions);
+      }
     }
 
     // Transform to summary format
