@@ -301,7 +301,7 @@ const applicationTables = {
     .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"])
     .index("by_project", ["projectId"])
-    .index("by_creator_updated", ["createdBy", "updatedAt"])
+    .index("by_creator_public_updated", ["createdBy", "isPublic", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_organization_deleted", ["organizationId", "isDeleted"])
     .index("by_organization_public", ["organizationId", "isPublic", "updatedAt"])
@@ -1341,7 +1341,8 @@ const applicationTables = {
     .index("by_recording", ["recordingId"])
     .index("by_status", ["status"])
     .index("by_scheduled_time", ["scheduledTime"])
-    .index("by_next_attempt", ["nextAttemptAt"]),
+    .index("by_next_attempt", ["nextAttemptAt"])
+    .index("by_status_scheduled", ["status", "scheduledTime"]),
 
   // ===========================================================================
   // TIME TRACKING
