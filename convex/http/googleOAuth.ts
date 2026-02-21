@@ -14,6 +14,28 @@ const escapeHtml = (unsafe: string) => {
 };
 
 /**
+ * Extracts a meaningful error message from a Response object
+ */
+const extractErrorMessage = async (response: Response, fallback: string): Promise<string> => {
+  try {
+    const text = await response.text();
+    try {
+      const json = JSON.parse(text);
+      if (typeof json === "string") return json;
+      if (json.error_description) return json.error_description;
+      if (json.error && typeof json.error === "string") return json.error;
+      if (json.error?.message) return json.error.message;
+      if (json.message) return json.message;
+      return fallback;
+    } catch {
+      return text || fallback;
+    }
+  } catch {
+    return fallback;
+  }
+};
+
+/**
  * Google OAuth Integration
  *
  * Handles OAuth flow for Google Calendar integration
@@ -178,8 +200,11 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     });
 
     if (!tokenResponse.ok) {
-      const _errorData = await tokenResponse.text();
-      throw validation("oauth", "Failed to exchange Google authorization code");
+      const errorMessage = await extractErrorMessage(
+        tokenResponse,
+        "Failed to exchange Google authorization code",
+      );
+      throw validation("oauth", errorMessage);
     }
 
     const tokens = await tokenResponse.json();
@@ -194,6 +219,14 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         },
       },
     );
+
+    if (!userInfoResponse.ok) {
+      const errorMessage = await extractErrorMessage(
+        userInfoResponse,
+        "Failed to fetch Google user info",
+      );
+      throw validation("oauth", errorMessage);
+    }
 
     const userInfo = await userInfoResponse.json();
     const email = userInfo.email;
@@ -340,7 +373,11 @@ export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
     );
 
     if (!eventsResponse.ok) {
-      throw validation("googleCalendar", "Failed to fetch Google Calendar events");
+      const errorMessage = await extractErrorMessage(
+        eventsResponse,
+        "Failed to fetch Google Calendar events",
+      );
+      throw validation("googleCalendar", errorMessage);
     }
 
     const data = await eventsResponse.json();
