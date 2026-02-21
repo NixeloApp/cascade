@@ -144,7 +144,7 @@ describe("OTP Verification Environment Safety", () => {
     };
 
     // Mock email FAILURE
-    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Mock Error" });
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Mock Error", id: "mock-failure-id" });
 
     const email = "user@inbox.mailtrap.io";
     const token = "123456";
@@ -171,7 +171,7 @@ describe("OTP Verification Environment Safety", () => {
     };
 
     // Mock email FAILURE
-    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Mock Error" });
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Mock Error", id: "mock-failure-id" });
 
     const email = "regular@example.com";
     const token = "123456";
