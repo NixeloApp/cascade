@@ -16,8 +16,8 @@ describe("calendarEvents", () => {
       const now = Date.now();
       const eventId = await asUser.mutation(api.calendarEvents.create, {
         title: "Team Meeting",
-        startTime: now + 3600000, // 1 HOUR from now
-        endTime: now + 7200000, // 2 HOURs from now
+        startTime: now + 1 * HOUR, // 1 hour from now
+        endTime: now + 2 * HOUR, // 2 hours from now
         allDay: false,
         eventType: "meeting",
       });
@@ -442,7 +442,7 @@ describe("calendarEvents", () => {
   });
 
   describe("getUpcoming", () => {
-    it("should return events in next 7 DAYs", async () => {
+    it("should return events in next 7 days", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
@@ -459,7 +459,7 @@ describe("calendarEvents", () => {
 
       await asUser.mutation(api.calendarEvents.create, {
         title: "Next Week Event",
-        startTime: now + 10 * DAY, // Outside 7 DAY window
+        startTime: now + 10 * DAY, // Outside 7-day window
         endTime: now + 10 * DAY + 3600000,
         allDay: false,
         eventType: "meeting",
@@ -579,15 +579,15 @@ describe("calendarEvents", () => {
     });
   });
 
-  describe("all-DAY events", () => {
-    it("should handle all-DAY events", async () => {
+  describe("all-day events", () => {
+    it("should handle all-day events", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const toDAY = new Date();
-      toDAY.setHours(0, 0, 0, 0);
-      const startOfDay = toDAY.getTime();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startOfDay = today.getTime();
       const endOfDay = startOfDay + DAY - 1;
 
       const eventId = await asUser.mutation(api.calendarEvents.create, {

@@ -16,8 +16,8 @@ import { internal } from "./_generated/api";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { BOUNDED_DELETE_BATCH, BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { encrypt } from "./lib/encryption";
-import { getGoogleClientId, getGoogleClientSecret } from "./lib/env";
-import { HOUR, MINUTE } from "./lib/timeUtils";
+import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "./lib/env";
+import { MINUTE } from "./lib/timeUtils";
 
 // Token status types
 export type TokenStatus = "healthy" | "expiring_soon" | "expired" | "invalid" | "missing";
@@ -112,12 +112,13 @@ export const refreshConnectionToken = internalAction({
     connectionId: v.id("calendarConnections"),
   },
   handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
-    const clientId = getGoogleClientId();
-    const clientSecret = getGoogleClientSecret();
-
-    if (!clientId || !clientSecret) {
+    // Check if OAuth is configured before calling throwing getters
+    if (!isGoogleOAuthConfigured()) {
       return { success: false, error: "Google OAuth not configured" };
     }
+
+    const clientId = getGoogleClientId();
+    const clientSecret = getGoogleClientSecret();
 
     // Get decrypted refresh token
     const tokens = await ctx.runMutation(internal.googleCalendar.getDecryptedTokens, {

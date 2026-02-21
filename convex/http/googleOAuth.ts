@@ -10,15 +10,6 @@ import {
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 
-const escapeHtml = (unsafe: string) => {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-};
-
 /** Generic error page HTML - no internal details exposed */
 const errorPageHtml = `
 <!DOCTYPE html>
@@ -87,8 +78,13 @@ function handleTestCode(
     return null;
   }
 
-  // Extract scenario from code (e.g., TEST_new_user -> new_user)
-  const scenario = code.replace("TEST_", "").replace(/_/g, "-");
+  // Extract and sanitize scenario from code (e.g., TEST_new_user -> new-user)
+  // Only allow alphanumeric and hyphens, cap length to prevent injection
+  const rawScenario = code.replace("TEST_", "").replace(/_/g, "-");
+  const scenario = rawScenario
+    .replace(/[^a-z0-9-]/gi, "")
+    .slice(0, 50)
+    .toLowerCase();
   const timestamp = Date.now();
 
   // Only create test emails (auto-cleaned by cron)
@@ -275,6 +271,15 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       const tokens = await tokenResponse.json();
       const { access_token, refresh_token, expires_in } = tokens;
 
+      // Google may omit refresh_token even with access_type=offline
+      // This happens if user already granted access before
+      if (!refresh_token) {
+        throw validation(
+          "oauth",
+          "No refresh token received. Please revoke app access in Google and try again.",
+        );
+      }
+
       // Get user info from Google
       const userInfoResponse = await fetchWithTimeout(
         "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -285,7 +290,15 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         },
       );
 
+      if (!userInfoResponse.ok) {
+        throw validation("oauth", "Failed to fetch user info from Google");
+      }
+
       const userInfo = await userInfoResponse.json();
+      if (!userInfo.email || typeof userInfo.email !== "string") {
+        throw validation("oauth", "Invalid email received from Google");
+      }
+
       email = userInfo.email;
       accessToken = access_token;
       refreshToken = refresh_token;
