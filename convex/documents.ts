@@ -1009,6 +1009,12 @@ export const updateComment = authenticatedMutation({
       throw notFound("comment", args.commentId);
     }
 
+    const document = await ctx.db.get(comment.documentId);
+    if (!document || document.isDeleted) {
+      throw notFound("document", comment.documentId);
+    }
+    await assertDocumentAccess(ctx, document);
+
     // Only author can edit
     if (comment.authorId !== ctx.userId) {
       throw forbidden(undefined, "You can only edit your own comments");
@@ -1033,6 +1039,12 @@ export const deleteComment = authenticatedMutation({
       throw notFound("comment", args.commentId);
     }
 
+    const document = await ctx.db.get(comment.documentId);
+    if (!document || document.isDeleted) {
+      throw notFound("document", comment.documentId);
+    }
+    await assertDocumentAccess(ctx, document);
+
     // Only author can delete
     if (comment.authorId !== ctx.userId) {
       throw forbidden(undefined, "You can only delete your own comments");
@@ -1055,6 +1067,12 @@ export const addCommentReaction = authenticatedMutation({
     if (!comment || comment.isDeleted) {
       throw notFound("comment", args.commentId);
     }
+
+    const document = await ctx.db.get(comment.documentId);
+    if (!document || document.isDeleted) {
+      throw notFound("document", comment.documentId);
+    }
+    await assertDocumentAccess(ctx, document);
 
     // Check if reaction already exists
     const existing = await ctx.db
@@ -1084,6 +1102,17 @@ export const removeCommentReaction = authenticatedMutation({
     emoji: v.string(),
   },
   handler: async (ctx, args) => {
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment || comment.isDeleted) {
+      throw notFound("comment", args.commentId);
+    }
+
+    const document = await ctx.db.get(comment.documentId);
+    if (!document || document.isDeleted) {
+      throw notFound("document", comment.documentId);
+    }
+    await assertDocumentAccess(ctx, document);
+
     const reaction = await ctx.db
       .query("documentCommentReactions")
       .withIndex("by_comment_user_emoji", (q) =>
