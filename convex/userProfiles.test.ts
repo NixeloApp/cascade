@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -474,7 +475,7 @@ describe("User Profiles", () => {
       const now = Date.now();
       const stats = await asUser.query(api.userProfiles.getEquityHoursStats, {
         userId,
-        startDate: now - 7 * 24 * 60 * 60 * 1000, // 1 week ago
+        startDate: now - WEEK, // 1 week ago
         endDate: now,
       });
 
@@ -493,7 +494,7 @@ describe("User Profiles", () => {
       await expect(
         asOther.query(api.userProfiles.getEquityHoursStats, {
           userId,
-          startDate: now - 7 * 24 * 60 * 60 * 1000,
+          startDate: now - WEEK,
           endDate: now,
         }),
       ).rejects.toThrow(/FORBIDDEN|Not authorized/i);
@@ -517,7 +518,7 @@ describe("User Profiles", () => {
       const now = Date.now();
       const stats = await asUser.query(api.userProfiles.getEquityHoursStats, {
         userId,
-        startDate: now - 7 * 24 * 60 * 60 * 1000,
+        startDate: now - WEEK,
         endDate: now,
       });
 

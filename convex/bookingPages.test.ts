@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { DAY, MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
@@ -313,8 +314,8 @@ describe("Booking Pages", () => {
           hostId: userId,
           bookerName: "Guest",
           bookerEmail: "guest@test.com",
-          startTime: Date.now() + 24 * 60 * 60 * 1000,
-          endTime: Date.now() + 24 * 60 * 60 * 1000 + 30 * 60 * 1000,
+          startTime: Date.now() + DAY,
+          endTime: Date.now() + DAY + 30 * MINUTE,
           timezone: "UTC",
           location: "zoom",
           status: "confirmed",
@@ -347,8 +348,8 @@ describe("Booking Pages", () => {
           hostId: userId,
           bookerName: "Guest",
           bookerEmail: "guest@test.com",
-          startTime: Date.now() + 24 * 60 * 60 * 1000,
-          endTime: Date.now() + 24 * 60 * 60 * 1000 + 30 * 60 * 1000,
+          startTime: Date.now() + DAY,
+          endTime: Date.now() + DAY + 30 * MINUTE,
           timezone: "UTC",
           location: "zoom",
           status: "cancelled",

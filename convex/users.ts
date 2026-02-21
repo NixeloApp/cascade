@@ -10,6 +10,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { constantTimeEqual } from "./lib/apiAuth";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { type CountableQuery, efficientCount } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
@@ -344,7 +345,8 @@ export const verifyEmailChange = authenticatedMutation({
       throw validation("token", "Verification token expired");
     }
 
-    if (args.token !== user.pendingEmailVerificationToken) {
+    // Use constant-time comparison to prevent timing attacks on the verification token
+    if (!constantTimeEqual(args.token, user.pendingEmailVerificationToken)) {
       throw validation("token", "Invalid verification token");
     }
 

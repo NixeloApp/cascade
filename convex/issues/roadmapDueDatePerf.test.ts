@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
+import { DAY } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "../testUtils";
@@ -13,7 +14,6 @@ describe("Roadmap Issues Due Date Performance", () => {
 
     const asUser = asAuthenticatedUser(t, userId);
     const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
 
     // Create 10 tasks due tomorrow
     const taskPromises = Array.from({ length: 10 }).map((_, i) =>
@@ -22,7 +22,7 @@ describe("Roadmap Issues Due Date Performance", () => {
         title: `Task ${i}`,
         type: "task",
         priority: "medium",
-        dueDate: now + oneDay,
+        dueDate: now + DAY,
       }),
     );
     await Promise.all(taskPromises);

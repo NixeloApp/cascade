@@ -1,3 +1,4 @@
+import { DAY, HOUR } from "@convex/lib/timeUtils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   formatCurrency,
@@ -208,27 +209,27 @@ describe("formatting utilities", () => {
     });
 
     it("should format hours ago", () => {
-      const timestamp = Date.now() - 3 * 60 * 60 * 1000;
+      const timestamp = Date.now() - 3 * HOUR;
       expect(formatRelativeTime(timestamp)).toMatch(/3 hours ago/);
     });
 
     it("should format days ago", () => {
-      const timestamp = Date.now() - 2 * 24 * 60 * 60 * 1000;
+      const timestamp = Date.now() - 2 * DAY;
       expect(formatRelativeTime(timestamp)).toMatch(/2 days ago/);
     });
 
     it("should format months ago", () => {
-      const timestamp = Date.now() - 45 * 24 * 60 * 60 * 1000;
+      const timestamp = Date.now() - 45 * DAY;
       expect(formatRelativeTime(timestamp)).toMatch(/month/);
     });
 
     it("should format years ago", () => {
-      const timestamp = Date.now() - 400 * 24 * 60 * 60 * 1000;
+      const timestamp = Date.now() - 400 * DAY;
       expect(formatRelativeTime(timestamp)).toMatch(/year/);
     });
 
     it("should format future times", () => {
-      const timestamp = Date.now() + 2 * 24 * 60 * 60 * 1000;
+      const timestamp = Date.now() + 2 * DAY;
       expect(formatRelativeTime(timestamp)).toMatch(/in 2 days/);
     });
   });

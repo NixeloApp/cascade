@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY } from "@convex/lib/timeUtils";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
@@ -93,7 +94,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
 
   const getHeaderText = () => {
     if (timeScale === "week") {
-      const endOfWeek = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+      const endOfWeek = new Date(startDate.getTime() + 6 * DAY);
       return `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${endOfWeek.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
     } else if (timeScale === "month") {
       return currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });

@@ -57,3 +57,7 @@
 ## 2024-05-24 - Overlay Button for Clickable Cards
 **Learning:** To make a complex card (like `IssueCard`) fully clickable while containing other interactive elements (checkbox, tooltip triggers), wrapping the content in a button is invalid HTML.
 **Action:** Use a container `div` with `role="article"`. Place a sibling `<button>` with `absolute inset-0` and `z-0` (Overlay Button) to handle the main click action. Ensure other interactive elements in the card have `relative z-10` to remain clickable above the overlay.
+
+## 2026-02-21 - Robust ID Generation
+**Learning:** Generating IDs from labels (e.g., `label.toLowerCase().replace(...)`) causes duplicate IDs when the same label is used multiple times on a page (e.g., in a modal and on the page), breaking accessibility.
+**Action:** Use `React.useId()` to generate unique, stable IDs for form inputs, error messages, and helper text. Use the generated ID as a fallback if no `id` prop is provided.

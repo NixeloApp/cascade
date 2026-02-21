@@ -99,7 +99,8 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("access_denied");
+      // Security: Error page should NOT expose internal error details
+      expect(text).not.toContain("access_denied");
     });
 
     it("should return HTML error if config is missing (throws)", async () => {
@@ -115,7 +116,8 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("Missing required environment variable");
+      // Security: Error page should NOT expose internal error details
+      expect(text).not.toContain("Missing required environment variable");
     });
 
     it("should return 400 if code is missing", async () => {
@@ -177,8 +179,7 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      // "invalid_grant" should now be in the error message because of our fix
-      expect(text).toContain("invalid_grant");
+      // Error details are logged server-side but not exposed to users (security best practice)
     });
 
     it("should handle token exchange failure with details", async () => {
@@ -194,7 +195,7 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("The code is invalid");
+      // Error details are logged server-side but not exposed to users (security best practice)
     });
 
     it("should handle user info fetch failure", async () => {
@@ -217,7 +218,7 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("Invalid token");
+      // Error details are logged server-side but not exposed to users (security best practice)
     });
   });
 

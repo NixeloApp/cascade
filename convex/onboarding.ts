@@ -7,6 +7,7 @@ import { BOUNDED_DELETE_BATCH, BOUNDED_RELATION_LIMIT, safeCollect } from "./lib
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole } from "./lib/organizationAccess";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { WEEK } from "./lib/timeUtils";
 import { inviteRoles, personas } from "./validators";
 
 /** Check if email is a test email (@inbox.mailtrap.io) */
@@ -286,7 +287,7 @@ export const createSampleProject = authenticatedMutation({
       name: "Sprint 1",
       goal: "Learn Nixelo basics and explore features",
       startDate: Date.now(),
-      endDate: Date.now() + 14 * 24 * 60 * 60 * 1000, // 2 weeks from now
+      endDate: Date.now() + 2 * WEEK,
       status: "active",
       createdBy: ctx.userId,
       updatedAt: Date.now(),

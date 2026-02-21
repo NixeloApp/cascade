@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { DONE_COLUMN_DAYS } from "../lib/pagination";
+import { DAY } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createProjectInOrganization, createTestContext, type TestContext } from "../testUtils";
@@ -32,7 +33,7 @@ describe("sprint issue counts", () => {
 
   it("should return correct counts for sprint issues", async () => {
     const now = Date.now();
-    const oldDate = now - (DONE_COLUMN_DAYS + 1) * 24 * 60 * 60 * 1000;
+    const oldDate = now - (DONE_COLUMN_DAYS + 1) * DAY;
 
     await t.run(async (runCtx) => {
       // Clear issues

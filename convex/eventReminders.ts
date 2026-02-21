@@ -11,6 +11,7 @@ import { internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
+import { WEEK } from "./lib/timeUtils";
 
 const reminderTypes = v.union(v.literal("email"), v.literal("push"), v.literal("in_app"));
 
@@ -139,7 +140,7 @@ export const listUpcoming = authenticatedQuery({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
-    const oneWeekFromNow = now + 7 * 24 * 60 * 60 * 1000;
+    const oneWeekFromNow = now + WEEK;
 
     // Get unsent reminders scheduled within the next week
     const reminders = await ctx.db

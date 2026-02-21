@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
+import { MONTH, SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -18,9 +19,8 @@ describe("Soft Delete Cleanup", () => {
     const now = Date.now();
     vi.setSystemTime(now);
 
-    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-    const OLD_DELETED_AT = now - THIRTY_DAYS_MS - 1000; // 30 days + 1 second ago
-    const RECENT_DELETED_AT = now - THIRTY_DAYS_MS + 1000; // 30 days - 1 second ago
+    const OLD_DELETED_AT = now - MONTH - SECOND; // 30 days + 1 second ago
+    const RECENT_DELETED_AT = now - MONTH + SECOND; // 30 days - 1 second ago
 
     // Setup User & Org
     const userId = await t.run(async (ctx) => {

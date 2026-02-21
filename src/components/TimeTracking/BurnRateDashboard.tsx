@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
+import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import { useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
@@ -33,17 +34,17 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
   const now = Date.now();
   const ranges = {
     week: {
-      startDate: now - 7 * 24 * 60 * 60 * 1000,
+      startDate: now - WEEK,
       endDate: now,
       label: "Last 7 Days",
     },
     month: {
-      startDate: now - 30 * 24 * 60 * 60 * 1000,
+      startDate: now - MONTH,
       endDate: now,
       label: "Last 30 Days",
     },
     quarter: {
-      startDate: now - 90 * 24 * 60 * 60 * 1000,
+      startDate: now - 3 * MONTH,
       endDate: now,
       label: "Last 90 Days",
     },

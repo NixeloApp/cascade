@@ -19,7 +19,16 @@ const BOT_SERVICE_TIMEOUT_MS = 30000;
 // Queries
 // ===========================================
 
-/** List meeting recordings for the current user, optionally filtered by project. */
+/**
+ * List meeting recordings for the current user, optionally filtered by project.
+ *
+ * Efficiently fetches related calendar events in a single batch to avoid N+1 queries.
+ * Also optimizes existence checks for transcripts and summaries based on recording status.
+ *
+ * @param projectId - Optional project ID to filter recordings.
+ * @param limit - Max number of recordings to return (default: 20).
+ * @returns Array of enriched recording objects.
+ */
 export const listRecordings = authenticatedQuery({
   args: {
     projectId: v.optional(v.id("projects")),
@@ -132,7 +141,7 @@ export const getRecordingByCalendarEvent = authenticatedQuery({
     if (!recording) return null;
 
     // Check access
-    if (!canAccessRecording(ctx, recording)) {
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
       return null;
     }
 
@@ -163,7 +172,9 @@ export const getRecording = authenticatedQuery({
     if (!recording) throw notFound("recording", args.recordingId);
 
     // Check access
-    assertCanAccessRecording(ctx, recording, "Not authorized to view this recording");
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden(undefined, "Not authorized to view this recording");
+    }
 
     const calendarEvent = recording.calendarEventId
       ? await ctx.db.get(recording.calendarEventId)
@@ -207,7 +218,9 @@ export const getTranscript = authenticatedQuery({
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
 
-    assertCanAccessRecording(ctx, recording);
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden();
+    }
 
     return ctx.db
       .query("meetingTranscripts")
@@ -223,7 +236,9 @@ export const getSummary = authenticatedQuery({
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
 
-    assertCanAccessRecording(ctx, recording);
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden();
+    }
 
     return ctx.db
       .query("meetingSummaries")
@@ -672,7 +687,24 @@ export const saveParticipants = mutation({
   },
 });
 
-/** Create a project issue from a meeting summary action item and link it back to the summary. */
+/**
+ * Create a project issue from a meeting summary action item and link it back to the summary.
+ *
+ * This mutation:
+ * 1. Verifies the user has access to the recording (owner or public).
+ * 2. Verifies the user has write access to the target project.
+ * 3. Generates the next sequential issue key (e.g., "PROJ-123").
+ * 4. Creates the issue with details from the action item.
+ * 5. Updates the original action item with a reference to the new issue.
+ *
+ * @param summaryId - The ID of the meeting summary containing the action item.
+ * @param actionItemIndex - The index of the action item in the summary's `actionItems` array.
+ * @param projectId - The ID of the project where the issue should be created.
+ * @returns The ID of the newly created issue.
+ * @throws {ConvexError} "NO_DOCUMENT_FOUND" if summary, recording, or project is missing.
+ * @throws {ConvexError} "NO_ACTION_ITEM_FOUND" if the action item index is invalid.
+ * @throws {ConvexError} "FORBIDDEN" if the user lacks permissions.
+ */
 export const createIssueFromActionItem = authenticatedMutation({
   args: {
     summaryId: v.id("meetingSummaries"),
@@ -687,7 +719,9 @@ export const createIssueFromActionItem = authenticatedMutation({
     const recording = await ctx.db.get(summary.recordingId);
     if (!recording) throw notFound("recording", summary.recordingId);
 
-    assertCanAccessRecording(ctx, recording, "Not authorized to access this recording");
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden(undefined, "Not authorized to access this recording");
+    }
 
     const actionItem = summary.actionItems[args.actionItemIndex];
     if (!actionItem) throw notFound("actionItem");
@@ -967,24 +1001,3 @@ export const markJobFailed = internalMutation({
     }
   },
 });
-
-// ===========================================
-// Helpers
-// ===========================================
-
-function canAccessRecording(
-  ctx: { userId: Id<"users"> },
-  recording: Doc<"meetingRecordings">,
-): boolean {
-  return recording.createdBy === ctx.userId || recording.isPublic;
-}
-
-function assertCanAccessRecording(
-  ctx: { userId: Id<"users"> },
-  recording: Doc<"meetingRecordings">,
-  message?: string,
-) {
-  if (!canAccessRecording(ctx, recording)) {
-    throw forbidden(undefined, message);
-  }
-}

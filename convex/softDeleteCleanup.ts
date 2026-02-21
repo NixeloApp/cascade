@@ -19,6 +19,7 @@ import {
   onlyDeleted,
   type SoftDeletable,
 } from "./lib/softDeleteHelpers";
+import { MONTH } from "./lib/timeUtils";
 
 interface SoftDeletableRecord extends SoftDeletable {
   _id: Id<TableNames>;
@@ -31,8 +32,6 @@ const TABLES_WITH_SOFT_DELETE = [
   "sprints",
   "projectMembers",
 ] as const;
-
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 function querySoftDeletedRecords(
   db: GenericDatabaseReader<DataModel>,
@@ -88,7 +87,7 @@ export const permanentlyDeleteOld = internalMutation({
     const errors: string[] = [];
 
     for (const table of TABLES_WITH_SOFT_DELETE) {
-      const stats = await deleteFromTable(ctx, table, THIRTY_DAYS_MS);
+      const stats = await deleteFromTable(ctx, table, MONTH);
       totalDeleted += stats.deleted;
       deletedByTable[table] = stats.deleted;
       errors.push(...stats.errors);

@@ -3,6 +3,7 @@ import { internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
+import { DAY, WEEK } from "./lib/timeUtils";
 
 // Add mutation to offline queue
 export const queueMutation = authenticatedMutation({
@@ -143,7 +144,7 @@ export const clearCompleted = authenticatedMutation({
     olderThan: v.optional(v.number()), // Clear items older than timestamp
   },
   handler: async (ctx, args) => {
-    const cutoff = args.olderThan ?? Date.now() - 24 * 60 * 60 * 1000; // Default: 24 hours ago
+    const cutoff = args.olderThan ?? Date.now() - DAY;
 
     // Bounded cleanup batch
     const completed = await ctx.db
@@ -236,8 +237,7 @@ export const autoRetryFailed = internalMutation({
 export const cleanupOldItems = internalMutation({
   handler: async (ctx) => {
     const now = Date.now();
-    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-    const cutoff = now - SEVEN_DAYS;
+    const cutoff = now - WEEK;
 
     // Bounded batch for cron cleanup
     const completed = await ctx.db

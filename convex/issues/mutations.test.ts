@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
+import { WEEK } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import {
@@ -32,7 +33,7 @@ describe("Issue Mutations", () => {
         assigneeId: userId,
         estimatedHours: 8,
         storyPoints: 5,
-        dueDate: Date.now() + 7 * 24 * 60 * 60 * 1000, // 1 week from now
+        dueDate: Date.now() + WEEK,
       });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });

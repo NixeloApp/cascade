@@ -20,6 +20,7 @@
 
 import type { ExpressionOrValue, FilterBuilder, GenericTableInfo } from "convex/server";
 import type { Id } from "../_generated/dataModel";
+import { MONTH } from "./timeUtils";
 
 // Loose type for dynamic table access
 
@@ -166,14 +167,13 @@ export function getTimeSinceDeletion(record: Partial<SoftDeletable>): number | n
  * @returns true if record should be permanently deleted
  *
  * @example
- * const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
- * if (isEligibleForPermanentDeletion(issue, THIRTY_DAYS)) {
+ * if (isEligibleForPermanentDeletion(issue, MONTH)) {
  *   await hardDelete(issue._id);
  * }
  */
 export function isEligibleForPermanentDeletion(
   record: Partial<SoftDeletable>,
-  thresholdMs: number = 30 * 24 * 60 * 60 * 1000, // 30 days default
+  thresholdMs: number = MONTH,
 ): boolean {
   const timeSince = getTimeSinceDeletion(record);
   return timeSince !== null && timeSince > thresholdMs;
