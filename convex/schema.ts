@@ -780,7 +780,7 @@ const applicationTables = {
     deletedBy: v.optional(v.id("users")),
   })
     .index("by_user", ["userId"])
-    .index("by_user_read", ["userId", "isRead"])
+    .index("by_user_read", ["userId", "isRead", "isDeleted"])
     .index("by_deleted", ["isDeleted"]),
 
   notificationPreferences: defineTable({

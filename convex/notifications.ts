@@ -5,6 +5,7 @@ import type { Doc } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
+import { efficientCount } from "./lib/boundedQueries";
 import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -22,10 +23,13 @@ export const list = authenticatedQuery({
       paginationOpts: args.paginationOpts,
       query: (db) => {
         if (onlyUnread) {
+          // Optimization: Use by_user_read index which includes isDeleted
+          // to avoid fetching deleted documents
           return db
             .query("notifications")
-            .withIndex("by_user_read", (q) => q.eq("userId", ctx.userId).eq("isRead", false))
-            .filter(notDeleted);
+            .withIndex("by_user_read", (q) =>
+              q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
+            );
         }
         return db
           .query("notifications")
@@ -60,13 +64,14 @@ export const getUnreadCount = authenticatedQuery({
   handler: async (ctx) => {
     // Cap at 100 - UI typically shows "99+" anyway
     const MAX_UNREAD_COUNT = 100;
-    const unread = await ctx.db
-      .query("notifications")
-      .withIndex("by_user_read", (q) => q.eq("userId", ctx.userId).eq("isRead", false))
-      .filter(notDeleted)
-      .take(MAX_UNREAD_COUNT);
-
-    return unread.length;
+    return await efficientCount(
+      ctx.db
+        .query("notifications")
+        .withIndex("by_user_read", (q) =>
+          q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
+        ),
+      MAX_UNREAD_COUNT,
+    );
   },
 });
 
@@ -90,8 +95,9 @@ export const markAllAsRead = authenticatedMutation({
     const MAX_TO_MARK = 500;
     const unread = await ctx.db
       .query("notifications")
-      .withIndex("by_user_read", (q) => q.eq("userId", ctx.userId).eq("isRead", false))
-      .filter(notDeleted)
+      .withIndex("by_user_read", (q) =>
+        q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
+      )
       .take(MAX_TO_MARK);
 
     // Batch update all notifications in parallel
