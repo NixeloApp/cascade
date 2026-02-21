@@ -29,15 +29,15 @@ describe("Email Providers Timeout", () => {
       const provider = new MailtrapProvider();
 
       // Mock fetch to hang and respect abort signal
-      (global.fetch as any).mockImplementation(async (url: any, options: any) => {
-        return new Promise((resolve, reject) => {
+      (global.fetch as any).mockImplementation(async (_url: any, options: any) => {
+        return new Promise((_resolve, reject) => {
           const signal = options?.signal;
           if (signal) {
             if (signal.aborted) {
-                const err = new Error("The operation was aborted");
-                err.name = "AbortError";
-                reject(err);
-                return;
+              const err = new Error("The operation was aborted");
+              err.name = "AbortError";
+              reject(err);
+              return;
             }
             signal.addEventListener("abort", () => {
               const err = new Error("The operation was aborted");
@@ -90,15 +90,15 @@ describe("Email Providers Timeout", () => {
     it("should fail with timeout error when auth request hangs", async () => {
       const provider = new SendPulseProvider();
 
-      (global.fetch as any).mockImplementation(async (url: any, options: any) => {
-        return new Promise((resolve, reject) => {
+      (global.fetch as any).mockImplementation(async (_url: any, options: any) => {
+        return new Promise((_resolve, reject) => {
           const signal = options?.signal;
           if (signal) {
-             if (signal.aborted) {
-                const err = new Error("The operation was aborted");
-                err.name = "AbortError";
-                reject(err);
-                return;
+            if (signal.aborted) {
+              const err = new Error("The operation was aborted");
+              err.name = "AbortError";
+              reject(err);
+              return;
             }
             signal.addEventListener("abort", () => {
               const err = new Error("The operation was aborted");
