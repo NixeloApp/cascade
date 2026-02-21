@@ -204,8 +204,8 @@ describe("handleCallbackHandler XSS Protection", () => {
     const html = await response.text();
 
     if (response.status !== 500) {
-        console.error("Test failed with status:", response.status);
-        console.error("Response body:", html);
+      console.error("Test failed with status:", response.status);
+      console.error("Response body:", html);
     }
 
     expect(response.status).toBe(500);
