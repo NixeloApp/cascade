@@ -9,7 +9,7 @@ describe("escapeHtml", () => {
   });
 
   it("should escape single quotes", () => {
-    expect(escapeHtml("' OR 1=1")).toBe("&#039; OR 1=1");
+    expect(escapeHtml("' OR 1=1")).toBe("&#39; OR 1=1");
   });
 
   it("should escape ampersands", () => {
