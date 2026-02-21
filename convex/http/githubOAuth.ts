@@ -120,7 +120,10 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       `,
       {
         status: 400,
-        headers: { "Content-Type": "text/html" },
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
       },
     );
   }
@@ -305,7 +308,10 @@ const handleOAuthError = (error: unknown) => {
     `,
     {
       status,
-      headers: { "Content-Type": "text/html" },
+      headers: {
+        "Content-Type": "text/html",
+        "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      },
     },
   );
 };

@@ -279,7 +279,10 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     // User denied access or error occurred - don't expose error details
     return new Response(errorPageHtml, {
       status: 400,
-      headers: { "Content-Type": "text/html" },
+      headers: {
+        "Content-Type": "text/html",
+        "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      },
     });
   }
 
@@ -313,7 +316,10 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       // Auth failed - show generic error (details logged server-side)
       return new Response(errorPageHtml, {
         status: 403,
-        headers: { "Content-Type": "text/html" },
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
       });
     }
     result = testResult;
@@ -324,7 +330,10 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     } catch (_error) {
       return new Response(errorPageHtml, {
         status: 500,
-        headers: { "Content-Type": "text/html" },
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
       });
     }
   }
