@@ -6,6 +6,7 @@ import type { FunctionReference } from "convex/server";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils";
@@ -50,21 +51,22 @@ export function SidebarTeamItem({
         >
           {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </Button>
-        <Link
-          to={ROUTES.workspaces.teams.detail.path}
-          params={{ orgSlug, workspaceSlug, teamSlug: team.slug }}
-          onClick={onNavClick}
-          aria-current={isActive ? "page" : undefined}
-          title={team.name}
-          className={cn(
-            "block px-3 py-1.5 rounded-md text-sm truncate transition-default flex-1",
-            isActive
-              ? "bg-ui-bg-hover text-ui-text"
-              : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
-          )}
-        >
-          {team.name}
-        </Link>
+        <Tooltip content={team.name}>
+          <Link
+            to={ROUTES.workspaces.teams.detail.path}
+            params={{ orgSlug, workspaceSlug, teamSlug: team.slug }}
+            onClick={onNavClick}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "block px-3 py-1.5 rounded-md text-sm truncate transition-default flex-1",
+              isActive
+                ? "bg-ui-bg-hover text-ui-text"
+                : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
+            )}
+          >
+            {team.name}
+          </Link>
+        </Tooltip>
       </Flex>
 
       {/* Lazy Loaded Projects */}
@@ -120,24 +122,25 @@ function SidebarTeamProjects({
 
         return (
           <div key={project._id}>
-            <Link
-              to={ROUTES.projects.board.path}
-              params={{
-                orgSlug,
-                key: project.key,
-              }}
-              onClick={onNavClick}
-              aria-current={isActive ? "page" : undefined}
-              title={`${project.key} - ${project.name}`}
-              className={cn(
-                "block px-3 py-1.5 rounded-md text-sm truncate transition-default",
-                isActive
-                  ? "bg-ui-bg-hover text-ui-text font-medium"
-                  : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
-              )}
-            >
-              {project.key} - {project.name}
-            </Link>
+            <Tooltip content={`${project.key} - ${project.name}`}>
+              <Link
+                to={ROUTES.projects.board.path}
+                params={{
+                  orgSlug,
+                  key: project.key,
+                }}
+                onClick={onNavClick}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "block px-3 py-1.5 rounded-md text-sm truncate transition-default",
+                  isActive
+                    ? "bg-ui-bg-hover text-ui-text font-medium"
+                    : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
+                )}
+              >
+                {project.key} - {project.name}
+              </Link>
+            </Tooltip>
           </div>
         );
       })}

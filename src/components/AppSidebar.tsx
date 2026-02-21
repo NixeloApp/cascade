@@ -675,21 +675,22 @@ function NavSubItem({
   ...props
 }: NavSubItemProps) {
   return (
-    <Link
-      to={to}
-      params={params}
-      {...props}
-      aria-current={isActive ? "page" : undefined}
-      title={label}
-      className={cn(
-        "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm truncate transition-default",
-        isActive
-          ? "bg-ui-bg-hover text-ui-text"
-          : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
-      )}
-    >
-      {Icon && <Icon className="w-4 h-4 shrink-0" />}
-      <span className="truncate">{label}</span>
-    </Link>
+    <Tooltip content={label}>
+      <Link
+        to={to}
+        params={params}
+        {...props}
+        aria-current={isActive ? "page" : undefined}
+        className={cn(
+          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm truncate transition-default",
+          isActive
+            ? "bg-ui-bg-hover text-ui-text"
+            : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
+        )}
+      >
+        {Icon && <Icon className="w-4 h-4 shrink-0" />}
+        <span className="truncate">{label}</span>
+      </Link>
+    </Tooltip>
   );
 }
