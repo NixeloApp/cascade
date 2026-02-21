@@ -1,16 +1,9 @@
-
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createTestContext,
-  createTestProject,
-  createTestUser,
-} from "./testUtils";
+import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
 
 describe("Invites Security", () => {
   beforeEach(() => {
@@ -73,7 +66,7 @@ describe("Invites Security", () => {
       ctx.db
         .query("organizationMembers")
         .withIndex("by_organization_user", (q) =>
-            q.eq("organizationId", project.organizationId).eq("userId", newUserId)
+          q.eq("organizationId", project.organizationId).eq("userId", newUserId),
         )
         .first(),
     );
