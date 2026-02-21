@@ -54,6 +54,8 @@ export function SidebarTeamItem({
           to={ROUTES.workspaces.teams.detail.path}
           params={{ orgSlug, workspaceSlug, teamSlug: team.slug }}
           onClick={onNavClick}
+          aria-current={isActive ? "page" : undefined}
+          title={team.name}
           className={cn(
             "block px-3 py-1.5 rounded-md text-sm truncate transition-default flex-1",
             isActive
@@ -111,27 +113,34 @@ function SidebarTeamProjects({
 
   return (
     <div className="ml-6 border-l border-ui-border pl-1">
-      {projects.map((project) => (
-        <div key={project._id}>
-          <Link
-            to={ROUTES.projects.board.path}
-            params={{
-              orgSlug,
-              key: project.key,
-            }}
-            onClick={onNavClick}
-            className={cn(
-              "block px-3 py-1.5 rounded-md text-sm truncate transition-default",
-              location.pathname === `/${orgSlug}/projects/${project.key}` ||
-                location.pathname.startsWith(`/${orgSlug}/projects/${project.key}/`)
-                ? "bg-ui-bg-hover text-ui-text font-medium"
-                : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
-            )}
-          >
-            {project.key} - {project.name}
-          </Link>
-        </div>
-      ))}
+      {projects.map((project) => {
+        const isActive =
+          location.pathname === `/${orgSlug}/projects/${project.key}` ||
+          location.pathname.startsWith(`/${orgSlug}/projects/${project.key}/`);
+
+        return (
+          <div key={project._id}>
+            <Link
+              to={ROUTES.projects.board.path}
+              params={{
+                orgSlug,
+                key: project.key,
+              }}
+              onClick={onNavClick}
+              aria-current={isActive ? "page" : undefined}
+              title={`${project.key} - ${project.name}`}
+              className={cn(
+                "block px-3 py-1.5 rounded-md text-sm truncate transition-default",
+                isActive
+                  ? "bg-ui-bg-hover text-ui-text font-medium"
+                  : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
+              )}
+            >
+              {project.key} - {project.name}
+            </Link>
+          </div>
+        );
+      })}
 
       {status === "CanLoadMore" && (
         <Button

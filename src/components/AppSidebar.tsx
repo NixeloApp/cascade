@@ -491,6 +491,7 @@ function NavItem({
       onClick={onClick}
       {...props}
       data-tour={dataTour}
+      aria-current={isActive ? "page" : undefined}
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-md transition-default",
         "text-sm font-medium",
@@ -560,6 +561,7 @@ function CollapsibleSection({
             params={props.params}
             search={props.search}
             data-tour={dataTour}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex items-center justify-center px-2 py-2 rounded-md transition-default",
               isActive
@@ -611,6 +613,7 @@ function CollapsibleSection({
           <Link
             {...props}
             to={props.to}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex-1 flex items-center gap-2 text-sm font-medium transition-default",
               isActive ? "text-ui-text" : "text-ui-text-secondary hover:text-ui-text",
@@ -676,6 +679,8 @@ function NavSubItem({
       to={to}
       params={params}
       {...props}
+      aria-current={isActive ? "page" : undefined}
+      title={label}
       className={cn(
         "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm truncate transition-default",
         isActive
