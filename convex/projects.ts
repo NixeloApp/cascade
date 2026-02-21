@@ -660,6 +660,8 @@ export const updateWorkflow = projectAdminMutation({
       targetType: "projects",
       metadata: { workflowStates: JSON.stringify(args.workflowStates) },
     });
+
+    return { success: true };
   },
 });
 
