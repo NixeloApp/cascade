@@ -7,6 +7,7 @@
 import { RateLimiter } from "@convex-dev/rate-limiter";
 
 import { components } from "./_generated/api";
+import { ActionCtx, MutationCtx } from "./_generated/server";
 
 // Helper to detect test/dev/CI environments for relaxed rate limits
 const isTestEnv =
@@ -74,7 +75,13 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
 /**
  * Rate limit an operation - throws if limit exceeded (unless throws: false)
  */
-export const rateLimit = rateLimiter.limit.bind(rateLimiter);
+export const rateLimit = async (
+  ctx: ActionCtx | MutationCtx,
+  name: string,
+  options?: { key?: string; count?: number; throws?: boolean; reserve?: boolean },
+) => {
+  return await rateLimiter.limit(ctx, name as any, { throws: true, ...options });
+};
 
 /**
  * Check rate limit without consuming tokens
