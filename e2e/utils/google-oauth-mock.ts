@@ -4,10 +4,15 @@
  * These helpers intercept Google OAuth endpoints and simulate the OAuth flow
  * without hitting real Google servers. This enables:
  *
- * 1. Testing the full OAuth UI flow in CI
+ * 1. Testing the full OAuth UI flow locally
  * 2. Testing error scenarios (user denies, Google errors)
  * 3. Faster test execution (no real network calls)
  * 4. No flaky tests due to Google captchas or rate limits
+ *
+ * IMPORTANT: These mocks only work locally, not in CI.
+ * In CI, we use:
+ * - e2e/oauth-security.spec.ts for HTTP endpoint testing
+ * - Session injection for authenticated E2E tests
  *
  * Usage:
  * ```typescript

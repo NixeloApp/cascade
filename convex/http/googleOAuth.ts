@@ -127,7 +127,7 @@ export const handleCallback = httpAction(async (_ctx, request) => {
         </head>
         <body>
           <div class="error">
-            <h1>❌ Connection Failed</h1>
+            <h1>Connection Failed</h1>
             <p>Failed to connect to Google Calendar: ${error}</p>
             <button onclick="window.close()">Close Window</button>
           </div>
@@ -209,7 +209,7 @@ export const handleCallback = httpAction(async (_ctx, request) => {
         </head>
         <body>
           <div class="success">
-            <h1>✅ Connected Successfully</h1>
+            <h1>Connected Successfully</h1>
             <p>Your Google Calendar has been connected to Nixelo.</p>
             <p><strong>${email}</strong></p>
             <button onclick="window.close()">Close Window</button>
@@ -252,7 +252,7 @@ export const handleCallback = httpAction(async (_ctx, request) => {
         </head>
         <body>
           <div class="error">
-            <h1>❌ Connection Failed</h1>
+            <h1>Connection Failed</h1>
             <p>An error occurred while connecting to Google Calendar.</p>
             <p>Please try again or contact support if the problem persists.</p>
             <button onclick="window.close()">Close Window</button>

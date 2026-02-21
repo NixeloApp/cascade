@@ -2,22 +2,30 @@
  * OAuth Mocked E2E Tests for Cascade
  *
  * These tests verify the Google OAuth flow by mocking Google's endpoints.
- * This allows us to test the full OAuth UI flow without:
- * - Hitting real Google servers
- * - Dealing with captchas or rate limits
- * - Needing real Google credentials
  *
- * What these tests verify:
- * - OAuth initiation (redirect to Google)
- * - OAuth callback handling
- * - User creation/login after OAuth
- * - Error handling (user denies, Google errors)
- * - State parameter validation
+ * ## Test Strategy (State of the Art)
  *
- * NOTE: Some tests are skipped in CI because OAuth mocking doesn't work
- * with Convex's server-side redirects. For CI coverage, see:
- * - e2e/oauth-security.spec.ts - HTTP endpoint security tests (run in CI)
- * - convex/googleOAuth.contract.test.ts - Backend contract tests (run in CI)
+ * We follow the industry best practice of ZERO test code in production:
+ *
+ * 1. **CI Tests (oauth-security.spec.ts)**
+ *    - HTTP endpoint tests verify OAuth redirects, parameters, error handling
+ *    - No mocking needed - tests real Convex HTTP actions
+ *    - Runs in CI ✅
+ *
+ * 2. **Local Full-Flow Tests (this file)**
+ *    - Mocks Google's OAuth endpoints at browser level
+ *    - Tests the complete user journey: click → redirect → callback → dashboard
+ *    - Skipped in CI (Convex makes server-side API calls that can't be intercepted)
+ *
+ * 3. **Auth E2E Tests**
+ *    - Use session injection (direct cookie/token creation)
+ *    - No OAuth flow needed for tests that just need an authenticated user
+ *    - Runs in CI ✅
+ *
+ * Why not TEST_* codes like some projects?
+ * - Adds test-specific code paths to production
+ * - Industry best practice is clean separation (see Auth.js, Baeldung guides)
+ * - Session injection achieves the same result without prod code changes
  */
 
 import { expect, test } from "@playwright/test";
