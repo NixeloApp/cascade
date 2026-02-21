@@ -105,6 +105,10 @@ describe("Refactor Issues Smart Queries", () => {
       teamId,
     });
 
+    if (Array.isArray(result)) {
+      throw new Error("Expected result to be an object, but got an array");
+    }
+
     expect(result.issuesByStatus).toBeDefined();
 
     const todoIssues = result.issuesByStatus.todo;
