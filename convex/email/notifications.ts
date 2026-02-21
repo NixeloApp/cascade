@@ -295,9 +295,9 @@ export const sendDigestEmail = internalAction({
       startTime,
     });
 
-    // If no notifications, optionally skip sending (or send empty digest)
+    // If no notifications, skip sending (nothing to digest)
     if (notifications.length === 0) {
-      return { success: true, id: "no-notifications" };
+      return { success: true, skipped: true, id: "no-notifications" };
     }
 
     // Generate unsubscribe token
