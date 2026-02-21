@@ -307,7 +307,6 @@ const applicationTables = {
     .index("by_organization_public", ["organizationId", "isPublic", "updatedAt"])
     .index("by_parent", ["parentId"])
     .index("by_organization_parent", ["organizationId", "parentId"])
-    .index("by_org_creator_updated", ["organizationId", "createdBy", "updatedAt"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId", "projectId"],
