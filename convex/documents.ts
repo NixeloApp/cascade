@@ -1134,10 +1134,21 @@ export const getCommentReactions = authenticatedQuery({
     commentIds: v.array(v.id("documentComments")),
   },
   handler: async (ctx, args) => {
-    // Fetch reactions for all comments at once
+    // 1. Fetch all unique comments to identify documents
+    const uniqueCommentIds = [...new Set(args.commentIds)];
+    const comments = await Promise.all(uniqueCommentIds.map((id) => ctx.db.get(id)));
+
+    // 2. Resolve documents and check access
+    const { commentToDocMap, accessibleDocIds } = await getAccessibleDocuments(ctx, comments);
+
+    // 3. Fetch reactions for all valid comments at once
     const reactionsByComment = new Map<Id<"documentComments">, Doc<"documentCommentReactions">[]>();
 
     for (const commentId of args.commentIds) {
+      const docId = commentToDocMap.get(commentId);
+      // Skip if comment doesn't exist, was deleted, or document is inaccessible
+      if (!docId || !accessibleDocIds.has(docId)) continue;
+
       const reactions = await ctx.db
         .query("documentCommentReactions")
         .withIndex("by_comment", (q) => q.eq("commentId", commentId))
@@ -1180,4 +1191,33 @@ async function assertDocumentAccess(
   if (!allowed) {
     throw forbidden(undefined, "Not authorized to access this document");
   }
+}
+
+// Helper: Filter accessible documents for comments
+async function getAccessibleDocuments(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  comments: (Doc<"documentComments"> | null)[],
+) {
+  const documentIds = new Set<Id<"documents">>();
+  const commentToDocMap = new Map<string, Id<"documents">>();
+
+  for (const comment of comments) {
+    if (comment && !comment.isDeleted) {
+      documentIds.add(comment.documentId);
+      commentToDocMap.set(comment._id, comment.documentId);
+    }
+  }
+
+  const uniqueDocIds = [...documentIds];
+  const documents = await Promise.all(uniqueDocIds.map((id) => ctx.db.get(id)));
+  const accessibleDocIds = new Set<string>();
+
+  for (const doc of documents) {
+    if (!doc || doc.isDeleted) continue;
+    // This throws forbidden() if user doesn't have access
+    await assertDocumentAccess(ctx, doc);
+    accessibleDocIds.add(doc._id);
+  }
+
+  return { commentToDocMap, accessibleDocIds };
 }
