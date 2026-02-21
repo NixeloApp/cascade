@@ -1143,55 +1143,52 @@ async function getSprintIssueCounts(
   doneThreshold: number,
   addCounts: (statusId: string, counts: { total: number; visible: number; hidden: number }) => void,
 ) {
-  // Optimization: Fetch counts in parallel using highly efficient .count() queries.
-  // This avoids loading all sprint issues (potentially large documents) into memory.
-  // We use Promise.all to parallelize the N status queries.
+  // Optimization: Fetch all issues in the sprint (bounded) and aggregate counts in memory.
+  // This reduces N queries (one per status) to a single query.
+  // Since sprints are typically small (< 200 issues), this is much faster and reduces DB ops.
 
-  await Promise.all(
-    workflowStates.map(async (state) => {
-      // 1. Get Total Count efficiently
-      const totalCount = await efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_sprint_status", (q) =>
-            q
-              .eq("projectId", projectId)
-              .eq("sprintId", sprintId)
-              .eq("status", state.id)
-              .lt("isDeleted", true),
-          ),
-      );
-
-      let visibleCount = 0;
-
-      if (state.category === "done") {
-        // 2. Get Visible Count for Done (filtered by date)
-        // We only need to check up to PAGE_SIZE items to determine visibility
-        // This avoids counting ALL recent done items if there are many
-        const visibleIssues = await ctx.db
-          .query("issues")
-          .withIndex("by_project_sprint_status_updated", (q) =>
-            q
-              .eq("projectId", projectId)
-              .eq("sprintId", sprintId)
-              .eq("status", state.id)
-              .gte("updatedAt", doneThreshold),
-          )
-          .take(DEFAULT_PAGE_SIZE + 1);
-
-        visibleCount = Math.min(visibleIssues.length, DEFAULT_PAGE_SIZE);
-      } else {
-        // For non-done columns, visible is simply total capped at page size
-        visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
-      }
-
-      addCounts(state.id, {
-        total: totalCount,
-        visible: visibleCount,
-        hidden: Math.max(0, totalCount - DEFAULT_PAGE_SIZE),
-      });
-    }),
+  const issues = await safeCollect(
+    ctx.db
+      .query("issues")
+      .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true)),
+    BOUNDED_LIST_LIMIT * 5, // Allow up to 500 issues per sprint (generous limit)
+    "sprint issue counts",
   );
+
+  // Filter by projectId for safety (though sprintId implies project)
+  const projectIssues = issues.filter((i) => i.projectId === projectId);
+
+  // Group by status
+  const issuesByStatus: Record<string, Doc<"issues">[]> = {};
+  for (const issue of projectIssues) {
+    if (!issuesByStatus[issue.status]) {
+      issuesByStatus[issue.status] = [];
+    }
+    issuesByStatus[issue.status].push(issue);
+  }
+
+  for (const state of workflowStates) {
+    const statusIssues = issuesByStatus[state.id] || [];
+    const totalCount = statusIssues.length;
+    let visibleCount = 0;
+
+    if (state.category === "done") {
+      // For done columns, filter by date (recent only)
+      // Count items updated after doneThreshold
+      const recentCount = statusIssues.filter((i) => i.updatedAt >= doneThreshold).length;
+      // Cap visible count at page size (consistent with old logic)
+      visibleCount = Math.min(recentCount, DEFAULT_PAGE_SIZE);
+    } else {
+      // For non-done columns, visible is simply total capped at page size
+      visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
+    }
+
+    addCounts(state.id, {
+      total: totalCount,
+      visible: visibleCount,
+      hidden: Math.max(0, totalCount - DEFAULT_PAGE_SIZE),
+    });
+  }
 }
 
 export const listIssuesByDateRange = authenticatedQuery({
