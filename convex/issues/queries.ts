@@ -772,19 +772,23 @@ export const listByProjectSmart = projectQuery({
       const issues = await safeCollect(
         ctx.db
           .query("issues")
-          .withIndex("by_sprint", (q) =>
-            q.eq("sprintId", args.sprintId as Id<"sprints">).lt("isDeleted", true),
-          ),
+          // Use prefix of by_project_sprint_status to get all sprint issues efficiently
+          // without needing a new index
+          .withIndex("by_project_sprint_status", (q) =>
+            q
+              .eq("projectId", ctx.project._id)
+              .eq("sprintId", args.sprintId as Id<"sprints">),
+          )
+          .filter(notDeleted),
         BOUNDED_LIST_LIMIT * 5, // Allow up to 500 issues per sprint (generous limit)
         "sprint issues",
       );
 
-      // Filter by projectId for safety (though sprintId implies project)
-      const projectIssues = issues.filter((i) => i.projectId === ctx.project._id);
+      // projectId filter is implicit in the index query above
 
       // Group by status
       const issuesByStatus: Record<string, Doc<"issues">[]> = {};
-      for (const issue of projectIssues) {
+      for (const issue of issues) {
         if (!issuesByStatus[issue.status]) {
           issuesByStatus[issue.status] = [];
         }

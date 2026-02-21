@@ -4,13 +4,7 @@ import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createProjectInOrganization,
-  createTestContext,
-  createTestIssue,
-  type TestContext,
-} from "../testUtils";
+import { createProjectInOrganization, createTestContext, type TestContext } from "../testUtils";
 
 describe("issue queries - sprint optimization", () => {
   let t: ReturnType<typeof convexTest>;
@@ -39,7 +33,7 @@ describe("issue queries - sprint optimization", () => {
     status: string,
     order: number,
     updatedAt: number,
-    title: string
+    title: string,
   ) {
     return await t.run(async (runCtx) => {
       const project = await runCtx.db.get(projectId);
@@ -82,15 +76,15 @@ describe("issue queries - sprint optimization", () => {
     expect(result.issuesByStatus).toBeDefined();
     expect(result.workflowStates).toBeDefined();
 
-    const todoIssues = result.issuesByStatus["todo"];
+    const todoIssues = result.issuesByStatus.todo;
     expect(todoIssues).toHaveLength(2);
-    expect(todoIssues.map(i => i.title).sort()).toEqual(["Todo 1", "Todo 2"]);
+    expect(todoIssues.map((i) => i.title).sort()).toEqual(["Todo 1", "Todo 2"]);
 
-    const inProgressIssues = result.issuesByStatus["inprogress"];
+    const inProgressIssues = result.issuesByStatus.inprogress;
     expect(inProgressIssues).toHaveLength(1);
     expect(inProgressIssues[0].title).toBe("In Progress 1");
 
-    const doneIssues = result.issuesByStatus["done"];
+    const doneIssues = result.issuesByStatus.done;
     expect(doneIssues).toHaveLength(1);
     expect(doneIssues[0].title).toBe("Done 1");
   });
@@ -105,7 +99,7 @@ describe("issue queries - sprint optimization", () => {
       sprintId,
     });
 
-    const todoIssues = result.issuesByStatus["todo"];
+    const todoIssues = result.issuesByStatus.todo;
     expect(todoIssues).toHaveLength(2);
     // Should be sorted by order asc
     expect(todoIssues[0].title).toBe("Todo First");
@@ -128,7 +122,7 @@ describe("issue queries - sprint optimization", () => {
       doneColumnDays: 14, // Default
     });
 
-    const doneIssues = result.issuesByStatus["done"];
+    const doneIssues = result.issuesByStatus.done;
     expect(doneIssues).toHaveLength(1);
     expect(doneIssues[0].title).toBe("Recent Done");
   });
@@ -143,7 +137,7 @@ describe("issue queries - sprint optimization", () => {
       sprintId,
     });
 
-    const doneIssues = result.issuesByStatus["done"];
+    const doneIssues = result.issuesByStatus.done;
     expect(doneIssues).toHaveLength(2);
     // Current implementation sorts by updatedAt ASC
     expect(doneIssues[0].title).toBe("Older");
