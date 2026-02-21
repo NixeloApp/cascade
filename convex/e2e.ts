@@ -18,7 +18,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { type ActionCtx, httpAction, internalMutation, internalQuery } from "./_generated/server";
 import { constantTimeEqual } from "./lib/apiAuth";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
-import { getConvexSiteUrl } from "./lib/env";
+import { isLocalhost } from "./lib/env";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MONTH, WEEK } from "./lib/timeUtils";
 import type { CalendarEventColor } from "./validators";
@@ -48,14 +48,8 @@ function validateE2EApiKey(request: Request): Response | null {
     // This covers local development and local CI runs.
     // We do NOT allow general "development" or "test" environments to bypass this check,
     // as they might be exposed publicly (e.g. preview deployments).
-    try {
-      const siteUrl = getConvexSiteUrl();
-      const url = new URL(siteUrl);
-      if (url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "::1") {
-        return null;
-      }
-    } catch {
-      // Ignore URL parsing errors
+    if (isLocalhost()) {
+      return null;
     }
 
     // Block everything else (production, staging, or undefined)

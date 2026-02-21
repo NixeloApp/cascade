@@ -1,7 +1,98 @@
 import { api, internal } from "../_generated/api";
 import { httpAction } from "../_generated/server";
-import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "../lib/env";
+import { constantTimeEqual } from "../lib/apiAuth";
+import {
+  getGoogleClientId,
+  getGoogleClientSecret,
+  isGoogleOAuthConfigured,
+  isLocalhost,
+} from "../lib/env";
 import { validation } from "../lib/errors";
+
+/** Generic error page HTML - no internal details exposed */
+const errorPageHtml = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Google Calendar - Error</title>
+    <style>
+      body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
+      .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="error">
+      <h1>Connection Failed</h1>
+      <p>An error occurred while connecting to Google Calendar.</p>
+      <p>Please try again or contact support if the problem persists.</p>
+      <button onclick="window.close()">Close Window</button>
+    </div>
+  </body>
+</html>
+`;
+
+/**
+ * Validate E2E API key for TEST_* codes
+ * Same security pattern as other /e2e/* endpoints
+ *
+ * Returns false if invalid (logs warning), true if valid
+ */
+function validateE2EApiKey(request: Request): boolean {
+  const apiKey = process.env.E2E_API_KEY;
+
+  // If no API key is configured, only allow on localhost
+  if (!apiKey) {
+    if (isLocalhost()) {
+      return true;
+    }
+    console.warn("[SECURITY] TEST_* code attempted but E2E_API_KEY not configured");
+    return false;
+  }
+
+  const providedKey = request.headers.get("x-e2e-api-key");
+  if (!providedKey || !constantTimeEqual(providedKey, apiKey)) {
+    console.warn("[SECURITY] TEST_* code with invalid/missing E2E API key");
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Handle TEST_* codes for E2E testing
+ *
+ * Security:
+ * - Requires E2E_API_KEY env var (or localhost)
+ * - Requires x-e2e-api-key header to match
+ * - Only creates @inbox.mailtrap.io emails (auto-cleaned by cron)
+ *
+ * Returns null if auth fails (caller should show generic error page)
+ */
+function handleTestCode(
+  code: string,
+  request: Request,
+): { email: string; accessToken: string; refreshToken: string; expiresAt: number } | null {
+  // Validate E2E API key - returns false if invalid (already logged)
+  if (!validateE2EApiKey(request)) {
+    return null;
+  }
+
+  // Extract scenario from code (e.g., TEST_new_user -> new_user)
+  const scenario = code.replace("TEST_", "").replace(/_/g, "-");
+  const timestamp = Date.now();
+
+  // Only create test emails (auto-cleaned by cron)
+  const email = `test-oauth-${scenario}-${timestamp}@inbox.mailtrap.io`;
+
+  console.log(`[E2E] Processing TEST_* OAuth code for scenario: ${scenario}, email: ${email}`);
+
+  return {
+    email,
+    accessToken: `mock_access_${scenario}_${timestamp}`,
+    refreshToken: `mock_refresh_${scenario}_${timestamp}`,
+    expiresAt: timestamp + 3600 * 1000, // 1 hour
+  };
+}
 
 /**
  * Google OAuth Integration
@@ -113,159 +204,137 @@ export const handleCallback = httpAction(async (_ctx, request) => {
   const error = url.searchParams.get("error");
 
   if (error) {
-    // User denied access or error occurred
-    return new Response(
-      `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Google Calendar - Error</title>
-          <style>
-            body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-            .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h1>Connection Failed</h1>
-            <p>Failed to connect to Google Calendar: ${error}</p>
-            <button onclick="window.close()">Close Window</button>
-          </div>
-        </body>
-      </html>
-      `,
-      {
-        status: 400,
-        headers: { "Content-Type": "text/html" },
-      },
-    );
+    // User denied access or error occurred - don't expose error details
+    return new Response(errorPageHtml, {
+      status: 400,
+      headers: { "Content-Type": "text/html" },
+    });
   }
 
   if (!code) {
     return new Response("Missing authorization code", { status: 400 });
   }
 
-  const config = getGoogleOAuthConfig();
+  let email: string;
+  let accessToken: string;
+  let refreshToken: string;
+  let expiresAt: number | undefined;
 
-  try {
-    // Exchange authorization code for tokens
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        code,
-        client_id: config.clientId,
-        client_secret: config.clientSecret,
-        redirect_uri: config.redirectUri,
-        grant_type: "authorization_code",
-      }),
-    });
-
-    if (!tokenResponse.ok) {
-      const _errorData = await tokenResponse.text();
-      throw validation("oauth", "Failed to exchange Google authorization code");
-    }
-
-    const tokens = await tokenResponse.json();
-    const { access_token, refresh_token, expires_in } = tokens;
-
-    // Get user info from Google
-    const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-
-    const userInfo = await userInfoResponse.json();
-    const email = userInfo.email;
-
-    // Calculate expiration time
-    const expiresAt = expires_in ? Date.now() + expires_in * 1000 : undefined;
-
-    // Connection data to pass to the frontend
-    const connectionData = {
-      providerAccountId: email,
-      accessToken: access_token,
-      refreshToken: refresh_token,
-      expiresAt,
-    };
-
-    // Return success page that passes tokens to opener window
-    // The frontend will save these via the authenticated connectGoogle mutation
-    return new Response(
-      `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Google Calendar - Connected</title>
-          <style>
-            body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-            .success { background: #efe; border: 1px solid #cfc; padding: 20px; border-radius: 8px; }
-            button { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-            button:hover { background: #2563eb; }
-          </style>
-        </head>
-        <body>
-          <div class="success">
-            <h1>Connected Successfully</h1>
-            <p>Your Google Calendar has been connected to Nixelo.</p>
-            <p><strong>${email}</strong></p>
-            <button onclick="window.close()">Close Window</button>
-            <script>
-              // Pass tokens to opener window for saving via authenticated mutation
-              if (window.opener) {
-                // Use opener's origin for security instead of wildcard
-                const targetOrigin = window.opener.location.origin;
-                window.opener.postMessage({
-                  type: 'google-calendar-connected',
-                  data: ${JSON.stringify(connectionData)}
-                }, targetOrigin);
-              }
-              // Auto-close after 3 seconds
-              setTimeout(() => {
-                window.opener?.location.reload();
-                window.close();
-              }, 3000);
-            </script>
-          </div>
-        </body>
-      </html>
-      `,
-      {
-        status: 200,
+  // TEST_* code handling for E2E tests - tests the real callback code path
+  if (code.startsWith("TEST_")) {
+    const testResult = handleTestCode(code, request);
+    if (!testResult) {
+      // Auth failed - show generic error (details logged server-side)
+      return new Response(errorPageHtml, {
+        status: 403,
         headers: { "Content-Type": "text/html" },
-      },
-    );
-  } catch (_error) {
-    return new Response(
-      `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Google Calendar - Error</title>
-          <style>
-            body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-            .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h1>Connection Failed</h1>
-            <p>An error occurred while connecting to Google Calendar.</p>
-            <p>Please try again or contact support if the problem persists.</p>
-            <button onclick="window.close()">Close Window</button>
-          </div>
-        </body>
-      </html>
-      `,
-      {
+      });
+    }
+    email = testResult.email;
+    accessToken = testResult.accessToken;
+    refreshToken = testResult.refreshToken;
+    expiresAt = testResult.expiresAt;
+  } else {
+    // Real OAuth flow - exchange code with Google
+    const config = getGoogleOAuthConfig();
+
+    try {
+      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          code,
+          client_id: config.clientId,
+          client_secret: config.clientSecret,
+          redirect_uri: config.redirectUri,
+          grant_type: "authorization_code",
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const _errorData = await tokenResponse.text();
+        throw validation("oauth", "Failed to exchange Google authorization code");
+      }
+
+      const tokens = await tokenResponse.json();
+      const { access_token, refresh_token, expires_in } = tokens;
+
+      // Get user info from Google
+      const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+
+      const userInfo = await userInfoResponse.json();
+      email = userInfo.email;
+      accessToken = access_token;
+      refreshToken = refresh_token;
+      expiresAt = expires_in ? Date.now() + expires_in * 1000 : undefined;
+    } catch (_error) {
+      return new Response(errorPageHtml, {
         status: 500,
         headers: { "Content-Type": "text/html" },
-      },
-    );
+      });
+    }
   }
+
+  // SAME code path from here - tests real HTML, JS, postMessage
+  const connectionData = {
+    providerAccountId: email,
+    accessToken,
+    refreshToken,
+    expiresAt,
+  };
+
+  // Return success page that passes tokens to opener window
+  // The frontend will save these via the authenticated connectGoogle mutation
+  return new Response(
+    `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Google Calendar - Connected</title>
+        <style>
+          body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
+          .success { background: #efe; border: 1px solid #cfc; padding: 20px; border-radius: 8px; }
+          button { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+          button:hover { background: #2563eb; }
+        </style>
+      </head>
+      <body>
+        <div class="success">
+          <h1>Connected Successfully</h1>
+          <p>Your Google Calendar has been connected to Nixelo.</p>
+          <p><strong>${email}</strong></p>
+          <button onclick="window.close()">Close Window</button>
+          <script>
+            // Pass tokens to opener window for saving via authenticated mutation
+            if (window.opener) {
+              // Use opener's origin for security instead of wildcard
+              const targetOrigin = window.opener.location.origin;
+              window.opener.postMessage({
+                type: 'google-calendar-connected',
+                data: ${JSON.stringify(connectionData)}
+              }, targetOrigin);
+            }
+            // Auto-close after 3 seconds
+            setTimeout(() => {
+              window.opener?.location.reload();
+              window.close();
+            }, 3000);
+          </script>
+        </div>
+      </body>
+    </html>
+    `,
+    {
+      status: 200,
+      headers: { "Content-Type": "text/html" },
+    },
+  );
 });
 
 /**

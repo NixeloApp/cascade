@@ -1,26 +1,33 @@
 /**
  * Google OAuth Mock Helpers for Cascade
  *
- * These helpers intercept Google OAuth endpoints and simulate the OAuth flow
- * without hitting real Google servers. This enables:
+ * These helpers intercept Google OAuth endpoints and redirect to the real
+ * callback with TEST_* codes. This tests the actual production code path
+ * while bypassing Google's OAuth servers.
  *
- * 1. Testing the full OAuth UI flow locally
- * 2. Testing error scenarios (user denies, Google errors)
- * 3. Faster test execution (no real network calls)
- * 4. No flaky tests due to Google captchas or rate limits
+ * ## How It Works
  *
- * IMPORTANT: These mocks only work locally, not in CI.
- * In CI, we use:
- * - e2e/oauth-security.spec.ts for HTTP endpoint testing
- * - Session injection for authenticated E2E tests
+ * 1. Intercepts redirect to accounts.google.com
+ * 2. Redirects to real /google/callback with TEST_* code
+ * 3. Injects x-e2e-api-key header for authentication
+ * 4. Real callback handler processes TEST_* code and returns success HTML
  *
- * Usage:
+ * ## Security
+ *
+ * - TEST_* codes require E2E_API_KEY env var (or localhost)
+ * - x-e2e-api-key header must match E2E_API_KEY
+ * - Only creates @inbox.mailtrap.io test users (auto-cleaned by cron)
+ *
+ * ## Usage
+ *
  * ```typescript
- * await setupGoogleOAuthMock(page, { email: 'test@example.com' });
+ * await setupGoogleOAuthMock(page, { scenario: 'new_user' });
  * await page.getByRole('button', { name: /google/i }).click();
- * // OAuth flow completes automatically with mocked data
+ * // Real callback processes TEST_new_user code
  * await expect(page).toHaveURL(/dashboard/);
  * ```
+ *
+ * Runs in CI: YES (tests real callback code)
  */
 
 import type { Page, Route } from "@playwright/test";
@@ -28,106 +35,74 @@ import { expect } from "@playwright/test";
 
 export interface GoogleOAuthMockOptions {
   /**
-   * Email to return from the mocked Google profile
-   * @default 'test@example.com'
+   * Test scenario name - becomes TEST_{scenario} code
+   * e.g., "new_user" -> TEST_new_user
+   * @default 'user'
    */
-  email?: string;
+  scenario?: string;
 
   /**
-   * Google user ID to return
-   * @default '118234567890123456789'
-   */
-  googleId?: string;
-
-  /**
-   * User's name
-   * @default 'Test User'
-   */
-  name?: string;
-
-  /**
-   * Profile picture URL
-   * @default 'https://lh3.googleusercontent.com/a/default-user=s96-c'
-   */
-  picture?: string;
-
-  /**
-   * If true, simulate a failure scenario
+   * If true, simulate a failure scenario (user denies access)
    */
   shouldFail?: boolean;
 
   /**
-   * Type of error to simulate
+   * Type of error to simulate when shouldFail is true
    */
   errorType?: "access_denied" | "invalid_grant" | "server_error";
 
   /**
-   * Delay before completing the mock (simulates network latency)
-   * @default 100
+   * @deprecated No longer used - email is generated from scenario
+   */
+  email?: string;
+
+  /**
+   * @deprecated No longer used - name not needed for TEST_* codes
+   */
+  name?: string;
+
+  /**
+   * @deprecated No longer used - picture not needed for TEST_* codes
+   */
+  picture?: string;
+
+  /**
+   * @deprecated No longer used - delays handled by real callback
    */
   delayMs?: number;
 }
 
 /**
- * Creates a mock Google ID token (JWT format, not cryptographically valid)
- */
-function createMockGoogleIdToken(options: GoogleOAuthMockOptions): string {
-  const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
-
-  const [firstName, lastName] = (options.name || "Test User").split(" ");
-
-  const payload = Buffer.from(
-    JSON.stringify({
-      iss: "https://accounts.google.com",
-      azp: "test-client-id.apps.googleusercontent.com",
-      aud: "test-client-id.apps.googleusercontent.com",
-      sub: options.googleId || "118234567890123456789",
-      email: options.email || "test@example.com",
-      email_verified: true,
-      at_hash: "mock_at_hash",
-      name: options.name || "Test User",
-      picture: options.picture || "https://lh3.googleusercontent.com/a/default-user=s96-c",
-      given_name: firstName || "Test",
-      family_name: lastName || "User",
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 3600,
-    }),
-  ).toString("base64url");
-
-  const signature = Buffer.from("mock_signature").toString("base64url");
-
-  return `${header}.${payload}.${signature}`;
-}
-
-/**
- * Sets up route interception to mock Google OAuth flow for Cascade
+ * Sets up route interception to redirect Google OAuth to real callback with TEST_* codes
  *
- * Cascade uses @convex-dev/auth which handles OAuth differently.
- * This intercepts the Google OAuth redirect and simulates the flow.
+ * This approach:
+ * 1. Intercepts the redirect to Google
+ * 2. Redirects to the REAL /google/callback with TEST_* code
+ * 3. Injects x-e2e-api-key header for authentication
+ * 4. Tests the actual production callback code
  */
 export async function setupGoogleOAuthMock(
   page: Page,
   options: GoogleOAuthMockOptions = {},
 ): Promise<void> {
-  const {
-    email = "test@example.com",
-    googleId = "118234567890123456789",
-    name = "Test User",
-    picture = "https://lh3.googleusercontent.com/a/default-user=s96-c",
-    shouldFail = false,
-    errorType = "access_denied",
-    delayMs = 100,
-  } = options;
+  const { scenario = "user", shouldFail = false, errorType = "access_denied" } = options;
 
-  // Store the state parameter from the initial OAuth request
-  let capturedState: string | null = null;
+  // Intercept the callback request to inject the E2E API key header
+  await page.route("**/google/callback**", async (route: Route) => {
+    const request = route.request();
+    const headers = {
+      ...request.headers(),
+      "x-e2e-api-key": process.env.E2E_API_KEY || "",
+    };
+    await route.continue({ headers });
+  });
 
   // Intercept the redirect to Google OAuth
   await page.route("**/accounts.google.com/**", async (route: Route) => {
     const url = new URL(route.request().url());
 
     // Extract OAuth parameters
-    capturedState = url.searchParams.get("state");
+    const state = url.searchParams.get("state");
     const redirectUri = url.searchParams.get("redirect_uri");
 
     if (!redirectUri) {
@@ -135,17 +110,12 @@ export async function setupGoogleOAuthMock(
       return;
     }
 
-    // Add delay to simulate network latency
-    if (delayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-
     if (shouldFail) {
       // Simulate error by redirecting with error parameter
       const errorUrl = new URL(redirectUri);
       errorUrl.searchParams.set("error", errorType);
-      if (capturedState) {
-        errorUrl.searchParams.set("state", capturedState);
+      if (state) {
+        errorUrl.searchParams.set("state", state);
       }
 
       await page.goto(errorUrl.toString());
@@ -153,90 +123,16 @@ export async function setupGoogleOAuthMock(
       return;
     }
 
-    // Success: Redirect back to our callback with a mock auth code
+    // Success: Redirect to real callback with TEST_* code
     const successUrl = new URL(redirectUri);
-    successUrl.searchParams.set("code", `mock_auth_code_${Date.now()}`);
-    if (capturedState) {
-      successUrl.searchParams.set("state", capturedState);
+    successUrl.searchParams.set("code", `TEST_${scenario}`);
+    if (state) {
+      successUrl.searchParams.set("state", state);
     }
 
-    // Navigate to the callback URL
+    // Navigate to the real callback URL (route intercept will add header)
     await page.goto(successUrl.toString());
     await route.abort("failed");
-  });
-
-  // Intercept Google's token exchange endpoint
-  await page.route("**/oauth2.googleapis.com/token", async (route: Route) => {
-    if (delayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-
-    if (shouldFail) {
-      await route.fulfill({
-        status: 400,
-        contentType: "application/json",
-        body: JSON.stringify({
-          error: errorType === "invalid_grant" ? "invalid_grant" : "access_denied",
-          error_description:
-            errorType === "invalid_grant"
-              ? "Token has been expired or revoked."
-              : "User denied access.",
-        }),
-      });
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        access_token: `mock_access_token_${Date.now()}`,
-        refresh_token: `mock_refresh_token_${Date.now()}`,
-        id_token: createMockGoogleIdToken({ email, googleId, name, picture }),
-        token_type: "Bearer",
-        expires_in: 3600,
-        scope: "openid email profile",
-      }),
-    });
-  });
-
-  // Intercept Google's userinfo endpoint
-  await page.route("**/www.googleapis.com/oauth2/**", async (route: Route) => {
-    if (delayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-
-    if (shouldFail) {
-      await route.fulfill({
-        status: 401,
-        contentType: "application/json",
-        body: JSON.stringify({
-          error: {
-            code: 401,
-            message: "Invalid Credentials",
-            status: "UNAUTHENTICATED",
-          },
-        }),
-      });
-      return;
-    }
-
-    const [firstName, lastName] = name.split(" ");
-
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        id: googleId,
-        email: email,
-        verified_email: true,
-        name: name,
-        given_name: firstName || "Test",
-        family_name: lastName || "User",
-        picture: picture,
-        locale: "en",
-      }),
-    });
   });
 }
 
@@ -275,20 +171,32 @@ export async function verifyOAuthError(page: Page): Promise<void> {
 
 /**
  * Sets up mock for Google Calendar OAuth (for calendar integration, not login)
+ *
+ * Uses TEST_* codes just like the auth flow - tests real callback code.
  */
 export async function setupGoogleCalendarOAuthMock(
   page: Page,
   options: {
-    email?: string;
-    calendarId?: string;
+    scenario?: string;
     shouldFail?: boolean;
   } = {},
 ): Promise<void> {
-  const { email = "test@example.com", shouldFail = false } = options;
+  const { scenario = "calendar", shouldFail = false } = options;
+
+  // Intercept the callback request to inject the E2E API key header
+  await page.route("**/google/callback**", async (route: Route) => {
+    const request = route.request();
+    const headers = {
+      ...request.headers(),
+      "x-e2e-api-key": process.env.E2E_API_KEY || "",
+    };
+    await route.continue({ headers });
+  });
 
   // Intercept the calendar OAuth redirect
   await page.route("**/accounts.google.com/**", async (route: Route) => {
     const url = new URL(route.request().url());
+    const state = url.searchParams.get("state");
     const redirectUri = url.searchParams.get("redirect_uri");
 
     if (!redirectUri) {
@@ -296,64 +204,22 @@ export async function setupGoogleCalendarOAuthMock(
       return;
     }
 
-    // For Cascade, the calendar callback returns HTML that posts a message
     if (shouldFail) {
       const errorUrl = new URL(redirectUri);
       errorUrl.searchParams.set("error", "access_denied");
+      if (state) {
+        errorUrl.searchParams.set("state", state);
+      }
       await page.goto(errorUrl.toString());
     } else {
       const successUrl = new URL(redirectUri);
-      successUrl.searchParams.set("code", `mock_calendar_code_${Date.now()}`);
+      successUrl.searchParams.set("code", `TEST_${scenario}`);
+      if (state) {
+        successUrl.searchParams.set("state", state);
+      }
       await page.goto(successUrl.toString());
     }
 
     await route.abort("failed");
-  });
-
-  // Mock the token exchange
-  await page.route("**/oauth2.googleapis.com/token", async (route: Route) => {
-    if (shouldFail) {
-      await route.fulfill({
-        status: 400,
-        contentType: "application/json",
-        body: JSON.stringify({ error: "access_denied" }),
-      });
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        access_token: `mock_calendar_access_token_${Date.now()}`,
-        refresh_token: `mock_calendar_refresh_token_${Date.now()}`,
-        expires_in: 3600,
-      }),
-    });
-  });
-
-  // Mock the userinfo endpoint (to get email)
-  await page.route("**/www.googleapis.com/oauth2/v2/userinfo", async (route: Route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        email: email,
-        verified_email: true,
-      }),
-    });
-  });
-
-  // Mock the calendar events endpoint
-  await page.route("**/www.googleapis.com/calendar/v3/**", async (route: Route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        kind: "calendar#events",
-        items: [],
-        nextPageToken: null,
-      }),
-    });
   });
 }

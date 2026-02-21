@@ -1,6 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
 import { createTestUserHandler } from "./e2e";
-import { getConvexSiteUrl } from "./lib/env";
+import { isLocalhost } from "./lib/env";
+
+const mockIsLocalhost = isLocalhost as MockedFunction<typeof isLocalhost>;
 
 // Mock internal dependencies
 vi.mock("./_generated/api", () => ({
@@ -22,6 +24,7 @@ vi.mock("lucia", () => ({
 // Mock env utils
 vi.mock("./lib/env", () => ({
   getConvexSiteUrl: vi.fn(),
+  isLocalhost: vi.fn(),
 }));
 
 describe("E2E Security Check", () => {
@@ -38,8 +41,7 @@ describe("E2E Security Check", () => {
   });
 
   it("should allow request when CONVEX_SITE_URL is localhost", async () => {
-    // Mock getConvexSiteUrl to return localhost
-    (getConvexSiteUrl as any).mockReturnValue("http://localhost:5173");
+    mockIsLocalhost.mockReturnValue(true);
 
     // Request can be anything
     const request = new Request("http://localhost:5173/e2e/create-test-user", {
@@ -56,8 +58,7 @@ describe("E2E Security Check", () => {
   });
 
   it("should block request when CONVEX_SITE_URL is production, even if request.url is localhost (spoofed)", async () => {
-    // Mock getConvexSiteUrl to return production URL
-    (getConvexSiteUrl as any).mockReturnValue("https://prod.convex.site");
+    mockIsLocalhost.mockReturnValue(false);
 
     // Attacker spoofs request to look like localhost (e.g. Host: localhost)
     // In this test, we construct the request with localhost URL

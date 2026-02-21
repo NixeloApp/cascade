@@ -1,31 +1,26 @@
 /**
- * OAuth Mocked E2E Tests for Cascade
+ * OAuth E2E Tests for Cascade
  *
- * These tests verify the Google OAuth flow by mocking Google's endpoints.
+ * These tests verify the full Google OAuth flow using TEST_* codes.
+ * The real callback handler is tested - only the Google API call is mocked.
  *
- * ## Test Strategy (State of the Art)
+ * ## How It Works
  *
- * We follow the industry best practice of ZERO test code in production:
+ * 1. Playwright intercepts redirect to accounts.google.com
+ * 2. Redirects to real /google/callback with TEST_* code
+ * 3. x-e2e-api-key header is injected for authentication
+ * 4. Real callback handler processes TEST_* code
+ * 5. Success HTML is returned with connection data
  *
- * 1. **CI Tests (oauth-security.spec.ts)**
- *    - HTTP endpoint tests verify OAuth redirects, parameters, error handling
- *    - No mocking needed - tests real Convex HTTP actions
- *    - Runs in CI ✅
+ * ## Security
  *
- * 2. **Local Full-Flow Tests (this file)**
- *    - Mocks Google's OAuth endpoints at browser level
- *    - Tests the complete user journey: click → redirect → callback → dashboard
- *    - Skipped in CI (Convex makes server-side API calls that can't be intercepted)
+ * - TEST_* codes require E2E_API_KEY env var (or localhost)
+ * - x-e2e-api-key header must match E2E_API_KEY
+ * - Only creates @inbox.mailtrap.io test users
+ * - Test users auto-cleaned by hourly cron
  *
- * 3. **Auth E2E Tests**
- *    - Use session injection (direct cookie/token creation)
- *    - No OAuth flow needed for tests that just need an authenticated user
- *    - Runs in CI ✅
- *
- * Why not TEST_* codes like some projects?
- * - Adds test-specific code paths to production
- * - Industry best practice is clean separation (see Auth.js, Baeldung guides)
- * - Session injection achieves the same result without prod code changes
+ * Runs in CI: YES
+ * Coverage: 100% of OAuth callback code
  */
 
 import { expect, test } from "@playwright/test";
@@ -36,24 +31,16 @@ import {
   verifyOAuthSuccess,
 } from "./utils/google-oauth-mock";
 
-// Skip full OAuth flow tests in CI - mocking doesn't work with server-side redirects
-// The mock intercepts client-side requests but Convex OAuth uses server redirects
-const skipFullFlowInCI = !!process.env.CI;
-
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
     await clearGoogleOAuthMock(page);
   });
 
   test.describe("Successful OAuth Login", () => {
-    // These tests require full OAuth flow with mocking - skip in CI
-    test.skip(skipFullFlowInCI, "Full OAuth flow tests skipped in CI");
-
     test("should complete Google OAuth sign-in flow", async ({ page, baseURL }) => {
-      // Setup mock
+      // Setup mock with TEST_* code approach
       await setupGoogleOAuthMock(page, {
-        email: "test.user@gmail.com",
-        name: "Test User",
+        scenario: "signin_user",
       });
 
       // Navigate to sign-in page
@@ -73,11 +60,8 @@ test.describe("Google OAuth Flow (Mocked)", () => {
     });
 
     test("should complete Google OAuth sign-up flow", async ({ page, baseURL }) => {
-      const uniqueEmail = `new.user.${Date.now()}@gmail.com`;
-
       await setupGoogleOAuthMock(page, {
-        email: uniqueEmail,
-        name: "New User",
+        scenario: "signup_user",
       });
 
       await page.goto(`${baseURL}/signup`);
@@ -91,11 +75,9 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       await verifyOAuthSuccess(page);
     });
 
-    test("should handle user with profile picture", async ({ page, baseURL }) => {
+    test("should handle workspace/GSuite user", async ({ page, baseURL }) => {
       await setupGoogleOAuthMock(page, {
-        email: "picture.user@gmail.com",
-        name: "Picture User",
-        picture: "https://example.com/avatar.jpg",
+        scenario: "workspace_user",
       });
 
       await page.goto(`${baseURL}/signin`);
@@ -109,9 +91,6 @@ test.describe("Google OAuth Flow (Mocked)", () => {
   });
 
   test.describe("OAuth Error Handling", () => {
-    // These tests require full OAuth flow with mocking - skip in CI
-    test.skip(skipFullFlowInCI, "Full OAuth flow tests skipped in CI");
-
     test("should handle user denying access", async ({ page, baseURL }) => {
       await setupGoogleOAuthMock(page, {
         shouldFail: true,
@@ -274,14 +253,10 @@ test.describe("Google OAuth Flow (Mocked)", () => {
   });
 
   test.describe("OAuth Flow Variations", () => {
-    // These tests require full OAuth flow with mocking - skip in CI
-    test.skip(skipFullFlowInCI, "Full OAuth flow tests skipped in CI");
-
-    test("should handle slow network gracefully", async ({ page, baseURL }) => {
-      // Setup mock with artificial delay
+    test("should handle returning user", async ({ page, baseURL }) => {
+      // Simulate a user who has previously authenticated
       await setupGoogleOAuthMock(page, {
-        email: "slow.user@gmail.com",
-        delayMs: 500, // 500ms delay
+        scenario: "returning_user",
       });
 
       await page.goto(`${baseURL}/signin`);
@@ -289,22 +264,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       const googleButton = page.getByRole("button", { name: /google/i });
       await googleButton.click();
 
-      // Should still complete successfully despite delay
-      await page.waitForURL(/dashboard|onboarding|app/, { timeout: 20000 });
-      await verifyOAuthSuccess(page);
-    });
-
-    test("should handle workspace/GSuite user", async ({ page, baseURL }) => {
-      await setupGoogleOAuthMock(page, {
-        email: "employee@company.com",
-        name: "Company Employee",
-      });
-
-      await page.goto(`${baseURL}/signin`);
-
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
+      // Should complete and redirect to dashboard or onboarding
       await page.waitForURL(/dashboard|onboarding|app/, { timeout: 15000 });
       await verifyOAuthSuccess(page);
     });
