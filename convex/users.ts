@@ -683,8 +683,7 @@ async function countComments(
   if (allowedProjectIds) {
     const commentsAll = await ctx.db
       .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", userId))
-      .filter(notDeleted)
+      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true))
       .take(MAX_COMMENTS_FOR_STATS);
 
     // Batch fetch unique issue IDs to check project membership using batchFetchIssues
@@ -704,8 +703,7 @@ async function countComments(
   return await efficientCount(
     ctx.db
       .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", userId))
-      .filter(notDeleted),
+      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true)),
     MAX_COMMENTS_FOR_STATS,
   );
 }
