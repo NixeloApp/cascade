@@ -2,6 +2,11 @@ import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 
+// PointerEvent polyfill for Radix Tooltip hover tests in CI environments
+if (!globalThis.PointerEvent) {
+  globalThis.PointerEvent = MouseEvent as unknown as typeof PointerEvent;
+}
+
 // React 19 doesn't export act, so we implement a simple version
 const actImpl = (callback: () => void | Promise<void>) => {
   const result = callback();
