@@ -10,13 +10,13 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { constantTimeEqual } from "./lib/apiAuth";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { type CountableQuery, efficientCount } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
-import { constantTimeEqual } from "./lib/apiAuth";
 import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
