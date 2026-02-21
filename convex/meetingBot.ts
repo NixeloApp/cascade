@@ -10,7 +10,7 @@ import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
 import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
-import { assertCanEditProject } from "./projectAccess";
+import { assertCanAccessProject, assertCanEditProject } from "./projectAccess";
 import { simplePriorities } from "./validators";
 
 const BOT_SERVICE_TIMEOUT_MS = 30000;
@@ -85,11 +85,17 @@ export const listRecordings = authenticatedQuery({
 
     let recordings: Doc<"meetingRecordings">[];
     if (args.projectId) {
+      // Security: Ensure user has access to the project
+      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+
       recordings = await ctx.db
         .query("meetingRecordings")
         .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
         .order("desc")
         .take(limit);
+
+      // Security: Filter out private recordings from other users
+      recordings = recordings.filter((r) => r.isPublic || r.createdBy === ctx.userId);
     } else {
       recordings = await ctx.db
         .query("meetingRecordings")
@@ -141,6 +147,10 @@ export const getRecordingByCalendarEvent = authenticatedQuery({
     if (!recording) return null;
 
     // Check access
+    if (recording.projectId) {
+      await assertCanAccessProject(ctx, recording.projectId, ctx.userId);
+    }
+
     if (recording.createdBy !== ctx.userId && !recording.isPublic) {
       return null;
     }
@@ -172,6 +182,10 @@ export const getRecording = authenticatedQuery({
     if (!recording) throw notFound("recording", args.recordingId);
 
     // Check access
+    if (recording.projectId) {
+      await assertCanAccessProject(ctx, recording.projectId, ctx.userId);
+    }
+
     if (recording.createdBy !== ctx.userId && !recording.isPublic) {
       throw forbidden(undefined, "Not authorized to view this recording");
     }
@@ -218,6 +232,10 @@ export const getTranscript = authenticatedQuery({
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
 
+    if (recording.projectId) {
+      await assertCanAccessProject(ctx, recording.projectId, ctx.userId);
+    }
+
     if (recording.createdBy !== ctx.userId && !recording.isPublic) {
       throw forbidden();
     }
@@ -235,6 +253,10 @@ export const getSummary = authenticatedQuery({
   handler: async (ctx, args) => {
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
+
+    if (recording.projectId) {
+      await assertCanAccessProject(ctx, recording.projectId, ctx.userId);
+    }
 
     if (recording.createdBy !== ctx.userId && !recording.isPublic) {
       throw forbidden();
@@ -305,6 +327,10 @@ export const scheduleRecording = authenticatedMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
+    if (args.projectId) {
+      await assertCanEditProject(ctx, args.projectId, ctx.userId);
+    }
+
     // Create the recording record
     const recordingId = await ctx.db.insert("meetingRecordings", {
       calendarEventId: args.calendarEventId,
@@ -358,6 +384,10 @@ export const startRecordingNow = authenticatedMutation({
   returns: v.id("meetingRecordings"),
   handler: async (ctx, args) => {
     const now = Date.now();
+
+    if (args.projectId) {
+      await assertCanEditProject(ctx, args.projectId, ctx.userId);
+    }
 
     const recordingId = await ctx.db.insert("meetingRecordings", {
       meetingUrl: args.meetingUrl,
