@@ -6,3 +6,7 @@ This journal tracks critical learnings and major refactoring decisions.
 - Created refactor journal.
 - Refactored `convex/users.ts` to consolidate parallel project counting logic into `countByProjectParallel` helper.
 - Learned: When extracting helpers for "fast path" optimizations, ensure that clamping logic (e.g. `Math.min`) is applied at the appropriate level (per-project vs global) to preserve exact behavior.
+
+## 2026-02-20 - Documents Access Refactor
+- Refactored `convex/documents.ts` to centralize document retrieval and access checks into `getAccessibleDocument` helper.
+- Learned: When replacing manual checks with a helper, verify that the helper's error types (e.g., `NOT_FOUND` vs returning `null`) match the original behavior for each call site. In this case, mutations and specific queries expected `throw notFound`, which matched the helper.
