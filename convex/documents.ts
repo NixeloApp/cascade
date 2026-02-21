@@ -119,52 +119,20 @@ export const list = authenticatedQuery({
     const fetchBuffer = limit * FETCH_BUFFER_MULTIPLIER;
 
     // Get user's private documents (their own non-public docs)
-    // If organizationId is provided, filter by it
-    let privateDocumentsQuery = ctx.db
-      .query("documents")
-      .withIndex("by_creator_updated", (q) => q.eq("createdBy", ctx.userId))
-      .filter((q) => q.eq(q.field("isPublic"), false));
-
-    if (args.organizationId) {
-      privateDocumentsQuery = privateDocumentsQuery.filter((q) =>
-        q.eq(q.field("organizationId"), args.organizationId),
-      );
-    }
-
-    const privateDocuments = await privateDocumentsQuery
-      .order("desc")
-      .filter(notDeleted)
-      .take(fetchBuffer);
+    const privateDocuments = await fetchPrivateDocuments(
+      ctx,
+      ctx.userId,
+      args.organizationId,
+      fetchBuffer,
+    );
 
     // Get public documents (must be scoped to organization)
-    let publicDocuments: typeof privateDocuments = [];
-
-    if (args.organizationId) {
-      const orgId = args.organizationId;
-      // If organizationId is provided, first verify user is a member
-      const membership = await ctx.db
-        .query("organizationMembers")
-        .withIndex("by_organization_user", (q) =>
-          q.eq("organizationId", orgId).eq("userId", ctx.userId),
-        )
-        .first();
-
-      if (membership) {
-        // Efficiently fetch public docs for that org
-        publicDocuments = await ctx.db
-          .query("documents")
-          .withIndex("by_organization_public", (q) =>
-            q.eq("organizationId", orgId).eq("isPublic", true),
-          )
-          .order("desc")
-          .filter(notDeleted)
-          .take(fetchBuffer);
-      }
-    } else {
-      // If no organizationId, we DO NOT return any public documents to prevent cross-tenant leaks.
-      // Users must be in an organization context to see shared documents.
-      publicDocuments = [];
-    }
+    const publicDocuments = await fetchPublicDocuments(
+      ctx,
+      ctx.userId,
+      args.organizationId,
+      fetchBuffer,
+    );
 
     // Combine and deduplicate (user's public docs appear in both queries)
     const seenIds = new Set<string>();
@@ -1316,4 +1284,57 @@ async function getAccessibleDocuments(
   }
 
   return { commentToDocMap, accessibleDocIds };
+}
+
+async function fetchPrivateDocuments(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  organizationId: Id<"organizations"> | undefined,
+  limit: number,
+) {
+  let query = ctx.db
+    .query("documents")
+    .withIndex("by_creator_updated", (q) => q.eq("createdBy", userId))
+    .filter((q) => q.eq(q.field("isPublic"), false));
+
+  if (organizationId) {
+    query = query.filter((q) => q.eq(q.field("organizationId"), organizationId));
+  }
+
+  return await query.order("desc").filter(notDeleted).take(limit);
+}
+
+async function fetchPublicDocuments(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  organizationId: Id<"organizations"> | undefined,
+  limit: number,
+) {
+  if (!organizationId) {
+    // If no organizationId, we DO NOT return any public documents to prevent cross-tenant leaks.
+    // Users must be in an organization context to see shared documents.
+    return [];
+  }
+
+  // If organizationId is provided, first verify user is a member
+  const membership = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_organization_user", (q) =>
+      q.eq("organizationId", organizationId).eq("userId", userId),
+    )
+    .first();
+
+  if (!membership) {
+    return [];
+  }
+
+  // Efficiently fetch public docs for that org
+  return await ctx.db
+    .query("documents")
+    .withIndex("by_organization_public", (q) =>
+      q.eq("organizationId", organizationId).eq("isPublic", true),
+    )
+    .order("desc")
+    .filter(notDeleted)
+    .take(limit);
 }
