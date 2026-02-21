@@ -235,6 +235,8 @@ export const updateTitle = authenticatedMutation({
       title: args.title,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -259,6 +261,8 @@ export const togglePublic = authenticatedMutation({
       isPublic: !document.isPublic,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -278,6 +282,8 @@ export const deleteDocument = authenticatedMutation({
     const deletedAt = Date.now();
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
     await cascadeSoftDelete(ctx, "documents", args.id, ctx.userId, deletedAt);
+
+    return { success: true };
   },
 });
 
@@ -303,6 +309,8 @@ export const restoreDocument = authenticatedMutation({
       deletedAt: undefined,
       deletedBy: undefined,
     });
+
+    return { success: true };
   },
 });
 
@@ -865,6 +873,8 @@ export const moveDocument = authenticatedMutation({
       order: newOrder,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -897,6 +907,8 @@ export const reorderDocuments = authenticatedMutation({
     await Promise.all(
       args.documentIds.map((id, index) => ctx.db.patch(id, { order: index, updatedAt: now })),
     );
+
+    return { success: true };
   },
 });
 
@@ -1079,6 +1091,8 @@ export const updateComment = authenticatedMutation({
       mentions: args.mentions ?? comment.mentions,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -1103,6 +1117,8 @@ export const deleteComment = authenticatedMutation({
     await ctx.db.patch(args.commentId, {
       isDeleted: true,
     });
+
+    return { success: true };
   },
 });
 
@@ -1138,6 +1154,8 @@ export const addCommentReaction = authenticatedMutation({
       emoji: args.emoji,
       createdAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -1167,6 +1185,8 @@ export const removeCommentReaction = authenticatedMutation({
     }
 
     await ctx.db.delete(reaction._id);
+
+    return { success: true };
   },
 });
 
