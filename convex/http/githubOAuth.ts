@@ -1,6 +1,5 @@
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
-import { constantTimeEqual } from "../lib/apiAuth";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
 import { isAppError, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
@@ -58,14 +57,13 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   }
 
   const config = getGitHubOAuthConfig();
-  const state = crypto.randomUUID();
 
   // Build OAuth authorization URL
   const authUrl = new URL("https://github.com/login/oauth/authorize");
   authUrl.searchParams.set("client_id", config.clientId);
   authUrl.searchParams.set("redirect_uri", config.redirectUri);
   authUrl.searchParams.set("scope", config.scopes);
-  authUrl.searchParams.set("state", state); // CSRF protection
+  authUrl.searchParams.set("state", crypto.randomUUID()); // CSRF protection
 
   // Redirect user to GitHub OAuth page
   return Promise.resolve(
@@ -73,7 +71,6 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
       status: 302,
       headers: {
         Location: authUrl.toString(),
-        "Set-Cookie": `github-oauth-state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
       },
     }),
   );
@@ -91,7 +88,6 @@ export const initiateAuth = httpAction(initiateAuthHandler);
 export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
   const errorDescription = url.searchParams.get("error_description");
 
@@ -121,28 +117,13 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       `,
       {
         status: 400,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
-        },
+        headers: { "Content-Type": "text/html" },
       },
     );
   }
 
-  // Validate state to prevent CSRF
-  const cookieHeader = request.headers.get("Cookie");
-  const storedState = cookieHeader
-    ?.split(";")
-    .find((c) => c.trim().startsWith("github-oauth-state="))
-    ?.split("=")[1];
-
-  if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
-    return new Response("Invalid state or missing authorization code", {
-      status: 400,
-      headers: {
-        "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
-      },
-    });
+  if (!code) {
+    return new Response("Missing authorization code", { status: 400 });
   }
 
   const config = getGitHubOAuthConfig();
@@ -245,10 +226,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
       `,
       {
         status: 200,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
-        },
+        headers: { "Content-Type": "text/html" },
       },
     );
   } catch (error) {
@@ -309,10 +287,7 @@ const handleOAuthError = (error: unknown) => {
     `,
     {
       status,
-      headers: {
-        "Content-Type": "text/html",
-        "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
-      },
+      headers: { "Content-Type": "text/html" },
     },
   );
 };

@@ -6,7 +6,7 @@ describe("html utils", () => {
     it("should escape basic HTML characters", () => {
       expect(escapeHtml("<div>")).toBe("&lt;div&gt;");
       expect(escapeHtml('"quoted"')).toBe("&quot;quoted&quot;");
-      expect(escapeHtml("'single'")).toBe("&#039;single&#039;");
+      expect(escapeHtml("'single'")).toBe("&#39;single&#39;");
       expect(escapeHtml("a & b")).toBe("a &amp; b");
     });
 
