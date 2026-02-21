@@ -10,6 +10,7 @@ import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
 import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { assertCanEditProject } from "./projectAccess";
 import { simplePriorities } from "./validators";
 
 const BOT_SERVICE_TIMEOUT_MS = 30000;
@@ -688,8 +689,19 @@ export const createIssueFromActionItem = authenticatedMutation({
     const summary = await ctx.db.get(args.summaryId);
     if (!summary) throw notFound("summary", args.summaryId);
 
+    // Security Check: Ensure user can access the recording
+    const recording = await ctx.db.get(summary.recordingId);
+    if (!recording) throw notFound("recording", summary.recordingId);
+
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden(undefined, "Not authorized to access this recording");
+    }
+
     const actionItem = summary.actionItems[args.actionItemIndex];
     if (!actionItem) throw notFound("actionItem");
+
+    // Security Check: Ensure user has write access to the project
+    await assertCanEditProject(ctx, args.projectId, ctx.userId);
 
     // Get project for issue key
     const project = await ctx.db.get(args.projectId);
