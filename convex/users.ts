@@ -16,7 +16,7 @@ import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
-import { getOrganizationMemberships } from "./lib/organizationAccess";
+import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import {
@@ -82,20 +82,10 @@ export const getUser = authenticatedQuery({
     }
 
     // Check for shared organization
-    // Optimization: Use cached memberships for the current user
-    const { items: myOrgs } = await getOrganizationMemberships(ctx, ctx.userId);
+    const isShared = await hasSharedOrganization(ctx, ctx.userId, args.id);
 
-    if (myOrgs.length > 0) {
-      // Optimization: Fetch memberships for the target user (cached per request)
-      // This helper enforces MAX_PAGE_SIZE limit internally
-      const { items: theirOrgs } = await getOrganizationMemberships(ctx, args.id);
-
-      const myOrgIds = new Set(myOrgs.map((m) => m.organizationId));
-      const hasSharedOrg = theirOrgs.some((m) => myOrgIds.has(m.organizationId));
-
-      if (hasSharedOrg) {
-        return sanitizeUserForAuth(user);
-      }
+    if (isShared) {
+      return sanitizeUserForAuth(user);
     }
 
     // If no shared context, return public profile (no email)

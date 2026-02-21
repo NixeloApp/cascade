@@ -125,3 +125,39 @@ export async function isOrganizationMember(
   const role = await getOrganizationRole(ctx, organizationId, userId);
   return role !== null;
 }
+
+/**
+ * Checks if two users share at least one organization.
+ *
+ * This is useful for privacy checks where users can only see profiles of people
+ * they share an organization with.
+ *
+ * @param ctx - Query or Mutation context.
+ * @param userId1 - The first user ID.
+ * @param userId2 - The second user ID.
+ * @returns `true` if the users share at least one organization, `false` otherwise.
+ */
+export async function hasSharedOrganization(
+  ctx: QueryCtx | MutationCtx,
+  userId1: Id<"users">,
+  userId2: Id<"users">,
+): Promise<boolean> {
+  // Get memberships for the first user
+  const { items: orgs1 } = await getOrganizationMemberships(ctx, userId1);
+
+  // Optimization: If the first user has no organizations, they can't share any.
+  if (orgs1.length === 0) {
+    return false;
+  }
+
+  // Get memberships for the second user
+  const { items: orgs2 } = await getOrganizationMemberships(ctx, userId2);
+
+  if (orgs2.length === 0) {
+    return false;
+  }
+
+  // Check for intersection
+  const orgIds1 = new Set(orgs1.map((m) => m.organizationId));
+  return orgs2.some((m) => orgIds1.has(m.organizationId));
+}

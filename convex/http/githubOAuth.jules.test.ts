@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { api, internal } from "../_generated/api";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
-import { handleCallbackHandler, initiateAuthHandler } from "./githubOAuth";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { handleCallbackHandler, initiateAuthHandler, listReposHandler } from "./githubOAuth";
 
 // Mock env library
 vi.mock("../lib/env", () => ({
@@ -11,8 +13,16 @@ vi.mock("../lib/env", () => ({
   getConvexSiteUrl: vi.fn(),
 }));
 
+// Mock fetchWithTimeout
+vi.mock("../lib/fetchWithTimeout", () => ({
+  fetchWithTimeout: vi.fn(),
+}));
+
 describe("GitHub OAuth Flow", () => {
-  const mockCtx = {} as ActionCtx;
+  const mockCtx = {
+    runQuery: vi.fn(),
+    runMutation: vi.fn(),
+  } as unknown as ActionCtx;
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -63,9 +73,6 @@ describe("GitHub OAuth Flow", () => {
   });
 
   describe("handleCallbackHandler", () => {
-    const mockFetch = vi.fn();
-    global.fetch = mockFetch;
-
     it("should return HTML error if error param exists", async () => {
       const request = new Request("https://api.convex.site/github/callback?error=access_denied");
       const response = await handleCallbackHandler(mockCtx, request);
@@ -86,13 +93,13 @@ describe("GitHub OAuth Flow", () => {
 
     it("should exchange code for token and return success HTML", async () => {
       // Mock token exchange response
-      mockFetch.mockResolvedValueOnce({
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ access_token: "gho_token123" }),
       } as Response);
 
       // Mock user info response
-      mockFetch.mockResolvedValueOnce({
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ id: 12345, login: "testuser" }),
       } as Response);
@@ -108,20 +115,27 @@ describe("GitHub OAuth Flow", () => {
       expect(text).toContain('"githubUserId":"12345"');
 
       // Verify fetch calls
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(fetchWithTimeout).toHaveBeenCalledTimes(2);
       // Check token exchange call
-      expect(mockFetch.mock.calls[0][0]).toBe("https://github.com/login/oauth/access_token");
-      const tokenBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(vi.mocked(fetchWithTimeout).mock.calls[0][0]).toBe(
+        "https://github.com/login/oauth/access_token",
+      );
+      const tokenBody = JSON.parse(
+        (vi.mocked(fetchWithTimeout).mock.calls[0][1] as RequestInit).body as string,
+      );
       expect(tokenBody.code).toBe("auth_code");
       expect(tokenBody.client_id).toBe("test-client-id");
 
       // Check user info call
-      expect(mockFetch.mock.calls[1][0]).toBe("https://api.github.com/user");
-      expect(mockFetch.mock.calls[1][1].headers.Authorization).toBe("Bearer gho_token123");
+      expect(vi.mocked(fetchWithTimeout).mock.calls[1][0]).toBe("https://api.github.com/user");
+      expect((vi.mocked(fetchWithTimeout).mock.calls[1][1] as RequestInit).headers).toHaveProperty(
+        "Authorization",
+        "Bearer gho_token123",
+      );
     });
 
     it("should handle token exchange failure", async () => {
-      mockFetch.mockResolvedValueOnce({
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: false,
         status: 400,
       } as Response);
@@ -135,7 +149,7 @@ describe("GitHub OAuth Flow", () => {
     });
 
     it("should handle token exchange error in JSON", async () => {
-      mockFetch.mockResolvedValueOnce({
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           error: "bad_verification_code",
@@ -153,13 +167,13 @@ describe("GitHub OAuth Flow", () => {
 
     it("should handle user info fetch failure", async () => {
       // Token success
-      mockFetch.mockResolvedValueOnce({
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ access_token: "gho_token123" }),
       } as Response);
 
       // User info failure
-      mockFetch.mockResolvedValueOnce({
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
         ok: false,
       } as Response);
 
@@ -169,6 +183,118 @@ describe("GitHub OAuth Flow", () => {
       expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("Failed to get GitHub user info");
+    });
+  });
+
+  describe("listReposHandler", () => {
+    it("should return 400 if user is not connected to GitHub", async () => {
+      vi.mocked(mockCtx.runQuery).mockResolvedValueOnce(null);
+
+      const request = new Request("https://api.convex.site/github/repos");
+      const response = await listReposHandler(mockCtx, request);
+
+      expect(response.status).toBe(400);
+      const body = await response.json();
+      expect(body.error).toBe("Not connected to GitHub");
+      expect(mockCtx.runQuery).toHaveBeenCalledWith(api.github.getConnection);
+    });
+
+    it("should return 500 if tokens cannot be retrieved", async () => {
+      vi.mocked(mockCtx.runQuery).mockResolvedValueOnce({ userId: "user123" });
+      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce(null);
+
+      const request = new Request("https://api.convex.site/github/repos");
+      const response = await listReposHandler(mockCtx, request);
+
+      expect(response.status).toBe(500);
+      const body = await response.json();
+      expect(body.error).toBe("Failed to get GitHub tokens");
+      expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.github.getDecryptedGitHubTokens, {
+        userId: "user123",
+      });
+    });
+
+    it("should return 500 if GitHub API fails", async () => {
+      vi.mocked(mockCtx.runQuery).mockResolvedValueOnce({ userId: "user123" });
+      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "token123" });
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      } as Response);
+
+      const request = new Request("https://api.convex.site/github/repos");
+      const response = await listReposHandler(mockCtx, request);
+
+      expect(response.status).toBe(500);
+      const body = await response.json();
+      expect(body.error).toContain("Failed to fetch repositories");
+    });
+
+    it("should return repositories on success", async () => {
+      vi.mocked(mockCtx.runQuery).mockResolvedValueOnce({ userId: "user123" });
+      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "token123" });
+
+      const mockRepos = [
+        {
+          id: 101,
+          name: "repo-1",
+          full_name: "owner/repo-1",
+          owner: { login: "owner" },
+          private: false,
+          description: "A public repo",
+        },
+        {
+          id: 102,
+          name: "repo-2",
+          full_name: "owner/repo-2",
+          owner: { login: "owner" },
+          private: true,
+          description: null,
+        },
+      ];
+
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockRepos,
+      } as Response);
+
+      const request = new Request("https://api.convex.site/github/repos");
+      const response = await listReposHandler(mockCtx, request);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.repos).toHaveLength(2);
+      expect(body.repos[0]).toEqual({
+        id: "101",
+        name: "repo-1",
+        fullName: "owner/repo-1",
+        owner: "owner",
+        private: false,
+        description: "A public repo",
+      });
+      expect(body.repos[1]).toEqual({
+        id: "102",
+        name: "repo-2",
+        fullName: "owner/repo-2",
+        owner: "owner",
+        private: true,
+        description: null,
+      });
+
+      // Verify Convex interactions
+      expect(mockCtx.runQuery).toHaveBeenCalledWith(api.github.getConnection);
+      expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.github.getDecryptedGitHubTokens, {
+        userId: "user123",
+      });
+      expect(fetchWithTimeout).toHaveBeenCalledWith(
+        expect.stringContaining("https://api.github.com/user/repos"),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer token123",
+          }),
+        }),
+        30000,
+      );
     });
   });
 });

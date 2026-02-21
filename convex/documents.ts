@@ -393,29 +393,44 @@ async function canAccessDocument(
   },
   myOrgIds?: Set<string>,
 ): Promise<boolean> {
-  if (doc.createdBy === ctx.userId) return true;
+  // Security: Always verify container access first, even for the creator.
+  // This ensures that removed members lose access to their creations.
 
-  // Check project access if document is linked to a project
+  // 1. Check Project Access (if linked)
   if (doc.projectId) {
     const canProject = await canAccessProject(ctx, doc.projectId, ctx.userId);
     if (!canProject) return false;
   }
+  // 2. Check Organization Access (if NOT linked to a project)
+  // Note: canAccessProject already handles org admin checks, so we only need explicit org check here
+  else {
+    let hasOrgAccess = false;
+    if (myOrgIds) {
+      hasOrgAccess = myOrgIds.has(doc.organizationId);
+    } else {
+      const membership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_organization_user", (q) =>
+          q.eq("organizationId", doc.organizationId).eq("userId", ctx.userId),
+        )
+        .first();
+      hasOrgAccess = !!membership;
+    }
 
-  if (!doc.isPublic) return false;
-
-  // Check organization membership
-  if (myOrgIds) {
-    return myOrgIds.has(doc.organizationId);
+    if (!hasOrgAccess) return false;
   }
 
-  const membership = await ctx.db
-    .query("organizationMembers")
-    .withIndex("by_organization_user", (q) =>
-      q.eq("organizationId", doc.organizationId).eq("userId", ctx.userId),
-    )
-    .first();
+  // 3. Check Document Permissions
+  // If we reached here, the user has access to the CONTAINER (Project or Org).
 
-  return !!membership;
+  // Creator always has access (within valid container)
+  if (doc.createdBy === ctx.userId) return true;
+
+  // Public documents are accessible (within valid container)
+  if (doc.isPublic) return true;
+
+  // Otherwise, deny (e.g. private document created by someone else)
+  return false;
 }
 
 async function checkRateLimit(ctx: MutationCtx & { userId: Id<"users"> }) {

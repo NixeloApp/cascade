@@ -127,6 +127,7 @@ export const executeRules = internalMutation({
     trigger: automationTriggers,
     triggerValue: v.optional(v.string()),
   },
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy code
   handler: async (ctx, args) => {
     // Get active rules for this project and trigger
     const rules = await ctx.db
