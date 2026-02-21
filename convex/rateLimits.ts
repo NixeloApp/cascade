@@ -80,6 +80,7 @@ export const rateLimit = async (
   name: string,
   options?: { key?: string; count?: number; throws?: boolean; reserve?: boolean },
 ) => {
+  // biome-ignore lint/suspicious/noExplicitAny: library limitation
   return await rateLimiter.limit(ctx, name as any, { throws: true, ...options });
 };
 
