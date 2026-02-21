@@ -17,12 +17,12 @@ vi.mock("../emails/VerifyEmail", () => ({
 }));
 
 // Access the internal function hidden in the provider options
-// @ts-ignore
+// @ts-expect-error
 const sendVerificationRequest = otpVerification.options
-  // @ts-ignore
-  ? otpVerification.options.sendVerificationRequest
-  // @ts-ignore
-  : otpVerification.sendVerificationRequest;
+  ? // @ts-expect-error
+    otpVerification.options.sendVerificationRequest
+  : // @ts-expect-error
+    otpVerification.sendVerificationRequest;
 
 describe("OTP Verification Environment Safety", () => {
   const originalEnv = process.env;
@@ -54,7 +54,7 @@ describe("OTP Verification Environment Safety", () => {
     const email = "user@inbox.mailtrap.io";
     const token = "123456";
 
-    // @ts-ignore
+    // @ts-expect-error
     await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
     // Verify calls
@@ -62,16 +62,14 @@ describe("OTP Verification Environment Safety", () => {
     expect(mockCtx.runMutation).toHaveBeenCalledTimes(2);
 
     // First call: Rate limit
-    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(1,
-      expect.anything(),
-      { email }
-    );
+    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(1, expect.anything(), { email });
 
     // Second call: Store OTP
-    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(2,
-      internal.e2e.storeTestOtp,
-      { email, code: token, type: "verification" }
-    );
+    expect(mockCtx.runMutation).toHaveBeenNthCalledWith(2, internal.e2e.storeTestOtp, {
+      email,
+      code: token,
+      type: "verification",
+    });
   });
 
   it("should NOT store OTP for test email in UNSAFE environment", async () => {
@@ -91,15 +89,12 @@ describe("OTP Verification Environment Safety", () => {
     const email = "user@inbox.mailtrap.io";
     const token = "123456";
 
-    // @ts-ignore
+    // @ts-expect-error
     await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
     // Should only call rate limit (1 time), NOT store OTP
     expect(mockCtx.runMutation).toHaveBeenCalledTimes(1);
-    expect(mockCtx.runMutation).toHaveBeenCalledWith(
-       expect.anything(),
-       { email }
-    );
+    expect(mockCtx.runMutation).toHaveBeenCalledWith(expect.anything(), { email });
 
     // But email should still be sent
     expect(sendEmail).toHaveBeenCalledTimes(1);
@@ -121,16 +116,13 @@ describe("OTP Verification Environment Safety", () => {
     const email = "regular@example.com"; // NOT mailtrap
     const token = "123456";
 
-    // @ts-ignore
+    // @ts-expect-error
     await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
     // Should only call rate limit
     expect(mockCtx.runMutation).toHaveBeenCalledTimes(1);
     // Verify the only call was NOT for storing OTP (checking args)
-    expect(mockCtx.runMutation).toHaveBeenLastCalledWith(
-      expect.anything(),
-      { email }
-    );
+    expect(mockCtx.runMutation).toHaveBeenLastCalledWith(expect.anything(), { email });
   });
 
   it("should suppress email errors for test emails", async () => {
@@ -144,20 +136,23 @@ describe("OTP Verification Environment Safety", () => {
     };
 
     // Mock email FAILURE
-    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Mock Error", id: "mock-failure-id" });
+    vi.mocked(sendEmail).mockResolvedValue({
+      success: false,
+      error: "Mock Error",
+      id: "mock-failure-id",
+    });
 
     const email = "user@inbox.mailtrap.io";
     const token = "123456";
 
     // Should NOT throw
-    // @ts-ignore
-    await expect(sendVerificationRequest({ identifier: email, token }, mockCtx)).resolves.toBeUndefined();
+    // @ts-expect-error
+    await expect(
+      sendVerificationRequest({ identifier: email, token }, mockCtx),
+    ).resolves.toBeUndefined();
 
     // Store OTP should still have been called before email send
-    expect(mockCtx.runMutation).toHaveBeenCalledWith(
-      internal.e2e.storeTestOtp,
-      expect.anything()
-    );
+    expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.e2e.storeTestOtp, expect.anything());
   });
 
   it("should THROW email errors for regular emails", async () => {
@@ -171,14 +166,19 @@ describe("OTP Verification Environment Safety", () => {
     };
 
     // Mock email FAILURE
-    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Mock Error", id: "mock-failure-id" });
+    vi.mocked(sendEmail).mockResolvedValue({
+      success: false,
+      error: "Mock Error",
+      id: "mock-failure-id",
+    });
 
     const email = "regular@example.com";
     const token = "123456";
 
     // Should THROW
-    // @ts-ignore
-    await expect(sendVerificationRequest({ identifier: email, token }, mockCtx))
-      .rejects.toThrow("Could not send verification email");
+    // @ts-expect-error
+    await expect(sendVerificationRequest({ identifier: email, token }, mockCtx)).rejects.toThrow(
+      "Could not send verification email",
+    );
   });
 });
