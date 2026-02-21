@@ -426,6 +426,26 @@ describe("Teams", () => {
 
       await t.finishInProgressScheduledFunctions();
     });
+
+    it("should return team when using id instead of teamId", async () => {
+      const t = convexTest(schema, modules);
+      const { organizationId, workspaceId, asUser: asOwner } = await createTestContext(t);
+
+      const { teamId } = await asOwner.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId,
+        name: "Test Team",
+        isPrivate: false,
+      });
+
+      // Use id instead of teamId
+      const team = await asOwner.query(api.teams.getTeam, { id: teamId });
+
+      expect(team).not.toBeNull();
+      expect(team?.name).toBe("Test Team");
+
+      await t.finishInProgressScheduledFunctions();
+    });
   });
 
   describe("getBySlug", () => {
