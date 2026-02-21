@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import { type QueryCtx, internalQuery } from "./_generated/server";
+import { internalQuery, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { forbidden, notFound, validation } from "./lib/errors";
@@ -81,7 +81,6 @@ async function getUserEventsInRange(
   endDate: number,
 ) {
   // Parallel fetch: organized events + attending events
-  // biome-ignore lint/suspicious/noExplicitAny: userId cast needed for strict types vs index query
   const [organizedEvents, attendingEventsResult] = await Promise.all([
     // User is organizer
     ctx.db
@@ -95,7 +94,11 @@ async function getUserEventsInRange(
     ctx.db
       .query("calendarEvents")
       .withIndex("by_attendee_start", (q) =>
-        q.eq("attendeeIds", userId as any).gte("startTime", startDate).lte("startTime", endDate),
+        q
+          // biome-ignore lint/suspicious/noExplicitAny: userId cast needed for strict types vs index query
+          .eq("attendeeIds", userId as any)
+          .gte("startTime", startDate)
+          .lte("startTime", endDate),
       )
       .take(MAX_PAGE_SIZE),
   ]);
