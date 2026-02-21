@@ -8,6 +8,7 @@ Project todos and improvement tracking.
 
 | File | Status | Focus |
 |------|--------|-------|
+| [competitive-parity.md](./competitive-parity.md) | **P1** | Plane/Cal.com feature gaps - copy from source |
 | [agency-mvp.md](./agency-mvp.md) | Active | Agency MVP features |
 | [enterprise.md](./enterprise.md) | Active | Enterprise features |
 | [growth-features.md](./growth-features.md) | Active | Growth features |
