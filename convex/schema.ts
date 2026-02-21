@@ -1601,14 +1601,6 @@ const applicationTables = {
   // Rate limiting, auditing, testing, health checks
   // ===========================================================================
 
-  rateLimits: defineTable({
-    key: v.string(),
-    value: v.number(),
-    expiresAt: v.number(),
-  })
-    .index("by_key", ["key"])
-    .index("by_expiry", ["expiresAt"]),
-
   auditLogs: defineTable({
     action: v.string(), // "team.create", "project.delete"
     actorId: v.optional(v.id("users")),
