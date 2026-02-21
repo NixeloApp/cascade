@@ -130,24 +130,38 @@ describe("IssueCard", () => {
     expect(tooltipText).toBeInTheDocument();
   });
 
-  it("should be keyboard accessible for tooltips", () => {
+  it("should display metadata icons with correct labels", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    // Type icon wrapper
+    // Type icon
     const typeIcon = screen.getByLabelText("Bug");
-    const typeWrapper = typeIcon.closest("button");
-    expect(typeWrapper).toBeInTheDocument();
+    expect(typeIcon).toBeInTheDocument();
+    // Ensure it's NOT in a button (to avoid tab stops)
+    expect(typeIcon.closest("button")).not.toBeInTheDocument();
 
-    // Priority icon wrapper
-    // Priority: high
+    // Priority icon
     const priorityIcon = screen.getByLabelText("Priority: high");
-    const priorityWrapper = priorityIcon.closest("button");
-    expect(priorityWrapper).toBeInTheDocument();
+    expect(priorityIcon).toBeInTheDocument();
+    expect(priorityIcon.closest("button")).not.toBeInTheDocument();
 
-    // Assignee wrapper
+    // Assignee
     const assigneeImg = screen.getByAltText("Alice Johnson");
-    const assigneeWrapper = assigneeImg.closest("button");
-    expect(assigneeWrapper).toBeInTheDocument();
+    expect(assigneeImg).toBeInTheDocument();
+    expect(assigneeImg.closest("button")).not.toBeInTheDocument();
+  });
+
+  it("should render fallback assignee avatar with accessible label", () => {
+    const issueWithoutAvatar = {
+      ...mockIssue,
+      // biome-ignore lint/style/noNonNullAssertion: testing mock data
+      assignee: { ...mockIssue.assignee!, image: undefined },
+    };
+    render(<IssueCard issue={issueWithoutAvatar} status="todo" />);
+
+    const fallbackAvatar = screen.getByLabelText("Alice Johnson");
+    expect(fallbackAvatar).toBeInTheDocument();
+    expect(fallbackAvatar).toHaveAttribute("role", "img");
+    expect(fallbackAvatar).toHaveTextContent("A"); // Initial
   });
 
   it("should trigger onClick when clicking on interactive elements", async () => {
