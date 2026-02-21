@@ -7,7 +7,6 @@ vi.mock("../lib/env", () => ({
   getGitHubClientId: () => "test-client-id",
   getGitHubClientSecret: () => "test-client-secret",
   isGitHubOAuthConfigured: () => true,
-  getSiteUrl: () => "http://localhost:5555",
 }));
 
 vi.mock("../lib/fetchWithTimeout", () => ({
@@ -15,7 +14,7 @@ vi.mock("../lib/fetchWithTimeout", () => ({
 }));
 
 // Mock crypto.randomUUID
-global.crypto.randomUUID = vi.fn(() => "test-uuid-state") as typeof crypto.randomUUID;
+global.crypto.randomUUID = vi.fn(() => "test-uuid-state") as any;
 
 describe("GitHub OAuth Security", () => {
   let mockCtx: ActionCtx;
