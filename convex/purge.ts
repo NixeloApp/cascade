@@ -80,7 +80,6 @@ export const TABLES: TableNames[] = [
   "serviceProviders",
   "meetingBotJobs",
   "userSettings",
-  "rateLimits",
   "auditLogs",
   "users",
   "authAccounts",
