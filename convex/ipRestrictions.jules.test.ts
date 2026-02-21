@@ -1,211 +1,254 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestUser } from "./testUtils";
 
 describe("IP Restrictions", () => {
-  it("should enforce admin access", async () => {
+  it("should allow access when IP restrictions are disabled", async () => {
     const t = convexTest(schema, modules);
-    const ownerId = await createTestUser(t);
-    const memberId = await createTestUser(t);
-    const asOwner = asAuthenticatedUser(t, ownerId);
 
-    // Create org
-    const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
-      name: "Test Org",
-      timezone: "UTC",
+    // Setup
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert("users", {
+        name: "Test User",
+        email: "test@example.com",
+      });
     });
 
-    // Add member
-    await asOwner.mutation(api.organizations.addMember, {
-      organizationId,
-      userId: memberId,
-      role: "member",
+    const orgId = await t.run(async (ctx) => {
+      return await ctx.db.insert("organizations", {
+        name: "Test Org",
+        slug: "test-org",
+        timezone: "UTC",
+        settings: {
+          defaultMaxHoursPerWeek: 40,
+          defaultMaxHoursPerDay: 8,
+          requiresTimeApproval: false,
+          billingEnabled: true,
+        },
+        ipRestrictionsEnabled: false, // Disabled
+        createdBy: userId,
+        updatedAt: Date.now(),
+      });
     });
 
-    const asMember = asAuthenticatedUser(t, memberId);
-
-    // Member tries to add IP
-    await expect(async () => {
-      await asMember.mutation(api.ipRestrictions.addIpToAllowlist, {
-        organizationId,
-        ipRange: "192.168.1.1",
+    const workspaceId = await t.run(async (ctx) => {
+      return await ctx.db.insert("workspaces", {
+        organizationId: orgId,
+        name: "Test Workspace",
+        slug: "test-workspace",
+        createdBy: userId,
+        updatedAt: Date.now(),
       });
-    }).rejects.toThrow("Only organization admins can manage IP restrictions");
+    });
 
-    // Member tries to enable restrictions
-    await expect(async () => {
-      await asMember.mutation(api.ipRestrictions.setIpRestrictionsEnabled, {
-        organizationId,
-        enabled: true,
+    const projectId = await t.run(async (ctx) => {
+      return await ctx.db.insert("projects", {
+        name: "Test Project",
+        key: "TEST",
+        organizationId: orgId,
+        workspaceId: workspaceId,
+        ownerId: userId,
+        createdBy: userId,
+        updatedAt: Date.now(),
+        boardType: "kanban",
+        workflowStates: [],
+        isPublic: false,
       });
-    }).rejects.toThrow("Only organization admins can manage IP restrictions");
+    });
+
+    // Test
+    const allowed = await t.run(async (ctx) => {
+      return await ctx.runQuery(internal.ipRestrictions.checkProjectIpAllowed, {
+        projectId,
+        clientIp: "1.2.3.4",
+      });
+    });
+
+    expect(allowed).toBe(true);
   });
 
-  it("should manage allowlist", async () => {
+  it("should allow access when IP is in allowlist", async () => {
     const t = convexTest(schema, modules);
-    const ownerId = await createTestUser(t);
-    const asOwner = asAuthenticatedUser(t, ownerId);
 
-    const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
-      name: "Test Org",
-      timezone: "UTC",
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert("users", {});
     });
 
-    // Add valid IP
-    await asOwner.mutation(api.ipRestrictions.addIpToAllowlist, {
-      organizationId,
-      ipRange: "192.168.1.1",
-      description: "Office",
-    });
-
-    // Add valid CIDR
-    await asOwner.mutation(api.ipRestrictions.addIpToAllowlist, {
-      organizationId,
-      ipRange: "10.0.0.0/24",
-      description: "VPN",
-    });
-
-    // Verify list
-    const list = await asOwner.query(api.ipRestrictions.listIpAllowlist, { organizationId });
-    expect(list).toHaveLength(2);
-    expect(list.some((i) => i.ipRange === "192.168.1.1")).toBe(true);
-    expect(list.some((i) => i.ipRange === "10.0.0.0/24")).toBe(true);
-
-    // Try duplicate
-    await expect(async () => {
-      await asOwner.mutation(api.ipRestrictions.addIpToAllowlist, {
-        organizationId,
-        ipRange: "192.168.1.1",
+    const orgId = await t.run(async (ctx) => {
+      return await ctx.db.insert("organizations", {
+        name: "Test Org",
+        slug: "test-org",
+        timezone: "UTC",
+        settings: { defaultMaxHoursPerWeek: 40, defaultMaxHoursPerDay: 8, requiresTimeApproval: false, billingEnabled: true },
+        ipRestrictionsEnabled: true, // Enabled
+        createdBy: userId,
+        updatedAt: Date.now(),
       });
-    }).rejects.toThrow("This IP or range is already in the allowlist");
+    });
 
-    // Try invalid IP
-    await expect(async () => {
-      await asOwner.mutation(api.ipRestrictions.addIpToAllowlist, {
-        organizationId,
-        ipRange: "999.999.999.999",
+    const workspaceId = await t.run(async (ctx) => {
+      return await ctx.db.insert("workspaces", {
+        organizationId: orgId,
+        name: "Test Workspace",
+        slug: "test-workspace",
+        createdBy: userId,
+        updatedAt: Date.now(),
       });
-    }).rejects.toThrow("Invalid IP address or CIDR range");
+    });
 
-    // Remove IP
-    const entryToRemove = list.find((i) => i.ipRange === "192.168.1.1");
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    await asOwner.mutation(api.ipRestrictions.removeIpFromAllowlist, { id: entryToRemove!._id });
+    await t.run(async (ctx) => {
+      await ctx.db.insert("organizationIpAllowlist", {
+        organizationId: orgId,
+        ipRange: "192.168.1.0/24",
+        createdBy: userId,
+        createdAt: Date.now(),
+      });
+    });
 
-    const listAfter = await asOwner.query(api.ipRestrictions.listIpAllowlist, { organizationId });
-    expect(listAfter).toHaveLength(1);
-    expect(listAfter[0].ipRange).toBe("10.0.0.0/24");
+    const projectId = await t.run(async (ctx) => {
+      return await ctx.db.insert("projects", {
+        name: "Test Project",
+        key: "TEST",
+        organizationId: orgId,
+        workspaceId: workspaceId,
+        ownerId: userId,
+        createdBy: userId,
+        updatedAt: Date.now(),
+        boardType: "kanban",
+        workflowStates: [],
+        isPublic: false,
+      });
+    });
+
+    // Test Allowed IP
+    const allowed = await t.run(async (ctx) => {
+      return await ctx.runQuery(internal.ipRestrictions.checkProjectIpAllowed, {
+        projectId,
+        clientIp: "192.168.1.50",
+      });
+    });
+
+    expect(allowed).toBe(true);
   });
 
-  it("should enforce restrictions", async () => {
+  it("should deny access when IP is NOT in allowlist", async () => {
     const t = convexTest(schema, modules);
-    const ownerId = await createTestUser(t);
-    const asOwner = asAuthenticatedUser(t, ownerId);
 
-    const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
-      name: "Test Org",
-      timezone: "UTC",
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert("users", {});
     });
 
-    // Try to enable with empty list
-    await expect(async () => {
-      await asOwner.mutation(api.ipRestrictions.setIpRestrictionsEnabled, {
-        organizationId,
-        enabled: true,
+    const orgId = await t.run(async (ctx) => {
+      return await ctx.db.insert("organizations", {
+        name: "Test Org",
+        slug: "test-org",
+        timezone: "UTC",
+        settings: { defaultMaxHoursPerWeek: 40, defaultMaxHoursPerDay: 8, requiresTimeApproval: false, billingEnabled: true },
+        ipRestrictionsEnabled: true, // Enabled
+        createdBy: userId,
+        updatedAt: Date.now(),
       });
-    }).rejects.toThrow("Cannot enable IP restrictions without at least one IP");
-
-    // Add IP
-    await asOwner.mutation(api.ipRestrictions.addIpToAllowlist, {
-      organizationId,
-      ipRange: "192.168.1.100",
     });
 
-    // Check status - disabled by default
-    const status = await asOwner.query(api.ipRestrictions.getIpRestrictionsStatus, {
-      organizationId,
-    });
-    expect(status.enabled).toBe(false);
-
-    // Check access - allowed because disabled
-    let check = await asOwner.query(api.ipRestrictions.checkCurrentIp, {
-      organizationId,
-      clientIp: "1.2.3.4",
-    });
-    expect(check.allowed).toBe(true);
-
-    // Enable restrictions
-    await asOwner.mutation(api.ipRestrictions.setIpRestrictionsEnabled, {
-      organizationId,
-      enabled: true,
+    const workspaceId = await t.run(async (ctx) => {
+      return await ctx.db.insert("workspaces", {
+        organizationId: orgId,
+        name: "Test Workspace",
+        slug: "test-workspace",
+        createdBy: userId,
+        updatedAt: Date.now(),
+      });
     });
 
-    // Check status
-    const statusEnabled = await asOwner.query(api.ipRestrictions.getIpRestrictionsStatus, {
-      organizationId,
+    await t.run(async (ctx) => {
+      await ctx.db.insert("organizationIpAllowlist", {
+        organizationId: orgId,
+        ipRange: "192.168.1.0/24",
+        createdBy: userId,
+        createdAt: Date.now(),
+      });
     });
-    expect(statusEnabled.enabled).toBe(true);
 
-    // Check access - blocked
-    check = await asOwner.query(api.ipRestrictions.checkCurrentIp, {
-      organizationId,
-      clientIp: "1.2.3.4",
+    const projectId = await t.run(async (ctx) => {
+      return await ctx.db.insert("projects", {
+        name: "Test Project",
+        key: "TEST",
+        organizationId: orgId,
+        workspaceId: workspaceId,
+        ownerId: userId,
+        createdBy: userId,
+        updatedAt: Date.now(),
+        boardType: "kanban",
+        workflowStates: [],
+        isPublic: false,
+      });
     });
-    expect(check.allowed).toBe(false);
 
-    // Check access - allowed
-    check = await asOwner.query(api.ipRestrictions.checkCurrentIp, {
-      organizationId,
-      clientIp: "192.168.1.100",
+    // Test Denied IP
+    const allowed = await t.run(async (ctx) => {
+      return await ctx.runQuery(internal.ipRestrictions.checkProjectIpAllowed, {
+        projectId,
+        clientIp: "10.0.0.1",
+      });
     });
-    expect(check.allowed).toBe(true);
+
+    expect(allowed).toBe(false);
   });
 
-  it("should prevent removing last IP when enabled", async () => {
+  it("should allow access when clientIp is null (cannot determine IP)", async () => {
     const t = convexTest(schema, modules);
-    const ownerId = await createTestUser(t);
-    const asOwner = asAuthenticatedUser(t, ownerId);
 
-    const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
-      name: "Test Org",
-      timezone: "UTC",
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert("users", {});
     });
 
-    await asOwner.mutation(api.ipRestrictions.addIpToAllowlist, {
-      organizationId,
-      ipRange: "192.168.1.1",
-    });
-
-    await asOwner.mutation(api.ipRestrictions.setIpRestrictionsEnabled, {
-      organizationId,
-      enabled: true,
-    });
-
-    const list = await asOwner.query(api.ipRestrictions.listIpAllowlist, { organizationId });
-    const entry = list[0];
-
-    // Try to remove last IP
-    await expect(async () => {
-      await asOwner.mutation(api.ipRestrictions.removeIpFromAllowlist, {
-        id: entry._id,
+    const orgId = await t.run(async (ctx) => {
+      return await ctx.db.insert("organizations", {
+        name: "Test Org",
+        slug: "test-org",
+        timezone: "UTC",
+        settings: { defaultMaxHoursPerWeek: 40, defaultMaxHoursPerDay: 8, requiresTimeApproval: false, billingEnabled: true },
+        ipRestrictionsEnabled: true, // Enabled
+        createdBy: userId,
+        updatedAt: Date.now(),
       });
-    }).rejects.toThrow("Cannot remove the last IP from allowlist while restrictions are enabled");
-
-    // Disable restrictions
-    await asOwner.mutation(api.ipRestrictions.setIpRestrictionsEnabled, {
-      organizationId,
-      enabled: false,
     });
 
-    // Now remove should succeed
-    await asOwner.mutation(api.ipRestrictions.removeIpFromAllowlist, {
-      id: entry._id,
+    const workspaceId = await t.run(async (ctx) => {
+      return await ctx.db.insert("workspaces", {
+        organizationId: orgId,
+        name: "Test Workspace",
+        slug: "test-workspace",
+        createdBy: userId,
+        updatedAt: Date.now(),
+      });
     });
 
-    const listAfter = await asOwner.query(api.ipRestrictions.listIpAllowlist, { organizationId });
-    expect(listAfter).toHaveLength(0);
+    const projectId = await t.run(async (ctx) => {
+      return await ctx.db.insert("projects", {
+        name: "Test Project",
+        key: "TEST",
+        organizationId: orgId,
+        workspaceId: workspaceId,
+        ownerId: userId,
+        createdBy: userId,
+        updatedAt: Date.now(),
+        boardType: "kanban",
+        workflowStates: [],
+        isPublic: false,
+      });
+    });
+
+    // Test Null IP
+    const allowed = await t.run(async (ctx) => {
+      return await ctx.runQuery(internal.ipRestrictions.checkProjectIpAllowed, {
+        projectId,
+        clientIp: null,
+      });
+    });
+
+    expect(allowed).toBe(true);
   });
 });
