@@ -44,6 +44,79 @@ async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string
   }
 }
 
+// Convex Auth passes ctx as second param, but @auth/core types don't include it
+// Using type assertion to handle the library integration mismatch
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy code
+async function sendVerificationRequest(
+  { identifier: email, token }: { identifier: string; token: string },
+  ctx: ConvexAuthContext,
+) {
+  try {
+    // Check rate limit first
+    if (ctx.runMutation) {
+      try {
+        // Type assertion needed because codegen hasn't run to update the type definition
+        // Cast internal.authWrapper to a type that includes the new mutation
+        // This avoids 'any' and Biome suppression
+        const authWrapper = internal.authWrapper as unknown as {
+          checkEmailVerificationRateLimit: FunctionReference<"mutation">;
+        };
+
+        await ctx.runMutation(authWrapper.checkEmailVerificationRateLimit, {
+          email,
+        });
+      } catch (error) {
+        const isRateLimitError =
+          (isAppError(error) && error.data.code === "RATE_LIMITED") ||
+          (error instanceof Error && error.message.includes("Rate limit exceeded"));
+
+        if (isRateLimitError) {
+          throw new Error("Too many verification requests. Please try again later.");
+        }
+        throw error;
+      }
+    }
+
+    // Store test OTP if applicable
+    await storeTestOtp(ctx, email, token);
+
+    // Render email using React Email template
+    const { VerifyEmail } = await import("../emails/VerifyEmail");
+    const html = await render(VerifyEmail({ code: token, expiryMinutes: 15 }));
+
+    // Send verification email through the email provider system
+    // In dev/E2E (MAILTRAP_MODE=sandbox), emails go to Mailtrap inbox
+    const result = await sendEmail(ctx, {
+      to: email,
+      subject: "Verify your email",
+      html,
+      text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.\n\nIf you didn't create an account, you can safely ignore this email.`,
+    });
+
+    if (!result.success) {
+      const isTestEmail = email.endsWith("@inbox.mailtrap.io");
+      // For test emails, don't fail on email send errors (e.g., Mailtrap rate limiting)
+      // E2E tests can retrieve the OTP via /e2e/get-latest-otp endpoint instead
+      if (isTestEmail) {
+        logger.warn(
+          `[otpVerification] Email send failed for test user, continuing: ${result.error}`,
+        );
+        return; // Don't throw - OTP is already stored in testOtpCodes
+      }
+      throw new Error(`Could not send verification email: ${result.error}`);
+    }
+  } catch (err) {
+    const isTestEmail = email.endsWith("@inbox.mailtrap.io");
+    // For test emails, don't fail on email send errors
+    if (isTestEmail) {
+      logger.warn(`[otpVerification] Email send failed for test user, continuing: ${err}`);
+      return; // Don't throw - OTP is already stored in testOtpCodes
+    }
+    // Fail fast so users aren't stuck without a verification code.
+    throw err instanceof Error ? err : new Error("Could not send verification email");
+  }
+}
+
 /**
  * OTP Verification Provider for email verification during signup
  *
@@ -65,75 +138,7 @@ export const otpVerification = Resend({
     return generateOTP();
   },
 
-  // Convex Auth passes ctx as second param, but @auth/core types don't include it
-  // Using type assertion to handle the library integration mismatch
-  sendVerificationRequest: (async (
-    { identifier: email, token }: { identifier: string; token: string },
-    ctx: ConvexAuthContext,
-  ) => {
-    try {
-      // Check rate limit first
-      if (ctx.runMutation) {
-        try {
-          // Type assertion needed because codegen hasn't run to update the type definition
-          // Cast internal.authWrapper to a type that includes the new mutation
-          // This avoids 'any' and Biome suppression
-          const authWrapper = internal.authWrapper as unknown as {
-            checkEmailVerificationRateLimit: FunctionReference<"mutation">;
-          };
-
-          await ctx.runMutation(authWrapper.checkEmailVerificationRateLimit, {
-            email,
-          });
-        } catch (error) {
-          const isRateLimitError =
-            (isAppError(error) && error.data.code === "RATE_LIMITED") ||
-            (error instanceof Error && error.message.includes("Rate limit exceeded"));
-
-          if (isRateLimitError) {
-            throw new Error("Too many verification requests. Please try again later.");
-          }
-          throw error;
-        }
-      }
-
-      // Store test OTP if applicable
-      await storeTestOtp(ctx, email, token);
-
-      // Render email using React Email template
-      const { VerifyEmail } = await import("../emails/VerifyEmail");
-      const html = await render(VerifyEmail({ code: token, expiryMinutes: 15 }));
-
-      // Send verification email through the email provider system
-      // In dev/E2E (MAILTRAP_MODE=sandbox), emails go to Mailtrap inbox
-      const result = await sendEmail(ctx, {
-        to: email,
-        subject: "Verify your email",
-        html,
-        text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.\n\nIf you didn't create an account, you can safely ignore this email.`,
-      });
-
-      if (!result.success) {
-        const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-        // For test emails, don't fail on email send errors (e.g., Mailtrap rate limiting)
-        // E2E tests can retrieve the OTP via /e2e/get-latest-otp endpoint instead
-        if (isTestEmail) {
-          logger.warn(
-            `[otpVerification] Email send failed for test user, continuing: ${result.error}`,
-          );
-          return; // Don't throw - OTP is already stored in testOtpCodes
-        }
-        throw new Error(`Could not send verification email: ${result.error}`);
-      }
-    } catch (err) {
-      const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-      // For test emails, don't fail on email send errors
-      if (isTestEmail) {
-        logger.warn(`[otpVerification] Email send failed for test user, continuing: ${err}`);
-        return; // Don't throw - OTP is already stored in testOtpCodes
-      }
-      // Fail fast so users aren't stuck without a verification code.
-      throw err instanceof Error ? err : new Error("Could not send verification email");
-    }
-  }) as (params: { identifier: string }) => Promise<void>,
+  sendVerificationRequest: sendVerificationRequest as (params: {
+    identifier: string;
+  }) => Promise<void>,
 });

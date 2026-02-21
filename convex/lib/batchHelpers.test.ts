@@ -83,7 +83,6 @@ describe("batchHelpers", () => {
 
   describe("formatUser", () => {
     it("should format user correctly", () => {
-      // biome-ignore lint/suspicious/noExplicitAny: testing convenience
       const user = {
         _id: "u1",
         name: "Alice",
@@ -99,7 +98,6 @@ describe("batchHelpers", () => {
     });
 
     it("should fallback to Unknown if name/email missing", () => {
-      // biome-ignore lint/suspicious/noExplicitAny: testing convenience
       const user = { _id: "u1" } as any;
       expect(formatUser(user)).toEqual({
         _id: "u1",
@@ -117,15 +115,12 @@ describe("batchHelpers", () => {
 
   describe("getUserName", () => {
     it("should return name if present", () => {
-      // biome-ignore lint/suspicious/noExplicitAny: testing convenience
       expect(getUserName({ name: "Bob" } as any)).toBe("Bob");
     });
     it("should return email if name missing", () => {
-      // biome-ignore lint/suspicious/noExplicitAny: testing convenience
       expect(getUserName({ email: "bob@example.com" } as any)).toBe("bob@example.com");
     });
     it("should return Unknown if both missing", () => {
-      // biome-ignore lint/suspicious/noExplicitAny: testing convenience
       expect(getUserName({} as any)).toBe("Unknown");
     });
     it("should return Unknown if user is null/undefined", () => {

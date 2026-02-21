@@ -204,7 +204,8 @@
   },
   "pnpm": {
     "overrides": {
-      "axios": "^1.13.5"
+      "axios": "^1.13.5",
+      "node-forge": "^1.3.3"
     }
   },
   "packageManager": "pnpm@10.24.0"
