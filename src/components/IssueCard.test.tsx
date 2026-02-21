@@ -1,12 +1,13 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { IssueCard } from "./IssueCard";
 
 // Create mock icon that's hoisted to be available in vi.mock
 const { MockIcon } = vi.hoisted(() => ({
-  MockIcon: (props: any) => <svg {...props} />,
+  MockIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
 }));
 
 // Mock issue utilities
