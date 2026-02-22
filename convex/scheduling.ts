@@ -165,6 +165,7 @@ export const recordAssignment = internalMutation({
           .eq("userId", args.userId)
           .eq("periodKey", args.periodKey),
       )
+      .order("desc")
       .first();
 
     const count = existing ? existing.assignmentCountInPeriod + 1 : 1;

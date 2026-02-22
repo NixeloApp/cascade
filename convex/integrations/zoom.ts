@@ -5,11 +5,40 @@
  * Based on Cal.com's zoomvideo integration pattern.
  */
 
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { action, internalAction, internalMutation } from "../_generated/server";
-import { authenticatedMutation } from "../customFunctions";
+import { action, internalAction, internalMutation, internalQuery } from "../_generated/server";
+import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
+
+// ============================================================================
+// Zoom API Response Types
+// ============================================================================
+
+/** Response from Zoom OAuth token endpoint */
+interface ZoomTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  scope: string;
+}
+
+/** Response from Zoom user info endpoint */
+interface ZoomUserInfoResponse {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
+
+/** Response from Zoom create meeting endpoint */
+interface ZoomMeetingResponse {
+  id: number;
+  join_url: string;
+  password?: string;
+  start_url: string;
+}
 
 // Zoom OAuth endpoints
 const ZOOM_AUTH_URL = "https://zoom.us/oauth/authorize";
@@ -84,7 +113,7 @@ export const exchangeCodeForToken = internalAction({
       throw new Error(`Failed to exchange code: ${error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as ZoomTokenResponse;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -135,7 +164,7 @@ export const refreshAccessToken = internalAction({
       throw new Error(`Failed to refresh token: ${error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as ZoomTokenResponse;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -171,7 +200,7 @@ export const getUserInfo = internalAction({
       throw new Error(`Failed to get user info: ${error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as ZoomUserInfoResponse;
     return {
       id: data.id,
       email: data.email,
@@ -239,11 +268,16 @@ export const storeConnection = internalMutation({
  */
 export const handleOAuthCallback = action({
   args: {
-    userId: v.id("users"),
     code: v.string(),
     redirectUri: v.string(),
   },
   handler: async (ctx, args): Promise<{ connectionId: Id<"videoConnections">; email: string }> => {
+    // Get authenticated user
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     // Exchange code for tokens
     const tokens: {
       accessToken: string;
@@ -265,7 +299,7 @@ export const handleOAuthCallback = action({
     const connectionId: Id<"videoConnections"> = await ctx.runMutation(
       internal.integrations.zoom.storeConnection,
       {
-        userId: args.userId,
+        userId,
         providerAccountId: userInfo.id,
         providerEmail: userInfo.email,
         accessToken: tokens.accessToken,
@@ -287,7 +321,6 @@ export const handleOAuthCallback = action({
  */
 export const createMeeting = action({
   args: {
-    userId: v.id("users"),
     topic: v.string(),
     startTime: v.number(), // Unix timestamp in ms
     duration: v.number(), // Minutes
@@ -302,9 +335,15 @@ export const createMeeting = action({
     password: string;
     hostUrl: string;
   }> => {
+    // Get authenticated user
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     // Get user's Zoom connection
     const connection = await ctx.runQuery(internal.integrations.zoom.getConnection, {
-      userId: args.userId,
+      userId,
     });
 
     if (!connection) {
@@ -363,7 +402,7 @@ export const createMeeting = action({
       throw new Error(`Failed to create Zoom meeting: ${error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as ZoomMeetingResponse;
 
     // Update last used timestamp
     await ctx.runMutation(internal.integrations.zoom.updateLastUsed, {
@@ -382,8 +421,6 @@ export const createMeeting = action({
 /**
  * Get user's Zoom connection (internal query)
  */
-import { internalQuery } from "../_generated/server";
-
 export const getConnection = internalQuery({
   args: {
     userId: v.id("users"),
@@ -456,7 +493,7 @@ export const disconnect = authenticatedMutation({
 /**
  * Check if user has connected Zoom
  */
-export const isConnected = authenticatedMutation({
+export const isConnected = authenticatedQuery({
   args: {},
   handler: async (ctx) => {
     const connection = await ctx.db

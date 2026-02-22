@@ -92,6 +92,14 @@ export const create = projectEditorMutation({
     // Validate parent/epic constraints
     const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
 
+    // Validate module belongs to the same project
+    if (args.moduleId) {
+      const module = await ctx.db.get(args.moduleId);
+      if (!module || module.projectId !== ctx.projectId) {
+        throw validation("moduleId", "Module does not belong to this project");
+      }
+    }
+
     // Generate issue key with duplicate detection
     // In rare concurrent scenarios, we verify the key doesn't exist before using
     let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
@@ -674,8 +682,10 @@ export const bulkMoveToModule = authenticatedMutation({
   },
   handler: async (ctx, args) => {
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
     const now = Date.now();
+
+    // Pre-validate module if provided
+    const targetModule = args.moduleId ? await ctx.db.get(args.moduleId) : null;
 
     const results = await Promise.all(
       issues.map(async (issue) => {
@@ -687,13 +697,11 @@ export const bulkMoveToModule = authenticatedMutation({
           return 0;
         }
 
+        // Skip if module doesn't belong to this project
+        if (targetModule && targetModule.projectId !== issue.projectId) return 0;
+
         const oldModule = issue.moduleId;
-
-        await ctx.db.patch(issue._id, {
-          moduleId: args.moduleId ?? undefined,
-          updatedAt: now,
-        });
-
+        await ctx.db.patch(issue._id, { moduleId: args.moduleId ?? undefined, updatedAt: now });
         await ctx.db.insert("issueActivity", {
           issueId: issue._id,
           userId: ctx.userId,

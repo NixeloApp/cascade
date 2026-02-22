@@ -7,6 +7,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import { useMutation } from "convex/react";
 import { useCallback, useRef, useState } from "react";
 import { BulkOperationsBar } from "@/components/BulkOperationsBar";
@@ -15,7 +16,7 @@ import { IssueDetailModal } from "@/components/IssueDetailModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
-import type { EnrichedIssue } from "../../../convex/lib/issueHelpers";
+import { showError } from "@/lib/toast";
 import { SpreadsheetHeader } from "./SpreadsheetHeader";
 import { SpreadsheetRow } from "./SpreadsheetRow";
 import { SpreadsheetSkeleton } from "./SpreadsheetSkeleton";
@@ -131,33 +132,23 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
   // Issue update handler - extract only primitive fields the mutation accepts
   const handleUpdateIssue = useCallback(
     async (issueId: Id<"issues">, data: Partial<EnrichedIssue>) => {
-      // Fields the mutation accepts (excluding labels which needs transformation)
-      const primitiveFields = [
-        "title",
-        "description",
-        "priority",
-        "status",
-        "type",
-        "assigneeId",
-        "storyPoints",
-        "startDate",
-        "dueDate",
-      ] as const;
+      try {
+        // Build update payload with allowed fields
+        const labels = data.labels?.map((l) => (typeof l === "string" ? l : l.name));
 
-      // Extract primitive fields that are defined
-      const updateData: Record<string, unknown> = {};
-      for (const field of primitiveFields) {
-        if (data[field] !== undefined) {
-          updateData[field] = data[field];
-        }
+        await updateIssue({
+          issueId,
+          ...(data.title !== undefined && { title: data.title }),
+          ...(data.description !== undefined && { description: data.description }),
+          ...(data.priority !== undefined && { priority: data.priority }),
+          ...(data.assigneeId !== undefined && { assigneeId: data.assigneeId }),
+          ...(data.storyPoints !== undefined && { storyPoints: data.storyPoints }),
+          ...(data.dueDate !== undefined && { dueDate: data.dueDate }),
+          ...(labels !== undefined && { labels }),
+        });
+      } catch (error) {
+        showError(error, "Failed to update issue");
       }
-
-      // Handle labels transformation separately
-      if (data.labels !== undefined) {
-        updateData.labels = data.labels.map((l) => (typeof l === "string" ? l : l.name));
-      }
-
-      await updateIssue({ issueId, ...updateData });
     },
     [updateIssue],
   );

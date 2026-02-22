@@ -73,18 +73,18 @@ export const listByProject = projectQuery({
         MAX_PAGE_SIZE,
       );
 
-      // Count completed issues
-      const completedPromise = ctx.db
-        .query("issues")
-        .withIndex("by_module", (q) => q.eq("moduleId", moduleId).lt("isDeleted", true))
-        .filter(
-          (q) =>
-            doneStatusIds.length > 0
-              ? q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status)))
-              : q.eq(1, 0), // Always false if no done statuses
-        )
-        .take(BOUNDED_LIST_LIMIT)
-        .then((issues) => issues.length);
+      // Count completed issues (skip query if no done statuses defined)
+      const completedPromise =
+        doneStatusIds.length > 0
+          ? ctx.db
+              .query("issues")
+              .withIndex("by_module", (q) => q.eq("moduleId", moduleId).lt("isDeleted", true))
+              .filter((q) =>
+                q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status))),
+              )
+              .take(BOUNDED_LIST_LIMIT)
+              .then((issues) => issues.length)
+          : Promise.resolve(0);
 
       const [count, completedCount] = await Promise.all([totalPromise, completedPromise]);
       return { moduleId, count, completedCount };

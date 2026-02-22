@@ -66,9 +66,15 @@ export function GanttView({ projectId, sprintId, canEdit = true }: GanttViewProp
   // Filter to issues with dates (for Gantt we need at least a start or due date)
   const ganttIssues = allIssues.filter((issue) => issue.startDate || issue.dueDate);
 
-  // Calculate date range for display
-  const viewStartDate = startOfMonth(subMonths(currentMonth, 1));
-  const viewEndDate = endOfMonth(addMonths(currentMonth, 2));
+  // Calculate date range for display (memoized using timestamp to avoid Date object comparison)
+  const currentMonthTime = currentMonth.getTime();
+  const { viewStartDate, viewEndDate } = useMemo(() => {
+    const month = new Date(currentMonthTime);
+    return {
+      viewStartDate: startOfMonth(subMonths(month, 1)),
+      viewEndDate: endOfMonth(addMonths(month, 2)),
+    };
+  }, [currentMonthTime]);
 
   // Generate all days in the view range
   const daysInView = useMemo(() => {

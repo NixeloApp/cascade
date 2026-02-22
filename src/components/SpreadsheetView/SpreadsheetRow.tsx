@@ -8,6 +8,7 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
+import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
@@ -27,7 +28,6 @@ import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { getTypeLabel, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
-import type { EnrichedIssue } from "../../../convex/lib/issueHelpers";
 import {
   AssigneeCell,
   DateCell,

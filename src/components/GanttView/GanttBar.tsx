@@ -38,6 +38,9 @@ export function GanttBar({
   const barRef = useRef<HTMLButtonElement>(null);
   const [isDragging, setIsDragging] = useState<"left" | "right" | "move" | null>(null);
   const [dragOffset, setDragOffset] = useState({ start: 0, end: 0 });
+  // Ref to track current dragOffset for use in event handlers (avoids stale closure)
+  const dragOffsetRef = useRef(dragOffset);
+  dragOffsetRef.current = dragOffset;
 
   // Calculate dates
   const startDate = issue.startDate ? new Date(issue.startDate) : null;
@@ -87,7 +90,8 @@ export function GanttBar({
       setIsDragging(type);
 
       const startX = e.clientX;
-      const initialOffset = { ...dragOffset };
+      // Use ref to capture initial offset (avoids stale closure and unnecessary re-renders)
+      const initialOffset = { ...dragOffsetRef.current };
       const { duration } = metrics;
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -117,12 +121,15 @@ export function GanttBar({
         document.removeEventListener("mouseup", handleMouseUp);
         setIsDragging(null);
 
+        // Use ref to get current dragOffset (avoids stale closure)
+        const currentOffset = dragOffsetRef.current;
+
         // Calculate new dates
-        const newStartDate = addDays(effectiveStart, dragOffset.start);
-        const newEndDate = addDays(effectiveEnd, dragOffset.end);
+        const newStartDate = addDays(effectiveStart, currentOffset.start);
+        const newEndDate = addDays(effectiveEnd, currentOffset.end);
 
         // Only update if dates changed
-        if (dragOffset.start !== 0 || dragOffset.end !== 0) {
+        if (currentOffset.start !== 0 || currentOffset.end !== 0) {
           await onUpdateDates(
             issue._id,
             startDate ? newStartDate.getTime() : undefined,
@@ -136,17 +143,7 @@ export function GanttBar({
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [
-      onUpdateDates,
-      dayWidth,
-      metrics,
-      effectiveStart,
-      effectiveEnd,
-      issue._id,
-      startDate,
-      dueDate,
-      dragOffset,
-    ],
+    [onUpdateDates, dayWidth, metrics, effectiveStart, effectiveEnd, issue._id, startDate, dueDate],
   );
 
   // If no dates, don't render (after hooks)
