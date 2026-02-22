@@ -11,7 +11,7 @@ describe("Project Members", () => {
       const t = convexTest(schema, modules);
       const { userId, organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "TEST",
         description: "A test project",
@@ -62,7 +62,7 @@ describe("Project Members", () => {
       const t = convexTest(schema, modules);
       const { userId, organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "TEST2",
         isPublic: false,
@@ -99,7 +99,7 @@ describe("Project Members", () => {
       const t = convexTest(schema, modules);
       const { userId, organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "TEST3",
         isPublic: false,
@@ -136,7 +136,7 @@ describe("Project Members", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Private Project",
         key: "PRIV",
         isPublic: false,
