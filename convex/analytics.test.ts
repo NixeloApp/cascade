@@ -8,6 +8,97 @@ import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUt
 
 describe("Analytics", () => {
   describe("getProjectAnalytics", () => {
+    it("should return correct analytics data for a project", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t, { name: "User 1" });
+      const otherUserId = await createTestUser(t, { name: "User 2" });
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      // Get workflow states to use correct IDs
+      const project = await asUser.query(api.projects.getProject, { id: projectId });
+      const todoState = project?.workflowStates.find((s: { id: string }) => s.id === "todo");
+      const inProgressState = project?.workflowStates.find(
+        (s: { id: string }) => s.id === "inprogress",
+      );
+      const doneState = project?.workflowStates.find((s: { id: string }) => s.id === "done");
+
+      if (!todoState || !inProgressState || !doneState) {
+        throw new Error("Missing expected workflow states");
+      }
+
+      // Create issues with various attributes
+      // 1. Todo, Task, Medium, Unassigned (create defaults to Todo)
+      await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "Issue 1",
+        type: "task",
+        priority: "medium",
+      });
+
+      // 2. In Progress, Bug, High, Assigned to User 1
+      const issue2 = await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "Issue 2",
+        type: "bug",
+        priority: "high",
+        assigneeId: userId,
+      });
+      await asUser.mutation(api.issues.updateStatus, {
+        issueId: issue2,
+        newStatus: inProgressState.id,
+        newOrder: 0,
+      });
+
+      // 3. Done, Story, Low, Assigned to User 2
+      const issue3 = await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "Issue 3",
+        type: "story",
+        priority: "low",
+        assigneeId: otherUserId,
+      });
+      await asUser.mutation(api.issues.updateStatus, {
+        issueId: issue3,
+        newStatus: doneState.id,
+        newOrder: 0,
+      });
+
+      const analytics = await asUser.query(api.analytics.getProjectAnalytics, {
+        projectId,
+      });
+
+      // Assertions
+      expect(analytics.totalIssues).toBe(3);
+
+      // Status counts
+      expect(analytics.issuesByStatus[todoState.id]).toBe(1);
+      expect(analytics.issuesByStatus[inProgressState.id]).toBe(1);
+      expect(analytics.issuesByStatus[doneState.id]).toBe(1);
+
+      // Type counts
+      expect(analytics.issuesByType.task).toBe(1);
+      expect(analytics.issuesByType.bug).toBe(1);
+      expect(analytics.issuesByType.story).toBe(1);
+      expect(analytics.issuesByType.epic).toBe(0);
+
+      // Priority counts
+      expect(analytics.issuesByPriority.medium).toBe(1);
+      expect(analytics.issuesByPriority.high).toBe(1);
+      expect(analytics.issuesByPriority.low).toBe(1);
+      expect(analytics.issuesByPriority.highest).toBe(0);
+
+      // Assignee counts
+      expect(analytics.unassignedCount).toBe(1);
+      expect(analytics.issuesByAssignee[userId]).toBeDefined();
+      expect(analytics.issuesByAssignee[userId]?.count).toBe(1);
+      expect(analytics.issuesByAssignee[otherUserId]).toBeDefined();
+      expect(analytics.issuesByAssignee[otherUserId]?.count).toBe(1);
+      expect(analytics.issuesByAssignee[userId]?.name).toBe("User 1");
+      expect(analytics.issuesByAssignee[otherUserId]?.name).toBe("User 2");
+    });
+
     it("should deny unauthenticated users", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
