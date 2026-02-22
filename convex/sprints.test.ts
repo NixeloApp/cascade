@@ -7,7 +7,6 @@ import { modules } from "./testSetup.test-helper";
 import {
   asAuthenticatedUser,
   createOrganizationAdmin,
-  createProjectInOrganization,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -77,21 +76,14 @@ describe("Sprints", () => {
         name: "Member",
         email: "member@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add member to organization
-<<<<<<< HEAD
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
           organizationId: project.organizationId,
-=======
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
->>>>>>> origin/main
           userId: member,
           role: "member",
           addedBy: owner,
@@ -471,21 +463,14 @@ describe("Sprints", () => {
         name: "Member",
         email: "member@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add member to organization
-<<<<<<< HEAD
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
           organizationId: project.organizationId,
-=======
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
->>>>>>> origin/main
           userId: member,
           role: "member",
           addedBy: owner,
@@ -653,21 +638,14 @@ describe("Sprints", () => {
         name: "Member",
         email: "member@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add member to organization
-<<<<<<< HEAD
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
           organizationId: project.organizationId,
-=======
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
->>>>>>> origin/main
           userId: member,
           role: "member",
           addedBy: owner,

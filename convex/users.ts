@@ -680,48 +680,6 @@ async function countIssuesByAssignee(
 }
 
 /**
- * Helper to count comments by a user without project restrictions.
- */
-async function countCommentsUnrestricted(ctx: QueryCtx, userId: Id<"users">) {
-  return await efficientCount(
-    ctx.db
-      .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true)),
-    MAX_COMMENTS_FOR_STATS,
-  );
-}
-
-/**
- * Helper to count comments by a user in specific projects (filtered).
- * Since we don't have a direct index for comments by project, "fast" and "filtered" strategies are the same.
- */
-async function countCommentsFiltered(
-  ctx: QueryCtx,
-  userId: Id<"users">,
-  allowedProjectIds: Set<string>,
-) {
-  const commentsAll = await ctx.db
-    .query("issueComments")
-    .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true))
-    .order("desc") // Optimization: Count recent comments first
-    .take(MAX_COMMENTS_FOR_STATS);
-
-  // Batch fetch unique issue IDs to check project membership using batchFetchIssues
-  // This avoids unbounded Promise.all calls
-  const issueIds = [...new Set(commentsAll.map((c) => c.issueId))];
-  const issueMap = await batchFetchIssues(ctx, issueIds);
-
-  const allowedIssueIds = new Set<string>();
-  for (const [issueId, issue] of issueMap.entries()) {
-    if (issue.projectId && allowedProjectIds.has(issue.projectId)) {
-      allowedIssueIds.add(issueId);
-    }
-  }
-
-  return commentsAll.filter((c) => allowedIssueIds.has(c.issueId)).length;
-}
-
-/**
  * Count comments made by a specific user.
  *
  * Checks that the comment's issue belongs to an allowed project.
@@ -735,13 +693,33 @@ async function countComments(
   userId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  return await executeCountStrategy(allowedProjectIds, 0, {
-    unrestricted: () => countCommentsUnrestricted(ctx, userId),
-    // Comments don't have a "fast" path (no project index), so we use the filtered strategy for both.
-    // The "filtered" strategy already limits fetching to MAX_COMMENTS_FOR_STATS, so it is safe.
-    fast: (ids) => countCommentsFiltered(ctx, userId, ids),
-    filtered: (ids) => countCommentsFiltered(ctx, userId, ids),
-  });
+  if (allowedProjectIds) {
+    const commentsAll = await ctx.db
+      .query("issueComments")
+      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true))
+      .order("desc") // Optimization: Count recent comments first
+      .take(MAX_COMMENTS_FOR_STATS);
+
+    // Batch fetch unique issue IDs to check project membership using batchFetchIssues
+    // This avoids unbounded Promise.all calls
+    const issueIds = [...new Set(commentsAll.map((c) => c.issueId))];
+    const issueMap = await batchFetchIssues(ctx, issueIds);
+
+    const allowedIssueIds = new Set<string>();
+    for (const [issueId, issue] of issueMap.entries()) {
+      if (issue.projectId && allowedProjectIds.has(issue.projectId)) {
+        allowedIssueIds.add(issueId);
+      }
+    }
+
+    return commentsAll.filter((c) => allowedIssueIds.has(c.issueId)).length;
+  }
+  return await efficientCount(
+    ctx.db
+      .query("issueComments")
+      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true)),
+    MAX_COMMENTS_FOR_STATS,
+  );
 }
 
 /**

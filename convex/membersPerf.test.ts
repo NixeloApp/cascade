@@ -11,7 +11,7 @@ describe("Membership Performance & Correctness", () => {
     const { userId, organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
     // Create a project
-    const { projectId } = await asUser.mutation(api.projects.createProject, {
+    const projectId = await asUser.mutation(api.projects.createProject, {
       name: "Perf Project",
       key: "PERF",
       isPublic: false,
