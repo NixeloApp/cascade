@@ -210,6 +210,12 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     });
 
     if (!tokenResponse.ok) {
+      try {
+        const errorText = await tokenResponse.text();
+        console.error("GitHub OAuth error: Failed to exchange code", errorText);
+      } catch (e) {
+        console.error("GitHub OAuth error: Failed to exchange code (and failed to read body)", e);
+      }
       throw validation("oauth", "Failed to exchange GitHub authorization code");
     }
 
@@ -231,6 +237,12 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     });
 
     if (!userResponse.ok) {
+      try {
+        const errorText = await userResponse.text();
+        console.error("GitHub OAuth error: Failed to get user info", errorText);
+      } catch (e) {
+        console.error("GitHub OAuth error: Failed to get user info (and failed to read body)", e);
+      }
       throw validation("github", "Failed to get GitHub user info");
     }
 
