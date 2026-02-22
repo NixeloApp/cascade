@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { HOUR } from "./lib/timeUtils";
+import { HOUR, MINUTE, SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
@@ -151,7 +151,7 @@ describe("Event Reminders", () => {
       const t = convexTest(schema, modules);
       const { userId } = await createTestContext(t);
 
-      const startTime = Date.now() - 60 * 1000; // 1 minute ago
+      const startTime = Date.now() - MINUTE; // 1 minute ago
       const eventId = await createCalendarEvent(t, userId, { startTime });
 
       await t.mutation(internal.eventReminders.createDefaultReminders, {
@@ -264,7 +264,7 @@ describe("Event Reminders", () => {
           userId,
           reminderType: "in_app",
           minutesBefore: 15,
-          scheduledFor: now - 1000, // 1 second ago (due)
+          scheduledFor: now - SECOND, // 1 second ago (due)
           sent: false,
         });
       });
@@ -303,7 +303,7 @@ describe("Event Reminders", () => {
           userId,
           reminderType: "in_app",
           minutesBefore: 15,
-          scheduledFor: now - 1000,
+          scheduledFor: now - SECOND,
           sent: false,
         });
       });
@@ -330,7 +330,7 @@ describe("Event Reminders", () => {
           userId,
           reminderType: "in_app",
           minutesBefore: 15,
-          scheduledFor: now - 1000,
+          scheduledFor: now - SECOND,
           sent: false,
         });
       });
@@ -423,7 +423,7 @@ describe("Event Reminders", () => {
 
       expect(reminders).toHaveLength(1);
       // New scheduled time should be 15 minutes before new start time
-      const expectedScheduledFor = newStartTime - 15 * 60 * 1000;
+      const expectedScheduledFor = newStartTime - 15 * MINUTE;
       expect(reminders[0].scheduledFor).toBe(expectedScheduledFor);
     });
   });

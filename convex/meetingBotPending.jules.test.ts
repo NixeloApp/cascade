@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
+import { DAY } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -13,7 +14,7 @@ describe("MeetingBot Pending Jobs", () => {
 
     // Create many "future" pending jobs (scheduled for next year)
     // BOUNDED_LIST_LIMIT is 100, so we create more than that to fill the first page
-    const futureTime = Date.now() + 365 * 24 * 60 * 60 * 1000;
+    const futureTime = Date.now() + 365 * DAY;
 
     // Use run to insert directly to avoid auth checks for this setup
     await t.run(async (ctx) => {

@@ -10,6 +10,7 @@ import {
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
+import { HOUR, SECOND } from "../lib/timeUtils";
 
 /** Generic error page HTML - no internal details exposed */
 const errorPageHtml = `
@@ -97,7 +98,7 @@ function handleTestCode(
     email,
     accessToken: `mock_access_${scenario}_${timestamp}`,
     refreshToken: `mock_refresh_${scenario}_${timestamp}`,
-    expiresAt: timestamp + 3600 * 1000, // 1 hour
+    expiresAt: timestamp + HOUR, // 1 hour
   };
 }
 
@@ -263,7 +264,7 @@ async function exchangeCodeForTokens(code: string) {
     email: userInfo.email,
     accessToken: access_token,
     refreshToken: refresh_token,
-    expiresAt: expires_in ? Date.now() + expires_in * 1000 : undefined,
+    expiresAt: expires_in ? Date.now() + expires_in * SECOND : undefined,
   };
 }
 
