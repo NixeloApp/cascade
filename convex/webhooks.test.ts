@@ -87,7 +87,7 @@ describe("Webhooks", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -192,7 +192,7 @@ describe("Webhooks", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -339,7 +339,7 @@ describe("Webhooks", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -510,7 +510,7 @@ describe("Webhooks", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -680,7 +680,7 @@ describe("Webhooks", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -808,7 +808,7 @@ describe("Webhooks", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -941,7 +941,7 @@ describe("Webhooks", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: editor,
           role: "member",
           addedBy: owner,

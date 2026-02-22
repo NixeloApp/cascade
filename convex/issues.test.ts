@@ -138,7 +138,7 @@ describe("Issues", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: viewerId,
           role: "member",
           addedBy: adminId,
@@ -278,7 +278,7 @@ describe("Issues", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: viewerId,
           role: "member",
           addedBy: adminId,

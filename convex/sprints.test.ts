@@ -82,7 +82,7 @@ describe("Sprints", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: member,
           role: "member",
           addedBy: owner,
@@ -468,7 +468,7 @@ describe("Sprints", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: member,
           role: "member",
           addedBy: owner,
@@ -642,7 +642,7 @@ describe("Sprints", () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId: project?.organizationId!,
           userId: member,
           role: "member",
           addedBy: owner,
