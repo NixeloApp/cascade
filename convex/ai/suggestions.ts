@@ -15,6 +15,7 @@ import { action, internalAction, mutation, query } from "../_generated/server";
 import { extractUsage } from "../lib/aiHelpers";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { unauthenticated } from "../lib/errors";
+import { HOUR } from "../lib/timeUtils";
 import { rateLimit } from "../rateLimits";
 import { issueTypes } from "../validators";
 
@@ -131,7 +132,7 @@ Description:`;
 
     // Use cache with 1 hour TTL - same prompt = cached result
     const startTime = Date.now();
-    const result = await descriptionCache.fetch(ctx, { prompt }, { ttl: 3600000 });
+    const result = await descriptionCache.fetch(ctx, { prompt }, { ttl: HOUR });
     const responseTime = Date.now() - startTime;
 
     // Handle backward compatibility (cache might contain strings)
@@ -207,7 +208,7 @@ Priority:`;
 
     // Use cache with 1 hour TTL - same prompt = cached result
     const startTime = Date.now();
-    const result = await priorityCache.fetch(ctx, { prompt }, { ttl: 3600000 });
+    const result = await priorityCache.fetch(ctx, { prompt }, { ttl: HOUR });
     const responseTime = Date.now() - startTime;
 
     // Handle backward compatibility
@@ -296,7 +297,7 @@ Labels:`;
 
     // Use cache with 1 hour TTL - same prompt = cached result
     const startTime = Date.now();
-    const result = await labelsCache.fetch(ctx, { prompt }, { ttl: 3600000 });
+    const result = await labelsCache.fetch(ctx, { prompt }, { ttl: HOUR });
     const responseTime = Date.now() - startTime;
 
     // Handle backward compatibility

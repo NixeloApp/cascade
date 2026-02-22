@@ -282,8 +282,7 @@ export const getPendingJobs = query({
 
     // Get jobs that are pending and scheduled to start within next 5 minutes
     // Bounded to prevent memory issues with many pending jobs
-    // Optimization: Use by_status_scheduled index to efficiently find urgent jobs
-    // without scanning through future pending jobs.
+    // Optimized: Use by_status_scheduled index to filter at DB level, preventing starvation by future jobs
     const readyJobs = await ctx.db
       .query("meetingBotJobs")
       .withIndex("by_status_scheduled", (q) =>
