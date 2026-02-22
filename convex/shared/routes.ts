@@ -184,6 +184,18 @@ export const ROUTES = {
       path: "/$orgSlug/projects/$key/settings" as const,
       build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/settings`,
     },
+    spreadsheet: {
+      path: "/$orgSlug/projects/$key/spreadsheet" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/spreadsheet`,
+    },
+    gantt: {
+      path: "/$orgSlug/projects/$key/gantt" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/gantt`,
+    },
+    modules: {
+      path: "/$orgSlug/projects/$key/modules" as const,
+      build: (orgSlug: string, key: string) => `/${orgSlug}/projects/${key}/modules`,
+    },
   },
 
   issues: {

@@ -35,7 +35,8 @@ describe("IssueCard (Jules additions)", () => {
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    const titleElement = screen.getByText(mockIssue.title);
+    // biome-ignore lint/suspicious/noExplicitAny: hidden option is valid at runtime
+    const titleElement = screen.getByText(mockIssue.title, { hidden: true } as any);
     expect(titleElement).toBeInTheDocument();
 
     // Hover over the title
@@ -44,7 +45,7 @@ describe("IssueCard (Jules additions)", () => {
     // Expect tooltip to appear with the title
     // Note: Radix Tooltip might take some time or need specific setup in tests,
     // but usually finding by role tooltip works if animations are disabled or handled
-    const tooltip = await screen.findByRole("tooltip");
+    const tooltip = await screen.findByRole("tooltip", { hidden: true });
     expect(tooltip).toHaveTextContent(mockIssue.title);
   });
 
@@ -53,7 +54,8 @@ describe("IssueCard (Jules additions)", () => {
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" onClick={handleClick} />);
 
-    const titleElement = screen.getByText(mockIssue.title);
+    // biome-ignore lint/suspicious/noExplicitAny: hidden option is valid at runtime
+    const titleElement = screen.getByText(mockIssue.title, { hidden: true } as any);
 
     // Click the title
     await user.click(titleElement);
