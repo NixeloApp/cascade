@@ -11,6 +11,7 @@ import {
   hasScope,
   verifyProjectAccess,
 } from "../lib/apiAuth";
+import { type ErrorCode, getErrorCode, getErrorMessage } from "../lib/errors";
 import { logger } from "../lib/logger";
 import { getClientIp } from "../lib/ssrf";
 
@@ -71,16 +72,55 @@ export const handler = httpAction(issuesApiHandler);
  * Convert a thrown value into an HTTP error response and a normalized error message.
  *
  * @param e - The thrown value or Error to normalize
- * @returns An object with `response` set to a 403 "Not authorized" response when the error message contains "Not authorized", otherwise a 500 "Internal server error" response; `error` is the extracted error message
+ * @returns An object with `response` set to appropriate status code response; `error` is the extracted error message
  */
 function handleError(e: unknown): { response: Response; error: string } {
-  const error = e instanceof Error ? e.message : String(e);
-  logger.error("API error", { error });
-  // Explicitly handle unauthorized errors from internal queries
-  if (error.includes("Not authorized")) {
-    return { response: createErrorResponse(403, "Not authorized"), error };
+  // Use structured error message if available
+  const error = getErrorMessage(e);
+  const errorCode = getErrorCode(e);
+
+  // Log detailed error for server-side debugging
+  logger.error("API error", { error, code: errorCode, original: String(e) });
+
+  // 1. Handle Convex App Errors (structured errors)
+  if (errorCode) {
+    const status = mapErrorCodeToStatus(errorCode);
+    return { response: createErrorResponse(status, error), error };
   }
+
+  // 2. Handle System Errors (e.g. Validator failed)
+  if (e instanceof Error) {
+    // Convex validation errors often start with "Validator failed for argument"
+    if (e.message.includes("Validator failed")) {
+      return { response: createErrorResponse(400, "Invalid request parameters"), error };
+    }
+    // Explicitly handle unauthorized errors from internal queries (legacy pattern)
+    if (e.message.includes("Not authorized")) {
+      return { response: createErrorResponse(403, "Not authorized"), error };
+    }
+  }
+
+  // 3. Fallback to Internal Server Error
   return { response: createErrorResponse(500, "Internal server error"), error };
+}
+
+function mapErrorCodeToStatus(code: ErrorCode): number {
+  switch (code) {
+    case "VALIDATION":
+      return 400;
+    case "UNAUTHENTICATED":
+      return 401;
+    case "FORBIDDEN":
+      return 403;
+    case "NOT_FOUND":
+      return 404;
+    case "CONFLICT":
+      return 409;
+    case "RATE_LIMITED":
+      return 429;
+    default:
+      return 500;
+  }
 }
 
 /**
