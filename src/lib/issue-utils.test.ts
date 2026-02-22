@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getIssueAccessibleLabel,
   getPriorityColor,
   getStatusColor,
   getTypeLabel,
@@ -198,6 +199,52 @@ describe("issue-utils", () => {
       expect(getStatusColor("unknown")).toBe(expected);
       expect(getStatusColor("")).toBe(expected);
       expect(getStatusColor("custom-status")).toBe(expected);
+    });
+  });
+
+  describe("getIssueAccessibleLabel", () => {
+    const baseIssue = {
+      key: "TEST-1",
+      title: "Test Issue",
+      type: "bug",
+      priority: "high",
+    };
+
+    it("should format label correctly with assignee and points", () => {
+      const issue = {
+        ...baseIssue,
+        assignee: { name: "Alice" },
+        storyPoints: 5,
+      };
+      const label = getIssueAccessibleLabel(issue);
+      expect(label).toContain("Bug TEST-1: Test Issue");
+      expect(label).toContain("High priority");
+      expect(label).toContain("assigned to Alice");
+      expect(label).toContain("5 points");
+    });
+
+    it("should handle unassigned issue without points", () => {
+      const label = getIssueAccessibleLabel(baseIssue);
+      expect(label).toContain("unassigned");
+      expect(label).not.toContain("points");
+    });
+
+    it("should include labels when present", () => {
+      const issue = {
+        ...baseIssue,
+        labels: [{ name: "frontend" }, { name: "accessibility" }],
+      };
+      const label = getIssueAccessibleLabel(issue);
+      expect(label).toContain("Labels: frontend, accessibility");
+    });
+
+    it("should handle empty labels", () => {
+      const issue = {
+        ...baseIssue,
+        labels: [],
+      };
+      const label = getIssueAccessibleLabel(issue);
+      expect(label).not.toContain("Labels:");
     });
   });
 });

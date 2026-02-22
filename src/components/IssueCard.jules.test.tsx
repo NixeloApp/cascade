@@ -44,7 +44,9 @@ describe("IssueCard (Jules additions)", () => {
     // Expect tooltip to appear with the title
     // Note: Radix Tooltip might take some time or need specific setup in tests,
     // but usually finding by role tooltip works if animations are disabled or handled
-    const tooltip = await screen.findByRole("tooltip");
+    // The tooltip is intentionally hidden from the accessibility tree (aria-hidden)
+    // because the card's accessible name already includes this information.
+    const tooltip = await screen.findByRole("tooltip", { hidden: true });
     expect(tooltip).toHaveTextContent(mockIssue.title);
   });
 
