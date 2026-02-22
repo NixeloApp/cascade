@@ -15,6 +15,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { action, internalAction } from "../_generated/server";
+import { fetchJSON } from "../lib/fetchWithTimeout";
 
 // ============================================================================
 // OAuth CSRF Protection
@@ -156,7 +157,7 @@ export const exchangeCodeForToken = internalAction({
 
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
-    const response = await fetch(ZOOM_TOKEN_URL, {
+    const data = await fetchJSON<ZoomTokenResponse>(ZOOM_TOKEN_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -169,12 +170,6 @@ export const exchangeCodeForToken = internalAction({
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to exchange code: ${error}`);
-    }
-
-    const data = (await response.json()) as ZoomTokenResponse;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -208,7 +203,7 @@ export const refreshAccessToken = internalAction({
 
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
-    const response = await fetch(ZOOM_TOKEN_URL, {
+    const data = await fetchJSON<ZoomTokenResponse>(ZOOM_TOKEN_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -220,12 +215,6 @@ export const refreshAccessToken = internalAction({
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to refresh token: ${error}`);
-    }
-
-    const data = (await response.json()) as ZoomTokenResponse;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -250,18 +239,12 @@ export const getUserInfo = internalAction({
     firstName: string;
     lastName: string;
   }> => {
-    const response = await fetch(`${ZOOM_API_BASE}/users/me`, {
+    const data = await fetchJSON<ZoomUserInfoResponse>(`${ZOOM_API_BASE}/users/me`, {
       headers: {
         Authorization: `Bearer ${args.accessToken}`,
       },
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to get user info: ${error}`);
-    }
-
-    const data = (await response.json()) as ZoomUserInfoResponse;
     return {
       id: data.id,
       email: data.email,
@@ -388,7 +371,7 @@ export const createMeeting = action({
     }
 
     // Create meeting via Zoom API
-    const response = await fetch(`${ZOOM_API_BASE}/users/me/meetings`, {
+    const data = await fetchJSON<ZoomMeetingResponse>(`${ZOOM_API_BASE}/users/me/meetings`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -410,13 +393,6 @@ export const createMeeting = action({
         },
       }),
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to create Zoom meeting: ${error}`);
-    }
-
-    const data = (await response.json()) as ZoomMeetingResponse;
 
     // Update last used timestamp (in zoomDb.ts)
     await ctx.runMutation(internal.integrations.zoomDb.updateLastUsed, {

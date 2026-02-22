@@ -5,6 +5,45 @@ export class FetchTimeoutError extends Error {
   }
 }
 
+export class HttpError extends Error {
+  status: number;
+  body: string;
+  constructor(status: number, body: string) {
+    super(`HTTP ${status}: ${body.slice(0, 500)}`);
+    this.name = "HttpError";
+    this.status = status;
+    this.body = body;
+  }
+}
+
+function setupSignal(controller: AbortController, init?: RequestInit): () => void {
+  const { signal } = init || {};
+  if (signal) {
+    if (signal.aborted) {
+      controller.abort();
+      return () => {};
+    }
+    const onAbort = () => controller.abort();
+    signal.addEventListener("abort", onAbort);
+    return () => signal.removeEventListener("abort", onAbort);
+  }
+  return () => {};
+}
+
+function handleFetchError(
+  error: unknown,
+  signal: AbortSignal | undefined | null,
+  timeoutMs: number,
+) {
+  if (error instanceof Error && error.name === "AbortError") {
+    if (signal?.aborted) {
+      throw error;
+    }
+    throw new FetchTimeoutError(timeoutMs);
+  }
+  throw error;
+}
+
 /**
  * Fetches a resource with a timeout.
  * @param input - The URL or Request object.
@@ -21,16 +60,9 @@ export async function fetchWithTimeout(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  const { signal, ...fetchInit } = init || {};
+  const cleanupSignal = setupSignal(controller, init);
 
-  // If a signal is provided, listen to its abort event
-  if (signal) {
-    if (signal.aborted) {
-      controller.abort();
-    } else {
-      signal.addEventListener("abort", () => controller.abort());
-    }
-  }
+  const { signal: _, ...fetchInit } = init || {};
 
   try {
     const response = await fetch(input, {
@@ -39,19 +71,92 @@ export async function fetchWithTimeout(
     });
     return response;
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      // Check if the timeout caused the abort (controller signal is aborted)
-      // but the user's signal (if any) was not.
-      // Or simply assume if it's an AbortError and we set a timeout, it might be the timeout.
-      // To be precise:
-      if (signal?.aborted) {
-        // User aborted, rethrow original error or new AbortError
-        throw error;
+    handleFetchError(error, init?.signal, timeoutMs);
+    throw error; // handleFetchError always throws
+  } finally {
+    clearTimeout(timeoutId);
+    cleanupSignal();
+  }
+}
+
+/**
+ * Fetches a resource and parses it as JSON, with a timeout that covers the entire operation.
+ * Automatically throws if the response is not OK (status 200-299).
+ */
+export async function fetchJSON<T = unknown>(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  timeoutMs = 10000,
+): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  const cleanupSignal = setupSignal(controller, init);
+  const { signal: _, ...fetchInit } = init || {};
+
+  try {
+    const response = await fetch(input, {
+      ...fetchInit,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      let errorText = "";
+      try {
+        errorText = await response.text();
+      } catch {
+        // Ignore error reading body
       }
-      throw new FetchTimeoutError(timeoutMs);
+      throw new HttpError(response.status, errorText);
     }
+
+    return (await response.json()) as T;
+  } catch (error) {
+    handleFetchError(error, init?.signal, timeoutMs);
     throw error;
   } finally {
     clearTimeout(timeoutId);
+    cleanupSignal();
+  }
+}
+
+/**
+ * Fetches a resource and returns it as text, with a timeout that covers the entire operation.
+ * Automatically throws if the response is not OK.
+ */
+export async function fetchText(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  timeoutMs = 10000,
+): Promise<string> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  const cleanupSignal = setupSignal(controller, init);
+  const { signal: _, ...fetchInit } = init || {};
+
+  try {
+    const response = await fetch(input, {
+      ...fetchInit,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      let errorText = "";
+      try {
+        errorText = await response.text();
+      } catch {
+        // Ignore
+      }
+      throw new HttpError(response.status, errorText);
+    }
+
+    return await response.text();
+  } catch (error) {
+    handleFetchError(error, init?.signal, timeoutMs);
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+    cleanupSignal();
   }
 }

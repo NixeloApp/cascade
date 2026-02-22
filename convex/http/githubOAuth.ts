@@ -3,7 +3,7 @@ import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
 import { isAppError, validation } from "../lib/errors";
-import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { fetchJSON, HttpError } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 
 /**
@@ -195,31 +195,30 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
 
   try {
     // Exchange authorization code for access token
-    const tokenResponse = await fetchWithTimeout("https://github.com/login/oauth/access_token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        client_id: config.clientId,
-        client_secret: config.clientSecret,
-        code,
-        redirect_uri: config.redirectUri,
-      }),
-    });
+    let tokens: {
+      access_token: string;
+      error?: string;
+      error_description?: string;
+    };
 
-    if (!tokenResponse.ok) {
-      try {
-        const errorText = await tokenResponse.text();
-        console.error("GitHub OAuth error: Failed to exchange code", errorText);
-      } catch (e) {
-        console.error("GitHub OAuth error: Failed to exchange code (and failed to read body)", e);
-      }
+    try {
+      tokens = await fetchJSON("https://github.com/login/oauth/access_token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          client_id: config.clientId,
+          client_secret: config.clientSecret,
+          code,
+          redirect_uri: config.redirectUri,
+        }),
+      });
+    } catch (e) {
+      console.error("GitHub OAuth error: Failed to exchange code", e);
       throw validation("oauth", "Failed to exchange GitHub authorization code");
     }
-
-    const tokens = await tokenResponse.json();
 
     if (tokens.error) {
       throw validation("oauth", tokens.error_description || tokens.error);
@@ -228,25 +227,20 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     const { access_token } = tokens;
 
     // Get user info from GitHub
-    const userResponse = await fetchWithTimeout("https://api.github.com/user", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        Accept: "application/vnd.github.v3+json",
-        "User-Agent": "Nixelo-App",
-      },
-    });
-
-    if (!userResponse.ok) {
-      try {
-        const errorText = await userResponse.text();
-        console.error("GitHub OAuth error: Failed to get user info", errorText);
-      } catch (e) {
-        console.error("GitHub OAuth error: Failed to get user info (and failed to read body)", e);
-      }
+    let userInfo: { id: number; login: string };
+    try {
+      userInfo = await fetchJSON("https://api.github.com/user", {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "Nixelo-App",
+        },
+      });
+    } catch (e) {
+      console.error("GitHub OAuth error: Failed to get user info", e);
       throw validation("github", "Failed to get GitHub user info");
     }
 
-    const userInfo = await userResponse.json();
     const githubUserId = String(userInfo.id);
     const githubUsername = userInfo.login;
 
@@ -426,39 +420,43 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
     }
 
     // Fetch repositories from GitHub API
-    const reposResponse = await fetchWithTimeout(
-      "https://api.github.com/user/repos?sort=updated&per_page=100",
-      {
-        headers: {
-          Authorization: `Bearer ${tokens.accessToken}`,
-          Accept: "application/vnd.github.v3+json",
-          "User-Agent": "Nixelo-App",
-        },
-      },
-      30000,
-    );
+    let repos: {
+      id: number;
+      name: string;
+      full_name: string;
+      owner: { login: string };
+      private: boolean;
+      description: string | null;
+    }[];
 
-    if (!reposResponse.ok) {
-      let errorMessage = "Failed to fetch repositories";
-      try {
-        const text = await reposResponse.text();
+    try {
+      repos = await fetchJSON(
+        "https://api.github.com/user/repos?sort=updated&per_page=100",
+        {
+          headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+            Accept: "application/vnd.github.v3+json",
+            "User-Agent": "Nixelo-App",
+          },
+        },
+        30000,
+      );
+    } catch (e) {
+      if (e instanceof HttpError) {
+        let errorMessage = "Failed to fetch repositories";
         try {
-          const errorBody = JSON.parse(text);
+          const errorBody = JSON.parse(e.body);
           errorMessage = errorBody.message || errorMessage;
         } catch {
-          errorMessage = text || errorMessage;
+          errorMessage = e.body || errorMessage;
         }
-      } catch (e) {
-        console.error("Failed to read error response body:", e);
+        return new Response(JSON.stringify({ error: errorMessage }), {
+          status: e.status,
+          headers: { "Content-Type": "application/json" },
+        });
       }
-
-      return new Response(JSON.stringify({ error: errorMessage }), {
-        status: reposResponse.status,
-        headers: { "Content-Type": "application/json" },
-      });
+      throw e;
     }
-
-    const repos = await reposResponse.json();
 
     // Transform to a simpler format
     const simplifiedRepos = repos.map(
