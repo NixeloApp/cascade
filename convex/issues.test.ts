@@ -21,12 +21,16 @@ describe("Issues", () => {
       });
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         description: "This is a test issue",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       expect(issueId).toBeDefined();
@@ -49,11 +53,15 @@ describe("Issues", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issue1Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "First Issue",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       const issue2Id = await asUser.mutation(api.issues.create, {
@@ -61,6 +69,7 @@ describe("Issues", () => {
         title: "Second Issue",
         type: "bug",
         priority: "high",
+        organizationId: project.organizationId,
       });
 
       const issue1 = await asUser.query(api.issues.getIssue, { id: issue1Id });
@@ -77,11 +86,15 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Status Test",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
@@ -96,12 +109,16 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, reporterId);
 
       const asReporter = asAuthenticatedUser(t, reporterId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asReporter.mutation(api.issues.create, {
         projectId,
         title: "Assigned Issue",
         type: "task",
         priority: "medium",
         assigneeId,
+        organizationId: project.organizationId,
       });
 
       const issue = await asReporter.query(api.issues.getIssue, { id: issueId });
@@ -114,12 +131,16 @@ describe("Issues", () => {
       const userId = await createTestUser(t);
       const projectId = await createTestProject(t, userId);
 
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       await expect(async () => {
         await t.mutation(api.issues.create, {
           projectId,
           title: "Unauthorized",
           type: "task",
           priority: "medium",
+          organizationId: project.organizationId,
         });
       }).rejects.toThrow("Not authenticated");
       await t.finishInProgressScheduledFunctions();
@@ -155,6 +176,10 @@ describe("Issues", () => {
 
       // Try to create issue as viewer
       const asViewer = asAuthenticatedUser(t, viewerId);
+
+      const projectDoc = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!projectDoc) throw new Error("Project not found");
+
       // Viewer should not be able to create issues - requires editor role
       await expect(async () => {
         await asViewer.mutation(api.issues.create, {
@@ -162,6 +187,7 @@ describe("Issues", () => {
           title: "Should Fail",
           type: "task",
           priority: "medium",
+          organizationId: projectDoc.organizationId,
         });
       }).rejects.toThrow(/FORBIDDEN|editor/i);
       await t.finishInProgressScheduledFunctions();
@@ -175,12 +201,16 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Detailed Issue",
         description: "Detailed description",
         type: "story",
         priority: "high",
+        organizationId: project.organizationId,
       });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
@@ -198,11 +228,15 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "To Delete",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       // Delete the issue using bulkDelete
@@ -220,11 +254,15 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, owner, { isPublic: false });
 
       const asOwner = asAuthenticatedUser(t, owner);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asOwner.mutation(api.issues.create, {
         projectId,
         title: "Private Issue",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       // Try to access as outsider
@@ -243,12 +281,16 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Original Title",
         description: "Original description",
         type: "task",
         priority: "low",
+        organizationId: project.organizationId,
       });
 
       await asUser.mutation(api.issues.update, {
@@ -286,11 +328,15 @@ describe("Issues", () => {
       });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
+      const projectDoc = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!projectDoc) throw new Error("Project not found");
+
       const issueId = await asAdmin.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
         priority: "medium",
+        organizationId: projectDoc.organizationId,
       });
 
       await asAdmin.mutation(api.projects.addProjectMember, {
@@ -318,11 +364,15 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Status Test",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       await asUser.mutation(api.issues.updateStatus, {
@@ -355,11 +405,15 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       // Implementation accepts any status value (no workflow validation)
@@ -382,23 +436,29 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "bug",
         priority: "high",
+        organizationId: project.organizationId,
       });
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 3",
         type: "story",
         priority: "low",
+        organizationId: project.organizationId,
       });
 
       const { page: issues } = await asUser.query(api.issues.listProjectIssues, {
@@ -434,11 +494,15 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       const commentId = await asUser.mutation(api.issues.addComment, {
@@ -468,11 +532,15 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       // Call without authentication
@@ -493,17 +561,22 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issue1Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
       const issue2Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       await asUser.mutation(api.issues.bulkUpdateStatus, {
@@ -525,17 +598,22 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issue1Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "low",
+        organizationId: project.organizationId,
       });
       const issue2Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       await asUser.mutation(api.issues.bulkUpdatePriority, {
@@ -558,17 +636,22 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, reporterId);
 
       const asReporter = asAuthenticatedUser(t, reporterId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issue1Id = await asReporter.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
       const issue2Id = await asReporter.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       await asReporter.mutation(api.issues.bulkAssign, {
@@ -620,6 +703,7 @@ describe("Issues", () => {
         title: "Test",
         type: "task",
         priority: "medium",
+        organizationId,
       });
 
       await asAdmin.mutation(api.projects.addProjectMember, {
@@ -652,23 +736,29 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Fix login bug",
         type: "bug",
         priority: "high",
+        organizationId: project.organizationId,
       });
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Add login feature",
         type: "story",
         priority: "medium",
+        organizationId: project.organizationId,
       });
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Update dashboard",
         type: "task",
         priority: "low",
+        organizationId: project.organizationId,
       });
 
       const searchResult = await asUser.query(api.issues.search, {
@@ -687,12 +777,16 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Normal Title",
         description: "Contains unique_word_in_desc",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       const searchResult = await asUser.query(api.issues.search, {
@@ -710,12 +804,16 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Update Test",
         description: "Initial description",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       // Update description
@@ -743,12 +841,16 @@ describe("Issues", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Create an epic
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Epic 1",
         type: "epic",
         priority: "high",
+        organizationId: project.organizationId,
       });
 
       // Create a task
@@ -757,6 +859,7 @@ describe("Issues", () => {
         title: "Task 1",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       // List without exclusion
@@ -782,12 +885,16 @@ describe("Issues", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
+      const project = await t.run(async (ctx) => await ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Create an epic
       const epicId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Epic 1",
         type: "epic",
         priority: "high",
+        organizationId: project.organizationId,
       });
 
       // Create task IN the epic
@@ -797,6 +904,7 @@ describe("Issues", () => {
         type: "task",
         priority: "medium",
         epicId: epicId,
+        organizationId: project.organizationId,
       });
 
       // Create task NOT in the epic
@@ -805,6 +913,7 @@ describe("Issues", () => {
         title: "Task not in Epic",
         type: "task",
         priority: "medium",
+        organizationId: project.organizationId,
       });
 
       // List by epicId
