@@ -148,7 +148,7 @@ export const updateProfile = authenticatedMutation({
     emailNotifications: v.optional(v.boolean()),
     desktopNotifications: v.optional(v.boolean()),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const updates: {
       name?: string;
@@ -193,6 +193,8 @@ export const updateProfile = authenticatedMutation({
       updates.desktopNotifications = args.desktopNotifications;
 
     await ctx.db.patch(ctx.userId, updates);
+
+    return { success: true };
   },
 });
 
@@ -324,7 +326,7 @@ export const sendVerificationEmailAction = internalAction({
  */
 export const verifyEmailChange = authenticatedMutation({
   args: { token: v.string() },
-  returns: v.null(),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     // Rate limit verification attempts to prevent brute-forcing
     await rateLimit(ctx, "emailChange", { key: ctx.userId });
@@ -374,6 +376,8 @@ export const verifyEmailChange = authenticatedMutation({
 
     // Sync to auth accounts
     await syncEmailToAuthAccounts(ctx, ctx.userId, newEmail);
+
+    return { success: true };
   },
 });
 
