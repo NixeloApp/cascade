@@ -280,7 +280,7 @@ export const IssueCard = memo(function IssueCard({
                   className="w-3 h-3 text-ui-text-tertiary opacity-0 group-hover:opacity-40 transition-fast -ml-0.5 shrink-0"
                   aria-hidden="true"
                 />
-              </Flex>
+              </div>
             )}
             {/* Checkbox */}
             {selectionMode && (
@@ -423,7 +423,7 @@ export const IssueCard = memo(function IssueCard({
             </Badge>
           )}
         </Flex>
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 }, areIssuePropsEqual);
