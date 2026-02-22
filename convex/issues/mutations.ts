@@ -448,6 +448,7 @@ export const bulkUpdateStatus = authenticatedMutation({
             newValue: args.newStatus,
           });
         }
+        return undefined;
       },
     );
 
@@ -488,6 +489,7 @@ export const bulkUpdatePriority = authenticatedMutation({
           oldValue: oldPriority,
           newValue: args.priority,
         });
+        return undefined;
       },
     );
 
@@ -522,6 +524,7 @@ export const bulkAssign = authenticatedMutation({
           oldValue: oldAssignee ? String(oldAssignee) : "",
           newValue: args.assigneeId ? String(args.assigneeId) : "",
         });
+        return undefined;
       },
     );
 
@@ -556,6 +559,7 @@ export const bulkAddLabels = authenticatedMutation({
           oldValue: issue.labels.join(", "),
           newValue: updatedLabels.join(", "),
         });
+        return undefined;
       },
     );
 
@@ -590,6 +594,7 @@ export const bulkMoveToSprint = authenticatedMutation({
           oldValue: oldSprint ? String(oldSprint) : "",
           newValue: args.sprintId ? String(args.sprintId) : "",
         });
+        return undefined;
       },
     );
 
@@ -616,6 +621,7 @@ export const bulkDelete = authenticatedMutation({
           userId: ctx.userId,
           action: "deleted",
         });
+        return undefined;
       },
     );
 
@@ -729,6 +735,7 @@ export const bulkArchive = authenticatedMutation({
           userId: ctx.userId,
           action: "archived",
         });
+        return undefined;
       },
     );
 
@@ -764,6 +771,7 @@ export const bulkRestore = authenticatedMutation({
           userId: ctx.userId,
           action: "restored",
         });
+        return undefined;
       },
     );
 
@@ -807,6 +815,7 @@ export const bulkUpdateDueDate = authenticatedMutation({
           oldValue: issue.dueDate ? new Date(issue.dueDate).toISOString() : undefined,
           newValue: args.dueDate ? new Date(args.dueDate).toISOString() : undefined,
         });
+        return undefined;
       },
     );
 
@@ -850,6 +859,7 @@ export const bulkUpdateStartDate = authenticatedMutation({
           oldValue: issue.startDate ? new Date(issue.startDate).toISOString() : undefined,
           newValue: args.startDate ? new Date(args.startDate).toISOString() : undefined,
         });
+        return undefined;
       },
     );
 

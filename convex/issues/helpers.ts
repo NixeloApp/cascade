@@ -368,8 +368,7 @@ export async function runBulkMutation(
     ctx: MutationCtx & { userId: Id<"users"> },
     issue: Doc<"issues">,
     project: Doc<"projects"> | null,
-    // biome-ignore lint/suspicious/noConfusingVoidType: allow void return
-  ) => Promise<void | number | undefined>,
+  ) => Promise<number | undefined>,
 ) {
   const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
 
