@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { DAY, HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
@@ -27,7 +28,7 @@ describe("Calendar Events Attendance", () => {
         attendeeIds: options.attendeeIds ?? [],
         isRequired: options.isRequired ?? false,
         startTime: options.startTime ?? now,
-        endTime: options.endTime ?? now + 3600000, // 1 hour
+        endTime: options.endTime ?? now + HOUR, // 1 hour
         updatedAt: now,
         // Required fields
         allDay: false,
@@ -244,16 +245,16 @@ describe("Calendar Events Attendance", () => {
         title: "Morning Standup",
         attendeeIds: [attendeeId],
         isRequired: true,
-        startTime: now - 86400000, // 1 day ago
-        endTime: now - 86400000 + 3600000,
+        startTime: now - DAY, // 1 day ago
+        endTime: now - DAY + HOUR,
       });
 
       const event2 = await createCalendarEvent(t, userId, organizationId, {
         title: "Sprint Review",
         attendeeIds: [attendeeId],
         isRequired: true,
-        startTime: now - 172800000, // 2 days ago
-        endTime: now - 172800000 + 3600000,
+        startTime: now - 2 * DAY, // 2 days ago
+        endTime: now - 2 * DAY + HOUR,
       });
 
       // Mark attendance
@@ -287,14 +288,14 @@ describe("Calendar Events Attendance", () => {
       const attendeeId = await createTestUser(t, { name: "Attendee" });
 
       const now = Date.now();
-      const oneWeekAgo = now - 7 * 86400000;
-      const twoWeeksAgo = now - 14 * 86400000;
+      const oneWeekAgo = now - 7 * DAY;
+      const twoWeeksAgo = now - 14 * DAY;
 
       // Create events at different times
       const recentEvent = await createCalendarEvent(t, userId, organizationId, {
         title: "Recent Meeting",
         attendeeIds: [attendeeId],
-        startTime: now - 86400000, // 1 day ago
+        startTime: now - DAY, // 1 day ago
       });
 
       const oldEvent = await createCalendarEvent(t, userId, organizationId, {
@@ -362,14 +363,14 @@ describe("Calendar Events Attendance", () => {
         title: "All Hands",
         attendeeIds: [attendee1, attendee2],
         isRequired: true,
-        startTime: now - 86400000,
+        startTime: now - DAY,
       });
 
       const event2 = await createCalendarEvent(t, userId, organizationId, {
         title: "Team Sync",
         attendeeIds: [attendee1, attendee2],
         isRequired: true,
-        startTime: now - 172800000,
+        startTime: now - 2 * DAY,
       });
 
       // Create non-required meeting (should not be counted)
@@ -377,7 +378,7 @@ describe("Calendar Events Attendance", () => {
         title: "Optional Social",
         attendeeIds: [attendee1, attendee2],
         isRequired: false,
-        startTime: now - 259200000,
+        startTime: now - 3 * DAY,
       });
 
       // Mark attendance
@@ -430,15 +431,15 @@ describe("Calendar Events Attendance", () => {
       const attendeeId = await createTestUser(t, { name: "Employee" });
 
       const now = Date.now();
-      const oneWeekAgo = now - 7 * 86400000;
-      const twoWeeksAgo = now - 14 * 86400000;
+      const oneWeekAgo = now - 7 * DAY;
+      const twoWeeksAgo = now - 14 * DAY;
 
       // Create events at different times
       await createCalendarEvent(t, userId, organizationId, {
         title: "Recent Required",
         attendeeIds: [attendeeId],
         isRequired: true,
-        startTime: now - 86400000,
+        startTime: now - DAY,
       });
 
       await createCalendarEvent(t, userId, organizationId, {

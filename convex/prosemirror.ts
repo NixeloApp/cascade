@@ -5,6 +5,7 @@ import { components } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, unauthenticated, validation } from "./lib/errors";
+import { MINUTE } from "./lib/timeUtils";
 import type { ProseMirrorSnapshot } from "./validators";
 
 const prosemirrorSync = new ProsemirrorSync(components.prosemirrorSync);
@@ -66,8 +67,9 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
           typeof snapshot === "string"
             ? (JSON.parse(snapshot) as ProseMirrorSnapshot)
             : (snapshot as ProseMirrorSnapshot);
-      } catch (_e) {
-        return;
+      } catch (e) {
+        console.error(`Failed to parse snapshot for document ${id}:`, e);
+        throw validation("content", "Invalid document snapshot");
       }
       // Update the document's updatedAt timestamp when content changes
       const document = await ctx.db.get(id as Id<"documents">);
@@ -90,7 +92,7 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
         // Save version if:
         // 1. No previous version exists, OR
         // 2. More than 1 minute has passed since last version
-        const shouldSaveVersion = !lastVersion || now - lastVersion._creationTime > 60 * 1000; // 1 minute
+        const shouldSaveVersion = !lastVersion || now - lastVersion._creationTime > MINUTE; // 1 minute
 
         if (shouldSaveVersion) {
           await ctx.db.insert("documentVersions", {

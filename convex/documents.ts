@@ -114,43 +114,7 @@ export const list = authenticatedQuery({
     const requestedLimit = args.limit ?? DEFAULT_PAGE_SIZE;
     const limit = Math.min(requestedLimit, MAX_PAGE_SIZE);
 
-    // Fetch buffer: get more than needed to handle deduplication between private/public
-    // Buffer size scales with limit to ensure we have enough results
-    const fetchBuffer = limit * FETCH_BUFFER_MULTIPLIER;
-
-    // Get user's private documents (their own non-public docs)
-    const privateDocuments = await fetchPrivateDocuments(
-      ctx,
-      ctx.userId,
-      args.organizationId,
-      fetchBuffer,
-    );
-
-    // Get public documents (must be scoped to organization)
-    const publicDocuments = await fetchPublicDocuments(
-      ctx,
-      ctx.userId,
-      args.organizationId,
-      fetchBuffer,
-    );
-
-    // Combine and deduplicate (user's public docs appear in both queries)
-    const seenIds = new Set<string>();
-    const combinedDocuments = [...privateDocuments, ...publicDocuments].filter((doc) => {
-      if (seenIds.has(doc._id)) return false;
-      seenIds.add(doc._id);
-      return true;
-    });
-
-    // Filter by access (specifically project access)
-    // Pre-build org IDs set to avoid N+1 membership queries
-    const myOrgIds = args.organizationId ? new Set<string>([args.organizationId]) : undefined;
-    const allDocuments = [];
-    for (const doc of combinedDocuments) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        allDocuments.push(doc);
-      }
-    }
+    const allDocuments = await fetchAndMergeAccessibleDocuments(ctx, args.organizationId, limit);
 
     // Sort by updatedAt descending
     allDocuments.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -562,9 +526,15 @@ export const search = authenticatedQuery({
     const filtered = [];
     const targetCount = offset + limit + 1;
 
-    for (const doc of results) {
+    // Optimized: Parallelize access checks to resolve N+1 latency
+    const accessResults = await Promise.all(
+      results.map((doc) => canAccessDocument(ctx, doc, myOrgIds)),
+    );
+
+    for (let i = 0; i < results.length; i++) {
+      const doc = results[i];
       // Check access and filter conditions
-      if (!(await canAccessDocument(ctx, doc, myOrgIds))) continue;
+      if (!accessResults[i]) continue;
       if (args.organizationId && doc.organizationId !== args.organizationId) continue;
       if (!matchesDocumentFilters(doc, args, ctx.userId)) continue;
 
@@ -658,21 +628,23 @@ export const listChildren = authenticatedQuery({
     const documents = await ctx.db
       .query("documents")
       .withIndex("by_organization_parent", (q) =>
-        q.eq("organizationId", args.organizationId).eq("parentId", args.parentId),
+        q
+          .eq("organizationId", args.organizationId)
+          .eq("parentId", args.parentId)
+          .lt("isDeleted", true),
       )
-      .filter(notDeleted)
       .take(BOUNDED_RELATION_LIMIT);
 
     // Pre-build org IDs set to avoid N+1 membership queries
     const myOrgIds = new Set<string>([args.organizationId]);
 
     // Filter by access
-    const accessible = [];
-    for (const doc of documents) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        accessible.push(doc);
-      }
-    }
+    // Optimized: Parallelize access checks to resolve N+1 latency
+    const accessResults = await Promise.all(
+      documents.map((doc) => canAccessDocument(ctx, doc, myOrgIds)),
+    );
+
+    const accessible = documents.filter((_, i) => accessResults[i]);
 
     // Sort by order
     accessible.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -685,9 +657,11 @@ export const listChildren = authenticatedQuery({
         const firstChild = await ctx.db
           .query("documents")
           .withIndex("by_organization_parent", (q) =>
-            q.eq("organizationId", args.organizationId).eq("parentId", doc._id),
+            q
+              .eq("organizationId", args.organizationId)
+              .eq("parentId", doc._id)
+              .lt("isDeleted", true),
           )
-          .filter(notDeleted)
           .first();
 
         return {
@@ -735,20 +709,21 @@ export const getTree = authenticatedQuery({
     // Get all documents in org (bounded - most orgs won't have more than this)
     const allDocs = await ctx.db
       .query("documents")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
-      .filter(notDeleted)
+      .withIndex("by_organization_deleted", (q) =>
+        q.eq("organizationId", args.organizationId).lt("isDeleted", true),
+      )
       .take(BOUNDED_RELATION_LIMIT);
 
     // Pre-build org IDs set to avoid N+1 membership queries
     const myOrgIds = new Set<string>([args.organizationId]);
 
     // Filter by access
-    const accessible = [];
-    for (const doc of allDocs) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        accessible.push(doc);
-      }
-    }
+    // Optimized: Parallelize access checks to resolve N+1 latency
+    const accessResults = await Promise.all(
+      allDocs.map((doc) => canAccessDocument(ctx, doc, myOrgIds)),
+    );
+
+    const accessible = allDocs.filter((_, i) => accessResults[i]);
 
     // Build tree structure
     const childrenByParent = new Map<Id<"documents"> | undefined, typeof accessible>();
@@ -1296,14 +1271,60 @@ async function getAccessibleDocuments(
   const documents = await Promise.all(uniqueDocIds.map((id) => ctx.db.get(id)));
   const accessibleDocIds = new Set<string>();
 
-  for (const doc of documents) {
-    if (!doc || doc.isDeleted) continue;
-    // This throws forbidden() if user doesn't have access
-    await assertDocumentAccess(ctx, doc);
-    accessibleDocIds.add(doc._id);
-  }
+  // Optimized: Parallelize access checks
+  await Promise.all(
+    documents.map(async (doc) => {
+      if (!doc || doc.isDeleted) return;
+      // This throws forbidden() if user doesn't have access
+      await assertDocumentAccess(ctx, doc);
+      accessibleDocIds.add(doc._id);
+    }),
+  );
 
   return { commentToDocMap, accessibleDocIds };
+}
+
+// Helper: Fetch, combine, and filter accessible documents
+async function fetchAndMergeAccessibleDocuments(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  organizationId: Id<"organizations"> | undefined,
+  limit: number,
+) {
+  // Fetch buffer: get more than needed to handle deduplication between private/public
+  // Buffer size scales with limit to ensure we have enough results
+  const fetchBuffer = limit * FETCH_BUFFER_MULTIPLIER;
+
+  // Get user's private documents (their own non-public docs)
+  const privateDocuments = await fetchPrivateDocuments(
+    ctx,
+    ctx.userId,
+    organizationId,
+    fetchBuffer,
+  );
+
+  // Get public documents (must be scoped to organization)
+  const publicDocuments = await fetchPublicDocuments(ctx, ctx.userId, organizationId, fetchBuffer);
+
+  // Combine and deduplicate (user's public docs appear in both queries)
+  const seenIds = new Set<string>();
+  const combinedDocuments = [...privateDocuments, ...publicDocuments].filter((doc) => {
+    if (seenIds.has(doc._id)) return false;
+    seenIds.add(doc._id);
+    return true;
+  });
+
+  // Filter by access (specifically project access)
+  // Pre-build org IDs set to avoid N+1 membership queries
+  const myOrgIds = organizationId ? new Set<string>([organizationId]) : undefined;
+
+  // Optimized: Parallelize access checks to resolve N+1 latency
+  const accessResults = await Promise.all(
+    combinedDocuments.map((doc) => canAccessDocument(ctx, doc, myOrgIds)),
+  );
+
+  const accessibleDocuments = combinedDocuments.filter((_, i) => accessResults[i]);
+
+  return accessibleDocuments;
 }
 
 async function fetchPrivateDocuments(
@@ -1312,16 +1333,23 @@ async function fetchPrivateDocuments(
   organizationId: Id<"organizations"> | undefined,
   limit: number,
 ) {
-  let query = ctx.db
-    .query("documents")
-    .withIndex("by_creator_updated", (q) => q.eq("createdBy", userId))
-    .filter((q) => q.eq(q.field("isPublic"), false));
-
   if (organizationId) {
-    query = query.filter((q) => q.eq(q.field("organizationId"), organizationId));
+    return await ctx.db
+      .query("documents")
+      .withIndex("by_org_creator_public_updated", (q) =>
+        q.eq("organizationId", organizationId).eq("createdBy", userId).eq("isPublic", false),
+      )
+      .order("desc")
+      .filter(notDeleted)
+      .take(limit);
   }
 
-  return await query.order("desc").filter(notDeleted).take(limit);
+  return await ctx.db
+    .query("documents")
+    .withIndex("by_creator_public_updated", (q) => q.eq("createdBy", userId).eq("isPublic", false))
+    .order("desc")
+    .filter(notDeleted)
+    .take(limit);
 }
 
 async function fetchPublicDocuments(

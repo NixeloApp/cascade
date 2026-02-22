@@ -1,7 +1,13 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalAction, internalMutation, mutation, query } from "./_generated/server";
+import {
+  internalAction,
+  internalMutation,
+  mutation,
+  type QueryCtx,
+  query,
+} from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchCalendarEvents, batchFetchRecordings } from "./lib/batchHelpers";
 import { requireBotApiKey } from "./lib/botAuth";
@@ -10,16 +16,54 @@ import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
 import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
-import { assertCanEditProject } from "./projectAccess";
-import { simplePriorities } from "./validators";
+import { MINUTE } from "./lib/timeUtils";
+import { assertCanAccessProject, assertCanEditProject } from "./projectAccess";
+import { meetingPlatforms, meetingStatuses, simplePriorities } from "./validators";
 
 const BOT_SERVICE_TIMEOUT_MS = 30000;
+
+// ===========================================
+// Helpers
+// ===========================================
+
+async function assertRecordingAccess(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  recording: Doc<"meetingRecordings">,
+) {
+  if (recording.projectId) {
+    await assertCanAccessProject(ctx, recording.projectId, ctx.userId);
+  }
+
+  if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+    throw forbidden(undefined, "Not authorized to view this recording");
+  }
+}
+
+async function getAccessibleRecording(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  recordingId: Id<"meetingRecordings">,
+) {
+  const recording = await ctx.db.get(recordingId);
+  if (!recording) throw notFound("recording", recordingId);
+
+  await assertRecordingAccess(ctx, recording);
+  return recording;
+}
 
 // ===========================================
 // Queries
 // ===========================================
 
-/** List meeting recordings for the current user, optionally filtered by project. */
+/**
+ * List meeting recordings for the current user, optionally filtered by project.
+ *
+ * Efficiently fetches related calendar events in a single batch to avoid N+1 queries.
+ * Also optimizes existence checks for transcripts and summaries based on recording status.
+ *
+ * @param projectId - Optional project ID to filter recordings.
+ * @param limit - Max number of recordings to return (default: 20).
+ * @returns Array of enriched recording objects.
+ */
 export const listRecordings = authenticatedQuery({
   args: {
     projectId: v.optional(v.id("projects")),
@@ -31,28 +75,13 @@ export const listRecordings = authenticatedQuery({
       _creationTime: v.number(),
       calendarEventId: v.optional(v.id("calendarEvents")),
       meetingUrl: v.optional(v.string()),
-      meetingPlatform: v.union(
-        v.literal("google_meet"),
-        v.literal("zoom"),
-        v.literal("teams"),
-        v.literal("other"),
-      ),
+      meetingPlatform: meetingPlatforms,
       title: v.string(),
       recordingFileId: v.optional(v.id("_storage")),
       recordingUrl: v.optional(v.string()),
       duration: v.optional(v.number()),
       fileSize: v.optional(v.number()),
-      status: v.union(
-        v.literal("scheduled"),
-        v.literal("joining"),
-        v.literal("recording"),
-        v.literal("processing"),
-        v.literal("transcribing"),
-        v.literal("summarizing"),
-        v.literal("completed"),
-        v.literal("cancelled"),
-        v.literal("failed"),
-      ),
+      status: meetingStatuses,
       errorMessage: v.optional(v.string()),
       scheduledStartTime: v.optional(v.number()),
       actualStartTime: v.optional(v.number()),
@@ -76,11 +105,17 @@ export const listRecordings = authenticatedQuery({
 
     let recordings: Doc<"meetingRecordings">[];
     if (args.projectId) {
+      // Security: Ensure user has access to the project
+      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+
       recordings = await ctx.db
         .query("meetingRecordings")
         .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
         .order("desc")
         .take(limit);
+
+      // Security: Filter out private recordings from other users
+      recordings = recordings.filter((r) => r.isPublic || r.createdBy === ctx.userId);
     } else {
       recordings = await ctx.db
         .query("meetingRecordings")
@@ -132,6 +167,10 @@ export const getRecordingByCalendarEvent = authenticatedQuery({
     if (!recording) return null;
 
     // Check access
+    if (recording.projectId) {
+      await assertCanAccessProject(ctx, recording.projectId, ctx.userId);
+    }
+
     if (recording.createdBy !== ctx.userId && !recording.isPublic) {
       return null;
     }
@@ -159,13 +198,7 @@ export const getRecordingByCalendarEvent = authenticatedQuery({
 export const getRecording = authenticatedQuery({
   args: { recordingId: v.id("meetingRecordings") },
   handler: async (ctx, args) => {
-    const recording = await ctx.db.get(args.recordingId);
-    if (!recording) throw notFound("recording", args.recordingId);
-
-    // Check access
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden(undefined, "Not authorized to view this recording");
-    }
+    const recording = await getAccessibleRecording(ctx, args.recordingId);
 
     const calendarEvent = recording.calendarEventId
       ? await ctx.db.get(recording.calendarEventId)
@@ -206,12 +239,7 @@ export const getRecording = authenticatedQuery({
 export const getTranscript = authenticatedQuery({
   args: { recordingId: v.id("meetingRecordings") },
   handler: async (ctx, args) => {
-    const recording = await ctx.db.get(args.recordingId);
-    if (!recording) throw notFound("recording", args.recordingId);
-
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden();
-    }
+    await getAccessibleRecording(ctx, args.recordingId);
 
     return ctx.db
       .query("meetingTranscripts")
@@ -224,12 +252,7 @@ export const getTranscript = authenticatedQuery({
 export const getSummary = authenticatedQuery({
   args: { recordingId: v.id("meetingRecordings") },
   handler: async (ctx, args) => {
-    const recording = await ctx.db.get(args.recordingId);
-    if (!recording) throw notFound("recording", args.recordingId);
-
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden();
-    }
+    await getAccessibleRecording(ctx, args.recordingId);
 
     return ctx.db
       .query("meetingSummaries")
@@ -251,13 +274,13 @@ export const getPendingJobs = query({
 
     // Get jobs that are pending and scheduled to start within next 5 minutes
     // Bounded to prevent memory issues with many pending jobs
-    const jobs = await ctx.db
+    // Optimized: Use by_status_scheduled index to filter at DB level, preventing starvation by future jobs
+    const readyJobs = await ctx.db
       .query("meetingBotJobs")
-      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .withIndex("by_status_scheduled", (q) =>
+        q.eq("status", "pending").lte("scheduledTime", now + 5 * MINUTE),
+      )
       .take(BOUNDED_LIST_LIMIT);
-
-    // Filter to jobs that should start soon
-    const readyJobs = jobs.filter((job) => job.scheduledTime <= now + 5 * 60 * 1000);
 
     // Batch fetch recordings to avoid N+1 queries
     const recordingIds = readyJobs.map((job) => job.recordingId);
@@ -281,12 +304,7 @@ export const scheduleRecording = authenticatedMutation({
     calendarEventId: v.optional(v.id("calendarEvents")),
     meetingUrl: v.string(),
     title: v.string(),
-    meetingPlatform: v.union(
-      v.literal("google_meet"),
-      v.literal("zoom"),
-      v.literal("teams"),
-      v.literal("other"),
-    ),
+    meetingPlatform: meetingPlatforms,
     scheduledStartTime: v.number(),
     projectId: v.optional(v.id("projects")),
     isPublic: v.optional(v.boolean()),
@@ -294,6 +312,10 @@ export const scheduleRecording = authenticatedMutation({
   returns: v.id("meetingRecordings"),
   handler: async (ctx, args) => {
     const now = Date.now();
+
+    if (args.projectId) {
+      await assertCanEditProject(ctx, args.projectId, ctx.userId);
+    }
 
     // Create the recording record
     const recordingId = await ctx.db.insert("meetingRecordings", {
@@ -337,17 +359,16 @@ export const startRecordingNow = authenticatedMutation({
   args: {
     meetingUrl: v.string(),
     title: v.string(),
-    meetingPlatform: v.union(
-      v.literal("google_meet"),
-      v.literal("zoom"),
-      v.literal("teams"),
-      v.literal("other"),
-    ),
+    meetingPlatform: meetingPlatforms,
     projectId: v.optional(v.id("projects")),
   },
   returns: v.id("meetingRecordings"),
   handler: async (ctx, args) => {
     const now = Date.now();
+
+    if (args.projectId) {
+      await assertCanEditProject(ctx, args.projectId, ctx.userId);
+    }
 
     const recordingId = await ctx.db.insert("meetingRecordings", {
       meetingUrl: args.meetingUrl,
@@ -434,17 +455,7 @@ export const updateRecordingStatus = mutation({
   args: {
     apiKey: v.string(),
     recordingId: v.id("meetingRecordings"),
-    status: v.union(
-      v.literal("scheduled"),
-      v.literal("joining"),
-      v.literal("recording"),
-      v.literal("processing"),
-      v.literal("transcribing"),
-      v.literal("summarizing"),
-      v.literal("completed"),
-      v.literal("cancelled"),
-      v.literal("failed"),
-    ),
+    status: meetingStatuses,
     errorMessage: v.optional(v.string()),
     botJoinedAt: v.optional(v.number()),
     botLeftAt: v.optional(v.number()),
@@ -678,7 +689,24 @@ export const saveParticipants = mutation({
   },
 });
 
-/** Create a project issue from a meeting summary action item and link it back to the summary. */
+/**
+ * Create a project issue from a meeting summary action item and link it back to the summary.
+ *
+ * This mutation:
+ * 1. Verifies the user has access to the recording (owner or public).
+ * 2. Verifies the user has write access to the target project.
+ * 3. Generates the next sequential issue key (e.g., "PROJ-123").
+ * 4. Creates the issue with details from the action item.
+ * 5. Updates the original action item with a reference to the new issue.
+ *
+ * @param summaryId - The ID of the meeting summary containing the action item.
+ * @param actionItemIndex - The index of the action item in the summary's `actionItems` array.
+ * @param projectId - The ID of the project where the issue should be created.
+ * @returns The ID of the newly created issue.
+ * @throws {ConvexError} "NO_DOCUMENT_FOUND" if summary, recording, or project is missing.
+ * @throws {ConvexError} "NO_ACTION_ITEM_FOUND" if the action item index is invalid.
+ * @throws {ConvexError} "FORBIDDEN" if the user lacks permissions.
+ */
 export const createIssueFromActionItem = authenticatedMutation({
   args: {
     summaryId: v.id("meetingSummaries"),
@@ -842,12 +870,7 @@ export const notifyBotService = internalAction({
     jobId: v.id("meetingBotJobs"),
     recordingId: v.id("meetingRecordings"),
     meetingUrl: v.string(),
-    platform: v.union(
-      v.literal("google_meet"),
-      v.literal("zoom"),
-      v.literal("teams"),
-      v.literal("other"),
-    ),
+    platform: meetingPlatforms,
   },
   handler: async (ctx, args) => {
     const botServiceUrl = getBotServiceUrl();
@@ -943,7 +966,7 @@ export const markJobFailed = internalMutation({
 
     if (newAttempts < job.maxAttempts) {
       // Retry in 1 minute
-      const nextAttempt = Date.now() + 60 * 1000;
+      const nextAttempt = Date.now() + MINUTE;
       await ctx.db.patch(args.jobId, {
         attempts: newAttempts,
         lastAttemptAt: Date.now(),

@@ -13,10 +13,13 @@
  *
  * // ✅ GOOD: Batch pattern
  * const userMap = await batchFetchUsers(ctx, items.map(i => i.userId));
- * const enriched = items.map(item => ({
- *   ...item,
- *   userName: getUserName(userMap.get(item.userId))
- * }));
+ * const enriched = items.map(item => {
+ *   const user = userMap.get(item.userId);
+ *   return {
+ *     ...item,
+ *     userName: user?.name ?? "Unknown"
+ *   };
+ * });
  */
 
 import { asyncMap, pruneNull } from "convex-helpers";

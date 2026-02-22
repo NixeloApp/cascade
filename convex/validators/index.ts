@@ -119,6 +119,28 @@ export const bookingFieldTypes = literals("text", "email", "phone");
 export const schedulingTypes = literals("individual", "round_robin", "collective");
 export const roundRobinIntervals = literals("daily", "weekly", "monthly");
 
+// Meeting Bot
+export const meetingPlatforms = literals("google_meet", "zoom", "teams", "other");
+export const meetingStatuses = literals(
+  "scheduled",
+  "joining",
+  "recording",
+  "processing",
+  "transcribing",
+  "summarizing",
+  "completed",
+  "cancelled",
+  "failed",
+);
+export const botJobStatuses = literals(
+  "pending",
+  "queued",
+  "running",
+  "completed",
+  "failed",
+  "cancelled",
+);
+
 // =============================================================================
 // Automation Rules
 // =============================================================================
@@ -401,3 +423,8 @@ export type AutomationActionValue = Infer<typeof automationActionValue>;
 // Booking types
 export type BookingAnswer = Infer<typeof bookingAnswer>;
 export type BookerAnswers = Infer<typeof bookerAnswers>;
+
+// Meeting Bot types
+export type MeetingPlatform = Infer<typeof meetingPlatforms>;
+export type MeetingStatus = Infer<typeof meetingStatuses>;
+export type BotJobStatus = Infer<typeof botJobStatuses>;

@@ -19,3 +19,7 @@
 ## 2024-05-22 - Silent Security Wrappers
 **Learning:** Security wrappers like `securePasswordReset` (which return generic success to prevent enumeration) must still log internal errors server-side. Swallowing exceptions completely creates a black hole for debugging critical auth failures.
 **Action:** Always include server-side logging (e.g., `logger.error`) in the catch block of security-sensitive endpoints that return generic client responses.
+
+## 2024-05-22 - ProseMirror Sync Silent Failure
+**Learning:** The `onSnapshot` callback in `convex/prosemirror.ts` was silently swallowing `JSON.parse` errors, leading to data inconsistencies (missing versions, outdated timestamps) without client feedback.
+**Action:** Ensure all callbacks in third-party integrations (like `prosemirror-sync`) have explicit error handling (logging and re-throwing as appropriate errors) to prevent silent failures.

@@ -11,6 +11,7 @@ import {
   boardTypes,
   bookerAnswers,
   bookingFieldTypes,
+  botJobStatuses,
   calendarEventColors,
   calendarProviders,
   calendarStatuses,
@@ -26,6 +27,8 @@ import {
   issuePriorities,
   issueTypes,
   linkTypes,
+  meetingPlatforms,
+  meetingStatuses,
   moduleStatuses,
   periodTypes,
   personas,
@@ -308,12 +311,18 @@ const applicationTables = {
     .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"])
     .index("by_project", ["projectId"])
-    .index("by_creator_updated", ["createdBy", "updatedAt"])
+    .index("by_creator_public_updated", ["createdBy", "isPublic", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_organization_deleted", ["organizationId", "isDeleted"])
     .index("by_organization_public", ["organizationId", "isPublic", "updatedAt"])
     .index("by_parent", ["parentId"])
-    .index("by_organization_parent", ["organizationId", "parentId"])
+    .index("by_organization_parent", ["organizationId", "parentId", "isDeleted"])
+    .index("by_org_creator_public_updated", [
+      "organizationId",
+      "createdBy",
+      "isPublic",
+      "updatedAt",
+    ])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId", "projectId"],
@@ -404,7 +413,7 @@ const applicationTables = {
     deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId", "isDeleted"])
-    .index("by_user", ["userId"])
+    .index("by_user", ["userId", "isDeleted"])
     .index("by_project_user", ["projectId", "userId"])
     .index("by_role", ["role"])
     .index("by_deleted", ["isDeleted"]),
@@ -1350,28 +1359,13 @@ const applicationTables = {
   meetingRecordings: defineTable({
     calendarEventId: v.optional(v.id("calendarEvents")),
     meetingUrl: v.optional(v.string()),
-    meetingPlatform: v.union(
-      v.literal("google_meet"),
-      v.literal("zoom"),
-      v.literal("teams"),
-      v.literal("other"),
-    ),
+    meetingPlatform: meetingPlatforms,
     title: v.string(),
     recordingFileId: v.optional(v.id("_storage")),
     recordingUrl: v.optional(v.string()),
     duration: v.optional(v.number()),
     fileSize: v.optional(v.number()),
-    status: v.union(
-      v.literal("scheduled"),
-      v.literal("joining"),
-      v.literal("recording"),
-      v.literal("processing"),
-      v.literal("transcribing"),
-      v.literal("summarizing"),
-      v.literal("completed"),
-      v.literal("cancelled"),
-      v.literal("failed"),
-    ),
+    status: meetingStatuses,
     errorMessage: v.optional(v.string()),
     scheduledStartTime: v.optional(v.number()),
     actualStartTime: v.optional(v.number()),
@@ -1477,14 +1471,7 @@ const applicationTables = {
     recordingId: v.id("meetingRecordings"),
     meetingUrl: v.string(),
     scheduledTime: v.number(),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("queued"),
-      v.literal("running"),
-      v.literal("completed"),
-      v.literal("failed"),
-      v.literal("cancelled"),
-    ),
+    status: botJobStatuses,
     attempts: v.number(),
     maxAttempts: v.number(),
     lastAttemptAt: v.optional(v.number()),
@@ -1496,7 +1483,8 @@ const applicationTables = {
     .index("by_recording", ["recordingId"])
     .index("by_status", ["status"])
     .index("by_scheduled_time", ["scheduledTime"])
-    .index("by_next_attempt", ["nextAttemptAt"]),
+    .index("by_next_attempt", ["nextAttemptAt"])
+    .index("by_status_scheduled", ["status", "scheduledTime"]),
 
   // ===========================================================================
   // TIME TRACKING

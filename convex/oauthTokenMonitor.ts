@@ -13,11 +13,17 @@
 
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import {
+  type ActionCtx,
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { BOUNDED_DELETE_BATCH, BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { encrypt } from "./lib/encryption";
 import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "./lib/env";
-import { MINUTE } from "./lib/timeUtils";
+import { MINUTE, SECOND } from "./lib/timeUtils";
 
 // Token status types
 export type TokenStatus = "healthy" | "expiring_soon" | "expired" | "invalid" | "missing";
@@ -25,6 +31,18 @@ export type TokenStatus = "healthy" | "expiring_soon" | "expired" | "invalid" | 
 // Token expiration thresholds
 const EXPIRING_SOON_THRESHOLD = 30 * MINUTE; // 30 minutes before expiry
 const REFRESH_THRESHOLD = 15 * MINUTE; // Auto-refresh if expiring within 15 minutes
+
+// Stats interface for health check
+interface HealthCheckStats {
+  totalConnections: number;
+  healthyCount: number;
+  expiringSoonCount: number;
+  expiredCount: number;
+  invalidCount: number;
+  missingCount: number;
+  refreshedCount: number;
+  refreshFailedCount: number;
+}
 
 /**
  * Check the health of a single calendar connection's tokens
@@ -162,7 +180,9 @@ export const refreshConnectionToken = internalAction({
       };
 
       // Calculate new expiration time
-      const expiresAt = newTokens.expires_in ? Date.now() + newTokens.expires_in * 1000 : undefined;
+      const expiresAt = newTokens.expires_in
+        ? Date.now() + newTokens.expires_in * SECOND
+        : undefined;
 
       // Encrypt and store the new access token
       const encryptedAccessToken = await encrypt(newTokens.access_token);
@@ -291,6 +311,73 @@ export const getTokenHealthStats = internalQuery({
 });
 
 /**
+ * Handle auto-refresh logic for expiring or expired tokens
+ */
+async function handleAutoRefresh(
+  ctx: ActionCtx,
+  connectionId: Id<"calendarConnections">,
+  stats: HealthCheckStats,
+  type: "expiring_soon" | "expired",
+): Promise<void> {
+  const refreshResult = await ctx.runAction(internal.oauthTokenMonitor.refreshConnectionToken, {
+    connectionId,
+  });
+
+  if (refreshResult.success) {
+    stats.refreshedCount++;
+    stats.healthyCount++; // Now healthy after refresh
+    if (type === "expiring_soon") {
+      stats.expiringSoonCount--;
+    } else {
+      stats.expiredCount--;
+    }
+  } else {
+    stats.refreshFailedCount++;
+    console.warn(
+      `[Token Monitor] Failed to refresh token for connection ${connectionId}: ${refreshResult.error}`,
+    );
+  }
+}
+
+/**
+ * Process a single connection for health check
+ */
+async function processConnectionHealth(
+  ctx: ActionCtx,
+  connectionId: Id<"calendarConnections">,
+  stats: HealthCheckStats,
+  autoRefresh: boolean,
+): Promise<void> {
+  const health = await ctx.runQuery(internal.oauthTokenMonitor.checkConnectionTokenHealth, {
+    connectionId,
+  });
+
+  switch (health.status) {
+    case "healthy":
+      stats.healthyCount++;
+      break;
+    case "expiring_soon":
+      stats.expiringSoonCount++;
+      if (autoRefresh && health.needsRefresh) {
+        await handleAutoRefresh(ctx, connectionId, stats, "expiring_soon");
+      }
+      break;
+    case "expired":
+      stats.expiredCount++;
+      if (autoRefresh && health.needsRefresh) {
+        await handleAutoRefresh(ctx, connectionId, stats, "expired");
+      }
+      break;
+    case "invalid":
+      stats.invalidCount++;
+      break;
+    case "missing":
+      stats.missingCount++;
+      break;
+  }
+}
+
+/**
  * Main token health check action
  * Called by cron job to monitor all user tokens
  */
@@ -305,7 +392,7 @@ export const performTokenHealthCheck = internalAction({
     // Get all calendar connections
     const connections = await ctx.runQuery(internal.oauthTokenMonitor.getAllConnections);
 
-    const stats = {
+    const stats: HealthCheckStats = {
       totalConnections: connections.length,
       healthyCount: 0,
       expiringSoonCount: 0,
@@ -316,51 +403,9 @@ export const performTokenHealthCheck = internalAction({
       refreshFailedCount: 0,
     };
 
-    // Helper to attempt token refresh and update stats
-    const tryRefreshToken = async (
-      connectionId: (typeof connections)[0]["_id"],
-      statusKey: "expiringSoonCount" | "expiredCount",
-    ): Promise<void> => {
-      const refreshResult = await ctx.runAction(internal.oauthTokenMonitor.refreshConnectionToken, {
-        connectionId,
-      });
-      if (refreshResult.success) {
-        stats.refreshedCount++;
-        stats.healthyCount++;
-        stats[statusKey]--;
-      } else {
-        stats.refreshFailedCount++;
-        if (statusKey === "expiringSoonCount") {
-          console.warn(
-            `[Token Monitor] Failed to refresh token for connection ${connectionId}: ${refreshResult.error}`,
-          );
-        }
-      }
-    };
-
     // Check each connection's token health
     for (const connection of connections) {
-      const health = await ctx.runQuery(internal.oauthTokenMonitor.checkConnectionTokenHealth, {
-        connectionId: connection._id,
-      });
-
-      // Update status counts
-      const statusCountMap: Record<TokenStatus, keyof typeof stats> = {
-        healthy: "healthyCount",
-        expiring_soon: "expiringSoonCount",
-        expired: "expiredCount",
-        invalid: "invalidCount",
-        missing: "missingCount",
-      };
-      stats[statusCountMap[health.status]]++;
-
-      // Auto-refresh expiring or expired tokens
-      const needsAutoRefresh = autoRefresh && health.needsRefresh;
-      if (health.status === "expiring_soon" && needsAutoRefresh) {
-        await tryRefreshToken(connection._id, "expiringSoonCount");
-      } else if (health.status === "expired" && needsAutoRefresh) {
-        await tryRefreshToken(connection._id, "expiredCount");
-      }
+      await processConnectionHealth(ctx, connection._id, stats, autoRefresh);
     }
 
     const durationMs = Date.now() - startTime;

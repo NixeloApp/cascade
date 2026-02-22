@@ -21,7 +21,7 @@ import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { isLocalhost } from "./lib/env";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
-import { DAY, HOUR, MONTH, WEEK } from "./lib/timeUtils";
+import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
 import type { CalendarEventColor } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
@@ -1685,7 +1685,7 @@ export const storeTestOtp = internalMutation({
       email: args.email,
       code: codeToStore,
       type: args.type,
-      expiresAt: Date.now() + 15 * 60 * 1000,
+      expiresAt: Date.now() + 15 * MINUTE,
     });
   },
 });
@@ -3156,8 +3156,8 @@ export const seedScreenshotDataInternal = internalMutation({
 
       if (!existing) {
         const startTime =
-          todayMs + cal.dayOffset * DAY + cal.startHour * 3600000 + cal.startMin * 60000;
-        const endTime = todayMs + cal.dayOffset * DAY + cal.endHour * 3600000 + cal.endMin * 60000;
+          todayMs + cal.dayOffset * DAY + cal.startHour * HOUR + cal.startMin * MINUTE;
+        const endTime = todayMs + cal.dayOffset * DAY + cal.endHour * HOUR + cal.endMin * MINUTE;
 
         await ctx.db.insert("calendarEvents", {
           title: cal.title,
@@ -3237,8 +3237,8 @@ export const seedScreenshotDataInternal = internalMutation({
 
       if (!existing) {
         const durationSeconds = entry.durationHours * 3600;
-        const startTime = entryDate + 9 * 3600000; // 9 AM
-        const endTime = startTime + durationSeconds * 1000;
+        const startTime = entryDate + 9 * HOUR; // 9 AM
+        const endTime = startTime + durationSeconds * SECOND;
         const totalCost =
           entry.billable && entry.hourlyRate ? entry.durationHours * entry.hourlyRate : undefined;
 
