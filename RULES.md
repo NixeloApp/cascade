@@ -119,7 +119,6 @@ export default function ComponentName() {}
 - **NEVER** use `--amend` unless explicitly asked
 - If no changes to commit, do not create an empty commit
 - Use descriptive commit messages focusing on "why" not "what"
-- **To update from main branch**: Use `git pull origin main`, NOT `git merge origin/main`. The merge command may be blocked by hooks, but pull works correctly.
 
 ---
 

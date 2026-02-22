@@ -1,47 +1,9 @@
-import { components } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import { conflict, notFound, rateLimited, validation } from "../lib/errors";
+import { conflict, notFound, validation } from "../lib/errors";
 import { notDeleted } from "../lib/softDeleteHelpers";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
-
-// Helper: Check rate limit
-export async function checkRateLimit(
-  ctx: MutationCtx,
-  name: string,
-  config: {
-    rate: number;
-    period: number;
-    capacity: number;
-  },
-) {
-  if (process.env.IS_TEST_ENV) return;
-
-  const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
-    name,
-    config: {
-      kind: "token bucket",
-      rate: config.rate,
-      period: config.period,
-      capacity: config.capacity,
-    },
-  });
-
-  if (!rateLimitResult.ok) {
-    throw rateLimited(rateLimitResult.retryAfter);
-  }
-
-  await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
-    name,
-    config: {
-      kind: "token bucket",
-      rate: config.rate,
-      period: config.period,
-      capacity: config.capacity,
-    },
-  });
-}
 
 // Helper: Combined searchable content for issues
 export function getSearchContent(title: string, description?: string) {
@@ -216,11 +178,9 @@ export function processIssueUpdates(
   issue: {
     title: string;
     description?: string;
-    type: string;
     priority: string;
     assigneeId?: Id<"users">;
     labels: string[];
-    startDate?: number;
     dueDate?: number;
     estimatedHours?: number;
     storyPoints?: number;
@@ -228,11 +188,9 @@ export function processIssueUpdates(
   args: {
     title?: string;
     description?: string;
-    type?: string;
     priority?: string;
     assigneeId?: Id<"users"> | null;
     labels?: string[];
-    startDate?: number | null;
     dueDate?: number | null;
     estimatedHours?: number | null;
     storyPoints?: number | null;
@@ -255,9 +213,6 @@ export function processIssueUpdates(
   if (trackFieldChange(changes, "priority", issue.priority, args.priority)) {
     updates.priority = args.priority;
   }
-  if (trackFieldChange(changes, "type", issue.type, args.type)) {
-    updates.type = args.type;
-  }
 
   // Update search content if title or description changed
   if (args.title !== undefined || args.description !== undefined) {
@@ -268,7 +223,6 @@ export function processIssueUpdates(
 
   // Track nullable field changes
   trackNullableFieldUpdate(updates, changes, "assigneeId", issue.assigneeId, args.assigneeId);
-  trackNullableFieldUpdate(updates, changes, "startDate", issue.startDate, args.startDate);
   trackNullableFieldUpdate(updates, changes, "dueDate", issue.dueDate, args.dueDate);
   trackNullableFieldUpdate(
     updates,

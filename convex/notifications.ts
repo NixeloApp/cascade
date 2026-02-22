@@ -5,7 +5,6 @@ import type { Doc } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
-import { efficientCount } from "./lib/boundedQueries";
 import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -64,14 +63,14 @@ export const getUnreadCount = authenticatedQuery({
   handler: async (ctx) => {
     // Cap at 100 - UI typically shows "99+" anyway
     const MAX_UNREAD_COUNT = 100;
-    return await efficientCount(
-      ctx.db
-        .query("notifications")
-        .withIndex("by_user_read", (q) =>
-          q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
-        ),
-      MAX_UNREAD_COUNT,
-    );
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_read", (q) =>
+        q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
+      )
+      .take(MAX_UNREAD_COUNT);
+
+    return notifications.length;
   },
 });
 

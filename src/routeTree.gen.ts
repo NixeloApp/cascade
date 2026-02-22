@@ -44,12 +44,9 @@ import { Route as AuthAppOrgSlugProjectsKeyIndexRouteImport } from './routes/_au
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
 import { Route as AuthAppOrgSlugProjectsKeyTimesheetRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/timesheet'
 import { Route as AuthAppOrgSlugProjectsKeySprintsRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/sprints'
-import { Route as AuthAppOrgSlugProjectsKeySpreadsheetRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/spreadsheet'
 import { Route as AuthAppOrgSlugProjectsKeySettingsRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/settings'
 import { Route as AuthAppOrgSlugProjectsKeyRoadmapRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/roadmap'
-import { Route as AuthAppOrgSlugProjectsKeyModulesRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/modules'
 import { Route as AuthAppOrgSlugProjectsKeyInboxRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/inbox'
-import { Route as AuthAppOrgSlugProjectsKeyGanttRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/gantt'
 import { Route as AuthAppOrgSlugProjectsKeyCalendarRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/calendar'
 import { Route as AuthAppOrgSlugProjectsKeyBoardRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/board'
 import { Route as AuthAppOrgSlugProjectsKeyBillingRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/billing'
@@ -253,12 +250,6 @@ const AuthAppOrgSlugProjectsKeySprintsRoute =
     path: '/sprints',
     getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
   } as any)
-const AuthAppOrgSlugProjectsKeySpreadsheetRoute =
-  AuthAppOrgSlugProjectsKeySpreadsheetRouteImport.update({
-    id: '/spreadsheet',
-    path: '/spreadsheet',
-    getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
-  } as any)
 const AuthAppOrgSlugProjectsKeySettingsRoute =
   AuthAppOrgSlugProjectsKeySettingsRouteImport.update({
     id: '/settings',
@@ -271,22 +262,10 @@ const AuthAppOrgSlugProjectsKeyRoadmapRoute =
     path: '/roadmap',
     getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
   } as any)
-const AuthAppOrgSlugProjectsKeyModulesRoute =
-  AuthAppOrgSlugProjectsKeyModulesRouteImport.update({
-    id: '/modules',
-    path: '/modules',
-    getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
-  } as any)
 const AuthAppOrgSlugProjectsKeyInboxRoute =
   AuthAppOrgSlugProjectsKeyInboxRouteImport.update({
     id: '/inbox',
     path: '/inbox',
-    getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
-  } as any)
-const AuthAppOrgSlugProjectsKeyGanttRoute =
-  AuthAppOrgSlugProjectsKeyGanttRouteImport.update({
-    id: '/gantt',
-    path: '/gantt',
     getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
   } as any)
 const AuthAppOrgSlugProjectsKeyCalendarRoute =
@@ -401,12 +380,9 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/projects/$key/billing': typeof AuthAppOrgSlugProjectsKeyBillingRoute
   '/$orgSlug/projects/$key/board': typeof AuthAppOrgSlugProjectsKeyBoardRoute
   '/$orgSlug/projects/$key/calendar': typeof AuthAppOrgSlugProjectsKeyCalendarRoute
-  '/$orgSlug/projects/$key/gantt': typeof AuthAppOrgSlugProjectsKeyGanttRoute
   '/$orgSlug/projects/$key/inbox': typeof AuthAppOrgSlugProjectsKeyInboxRoute
-  '/$orgSlug/projects/$key/modules': typeof AuthAppOrgSlugProjectsKeyModulesRoute
   '/$orgSlug/projects/$key/roadmap': typeof AuthAppOrgSlugProjectsKeyRoadmapRoute
   '/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
-  '/$orgSlug/projects/$key/spreadsheet': typeof AuthAppOrgSlugProjectsKeySpreadsheetRoute
   '/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
   '/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
@@ -451,12 +427,9 @@ export interface FileRoutesByTo {
   '/$orgSlug/projects/$key/billing': typeof AuthAppOrgSlugProjectsKeyBillingRoute
   '/$orgSlug/projects/$key/board': typeof AuthAppOrgSlugProjectsKeyBoardRoute
   '/$orgSlug/projects/$key/calendar': typeof AuthAppOrgSlugProjectsKeyCalendarRoute
-  '/$orgSlug/projects/$key/gantt': typeof AuthAppOrgSlugProjectsKeyGanttRoute
   '/$orgSlug/projects/$key/inbox': typeof AuthAppOrgSlugProjectsKeyInboxRoute
-  '/$orgSlug/projects/$key/modules': typeof AuthAppOrgSlugProjectsKeyModulesRoute
   '/$orgSlug/projects/$key/roadmap': typeof AuthAppOrgSlugProjectsKeyRoadmapRoute
   '/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
-  '/$orgSlug/projects/$key/spreadsheet': typeof AuthAppOrgSlugProjectsKeySpreadsheetRoute
   '/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
   '/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
@@ -506,12 +479,9 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/projects/$key/billing': typeof AuthAppOrgSlugProjectsKeyBillingRoute
   '/_auth/_app/$orgSlug/projects/$key/board': typeof AuthAppOrgSlugProjectsKeyBoardRoute
   '/_auth/_app/$orgSlug/projects/$key/calendar': typeof AuthAppOrgSlugProjectsKeyCalendarRoute
-  '/_auth/_app/$orgSlug/projects/$key/gantt': typeof AuthAppOrgSlugProjectsKeyGanttRoute
   '/_auth/_app/$orgSlug/projects/$key/inbox': typeof AuthAppOrgSlugProjectsKeyInboxRoute
-  '/_auth/_app/$orgSlug/projects/$key/modules': typeof AuthAppOrgSlugProjectsKeyModulesRoute
   '/_auth/_app/$orgSlug/projects/$key/roadmap': typeof AuthAppOrgSlugProjectsKeyRoadmapRoute
   '/_auth/_app/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
-  '/_auth/_app/$orgSlug/projects/$key/spreadsheet': typeof AuthAppOrgSlugProjectsKeySpreadsheetRoute
   '/_auth/_app/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
   '/_auth/_app/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
@@ -561,12 +531,9 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/billing'
     | '/$orgSlug/projects/$key/board'
     | '/$orgSlug/projects/$key/calendar'
-    | '/$orgSlug/projects/$key/gantt'
     | '/$orgSlug/projects/$key/inbox'
-    | '/$orgSlug/projects/$key/modules'
     | '/$orgSlug/projects/$key/roadmap'
     | '/$orgSlug/projects/$key/settings'
-    | '/$orgSlug/projects/$key/spreadsheet'
     | '/$orgSlug/projects/$key/sprints'
     | '/$orgSlug/projects/$key/timesheet'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
@@ -611,12 +578,9 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/billing'
     | '/$orgSlug/projects/$key/board'
     | '/$orgSlug/projects/$key/calendar'
-    | '/$orgSlug/projects/$key/gantt'
     | '/$orgSlug/projects/$key/inbox'
-    | '/$orgSlug/projects/$key/modules'
     | '/$orgSlug/projects/$key/roadmap'
     | '/$orgSlug/projects/$key/settings'
-    | '/$orgSlug/projects/$key/spreadsheet'
     | '/$orgSlug/projects/$key/sprints'
     | '/$orgSlug/projects/$key/timesheet'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
@@ -665,12 +629,9 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/projects/$key/billing'
     | '/_auth/_app/$orgSlug/projects/$key/board'
     | '/_auth/_app/$orgSlug/projects/$key/calendar'
-    | '/_auth/_app/$orgSlug/projects/$key/gantt'
     | '/_auth/_app/$orgSlug/projects/$key/inbox'
-    | '/_auth/_app/$orgSlug/projects/$key/modules'
     | '/_auth/_app/$orgSlug/projects/$key/roadmap'
     | '/_auth/_app/$orgSlug/projects/$key/settings'
-    | '/_auth/_app/$orgSlug/projects/$key/spreadsheet'
     | '/_auth/_app/$orgSlug/projects/$key/sprints'
     | '/_auth/_app/$orgSlug/projects/$key/timesheet'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
@@ -941,13 +902,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugProjectsKeySprintsRouteImport
       parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
     }
-    '/_auth/_app/$orgSlug/projects/$key/spreadsheet': {
-      id: '/_auth/_app/$orgSlug/projects/$key/spreadsheet'
-      path: '/spreadsheet'
-      fullPath: '/$orgSlug/projects/$key/spreadsheet'
-      preLoaderRoute: typeof AuthAppOrgSlugProjectsKeySpreadsheetRouteImport
-      parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
-    }
     '/_auth/_app/$orgSlug/projects/$key/settings': {
       id: '/_auth/_app/$orgSlug/projects/$key/settings'
       path: '/settings'
@@ -962,25 +916,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyRoadmapRouteImport
       parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
     }
-    '/_auth/_app/$orgSlug/projects/$key/modules': {
-      id: '/_auth/_app/$orgSlug/projects/$key/modules'
-      path: '/modules'
-      fullPath: '/$orgSlug/projects/$key/modules'
-      preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyModulesRouteImport
-      parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
-    }
     '/_auth/_app/$orgSlug/projects/$key/inbox': {
       id: '/_auth/_app/$orgSlug/projects/$key/inbox'
       path: '/inbox'
       fullPath: '/$orgSlug/projects/$key/inbox'
       preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyInboxRouteImport
-      parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
-    }
-    '/_auth/_app/$orgSlug/projects/$key/gantt': {
-      id: '/_auth/_app/$orgSlug/projects/$key/gantt'
-      path: '/gantt'
-      fullPath: '/$orgSlug/projects/$key/gantt'
-      preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyGanttRouteImport
       parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
     }
     '/_auth/_app/$orgSlug/projects/$key/calendar': {
@@ -1077,12 +1017,9 @@ interface AuthAppOrgSlugProjectsKeyRouteRouteChildren {
   AuthAppOrgSlugProjectsKeyBillingRoute: typeof AuthAppOrgSlugProjectsKeyBillingRoute
   AuthAppOrgSlugProjectsKeyBoardRoute: typeof AuthAppOrgSlugProjectsKeyBoardRoute
   AuthAppOrgSlugProjectsKeyCalendarRoute: typeof AuthAppOrgSlugProjectsKeyCalendarRoute
-  AuthAppOrgSlugProjectsKeyGanttRoute: typeof AuthAppOrgSlugProjectsKeyGanttRoute
   AuthAppOrgSlugProjectsKeyInboxRoute: typeof AuthAppOrgSlugProjectsKeyInboxRoute
-  AuthAppOrgSlugProjectsKeyModulesRoute: typeof AuthAppOrgSlugProjectsKeyModulesRoute
   AuthAppOrgSlugProjectsKeyRoadmapRoute: typeof AuthAppOrgSlugProjectsKeyRoadmapRoute
   AuthAppOrgSlugProjectsKeySettingsRoute: typeof AuthAppOrgSlugProjectsKeySettingsRoute
-  AuthAppOrgSlugProjectsKeySpreadsheetRoute: typeof AuthAppOrgSlugProjectsKeySpreadsheetRoute
   AuthAppOrgSlugProjectsKeySprintsRoute: typeof AuthAppOrgSlugProjectsKeySprintsRoute
   AuthAppOrgSlugProjectsKeyTimesheetRoute: typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   AuthAppOrgSlugProjectsKeyIndexRoute: typeof AuthAppOrgSlugProjectsKeyIndexRoute
@@ -1101,16 +1038,11 @@ const AuthAppOrgSlugProjectsKeyRouteRouteChildren: AuthAppOrgSlugProjectsKeyRout
     AuthAppOrgSlugProjectsKeyBoardRoute: AuthAppOrgSlugProjectsKeyBoardRoute,
     AuthAppOrgSlugProjectsKeyCalendarRoute:
       AuthAppOrgSlugProjectsKeyCalendarRoute,
-    AuthAppOrgSlugProjectsKeyGanttRoute: AuthAppOrgSlugProjectsKeyGanttRoute,
     AuthAppOrgSlugProjectsKeyInboxRoute: AuthAppOrgSlugProjectsKeyInboxRoute,
-    AuthAppOrgSlugProjectsKeyModulesRoute:
-      AuthAppOrgSlugProjectsKeyModulesRoute,
     AuthAppOrgSlugProjectsKeyRoadmapRoute:
       AuthAppOrgSlugProjectsKeyRoadmapRoute,
     AuthAppOrgSlugProjectsKeySettingsRoute:
       AuthAppOrgSlugProjectsKeySettingsRoute,
-    AuthAppOrgSlugProjectsKeySpreadsheetRoute:
-      AuthAppOrgSlugProjectsKeySpreadsheetRoute,
     AuthAppOrgSlugProjectsKeySprintsRoute:
       AuthAppOrgSlugProjectsKeySprintsRoute,
     AuthAppOrgSlugProjectsKeyTimesheetRoute:
