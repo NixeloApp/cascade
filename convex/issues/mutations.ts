@@ -335,6 +335,9 @@ export const addComment = issueViewerMutation({
       action: "commented",
     });
 
+    // Update issue timestamp to reflect recent activity
+    await ctx.db.patch(ctx.issue._id, { updatedAt: now });
+
     const author = await ctx.db.get(ctx.userId);
     // Dynamic import to avoid cycles
     const { sendEmailNotification } = await import("../email/helpers");
@@ -672,7 +675,10 @@ export const bulkDelete = authenticatedMutation({
         }
 
         // Soft delete issue
-        await ctx.db.patch(issue._id, softDeleteFields(ctx.userId));
+        await ctx.db.patch(issue._id, {
+          ...softDeleteFields(ctx.userId),
+          updatedAt: Date.now(),
+        });
 
         // Log activity
         await ctx.db.insert("issueActivity", {
