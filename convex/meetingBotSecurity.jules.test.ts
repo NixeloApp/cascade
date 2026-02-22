@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { createProjectInOrganization, createTestContext } from "./testUtils";
+import { createOrganizationAdmin, createProjectInOrganization, createTestContext } from "./testUtils";
 
 describe("MeetingBot Security", () => {
   it("VULNERABILITY: Unauthorized user can create issue from private summary in private project", async () => {
@@ -173,5 +173,75 @@ describe("MeetingBot Security", () => {
         .collect(),
     );
     expect(issues.length).toBe(0);
+  });
+
+  it("VULNERABILITY: User can create issue in DIFFERENT organization from recording (should fail)", async () => {
+    const t = convexTest(schema, modules);
+
+    // Setup: User with two organizations
+    const { asUser, userId, organizationId: orgAId } = await createTestContext(t);
+    const { organizationId: orgBId } = await createOrganizationAdmin(t, userId, { name: "Org B" });
+
+    // Projects
+    const projectAId = await createProjectInOrganization(t, userId, orgAId, { name: "Project A", key: "PROJA" });
+    const projectBId = await createProjectInOrganization(t, userId, orgBId, { name: "Project B", key: "PROJB" });
+
+    // Recording in Org A
+    const recordingId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingRecordings", {
+        meetingUrl: "https://zoom.us/j/123",
+        meetingPlatform: "zoom",
+        title: "Meeting in Org A",
+        status: "completed",
+        botName: "Bot",
+        createdBy: userId,
+        projectId: projectAId,
+        isPublic: false,
+        updatedAt: Date.now(),
+      });
+    });
+
+    // Transcript
+    const transcriptId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingTranscripts", {
+        recordingId,
+        fullText: "Some text",
+        segments: [],
+        language: "en",
+        modelUsed: "whisper",
+        wordCount: 10,
+      });
+    });
+
+    // Summary
+    const summaryId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingSummaries", {
+        recordingId,
+        transcriptId,
+        executiveSummary: "Summary",
+        keyPoints: [],
+        actionItems: [
+          {
+            description: "Cross-org action item",
+            assigneeUserId: userId,
+            priority: "medium",
+          },
+        ],
+        decisions: [],
+        openQuestions: [],
+        topics: [],
+        modelUsed: "gpt-4",
+      });
+    });
+
+    // Act: Attempt to create issue in Org B from Org A's summary
+    // Expect failure (this will fail the test until fixed)
+    await expect(async () => {
+      await asUser.mutation(api.meetingBot.createIssueFromActionItem, {
+        summaryId,
+        actionItemIndex: 0,
+        projectId: projectBId,
+      });
+    }).rejects.toThrow(/Issue must be created in the same organization/);
   });
 });

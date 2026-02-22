@@ -761,6 +761,17 @@ export const createIssueFromActionItem = authenticatedMutation({
     const project = await ctx.db.get(args.projectId);
     if (!project) throw notFound("project", args.projectId);
 
+    // Security: Ensure cross-organization integrity
+    if (recording.projectId) {
+      const recordingProject = await ctx.db.get(recording.projectId);
+      if (recordingProject && recordingProject.organizationId !== project.organizationId) {
+        throw validation(
+          "projectId",
+          "Issue must be created in the same organization as the meeting recording",
+        );
+      }
+    }
+
     const status = project.workflowStates[0]?.id ?? "todo";
     const issueKey = await generateIssueKey(ctx, args.projectId, project.key);
     const maxOrder = await getMaxOrderForStatus(ctx, args.projectId, status);
