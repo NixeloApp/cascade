@@ -224,11 +224,12 @@ async function handleEmailChange(
       pendingEmailVerificationExpires: number;
     }
 > {
-  validate.email(newEmail);
+  const normalizedEmail = newEmail.trim().toLowerCase();
+  validate.email(normalizedEmail);
 
   // Check if email actually changed
   const currentUser = await ctx.db.get(ctx.userId);
-  if (currentUser?.email === newEmail) {
+  if (currentUser?.email === normalizedEmail) {
     return {};
   }
 
@@ -240,7 +241,7 @@ async function handleEmailChange(
   const expiresAt = Date.now() + 15 * MINUTE; // 15 minutes
 
   const updates = {
-    pendingEmail: newEmail,
+    pendingEmail: normalizedEmail,
     pendingEmailVerificationToken: token,
     pendingEmailVerificationExpires: expiresAt,
   };
@@ -248,7 +249,7 @@ async function handleEmailChange(
   // Check if email is already taken by ANOTHER user
   const existingUser = await ctx.db
     .query("users")
-    .withIndex("email", (q) => q.eq("email", newEmail))
+    .withIndex("email", (q) => q.eq("email", normalizedEmail))
     .first();
 
   // Only send verification email if the email is NOT taken
@@ -267,7 +268,7 @@ async function handleEmailChange(
     // E2E tests run against real deployments where IS_TEST_ENV is false, so they will run this.
     if (!process.env.IS_TEST_ENV) {
       await ctx.scheduler.runAfter(0, usersInternal.sendVerificationEmailAction, {
-        email: newEmail,
+        email: normalizedEmail,
         token,
         isTestUser: currentUser?.isTestUser,
       });
