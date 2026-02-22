@@ -169,7 +169,7 @@ export const createIssue = editorMutation({
       // ...
     });
 
-    return { issueId };
+    return issueId;
   },
 });
 ```
