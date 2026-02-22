@@ -512,15 +512,13 @@ export const getIssue = query({
       return null;
     }
 
-    if (userId) {
-      const hasAccess = await canAccessProject(ctx, issue.projectId as Id<"projects">, userId);
-      if (!hasAccess) {
-        throw forbidden();
-      }
-    } else {
-      if (!project.isPublic) {
-        throw forbidden();
-      }
+    if (!userId) {
+      throw forbidden();
+    }
+
+    const hasAccess = await canAccessProject(ctx, issue.projectId as Id<"projects">, userId);
+    if (!hasAccess) {
+      throw forbidden();
     }
 
     const enriched = await enrichIssue(ctx, issue);
@@ -552,15 +550,13 @@ export const listComments = query({
       throw notFound("project");
     }
 
-    if (userId) {
-      const hasAccess = await canAccessProject(ctx, issue.projectId as Id<"projects">, userId);
-      if (!hasAccess) {
-        throw forbidden();
-      }
-    } else {
-      if (!project.isPublic) {
-        throw forbidden();
-      }
+    if (!userId) {
+      throw forbidden();
+    }
+
+    const hasAccess = await canAccessProject(ctx, issue.projectId as Id<"projects">, userId);
+    if (!hasAccess) {
+      throw forbidden();
     }
 
     const results = await ctx.db
