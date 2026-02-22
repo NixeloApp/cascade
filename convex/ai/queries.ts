@@ -5,9 +5,9 @@
 import { v } from "convex/values";
 import { authenticatedQuery } from "../customFunctions";
 import { batchFetchUsers } from "../lib/batchHelpers";
+import { getUserName } from "../lib/userUtils";
 import { forbidden, notFound, requireOwned } from "../lib/errors";
 import { MAX_PAGE_SIZE } from "../lib/queryLimits";
-import { getUserName } from "../lib/userUtils";
 import type { AIProvider } from "./config";
 
 // Reasonable limits for AI-related queries

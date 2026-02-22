@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import { batchFetch, batchFetchUsers } from "./batchHelpers";
+import { batchFetch, batchFetchUsers, formatUser } from "./batchHelpers";
 
 describe("batchHelpers", () => {
   it("should batch fetch users correctly", async () => {
@@ -80,4 +80,37 @@ describe("batchHelpers", () => {
       expect(map.get(user1Id)?.name).toBe("User 1");
     });
   });
+
+  describe("formatUser", () => {
+    it("should format user correctly", () => {
+      const user = {
+        _id: "u1",
+        name: "Alice",
+        email: "alice@example.com",
+        image: "img.png",
+      } as any;
+      expect(formatUser(user)).toEqual({
+        _id: "u1",
+        name: "Alice",
+        email: "alice@example.com",
+        image: "img.png",
+      });
+    });
+
+    it("should fallback to Unknown if name/email missing", () => {
+      const user = { _id: "u1" } as any;
+      expect(formatUser(user)).toEqual({
+        _id: "u1",
+        name: "Unknown",
+        email: undefined,
+        image: undefined,
+      });
+    });
+
+    it("should return null for null/undefined user", () => {
+      expect(formatUser(null)).toBeNull();
+      expect(formatUser(undefined)).toBeNull();
+    });
+  });
+
 });

@@ -28,9 +28,14 @@ export type AuthenticatedUser = Omit<PublicUser, "email"> & {
 
 /**
  * Get user name with fallback
+ * Strategy: name -> email -> defaultName
  */
-export function getUserName(user: Doc<"users"> | undefined | null): string {
-  return user?.name || user?.email || "Unknown";
+export function getUserName(
+  user: Doc<"users"> | { name?: string; email?: string } | null | undefined,
+  defaultName = "Unknown",
+): string {
+  if (!user) return defaultName;
+  return user.name || user.email || defaultName;
 }
 
 /**
@@ -64,7 +69,7 @@ export function sanitizeUserForAuth(
 
   return {
     _id: user._id,
-    name: getUserName(user),
+    name: user.name || user.email || "Unknown",
     email: user.email,
     image: user.image,
   };
@@ -115,16 +120,4 @@ export function sanitizeUsersForAuth(
   users: (Doc<"users"> | null | undefined)[],
 ): (AuthenticatedUser | null)[] {
   return users.map(sanitizeUserForAuth);
-}
-
-/**
- * Get user name with fallback
- *
- * Strategy: name -> email -> defaultName ("Unknown")
- */
-export function getUserName(
-  user: Doc<"users"> | undefined | null,
-  defaultName = "Unknown",
-): string {
-  return user?.name || user?.email || defaultName;
 }

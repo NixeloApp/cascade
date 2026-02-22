@@ -3,9 +3,9 @@ import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchCalendarEvents, batchFetchUsers } from "./lib/batchHelpers";
+import { getUserName } from "./lib/userUtils";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
-import { getUserName } from "./lib/userUtils";
 import { attendanceStatuses } from "./validators";
 
 /**

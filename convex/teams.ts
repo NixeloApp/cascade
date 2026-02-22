@@ -12,6 +12,7 @@ import {
 } from "./customFunctions";
 import { logAudit } from "./lib/audit";
 import { batchFetchTeams, batchFetchUsers } from "./lib/batchHelpers";
+import { getUserName } from "./lib/userUtils";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
@@ -19,7 +20,6 @@ import { MAX_PROJECTS_PER_TEAM, MAX_TEAM_MEMBERS, MAX_TEAMS_PER_ORG } from "./li
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getTeamRole } from "./lib/teamAccess";
-import { getUserName } from "./lib/userUtils";
 import { teamRoles } from "./validators";
 
 // ============================================================================
