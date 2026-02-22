@@ -24,8 +24,6 @@ describe("OAuth Health Check", () => {
     vi.mocked(fetchWithTimeoutModule.fetchWithTimeout).mockResolvedValue(
       new Response(JSON.stringify({}), { status: 200 }),
     );
-    // Mock global fetch
-    global.fetch = vi.fn();
   });
 
   afterEach(() => {
@@ -203,18 +201,24 @@ describe("OAuth Health Check", () => {
       setupEnv();
       const t = convexTest(schema, modules);
 
-      // Mock endpoint check (fetch)
-      vi.mocked(global.fetch).mockResolvedValue(
-        new Response(null, {
-          status: 302,
-          headers: { location: "https://accounts.google.com/o/oauth2/auth" },
-        }),
+      vi.mocked(fetchWithTimeoutModule.fetchWithTimeout).mockImplementation(
+        async (url, _options) => {
+          const urlStr = url.toString();
+          if (urlStr.includes("google/auth")) {
+            return new Response(null, {
+              status: 302,
+              headers: { location: "https://accounts.google.com/o/oauth2/auth" },
+            });
+          }
+          if (urlStr === "https://oauth2.googleapis.com/token") {
+            return new Response(JSON.stringify({ access_token: "access-token" }));
+          }
+          if (urlStr === "https://www.googleapis.com/oauth2/v2/userinfo") {
+            return new Response(JSON.stringify({}));
+          }
+          return new Response(JSON.stringify({}));
+        },
       );
-
-      // Mock token exchange (fetchWithTimeout)
-      vi.mocked(fetchWithTimeoutModule.fetchWithTimeout)
-        .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "access-token" }))) // Token
-        .mockResolvedValueOnce(new Response(JSON.stringify({}))); // User info
 
       await t.action(internal.oauthHealthCheck.checkGoogleOAuthHealth);
 
@@ -227,8 +231,15 @@ describe("OAuth Health Check", () => {
       setupEnv();
       const t = convexTest(schema, modules);
 
-      // Mock endpoint check failure (404)
-      vi.mocked(global.fetch).mockResolvedValue(new Response("Not Found", { status: 404 }));
+      vi.mocked(fetchWithTimeoutModule.fetchWithTimeout).mockImplementation(
+        async (url, _options) => {
+          const urlStr = url.toString();
+          if (urlStr.includes("google/auth")) {
+            return new Response("Not Found", { status: 404 });
+          }
+          return new Response(JSON.stringify({}));
+        },
+      );
 
       await t.action(internal.oauthHealthCheck.checkGoogleOAuthHealth);
 
@@ -242,16 +253,20 @@ describe("OAuth Health Check", () => {
       setupEnv();
       const t = convexTest(schema, modules);
 
-      vi.mocked(global.fetch).mockResolvedValue(
-        new Response(null, {
-          status: 302,
-          headers: { location: "https://accounts.google.com/..." },
-        }),
-      );
-
-      // Mock token failure
-      vi.mocked(fetchWithTimeoutModule.fetchWithTimeout).mockResolvedValue(
-        new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 }),
+      vi.mocked(fetchWithTimeoutModule.fetchWithTimeout).mockImplementation(
+        async (url, _options) => {
+          const urlStr = url.toString();
+          if (urlStr.includes("google/auth")) {
+            return new Response(null, {
+              status: 302,
+              headers: { location: "https://accounts.google.com/..." },
+            });
+          }
+          if (urlStr === "https://oauth2.googleapis.com/token") {
+            return new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 });
+          }
+          return new Response(JSON.stringify({}));
+        },
       );
 
       await t.action(internal.oauthHealthCheck.checkGoogleOAuthHealth);
@@ -266,23 +281,23 @@ describe("OAuth Health Check", () => {
       setupEnv();
       const t = convexTest(schema, modules);
 
+      const slackMock = vi.fn().mockResolvedValue(new Response("ok"));
+
+      // Failure mock
+      const failureMock = async (url: RequestInfo | URL) => {
+        const urlStr = url.toString();
+        if (urlStr.includes("slack")) {
+          return slackMock();
+        }
+        return new Response("Error", { status: 500 });
+      };
+
+      vi.mocked(fetchWithTimeoutModule.fetchWithTimeout).mockImplementation(failureMock);
+
       // 1. First failure
-      vi.mocked(global.fetch).mockResolvedValue(new Response("Error", { status: 500 }));
       await t.action(internal.oauthHealthCheck.checkGoogleOAuthHealth);
 
       // 2. Second failure (should trigger alert)
-      vi.mocked(global.fetch).mockResolvedValue(new Response("Error", { status: 500 }));
-
-      // Mock Slack response
-      const slackMock = vi.fn().mockResolvedValue(new Response("ok"));
-      // Reset fetchWithTimeout mock to separate calls
-      vi.mocked(fetchWithTimeoutModule.fetchWithTimeout).mockImplementation((url) => {
-        if (url.toString().includes("slack")) {
-          return slackMock();
-        }
-        return Promise.resolve(new Response(JSON.stringify({})));
-      });
-
       await t.action(internal.oauthHealthCheck.checkGoogleOAuthHealth);
 
       expect(slackMock).toHaveBeenCalled();
