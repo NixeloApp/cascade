@@ -101,14 +101,14 @@ async function validateInvitePermissions(
   organizationId: Id<"organizations">,
   projectId: Id<"projects"> | undefined,
   userId: Id<"users">,
-): Promise<{ projectName: string | undefined }> {
+): Promise<{ projectName: string | undefined; isOrgAdmin: boolean }> {
   const isPlatAdmin = await isOrganizationAdmin(ctx, organizationId, userId);
 
   if (!projectId) {
     if (!isPlatAdmin) {
       throw forbidden("admin", "Only admins can send platform invites");
     }
-    return { projectName: undefined };
+    return { projectName: undefined, isOrgAdmin: true };
   }
 
   const project = await ctx.db.get(projectId);
@@ -123,7 +123,7 @@ async function validateInvitePermissions(
     throw forbidden("admin", "Only project admins can invite to projects");
   }
 
-  return { projectName: project.name };
+  return { projectName: project.name, isOrgAdmin: isPlatAdmin };
 }
 
 // Helper: Check for duplicate pending invites
@@ -222,12 +222,16 @@ export const sendInvite = authenticatedMutation({
 
     // Validate permissions and get project info
     const effectiveProjectRole = args.projectRole || "editor";
-    const { projectName } = await validateInvitePermissions(
+    const { projectName, isOrgAdmin } = await validateInvitePermissions(
       ctx,
       args.organizationId,
       args.projectId,
       ctx.userId,
     );
+
+    if (args.role === "superAdmin" && !isOrgAdmin) {
+      throw forbidden("admin", "Only organization admins can invite other admins");
+    }
 
     // Check if user already exists with this email
     const existingUser = await ctx.db
