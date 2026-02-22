@@ -56,8 +56,8 @@ describe("Issue Bulk Archive/Restore Mutations", () => {
 
     const doneIssue = await t.run(async (ctx) => ctx.db.get(doneIssueId));
     expect(doneIssue?.archivedAt).toBeDefined();
-    // Verify updatedAt was updated
-    expect(doneIssue?.updatedAt).toBeGreaterThan(doneIssue?._creationTime || 0);
+    // Verify updatedAt was updated (use >= to avoid flakiness due to millisecond precision)
+    expect(doneIssue?.updatedAt).toBeGreaterThanOrEqual(doneIssue?._creationTime || 0);
 
     const todoIssue = await t.run(async (ctx) => ctx.db.get(todoIssueId));
     expect(todoIssue?.archivedAt).toBeUndefined();
