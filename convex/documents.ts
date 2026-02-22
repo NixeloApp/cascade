@@ -526,9 +526,15 @@ export const search = authenticatedQuery({
     const filtered = [];
     const targetCount = offset + limit + 1;
 
-    for (const doc of results) {
+    // Optimized: Parallelize access checks to resolve N+1 latency
+    const accessResults = await Promise.all(
+      results.map((doc) => canAccessDocument(ctx, doc, myOrgIds)),
+    );
+
+    for (let i = 0; i < results.length; i++) {
+      const doc = results[i];
       // Check access and filter conditions
-      if (!(await canAccessDocument(ctx, doc, myOrgIds))) continue;
+      if (!accessResults[i]) continue;
       if (args.organizationId && doc.organizationId !== args.organizationId) continue;
       if (!matchesDocumentFilters(doc, args, ctx.userId)) continue;
 
@@ -633,12 +639,12 @@ export const listChildren = authenticatedQuery({
     const myOrgIds = new Set<string>([args.organizationId]);
 
     // Filter by access
-    const accessible = [];
-    for (const doc of documents) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        accessible.push(doc);
-      }
-    }
+    // Optimized: Parallelize access checks to resolve N+1 latency
+    const accessResults = await Promise.all(
+      documents.map((doc) => canAccessDocument(ctx, doc, myOrgIds)),
+    );
+
+    const accessible = documents.filter((_, i) => accessResults[i]);
 
     // Sort by order
     accessible.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -712,12 +718,12 @@ export const getTree = authenticatedQuery({
     const myOrgIds = new Set<string>([args.organizationId]);
 
     // Filter by access
-    const accessible = [];
-    for (const doc of allDocs) {
-      if (await canAccessDocument(ctx, doc, myOrgIds)) {
-        accessible.push(doc);
-      }
-    }
+    // Optimized: Parallelize access checks to resolve N+1 latency
+    const accessResults = await Promise.all(
+      allDocs.map((doc) => canAccessDocument(ctx, doc, myOrgIds)),
+    );
+
+    const accessible = allDocs.filter((_, i) => accessResults[i]);
 
     // Build tree structure
     const childrenByParent = new Map<Id<"documents"> | undefined, typeof accessible>();
@@ -1265,12 +1271,15 @@ async function getAccessibleDocuments(
   const documents = await Promise.all(uniqueDocIds.map((id) => ctx.db.get(id)));
   const accessibleDocIds = new Set<string>();
 
-  for (const doc of documents) {
-    if (!doc || doc.isDeleted) continue;
-    // This throws forbidden() if user doesn't have access
-    await assertDocumentAccess(ctx, doc);
-    accessibleDocIds.add(doc._id);
-  }
+  // Optimized: Parallelize access checks
+  await Promise.all(
+    documents.map(async (doc) => {
+      if (!doc || doc.isDeleted) return;
+      // This throws forbidden() if user doesn't have access
+      await assertDocumentAccess(ctx, doc);
+      accessibleDocIds.add(doc._id);
+    }),
+  );
 
   return { commentToDocMap, accessibleDocIds };
 }
@@ -1307,12 +1316,13 @@ async function fetchAndMergeAccessibleDocuments(
   // Filter by access (specifically project access)
   // Pre-build org IDs set to avoid N+1 membership queries
   const myOrgIds = organizationId ? new Set<string>([organizationId]) : undefined;
-  const accessibleDocuments = [];
-  for (const doc of combinedDocuments) {
-    if (await canAccessDocument(ctx, doc, myOrgIds)) {
-      accessibleDocuments.push(doc);
-    }
-  }
+
+  // Optimized: Parallelize access checks to resolve N+1 latency
+  const accessResults = await Promise.all(
+    combinedDocuments.map((doc) => canAccessDocument(ctx, doc, myOrgIds)),
+  );
+
+  const accessibleDocuments = combinedDocuments.filter((_, i) => accessResults[i]);
 
   return accessibleDocuments;
 }
