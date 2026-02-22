@@ -70,6 +70,9 @@ export const createProject = authenticatedMutation({
     isPublic: v.optional(v.boolean()), // Visible to all organization members
     sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Share with specific teams
   },
+  returns: v.object({
+    projectId: v.id("projects"),
+  }),
   handler: async (ctx, args) => {
     // Validate input constraints
     validate.name(args.name, "name");
@@ -174,7 +177,7 @@ export const createProject = authenticatedMutation({
       },
     });
 
-    return projectId;
+    return { projectId };
   },
 });
 
