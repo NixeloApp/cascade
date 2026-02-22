@@ -30,6 +30,7 @@ export function run() {
     "/onboarding.tsx", // External link to docs
     "src/components/Landing/", // Landing page navigation (public-facing)
     "src/components/Auth/", // Auth page legal links
+    "src/routes/_auth/_app/$orgSlug/route.tsx", // Skip to content link
   ];
 
   // Files where <strong> for inline emphasis is allowed (inside Typography)
