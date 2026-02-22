@@ -1,8 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler } from "./githubOAuth";
+
+// Define error type for testing
+interface AppErrorData {
+  code: string;
+  message: string;
+}
+
+interface AppError extends Error {
+  data: AppErrorData;
+}
 
 // Mock dependencies
 vi.mock("../lib/fetchWithTimeout", () => ({
@@ -14,16 +24,25 @@ vi.mock("../lib/env", () => ({
   getGitHubClientId: vi.fn(),
   getGitHubClientSecret: vi.fn(),
   isGitHubOAuthConfigured: vi.fn(),
-  isAppError: (err: any) => err?.data?.code,
-  validation: (_type: string, msg: string) => {
-    const err = new Error(msg);
-    (err as any).data = { code: "VALIDATION", message: msg };
+}));
+
+// Mock errors library (the actual module githubOAuth.ts imports from)
+vi.mock("../lib/errors", () => ({
+  isAppError: (err: unknown): err is AppError =>
+    typeof err === "object" &&
+    err !== null &&
+    "data" in err &&
+    typeof (err as AppError).data?.code === "string",
+  validation: (_type: string, msg: string): AppError => {
+    const err = new Error(msg) as AppError;
+    err.data = { code: "VALIDATION", message: msg };
     return err;
   },
 }));
 
 describe("GitHub OAuth Error Handling", () => {
   let mockCtx: ActionCtx;
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
   const mockErrorResponse = {
     error: "bad_verification_code",
     error_description: "The code passed is incorrect or expired.",
@@ -42,6 +61,13 @@ describe("GitHub OAuth Error Handling", () => {
     vi.mocked(envLib.getGitHubClientSecret).mockReturnValue("test-client-secret");
     vi.mocked(envLib.isGitHubOAuthConfigured).mockReturnValue(true);
     process.env.CONVEX_SITE_URL = "https://test.convex.site";
+
+    // Spy on console.error
+    consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
   });
 
   it("should fail generically BUT log detailed error when GitHub returns 400 (fixed behavior)", async () => {
@@ -52,8 +78,6 @@ describe("GitHub OAuth Error Handling", () => {
       json: async () => mockErrorResponse,
       text: async () => JSON.stringify(mockErrorResponse),
     } as Response);
-
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const request = new Request(
       "https://api.convex.site/github/callback?code=bad_code&state=valid_state",
@@ -73,8 +97,6 @@ describe("GitHub OAuth Error Handling", () => {
       "GitHub OAuth error: Failed to exchange code",
       expect.stringContaining("The code passed is incorrect or expired."),
     );
-
-    consoleSpy.mockRestore();
   });
 
   it("should fail generically BUT log detailed error when user info fetch returns 400", async () => {
@@ -91,8 +113,6 @@ describe("GitHub OAuth Error Handling", () => {
       json: async () => ({ message: "Bad credentials" }),
       text: async () => JSON.stringify({ message: "Bad credentials" }),
     } as Response);
-
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const request = new Request(
       "https://api.convex.site/github/callback?code=valid_code&state=valid_state",
@@ -112,7 +132,5 @@ describe("GitHub OAuth Error Handling", () => {
       "GitHub OAuth error: Failed to get user info",
       expect.stringContaining("Bad credentials"),
     );
-
-    consoleSpy.mockRestore();
   });
 });
