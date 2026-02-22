@@ -18,7 +18,6 @@ import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
-import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { MINUTE } from "./lib/timeUtils";
 import {
@@ -32,8 +31,10 @@ import { digestFrequencies } from "./validators";
 // Limits for user stats queries
 const MAX_ISSUES_FOR_STATS = 1000;
 const MAX_COMMENTS_FOR_STATS = 1000;
+const MAX_PROJECTS_FOR_STATS = 500;
 // Threshold below which per-project index queries outperform a single filtered scan
-const MAX_PROJECTS_FOR_FAST_PATH = 50;
+// Reduced from 50 to 10 to prefer batch fetching memberships over running many parallel queries
+const MAX_PROJECTS_FOR_FAST_PATH = 10;
 
 /**
  * Internal query to get user by ID (system use only)
@@ -696,6 +697,7 @@ async function countComments(
     const commentsAll = await ctx.db
       .query("issueComments")
       .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true))
+      .order("desc") // Optimization: Count recent comments first
       .take(MAX_COMMENTS_FOR_STATS);
 
     // Batch fetch unique issue IDs to check project membership using batchFetchIssues
@@ -729,7 +731,7 @@ async function countProjectsUnrestricted(ctx: QueryCtx, userId: Id<"users">) {
       .query("projectMembers")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter(notDeleted),
-    MAX_PAGE_SIZE,
+    MAX_PROJECTS_FOR_STATS, // Optimization: Allow counting up to 500 projects (was 100)
   );
 }
 
@@ -770,7 +772,7 @@ async function countProjectsFiltered(
     .query("projectMembers")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .filter(notDeleted)
-    .take(MAX_PAGE_SIZE);
+    .take(MAX_PROJECTS_FOR_STATS); // Optimization: Allow counting up to 500 projects (was 100)
 
   return projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId)).length;
 }
@@ -826,7 +828,7 @@ export const getUserStats = authenticatedQuery({
         .query("projectMembers")
         .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
         .filter(notDeleted)
-        .take(MAX_PAGE_SIZE);
+        .take(MAX_PROJECTS_FOR_STATS); // Optimization: Use higher limit for finding shared projects
       allowedProjectIds = new Set(myMemberships.map((m) => m.projectId));
     }
 
