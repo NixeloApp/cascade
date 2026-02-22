@@ -4,6 +4,7 @@
  * OAuth flow and meeting management for Zoom video conferencing.
  * Based on Cal.com's zoomvideo integration pattern.
  */
+"use node";
 
 import { createHmac, randomBytes } from "node:crypto";
 import { getAuthUserId } from "@convex-dev/auth/server";
