@@ -198,13 +198,15 @@ describe("Button", () => {
       expect(screen.getByRole("button")).toBeDisabled();
     });
 
-    it("hides children when loading if size is icon", () => {
+    it("renders children visually hidden when loading if size is icon", () => {
       render(
         <Button isLoading size="icon">
           <Plus data-testid="icon-child" />
         </Button>,
       );
-      expect(screen.queryByTestId("icon-child")).not.toBeInTheDocument();
+      const child = screen.getByTestId("icon-child");
+      expect(child).toBeInTheDocument();
+      expect(child.parentElement).toHaveClass("sr-only");
       const spinner = document.querySelector(".animate-spin");
       expect(spinner).toBeInTheDocument();
     });
@@ -227,6 +229,16 @@ describe("Button", () => {
         </Button>,
       );
       expect(screen.getByTestId("right-icon")).toBeInTheDocument();
+    });
+
+    it("preserves accessible name when loading if provided via sr-only", () => {
+      render(
+        <Button isLoading size="icon">
+          <span className="sr-only">Save</span>
+          <Plus aria-hidden="true" />
+        </Button>,
+      );
+      expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
     });
 
     it("renders both icons", () => {
