@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { DAY, HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -51,7 +52,7 @@ describe("Time Tracking", () => {
       // Since 0 time passed, duration/cost might be 0, but it should be stopped.
       // If we want non-zero, we might need to patch the start time back in time manually?
       await t.run(async (ctx) => {
-        await ctx.db.patch(entryId, { startTime: Date.now() - 3600000 }); // 1 hour ago
+        await ctx.db.patch(entryId, { startTime: Date.now() - HOUR }); // 1 hour ago
       });
       // Re-stop? No, stopTimer calculates based on current time.
       // We should have patched start time BEFORE stopping.
@@ -70,7 +71,7 @@ describe("Time Tracking", () => {
       });
 
       // Create manual entry
-      const startTime = Date.now() - 7200000; // 2 hours ago
+      const startTime = Date.now() - 2 * HOUR; // 2 hours ago
       const endTime = Date.now();
 
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
@@ -108,20 +109,20 @@ describe("Time Tracking", () => {
       await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId,
         startTime: baseTime,
-        endTime: baseTime + 3600000, // Exactly 1 hour later
+        endTime: baseTime + HOUR, // Exactly 1 hour later
         billable: true,
       });
       await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId,
-        startTime: baseTime + 3600000,
-        endTime: baseTime + 7200000, // Exactly 1 hour later
+        startTime: baseTime + HOUR,
+        endTime: baseTime + 2 * HOUR, // Exactly 1 hour later
         billable: true,
       });
 
       const stats = await asUser.query(api.timeTracking.getBurnRate, {
         projectId,
-        startDate: baseTime - 86400000,
-        endDate: baseTime + 86400000,
+        startDate: baseTime - DAY,
+        endDate: baseTime + DAY,
       });
 
       expect(stats?.totalCost).toBeCloseTo(100, 1); // 2 hours * 50, allow 0.1 difference
@@ -152,7 +153,7 @@ describe("Time Tracking", () => {
 
       const list1 = await asUser.query(api.timeTracking.listTimeEntries, {
         projectId: p1,
-        startDate: now - 86400000, // 24 hours ago
+        startDate: now - DAY, // 24 hours ago
         endDate: now + 10000,
       });
       expect(list1).toHaveLength(1);
@@ -173,12 +174,12 @@ describe("Time Tracking", () => {
       await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId,
         issueId,
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
       });
       await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId,
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
       });
 
@@ -197,12 +198,12 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
       });
       await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 7200000,
-        endTime: now - 3600000,
+        startTime: now - 2 * HOUR,
+        endTime: now - HOUR,
       });
 
       const list = await asUser.query(api.timeTracking.listTimeEntries, {});
@@ -219,7 +220,7 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
         description: "Original",
         activity: "Development",
@@ -254,7 +255,7 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000, // 1 hour ago
+        startTime: now - HOUR, // 1 hour ago
         endTime: now,
         billable: true,
       });
@@ -262,7 +263,7 @@ describe("Time Tracking", () => {
       // Change to 2 hours
       await asUser.mutation(api.timeTracking.updateTimeEntry, {
         entryId,
-        startTime: now - 7200000, // 2 hours ago
+        startTime: now - 2 * HOUR, // 2 hours ago
       });
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
@@ -277,7 +278,7 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
       });
 
@@ -304,7 +305,7 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       const entryId = await asUser1.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
       });
 
@@ -326,7 +327,7 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
       });
 
@@ -344,7 +345,7 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
       });
 
@@ -365,7 +366,7 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
         billable: true,
       });
@@ -391,7 +392,7 @@ describe("Time Tracking", () => {
       await expect(
         asUser.mutation(api.timeTracking.createTimeEntry, {
           startTime: now,
-          endTime: now - 3600000, // End before start
+          endTime: now - HOUR, // End before start
         }),
       ).rejects.toThrow(/End time must be after start time/);
       await t.finishInProgressScheduledFunctions();
@@ -404,7 +405,7 @@ describe("Time Tracking", () => {
 
       const now = Date.now();
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
         isEquityHour: true,
       });
@@ -513,7 +514,7 @@ describe("Time Tracking", () => {
 
       // Patch the start time to 1 hour ago
       await t.run(async (ctx) => {
-        await ctx.db.patch(entryId, { startTime: Date.now() - 3600000 });
+        await ctx.db.patch(entryId, { startTime: Date.now() - HOUR });
       });
 
       const running = await asUser.query(api.timeTracking.getRunningTimer, {});
@@ -581,7 +582,7 @@ describe("Time Tracking", () => {
       const now = Date.now();
       const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId,
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
         billable: true,
       });
@@ -645,7 +646,7 @@ describe("Time Tracking", () => {
       // Add billable entry (1 hour)
       await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId,
-        startTime: now - 3600000,
+        startTime: now - HOUR,
         endTime: now,
         billable: true,
       });
@@ -653,8 +654,8 @@ describe("Time Tracking", () => {
       // Add non-billable entry (1 hour)
       await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId,
-        startTime: now - 7200000,
-        endTime: now - 3600000,
+        startTime: now - 2 * HOUR,
+        endTime: now - HOUR,
         billable: false,
       });
 
