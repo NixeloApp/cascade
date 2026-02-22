@@ -27,7 +27,7 @@ describe("Multi-Tenant Isolation", () => {
 
       // User A creates a project in Org A
       const asUserA = asAuthenticatedUser(t, userOrgA);
-      const projectIdA = await asUserA.mutation(api.projects.createProject, {
+      const { projectId: projectIdA } = await asUserA.mutation(api.projects.createProject, {
         name: "Org A Secret Project",
         key: "SECA",
         organizationId: orgA,
@@ -104,7 +104,7 @@ describe("Multi-Tenant Isolation", () => {
 
       // User A creates a project and issue
       const asUserA = asAuthenticatedUser(t, userOrgA);
-      const projectIdA = await asUserA.mutation(api.projects.createProject, {
+      const { projectId: projectIdA } = await asUserA.mutation(api.projects.createProject, {
         name: "Org A Project",
         key: "ORGA",
         organizationId: orgA,
@@ -139,7 +139,7 @@ describe("Multi-Tenant Isolation", () => {
 
       // User A creates a project
       const asUserA = asAuthenticatedUser(t, userOrgA);
-      const projectIdA = await asUserA.mutation(api.projects.createProject, {
+      const { projectId: projectIdA } = await asUserA.mutation(api.projects.createProject, {
         name: "Org A Project",
         key: "MODP",
         organizationId: orgA,
@@ -169,7 +169,7 @@ describe("Multi-Tenant Isolation", () => {
 
       // User A creates a project
       const asUserA = asAuthenticatedUser(t, userOrgA);
-      const projectIdA = await asUserA.mutation(api.projects.createProject, {
+      const { projectId: projectIdA } = await asUserA.mutation(api.projects.createProject, {
         name: "Org A Project to Delete",
         key: "DELP",
         organizationId: orgA,
@@ -205,7 +205,7 @@ describe("Multi-Tenant Isolation", () => {
 
       // User A creates a project and document
       const asUserA = asAuthenticatedUser(t, userOrgA);
-      const projectIdA = await asUserA.mutation(api.projects.createProject, {
+      const { projectId: projectIdA } = await asUserA.mutation(api.projects.createProject, {
         name: "Org A Project",
         key: "DOCA",
         organizationId: orgA,
@@ -243,7 +243,7 @@ describe("Multi-Tenant Isolation", () => {
 
       // User A creates a project and sprint
       const asUserA = asAuthenticatedUser(t, userOrgA);
-      const projectIdA = await asUserA.mutation(api.projects.createProject, {
+      const { projectId: projectIdA } = await asUserA.mutation(api.projects.createProject, {
         name: "Org A Project",
         key: "SPRA",
         organizationId: orgA,
@@ -281,7 +281,7 @@ describe("Multi-Tenant Isolation", () => {
 
       // User A creates a project
       const asUserA = asAuthenticatedUser(t, userOrgA);
-      const projectIdA = await asUserA.mutation(api.projects.createProject, {
+      const { projectId: projectIdA } = await asUserA.mutation(api.projects.createProject, {
         name: "Org A Project",
         key: "INJA",
         organizationId: orgA,
@@ -312,7 +312,7 @@ describe("Multi-Tenant Isolation", () => {
 
       // User A creates a project
       const asUserA = asAuthenticatedUser(t, userOrgA);
-      const projectIdA = await asUserA.mutation(api.projects.createProject, {
+      const { projectId: projectIdA } = await asUserA.mutation(api.projects.createProject, {
         name: "Org A Project",
         key: "MEMB",
         organizationId: orgA,

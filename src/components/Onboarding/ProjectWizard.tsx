@@ -75,7 +75,7 @@ export function ProjectWizard({
 
   const handleFinish = async () => {
     try {
-      const projectId = await createWorkspace({
+      const { projectId } = await createWorkspace({
         name: projectName,
         key: projectKey,
         description: description || undefined,

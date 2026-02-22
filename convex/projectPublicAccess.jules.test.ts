@@ -19,7 +19,7 @@ describe("Project Public Access Security", () => {
     const asUserA = asAuthenticatedUser(t, userA);
 
     // 2. User A creates a PUBLIC project
-    const projectId = await asUserA.mutation(api.projects.createProject, {
+    const { projectId } = await asUserA.mutation(api.projects.createProject, {
       name: "Public Project A",
       key: "PUB",
       organizationId: orgA,

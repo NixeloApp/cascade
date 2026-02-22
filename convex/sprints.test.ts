@@ -7,6 +7,7 @@ import { modules } from "./testSetup.test-helper";
 import {
   asAuthenticatedUser,
   createOrganizationAdmin,
+  createProjectInOrganization,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -76,13 +77,13 @@ describe("Sprints", () => {
         name: "Member",
         email: "member@test.com",
       });
-      const projectId = await createTestProject(t, owner);
+      const { organizationId } = await createOrganizationAdmin(t, owner);
+      const projectId = await createProjectInOrganization(t, owner, organizationId);
 
       // Add member to organization
-      const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId,
           userId: member,
           role: "member",
           addedBy: owner,
@@ -462,13 +463,13 @@ describe("Sprints", () => {
         name: "Member",
         email: "member@test.com",
       });
-      const projectId = await createTestProject(t, owner);
+      const { organizationId } = await createOrganizationAdmin(t, owner);
+      const projectId = await createProjectInOrganization(t, owner, organizationId);
 
       // Add member to organization
-      const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId,
           userId: member,
           role: "member",
           addedBy: owner,
@@ -636,13 +637,13 @@ describe("Sprints", () => {
         name: "Member",
         email: "member@test.com",
       });
-      const projectId = await createTestProject(t, owner);
+      const { organizationId } = await createOrganizationAdmin(t, owner);
+      const projectId = await createProjectInOrganization(t, owner, organizationId);
 
       // Add member to organization
-      const project = await t.run(async (ctx) => ctx.db.get(projectId));
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project?.organizationId,
+          organizationId,
           userId: member,
           role: "member",
           addedBy: owner,
