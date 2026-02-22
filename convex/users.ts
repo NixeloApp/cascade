@@ -610,17 +610,19 @@ async function countIssuesByAssigneeFast(
         ),
   );
 
-  // 2. Completed: Parallel efficient counts on by_project_assignee index with status filter
-  // Although status is not in the index, scanning the project-scoped index and filtering
-  // is significantly more efficient than scanning the global index when the user
-  // has a large history in other projects not included in allowedProjectIds.
+  // 2. Completed: Parallel efficient counts on by_project_assignee_status index
+  // This uses a direct index lookup for done issues in the project, avoiding scanning
+  // all assigned issues (including todo/in-progress) and filtering.
   const completed = await countByProjectParallel(projectIds, MAX_ISSUES_FOR_STATS, (projectId) =>
     ctx.db
       .query("issues")
-      .withIndex("by_project_assignee", (q) =>
-        q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
-      )
-      .filter((q) => q.eq(q.field("status"), "done")),
+      .withIndex("by_project_assignee_status", (q) =>
+        q
+          .eq("projectId", projectId)
+          .eq("assigneeId", assigneeId)
+          .eq("status", "done")
+          .lt("isDeleted", true),
+      ),
   );
 
   return [Math.min(totalAssigned, MAX_ISSUES_FOR_STATS), Math.min(completed, MAX_ISSUES_FOR_STATS)];
