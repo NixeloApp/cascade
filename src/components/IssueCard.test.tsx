@@ -141,24 +141,24 @@ describe("IssueCard", () => {
     // Type icon
     const typeIcon = screen.getByLabelText("Bug");
     expect(typeIcon).toBeInTheDocument();
-    // Ensure it IS in a button but has tabIndex="-1"
+    // Ensure it IS in a button and is keyboard accessible
     const typeBtn = typeIcon.closest("button");
     expect(typeBtn).toBeInTheDocument();
-    expect(typeBtn).toHaveAttribute("tabIndex", "-1");
+    expect(typeBtn).not.toHaveAttribute("tabIndex", "-1");
 
     // Priority icon
     const priorityIcon = screen.getByLabelText("Priority: high");
     expect(priorityIcon).toBeInTheDocument();
     const priorityBtn = priorityIcon.closest("button");
     expect(priorityBtn).toBeInTheDocument();
-    expect(priorityBtn).toHaveAttribute("tabIndex", "-1");
+    expect(priorityBtn).not.toHaveAttribute("tabIndex", "-1");
 
     // Assignee
     const assigneeImg = screen.getByAltText("Alice Johnson");
     expect(assigneeImg).toBeInTheDocument();
     const assigneeBtn = assigneeImg.closest("button");
     expect(assigneeBtn).toBeInTheDocument();
-    expect(assigneeBtn).toHaveAttribute("tabIndex", "-1");
+    expect(assigneeBtn).not.toHaveAttribute("tabIndex", "-1");
   });
 
   it("should render fallback assignee avatar with accessible label", () => {

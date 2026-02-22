@@ -299,7 +299,6 @@ export const IssueCard = memo(function IssueCard({
                 variant="unstyled"
                 onClick={handleClick}
                 className="pointer-events-auto p-0 h-auto rounded-sm"
-                tabIndex={-1}
               >
                 <Icon
                   icon={ISSUE_TYPE_ICONS[issue.type]}
@@ -321,7 +320,6 @@ export const IssueCard = memo(function IssueCard({
               variant="unstyled"
               onClick={handleClick}
               className="pointer-events-auto p-0 h-auto rounded-sm"
-              tabIndex={-1}
             >
               <Icon
                 icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
@@ -372,7 +370,6 @@ export const IssueCard = memo(function IssueCard({
                   variant="unstyled"
                   onClick={handleClick}
                   className="pointer-events-auto p-0 h-auto rounded-sm"
-                  tabIndex={-1}
                 >
                   <Badge variant="neutral" size="sm" className="cursor-help">
                     +{issue.labels.length - 3}
@@ -398,7 +395,6 @@ export const IssueCard = memo(function IssueCard({
                   variant="unstyled"
                   onClick={handleClick}
                   className="pointer-events-auto p-0 h-auto rounded-sm flex items-center gap-1"
-                  tabIndex={-1}
                 >
                   {issue.assignee.image ? (
                     <img
