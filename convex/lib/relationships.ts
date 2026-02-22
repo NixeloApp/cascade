@@ -1,8 +1,18 @@
 /**
  * Relationship Registry & Cascading Delete System
  *
- * Central registry of all parent-child relationships in the database.
- * Automatically handles cascading deletes/soft-deletes so you never forget.
+ * This file serves as the **Central Registry** of all parent-child relationships in the database.
+ * It is used to automatically handle cascading deletes and soft-deletes, ensuring data integrity.
+ *
+ * ⚠️ **CRITICAL:** This file must be kept in sync with `convex/schema.ts`.
+ * If you add a foreign key in the schema, you MUST add a corresponding entry here.
+ * Failure to do so will result in orphaned records when parents are deleted.
+ *
+ * ⚠️ **LIMITATION:** Cascading operations are **bounded** to prevent memory exhaustion.
+ * They process only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
+ * If a parent has more than 100 children (e.g., a popular issue with 500 comments),
+ * the excess children will NOT be deleted/restored. For bulk operations on large datasets,
+ * use `collectInBatches` or manual deletion scripts.
  *
  * Usage:
  *   await cascadeDelete(ctx, "issues", issueId);
@@ -19,19 +29,34 @@ import { conflict } from "./errors";
 type AnyDataModel = GenericDataModel;
 
 /**
- * Relationship definition between parent and child tables
+ * Relationship definition between parent and child tables.
+ * Defines how child records should be handled when the parent is deleted.
  */
 export type Relationship = {
-  parent: TableNames; // Parent table name (e.g., "issues")
-  child: TableNames; // Child table name (e.g., "issueComments")
-  foreignKey: string; // Field in child pointing to parent (e.g., "issueId")
-  index: string; // Index name for fast lookup (e.g., "by_issue")
+  /** Parent table name (e.g., "issues") */
+  parent: TableNames;
+  /** Child table name (e.g., "issueComments") */
+  child: TableNames;
+  /** Field in child table pointing to parent (e.g., "issueId") */
+  foreignKey: string;
+  /** Index name on the child table for fast lookup by foreign key (e.g., "by_issue") */
+  index: string;
+  /**
+   * Action to take when parent is deleted:
+   * - `cascade`: Recursively delete (or soft-delete) the child record.
+   * - `set_null`: Keep the child record but set the foreign key to null/undefined.
+   * - `restrict`: Throw an error if children exist (prevent deletion).
+   */
   onDelete: "cascade" | "set_null" | "restrict";
 };
 
 /**
- * Master registry of all database relationships
- * Add new relationships here when creating related tables
+ * Master registry of all database relationships.
+ *
+ * 📝 **HOW TO ADD A NEW RELATIONSHIP:**
+ * 1. Define the table and foreign key in `convex/schema.ts`.
+ * 2. Ensure an index exists on the foreign key field in `convex/schema.ts`.
+ * 3. Add a new entry to this array matching the schema definition.
  */
 export const RELATIONSHIPS: Relationship[] = [
   // ============================================================================

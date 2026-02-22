@@ -37,6 +37,14 @@ export const chatRoles = literals("user", "assistant", "system");
 
 // Statuses
 export const sprintStatuses = literals("future", "active", "completed");
+export const moduleStatuses = literals(
+  "backlog",
+  "planned",
+  "in_progress",
+  "paused",
+  "completed",
+  "cancelled",
+);
 export const inboxIssueStatuses = literals(
   "pending",
   "accepted",
@@ -77,6 +85,7 @@ export const serviceTypes = literals("transcription", "email", "sms", "ai");
 // Calendar & Sync
 export const syncDirections = literals("import", "export", "bidirectional");
 export const calendarProviders = literals("google", "outlook");
+export const videoProviders = literals("zoom", "google_meet", "ms_teams", "daily");
 export const cancelledByOptions = literals("host", "booker");
 
 // User Preferences
@@ -84,8 +93,31 @@ export const emailDigests = literals("none", "daily", "weekly");
 export const digestFrequencies = literals("daily", "weekly"); // Without "none"
 export const personas = literals("team_lead", "team_member");
 
+// Workflow Automation
+export const workflowTriggers = literals(
+  "booking_created",
+  "booking_cancelled",
+  "booking_rescheduled",
+  "event_reminder", // Before event
+  "event_followup", // After event
+  "issue_created",
+  "issue_status_changed",
+  "issue_assigned",
+);
+export const workflowActionTypes = literals(
+  "email_host",
+  "email_attendee",
+  "email_assignee",
+  "sms_attendee",
+  "webhook",
+  "create_issue",
+);
+export const workflowStatuses = literals("pending", "sent", "failed", "skipped");
+
 // Booking
 export const bookingFieldTypes = literals("text", "email", "phone");
+export const schedulingTypes = literals("individual", "round_robin", "collective");
+export const roundRobinIntervals = literals("daily", "weekly", "monthly");
 
 // Meeting Bot
 export const meetingPlatforms = literals("google_meet", "zoom", "teams", "other");
@@ -377,6 +409,11 @@ export type CalendarEventColor = Infer<typeof calendarEventColors>;
 export type GoogleCalendarEvent = Infer<typeof googleCalendarEvent>;
 export type InboxIssueStatus = Infer<typeof inboxIssueStatuses>;
 export type InboxIssueSource = Infer<typeof inboxIssueSources>;
+export type ModuleStatus = Infer<typeof moduleStatuses>;
+export type VideoProvider = Infer<typeof videoProviders>;
+export type WorkflowTrigger = Infer<typeof workflowTriggers>;
+export type WorkflowActionType = Infer<typeof workflowActionTypes>;
+export type WorkflowStatus = Infer<typeof workflowStatuses>;
 
 // Automation rules types
 export type AutomationTrigger = Infer<typeof automationTriggers>;

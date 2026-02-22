@@ -3,13 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createOrganizationAdmin,
-  createProjectInOrganization,
-  createTestProject,
-  createTestUser,
-} from "./testUtils";
+import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
 
 // Mock DNS resolution
 vi.mock("./lib/dns", () => ({
@@ -87,13 +81,14 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId,
+          organizationId: project.organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -192,13 +187,14 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId,
+          organizationId: project.organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -339,13 +335,14 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId,
+          organizationId: project.organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -510,13 +507,14 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId,
+          organizationId: project.organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -680,13 +678,14 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId,
+          organizationId: project.organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -808,13 +807,14 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId,
+          organizationId: project.organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
@@ -941,13 +941,14 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
       // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId,
+          organizationId: project.organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
