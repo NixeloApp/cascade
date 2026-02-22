@@ -64,7 +64,7 @@ describe("E2E Security Check", () => {
     const request = new Request("http://localhost:5173/e2e/create-test-user", {
       method: "POST",
       headers: {
-        "x-e2e-api-key": "secret-key"
+        "x-e2e-api-key": "secret-key",
       },
       body: JSON.stringify({ email: "test@inbox.mailtrap.io", password: "password" }),
     });

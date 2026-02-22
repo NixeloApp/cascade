@@ -18,7 +18,6 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { type ActionCtx, httpAction, internalMutation, internalQuery } from "./_generated/server";
 import { constantTimeEqual } from "./lib/apiAuth";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
-import { isLocalhost } from "./lib/env";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
