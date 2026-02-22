@@ -66,6 +66,7 @@ export const issuesFields = {
   storyPoints: v.optional(v.number()),
   labels: v.array(v.string()),
   sprintId: v.optional(v.id("sprints")),
+  moduleId: v.optional(v.id("modules")), // Feature-based grouping (parallel to sprints)
   epicId: v.optional(v.id("issues")),
   parentId: v.optional(v.id("issues")), // For sub-tasks
   linkedDocuments: v.array(v.id("documents")),
@@ -92,7 +93,7 @@ export const issueActivityFields = {
   field: v.optional(v.string()), // Field that was changed
   oldValue: v.optional(v.string()),
   newValue: v.optional(v.string()),
-  // Soft Delete
+  // Soft Delete (cascaded from issue)
   isDeleted: v.optional(v.boolean()),
   deletedAt: v.optional(v.number()),
   deletedBy: v.optional(v.id("users")),
