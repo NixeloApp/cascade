@@ -30,7 +30,6 @@ describe("Issues", () => {
         description: "This is a test issue",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       expect(issueId).toBeDefined();
@@ -61,7 +60,6 @@ describe("Issues", () => {
         title: "First Issue",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       const issue2Id = await asUser.mutation(api.issues.create, {
@@ -69,7 +67,6 @@ describe("Issues", () => {
         title: "Second Issue",
         type: "bug",
         priority: "high",
-        organizationId: project.organizationId,
       });
 
       const issue1 = await asUser.query(api.issues.getIssue, { id: issue1Id });
@@ -94,7 +91,6 @@ describe("Issues", () => {
         title: "Status Test",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
@@ -118,7 +114,6 @@ describe("Issues", () => {
         type: "task",
         priority: "medium",
         assigneeId,
-        organizationId: project.organizationId,
       });
 
       const issue = await asReporter.query(api.issues.getIssue, { id: issueId });
@@ -140,7 +135,6 @@ describe("Issues", () => {
           title: "Unauthorized",
           type: "task",
           priority: "medium",
-          organizationId: project.organizationId,
         });
       }).rejects.toThrow("Not authenticated");
       await t.finishInProgressScheduledFunctions();
@@ -187,7 +181,6 @@ describe("Issues", () => {
           title: "Should Fail",
           type: "task",
           priority: "medium",
-          organizationId: projectDoc.organizationId,
         });
       }).rejects.toThrow(/FORBIDDEN|editor/i);
       await t.finishInProgressScheduledFunctions();
@@ -210,7 +203,6 @@ describe("Issues", () => {
         description: "Detailed description",
         type: "story",
         priority: "high",
-        organizationId: project.organizationId,
       });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
@@ -236,7 +228,6 @@ describe("Issues", () => {
         title: "To Delete",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       // Delete the issue using bulkDelete
@@ -262,7 +253,6 @@ describe("Issues", () => {
         title: "Private Issue",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       // Try to access as outsider
@@ -290,7 +280,6 @@ describe("Issues", () => {
         description: "Original description",
         type: "task",
         priority: "low",
-        organizationId: project.organizationId,
       });
 
       await asUser.mutation(api.issues.update, {
@@ -336,7 +325,6 @@ describe("Issues", () => {
         title: "Test Issue",
         type: "task",
         priority: "medium",
-        organizationId: projectDoc.organizationId,
       });
 
       await asAdmin.mutation(api.projects.addProjectMember, {
@@ -372,7 +360,6 @@ describe("Issues", () => {
         title: "Status Test",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       await asUser.mutation(api.issues.updateStatus, {
@@ -413,7 +400,6 @@ describe("Issues", () => {
         title: "Test",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       // Implementation accepts any status value (no workflow validation)
@@ -444,21 +430,18 @@ describe("Issues", () => {
         title: "Issue 1",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "bug",
         priority: "high",
-        organizationId: project.organizationId,
       });
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 3",
         type: "story",
         priority: "low",
-        organizationId: project.organizationId,
       });
 
       const { page: issues } = await asUser.query(api.issues.listProjectIssues, {
@@ -502,7 +485,6 @@ describe("Issues", () => {
         title: "Test Issue",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       const commentId = await asUser.mutation(api.issues.addComment, {
@@ -540,7 +522,6 @@ describe("Issues", () => {
         title: "Test",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       // Call without authentication
@@ -569,14 +550,12 @@ describe("Issues", () => {
         title: "Issue 1",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
       const issue2Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       await asUser.mutation(api.issues.bulkUpdateStatus, {
@@ -606,14 +585,12 @@ describe("Issues", () => {
         title: "Issue 1",
         type: "task",
         priority: "low",
-        organizationId: project.organizationId,
       });
       const issue2Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       await asUser.mutation(api.issues.bulkUpdatePriority, {
@@ -644,14 +621,12 @@ describe("Issues", () => {
         title: "Issue 1",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
       const issue2Id = await asReporter.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       await asReporter.mutation(api.issues.bulkAssign, {
@@ -703,7 +678,6 @@ describe("Issues", () => {
         title: "Test",
         type: "task",
         priority: "medium",
-        organizationId,
       });
 
       await asAdmin.mutation(api.projects.addProjectMember, {
@@ -744,21 +718,18 @@ describe("Issues", () => {
         title: "Fix login bug",
         type: "bug",
         priority: "high",
-        organizationId: project.organizationId,
       });
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Add login feature",
         type: "story",
         priority: "medium",
-        organizationId: project.organizationId,
       });
       await asUser.mutation(api.issues.create, {
         projectId,
         title: "Update dashboard",
         type: "task",
         priority: "low",
-        organizationId: project.organizationId,
       });
 
       const searchResult = await asUser.query(api.issues.search, {
@@ -786,7 +757,6 @@ describe("Issues", () => {
         description: "Contains unique_word_in_desc",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       const searchResult = await asUser.query(api.issues.search, {
@@ -813,7 +783,6 @@ describe("Issues", () => {
         description: "Initial description",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       // Update description
@@ -850,7 +819,6 @@ describe("Issues", () => {
         title: "Epic 1",
         type: "epic",
         priority: "high",
-        organizationId: project.organizationId,
       });
 
       // Create a task
@@ -859,7 +827,6 @@ describe("Issues", () => {
         title: "Task 1",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       // List without exclusion
@@ -894,7 +861,6 @@ describe("Issues", () => {
         title: "Epic 1",
         type: "epic",
         priority: "high",
-        organizationId: project.organizationId,
       });
 
       // Create task IN the epic
@@ -904,7 +870,6 @@ describe("Issues", () => {
         type: "task",
         priority: "medium",
         epicId: epicId,
-        organizationId: project.organizationId,
       });
 
       // Create task NOT in the epic
@@ -913,7 +878,6 @@ describe("Issues", () => {
         title: "Task not in Epic",
         type: "task",
         priority: "medium",
-        organizationId: project.organizationId,
       });
 
       // List by epicId
