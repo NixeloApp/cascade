@@ -194,12 +194,20 @@ describe("IssueCard", () => {
   });
 
   it("should have a descriptive accessible label for screen readers", () => {
-    const issueWithPoints = { ...mockIssue, storyPoints: 5 };
-    render(<IssueCard issue={issueWithPoints} status="todo" />);
+    render(<IssueCard issue={mockIssue} status="todo" />);
 
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, high priority, assigned to Alice Johnson, 5 points";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points";
     const overlayButton = screen.getByLabelText(expectedLabel);
     expect(overlayButton).toBeInTheDocument();
+  });
+
+  it("should include 0 story points in the accessible label", () => {
+    const issueWithZeroPoints = { ...mockIssue, storyPoints: 0 };
+    render(<IssueCard issue={issueWithZeroPoints} status="todo" />);
+
+    const expectedLabel =
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points";
+    expect(screen.getByLabelText(expectedLabel)).toBeInTheDocument();
   });
 });
