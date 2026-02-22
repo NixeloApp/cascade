@@ -550,21 +550,30 @@ const applicationTables = {
     toIssueId: v.id("issues"),
     linkType: linkTypes,
     createdBy: v.id("users"),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_from_issue", ["fromIssueId"])
-    .index("by_to_issue", ["toIssueId"]),
+    .index("by_to_issue", ["toIssueId"])
+    .index("by_deleted", ["isDeleted"]),
 
   issueActivity: defineTable(issueActivityFields)
     .index("by_issue", ["issueId"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_deleted", ["isDeleted"]),
 
   issueWatchers: defineTable({
     issueId: v.id("issues"),
     userId: v.id("users"),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
     .index("by_user", ["userId"])
-    .index("by_issue_user", ["issueId", "userId"]),
+    .index("by_issue_user", ["issueId", "userId"])
+    .index("by_deleted", ["isDeleted"]),
 
   sprints: defineTable({
     projectId: v.id("projects"),
@@ -710,10 +719,14 @@ const applicationTables = {
     fieldId: v.id("customFields"),
     value: v.string(),
     updatedAt: v.number(),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
     .index("by_field", ["fieldId"])
-    .index("by_issue_field", ["issueId", "fieldId"]),
+    .index("by_issue_field", ["issueId", "fieldId"])
+    .index("by_deleted", ["isDeleted"]),
 
   // ===========================================================================
   // AUTOMATION & WEBHOOKS
@@ -1357,6 +1370,9 @@ const applicationTables = {
     approvedBy: v.optional(v.id("users")),
     approvedAt: v.optional(v.number()),
     updatedAt: v.number(),
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_user", ["userId"])
     .index("by_project", ["projectId"])
@@ -1367,7 +1383,8 @@ const applicationTables = {
     .index("by_billable", ["billable"])
     .index("by_billed", ["billed"])
     .index("by_user_project", ["userId", "projectId"])
-    .index("by_equity", ["isEquityHour"]),
+    .index("by_equity", ["isEquityHour"])
+    .index("by_deleted", ["isDeleted"]),
 
   userRates: defineTable({
     userId: v.id("users"),

@@ -14,7 +14,7 @@ import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
-import { cascadeSoftDelete } from "./lib/relationships";
+import { cascadeRestore, cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getWorkspaceRole } from "./lib/workspaceAccess";
 import { canAccessProject, getProjectRole } from "./projectAccess";
@@ -612,8 +612,8 @@ export const restoreProject = authenticatedMutation({
       deletedBy: undefined,
     });
 
-    // Note: Cascade restore not implemented yet - would need cascadeRestore function
-    // For now, just restore the project itself
+    // Cascade restore to all related resources
+    await cascadeRestore(ctx, "projects", args.projectId);
 
     await logAudit(ctx, {
       action: "project_restored",
