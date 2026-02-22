@@ -26,15 +26,22 @@ import {
   issuePriorities,
   issueTypes,
   linkTypes,
+  moduleStatuses,
   periodTypes,
   personas,
   projectRoles,
   proseMirrorSnapshot,
   prStates,
+  roundRobinIntervals,
+  schedulingTypes,
   simplePriorities,
   sprintStatuses,
+  videoProviders,
   webhookStatuses,
+  workflowActionTypes,
   workflowCategories,
+  workflowStatuses,
+  workflowTriggers,
 } from "./validators";
 
 // =============================================================================
@@ -448,6 +455,7 @@ const applicationTables = {
     .index("by_reporter", ["reporterId", "isDeleted"])
     .index("by_status", ["status"])
     .index("by_sprint", ["sprintId", "isDeleted"])
+    .index("by_module", ["moduleId", "isDeleted"])
     .index("by_epic", ["epicId", "isDeleted"])
     .index("by_parent", ["parentId", "isDeleted"])
     .index("by_project_status", ["projectId", "status", "isDeleted", "order"])
@@ -572,6 +580,35 @@ const applicationTables = {
     .index("by_project", ["projectId"])
     .index("by_status", ["status"])
     .index("by_deleted", ["isDeleted"]),
+
+  // Feature-based work units (parallel to time-based sprints)
+  modules: defineTable({
+    projectId: v.id("projects"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    status: moduleStatuses, // backlog → planned → in_progress → completed
+    leadId: v.optional(v.id("users")), // Module lead/owner
+    startDate: v.optional(v.number()), // Planned start date
+    targetDate: v.optional(v.number()), // Target completion date
+    // Progress tracking
+    completedAt: v.optional(v.number()), // When module was completed
+    // Metadata
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+    // Soft delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_status", ["projectId", "status"])
+    .index("by_lead", ["leadId"])
+    .index("by_status", ["status"])
+    .index("by_deleted", ["isDeleted"])
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["projectId", "status"],
+    }),
 
   labelGroups: defineTable({
     projectId: v.id("projects"),
@@ -760,6 +797,73 @@ const applicationTables = {
     .index("by_webhook", ["webhookId"])
     .index("by_status", ["status"]),
 
+  // Workflow automation (Cal.com style reminders)
+  workflows: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    // Scope - can be user-level, project-level, or booking page specific
+    userId: v.id("users"),
+    projectId: v.optional(v.id("projects")),
+    bookingPageId: v.optional(v.id("bookingPages")),
+    // Trigger configuration
+    trigger: workflowTriggers,
+    triggerOffset: v.optional(v.number()), // Minutes before/after (negative = before)
+    // Actions to perform
+    actions: v.array(
+      v.object({
+        type: workflowActionTypes,
+        template: v.optional(v.string()), // Email/SMS template with variables
+        subject: v.optional(v.string()), // Email subject
+        webhookUrl: v.optional(v.string()),
+        includeIcs: v.optional(v.boolean()), // Include calendar invite attachment
+      }),
+    ),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    // Stats
+    executionCount: v.optional(v.number()),
+    lastExecutedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_project", ["projectId"])
+    .index("by_booking_page", ["bookingPageId"])
+    .index("by_trigger", ["trigger"])
+    .index("by_active", ["isActive"])
+    .index("by_user_active", ["userId", "isActive"]),
+
+  // Scheduled workflow executions (reminders queue)
+  workflowReminders: defineTable({
+    workflowId: v.id("workflows"),
+    // Reference to what triggered this
+    bookingId: v.optional(v.id("bookings")),
+    calendarEventId: v.optional(v.id("calendarEvents")),
+    issueId: v.optional(v.id("issues")),
+    // Recipient info
+    recipientEmail: v.optional(v.string()),
+    recipientPhone: v.optional(v.string()),
+    recipientUserId: v.optional(v.id("users")),
+    // Scheduling
+    scheduledFor: v.number(), // When to send
+    status: workflowStatuses, // pending, sent, failed, skipped
+    // Execution details
+    actionIndex: v.number(), // Which action in the workflow
+    attempts: v.number(),
+    lastAttemptAt: v.optional(v.number()),
+    sentAt: v.optional(v.number()),
+    error: v.optional(v.string()),
+    // Context data for template rendering
+    contextData: v.optional(v.string()), // JSON
+    createdAt: v.number(),
+  })
+    .index("by_workflow", ["workflowId"])
+    .index("by_booking", ["bookingId"])
+    .index("by_event", ["calendarEventId"])
+    .index("by_issue", ["issueId"])
+    .index("by_status", ["status"])
+    .index("by_scheduled", ["scheduledFor"])
+    .index("by_status_scheduled", ["status", "scheduledFor"]),
+
   // ===========================================================================
   // NOTIFICATIONS
   // In-app notifications, email preferences, unsubscribe tokens
@@ -852,7 +956,11 @@ const applicationTables = {
     status: calendarStatuses,
     isRecurring: v.boolean(),
     recurrenceRule: v.optional(v.string()), // RRULE format
+    // Video conferencing
     meetingUrl: v.optional(v.string()),
+    videoProvider: v.optional(videoProviders), // zoom, google_meet, ms_teams, daily
+    videoMeetingId: v.optional(v.string()), // Provider's meeting ID
+    videoMeetingPassword: v.optional(v.string()), // Meeting password/passcode
     notes: v.optional(v.string()),
     isRequired: v.optional(v.boolean()),
     color: v.optional(calendarEventColors),
@@ -948,11 +1056,24 @@ const applicationTables = {
     isActive: v.boolean(),
     requiresConfirmation: v.boolean(),
     color: v.string(),
+    // Round-robin scheduling (Cal.com parity)
+    schedulingType: v.optional(schedulingTypes), // individual, round_robin, collective
+    teamMembers: v.optional(v.array(v.id("users"))), // Team members for round-robin
+    roundRobinInterval: v.optional(roundRobinIntervals), // daily, weekly, monthly
+    hostWeights: v.optional(
+      v.array(
+        v.object({
+          userId: v.id("users"),
+          weight: v.number(), // 1-10 scale, higher = more meetings
+        }),
+      ),
+    ),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
     .index("by_slug", ["slug"])
-    .index("by_active", ["isActive"]),
+    .index("by_active", ["isActive"])
+    .index("by_scheduling_type", ["schedulingType"]),
 
   bookings: defineTable({
     bookingPageId: v.id("bookingPages"),
@@ -987,6 +1108,26 @@ const applicationTables = {
     .index("by_status", ["status"])
     .index("by_host_status", ["hostId", "status"]),
 
+  // Round-robin assignment tracking for fair distribution
+  roundRobinAssignments: defineTable({
+    bookingPageId: v.id("bookingPages"),
+    userId: v.id("users"), // The host who was assigned
+    bookingId: v.id("bookings"), // The booking they were assigned to
+    assignedAt: v.number(),
+    // Period tracking for interval-based reset
+    periodKey: v.string(), // e.g., "2026-02-21" for daily, "2026-W08" for weekly
+    // Stats within period
+    assignmentCountInPeriod: v.number(),
+    // Weight at time of assignment (for audit)
+    weightAtAssignment: v.optional(v.number()),
+  })
+    .index("by_booking_page", ["bookingPageId"])
+    .index("by_user", ["userId"])
+    .index("by_booking", ["bookingId"])
+    .index("by_booking_page_user", ["bookingPageId", "userId"])
+    .index("by_booking_page_period", ["bookingPageId", "periodKey"])
+    .index("by_booking_page_user_period", ["bookingPageId", "userId", "periodKey"]),
+
   calendarConnections: defineTable({
     userId: v.id("users"),
     provider: calendarProviders,
@@ -1002,6 +1143,26 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_provider", ["provider"])
     .index("by_user_provider", ["userId", "provider"])
+    .index("by_expires_at", ["expiresAt"]),
+
+  // Video conferencing provider connections (Zoom, Google Meet, MS Teams)
+  videoConnections: defineTable({
+    userId: v.id("users"),
+    provider: videoProviders, // zoom, google_meet, ms_teams, daily
+    providerAccountId: v.string(), // Provider's user/account ID
+    providerEmail: v.optional(v.string()), // Email associated with provider account
+    accessToken: v.string(),
+    refreshToken: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+    scope: v.optional(v.string()), // OAuth scopes granted
+    isActive: v.boolean(), // Can be disabled without deleting
+    lastUsedAt: v.optional(v.number()), // Last time used to create meeting
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_provider", ["provider"])
+    .index("by_user_provider", ["userId", "provider"])
+    .index("by_active", ["isActive"])
     .index("by_expires_at", ["expiresAt"]),
 
   // ===========================================================================

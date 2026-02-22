@@ -45,6 +45,7 @@ export const create = projectEditorMutation({
     ),
     assigneeId: v.optional(v.id("users")),
     sprintId: v.optional(v.id("sprints")),
+    moduleId: v.optional(v.id("modules")),
     epicId: v.optional(v.id("issues")),
     parentId: v.optional(v.id("issues")),
     labels: v.optional(v.array(v.id("labels"))),
@@ -132,6 +133,7 @@ export const create = projectEditorMutation({
       updatedAt: now,
       labels: labelNames,
       sprintId: args.sprintId,
+      moduleId: args.moduleId,
       epicId: inheritedEpicId,
       parentId: args.parentId,
       linkedDocuments: [],
@@ -655,6 +657,50 @@ export const bulkMoveToSprint = authenticatedMutation({
           field: "sprint",
           oldValue: oldSprint ? String(oldSprint) : "",
           newValue: args.sprintId ? String(args.sprintId) : "",
+        });
+
+        return 1;
+      }),
+    );
+
+    return { updated: results.reduce((a: number, b) => a + b, 0) };
+  },
+});
+
+export const bulkMoveToModule = authenticatedMutation({
+  args: {
+    issueIds: v.array(v.id("issues")),
+    moduleId: v.union(v.id("modules"), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+
+    const now = Date.now();
+
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        if (!issue || issue.isDeleted) return 0;
+
+        try {
+          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
+        } catch {
+          return 0;
+        }
+
+        const oldModule = issue.moduleId;
+
+        await ctx.db.patch(issue._id, {
+          moduleId: args.moduleId ?? undefined,
+          updatedAt: now,
+        });
+
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "updated",
+          field: "module",
+          oldValue: oldModule ? String(oldModule) : "",
+          newValue: args.moduleId ? String(args.moduleId) : "",
         });
 
         return 1;

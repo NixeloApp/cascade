@@ -66,6 +66,7 @@ export const issuesFields = {
   storyPoints: v.optional(v.number()),
   labels: v.array(v.string()),
   sprintId: v.optional(v.id("sprints")),
+  moduleId: v.optional(v.id("modules")), // Feature-based grouping (parallel to sprints)
   epicId: v.optional(v.id("issues")),
   parentId: v.optional(v.id("issues")), // For sub-tasks
   linkedDocuments: v.array(v.id("documents")),
