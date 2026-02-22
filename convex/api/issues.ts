@@ -203,6 +203,17 @@ async function handleList(ctx: ActionCtx, request: Request, auth: ApiAuthContext
     return createErrorResponse(400, "projectId required");
   }
 
+  // Check IP restrictions
+  const clientIp = getClientIp(request);
+  const isAllowed = await ctx.runQuery(internal.ipRestrictions.checkProjectIpAllowed, {
+    projectId,
+    clientIp,
+  });
+
+  if (!isAllowed) {
+    return createErrorResponse(403, "IP address not allowed");
+  }
+
   // 1. Check if the *key* allows this project (Key Scope)
   if (!verifyProjectAccess(auth, projectId)) {
     return createErrorResponse(403, "Not authorized for this project");

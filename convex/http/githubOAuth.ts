@@ -40,6 +40,28 @@ const getGitHubOAuthConfig = () => {
 
 /**
  * Initiate GitHub OAuth flow handler
+ *
+ * Starts the OAuth 2.0 flow by redirecting the user to GitHub's authorization page.
+ *
+ * Security:
+ * - Generates a random `state` token using `crypto.randomUUID()` to prevent CSRF attacks.
+ * - Sets an `HttpOnly`, `Secure`, `SameSite=Lax` cookie `github-oauth-state` containing the state token.
+ *   - `Path=/` ensures it's available for the callback.
+ *   - `Max-Age=3600` ensures it expires after 1 hour if the flow is abandoned.
+ *
+ * Flow:
+ * 1. Checks if GitHub OAuth is configured (client ID/secret).
+ * 2. Generates state token.
+ * 3. Constructs GitHub authorization URL with:
+ *    - `client_id`: App identifier
+ *    - `redirect_uri`: Callback URL (`/github/callback`)
+ *    - `scope`: Requested permissions (`repo`, `read:user`, `user:email`)
+ *    - `state`: CSRF token
+ * 4. Returns a 302 Redirect response to the authorization URL.
+ *
+ * @param _ctx - Convex action context (unused)
+ * @param _request - The incoming HTTP request
+ * @returns A Promise resolving to a Redirect Response
  */
 export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   if (!isGitHubOAuthConfigured()) {
@@ -87,6 +109,30 @@ export const initiateAuth = httpAction(initiateAuthHandler);
 
 /**
  * Handle OAuth callback from GitHub handler
+ *
+ * Processes the redirect from GitHub, exchanging the authorization code for an access token.
+ *
+ * Security:
+ * - Implements "Double Submit Cookie" pattern for CSRF protection.
+ * - Validates that the `state` query parameter matches the `github-oauth-state` cookie.
+ * - Uses `constantTimeEqual` for state comparison to prevent timing attacks.
+ * - Clears the state cookie (`Max-Age=0`) immediately after use to prevent reuse.
+ *
+ * Flow:
+ * 1. Parses `code`, `state`, and `error` from query parameters.
+ * 2. If `error` is present (user denied access), returns an error page.
+ * 3. Validates the `state` against the cookie.
+ * 4. Exchanges the `code` for an access token using GitHub's `/login/oauth/access_token` endpoint.
+ * 5. Fetches the authenticated user's profile from GitHub API (`/user`) to get the ID and username.
+ * 6. Returns an HTML success page that:
+ *    - Uses `window.opener.postMessage` to send the connection data back to the main application window.
+ *    - Automatically closes the popup window after a short delay.
+ *
+ * @param _ctx - Convex action context (unused)
+ * @param request - The incoming HTTP request containing query params and cookies
+ * @returns A Promise resolving to an HTML Response (success or error)
+ * @throws {ConvexError} "oauth" - If code exchange fails or state is invalid.
+ * @throws {ConvexError} "github" - If user info fetch fails.
  */
 export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
   const url = new URL(request.url);
@@ -325,6 +371,23 @@ export const handleCallback = httpAction(handleCallbackHandler);
 
 /**
  * List user's GitHub repositories handler
+ *
+ * Fetches the list of repositories for the connected GitHub user.
+ *
+ * Requirements:
+ * - User must be authenticated in the Convex app.
+ * - User must have previously connected their GitHub account via the OAuth flow.
+ *
+ * Flow:
+ * 1. Checks if the user has a stored GitHub connection record.
+ * 2. Retrieves the encrypted GitHub access token from the database.
+ * 3. Decrypts the token using the internal encryption helper.
+ * 4. Calls the GitHub API (`/user/repos`) to fetch repositories (sorted by updated time).
+ * 5. Transforms the GitHub API response into a simplified format for the frontend.
+ *
+ * @param ctx - Convex action context
+ * @param _request - The incoming HTTP request (unused)
+ * @returns A JSON Response containing the list of repositories or an error message.
  */
 export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
   try {

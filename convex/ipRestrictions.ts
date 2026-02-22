@@ -13,7 +13,7 @@
 
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { internalQuery, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, validation } from "./lib/errors";
@@ -419,5 +419,25 @@ export const checkCurrentIp = authenticatedQuery({
 
     const allowed = await isIpAllowed(ctx, args.organizationId, args.clientIp);
     return { allowed, restrictionsEnabled: true };
+  },
+});
+
+/**
+ * Internal query to check if an IP is allowed for a project.
+ * Used by HTTP actions where we have the IP but need to check DB state.
+ */
+export const checkProjectIpAllowed = internalQuery({
+  args: {
+    projectId: v.id("projects"),
+    clientIp: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const project = await ctx.db.get(args.projectId);
+    // If project doesn't exist, we can't check org rules.
+    // The caller (listIssues) will likely fail later with 404/403 anyway.
+    // Returning true avoids confusing 403 for non-existent projects.
+    if (!project) return true;
+
+    return await isIpAllowed(ctx, project.organizationId, args.clientIp);
   },
 });
