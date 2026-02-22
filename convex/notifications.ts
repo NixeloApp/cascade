@@ -8,7 +8,7 @@ import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
 import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
-import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { softDeleteFields } from "./lib/softDeleteHelpers";
 
 /** Get paginated notifications for the current user, optionally filtered to unread only. */
 export const list = authenticatedQuery({
@@ -31,10 +31,10 @@ export const list = authenticatedQuery({
               q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
             );
         }
+        // Optimization: Use by_user_deleted index to avoid scanning deleted notifications
         return db
           .query("notifications")
-          .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-          .filter(notDeleted);
+          .withIndex("by_user_deleted", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true));
       },
     });
 

@@ -800,10 +800,7 @@ export const bulkDelete = authenticatedMutation({
         }
 
         // Soft delete issue
-        await ctx.db.patch(issue._id, {
-          ...softDeleteFields(ctx.userId),
-          updatedAt: Date.now(),
-        });
+        await ctx.db.patch(issue._id, softDeleteFields(ctx.userId));
 
         // Log activity
         await ctx.db.insert("issueActivity", {
