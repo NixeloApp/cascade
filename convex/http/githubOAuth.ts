@@ -202,7 +202,11 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     };
 
     try {
-      tokens = await fetchJSON("https://github.com/login/oauth/access_token", {
+      tokens = await fetchJSON<{
+        access_token: string;
+        error?: string;
+        error_description?: string;
+      }>("https://github.com/login/oauth/access_token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -229,7 +233,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     // Get user info from GitHub
     let userInfo: { id: number; login: string };
     try {
-      userInfo = await fetchJSON("https://api.github.com/user", {
+      userInfo = await fetchJSON<{ id: number; login: string }>("https://api.github.com/user", {
         headers: {
           Authorization: `Bearer ${access_token}`,
           Accept: "application/vnd.github.v3+json",
@@ -430,7 +434,16 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
     }[];
 
     try {
-      repos = await fetchJSON(
+      repos = await fetchJSON<
+        {
+          id: number;
+          name: string;
+          full_name: string;
+          owner: { login: string };
+          private: boolean;
+          description: string | null;
+        }[]
+      >(
         "https://api.github.com/user/repos?sort=updated&per_page=100",
         {
           headers: {
