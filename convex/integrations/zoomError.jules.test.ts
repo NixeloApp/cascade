@@ -63,7 +63,7 @@ describe("Zoom Integration Error Handling", () => {
 
     // We expect the function to throw the user-friendly error we added
     await expect(() =>
-      exchangeCodeForToken(
+      (exchangeCodeForToken as any)(
         {} as any, // ctx
         { code: "test-code", redirectUri: "test-redirect" }, // args
       ),
@@ -91,7 +91,7 @@ describe("Zoom Integration Error Handling", () => {
     process.env.ZOOM_CLIENT_SECRET = "test-client-secret";
 
     await expect(() =>
-      exchangeCodeForToken(
+      (exchangeCodeForToken as any)(
         {} as any, // ctx
         { code: "test-code", redirectUri: "test-redirect" }, // args
       ),
