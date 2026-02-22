@@ -331,16 +331,25 @@ export const deliverTestWebhook = internalAction({
       requestPayload,
     });
 
-    const result = await deliverWebhook(webhook.url, requestPayload, "ping", webhook.secret);
+    try {
+      const result = await deliverWebhook(webhook.url, requestPayload, "ping", webhook.secret);
 
-    // Update execution log
-    await ctx.runMutation(internal.webhooks.updateExecution, {
-      id: executionId,
-      status: result.status,
-      responseStatus: result.responseStatus,
-      responseBody: result.responseBody,
-      error: result.error,
-    });
+      // Update execution log
+      await ctx.runMutation(internal.webhooks.updateExecution, {
+        id: executionId,
+        status: result.status,
+        responseStatus: result.responseStatus,
+        responseBody: result.responseBody,
+        error: result.error,
+      });
+    } catch (error) {
+      // Handle unexpected crashes during delivery
+      await ctx.runMutation(internal.webhooks.updateExecution, {
+        id: executionId,
+        status: "failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 });
 
@@ -360,9 +369,6 @@ export const createExecution = internalMutation({
     requestPayload: v.string(),
   },
   handler: async (ctx, args) => {
-    if (isTest) {
-      return "webhookExecutions:00000000000000000000000000000000" as Id<"webhookExecutions">;
-    }
     return await ctx.db.insert("webhookExecutions", {
       webhookId: args.webhookId,
       event: args.event,
@@ -373,7 +379,7 @@ export const createExecution = internalMutation({
   },
 });
 
-/** Update an execution log with delivery status, response data, and error information. Skipped in test mode. */
+/** Update an execution log with delivery status, response data, and error information. */
 export const updateExecution = internalMutation({
   args: {
     id: v.id("webhookExecutions"),
@@ -383,7 +389,6 @@ export const updateExecution = internalMutation({
     error: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    if (isTest) return;
     await ctx.db.patch(args.id, {
       status: args.status,
       responseStatus: args.responseStatus,
@@ -437,21 +442,30 @@ export const retryWebhookDelivery = internalAction({
     });
     if (!webhook) return;
 
-    const result = await deliverWebhook(
-      webhook.url,
-      execution.requestPayload,
-      execution.event,
-      webhook.secret,
-    );
+    try {
+      const result = await deliverWebhook(
+        webhook.url,
+        execution.requestPayload,
+        execution.event,
+        webhook.secret,
+      );
 
-    // Update execution log
-    await ctx.runMutation(internal.webhooks.incrementExecutionAttempt, {
-      id: args.executionId,
-      status: result.status,
-      responseStatus: result.responseStatus,
-      responseBody: result.responseBody,
-      error: result.error,
-    });
+      // Update execution log
+      await ctx.runMutation(internal.webhooks.incrementExecutionAttempt, {
+        id: args.executionId,
+        status: result.status,
+        responseStatus: result.responseStatus,
+        responseBody: result.responseBody,
+        error: result.error,
+      });
+    } catch (error) {
+      // Handle unexpected crashes during delivery
+      await ctx.runMutation(internal.webhooks.incrementExecutionAttempt, {
+        id: args.executionId,
+        status: "failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 });
 
@@ -473,7 +487,6 @@ export const incrementExecutionAttempt = internalMutation({
     error: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    if (isTest) return;
     const execution = await ctx.db.get(args.id);
     if (!execution) return;
 
