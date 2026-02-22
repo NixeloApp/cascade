@@ -1,9 +1,47 @@
+import { components } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import { conflict, notFound, validation } from "../lib/errors";
+import { conflict, notFound, rateLimited, validation } from "../lib/errors";
 import { notDeleted } from "../lib/softDeleteHelpers";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
+
+// Helper: Check rate limit
+export async function checkRateLimit(
+  ctx: MutationCtx,
+  name: string,
+  config: {
+    rate: number;
+    period: number;
+    capacity: number;
+  },
+) {
+  if (process.env.IS_TEST_ENV) return;
+
+  const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+    name,
+    config: {
+      kind: "token bucket",
+      rate: config.rate,
+      period: config.period,
+      capacity: config.capacity,
+    },
+  });
+
+  if (!rateLimitResult.ok) {
+    throw rateLimited(rateLimitResult.retryAfter);
+  }
+
+  await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+    name,
+    config: {
+      kind: "token bucket",
+      rate: config.rate,
+      period: config.period,
+      capacity: config.capacity,
+    },
+  });
+}
 
 // Helper: Combined searchable content for issues
 export function getSearchContent(title: string, description?: string) {
