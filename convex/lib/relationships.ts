@@ -80,6 +80,13 @@ export const RELATIONSHIPS: Relationship[] = [
     index: "by_issue",
     onDelete: "cascade", // Delete time entries when issue deleted
   },
+  {
+    parent: "issues",
+    child: "customFieldValues",
+    foreignKey: "issueId",
+    index: "by_issue",
+    onDelete: "cascade", // Delete custom field values when issue deleted
+  },
 
   // ============================================================================
   // PROJECT RELATIONSHIPS
@@ -233,6 +240,17 @@ export const RELATIONSHIPS: Relationship[] = [
     foreignKey: "webhookId",
     index: "by_webhook",
     onDelete: "cascade", // Delete executions when webhook deleted
+  },
+
+  // ============================================================================
+  // COMMENT RELATIONSHIPS
+  // ============================================================================
+  {
+    parent: "issueComments",
+    child: "issueCommentReactions",
+    foreignKey: "commentId",
+    index: "by_comment",
+    onDelete: "cascade", // Delete reactions when comment deleted
   },
 
   // ============================================================================
