@@ -3,8 +3,9 @@ import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
-import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
+import { getUserName } from "./lib/userUtils";
 
 /** Maximum issue count to compute for a project list view */
 const MAX_ISSUE_COUNT = 1000;
@@ -693,6 +694,19 @@ export const addProjectMember = projectAdminMutation({
       .first();
 
     if (!user) throw notFound("user");
+
+    // Check organization membership
+    // Prevent "Ghost Membership": User must be a member of the organization to join the project
+    const orgMembership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_organization_user", (q) =>
+        q.eq("organizationId", ctx.project.organizationId).eq("userId", user._id),
+      )
+      .first();
+
+    if (!orgMembership) {
+      throw validation("userEmail", "User is not a member of the organization");
+    }
 
     // Check if already a member
     const existingMembership = await ctx.db
