@@ -9,6 +9,7 @@ import {
 } from "../lib/env";
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { escapeHtml, escapeScriptJson } from "../lib/html";
 
 /** Generic error page HTML - no internal details exposed */
 const errorPageHtml = `
@@ -101,38 +102,6 @@ function handleTestCode(
 }
 
 /**
- * Type guard for record-like objects
- */
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-/**
- * Extracts a meaningful error message from a Response object
- */
-const extractErrorMessage = async (response: Response, fallback: string): Promise<string> => {
-  try {
-    const text = await response.text();
-    try {
-      const json: unknown = JSON.parse(text);
-      if (typeof json === "string") return json;
-      if (isRecord(json)) {
-        if (typeof json.error_description === "string") return json.error_description;
-        if (typeof json.error === "string") return json.error;
-        if (isRecord(json.error) && typeof json.error.message === "string") {
-          return json.error.message;
-        }
-        if (typeof json.message === "string") return json.message;
-      }
-      return fallback;
-    } catch {
-      return text || fallback;
-    }
-  } catch {
-    return fallback;
-  }
-};
-
-/**
  * Google OAuth Integration
  *
  * Handles OAuth flow for Google Calendar integration
@@ -210,6 +179,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   }
 
   const config = getGoogleOAuthConfig();
+  const state = crypto.randomUUID();
 
   // Build OAuth authorization URL
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -219,6 +189,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   authUrl.searchParams.set("scope", config.scopes);
   authUrl.searchParams.set("access_type", "offline"); // Get refresh token
   authUrl.searchParams.set("prompt", "consent"); // Force consent to get refresh token
+  authUrl.searchParams.set("state", state);
 
   // Redirect user to Google OAuth page
   return Promise.resolve(
@@ -226,6 +197,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
       status: 302,
       headers: {
         Location: authUrl.toString(),
+        "Set-Cookie": `google-oauth-state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
       },
     }),
   );
@@ -237,129 +209,126 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
  */
 export const initiateAuth = httpAction(initiateAuthHandler);
 
+async function exchangeCodeForTokens(code: string) {
+  const config = getGoogleOAuthConfig();
+
+  const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      code,
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      redirect_uri: config.redirectUri,
+      grant_type: "authorization_code",
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    const _errorData = await tokenResponse.text();
+    throw validation("oauth", "Failed to exchange Google authorization code");
+  }
+
+  const tokens = await tokenResponse.json();
+  const { access_token, refresh_token, expires_in } = tokens;
+
+  // Google may omit refresh_token even with access_type=offline
+  // This happens if user already granted access before
+  if (!refresh_token) {
+    throw validation(
+      "oauth",
+      "No refresh token received. Please revoke app access in Google and try again.",
+    );
+  }
+
+  // Get user info from Google
+  const userInfoResponse = await fetchWithTimeout("https://www.googleapis.com/oauth2/v2/userinfo", {
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+  });
+
+  if (!userInfoResponse.ok) {
+    throw validation("oauth", "Failed to fetch user info from Google");
+  }
+
+  const userInfo = await userInfoResponse.json();
+  if (!userInfo.email || typeof userInfo.email !== "string") {
+    throw validation("oauth", "Invalid email received from Google");
+  }
+
+  return {
+    email: userInfo.email,
+    accessToken: access_token,
+    refreshToken: refresh_token,
+    expiresAt: expires_in ? Date.now() + expires_in * 1000 : undefined,
+  };
+}
+
 /**
- * Handle OAuth callback from Google handler
+ * Helper to validate request parameters and state
  */
-export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
-  const url = new URL(request.url);
+function validateCallbackParams(
+  url: URL,
+  request: Request,
+): { success: false; response: Response } | { success: true; code: string } {
   const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
 
   if (error) {
-    // User denied access or error occurred - don't expose error details
-    return new Response(errorPageHtml, {
-      status: 400,
-      headers: { "Content-Type": "text/html" },
-    });
-  }
-
-  if (!code) {
-    return new Response("Missing authorization code", { status: 400 });
-  }
-
-  let email: string;
-  let accessToken: string;
-  let refreshToken: string;
-  let expiresAt: number | undefined;
-
-  // TEST_* code handling for E2E tests - tests the real callback code path
-  if (code.startsWith("TEST_")) {
-    const testResult = handleTestCode(code, request);
-    if (!testResult) {
-      // Auth failed - show generic error (details logged server-side)
-      return new Response(errorPageHtml, {
-        status: 403,
-        headers: { "Content-Type": "text/html" },
-      });
-    }
-    email = testResult.email;
-    accessToken = testResult.accessToken;
-    refreshToken = testResult.refreshToken;
-    expiresAt = testResult.expiresAt;
-  } else {
-    // Real OAuth flow - exchange code with Google
-    try {
-      const config = getGoogleOAuthConfig();
-
-      const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
-        method: "POST",
+    return {
+      success: false,
+      response: new Response(errorPageHtml, {
+        status: 400,
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "text/html",
+          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
         },
-        body: new URLSearchParams({
-          code,
-          client_id: config.clientId,
-          client_secret: config.clientSecret,
-          redirect_uri: config.redirectUri,
-          grant_type: "authorization_code",
-        }),
-      });
-
-      if (!tokenResponse.ok) {
-        const errorMessage = await extractErrorMessage(
-          tokenResponse,
-          "Failed to exchange Google authorization code",
-        );
-        throw validation("oauth", errorMessage);
-      }
-
-      const tokens = await tokenResponse.json();
-      const { access_token, refresh_token, expires_in } = tokens;
-
-      // Google may omit refresh_token even with access_type=offline
-      // This happens if user already granted access before
-      if (!refresh_token) {
-        throw validation(
-          "oauth",
-          "No refresh token received. Please revoke app access in Google and try again.",
-        );
-      }
-
-      // Get user info from Google
-      const userInfoResponse = await fetchWithTimeout(
-        "https://www.googleapis.com/oauth2/v2/userinfo",
-        {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-        },
-      );
-
-      if (!userInfoResponse.ok) {
-        const errorMessage = await extractErrorMessage(
-          userInfoResponse,
-          "Failed to fetch user info from Google",
-        );
-        throw validation("oauth", errorMessage);
-      }
-
-      const userInfo = await userInfoResponse.json();
-      if (!userInfo.email || typeof userInfo.email !== "string") {
-        throw validation("oauth", "Invalid email received from Google");
-      }
-
-      email = userInfo.email;
-      accessToken = access_token;
-      refreshToken = refresh_token;
-      expiresAt = expires_in ? Date.now() + expires_in * 1000 : undefined;
-    } catch (_error) {
-      return new Response(errorPageHtml, {
-        status: 500,
-        headers: { "Content-Type": "text/html" },
-      });
-    }
+      }),
+    };
   }
 
-  // SAME code path from here - tests real HTML, JS, postMessage
+  // Validate state
+  const cookieHeader = request.headers.get("Cookie");
+  const storedState = cookieHeader
+    ?.split(";")
+    .find((c) => c.trim().startsWith("google-oauth-state="))
+    ?.split("=")[1];
+
+  if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
+    return {
+      success: false,
+      response: new Response("Invalid state or missing authorization code", {
+        status: 400,
+        headers: {
+          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
+      }),
+    };
+  }
+
+  return { success: true, code };
+}
+
+/**
+ * Helper to generate success HTML response
+ */
+function generateSuccessResponse(result: {
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number | undefined;
+}) {
   const connectionData = {
-    providerAccountId: email,
-    accessToken,
-    refreshToken,
-    expiresAt,
+    providerAccountId: result.email,
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+    expiresAt: result.expiresAt,
   };
 
-  // Return success page that passes tokens to opener window
-  // The frontend will save these via the authenticated connectGoogle mutation
   return new Response(
     `
     <!DOCTYPE html>
@@ -377,7 +346,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         <div class="success">
           <h1>Connected Successfully</h1>
           <p>Your Google Calendar has been connected to Nixelo.</p>
-          <p><strong>${email}</strong></p>
+          <p><strong>${escapeHtml(result.email)}</strong></p>
           <button onclick="window.close()">Close Window</button>
           <script>
             // Pass tokens to opener window for saving via authenticated mutation
@@ -386,7 +355,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
               const targetOrigin = window.opener.location.origin;
               window.opener.postMessage({
                 type: 'google-calendar-connected',
-                data: ${JSON.stringify(connectionData)}
+                data: ${escapeScriptJson(connectionData)}
               }, targetOrigin);
             }
             // Auto-close after 3 seconds
@@ -401,9 +370,67 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     `,
     {
       status: 200,
-      headers: { "Content-Type": "text/html" },
+      headers: {
+        "Content-Type": "text/html",
+        "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      },
     },
   );
+}
+
+/**
+ * Handle OAuth callback from Google handler
+ */
+export const handleCallbackHandler = async (
+  _ctx: ActionCtx,
+  request: Request,
+): Promise<Response> => {
+  const url = new URL(request.url);
+  const validationResult = validateCallbackParams(url, request);
+
+  if (!validationResult.success) {
+    return validationResult.response;
+  }
+
+  const code = validationResult.code as string;
+
+  let result: {
+    email: string;
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number | undefined;
+  };
+
+  // TEST_* code handling for E2E tests - tests the real callback code path
+  if (code.startsWith("TEST_")) {
+    const testResult = handleTestCode(code, request);
+    if (!testResult) {
+      // Auth failed - show generic error (details logged server-side)
+      return new Response(errorPageHtml, {
+        status: 403,
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
+      });
+    }
+    result = testResult;
+  } else {
+    // Real OAuth flow - exchange code with Google
+    try {
+      result = await exchangeCodeForTokens(code);
+    } catch (_error) {
+      return new Response(errorPageHtml, {
+        status: 500,
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        },
+      });
+    }
+  }
+
+  return generateSuccessResponse(result);
 };
 
 /**
@@ -458,11 +485,7 @@ export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
     );
 
     if (!eventsResponse.ok) {
-      const errorMessage = await extractErrorMessage(
-        eventsResponse,
-        "Failed to fetch Google Calendar events",
-      );
-      throw validation("googleCalendar", errorMessage);
+      throw validation("googleCalendar", "Failed to fetch Google Calendar events");
     }
 
     const data = await eventsResponse.json();

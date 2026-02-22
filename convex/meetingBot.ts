@@ -88,39 +88,14 @@ export const listRecordings = authenticatedQuery({
       // Security: Ensure user has access to the project
       await assertCanAccessProject(ctx, args.projectId, ctx.userId);
 
-      // Parallel fetch: My recordings in project
-      const myRecordingsPromise = ctx.db
+      recordings = await ctx.db
         .query("meetingRecordings")
-        .withIndex("by_project_creator", (q) =>
-          q.eq("projectId", args.projectId).eq("createdBy", ctx.userId),
-        )
+        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
         .order("desc")
         .take(limit);
 
-      // Parallel fetch: Public recordings in project
-      const publicRecordingsPromise = ctx.db
-        .query("meetingRecordings")
-        .withIndex("by_project_public", (q) =>
-          q.eq("projectId", args.projectId).eq("isPublic", true),
-        )
-        .order("desc")
-        .take(limit);
-
-      const [myRecordings, publicRecordings] = await Promise.all([
-        myRecordingsPromise,
-        publicRecordingsPromise,
-      ]);
-
-      // Merge, deduplicate, and sort
-      const mergedMap = new Map<string, Doc<"meetingRecordings">>();
-      for (const r of myRecordings) mergedMap.set(r._id, r);
-      for (const r of publicRecordings) mergedMap.set(r._id, r);
-
-      recordings = Array.from(mergedMap.values()).sort((a, b) => b._creationTime - a._creationTime);
-
-      if (recordings.length > limit) {
-        recordings = recordings.slice(0, limit);
-      }
+      // Security: Filter out private recordings from other users
+      recordings = recordings.filter((r) => r.isPublic || r.createdBy === ctx.userId);
     } else {
       recordings = await ctx.db
         .query("meetingRecordings")
@@ -774,11 +749,8 @@ export const createIssueFromActionItem = authenticatedMutation({
     const recording = await ctx.db.get(summary.recordingId);
     if (!recording) throw notFound("recording", summary.recordingId);
 
-    // Security Check: ensure user has write access to the recording/summary
-    if (recording.projectId) {
-      await assertCanEditProject(ctx, recording.projectId, ctx.userId);
-    } else if (recording.createdBy !== ctx.userId) {
-      throw forbidden(undefined, "Not authorized to modify this recording");
+    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+      throw forbidden(undefined, "Not authorized to access this recording");
     }
 
     const actionItem = summary.actionItems[args.actionItemIndex];

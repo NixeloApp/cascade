@@ -139,6 +139,8 @@ export const update = authenticatedMutation({
     if (args.description !== undefined) updates.description = args.description ?? undefined;
 
     await ctx.db.patch(args.id, updates);
+
+    return { success: true };
   },
 });
 
@@ -167,6 +169,8 @@ export const remove = authenticatedMutation({
     );
 
     await ctx.db.delete(args.id);
+
+    return { success: true };
   },
 });
 
@@ -195,6 +199,8 @@ export const reorder = projectEditorMutation({
     await Promise.all(
       args.groupIds.map((id, index) => ctx.db.patch(id, { displayOrder: index + 1 })),
     );
+
+    return { success: true };
   },
 });
 
@@ -237,6 +243,8 @@ export const moveLabel = projectEditorMutation({
       groupId: targetGroupId,
       displayOrder: maxOrder + 1,
     });
+
+    return { success: true };
   },
 });
 
@@ -270,5 +278,7 @@ export const reorderLabels = projectEditorMutation({
     await Promise.all(
       args.labelIds.map((id, index) => ctx.db.patch(id, { displayOrder: index + 1 })),
     );
+
+    return { success: true };
   },
 });
