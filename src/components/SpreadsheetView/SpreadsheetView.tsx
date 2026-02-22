@@ -131,19 +131,29 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
   // Issue update handler - extract only primitive fields the mutation accepts
   const handleUpdateIssue = useCallback(
     async (issueId: Id<"issues">, data: Partial<EnrichedIssue>) => {
-      // Extract only the fields that the update mutation accepts
+      // Fields the mutation accepts (excluding labels which needs transformation)
+      const primitiveFields = [
+        "title",
+        "description",
+        "priority",
+        "status",
+        "type",
+        "assigneeId",
+        "storyPoints",
+        "startDate",
+        "dueDate",
+      ] as const;
+
+      // Extract primitive fields that are defined
       const updateData: Record<string, unknown> = {};
-      if (data.title !== undefined) updateData.title = data.title;
-      if (data.description !== undefined) updateData.description = data.description;
-      if (data.priority !== undefined) updateData.priority = data.priority;
-      if (data.status !== undefined) updateData.status = data.status;
-      if (data.type !== undefined) updateData.type = data.type;
-      if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId;
-      if (data.storyPoints !== undefined) updateData.storyPoints = data.storyPoints;
-      if (data.startDate !== undefined) updateData.startDate = data.startDate;
-      if (data.dueDate !== undefined) updateData.dueDate = data.dueDate;
+      for (const field of primitiveFields) {
+        if (data[field] !== undefined) {
+          updateData[field] = data[field];
+        }
+      }
+
+      // Handle labels transformation separately
       if (data.labels !== undefined) {
-        // Convert LabelInfo[] to string[] if needed
         updateData.labels = data.labels.map((l) => (typeof l === "string" ? l : l.name));
       }
 

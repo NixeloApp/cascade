@@ -316,59 +316,50 @@ export const performTokenHealthCheck = internalAction({
       refreshFailedCount: 0,
     };
 
+    // Helper to attempt token refresh and update stats
+    const tryRefreshToken = async (
+      connectionId: (typeof connections)[0]["_id"],
+      statusKey: "expiringSoonCount" | "expiredCount",
+    ): Promise<void> => {
+      const refreshResult = await ctx.runAction(internal.oauthTokenMonitor.refreshConnectionToken, {
+        connectionId,
+      });
+      if (refreshResult.success) {
+        stats.refreshedCount++;
+        stats.healthyCount++;
+        stats[statusKey]--;
+      } else {
+        stats.refreshFailedCount++;
+        if (statusKey === "expiringSoonCount") {
+          console.warn(
+            `[Token Monitor] Failed to refresh token for connection ${connectionId}: ${refreshResult.error}`,
+          );
+        }
+      }
+    };
+
     // Check each connection's token health
     for (const connection of connections) {
       const health = await ctx.runQuery(internal.oauthTokenMonitor.checkConnectionTokenHealth, {
         connectionId: connection._id,
       });
 
-      switch (health.status) {
-        case "healthy":
-          stats.healthyCount++;
-          break;
-        case "expiring_soon":
-          stats.expiringSoonCount++;
-          // Auto-refresh expiring tokens
-          if (autoRefresh && health.needsRefresh) {
-            const refreshResult = await ctx.runAction(
-              internal.oauthTokenMonitor.refreshConnectionToken,
-              { connectionId: connection._id },
-            );
-            if (refreshResult.success) {
-              stats.refreshedCount++;
-              stats.healthyCount++; // Now healthy after refresh
-              stats.expiringSoonCount--; // No longer expiring
-            } else {
-              stats.refreshFailedCount++;
-              console.warn(
-                `[Token Monitor] Failed to refresh token for connection ${connection._id}: ${refreshResult.error}`,
-              );
-            }
-          }
-          break;
-        case "expired":
-          stats.expiredCount++;
-          // Try to refresh expired tokens if we have a refresh token
-          if (autoRefresh && health.needsRefresh) {
-            const refreshResult = await ctx.runAction(
-              internal.oauthTokenMonitor.refreshConnectionToken,
-              { connectionId: connection._id },
-            );
-            if (refreshResult.success) {
-              stats.refreshedCount++;
-              stats.healthyCount++;
-              stats.expiredCount--;
-            } else {
-              stats.refreshFailedCount++;
-            }
-          }
-          break;
-        case "invalid":
-          stats.invalidCount++;
-          break;
-        case "missing":
-          stats.missingCount++;
-          break;
+      // Update status counts
+      const statusCountMap: Record<TokenStatus, keyof typeof stats> = {
+        healthy: "healthyCount",
+        expiring_soon: "expiringSoonCount",
+        expired: "expiredCount",
+        invalid: "invalidCount",
+        missing: "missingCount",
+      };
+      stats[statusCountMap[health.status]]++;
+
+      // Auto-refresh expiring or expired tokens
+      const needsAutoRefresh = autoRefresh && health.needsRefresh;
+      if (health.status === "expiring_soon" && needsAutoRefresh) {
+        await tryRefreshToken(connection._id, "expiringSoonCount");
+      } else if (health.status === "expired" && needsAutoRefresh) {
+        await tryRefreshToken(connection._id, "expiredCount");
       }
     }
 

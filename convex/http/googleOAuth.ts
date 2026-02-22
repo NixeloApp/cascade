@@ -69,10 +69,15 @@ function validateE2EApiKey(request: Request): boolean {
  *
  * Returns null if auth fails (caller should show generic error page)
  */
-function handleTestCode(
-  code: string,
-  request: Request,
-): { email: string; accessToken: string; refreshToken: string; expiresAt: number } | null {
+/** OAuth token data returned from token exchange */
+interface OAuthTokenData {
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number | undefined;
+}
+
+function handleTestCode(code: string, request: Request): OAuthTokenData | null {
   // Validate E2E API key - returns false if invalid (already logged)
   if (!validateE2EApiKey(request)) {
     return null;
@@ -98,6 +103,66 @@ function handleTestCode(
     refreshToken: `mock_refresh_${scenario}_${timestamp}`,
     expiresAt: timestamp + 3600 * 1000, // 1 hour
   };
+}
+
+/**
+ * Exchange authorization code for tokens with Google OAuth
+ * Returns null on error (caller should show generic error page)
+ */
+async function exchangeCodeForTokens(code: string): Promise<OAuthTokenData | null> {
+  try {
+    const config = getGoogleOAuthConfig();
+
+    const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        redirect_uri: config.redirectUri,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      return null;
+    }
+
+    const tokens = await tokenResponse.json();
+    const { access_token, refresh_token, expires_in } = tokens;
+
+    // Google may omit refresh_token if user already granted access
+    if (!refresh_token) {
+      return null;
+    }
+
+    // Get user info from Google
+    const userInfoResponse = await fetchWithTimeout(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+      },
+    );
+
+    if (!userInfoResponse.ok) {
+      return null;
+    }
+
+    const userInfo = await userInfoResponse.json();
+    if (!userInfo.email || typeof userInfo.email !== "string") {
+      return null;
+    }
+
+    return {
+      email: userInfo.email,
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expiresAt: expires_in ? Date.now() + expires_in * 1000 : undefined,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -214,102 +279,24 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
   const error = url.searchParams.get("error");
 
   if (error) {
-    // User denied access or error occurred - don't expose error details
-    return new Response(errorPageHtml, {
-      status: 400,
-      headers: { "Content-Type": "text/html" },
-    });
+    return new Response(errorPageHtml, { status: 400, headers: { "Content-Type": "text/html" } });
   }
 
   if (!code) {
     return new Response("Missing authorization code", { status: 400 });
   }
 
-  let email: string;
-  let accessToken: string;
-  let refreshToken: string;
-  let expiresAt: number | undefined;
+  // Get tokens either from test handler or real OAuth exchange
+  const tokenData = code.startsWith("TEST_")
+    ? handleTestCode(code, request)
+    : await exchangeCodeForTokens(code);
 
-  // TEST_* code handling for E2E tests - tests the real callback code path
-  if (code.startsWith("TEST_")) {
-    const testResult = handleTestCode(code, request);
-    if (!testResult) {
-      // Auth failed - show generic error (details logged server-side)
-      return new Response(errorPageHtml, {
-        status: 403,
-        headers: { "Content-Type": "text/html" },
-      });
-    }
-    email = testResult.email;
-    accessToken = testResult.accessToken;
-    refreshToken = testResult.refreshToken;
-    expiresAt = testResult.expiresAt;
-  } else {
-    // Real OAuth flow - exchange code with Google
-    try {
-      const config = getGoogleOAuthConfig();
-
-      const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          code,
-          client_id: config.clientId,
-          client_secret: config.clientSecret,
-          redirect_uri: config.redirectUri,
-          grant_type: "authorization_code",
-        }),
-      });
-
-      if (!tokenResponse.ok) {
-        const _errorData = await tokenResponse.text();
-        throw validation("oauth", "Failed to exchange Google authorization code");
-      }
-
-      const tokens = await tokenResponse.json();
-      const { access_token, refresh_token, expires_in } = tokens;
-
-      // Google may omit refresh_token even with access_type=offline
-      // This happens if user already granted access before
-      if (!refresh_token) {
-        throw validation(
-          "oauth",
-          "No refresh token received. Please revoke app access in Google and try again.",
-        );
-      }
-
-      // Get user info from Google
-      const userInfoResponse = await fetchWithTimeout(
-        "https://www.googleapis.com/oauth2/v2/userinfo",
-        {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-        },
-      );
-
-      if (!userInfoResponse.ok) {
-        throw validation("oauth", "Failed to fetch user info from Google");
-      }
-
-      const userInfo = await userInfoResponse.json();
-      if (!userInfo.email || typeof userInfo.email !== "string") {
-        throw validation("oauth", "Invalid email received from Google");
-      }
-
-      email = userInfo.email;
-      accessToken = access_token;
-      refreshToken = refresh_token;
-      expiresAt = expires_in ? Date.now() + expires_in * 1000 : undefined;
-    } catch (_error) {
-      return new Response(errorPageHtml, {
-        status: 500,
-        headers: { "Content-Type": "text/html" },
-      });
-    }
+  if (!tokenData) {
+    const status = code.startsWith("TEST_") ? 403 : 500;
+    return new Response(errorPageHtml, { status, headers: { "Content-Type": "text/html" } });
   }
+
+  const { email, accessToken, refreshToken, expiresAt } = tokenData;
 
   // SAME code path from here - tests real HTML, JS, postMessage
   const connectionData = {
