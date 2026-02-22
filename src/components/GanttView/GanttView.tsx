@@ -219,12 +219,10 @@ export function GanttView({ projectId, sprintId, canEdit = true }: GanttViewProp
 
               {/* Empty state */}
               {ganttIssues.length === 0 && (
-                <Flex
-                  align="center"
-                  justify="center"
-                  className="h-64 text-ui-text-secondary text-sm"
-                >
-                  No issues with start or due dates. Add dates to see them on the timeline.
+                <Flex align="center" justify="center" className="h-64">
+                  <Typography variant="small" color="secondary">
+                    No issues with start or due dates. Add dates to see them on the timeline.
+                  </Typography>
                 </Flex>
               )}
             </div>

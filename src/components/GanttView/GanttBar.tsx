@@ -190,7 +190,7 @@ export function GanttBar({
           <Button
             variant="unstyled"
             aria-label={`Adjust start date for ${issue.key}`}
-            className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-black/10 rounded-l"
+            className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-ui-bg-hover rounded-l"
             onMouseDown={(e) => handleMouseDown(e, "left")}
             onKeyDown={(e) => {
               if (e.key === "ArrowLeft") {
@@ -222,7 +222,7 @@ export function GanttBar({
           <Button
             variant="unstyled"
             aria-label={`Adjust due date for ${issue.key}`}
-            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-black/10 rounded-r"
+            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-ui-bg-hover rounded-r"
             onMouseDown={(e) => handleMouseDown(e, "right")}
             onKeyDown={(e) => {
               if (e.key === "ArrowLeft") {

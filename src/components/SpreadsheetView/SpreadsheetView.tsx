@@ -13,6 +13,7 @@ import { useCallback, useRef, useState } from "react";
 import { BulkOperationsBar } from "@/components/BulkOperationsBar";
 import { CreateIssueModal } from "@/components/CreateIssueModal";
 import { IssueDetailModal } from "@/components/IssueDetailModal";
+import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
@@ -220,8 +221,13 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
         </table>
 
         {allIssues.length === 0 && (
-          <Flex align="center" justify="center" className="h-64">
+          <Flex direction="column" align="center" justify="center" gap="md" className="h-64">
             <Typography color="secondary">No issues found. Create one to get started.</Typography>
+            {canEdit && (
+              <Button variant="primary" onClick={() => setShowCreateIssue(true)}>
+                Create Issue
+              </Button>
+            )}
           </Flex>
         )}
       </FlexItem>

@@ -816,7 +816,7 @@ const applicationTables = {
     bookingPageId: v.optional(v.id("bookingPages")),
     // Trigger configuration
     trigger: workflowTriggers,
-    triggerOffset: v.optional(v.number()), // Minutes before/after (negative = before)
+    triggerOffset: v.optional(v.number()), // Milliseconds before/after (negative = before)
     // Actions to perform
     actions: v.array(
       v.object({
