@@ -8,6 +8,7 @@ Project todos and improvement tracking.
 
 | File | Status | Focus |
 |------|--------|-------|
+| [competitive-parity.md](./competitive-parity.md) | **P1** | Plane/Cal.com feature gaps - copy from source |
 | [agency-mvp.md](./agency-mvp.md) | Active | Agency MVP features |
 | [enterprise.md](./enterprise.md) | Active | Enterprise features |
 | [growth-features.md](./growth-features.md) | Active | Growth features |
@@ -17,32 +18,7 @@ Project todos and improvement tracking.
 | [emoji-overhaul.md](./emoji-overhaul.md) | Active | Emoji system overhaul |
 | [uptime-monitoring.md](./uptime-monitoring.md) | Active | Uptime monitoring |
 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Active | OAuth monitoring |
-
----
-
-## Recursive Improvement (Completed Phases)
-
-> **Progress:** 133/278 (Phase 1-6 complete)
-> **Last Run:** 2026-02-17
-
-| Phase | File | Status | Summary |
-|-------|------|--------|---------|
-| 1 | [PHASE_1_USER_STORIES.md](./PHASE_1_USER_STORIES.md) | ✅ | Feature parity with Plane, Cal.com |
-| 2 | [PHASE_2_EDITOR_POLISH.md](./PHASE_2_EDITOR_POLISH.md) | ✅ | Editor features, markdown |
-| 3 | [PHASE_3_UI_UX_CONSISTENCY.md](./PHASE_3_UI_UX_CONSISTENCY.md) | ✅ | Design system, a11y, error handling |
-| 4 | [PHASE_4_FEATURE_POLISH.md](./PHASE_4_FEATURE_POLISH.md) | ✅ | Keyboard shortcuts, empty states, toasts |
-| 5 | [PHASE_5_QUALITY_DEEP_DIVE.md](./PHASE_5_QUALITY_DEEP_DIVE.md) | ✅ | 342 tests, 153 stories, N+1 fixes |
-| 6 | [PHASE_6_PERFORMANCE_BACKEND.md](./PHASE_6_PERFORMANCE_BACKEND.md) | ✅ | Bundle, Convex tests, CI |
-| 7 | [PHASE_7_CONSISTENCY_ENFORCEMENT.md](./PHASE_7_CONSISTENCY_ENFORCEMENT.md) | 🚧 | CVA expansion, validators, component recipes |
-
----
-
-## How Recursive Improvement Works
-
-1. **Invoke with:** "work on this doc" or "recursive improvement"
-2. **Each run:** Pick the highest-priority incomplete section, research competitors, implement improvements
-3. **Update:** Mark items complete, add findings, increment progress
-4. **Repeat:** Until all sections reach 100%
+| [memoization-cleanup.md](./memoization-cleanup.md) | Active | Remove manual memoization (React Compiler) |
 
 ---
 

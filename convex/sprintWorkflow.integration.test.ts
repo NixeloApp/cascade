@@ -30,7 +30,7 @@ describe("Sprint Workflow Integration", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create a scrum project (required for sprints)
-      const { projectId } = await asUser.mutation(api.projects.createProject, {
+      const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Scrum Project",
         key: "SCRUM",
         organizationId,
@@ -136,7 +136,7 @@ describe("Sprint Workflow Integration", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const { projectId } = await asUser.mutation(api.projects.createProject, {
+      const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Scrum Project",
         key: "MOVE",
         organizationId,
@@ -217,7 +217,7 @@ describe("Sprint Workflow Integration", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const { projectId } = await asUser.mutation(api.projects.createProject, {
+      const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Bulk Ops Project",
         key: "BULK",
         organizationId,
@@ -274,7 +274,7 @@ describe("Sprint Workflow Integration", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const { projectId } = await asUser.mutation(api.projects.createProject, {
+      const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Backlog Project",
         key: "BACK",
         organizationId,
@@ -320,7 +320,7 @@ describe("Sprint Workflow Integration", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const { projectId } = await asUser.mutation(api.projects.createProject, {
+      const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Single Active Sprint",
         key: "SGLE",
         organizationId,
@@ -373,7 +373,7 @@ describe("Sprint Workflow Integration", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const { projectId } = await asUser.mutation(api.projects.createProject, {
+      const projectId = await asUser.mutation(api.projects.createProject, {
         name: "Story Points Project",
         key: "STPT",
         organizationId,
