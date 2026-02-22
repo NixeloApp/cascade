@@ -1,11 +1,9 @@
-
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
-import { Id } from "./_generated/dataModel";
 
 describe("Smart Issue List - Sprint Optimization", () => {
   it("should list issues correctly grouped by status and enriched in a sprint", async () => {
@@ -17,13 +15,13 @@ describe("Smart Issue List - Sprint Optimization", () => {
 
     // Create Sprint
     const sprintId = await t.run(async (ctx) => {
-        return await ctx.db.insert("sprints", {
-            projectId,
-            name: "Test Sprint",
-            status: "active",
-            createdBy: userId,
-            updatedAt: Date.now(),
-        });
+      return await ctx.db.insert("sprints", {
+        projectId,
+        name: "Test Sprint",
+        status: "active",
+        createdBy: userId,
+        updatedAt: Date.now(),
+      });
     });
 
     // Create Todo issues (orders 2, 0, 1) - mixed insertion
@@ -36,58 +34,74 @@ describe("Smart Issue List - Sprint Optimization", () => {
       assigneeId: userId,
     });
     // Manually set order
-    await t.run(async (ctx) => { await ctx.db.patch(todo1, { order: 2 }) });
+    await t.run(async (ctx) => {
+      await ctx.db.patch(todo1, { order: 2 });
+    });
 
     const todo2 = await asUser.mutation(api.issues.create, {
-        projectId,
-        title: "Todo 2 (Order 0)",
-        type: "task",
-        priority: "medium",
-        sprintId,
+      projectId,
+      title: "Todo 2 (Order 0)",
+      type: "task",
+      priority: "medium",
+      sprintId,
     });
-    await t.run(async (ctx) => { await ctx.db.patch(todo2, { order: 0 }) });
+    await t.run(async (ctx) => {
+      await ctx.db.patch(todo2, { order: 0 });
+    });
 
     const todo3 = await asUser.mutation(api.issues.create, {
-        projectId,
-        title: "Todo 3 (Order 1)",
-        type: "task",
-        priority: "medium",
-        sprintId,
+      projectId,
+      title: "Todo 3 (Order 1)",
+      type: "task",
+      priority: "medium",
+      sprintId,
     });
-    await t.run(async (ctx) => { await ctx.db.patch(todo3, { order: 1 }) });
+    await t.run(async (ctx) => {
+      await ctx.db.patch(todo3, { order: 1 });
+    });
 
     // Create Done issues (timestamps T, T+1000, T+2000)
     const now = Date.now();
     const done1 = await asUser.mutation(api.issues.create, {
-        projectId,
-        title: "Done 1 (Oldest)",
-        type: "task",
-        priority: "low",
-        sprintId,
+      projectId,
+      title: "Done 1 (Oldest)",
+      type: "task",
+      priority: "low",
+      sprintId,
     });
-    await t.run(async (ctx) => { await ctx.db.patch(done1, { status: "done", updatedAt: now }) });
+    await t.run(async (ctx) => {
+      await ctx.db.patch(done1, { status: "done", updatedAt: now });
+    });
 
     const done2 = await asUser.mutation(api.issues.create, {
-        projectId,
-        title: "Done 2 (Middle)",
-        type: "task",
-        priority: "low",
-        sprintId,
+      projectId,
+      title: "Done 2 (Middle)",
+      type: "task",
+      priority: "low",
+      sprintId,
     });
-    await t.run(async (ctx) => { await ctx.db.patch(done2, { status: "done", updatedAt: now + 1000 }) });
+    await t.run(async (ctx) => {
+      await ctx.db.patch(done2, { status: "done", updatedAt: now + 1000 });
+    });
 
     const done3 = await asUser.mutation(api.issues.create, {
-        projectId,
-        title: "Done 3 (Newest)",
-        type: "task",
-        priority: "low",
-        sprintId,
+      projectId,
+      title: "Done 3 (Newest)",
+      type: "task",
+      priority: "low",
+      sprintId,
     });
-    await t.run(async (ctx) => { await ctx.db.patch(done3, { status: "done", updatedAt: now + 2000 }) });
+    await t.run(async (ctx) => {
+      await ctx.db.patch(done3, { status: "done", updatedAt: now + 2000 });
+    });
 
     // Fetch smart list with sprintId
     // Pass doneColumnDays big enough to include all done issues
-    const result = await asUser.query(api.issues.listByProjectSmart, { projectId, sprintId, doneColumnDays: 1 });
+    const result = await asUser.query(api.issues.listByProjectSmart, {
+      projectId,
+      sprintId,
+      doneColumnDays: 1,
+    });
 
     expect(result.issuesByStatus).toBeDefined();
 
