@@ -7,7 +7,7 @@
 
 import type { Id } from "@convex/_generated/dataModel";
 import { addDays, differenceInDays, format } from "date-fns";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -36,11 +36,13 @@ export function GanttBar({
   onUpdateDates,
 }: GanttBarProps) {
   const barRef = useRef<HTMLButtonElement>(null);
-  const [isDragging, setIsDragging] = useState<"left" | "right" | "move" | null>(null);
+  const [isDragging, setIsDragging] = useState<"left" | "right" | null>(null);
   const [dragOffset, setDragOffset] = useState({ start: 0, end: 0 });
   // Ref to track current dragOffset for use in event handlers (avoids stale closure)
   const dragOffsetRef = useRef(dragOffset);
   dragOffsetRef.current = dragOffset;
+  // Ref to store cleanup function for event listeners (handles unmount during drag)
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   // Calculate dates
   const startDate = issue.startDate ? new Date(issue.startDate) : null;
@@ -80,9 +82,9 @@ export function GanttBar({
     };
   }, [effectiveStart, effectiveEnd, viewStartDate, dayWidth, rowHeight, rowIndex, dragOffset]);
 
-  // Handle mouse down for dragging
+  // Handle mouse down for dragging (resize handles only)
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent, type: "left" | "right" | "move") => {
+    (e: React.MouseEvent, type: "left" | "right") => {
       if (!onUpdateDates || !effectiveStart || !effectiveEnd) return;
       e.stopPropagation();
       e.preventDefault();
@@ -103,22 +105,16 @@ export function GanttBar({
             start: Math.min(daysDelta, duration - 1 + initialOffset.end),
             end: initialOffset.end,
           });
-        } else if (type === "right") {
+        } else {
           setDragOffset({
             start: initialOffset.start,
             end: Math.max(daysDelta, -(duration - 1) - initialOffset.start),
-          });
-        } else {
-          setDragOffset({
-            start: daysDelta,
-            end: daysDelta,
           });
         }
       };
 
       const handleMouseUp = async () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
+        cleanup();
         setIsDragging(null);
 
         // Use ref to get current dragOffset (avoids stale closure)
@@ -140,11 +136,26 @@ export function GanttBar({
         setDragOffset({ start: 0, end: 0 });
       };
 
+      // Cleanup function to remove event listeners
+      const cleanup = () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+        cleanupRef.current = null;
+      };
+
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
+      cleanupRef.current = cleanup;
     },
     [onUpdateDates, dayWidth, metrics, effectiveStart, effectiveEnd, issue._id, startDate, dueDate],
   );
+
+  // Cleanup event listeners on unmount
+  useEffect(() => {
+    return () => {
+      cleanupRef.current?.();
+    };
+  }, []);
 
   // If no dates, don't render (after hooks)
   if (!hasDates || !effectiveStart || !effectiveEnd) {
@@ -176,13 +187,28 @@ export function GanttBar({
       >
         {/* Left resize handle */}
         {onUpdateDates && (
-          <span
-            role="slider"
-            aria-label="Resize start date"
-            aria-valuenow={0}
-            tabIndex={0}
+          <Button
+            variant="unstyled"
+            aria-label={`Adjust start date for ${issue.key}`}
             className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-black/10 rounded-l"
             onMouseDown={(e) => handleMouseDown(e, "left")}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                onUpdateDates(
+                  issue._id,
+                  startDate ? addDays(startDate, -1).getTime() : undefined,
+                  undefined,
+                );
+              } else if (e.key === "ArrowRight") {
+                e.preventDefault();
+                onUpdateDates(
+                  issue._id,
+                  startDate ? addDays(startDate, 1).getTime() : undefined,
+                  undefined,
+                );
+              }
+            }}
           />
         )}
 
@@ -193,13 +219,28 @@ export function GanttBar({
 
         {/* Right resize handle */}
         {onUpdateDates && (
-          <span
-            role="slider"
-            aria-label="Resize end date"
-            aria-valuenow={0}
-            tabIndex={0}
+          <Button
+            variant="unstyled"
+            aria-label={`Adjust due date for ${issue.key}`}
             className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-black/10 rounded-r"
             onMouseDown={(e) => handleMouseDown(e, "right")}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                onUpdateDates(
+                  issue._id,
+                  undefined,
+                  dueDate ? addDays(dueDate, -1).getTime() : undefined,
+                );
+              } else if (e.key === "ArrowRight") {
+                e.preventDefault();
+                onUpdateDates(
+                  issue._id,
+                  undefined,
+                  dueDate ? addDays(dueDate, 1).getTime() : undefined,
+                );
+              }
+            }}
           />
         )}
       </Button>

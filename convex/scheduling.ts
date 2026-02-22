@@ -246,8 +246,8 @@ function selectBestUser(
       bestScore = score;
       bestUserId = userId;
     } else if (score === bestScore && bestUserId) {
-      // Tie-breaker: random selection
-      if (Math.random() < 0.5) {
+      // Tie-breaker: use lowest userId for deterministic results (queries must be deterministic)
+      if (userId < bestUserId) {
         bestUserId = userId;
       }
     }

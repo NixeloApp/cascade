@@ -13,7 +13,7 @@ import { validate } from "../lib/constrainedValidators";
 import { rateLimited, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, assertIsProjectAdmin } from "../projectAccess";
-import { workflowCategories } from "../validators";
+import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   assertVersionMatch,
   generateIssueKey,
@@ -263,6 +263,8 @@ export const update = issueMutation({
     ),
     assigneeId: v.optional(v.union(v.id("users"), v.null())),
     labels: v.optional(v.array(v.string())),
+    type: v.optional(issueTypesWithSubtask),
+    startDate: v.optional(v.union(v.number(), v.null())),
     dueDate: v.optional(v.union(v.number(), v.null())),
     estimatedHours: v.optional(v.union(v.number(), v.null())),
     storyPoints: v.optional(v.union(v.number(), v.null())),
@@ -684,8 +686,11 @@ export const bulkMoveToModule = authenticatedMutation({
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
     const now = Date.now();
 
-    // Pre-validate module if provided
+    // Pre-validate module if provided (reject if moduleId given but module doesn't exist)
     const targetModule = args.moduleId ? await ctx.db.get(args.moduleId) : null;
+    if (args.moduleId && !targetModule) {
+      return { updated: 0 }; // Module was deleted or invalid
+    }
 
     const results = await Promise.all(
       issues.map(async (issue) => {

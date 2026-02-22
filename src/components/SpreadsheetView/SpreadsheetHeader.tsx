@@ -70,7 +70,7 @@ export function SpreadsheetHeader({
           <th
             key={column.id}
             className={cn(
-              "h-11 px-3 text-left font-medium text-ui-text text-sm border-r border-ui-border/50 last:border-r-0",
+              "group h-11 px-3 text-left font-medium text-ui-text text-sm border-r border-ui-border/50 last:border-r-0",
               column.width,
             )}
           >

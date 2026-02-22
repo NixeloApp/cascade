@@ -5,12 +5,59 @@
  * Based on Cal.com's zoomvideo integration pattern.
  */
 
+import { createHmac, randomBytes } from "node:crypto";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { action, internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
+
+// ============================================================================
+// OAuth CSRF Protection
+// ============================================================================
+
+/** Generate a CSRF-safe state token */
+function generateOAuthState(userId: string): string {
+  const secret = process.env.ZOOM_CLIENT_SECRET;
+  if (!secret) throw new Error("ZOOM_CLIENT_SECRET not configured");
+
+  const timestamp = Date.now().toString();
+  const nonce = randomBytes(8).toString("hex");
+  const data = `${userId}:${timestamp}:${nonce}`;
+  const signature = createHmac("sha256", secret).update(data).digest("hex").slice(0, 16);
+
+  return Buffer.from(`${data}:${signature}`).toString("base64url");
+}
+
+/** Validate CSRF state token */
+function validateOAuthState(state: string, userId: string): boolean {
+  const secret = process.env.ZOOM_CLIENT_SECRET;
+  if (!secret) return false;
+
+  try {
+    const decoded = Buffer.from(state, "base64url").toString();
+    const parts = decoded.split(":");
+    if (parts.length !== 4) return false;
+
+    const [stateUserId, timestamp, _nonce, signature] = parts;
+
+    // Check userId matches
+    if (stateUserId !== userId) return false;
+
+    // Check not expired (10 minutes)
+    const ts = Number.parseInt(timestamp, 10);
+    if (Number.isNaN(ts) || Date.now() - ts > 10 * 60 * 1000) return false;
+
+    // Verify signature
+    const data = `${stateUserId}:${timestamp}:${_nonce}`;
+    const expectedSignature = createHmac("sha256", secret).update(data).digest("hex").slice(0, 16);
+
+    return signature === expectedSignature;
+  } catch {
+    return false;
+  }
+}
 
 // ============================================================================
 // Zoom API Response Types
@@ -47,22 +94,33 @@ const ZOOM_API_BASE = "https://api.zoom.us/v2";
 
 /**
  * Generate OAuth authorization URL for Zoom
+ * Requires authentication for CSRF protection
  */
 export const getAuthUrl = action({
   args: {
     redirectUri: v.string(),
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args) => {
+    // Require authentication for CSRF protection
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     const clientId = process.env.ZOOM_CLIENT_ID;
     if (!clientId) {
       throw new Error("ZOOM_CLIENT_ID not configured");
     }
+
+    // Generate CSRF state token
+    const state = generateOAuthState(userId);
 
     const params = new URLSearchParams({
       response_type: "code",
       client_id: clientId,
       redirect_uri: args.redirectUri,
       scope: "meeting:write meeting:read user:read",
+      state,
     });
 
     return `${ZOOM_AUTH_URL}?${params.toString()}`;
@@ -270,12 +328,18 @@ export const handleOAuthCallback = action({
   args: {
     code: v.string(),
     redirectUri: v.string(),
+    state: v.string(),
   },
   handler: async (ctx, args): Promise<{ connectionId: Id<"videoConnections">; email: string }> => {
     // Get authenticated user
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Not authenticated");
+    }
+
+    // Validate CSRF state
+    if (!validateOAuthState(args.state, userId)) {
+      throw new Error("Invalid or expired OAuth state. Please try again.");
     }
 
     // Exchange code for tokens

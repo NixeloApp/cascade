@@ -98,6 +98,7 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
 
   // Mutations
   const updateIssue = useMutation(api.issues.update);
+  const updateIssueStatus = useMutation(api.issues.updateStatus);
 
   // Flatten issues from all statuses into a single list
   const allIssues = workflowStates
@@ -133,6 +134,16 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
   const handleUpdateIssue = useCallback(
     async (issueId: Id<"issues">, data: Partial<EnrichedIssue>) => {
       try {
+        // Handle status changes separately using updateStatus mutation
+        if (data.status !== undefined) {
+          await updateIssueStatus({
+            issueId,
+            newStatus: data.status,
+            newOrder: Date.now(), // Put at end of new status list
+          });
+          return;
+        }
+
         // Build update payload with allowed fields
         const labels = data.labels?.map((l) => (typeof l === "string" ? l : l.name));
 
@@ -140,9 +151,11 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
           issueId,
           ...(data.title !== undefined && { title: data.title }),
           ...(data.description !== undefined && { description: data.description }),
+          ...(data.type !== undefined && { type: data.type }),
           ...(data.priority !== undefined && { priority: data.priority }),
           ...(data.assigneeId !== undefined && { assigneeId: data.assigneeId }),
           ...(data.storyPoints !== undefined && { storyPoints: data.storyPoints }),
+          ...(data.startDate !== undefined && { startDate: data.startDate }),
           ...(data.dueDate !== undefined && { dueDate: data.dueDate }),
           ...(labels !== undefined && { labels }),
         });
@@ -150,7 +163,7 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
         showError(error, "Failed to update issue");
       }
     },
-    [updateIssue],
+    [updateIssue, updateIssueStatus],
   );
 
   // Toggle display property

@@ -60,20 +60,31 @@ export const listMine = authenticatedQuery({
     bookingPageId: v.optional(v.id("bookingPages")),
   },
   handler: async (ctx, args) => {
-    let workflows = await ctx.db
+    // Use the most selective index based on provided filters to avoid
+    // incomplete results from filtering after take()
+    if (args.bookingPageId) {
+      // Query by booking page (more selective), then filter by user
+      const workflows = await ctx.db
+        .query("workflows")
+        .withIndex("by_booking_page", (q) => q.eq("bookingPageId", args.bookingPageId))
+        .take(BOUNDED_LIST_LIMIT);
+      return workflows.filter((w) => w.userId === ctx.userId);
+    }
+
+    if (args.projectId) {
+      // Query by project (more selective), then filter by user
+      const workflows = await ctx.db
+        .query("workflows")
+        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+        .take(BOUNDED_LIST_LIMIT);
+      return workflows.filter((w) => w.userId === ctx.userId);
+    }
+
+    // No filter - just get user's workflows
+    return await ctx.db
       .query("workflows")
       .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
       .take(BOUNDED_LIST_LIMIT);
-
-    // Filter by project/booking page if specified
-    if (args.projectId) {
-      workflows = workflows.filter((w) => w.projectId === args.projectId);
-    }
-    if (args.bookingPageId) {
-      workflows = workflows.filter((w) => w.bookingPageId === args.bookingPageId);
-    }
-
-    return workflows;
   },
 });
 

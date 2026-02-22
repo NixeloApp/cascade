@@ -204,10 +204,7 @@ export function SpreadsheetRow({
             {selectionMode ? (
               <Checkbox
                 checked={isSelected}
-                onCheckedChange={(e) => {
-                  e.valueOf(); // Prevent row click by consuming event
-                  onToggleSelect(issue._id);
-                }}
+                onCheckedChange={() => onToggleSelect(issue._id)}
                 onClick={stopPropagation}
                 aria-label={`Select ${issue.key}`}
               />

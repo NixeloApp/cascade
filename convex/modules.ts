@@ -76,14 +76,15 @@ export const listByProject = projectQuery({
       // Count completed issues (skip query if no done statuses defined)
       const completedPromise =
         doneStatusIds.length > 0
-          ? ctx.db
-              .query("issues")
-              .withIndex("by_module", (q) => q.eq("moduleId", moduleId).lt("isDeleted", true))
-              .filter((q) =>
-                q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status))),
-              )
-              .take(BOUNDED_LIST_LIMIT)
-              .then((issues) => issues.length)
+          ? efficientCount(
+              ctx.db
+                .query("issues")
+                .withIndex("by_module", (q) => q.eq("moduleId", moduleId).lt("isDeleted", true))
+                .filter((q) =>
+                  q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status))),
+                ),
+              MAX_PAGE_SIZE,
+            )
           : Promise.resolve(0);
 
       const [count, completedCount] = await Promise.all([totalPromise, completedPromise]);
@@ -149,12 +150,26 @@ export const get = projectQuery({
     const doneStatusIds =
       project?.workflowStates.filter((s) => s.category === "done").map((s) => s.id) || [];
 
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_module", (q) => q.eq("moduleId", args.moduleId).lt("isDeleted", true))
-      .take(BOUNDED_LIST_LIMIT);
+    // Use efficientCount to avoid undercounting with large issue sets
+    const issueCount = await efficientCount(
+      ctx.db
+        .query("issues")
+        .withIndex("by_module", (q) => q.eq("moduleId", args.moduleId).lt("isDeleted", true)),
+      MAX_PAGE_SIZE,
+    );
 
-    const completedCount = issues.filter((i) => doneStatusIds.includes(i.status)).length;
+    const completedCount =
+      doneStatusIds.length > 0
+        ? await efficientCount(
+            ctx.db
+              .query("issues")
+              .withIndex("by_module", (q) => q.eq("moduleId", args.moduleId).lt("isDeleted", true))
+              .filter((q) =>
+                q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status))),
+              ),
+            MAX_PAGE_SIZE,
+          )
+        : 0;
 
     return {
       ...module,
@@ -166,9 +181,9 @@ export const get = projectQuery({
             image: lead.image,
           }
         : null,
-      issueCount: issues.length,
+      issueCount,
       completedCount,
-      progress: issues.length > 0 ? Math.round((completedCount / issues.length) * 100) : 0,
+      progress: issueCount > 0 ? Math.round((completedCount / issueCount) * 100) : 0,
     };
   },
 });
