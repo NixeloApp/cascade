@@ -10,7 +10,7 @@ import {
   projectEditorMutation,
 } from "../customFunctions";
 import { validate } from "../lib/constrainedValidators";
-import { rateLimited, validation } from "../lib/errors";
+import { conflict, rateLimited, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, assertIsProjectAdmin } from "../projectAccess";
 import { workflowCategories } from "../validators";
@@ -715,13 +715,13 @@ export const archive = issueMutation({
 
     // Already archived
     if (issue.archivedAt) {
-      return { success: false, error: "Issue is already archived" };
+      throw conflict("Issue is already archived");
     }
 
     // Check if issue is in "done" category
     const state = ctx.project.workflowStates.find((s) => s.id === issue.status);
     if (!state || state.category !== "done") {
-      return { success: false, error: "Only completed issues can be archived" };
+      throw validation("status", "Only completed issues can be archived");
     }
 
     // Archive the issue
@@ -752,7 +752,7 @@ export const restore = issueMutation({
 
     // Not archived
     if (!issue.archivedAt) {
-      return { success: false, error: "Issue is not archived" };
+      throw conflict("Issue is not archived");
     }
 
     // Restore the issue
