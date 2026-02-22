@@ -335,14 +335,17 @@ export const IssueCard = memo(function IssueCard({
         </Flex>
 
         {/* Title */}
-        <Typography
-          variant="label"
-          as="p"
-          className="mb-2 line-clamp-2"
-          data-testid={TEST_IDS.ISSUE.TITLE}
-        >
-          {issue.title}
-        </Typography>
+        <Tooltip content={issue.title}>
+          <Typography
+            variant="label"
+            as="p"
+            className="mb-2 line-clamp-2 pointer-events-auto"
+            data-testid={TEST_IDS.ISSUE.TITLE}
+            onClick={handleClick}
+          >
+            {issue.title}
+          </Typography>
+        </Tooltip>
 
         {/* Labels */}
         {issue.labels.length > 0 && (
