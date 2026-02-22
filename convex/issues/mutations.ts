@@ -26,6 +26,33 @@ import {
   validateParentIssue,
 } from "./helpers";
 
+/**
+ * Create a new issue in the project.
+ *
+ * This mutation handles:
+ * - Rate limiting (to prevent spam).
+ * - Validation of inputs (title, description, module ownership).
+ * - Unique key generation (e.g., "PROJ-123") with race condition handling.
+ * - Parent/Child validation (e.g., subtasks cannot have subtasks).
+ * - Activity logging.
+ *
+ * @param title - The title of the issue.
+ * @param description - Optional description.
+ * @param type - Issue type (task, bug, story, epic, subtask).
+ * @param priority - Issue priority (lowest to highest).
+ * @param assigneeId - Optional user ID to assign the issue to.
+ * @param sprintId - Optional sprint ID.
+ * @param moduleId - Optional module ID.
+ * @param epicId - Optional epic ID (if subtask or child of epic).
+ * @param parentId - Optional parent issue ID (if subtask).
+ * @param labels - Optional array of label IDs.
+ * @param estimatedHours - Optional estimated hours.
+ * @param dueDate - Optional due date timestamp.
+ * @param storyPoints - Optional story points.
+ *
+ * @returns The ID of the created issue.
+ * @throws {ConvexError} "Validation" if inputs are invalid.
+ */
 export const create = projectEditorMutation({
   args: {
     title: v.string(),
@@ -146,6 +173,15 @@ export const create = projectEditorMutation({
   },
 });
 
+/**
+ * Update an issue's status and order in the board.
+ *
+ * Supports optimistic locking to prevent overwriting concurrent changes.
+ *
+ * @param newStatus - The new status ID.
+ * @param newOrder - The new order/rank in the column.
+ * @param expectedVersion - The expected version number for optimistic locking.
+ */
 export const updateStatus = issueMutation({
   args: {
     newStatus: v.string(),
@@ -181,6 +217,16 @@ export const updateStatus = issueMutation({
   },
 });
 
+/**
+ * Update an issue's status by workflow category.
+ *
+ * Finds the first status in the project that matches the given category.
+ * Useful for "Move to Done" actions where the specific status ID is not known.
+ *
+ * @param category - The target workflow category (todo, inprogress, done, etc.).
+ * @param newOrder - The new order/rank in the column.
+ * @param expectedVersion - The expected version number for optimistic locking.
+ */
 export const updateStatusByCategory = issueMutation({
   args: {
     category: workflowCategories,
@@ -228,6 +274,23 @@ export const updateStatusByCategory = issueMutation({
   },
 });
 
+/**
+ * Update issue details.
+ *
+ * Handles partial updates, notifications for assignees, and activity logging.
+ *
+ * @param title - New title.
+ * @param description - New description.
+ * @param priority - New priority.
+ * @param assigneeId - New assignee (or null to unassign).
+ * @param labels - New array of label names (replaces existing).
+ * @param type - New issue type.
+ * @param startDate - New start date.
+ * @param dueDate - New due date.
+ * @param estimatedHours - New estimate.
+ * @param storyPoints - New story points.
+ * @param expectedVersion - Optimistic locking version.
+ */
 export const update = issueMutation({
   args: {
     title: v.optional(v.string()),
@@ -305,6 +368,16 @@ export const update = issueMutation({
   },
 });
 
+/**
+ * Add a comment to an issue.
+ *
+ * Handles mentions, notifications (email and in-app), and activity logging.
+ * Rate limited to prevent spam.
+ *
+ * @param content - The comment text (Markdown supported).
+ * @param mentions - List of user IDs mentioned in the comment.
+ * @returns The ID of the created comment.
+ */
 export const addComment = issueViewerMutation({
   args: {
     content: v.string(),
@@ -389,6 +462,16 @@ export const addComment = issueViewerMutation({
   },
 });
 
+/**
+ * Update the status of multiple issues.
+ *
+ * Verifies that the new status exists in the project's workflow.
+ * Checks permissions for each project involved (since issues can come from multiple projects).
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param newStatus - The new status ID.
+ * @returns Object with count of updated issues.
+ */
 export const bulkUpdateStatus = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -523,6 +606,12 @@ async function performBulkUpdate(
   return { updated: results.reduce((a: number, b) => a + b, 0) };
 }
 
+/**
+ * Update the priority of multiple issues.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param priority - New priority level.
+ */
 export const bulkUpdatePriority = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -549,6 +638,12 @@ export const bulkUpdatePriority = authenticatedMutation({
   },
 });
 
+/**
+ * Assign or unassign multiple issues.
+ *
+ * @param issueIds - Array of issue IDs.
+ * @param assigneeId - User ID to assign, or null to unassign.
+ */
 export const bulkAssign = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -569,6 +664,14 @@ export const bulkAssign = authenticatedMutation({
   },
 });
 
+/**
+ * Add labels to multiple issues.
+ *
+ * Merges new labels with existing ones (does not overwrite).
+ *
+ * @param issueIds - Array of issue IDs.
+ * @param labels - Array of label names to add.
+ */
 export const bulkAddLabels = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -590,6 +693,12 @@ export const bulkAddLabels = authenticatedMutation({
   },
 });
 
+/**
+ * Move multiple issues to a sprint (or backlog).
+ *
+ * @param issueIds - Array of issue IDs.
+ * @param sprintId - Target sprint ID, or null for backlog.
+ */
 export const bulkMoveToSprint = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -610,6 +719,14 @@ export const bulkMoveToSprint = authenticatedMutation({
   },
 });
 
+/**
+ * Move multiple issues to a module.
+ *
+ * Validates that the module belongs to the same project as the issues.
+ *
+ * @param issueIds - Array of issue IDs.
+ * @param moduleId - Target module ID, or null to remove from module.
+ */
 export const bulkMoveToModule = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -657,6 +774,14 @@ export const bulkMoveToModule = authenticatedMutation({
   },
 });
 
+/**
+ * Soft delete multiple issues.
+ *
+ * Requires project admin permissions for each issue's project.
+ *
+ * @param issueIds - Array of issue IDs to delete.
+ * @returns Object with count of deleted issues.
+ */
 export const bulkDelete = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
