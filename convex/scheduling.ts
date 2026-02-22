@@ -11,6 +11,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { roundRobinIntervals, schedulingTypes } from "./validators";
 
 // =============================================================================
@@ -87,7 +88,7 @@ export const getAssignmentCounts = internalQuery({
       .withIndex("by_booking_page_period", (q) =>
         q.eq("bookingPageId", args.bookingPageId).eq("periodKey", args.periodKey),
       )
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     // Count assignments per user
     for (const assignment of assignments) {
@@ -299,7 +300,7 @@ export const getNextRoundRobinHost = internalQuery({
       .withIndex("by_booking_page_period", (q) =>
         q.eq("bookingPageId", args.bookingPageId).eq("periodKey", periodKey),
       )
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     const assignmentCounts = buildAssignmentCounts(availableMembers, assignments);
     const weights = buildWeightMap(availableMembers, bookingPage.hostWeights);
@@ -334,7 +335,7 @@ export const getStats = authenticatedQuery({
       .withIndex("by_booking_page_period", (q) =>
         q.eq("bookingPageId", args.bookingPageId).eq("periodKey", periodKey),
       )
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     // Build member stats
     const memberStats: Array<{
@@ -363,7 +364,7 @@ export const getStats = authenticatedQuery({
     const allAssignments = await ctx.db
       .query("roundRobinAssignments")
       .withIndex("by_booking_page", (q) => q.eq("bookingPageId", args.bookingPageId))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     return {
       type: "round_robin" as const,
@@ -444,11 +445,11 @@ export const resetCounts = authenticatedMutation({
               .eq("bookingPageId", args.bookingPageId)
               .eq("periodKey", getPeriodKey(bookingPage.roundRobinInterval, Date.now())),
           )
-          .collect()
+          .take(BOUNDED_LIST_LIMIT)
       : await ctx.db
           .query("roundRobinAssignments")
           .withIndex("by_booking_page", (q) => q.eq("bookingPageId", args.bookingPageId))
-          .collect();
+          .take(BOUNDED_LIST_LIMIT);
 
     // Delete all assignments
     await Promise.all(assignments.map((a) => ctx.db.delete(a._id)));

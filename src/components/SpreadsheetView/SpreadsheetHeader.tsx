@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
+import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
 import type { ColumnDefinition, DisplayProperties } from "./SpreadsheetView";
 import { SPREADSHEET_COLUMNS } from "./SpreadsheetView";
@@ -60,7 +61,7 @@ export function SpreadsheetHeader({
                 <Columns className="h-4 w-4 text-ui-text-tertiary" />
               </Button>
             )}
-            <span className="font-medium text-ui-text text-sm">Title</span>
+            <Typography variant="label">Title</Typography>
           </Flex>
         </th>
 

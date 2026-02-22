@@ -25,31 +25,15 @@ interface ModuleManagerProps {
 
 const MODULE_STATUSES: { id: ModuleStatus; label: string; color: string }[] = [
   { id: "backlog", label: "Backlog", color: "bg-ui-bg-tertiary text-ui-text-secondary" },
-  {
-    id: "planned",
-    label: "Planned",
-    color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  },
+  { id: "planned", label: "Planned", color: "bg-status-info-bg text-status-info-text" },
   {
     id: "in_progress",
     label: "In Progress",
-    color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    color: "bg-status-warning-bg text-status-warning-text",
   },
-  {
-    id: "paused",
-    label: "Paused",
-    color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-  },
-  {
-    id: "completed",
-    label: "Completed",
-    color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-  },
-  {
-    id: "cancelled",
-    label: "Cancelled",
-    color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  },
+  { id: "paused", label: "Paused", color: "bg-ui-bg-tertiary text-ui-text-tertiary" },
+  { id: "completed", label: "Completed", color: "bg-status-success-bg text-status-success-text" },
+  { id: "cancelled", label: "Cancelled", color: "bg-status-error-bg text-status-error-text" },
 ];
 
 function getStatusConfig(status: ModuleStatus) {
@@ -118,10 +102,11 @@ function ModuleCard({ module, canEdit, onStatusChange, onDelete }: ModuleCardPro
                     onMouseLeave={() => setShowStatusMenu(false)}
                   >
                     {MODULE_STATUSES.map((status) => (
-                      <button
+                      <Button
                         key={status.id}
-                        type="button"
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-ui-bg-hover first:rounded-t-lg last:rounded-b-lg"
+                        variant="ghost"
+                        size="sm"
+                        className="block w-full text-left px-3 py-2 h-auto justify-start first:rounded-t-lg last:rounded-b-lg rounded-none"
                         onClick={() => {
                           void onStatusChange(module._id, status.id);
                           setShowStatusMenu(false);
@@ -130,7 +115,7 @@ function ModuleCard({ module, canEdit, onStatusChange, onDelete }: ModuleCardPro
                         <Badge size="sm" className={status.color}>
                           {status.label}
                         </Badge>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}

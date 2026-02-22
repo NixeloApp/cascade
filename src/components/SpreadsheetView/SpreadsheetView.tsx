@@ -12,7 +12,8 @@ import { useCallback, useRef, useState } from "react";
 import { BulkOperationsBar } from "@/components/BulkOperationsBar";
 import { CreateIssueModal } from "@/components/CreateIssueModal";
 import { IssueDetailModal } from "@/components/IssueDetailModal";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Typography } from "@/components/ui/Typography";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
 import type { EnrichedIssue } from "../../../convex/lib/issueHelpers";
 import { SpreadsheetHeader } from "./SpreadsheetHeader";
@@ -169,7 +170,7 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
   return (
     <Flex direction="column" className="h-full">
       {/* Table Container */}
-      <div ref={containerRef} className="flex-1 overflow-auto">
+      <FlexItem flex="1" ref={containerRef} className="overflow-auto">
         <table className="w-full border-collapse">
           <SpreadsheetHeader
             columns={visibleColumns}
@@ -205,11 +206,11 @@ export function SpreadsheetView({ projectId, sprintId, canEdit = true }: Spreads
         </table>
 
         {allIssues.length === 0 && (
-          <Flex align="center" justify="center" className="h-64 text-ui-text-secondary">
-            No issues found. Create one to get started.
+          <Flex align="center" justify="center" className="h-64">
+            <Typography color="secondary">No issues found. Create one to get started.</Typography>
           </Flex>
         )}
-      </div>
+      </FlexItem>
 
       {/* Modals */}
       <CreateIssueModal

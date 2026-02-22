@@ -2,6 +2,7 @@
  * SpreadsheetSkeleton - Loading state for spreadsheet view
  */
 
+import { Flex } from "@/components/ui/Flex";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 interface SpreadsheetSkeletonProps {
@@ -35,10 +36,10 @@ export function SpreadsheetSkeleton({ columns, rows }: SpreadsheetSkeletonProps)
             <tr key={`row-${rowIndex.toString()}`} className="border-b border-ui-border">
               {/* Title column */}
               <td className="h-11 px-3 border-r border-ui-border">
-                <div className="flex items-center gap-2">
+                <Flex align="center" gap="xs">
                   <Skeleton className="h-4 w-4 rounded" />
                   <Skeleton className="h-4 w-48" />
-                </div>
+                </Flex>
               </td>
               {/* Property columns */}
               {Array.from({ length: columns }).map((_, colIndex) => (

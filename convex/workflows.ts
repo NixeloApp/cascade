@@ -8,6 +8,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectQuery } from "./customFunctions";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { workflowActionTypes, workflowTriggers } from "./validators";
 
 /**
@@ -62,7 +63,7 @@ export const listMine = authenticatedQuery({
     let workflows = await ctx.db
       .query("workflows")
       .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     // Filter by project/booking page if specified
     if (args.projectId) {
@@ -85,7 +86,7 @@ export const listByProject = projectQuery({
     return await ctx.db
       .query("workflows")
       .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
   },
 });
 
@@ -167,7 +168,7 @@ export const remove = authenticatedMutation({
       .query("workflowReminders")
       .withIndex("by_workflow", (q) => q.eq("workflowId", args.workflowId))
       .filter((q) => q.eq(q.field("status"), "pending"))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     await Promise.all(pendingReminders.map((r) => ctx.db.patch(r._id, { status: "skipped" })));
 
@@ -248,7 +249,7 @@ export const getActiveWorkflowsForTrigger = internalQuery({
       .query("workflows")
       .withIndex("by_trigger", (q) => q.eq("trigger", args.trigger))
       .filter((q) => q.eq(q.field("isActive"), true))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     // Filter by scope
     if (args.projectId) {
@@ -382,19 +383,19 @@ export const cancelReminders = internalMutation({
         .query("workflowReminders")
         .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))
         .filter((q) => q.eq(q.field("status"), "pending"))
-        .collect();
+        .take(BOUNDED_LIST_LIMIT);
     } else if (args.calendarEventId) {
       reminders = await ctx.db
         .query("workflowReminders")
         .withIndex("by_event", (q) => q.eq("calendarEventId", args.calendarEventId))
         .filter((q) => q.eq(q.field("status"), "pending"))
-        .collect();
+        .take(BOUNDED_LIST_LIMIT);
     } else if (args.issueId) {
       reminders = await ctx.db
         .query("workflowReminders")
         .withIndex("by_issue", (q) => q.eq("issueId", args.issueId))
         .filter((q) => q.eq(q.field("status"), "pending"))
-        .collect();
+        .take(BOUNDED_LIST_LIMIT);
     }
 
     await Promise.all(reminders.map((r) => ctx.db.patch(r._id, { status: "skipped" })));

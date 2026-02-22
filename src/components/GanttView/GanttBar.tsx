@@ -8,7 +8,9 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { addDays, differenceInDays, format } from "date-fns";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
 import type { IssuePriority } from "@/lib/issue-utils";
 import { getPriorityColor } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
@@ -158,9 +160,9 @@ export function GanttBar({
 
   return (
     <Tooltip content={`${issue.key}: ${issue.title}\n${dateRange}`}>
-      <button
+      <Button
         ref={barRef}
-        type="button"
+        variant="unstyled"
         className={cn(
           "absolute flex items-center rounded cursor-pointer transition-shadow border-0 text-left",
           "hover:shadow-md hover:z-20",
@@ -188,7 +190,9 @@ export function GanttBar({
         )}
 
         {/* Bar content */}
-        <span className="flex-1 truncate px-2 text-xs font-medium">{width > 60 && issue.key}</span>
+        <Typography variant="caption" className="flex-1 truncate px-2 font-medium">
+          {width > 60 && issue.key}
+        </Typography>
 
         {/* Right resize handle */}
         {onUpdateDates && (
@@ -201,7 +205,7 @@ export function GanttBar({
             onMouseDown={(e) => handleMouseDown(e, "right")}
           />
         )}
-      </button>
+      </Button>
     </Tooltip>
   );
 }

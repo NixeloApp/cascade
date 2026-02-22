@@ -3,6 +3,7 @@
  */
 
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { videoProviders } from "./validators";
 
 /**
@@ -15,7 +16,7 @@ export const list = authenticatedQuery({
       .query("videoConnections")
       .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
       .filter((q) => q.eq(q.field("isActive"), true))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     return connections.map((c) => ({
       _id: c._id,

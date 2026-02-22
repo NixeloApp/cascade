@@ -5,6 +5,7 @@
 import { Badge } from "@/components/ui/Badge";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
 import type { LabelInfo } from "../../../../convex/lib/issueHelpers";
 
 interface LabelsCellProps {
@@ -13,7 +14,11 @@ interface LabelsCellProps {
 
 export function LabelsCell({ labels }: LabelsCellProps) {
   if (labels.length === 0) {
-    return <span className="text-sm text-ui-text-tertiary">No labels</span>;
+    return (
+      <Typography variant="small" color="tertiary">
+        No labels
+      </Typography>
+    );
   }
 
   const visibleLabels = labels.slice(0, 2);

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Typography } from "@/components/ui/Typography";
 import type { IssueType } from "@/lib/issue-utils";
 import { getTypeLabel, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
@@ -34,7 +35,9 @@ export function TypeCell({ type, onUpdate }: TypeCellProps) {
       )}
     >
       <Icon icon={TypeIcon} size="sm" />
-      <span className="text-sm capitalize">{type}</span>
+      <Typography variant="small" className="capitalize">
+        {type}
+      </Typography>
     </Flex>
   );
 

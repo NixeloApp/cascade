@@ -23,8 +23,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { IssueDetailModal } from "@/components/IssueDetailModal";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Typography } from "@/components/ui/Typography";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
+import { cn } from "@/lib/utils";
 import { GanttBar } from "./GanttBar";
 import { GanttSidebar } from "./GanttSidebar";
 import { GanttSkeleton } from "./GanttSkeleton";
@@ -115,20 +117,22 @@ export function GanttView({ projectId, sprintId, canEdit = true }: GanttViewProp
           <Button variant="ghost" size="sm" onClick={handleNextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-medium ml-2">{format(currentMonth, "MMMM yyyy")}</span>
+          <Typography variant="label" className="ml-2">
+            {format(currentMonth, "MMMM yyyy")}
+          </Typography>
         </Flex>
-        <span className="text-sm text-ui-text-secondary">
+        <Typography variant="small" color="secondary">
           {ganttIssues.length} issues with dates
-        </span>
+        </Typography>
       </Flex>
 
       {/* Gantt Container */}
-      <div ref={containerRef} className="flex-1 overflow-auto flex">
+      <Flex ref={containerRef} className="flex-1 overflow-auto">
         {/* Sidebar */}
         <GanttSidebar issues={ganttIssues} rowHeight={ROW_HEIGHT} width={SIDEBAR_WIDTH} />
 
         {/* Chart Area */}
-        <div className="flex-1 overflow-x-auto">
+        <FlexItem flex="1" className="overflow-x-auto">
           <div style={{ width: chartWidth, minWidth: "100%" }}>
             {/* Header with dates */}
             <div
@@ -137,24 +141,29 @@ export function GanttView({ projectId, sprintId, canEdit = true }: GanttViewProp
             >
               <Flex style={{ height: "100%" }}>
                 {daysInView.map((day) => (
-                  <div
+                  <Flex
                     key={day.toISOString()}
-                    className={`shrink-0 flex flex-col items-center justify-center border-r border-ui-border/30 ${
-                      isToday(day)
-                        ? "bg-brand-indigo-bg/30"
-                        : isWeekend(day)
-                          ? "bg-ui-bg-tertiary/30"
-                          : ""
-                    }`}
+                    direction="column"
+                    align="center"
+                    justify="center"
+                    className={cn(
+                      "shrink-0 border-r border-ui-border/30",
+                      isToday(day) && "bg-brand-indigo-bg/30",
+                      isWeekend(day) && !isToday(day) && "bg-ui-bg-tertiary/30",
+                    )}
                     style={{ width: DAY_WIDTH }}
                   >
-                    <span className="text-xs text-ui-text-tertiary">{format(day, "EEE")}</span>
-                    <span
-                      className={`text-sm ${isToday(day) ? "font-bold text-brand" : "text-ui-text-secondary"}`}
+                    <Typography variant="caption" color="tertiary">
+                      {format(day, "EEE")}
+                    </Typography>
+                    <Typography
+                      variant="small"
+                      className={cn(isToday(day) && "font-bold text-brand")}
+                      color={isToday(day) ? undefined : "secondary"}
                     >
                       {format(day, "d")}
-                    </span>
-                  </div>
+                    </Typography>
+                  </Flex>
                 ))}
               </Flex>
             </div>
@@ -162,21 +171,19 @@ export function GanttView({ projectId, sprintId, canEdit = true }: GanttViewProp
             {/* Chart grid and bars */}
             <div className="relative">
               {/* Grid lines */}
-              <div className="absolute inset-0 flex pointer-events-none">
+              <Flex className="absolute inset-0 pointer-events-none">
                 {daysInView.map((day) => (
                   <div
                     key={day.toISOString()}
-                    className={`shrink-0 border-r border-ui-border/20 ${
-                      isToday(day)
-                        ? "bg-brand-indigo-bg/10"
-                        : isWeekend(day)
-                          ? "bg-ui-bg-tertiary/20"
-                          : ""
-                    }`}
+                    className={cn(
+                      "shrink-0 border-r border-ui-border/20",
+                      isToday(day) && "bg-brand-indigo-bg/10",
+                      isWeekend(day) && !isToday(day) && "bg-ui-bg-tertiary/20",
+                    )}
                     style={{ width: DAY_WIDTH, height: ganttIssues.length * ROW_HEIGHT || 200 }}
                   />
                 ))}
-              </div>
+              </Flex>
 
               {/* Today line */}
               {daysInView.some((d) => isToday(d)) && (
@@ -216,8 +223,8 @@ export function GanttView({ projectId, sprintId, canEdit = true }: GanttViewProp
               )}
             </div>
           </div>
-        </div>
-      </div>
+        </FlexItem>
+      </Flex>
 
       {/* Issue Detail Modal */}
       {selectedIssue && (

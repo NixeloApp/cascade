@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -200,7 +200,7 @@ export function SpreadsheetRow({
       <td className="sticky left-0 z-10 bg-inherit border-r border-ui-border min-w-80 group-hover:bg-ui-bg-hover">
         <Flex align="center" gap="sm" className="h-11 px-3">
           {/* Checkbox for selection */}
-          <div className="w-5 shrink-0">
+          <FlexItem shrink={false} className="w-5">
             {selectionMode ? (
               <Checkbox
                 checked={isSelected}
@@ -222,7 +222,7 @@ export function SpreadsheetRow({
                 />
               )
             )}
-          </div>
+          </FlexItem>
 
           {/* Issue type icon */}
           <Tooltip content={getTypeLabel(issue.type)}>

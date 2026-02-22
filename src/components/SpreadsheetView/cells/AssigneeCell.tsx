@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
+import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
 import type { AuthenticatedUser } from "../../../../convex/lib/userUtils";
 
@@ -50,7 +51,9 @@ export function AssigneeCell({ assignee, projectId, onUpdate }: AssigneeCellProp
       )}
     >
       <Avatar src={assignee.image ?? undefined} name={assignee.name} size="xs" />
-      <span className="text-sm truncate max-w-24">{assignee.name}</span>
+      <Typography variant="small" className="truncate max-w-24">
+        {assignee.name}
+      </Typography>
     </Flex>
   ) : (
     <Flex
@@ -62,7 +65,7 @@ export function AssigneeCell({ assignee, projectId, onUpdate }: AssigneeCellProp
       )}
     >
       <User className="w-4 h-4" />
-      <span className="text-sm">Unassigned</span>
+      <Typography variant="small">Unassigned</Typography>
     </Flex>
   );
 
@@ -115,9 +118,9 @@ export function AssigneeCell({ assignee, projectId, onUpdate }: AssigneeCellProp
         ))}
 
         {filteredMembers.length === 0 && (
-          <div className="px-2 py-4 text-center text-sm text-ui-text-tertiary">
+          <Typography variant="small" color="tertiary" className="px-2 py-4 text-center block">
             No members found
-          </div>
+          </Typography>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

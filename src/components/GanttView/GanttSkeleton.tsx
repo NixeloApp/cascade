@@ -2,7 +2,7 @@
  * GanttSkeleton - Loading state for Gantt view
  */
 
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export function GanttSkeleton() {
@@ -33,7 +33,7 @@ export function GanttSkeleton() {
         </div>
 
         {/* Chart area */}
-        <div className="flex-1 p-4">
+        <FlexItem flex="1" className="p-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Flex key={`bar-${i.toString()}`} className="mb-3">
               <div className="w-1/3 ml-[10%]">
@@ -41,7 +41,7 @@ export function GanttSkeleton() {
               </div>
             </Flex>
           ))}
-        </div>
+        </FlexItem>
       </Flex>
     </Flex>
   );

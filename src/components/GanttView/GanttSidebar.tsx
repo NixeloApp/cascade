@@ -2,7 +2,7 @@
  * GanttSidebar - Left sidebar showing issue list
  */
 
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Typography } from "@/components/ui/Typography";
 import type { IssueType } from "@/lib/issue-utils";
@@ -17,16 +17,17 @@ interface GanttSidebarProps {
 
 export function GanttSidebar({ issues, rowHeight, width }: GanttSidebarProps) {
   return (
-    <div className="shrink-0 border-r border-ui-border bg-ui-bg-soft" style={{ width }}>
+    <FlexItem shrink={false} className="border-r border-ui-border bg-ui-bg-soft" style={{ width }}>
       {/* Header */}
-      <div
-        className="sticky top-0 z-10 bg-ui-bg-soft border-b border-ui-border flex items-center px-3"
+      <Flex
+        align="center"
+        className="sticky top-0 z-10 bg-ui-bg-soft border-b border-ui-border px-3"
         style={{ height: rowHeight }}
       >
         <Typography variant="label" color="secondary">
           Issues
         </Typography>
-      </div>
+      </Flex>
 
       {/* Issue rows */}
       {issues.map((issue) => (
@@ -49,10 +50,12 @@ export function GanttSidebar({ issues, rowHeight, width }: GanttSidebarProps) {
 
       {/* Empty state */}
       {issues.length === 0 && (
-        <Flex align="center" justify="center" className="h-32 text-ui-text-tertiary text-sm">
-          No issues with dates
+        <Flex align="center" justify="center" className="h-32">
+          <Typography variant="small" color="tertiary">
+            No issues with dates
+          </Typography>
         </Flex>
       )}
-    </div>
+    </FlexItem>
   );
 }

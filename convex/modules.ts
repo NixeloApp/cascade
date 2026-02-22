@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { projectEditorMutation, projectQuery } from "./customFunctions";
-import { efficientCount } from "./lib/boundedQueries";
+import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { moduleStatuses } from "./validators";
@@ -83,7 +83,7 @@ export const listByProject = projectQuery({
               ? q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status)))
               : q.eq(1, 0), // Always false if no done statuses
         )
-        .collect()
+        .take(BOUNDED_LIST_LIMIT)
         .then((issues) => issues.length);
 
       const [count, completedCount] = await Promise.all([totalPromise, completedPromise]);
@@ -152,7 +152,7 @@ export const get = projectQuery({
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_module", (q) => q.eq("moduleId", args.moduleId).lt("isDeleted", true))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     const completedCount = issues.filter((i) => doneStatusIds.includes(i.status)).length;
 
@@ -255,7 +255,7 @@ export const remove = projectEditorMutation({
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_module", (q) => q.eq("moduleId", args.moduleId).lt("isDeleted", true))
-      .collect();
+      .take(BOUNDED_LIST_LIMIT);
 
     await Promise.all(
       issues.map((issue) =>
