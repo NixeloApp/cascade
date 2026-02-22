@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
-import { DAY, HOUR } from "./lib/timeUtils";
+import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createTestUser, expectThrowsAsync } from "./testUtils";
@@ -82,7 +82,7 @@ describe("Bookings", () => {
         bookingPageSlug: "overlap-page",
         bookerName: "Guest 2",
         bookerEmail: "guest2@example.com",
-        startTime: baseTime + 15 * 60 * 1000,
+        startTime: baseTime + 15 * MINUTE,
         timezone: "UTC",
       });
     }, "This time slot is no longer available");
@@ -93,7 +93,7 @@ describe("Bookings", () => {
         bookingPageSlug: "overlap-page",
         bookerName: "Guest 3",
         bookerEmail: "guest3@example.com",
-        startTime: baseTime - 15 * 60 * 1000,
+        startTime: baseTime - 15 * MINUTE,
         timezone: "UTC",
       });
     }, "This time slot is no longer available");
@@ -124,7 +124,7 @@ describe("Bookings", () => {
       bookingPageSlug: "short-page",
       bookerName: "Inner Guest",
       bookerEmail: "inner@example.com",
-      startTime: containBaseTime + 10 * 60 * 1000, // Starts at T+10
+      startTime: containBaseTime + 10 * MINUTE, // Starts at T+10
       timezone: "UTC",
     });
 
@@ -145,7 +145,7 @@ describe("Bookings", () => {
       bookingPageSlug: "overlap-page",
       bookerName: "Guest 4",
       bookerEmail: "guest4@example.com",
-      startTime: baseTime + 30 * 60 * 1000, // T+30
+      startTime: baseTime + 30 * MINUTE, // T+30
       timezone: "UTC",
     });
   });

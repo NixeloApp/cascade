@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
+import { MINUTE, SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
@@ -45,7 +46,7 @@ async function hmacSha1(key: Uint8Array, message: Uint8Array): Promise<Uint8Arra
 }
 
 async function generateTestTOTP(secret: string, timestamp = Date.now()): Promise<string> {
-  const counter = Math.floor(timestamp / 1000 / TOTP_PERIOD);
+  const counter = Math.floor(timestamp / SECOND / TOTP_PERIOD);
   const key = base32Decode(secret);
 
   // Convert counter to 8-byte big-endian buffer
@@ -284,11 +285,11 @@ describe("Two Factor Authentication", () => {
     expect(lockedResult.error).toContain("Too many failed attempts");
 
     // Advance time by 15 mins + 1s (900000ms + 1000ms)
-    vi.setSystemTime(FIXED_TIME + 901000);
+    vi.setSystemTime(FIXED_TIME + 15 * MINUTE + SECOND);
 
     // Attempt with valid code (should succeed)
     const unlockedResult = await asUser.mutation(api.twoFactor.verifyCode, {
-      code: await generateTestTOTP(secret, FIXED_TIME + 901000),
+      code: await generateTestTOTP(secret, FIXED_TIME + 15 * MINUTE + SECOND),
     });
     expect(unlockedResult.success).toBe(true);
   });
