@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Doc } from "../_generated/dataModel";
 import {
+  getUserName,
   sanitizeUserForAuth,
   sanitizeUserForCurrent,
   sanitizeUserForPublic,
@@ -149,6 +150,36 @@ describe("User Sanitization Utils", () => {
         image: mockUser.image,
       });
       expect(result[1]).toBeNull();
+    });
+  });
+
+  describe("getUserName", () => {
+    it("should return name if present", () => {
+      expect(getUserName(mockUser)).toBe("Test User");
+    });
+
+    it("should return email if name missing", () => {
+      const noNameUser = { ...mockUser, name: undefined };
+      // @ts-expect-error - Testing fallback
+      expect(getUserName(noNameUser)).toBe("test@example.com");
+    });
+
+    it("should return default name if name and email missing", () => {
+      const emptyUser = { ...mockUser, name: undefined, email: undefined };
+      // @ts-expect-error - Testing fallback
+      expect(getUserName(emptyUser)).toBe("Unknown");
+    });
+
+    it("should accept custom default name", () => {
+      const emptyUser = { ...mockUser, name: undefined, email: undefined };
+      // @ts-expect-error - Testing fallback
+      expect(getUserName(emptyUser, "Guest")).toBe("Guest");
+    });
+
+    it("should handle null/undefined user", () => {
+      expect(getUserName(null)).toBe("Unknown");
+      expect(getUserName(undefined)).toBe("Unknown");
+      expect(getUserName(null, "Ghost")).toBe("Ghost");
     });
   });
 });
