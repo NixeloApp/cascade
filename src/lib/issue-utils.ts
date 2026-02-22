@@ -159,3 +159,23 @@ export function getWorkflowCategoryColor(
     ] || WORKFLOW_CATEGORY_COLORS.todo[variant]
   );
 }
+
+/**
+ * Generate an accessible label for an issue card
+ */
+export function getIssueAccessibleLabel(issue: {
+  key: string;
+  title: string;
+  type: string;
+  priority: string;
+  assignee?: { name: string } | null;
+  storyPoints?: number;
+}): string {
+  const typeLabel = getTypeLabel(issue.type);
+  const capitalizedPriority = issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1);
+  const priorityLabel = `${capitalizedPriority} priority`;
+  const assigneeLabel = issue.assignee ? `assigned to ${issue.assignee.name}` : "unassigned";
+  const pointsLabel = issue.storyPoints !== undefined ? `, ${issue.storyPoints} points` : "";
+
+  return `${typeLabel} ${issue.key}: ${issue.title}, ${priorityLabel}, ${assigneeLabel}${pointsLabel}`;
+}
