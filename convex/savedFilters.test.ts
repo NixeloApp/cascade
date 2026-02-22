@@ -214,12 +214,14 @@ describe("Saved Filters", () => {
         isPublic: false,
       });
 
-      await asUser.mutation(api.savedFilters.update, {
+      const result = await asUser.mutation(api.savedFilters.update, {
         id: filterId,
         name: "Updated Name",
         filters: { type: ["task"] },
         isPublic: true,
       });
+
+      expect(result).toEqual({ success: true });
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
       const updated = filters.find((f) => f._id === filterId);
@@ -273,10 +275,12 @@ describe("Saved Filters", () => {
       });
 
       // Only update name
-      await asUser.mutation(api.savedFilters.update, {
+      const result = await asUser.mutation(api.savedFilters.update, {
         id: filterId,
         name: "New Name",
       });
+
+      expect(result).toEqual({ success: true });
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
       const updated = filters.find((f) => f._id === filterId);
@@ -303,7 +307,9 @@ describe("Saved Filters", () => {
         isPublic: false,
       });
 
-      await asUser.mutation(api.savedFilters.remove, { id: filterId });
+      const result = await asUser.mutation(api.savedFilters.remove, { id: filterId });
+
+      expect(result).toEqual({ success: true });
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
       expect(filters).toHaveLength(0);
