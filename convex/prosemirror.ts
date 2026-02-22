@@ -66,8 +66,9 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
           typeof snapshot === "string"
             ? (JSON.parse(snapshot) as ProseMirrorSnapshot)
             : (snapshot as ProseMirrorSnapshot);
-      } catch (_e) {
-        return;
+      } catch (e) {
+        console.error(`Failed to parse snapshot for document ${id}:`, e);
+        throw validation("content", "Invalid document snapshot");
       }
       // Update the document's updatedAt timestamp when content changes
       const document = await ctx.db.get(id as Id<"documents">);

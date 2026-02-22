@@ -131,4 +131,31 @@ describe("ProseMirror Versioning", () => {
     expect(versions[0].version).toBe(3);
     expect(versions[1].version).toBe(1);
   });
+
+  it("throws validation error on invalid JSON snapshot", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, organizationId, asUser } = await createTestContext(t);
+
+    const docId = await createDocumentInOrganization(t, userId, organizationId, {
+      title: "Test Doc",
+    });
+
+    const invalidSnapshot = "{ invalid json }";
+
+    // This should now FAIL with a validation error
+    await expect(
+      asUser.mutation(api.prosemirror.submitSnapshot, {
+        id: docId,
+        version: 1,
+        content: invalidSnapshot,
+      }),
+    ).rejects.toThrow(/Invalid document snapshot/);
+
+    // Verify side effects did NOT happen (e.g. updatedAt not updated)
+    // We can check documentVersions count
+    const versions = await asUser.query(api.documentVersions.listVersions, {
+      documentId: docId,
+    });
+    expect(versions).toHaveLength(0);
+  });
 });
