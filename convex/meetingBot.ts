@@ -109,14 +109,33 @@ export const listRecordings = authenticatedQuery({
       // Security: Ensure user has access to the project
       await assertCanAccessProject(ctx, args.projectId, ctx.userId);
 
-      recordings = await ctx.db
-        .query("meetingRecordings")
-        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-        .order("desc")
-        .take(limit);
+      // Optimization: Fetch public and owned recordings in parallel to avoid scanning private ones
+      const [publicRecordings, myRecordings] = await Promise.all([
+        ctx.db
+          .query("meetingRecordings")
+          .withIndex("by_project_public", (q) =>
+            q.eq("projectId", args.projectId).eq("isPublic", true),
+          )
+          .order("desc")
+          .take(limit),
+        ctx.db
+          .query("meetingRecordings")
+          .withIndex("by_project_creator", (q) =>
+            q.eq("projectId", args.projectId).eq("createdBy", ctx.userId),
+          )
+          .order("desc")
+          .take(limit),
+      ]);
 
-      // Security: Filter out private recordings from other users
-      recordings = recordings.filter((r) => r.isPublic || r.createdBy === ctx.userId);
+      // Merge and deduplicate by ID
+      const uniqueRecordings = Array.from(
+        new Map([...publicRecordings, ...myRecordings].map((r) => [r._id, r])).values(),
+      );
+
+      // Sort by creation time descending and take top limit
+      recordings = uniqueRecordings
+        .sort((a, b) => b._creationTime - a._creationTime)
+        .slice(0, limit);
     } else {
       recordings = await ctx.db
         .query("meetingRecordings")

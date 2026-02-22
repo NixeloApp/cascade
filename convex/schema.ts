@@ -1220,6 +1220,8 @@ const applicationTables = {
     .index("by_calendar_event", ["calendarEventId"])
     .index("by_creator", ["createdBy"])
     .index("by_project", ["projectId"])
+    .index("by_project_public", ["projectId", "isPublic"])
+    .index("by_project_creator", ["projectId", "createdBy"])
     .index("by_status", ["status"])
     .index("by_scheduled_time", ["scheduledStartTime"])
     .index("by_platform", ["meetingPlatform"]),

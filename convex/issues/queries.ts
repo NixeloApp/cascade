@@ -581,6 +581,10 @@ export const getByKey = query({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
 
+    if (!userId) {
+      return null;
+    }
+
     const issue = await ctx.db
       .query("issues")
       .withIndex("by_key", (q) => q.eq("key", args.key))
@@ -592,17 +596,9 @@ export const getByKey = query({
     }
 
     // Check if user has access to the project
-    if (userId) {
-      const hasAccess = await canAccessProject(ctx, issue.projectId, userId);
-      if (!hasAccess) {
-        return null;
-      }
-    } else {
-      // Unauthenticated users can only see issues in public projects
-      const project = await ctx.db.get(issue.projectId);
-      if (!project?.isPublic) {
-        return null;
-      }
+    const hasAccess = await canAccessProject(ctx, issue.projectId, userId);
+    if (!hasAccess) {
+      return null;
     }
 
     return await enrichIssue(ctx, issue);
