@@ -26,7 +26,7 @@ describe("Issue Counts Performance", () => {
     // Create 2 Done issues
     const doneIssueIds = [];
     for (let i = 0; i < 2; i++) {
-      const id = await asUser.mutation(api.issues.create, {
+      const { issueId: id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: `Done ${i}`,
         type: "task",

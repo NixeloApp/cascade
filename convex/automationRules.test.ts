@@ -559,7 +559,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -596,7 +596,7 @@ describe("Automation Rules", () => {
       });
 
       // Create bug issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Bug Issue",
         type: "bug",
@@ -633,7 +633,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -669,7 +669,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -717,7 +717,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -753,7 +753,7 @@ describe("Automation Rules", () => {
       });
 
       // Create first issue
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
@@ -767,7 +767,7 @@ describe("Automation Rules", () => {
       });
 
       // Create second issue
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -806,7 +806,7 @@ describe("Automation Rules", () => {
       });
 
       // Create task (should NOT trigger)
-      const taskId = await asUser.mutation(api.issues.create, {
+      const { issueId: taskId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task",
         type: "task",
@@ -824,7 +824,7 @@ describe("Automation Rules", () => {
       expect(task?.priority).toBe("medium"); // Unchanged
 
       // Create bug (should trigger)
-      const bugId = await asUser.mutation(api.issues.create, {
+      const { issueId: bugId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Bug",
         type: "bug",

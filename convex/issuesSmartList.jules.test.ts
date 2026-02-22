@@ -25,7 +25,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
     });
 
     // Create Todo issues (orders 2, 0, 1) - mixed insertion
-    const todo1 = await asUser.mutation(api.issues.create, {
+    const { issueId: todo1 } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Todo 1 (Order 2)",
       type: "task",
@@ -38,7 +38,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       await ctx.db.patch(todo1, { order: 2 });
     });
 
-    const todo2 = await asUser.mutation(api.issues.create, {
+    const { issueId: todo2 } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Todo 2 (Order 0)",
       type: "task",
@@ -49,7 +49,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       await ctx.db.patch(todo2, { order: 0 });
     });
 
-    const todo3 = await asUser.mutation(api.issues.create, {
+    const { issueId: todo3 } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Todo 3 (Order 1)",
       type: "task",
@@ -62,7 +62,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
 
     // Create Done issues (timestamps T, T+1000, T+2000)
     const now = Date.now();
-    const done1 = await asUser.mutation(api.issues.create, {
+    const { issueId: done1 } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Done 1 (Oldest)",
       type: "task",
@@ -73,7 +73,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       await ctx.db.patch(done1, { status: "done", updatedAt: now });
     });
 
-    const done2 = await asUser.mutation(api.issues.create, {
+    const { issueId: done2 } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Done 2 (Middle)",
       type: "task",
@@ -84,7 +84,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       await ctx.db.patch(done2, { status: "done", updatedAt: now + 1000 });
     });
 
-    const done3 = await asUser.mutation(api.issues.create, {
+    const { issueId: done3 } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Done 3 (Newest)",
       type: "task",

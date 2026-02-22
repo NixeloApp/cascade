@@ -21,7 +21,7 @@ describe("Public Issue Access Vulnerability", () => {
     const asOwner = asAuthenticatedUser(t, ownerId);
 
     // Create an issue assigned to the victim
-    const issueId = await asOwner.mutation(api.issues.create, {
+    const { issueId } = await asOwner.mutation(api.issues.create, {
       projectId,
       title: "Sensitive Issue",
       description: "This issue contains sensitive info",

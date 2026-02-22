@@ -38,7 +38,7 @@ describe("Analytics", () => {
       });
 
       // 2. In Progress, Bug, High, Assigned to User 1
-      const issue2 = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2 } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "bug",
@@ -52,7 +52,7 @@ describe("Analytics", () => {
       });
 
       // 3. Done, Story, Low, Assigned to User 2
-      const issue3 = await asUser.mutation(api.issues.create, {
+      const { issueId: issue3 } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 3",
         type: "story",
@@ -208,7 +208,7 @@ describe("Analytics", () => {
       const doneState = project?.workflowStates.find((s: { name: string }) => s.name === "Done");
 
       // Create issues
-      const issue1 = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1 } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 1",
         type: "task",
@@ -216,7 +216,7 @@ describe("Analytics", () => {
         sprintId,
         estimatedHours: 5,
       });
-      const _issue2 = await asUser.mutation(api.issues.create, {
+      const { issueId: _issue2 } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 2",
         type: "task",
@@ -365,7 +365,7 @@ describe("Analytics", () => {
         projectId,
         name: "Sprint 1",
       });
-      const issue1 = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1 } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 1",
         type: "task",
@@ -387,7 +387,7 @@ describe("Analytics", () => {
         projectId,
         name: "Sprint 2",
       });
-      const issue2 = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2 } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 2",
         type: "task",
@@ -488,7 +488,7 @@ describe("Analytics", () => {
       });
 
       // Create completed issue
-      const completedIssue = await asUser.mutation(api.issues.create, {
+      const { issueId: completedIssue } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Completed Task",
         type: "task",
@@ -579,7 +579,7 @@ describe("Analytics", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create issue (generates activity)
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -710,7 +710,7 @@ describe("Analytics", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "To be deleted",
         type: "task",

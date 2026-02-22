@@ -53,6 +53,7 @@ export const create = projectEditorMutation({
     dueDate: v.optional(v.number()),
     storyPoints: v.optional(v.number()),
   },
+  returns: v.object({ issueId: v.id("issues"), key: v.string() }),
   handler: async (ctx, args) => {
     // Rate limit: 60 issues per minute per user with burst capacity of 15
     // Skip in test environment (convex-test doesn't support components)
@@ -153,7 +154,7 @@ export const create = projectEditorMutation({
       action: "created",
     });
 
-    return issueId;
+    return { issueId, key: issueKey };
   },
 });
 

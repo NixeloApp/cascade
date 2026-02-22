@@ -183,7 +183,7 @@ describe("Custom Functions Access Control", () => {
       await addProjectMember(t, projectId, editorId, "editor", adminId);
 
       // 4. Editor creates issue
-      const issueId = await asEditor.mutation(api.issues.create, {
+      const { issueId } = await asEditor.mutation(api.issues.create, {
         projectId,
         title: "Editor Issue",
         type: "task",

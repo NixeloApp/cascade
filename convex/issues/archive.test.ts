@@ -16,7 +16,7 @@ describe("Issue Archive", () => {
     });
 
     // Create issue
-    const issueId = await asUser.mutation(api.issues.create, {
+    const { issueId } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Issue to Archive",
       type: "task",
