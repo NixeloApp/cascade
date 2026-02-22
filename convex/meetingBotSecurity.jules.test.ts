@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { createOrganizationAdmin, createProjectInOrganization, createTestContext } from "./testUtils";
+import {
+  createOrganizationAdmin,
+  createProjectInOrganization,
+  createTestContext,
+} from "./testUtils";
 
 describe("MeetingBot Security", () => {
   it("VULNERABILITY: Unauthorized user can create issue from private summary in private project", async () => {
@@ -183,8 +187,14 @@ describe("MeetingBot Security", () => {
     const { organizationId: orgBId } = await createOrganizationAdmin(t, userId, { name: "Org B" });
 
     // Projects
-    const projectAId = await createProjectInOrganization(t, userId, orgAId, { name: "Project A", key: "PROJA" });
-    const projectBId = await createProjectInOrganization(t, userId, orgBId, { name: "Project B", key: "PROJB" });
+    const projectAId = await createProjectInOrganization(t, userId, orgAId, {
+      name: "Project A",
+      key: "PROJA",
+    });
+    const projectBId = await createProjectInOrganization(t, userId, orgBId, {
+      name: "Project B",
+      key: "PROJB",
+    });
 
     // Recording in Org A
     const recordingId = await t.run(async (ctx) => {
