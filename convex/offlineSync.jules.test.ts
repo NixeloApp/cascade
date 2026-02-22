@@ -73,7 +73,7 @@ describe("offlineSync", () => {
       expect(retryItem).toBeDefined();
       expect(retryItem?.status).toBe("pending");
       // Should have updated updatedAt
-      expect(retryItem!.updatedAt).toBeGreaterThan(now);
+      expect(retryItem?.updatedAt).toBeGreaterThan(now);
 
       // Check itemArchive
       const archiveItem = await ctx.db.get(itemArchiveId);
