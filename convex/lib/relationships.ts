@@ -290,6 +290,10 @@ async function handleDeleteRelation(ctx: MutationCtx, rel: Relationship, recordI
  * @param table - Parent table name
  * @param recordId - ID of parent record to delete
  *
+ * @warning This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
+ * If a parent has more than 100 children in a relationship (e.g. >100 comments), the remaining
+ * children will be orphaned. For large deletions, use `collectInBatches` or handle manually.
+ *
  * @example
  * await cascadeDelete(ctx, "issues", issueId);
  * // Deletes issue AND all comments, activities, links, watchers, time entries
@@ -316,6 +320,10 @@ export async function cascadeDelete<T extends TableNames>(
  * @param recordId - ID of parent record to soft delete
  * @param deletedBy - User ID who performed the deletion
  * @param deletedAt - Timestamp of deletion
+ *
+ * @warning This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
+ * If a parent has more than 100 children in a relationship, the remaining children will not be
+ * soft-deleted. For large datasets, handle deletion manually or in batches.
  *
  * @example
  * const now = Date.now();
@@ -418,6 +426,10 @@ async function handleRestoreRelation(
  * @param ctx - Mutation context
  * @param table - Parent table name
  * @param recordId - ID of parent record to restore
+ *
+ * @warning This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
+ * If a parent has more than 100 children in a relationship, the remaining children will not be
+ * restored. For large datasets, handle restoration manually or in batches.
  *
  * @example
  * await cascadeRestore(ctx, "issues", issueId);
