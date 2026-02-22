@@ -157,7 +157,7 @@ export function InboxList({ projectId }: InboxListProps) {
   const handleBulkAccept = async () => {
     try {
       const ids = Array.from(selectedIds);
-      const result = await bulkAccept({ ids, projectId });
+      const result = await bulkAccept({ inboxIssueIds: ids, projectId });
       showSuccess(`Accepted ${result.accepted} issue(s)`);
       setSelectedIds(new Set());
     } catch (error) {
@@ -169,7 +169,7 @@ export function InboxList({ projectId }: InboxListProps) {
   const handleBulkDecline = async () => {
     try {
       const ids = Array.from(selectedIds);
-      const result = await bulkDecline({ ids, projectId });
+      const result = await bulkDecline({ inboxIssueIds: ids, projectId });
       showSuccess(`Declined ${result.declined} issue(s)`);
       setSelectedIds(new Set());
     } catch (error) {
@@ -182,7 +182,7 @@ export function InboxList({ projectId }: InboxListProps) {
     try {
       const ids = Array.from(selectedIds);
       const oneWeekFromNow = Date.now() + WEEK;
-      const result = await bulkSnooze({ ids, projectId, until: oneWeekFromNow });
+      const result = await bulkSnooze({ inboxIssueIds: ids, projectId, until: oneWeekFromNow });
       showSuccess(`Snoozed ${result.snoozed} issue(s) for 1 week`);
       setSelectedIds(new Set());
     } catch (error) {

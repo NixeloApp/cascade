@@ -253,7 +253,7 @@ describe("Inbox", () => {
       const inbox2 = await createInboxIssue(t, projectId, issue2, userId);
 
       const result = await asUser.mutation(api.inbox.bulkAccept, {
-        ids: [inbox1, inbox2],
+        inboxIssueIds: [inbox1, inbox2],
         projectId,
       });
 
@@ -287,7 +287,7 @@ describe("Inbox", () => {
       });
 
       const result = await asUser.mutation(api.inbox.bulkAccept, {
-        ids: [inbox1, inbox2],
+        inboxIssueIds: [inbox1, inbox2],
         projectId,
       });
 

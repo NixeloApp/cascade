@@ -531,13 +531,13 @@ export const reopen = projectEditorMutation({
 /** Bulk accept multiple inbox issues */
 export const bulkAccept = projectEditorMutation({
   args: {
-    ids: v.array(v.id("inboxIssues")),
+    inboxIssueIds: v.array(v.id("inboxIssues")),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
     let accepted = 0;
 
-    for (const id of args.ids) {
+    for (const id of args.inboxIssueIds) {
       const inboxIssue = await ctx.db.get(id);
       if (!inboxIssue) continue;
       if (inboxIssue.projectId !== ctx.projectId) continue;
@@ -575,14 +575,14 @@ export const bulkAccept = projectEditorMutation({
 /** Bulk decline multiple inbox issues */
 export const bulkDecline = projectEditorMutation({
   args: {
-    ids: v.array(v.id("inboxIssues")),
+    inboxIssueIds: v.array(v.id("inboxIssues")),
     reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
     let declined = 0;
 
-    for (const id of args.ids) {
+    for (const id of args.inboxIssueIds) {
       const inboxIssue = await ctx.db.get(id);
       if (!inboxIssue) continue;
       if (inboxIssue.projectId !== ctx.projectId) continue;
@@ -621,7 +621,7 @@ export const bulkDecline = projectEditorMutation({
 /** Bulk snooze multiple inbox issues */
 export const bulkSnooze = projectEditorMutation({
   args: {
-    ids: v.array(v.id("inboxIssues")),
+    inboxIssueIds: v.array(v.id("inboxIssues")),
     until: v.number(),
   },
   handler: async (ctx, args) => {
@@ -633,7 +633,7 @@ export const bulkSnooze = projectEditorMutation({
     const now = Date.now();
     let snoozed = 0;
 
-    for (const id of args.ids) {
+    for (const id of args.inboxIssueIds) {
       const inboxIssue = await ctx.db.get(id);
       if (!inboxIssue) continue;
       if (inboxIssue.projectId !== ctx.projectId) continue;
