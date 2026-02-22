@@ -11,41 +11,45 @@ const { MockIcon } = vi.hoisted(() => ({
 }));
 
 // Mock issue utilities
-vi.mock("@/lib/issue-utils", () => ({
-  getTypeLabel: vi.fn((type: string) => {
-    const labels = {
-      bug: "Bug",
-      task: "Task",
-      story: "Story",
-      epic: "Epic",
-    };
-    return labels[type as keyof typeof labels] || "Task";
-  }),
-  getPriorityColor: vi.fn((priority: string) => {
-    const colors = {
-      lowest: "text-priority-lowest",
-      low: "text-priority-low",
-      medium: "text-priority-medium",
-      high: "text-priority-high",
-      highest: "text-priority-highest",
-    };
-    return colors[priority as keyof typeof colors] || "text-ui-text-tertiary";
-  }),
-  ISSUE_TYPE_ICONS: {
-    bug: MockIcon,
-    story: MockIcon,
-    epic: MockIcon,
-    subtask: MockIcon,
-    task: MockIcon,
-  },
-  PRIORITY_ICONS: {
-    highest: MockIcon,
-    high: MockIcon,
-    medium: MockIcon,
-    low: MockIcon,
-    lowest: MockIcon,
-  },
-}));
+vi.mock("@/lib/issue-utils", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/issue-utils")>();
+  return {
+    ...actual,
+    getTypeLabel: vi.fn((type: string) => {
+      const labels = {
+        bug: "Bug",
+        task: "Task",
+        story: "Story",
+        epic: "Epic",
+      };
+      return labels[type as keyof typeof labels] || "Task";
+    }),
+    getPriorityColor: vi.fn((priority: string) => {
+      const colors = {
+        lowest: "text-priority-lowest",
+        low: "text-priority-low",
+        medium: "text-priority-medium",
+        high: "text-priority-high",
+        highest: "text-priority-highest",
+      };
+      return colors[priority as keyof typeof colors] || "text-ui-text-tertiary";
+    }),
+    ISSUE_TYPE_ICONS: {
+      bug: MockIcon,
+      story: MockIcon,
+      epic: MockIcon,
+      subtask: MockIcon,
+      task: MockIcon,
+    },
+    PRIORITY_ICONS: {
+      highest: MockIcon,
+      high: MockIcon,
+      medium: MockIcon,
+      low: MockIcon,
+      lowest: MockIcon,
+    },
+  };
+});
 
 describe("IssueCard", () => {
   const mockIssue = {
@@ -187,5 +191,15 @@ describe("IssueCard", () => {
     // Click Assignee
     await user.click(screen.getByAltText("Alice Johnson"));
     expect(handleClick).toHaveBeenCalledTimes(3);
+  });
+
+  it("should have a descriptive accessible label for screen readers", () => {
+    const issueWithPoints = { ...mockIssue, storyPoints: 5 };
+    render(<IssueCard issue={issueWithPoints} status="todo" />);
+
+    const expectedLabel =
+      "Bug TEST-123: Fix critical bug in authentication, high priority, assigned to Alice Johnson, 5 points";
+    const overlayButton = screen.getByLabelText(expectedLabel);
+    expect(overlayButton).toBeInTheDocument();
   });
 });

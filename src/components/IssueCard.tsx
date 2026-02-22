@@ -14,6 +14,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import {
+  getIssueAccessibleLabel,
   getPriorityColor,
   getTypeLabel,
   ISSUE_TYPE_ICONS,
@@ -261,7 +262,7 @@ export const IssueCard = memo(function IssueCard({
         variant="unstyled"
         onClick={handleClick}
         className="absolute inset-0 w-full h-full z-0 opacity-0 cursor-pointer focus:outline-none"
-        aria-label={`Open issue ${issue.key}: ${issue.title}`}
+        aria-label={getIssueAccessibleLabel(issue)}
       />
 
       {/* Content Wrapper - pointer-events-none allows clicks to pass through to overlay */}
