@@ -160,19 +160,16 @@ describe("User Sanitization Utils", () => {
 
     it("should return email if name missing", () => {
       const noNameUser = { ...mockUser, name: undefined };
-      // @ts-expect-error - Testing fallback
       expect(getUserName(noNameUser)).toBe("test@example.com");
     });
 
     it("should return default name if name and email missing", () => {
       const emptyUser = { ...mockUser, name: undefined, email: undefined };
-      // @ts-expect-error - Testing fallback
       expect(getUserName(emptyUser)).toBe("Unknown");
     });
 
     it("should accept custom default name", () => {
       const emptyUser = { ...mockUser, name: undefined, email: undefined };
-      // @ts-expect-error - Testing fallback
       expect(getUserName(emptyUser, "Guest")).toBe("Guest");
     });
 
