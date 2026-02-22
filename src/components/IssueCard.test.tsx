@@ -102,7 +102,8 @@ describe("IssueCard", () => {
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    const avatar = screen.getByAltText("Alice Johnson");
+    // Assignee avatar is now hidden from AT (covered by card label), so we use hidden: true
+    const avatar = screen.getByRole("img", { name: "Alice Johnson", hidden: true });
     expect(avatar).toBeInTheDocument();
 
     await user.hover(avatar);
@@ -125,8 +126,9 @@ describe("IssueCard", () => {
     };
     render(<IssueCard issue={issueWithManyLabels} status="todo" />);
 
-    // The text "+2" should be present
-    const hiddenCount = screen.getByText("+2");
+    // The text "+2" should be present (hidden from AT)
+    // Casting options to any because TypeScript definition for getByText might miss 'hidden' in this setup
+    const hiddenCount = screen.getByText("+2", { hidden: true } as any);
     expect(hiddenCount).toBeInTheDocument();
 
     await user.hover(hiddenCount);
@@ -135,33 +137,31 @@ describe("IssueCard", () => {
     expect(tooltipText).toBeInTheDocument();
   });
 
-  it("should display metadata icons with correct labels", () => {
+  it("should display metadata icons but not as buttons", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    // Type icon
-    const typeIcon = screen.getByLabelText("Bug");
+    // Type icon (hidden from AT)
+    const typeIcon = screen.getByRole("img", { name: "Bug", hidden: true });
     expect(typeIcon).toBeInTheDocument();
-    // Ensure it IS in a button and is keyboard accessible
-    const typeBtn = typeIcon.closest("button");
-    expect(typeBtn).toBeInTheDocument();
-    expect(typeBtn).not.toHaveAttribute("tabIndex", "-1");
+    // Ensure it IS NOT in a button (removed from tab order)
+    expect(typeIcon.closest("button")).not.toBeInTheDocument();
+    // Ensure wrapper has aria-hidden="true"
+    expect(typeIcon.closest("div[aria-hidden='true']")).toBeInTheDocument();
 
-    // Priority icon
-    const priorityIcon = screen.getByLabelText("Priority: high");
+    // Priority icon (hidden from AT)
+    const priorityIcon = screen.getByRole("img", { name: "Priority: high", hidden: true });
     expect(priorityIcon).toBeInTheDocument();
-    const priorityBtn = priorityIcon.closest("button");
-    expect(priorityBtn).toBeInTheDocument();
-    expect(priorityBtn).not.toHaveAttribute("tabIndex", "-1");
+    expect(priorityIcon.closest("button")).not.toBeInTheDocument();
+    expect(priorityIcon.closest("div[aria-hidden='true']")).toBeInTheDocument();
 
-    // Assignee
-    const assigneeImg = screen.getByAltText("Alice Johnson");
+    // Assignee (hidden from AT)
+    const assigneeImg = screen.getByRole("img", { name: "Alice Johnson", hidden: true });
     expect(assigneeImg).toBeInTheDocument();
-    const assigneeBtn = assigneeImg.closest("button");
-    expect(assigneeBtn).toBeInTheDocument();
-    expect(assigneeBtn).not.toHaveAttribute("tabIndex", "-1");
+    expect(assigneeImg.closest("button")).not.toBeInTheDocument();
+    expect(assigneeImg.closest("div[aria-hidden='true']")).toBeInTheDocument();
   });
 
-  it("should render fallback assignee avatar with accessible label", () => {
+  it("should render fallback assignee avatar with accessible label (hidden from AT)", () => {
     const issueWithoutAvatar = {
       ...mockIssue,
       // biome-ignore lint/style/noNonNullAssertion: testing mock data
@@ -169,7 +169,7 @@ describe("IssueCard", () => {
     };
     render(<IssueCard issue={issueWithoutAvatar} status="todo" />);
 
-    const fallbackAvatar = screen.getByLabelText("Alice Johnson");
+    const fallbackAvatar = screen.getByRole("img", { name: "Alice Johnson", hidden: true });
     expect(fallbackAvatar).toBeInTheDocument();
     expect(fallbackAvatar).toHaveAttribute("role", "img");
     expect(fallbackAvatar).toHaveTextContent("A"); // Initial
@@ -180,24 +180,24 @@ describe("IssueCard", () => {
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" onClick={handleClick} />);
 
-    // Click Type Icon
-    await user.click(screen.getByLabelText("Bug"));
+    // Click Type Icon (using hidden query because it's aria-hidden)
+    await user.click(screen.getByRole("img", { name: "Bug", hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(1);
 
     // Click Priority Icon
-    await user.click(screen.getByLabelText("Priority: high"));
+    await user.click(screen.getByRole("img", { name: "Priority: high", hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(2);
 
     // Click Assignee
-    await user.click(screen.getByAltText("Alice Johnson"));
+    await user.click(screen.getByRole("img", { name: "Alice Johnson", hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(3);
   });
 
-  it("should have a descriptive accessible label for screen readers", () => {
+  it("should have a descriptive accessible label for screen readers including labels", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points, labels: backend, urgent";
     const overlayButton = screen.getByLabelText(expectedLabel);
     expect(overlayButton).toBeInTheDocument();
   });
@@ -207,7 +207,7 @@ describe("IssueCard", () => {
     render(<IssueCard issue={issueWithZeroPoints} status="todo" />);
 
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points, labels: backend, urgent";
     expect(screen.getByLabelText(expectedLabel)).toBeInTheDocument();
   });
 });
