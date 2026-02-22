@@ -61,16 +61,15 @@ describe("issue queries", () => {
       await expect(asOther.query(api.issues.queries.getIssue, { id: issueId })).rejects.toThrow();
     });
 
-    it("should allow public project access for unauthenticated user", async () => {
+    it("should deny public project access for unauthenticated user", async () => {
       // Create a public project
       const publicProjectId = await createProjectInOrganization(t, ctx.userId, ctx.organizationId, {
         isPublic: true,
       });
       const issueId = await createTestIssue(t, publicProjectId, ctx.userId);
 
-      // Query without authentication
-      const result = await t.query(api.issues.queries.getIssue, { id: issueId });
-      expect(result).not.toBeNull();
+      // Query without authentication should fail
+      await expect(t.query(api.issues.queries.getIssue, { id: issueId })).rejects.toThrow();
     });
   });
 

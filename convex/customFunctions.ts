@@ -507,7 +507,7 @@ export const projectQuery = customQuery(query, {
     }
 
     const role = await getProjectRole(ctx, args.projectId, userId);
-    if (!(role || project.isPublic)) {
+    if (!role) {
       throw forbidden();
     }
 
@@ -666,7 +666,7 @@ export const issueQuery = customQuery(query, {
       throw notFound("project", issue.projectId);
     }
     const role = await getProjectRole(ctx, issue.projectId, userId);
-    if (!(role || project.isPublic)) {
+    if (!role) {
       throw forbidden();
     }
 
