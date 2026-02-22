@@ -23,6 +23,7 @@ import {
 import { BOUNDED_DELETE_BATCH, BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { encrypt } from "./lib/encryption";
 import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "./lib/env";
+import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { MINUTE, SECOND } from "./lib/timeUtils";
 
 // Token status types
@@ -149,7 +150,7 @@ export const refreshConnectionToken = internalAction({
 
     try {
       // Exchange refresh token for new access token
-      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
