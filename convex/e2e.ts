@@ -18,7 +18,6 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { type ActionCtx, httpAction, internalMutation, internalQuery } from "./_generated/server";
 import { constantTimeEqual } from "./lib/apiAuth";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
-import { isLocalhost } from "./lib/env";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
@@ -43,18 +42,11 @@ function isTestEmail(email: string): boolean {
 function validateE2EApiKey(request: Request): Response | null {
   const apiKey = process.env.E2E_API_KEY;
 
-  // If no API key is configured, strict environment check
+  // If no API key is configured, disable endpoints completely.
+  // We do NOT allow "localhost" bypass because environment detection is fragile
+  // and can be spoofed in some configurations (e.g. reverse proxies).
   if (!apiKey) {
-    // FAIL SECURE: Only allow if running locally (localhost/127.0.0.1).
-    // This covers local development and local CI runs.
-    // We do NOT allow general "development" or "test" environments to bypass this check,
-    // as they might be exposed publicly (e.g. preview deployments).
-    if (isLocalhost()) {
-      return null;
-    }
-
-    // Block everything else (production, staging, or undefined)
-    return new Response(JSON.stringify({ error: "E2E endpoints disabled (missing API key)" }), {
+    return new Response(JSON.stringify({ error: "E2E endpoints disabled (missing E2E_API_KEY)" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
@@ -2142,7 +2134,7 @@ export const nukeWorkspacesInternal = internalMutation({
       (ws) =>
         ws.name === "E2E Testing Workspace" ||
         ws.name === "🧪 E2E Testing Workspace" ||
-        ws.name === "New Workspace" ||
+        // REMOVED "New Workspace" to prevent accidental data loss of user created workspaces
         ws.name.startsWith("Engineering ") ||
         ws.name.startsWith("Project-"), // Also clean up project leftovers if they leaked into workspaces table?
     );
@@ -3647,7 +3639,7 @@ export const batchCleanupInternal = internalMutation({
       (ws) =>
         ws.name === "E2E Testing Workspace" ||
         ws.name === "🧪 E2E Testing Workspace" ||
-        ws.name === "New Workspace" ||
+        // REMOVED "New Workspace" to prevent accidental data loss of user created workspaces
         ws.name === "Organization Workspace" ||
         ws.name.startsWith("Engineering ") ||
         ws.name.startsWith("Project-"),
