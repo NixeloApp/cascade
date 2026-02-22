@@ -550,30 +550,21 @@ const applicationTables = {
     toIssueId: v.id("issues"),
     linkType: linkTypes,
     createdBy: v.id("users"),
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
   })
     .index("by_from_issue", ["fromIssueId"])
-    .index("by_to_issue", ["toIssueId"])
-    .index("by_deleted", ["isDeleted"]),
+    .index("by_to_issue", ["toIssueId"]),
 
   issueActivity: defineTable(issueActivityFields)
     .index("by_issue", ["issueId"])
-    .index("by_user", ["userId"])
-    .index("by_deleted", ["isDeleted"]),
+    .index("by_user", ["userId"]),
 
   issueWatchers: defineTable({
     issueId: v.id("issues"),
     userId: v.id("users"),
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
     .index("by_user", ["userId"])
-    .index("by_issue_user", ["issueId", "userId"])
-    .index("by_deleted", ["isDeleted"]),
+    .index("by_issue_user", ["issueId", "userId"]),
 
   sprints: defineTable({
     projectId: v.id("projects"),
@@ -610,6 +601,10 @@ const applicationTables = {
     color: v.string(), // Hex: "#3B82F6"
     displayOrder: v.optional(v.number()),
     createdBy: v.id("users"),
+    // Soft Delete (cascaded from project)
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_project_name", ["projectId", "name"])
@@ -710,6 +705,10 @@ const applicationTables = {
     isRequired: v.boolean(),
     description: v.optional(v.string()),
     createdBy: v.id("users"),
+    // Soft Delete (cascaded from project)
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_project_key", ["projectId", "fieldKey"]),
@@ -719,14 +718,10 @@ const applicationTables = {
     fieldId: v.id("customFields"),
     value: v.string(),
     updatedAt: v.number(),
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
     .index("by_field", ["fieldId"])
-    .index("by_issue_field", ["issueId", "fieldId"])
-    .index("by_deleted", ["isDeleted"]),
+    .index("by_issue_field", ["issueId", "fieldId"]),
 
   // ===========================================================================
   // AUTOMATION & WEBHOOKS
@@ -1370,9 +1365,6 @@ const applicationTables = {
     approvedBy: v.optional(v.id("users")),
     approvedAt: v.optional(v.number()),
     updatedAt: v.number(),
-    isDeleted: v.optional(v.boolean()),
-    deletedAt: v.optional(v.number()),
-    deletedBy: v.optional(v.id("users")),
   })
     .index("by_user", ["userId"])
     .index("by_project", ["projectId"])
@@ -1383,8 +1375,7 @@ const applicationTables = {
     .index("by_billable", ["billable"])
     .index("by_billed", ["billed"])
     .index("by_user_project", ["userId", "projectId"])
-    .index("by_equity", ["isEquityHour"])
-    .index("by_deleted", ["isDeleted"]),
+    .index("by_equity", ["isEquityHour"]),
 
   userRates: defineTable({
     userId: v.id("users"),
