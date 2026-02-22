@@ -742,45 +742,29 @@ export const bulkArchive = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
+    const result = await performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      // Already archived?
+      if (issue.archivedAt) return null;
 
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted || issue.archivedAt) return 0;
+      // Check if issue is in "done" category
+      const project = await ctx.db.get(issue.projectId);
+      if (!project) return null;
 
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
+      const state = project.workflowStates.find((s) => s.id === issue.status);
+      if (!state || state.category !== "done") return null;
 
-        // Check if issue is in "done" category
-        const project = await ctx.db.get(issue.projectId);
-        if (!project) return 0;
-
-        const state = project.workflowStates.find((s) => s.id === issue.status);
-        if (!state || state.category !== "done") return 0;
-
-        // Archive the issue
-        await ctx.db.patch(issue._id, {
-          archivedAt: now,
+      return {
+        patch: {
+          archivedAt: Date.now(),
           archivedBy: ctx.userId,
-          updatedAt: now,
-        });
-
-        // Log activity
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
+        },
+        activity: {
           action: "archived",
-        });
+        },
+      };
+    });
 
-        return 1;
-      }),
-    );
-
-    return { archived: results.reduce((a: number, b) => a + b, 0) };
+    return { archived: result.updated };
   },
 });
 
@@ -792,38 +776,21 @@ export const bulkRestore = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
+    const result = await performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      if (!issue.archivedAt) return null;
 
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted || !issue.archivedAt) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Restore the issue
-        await ctx.db.patch(issue._id, {
+      return {
+        patch: {
           archivedAt: undefined,
           archivedBy: undefined,
-          updatedAt: now,
-        });
-
-        // Log activity
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
+        },
+        activity: {
           action: "restored",
-        });
+        },
+      };
+    });
 
-        return 1;
-      }),
-    );
-
-    return { restored: results.reduce((a: number, b) => a + b, 0) };
+    return { restored: result.updated };
   },
 });
 
