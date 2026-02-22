@@ -91,6 +91,12 @@ export const TABLES: TableNames[] = [
   "authVerificationCodes",
   "authVerifiers",
   "authRateLimits",
+  // Feature tables
+  "modules",
+  "workflows",
+  "workflowReminders",
+  "roundRobinAssignments",
+  "videoConnections",
 ];
 
 /** Purges all data from the database in batches, requires confirmation parameter. */

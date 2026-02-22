@@ -216,9 +216,11 @@ export function processIssueUpdates(
   issue: {
     title: string;
     description?: string;
+    type: string;
     priority: string;
     assigneeId?: Id<"users">;
     labels: string[];
+    startDate?: number;
     dueDate?: number;
     estimatedHours?: number;
     storyPoints?: number;
@@ -226,9 +228,11 @@ export function processIssueUpdates(
   args: {
     title?: string;
     description?: string;
+    type?: string;
     priority?: string;
     assigneeId?: Id<"users"> | null;
     labels?: string[];
+    startDate?: number | null;
     dueDate?: number | null;
     estimatedHours?: number | null;
     storyPoints?: number | null;
@@ -251,6 +255,9 @@ export function processIssueUpdates(
   if (trackFieldChange(changes, "priority", issue.priority, args.priority)) {
     updates.priority = args.priority;
   }
+  if (trackFieldChange(changes, "type", issue.type, args.type)) {
+    updates.type = args.type;
+  }
 
   // Update search content if title or description changed
   if (args.title !== undefined || args.description !== undefined) {
@@ -261,6 +268,7 @@ export function processIssueUpdates(
 
   // Track nullable field changes
   trackNullableFieldUpdate(updates, changes, "assigneeId", issue.assigneeId, args.assigneeId);
+  trackNullableFieldUpdate(updates, changes, "startDate", issue.startDate, args.startDate);
   trackNullableFieldUpdate(updates, changes, "dueDate", issue.dueDate, args.dueDate);
   trackNullableFieldUpdate(
     updates,
