@@ -110,7 +110,22 @@ describe("Issue Links", () => {
         priority: "medium",
       });
 
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      // Add viewer
+      const asAdminUser = asAuthenticatedUser(t, adminId);
+
+      // Add viewer to organization first
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project.organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
+
+      await asAdminUser.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",
         role: "viewer",
@@ -200,7 +215,22 @@ describe("Issue Links", () => {
         linkType: "relates",
       });
 
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      // Add viewer
+      const asAdminUser = asAuthenticatedUser(t, adminId);
+
+      // Add viewer to organization first
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project.organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
+
+      await asAdminUser.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",
         role: "viewer",
