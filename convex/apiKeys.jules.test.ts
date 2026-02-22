@@ -25,16 +25,6 @@ describe("API Keys Security", () => {
     const memberEmail = "member@example.com";
     const memberId = await createTestUser(t, { name: "Member", email: memberEmail });
 
-    // Add member to organization
-    await t.run(async (ctx) => {
-      await ctx.db.insert("organizationMembers", {
-        organizationId,
-        userId: memberId,
-        role: "member",
-        addedBy: creatorId,
-      });
-    });
-
     // Add member to project
     await asCreator.mutation(api.projects.addProjectMember, {
       projectId,

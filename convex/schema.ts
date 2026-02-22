@@ -601,6 +601,10 @@ const applicationTables = {
     color: v.string(), // Hex: "#3B82F6"
     displayOrder: v.optional(v.number()),
     createdBy: v.id("users"),
+    // Soft Delete (cascaded from project)
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_project_name", ["projectId", "name"])
@@ -701,6 +705,10 @@ const applicationTables = {
     isRequired: v.boolean(),
     description: v.optional(v.string()),
     createdBy: v.id("users"),
+    // Soft Delete (cascaded from project)
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_project_key", ["projectId", "fieldKey"]),
