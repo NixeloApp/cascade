@@ -156,6 +156,7 @@ export const startSprint = sprintMutation({
       endDate: args.endDate,
       updatedAt: Date.now(),
     });
+    return { success: true };
   },
 });
 
@@ -170,5 +171,6 @@ export const completeSprint = sprintMutation({
       status: "completed",
       updatedAt: Date.now(),
     });
+    return { success: true };
   },
 });

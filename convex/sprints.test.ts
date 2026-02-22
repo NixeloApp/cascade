@@ -383,11 +383,13 @@ describe("Sprints", () => {
       const startDate = Date.now();
       const endDate = startDate + 2 * WEEK;
 
-      await asUser.mutation(api.sprints.startSprint, {
+      const result = await asUser.mutation(api.sprints.startSprint, {
         sprintId,
         startDate,
         endDate,
       });
+
+      expect(result).toEqual({ success: true });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -467,11 +469,13 @@ describe("Sprints", () => {
       // Member starts sprint
       const asMember = asAuthenticatedUser(t, member);
       const startDate = Date.now();
-      await asMember.mutation(api.sprints.startSprint, {
+      const result = await asMember.mutation(api.sprints.startSprint, {
         sprintId,
         startDate,
         endDate: startDate + 2 * WEEK,
       });
+
+      expect(result).toEqual({ success: true });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -569,7 +573,9 @@ describe("Sprints", () => {
       });
 
       // Complete the sprint
-      await asUser.mutation(api.sprints.completeSprint, { sprintId });
+      const result = await asUser.mutation(api.sprints.completeSprint, { sprintId });
+
+      expect(result).toEqual({ success: true });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -590,7 +596,9 @@ describe("Sprints", () => {
       });
 
       // Complete without starting
-      await asUser.mutation(api.sprints.completeSprint, { sprintId });
+      const result = await asUser.mutation(api.sprints.completeSprint, { sprintId });
+
+      expect(result).toEqual({ success: true });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -623,7 +631,9 @@ describe("Sprints", () => {
 
       // Member completes sprint
       const asMember = asAuthenticatedUser(t, member);
-      await asMember.mutation(api.sprints.completeSprint, { sprintId });
+      const result = await asMember.mutation(api.sprints.completeSprint, { sprintId });
+
+      expect(result).toEqual({ success: true });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
