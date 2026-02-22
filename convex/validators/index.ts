@@ -87,6 +87,28 @@ export const personas = literals("team_lead", "team_member");
 // Booking
 export const bookingFieldTypes = literals("text", "email", "phone");
 
+// Meeting Bot
+export const meetingPlatforms = literals("google_meet", "zoom", "teams", "other");
+export const meetingStatuses = literals(
+  "scheduled",
+  "joining",
+  "recording",
+  "processing",
+  "transcribing",
+  "summarizing",
+  "completed",
+  "cancelled",
+  "failed",
+);
+export const botJobStatuses = literals(
+  "pending",
+  "queued",
+  "running",
+  "completed",
+  "failed",
+  "cancelled",
+);
+
 // =============================================================================
 // Automation Rules
 // =============================================================================
@@ -364,3 +386,8 @@ export type AutomationActionValue = Infer<typeof automationActionValue>;
 // Booking types
 export type BookingAnswer = Infer<typeof bookingAnswer>;
 export type BookerAnswers = Infer<typeof bookerAnswers>;
+
+// Meeting Bot types
+export type MeetingPlatform = Infer<typeof meetingPlatforms>;
+export type MeetingStatus = Infer<typeof meetingStatuses>;
+export type BotJobStatus = Infer<typeof botJobStatuses>;

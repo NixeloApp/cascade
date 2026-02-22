@@ -1,4 +1,3 @@
-
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
@@ -11,10 +10,7 @@ describe("MeetingBot Security Reproduction", () => {
     const t = convexTest(schema, modules);
 
     // Victim setup
-    const {
-      userId: victimId,
-      organizationId: victimOrgId,
-    } = await createTestContext(t);
+    const { userId: victimId, organizationId: victimOrgId } = await createTestContext(t);
 
     const recordingId = await t.run(async (ctx) => {
       return await ctx.db.insert("meetingRecordings", {
@@ -63,9 +59,9 @@ describe("MeetingBot Security Reproduction", () => {
 
     // Attacker setup
     const {
-        asUser: asAttacker,
-        userId: attackerId,
-        organizationId: attackerOrgId,
+      asUser: asAttacker,
+      userId: attackerId,
+      organizationId: attackerOrgId,
     } = await createTestContext(t);
 
     // Attacker has their own project
@@ -87,7 +83,7 @@ describe("MeetingBot Security Reproduction", () => {
 
     // Verify the summary was NOT modified
     const updatedSummary = await t.run(async (ctx) => {
-        return await ctx.db.get(summaryId);
+      return await ctx.db.get(summaryId);
     });
 
     // The summary should still be unmodified (no issueCreated link)
