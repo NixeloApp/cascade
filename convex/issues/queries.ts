@@ -765,39 +765,39 @@ export const listByProjectSmart = projectQuery({
     const issuesByColumn: Record<string, Doc<"issues">[]> = {};
 
     if (args.sprintId) {
-      await Promise.all(
-        workflowStates.map(async (state: { id: string; category: string }) => {
-          const q = (() => {
-            if (state.category === "done") {
-              // Batch query: Promise.all handles parallelism
-              return ctx.db
-                .query("issues")
-                .withIndex("by_project_sprint_status_updated", (q) =>
-                  q
-                    .eq("projectId", ctx.project._id)
-                    .eq("sprintId", args.sprintId as Id<"sprints">)
-                    .eq("status", state.id)
-                    .gte("updatedAt", doneThreshold),
-                )
-                .filter(notDeleted);
-            }
-
-            // Batch query: Promise.all handles parallelism
-            return ctx.db
-              .query("issues")
-              .withIndex("by_project_sprint_status", (q) =>
-                q
-                  .eq("projectId", ctx.project._id)
-                  .eq("sprintId", args.sprintId as Id<"sprints">)
-                  .eq("status", state.id)
-                  .lt("isDeleted", true),
-              )
-              .order("asc");
-          })();
-
-          issuesByColumn[state.id] = await q.take(DEFAULT_PAGE_SIZE);
-        }),
+      // Optimization: Fetch all issues in the sprint (bounded) and distribute them to columns in memory.
+      // This reduces N queries (one per status) to a single query.
+      // Since sprints are typically small (< 200 issues), this is much faster and reduces DB ops.
+      const sprintIssues = await safeCollect(
+        ctx.db
+          .query("issues")
+          .withIndex("by_sprint", (q) =>
+            q.eq("sprintId", args.sprintId as Id<"sprints">).lt("isDeleted", true),
+          )
+          .order("desc"),
+        BOUNDED_LIST_LIMIT * 5, // Allow up to 500 issues per sprint
+        "listByProjectSmart sprint issues",
       );
+
+      // Verify projectId matches (security check)
+      const projectIssues = sprintIssues.filter((i) => i.projectId === ctx.project._id);
+
+      // Group by status
+      for (const state of workflowStates) {
+        let issuesForState = projectIssues.filter((i) => i.status === state.id);
+
+        if (state.category === "done") {
+          // Filter by threshold and sort by updatedAt ascending (matching original query behavior)
+          issuesForState = issuesForState
+            .filter((i) => i.updatedAt >= doneThreshold)
+            .sort((a, b) => a.updatedAt - b.updatedAt);
+        } else {
+          // Sort by order ascending
+          issuesForState = issuesForState.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        }
+
+        issuesByColumn[state.id] = issuesForState.slice(0, DEFAULT_PAGE_SIZE);
+      }
     } else {
       await Promise.all(
         workflowStates.map(async (state: { id: string; category: string }) => {
