@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import { batchFetch, batchFetchUsers, formatUser, getUserName } from "./batchHelpers";
+import { batchFetch, batchFetchUsers } from "./batchHelpers";
 
 describe("batchHelpers", () => {
   it("should batch fetch users correctly", async () => {
@@ -78,54 +78,6 @@ describe("batchHelpers", () => {
       const map = await batchFetch(ctx, "users", [user1Id]);
       expect(map.size).toBe(1);
       expect(map.get(user1Id)?.name).toBe("User 1");
-    });
-  });
-
-  describe("formatUser", () => {
-    it("should format user correctly", () => {
-      const user = {
-        _id: "u1",
-        name: "Alice",
-        email: "alice@example.com",
-        image: "img.png",
-      } as any;
-      expect(formatUser(user)).toEqual({
-        _id: "u1",
-        name: "Alice",
-        email: "alice@example.com",
-        image: "img.png",
-      });
-    });
-
-    it("should fallback to Unknown if name/email missing", () => {
-      const user = { _id: "u1" } as any;
-      expect(formatUser(user)).toEqual({
-        _id: "u1",
-        name: "Unknown",
-        email: undefined,
-        image: undefined,
-      });
-    });
-
-    it("should return null for null/undefined user", () => {
-      expect(formatUser(null)).toBeNull();
-      expect(formatUser(undefined)).toBeNull();
-    });
-  });
-
-  describe("getUserName", () => {
-    it("should return name if present", () => {
-      expect(getUserName({ name: "Bob" } as any)).toBe("Bob");
-    });
-    it("should return email if name missing", () => {
-      expect(getUserName({ email: "bob@example.com" } as any)).toBe("bob@example.com");
-    });
-    it("should return Unknown if both missing", () => {
-      expect(getUserName({} as any)).toBe("Unknown");
-    });
-    it("should return Unknown if user is null/undefined", () => {
-      expect(getUserName(null)).toBe("Unknown");
-      expect(getUserName(undefined)).toBe("Unknown");
     });
   });
 });

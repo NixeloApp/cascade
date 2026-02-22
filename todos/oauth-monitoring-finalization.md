@@ -8,15 +8,6 @@
 
 OAuth synthetic monitoring is implemented. This task covers finalizing the remaining components.
 
-## Completed
-
-- [x] Contract tests (`googleOAuth.contract.test.ts`) - 20 tests
-- [x] Playwright mock OAuth helpers (`e2e/utils/google-oauth-mock.ts`)
-- [x] Playwright mock OAuth tests (`e2e/oauth-mocked.spec.ts`)
-- [x] Health check action (`convex/oauthHealthCheck.ts`)
-- [x] Cron job in `convex/crons.ts` - 15 min interval
-- [x] Documentation runbook
-
 ## Remaining Tasks
 
 ### Phase 4: Metrics Integration
