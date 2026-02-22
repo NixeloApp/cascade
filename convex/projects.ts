@@ -12,7 +12,7 @@ const MAX_ISSUE_COUNT = 1000;
 import { logAudit } from "./lib/audit";
 import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
-import { getOrganizationRole } from "./lib/organizationAccess";
+import { getOrganizationRole, isOrganizationMember } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { cascadeRestore, cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -70,6 +70,9 @@ export const createProject = authenticatedMutation({
     isPublic: v.optional(v.boolean()), // Visible to all organization members
     sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Share with specific teams
   },
+  returns: v.object({
+    projectId: v.id("projects"),
+  }),
   handler: async (ctx, args) => {
     // Validate input constraints
     validate.name(args.name, "name");
@@ -174,7 +177,7 @@ export const createProject = authenticatedMutation({
       },
     });
 
-    return projectId;
+    return { projectId };
   },
 });
 
@@ -336,7 +339,6 @@ export const getWorkspaceProjects = authenticatedQuery({
     }
 
     // Check if user is in organization
-    const { isOrganizationMember } = await import("./lib/organizationAccess");
     const isMember = await isOrganizationMember(ctx, workspace.organizationId, ctx.userId);
     if (!isMember) {
       throw forbidden("member", "You must be an organization member to access this workspace");
@@ -612,6 +614,7 @@ export const restoreProject = authenticatedMutation({
       deletedBy: undefined,
     });
 
+    // Cascade restore to all related resources
     await cascadeRestore(ctx, "projects", args.projectId);
 
     await logAudit(ctx, {
@@ -694,17 +697,13 @@ export const addProjectMember = projectAdminMutation({
 
     if (!user) throw notFound("user");
 
-    // Check organization membership
-    // Prevent "Ghost Membership": User must be a member of the organization to join the project
-    const orgMembership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_organization_user", (q) =>
-        q.eq("organizationId", ctx.project.organizationId).eq("userId", user._id),
-      )
-      .first();
-
-    if (!orgMembership) {
-      throw validation("userEmail", "User is not a member of the organization");
+    // Check if user is in the organization
+    const isMember = await isOrganizationMember(ctx, ctx.project.organizationId, user._id);
+    if (!isMember) {
+      throw validation(
+        "userEmail",
+        "User must be a member of the organization to be added to this project",
+      );
     }
 
     // Check if already a member
