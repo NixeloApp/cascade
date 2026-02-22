@@ -32,7 +32,7 @@ describe("E2E Security Check", () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    delete process.env.E2E_API_KEY; // Ensure no API key
+    delete process.env.E2E_API_KEY; // Ensure no API key by default
   });
 
   afterEach(() => {
@@ -40,12 +40,32 @@ describe("E2E Security Check", () => {
     vi.clearAllMocks();
   });
 
-  it("should allow request when CONVEX_SITE_URL is localhost", async () => {
+  it("should BLOCK request when CONVEX_SITE_URL is localhost (API key required now)", async () => {
     mockIsLocalhost.mockReturnValue(true);
 
-    // Request can be anything
     const request = new Request("http://localhost:5173/e2e/create-test-user", {
       method: "POST",
+      body: JSON.stringify({ email: "test@inbox.mailtrap.io", password: "password" }),
+    });
+
+    const ctx = {
+      runMutation: vi.fn().mockResolvedValue({ success: true }),
+    } as any;
+
+    const response = await createTestUserHandler(ctx, request);
+    expect(response.status).toBe(403);
+    const body = await response.json();
+    expect(body.error).toBe("E2E endpoints disabled (missing E2E_API_KEY)");
+  });
+
+  it("should allow request when E2E_API_KEY is provided and matches", async () => {
+    process.env.E2E_API_KEY = "secret-key";
+
+    const request = new Request("http://localhost:5173/e2e/create-test-user", {
+      method: "POST",
+      headers: {
+        "x-e2e-api-key": "secret-key"
+      },
       body: JSON.stringify({ email: "test@inbox.mailtrap.io", password: "password" }),
     });
 
@@ -74,6 +94,6 @@ describe("E2E Security Check", () => {
     const response = await createTestUserHandler(ctx, request);
     expect(response.status).toBe(403);
     const body = await response.json();
-    expect(body.error).toBe("E2E endpoints disabled (missing API key)");
+    expect(body.error).toBe("E2E endpoints disabled (missing E2E_API_KEY)");
   });
 });
