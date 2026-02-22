@@ -11,7 +11,7 @@ import { internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
-import { WEEK } from "./lib/timeUtils";
+import { MINUTE, WEEK } from "./lib/timeUtils";
 
 const reminderTypes = v.union(v.literal("email"), v.literal("push"), v.literal("in_app"));
 
@@ -52,7 +52,7 @@ export const create = authenticatedMutation({
 
     if (existing) {
       // Update existing reminder
-      const scheduledFor = event.startTime - args.minutesBefore * 60 * 1000;
+      const scheduledFor = event.startTime - args.minutesBefore * MINUTE;
       await ctx.db.patch(existing._id, {
         minutesBefore: args.minutesBefore,
         scheduledFor,
@@ -63,7 +63,7 @@ export const create = authenticatedMutation({
     }
 
     // Calculate scheduled time
-    const scheduledFor = event.startTime - args.minutesBefore * 60 * 1000;
+    const scheduledFor = event.startTime - args.minutesBefore * MINUTE;
 
     // Create the reminder
     const reminderId = await ctx.db.insert("eventReminders", {
@@ -90,7 +90,7 @@ export const createDefaultReminders = internalMutation({
   },
   handler: async (ctx, args) => {
     // Create default 15-minute email reminder
-    const scheduledFor = args.startTime - 15 * 60 * 1000;
+    const scheduledFor = args.startTime - 15 * MINUTE;
 
     // Only create if event is in the future
     if (scheduledFor > Date.now()) {
@@ -305,7 +305,7 @@ export const updateForEventTimeChange = internalMutation({
       .take(BOUNDED_LIST_LIMIT);
 
     for (const reminder of reminders) {
-      const newScheduledFor = args.newStartTime - reminder.minutesBefore * 60 * 1000;
+      const newScheduledFor = args.newStartTime - reminder.minutesBefore * MINUTE;
       await ctx.db.patch(reminder._id, { scheduledFor: newScheduledFor });
     }
   },

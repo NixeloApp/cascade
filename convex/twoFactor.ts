@@ -3,12 +3,13 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { conflict, notFound, unauthenticated } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
+import { MINUTE, SECOND } from "./lib/timeUtils";
 
 const APP_NAME = "Nixelo";
 const TOTP_WINDOW = 1; // Allow 1 step before/after for clock drift
 const TOTP_PERIOD = 30; // 30 second periods
 const MAX_VERIFICATION_ATTEMPTS = 5; // Max attempts before lockout
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
+const LOCKOUT_DURATION_MS = 15 * MINUTE; // 15 minutes lockout
 
 // Base32 alphabet for secret generation and decoding
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -117,7 +118,7 @@ async function generateTOTP(secret: string, counter: number): Promise<string> {
  * Verify TOTP code with window tolerance
  */
 async function verifyTOTP(secret: string, code: string, window = TOTP_WINDOW): Promise<boolean> {
-  const currentCounter = Math.floor(Date.now() / 1000 / TOTP_PERIOD);
+  const currentCounter = Math.floor(Date.now() / SECOND / TOTP_PERIOD);
 
   // Check current and adjacent time steps
   for (let i = -window; i <= window; i++) {

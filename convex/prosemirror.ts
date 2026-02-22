@@ -5,6 +5,7 @@ import { components } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, unauthenticated, validation } from "./lib/errors";
+import { MINUTE } from "./lib/timeUtils";
 import type { ProseMirrorSnapshot } from "./validators";
 
 const prosemirrorSync = new ProsemirrorSync(components.prosemirrorSync);
@@ -90,7 +91,7 @@ export const { getSnapshot, submitSnapshot, latestVersion, getSteps, submitSteps
         // Save version if:
         // 1. No previous version exists, OR
         // 2. More than 1 minute has passed since last version
-        const shouldSaveVersion = !lastVersion || now - lastVersion._creationTime > 60 * 1000; // 1 minute
+        const shouldSaveVersion = !lastVersion || now - lastVersion._creationTime > MINUTE; // 1 minute
 
         if (shouldSaveVersion) {
           await ctx.db.insert("documentVersions", {
