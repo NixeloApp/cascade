@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
 import * as fetchWithTimeoutModule from "./lib/fetchWithTimeout";
+import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -61,7 +62,7 @@ describe("OAuth Health Check", () => {
           latencyMs: 10,
         });
         // Advance time slightly to ensure ordering
-        vi.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(SECOND);
       }
 
       const checks = await t.run(async (ctx) => {
@@ -94,7 +95,7 @@ describe("OAuth Health Check", () => {
         success: true,
         latencyMs: 10,
       });
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(SECOND);
 
       // Failure 1
       await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {
@@ -102,7 +103,7 @@ describe("OAuth Health Check", () => {
         latencyMs: 10,
         error: "Fail 1",
       });
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(SECOND);
 
       // Failure 2
       await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {
@@ -110,7 +111,7 @@ describe("OAuth Health Check", () => {
         latencyMs: 10,
         error: "Fail 2",
       });
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(SECOND);
 
       const count = await t.query(internal.oauthHealthCheck.getConsecutiveFailureCount);
       expect(count).toBe(2);
@@ -124,14 +125,14 @@ describe("OAuth Health Check", () => {
         success: false,
         latencyMs: 10,
       });
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(SECOND);
 
       // Success (stops counting here)
       await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {
         success: true,
         latencyMs: 10,
       });
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(SECOND);
 
       // Failure (newest)
       await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {

@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import { DAY, SECOND } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createProjectInOrganization, createTestContext, type TestContext } from "../testUtils";
@@ -108,8 +109,8 @@ describe("issue queries - sprint optimization", () => {
 
   it("should filter done issues by threshold", async () => {
     const now = Date.now();
-    const twoDaysAgo = now - 2 * 24 * 60 * 60 * 1000;
-    const twentyDaysAgo = now - 20 * 24 * 60 * 60 * 1000;
+    const twoDaysAgo = now - 2 * DAY;
+    const twentyDaysAgo = now - 20 * DAY;
 
     // Recent done issue
     await createIssueInSprint("done", 0, twoDaysAgo, "Recent Done");
@@ -129,7 +130,7 @@ describe("issue queries - sprint optimization", () => {
 
   it("should sort done issues by updatedAt ascending (current behavior)", async () => {
     const now = Date.now();
-    await createIssueInSprint("done", 0, now - 1000, "Older");
+    await createIssueInSprint("done", 0, now - SECOND, "Older");
     await createIssueInSprint("done", 0, now, "Newer");
 
     const result = await ctx.asUser.query(api.issues.queries.listByProjectSmart, {

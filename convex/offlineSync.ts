@@ -3,7 +3,7 @@ import { internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
-import { DAY, WEEK } from "./lib/timeUtils";
+import { DAY, MINUTE, WEEK } from "./lib/timeUtils";
 
 // Add mutation to offline queue
 export const queueMutation = authenticatedMutation({
@@ -213,8 +213,7 @@ export const autoRetryFailed = internalMutation({
 
       // Exponential backoff: 5min, 15min, 45min, 2h, 6h
       const backoffMinutes = [5, 15, 45, 120, 360];
-      const waitTime =
-        backoffMinutes[Math.min(item.attempts, backoffMinutes.length - 1)] * 60 * 1000;
+      const waitTime = backoffMinutes[Math.min(item.attempts, backoffMinutes.length - 1)] * MINUTE;
 
       // Check if enough time has passed since last attempt
       if (item.lastAttempt && now - item.lastAttempt < waitTime) {

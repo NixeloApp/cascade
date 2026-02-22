@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -512,7 +513,7 @@ describe("Invites", () => {
       // Manually set expiresAt to past
       await t.run(async (ctx) => {
         await ctx.db.patch(inviteId as Id<"invites">, {
-          expiresAt: Date.now() - 1000,
+          expiresAt: Date.now() - SECOND,
         });
       });
 
@@ -537,7 +538,7 @@ describe("Invites", () => {
       // Expire the invite
       await t.run(async (ctx) => {
         await ctx.db.patch(inviteId as Id<"invites">, {
-          expiresAt: Date.now() - 1000,
+          expiresAt: Date.now() - SECOND,
         });
       });
 

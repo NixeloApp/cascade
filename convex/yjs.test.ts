@@ -7,6 +7,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
+import { MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -581,7 +582,7 @@ describe("Y.js Backend", () => {
           userId,
           clientId: 12345,
           awarenessData: "{}",
-          lastSeenAt: Date.now() - 120 * 1000, // 2 minutes ago (stale)
+          lastSeenAt: Date.now() - 2 * MINUTE, // 2 minutes ago (stale)
         });
       });
 

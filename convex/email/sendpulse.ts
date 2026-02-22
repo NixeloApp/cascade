@@ -8,6 +8,7 @@
 import { getSendPulseFromEmail, getSendPulseId, getSendPulseSecret } from "../lib/env";
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { SECOND } from "../lib/timeUtils";
 import type { EmailProvider, EmailSendParams, EmailSendResult } from "./provider";
 
 interface SendPulseTokenResponse {
@@ -76,7 +77,7 @@ export class SendPulseProvider implements EmailProvider {
     const data = (await response.json()) as SendPulseTokenResponse;
     this.accessToken = data.access_token;
     // Set expiry 5 minutes before actual expiry for safety
-    this.tokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
+    this.tokenExpiry = Date.now() + (data.expires_in - 300) * SECOND;
 
     return this.accessToken;
   }

@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
-import { DAY, HOUR } from "./lib/timeUtils";
+import { DAY, HOUR, SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -142,12 +142,12 @@ describe("Time Tracking", () => {
       const now = Date.now();
       await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId: p1,
-        startTime: now - 1000,
+        startTime: now - SECOND,
         endTime: now,
       });
       await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId: p2,
-        startTime: now - 1000,
+        startTime: now - SECOND,
         endTime: now,
       });
 

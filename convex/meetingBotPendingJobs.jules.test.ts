@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
+import { DAY, MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createTestContext } from "./testUtils";
@@ -15,7 +16,7 @@ describe("MeetingBot Pending Jobs Starvation", () => {
     const { userId } = await createTestContext(t);
 
     const now = Date.now();
-    const futureTime = now + 365 * 24 * 60 * 60 * 1000; // 1 year from now
+    const futureTime = now + 365 * DAY; // 1 year from now
 
     // 1. Create many future jobs (more than BOUNDED_LIST_LIMIT)
     // These will be returned first by the default index scan (by _id/creation time)
@@ -96,7 +97,7 @@ describe("MeetingBot Pending Jobs Starvation", () => {
     expect(pendingJobs.length).toBeGreaterThan(0);
     // All returned jobs should be scheduled soon (within 5 mins)
     for (const job of pendingJobs) {
-      expect(job.scheduledTime).toBeLessThanOrEqual(now + 5 * 60 * 1000);
+      expect(job.scheduledTime).toBeLessThanOrEqual(now + 5 * MINUTE);
     }
   });
 });

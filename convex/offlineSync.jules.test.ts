@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { internal } from "./_generated/api";
+import { MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createTestUser } from "./testUtils";
@@ -21,7 +22,7 @@ describe("offlineSync", () => {
         mutationArgs: "{}",
         status: "failed",
         attempts: 1,
-        lastAttempt: now - 5 * 60 * 1000, // 5 mins ago
+        lastAttempt: now - 5 * MINUTE, // 5 mins ago
         updatedAt: now,
       });
     });
@@ -34,7 +35,7 @@ describe("offlineSync", () => {
         mutationArgs: "{}",
         status: "failed",
         attempts: 1,
-        lastAttempt: now - 20 * 60 * 1000, // 20 mins ago
+        lastAttempt: now - 20 * MINUTE, // 20 mins ago
         updatedAt: now,
       });
     });

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
+import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
@@ -149,7 +150,7 @@ describe("API Keys", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const expiredTime = Date.now() - 1000;
+      const expiredTime = Date.now() - SECOND;
       const { apiKey } = await asUser.mutation(api.apiKeys.generate, {
         name: "Expired Key",
         scopes: ["issues:read"],
