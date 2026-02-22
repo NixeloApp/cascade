@@ -1,6 +1,7 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
+import { notDeleted } from "../lib/softDeleteHelpers";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
 
@@ -108,16 +109,19 @@ export async function getMaxOrderForStatus(
   projectId: Id<"projects">,
   status: string,
 ) {
-  // Limit to 1000 issues per status - reasonable cap for any Kanban column
-  const MAX_ISSUES_PER_STATUS = 1000;
-  const issuesInStatus = await ctx.db
+  // Use index to find max order efficiently
+  // The index `by_project_status` is sorted by `isDeleted` then `order`
+  // We scan in descending order, so we see deleted items (isDeleted=true) first,
+  // then active items (isDeleted=false/undefined).
+  // We skip deleted items and take the first active item, which has the max order.
+  const latestIssue = await ctx.db
     .query("issues")
     .withIndex("by_project_status", (q) => q.eq("projectId", projectId).eq("status", status))
-    .take(MAX_ISSUES_PER_STATUS);
+    .order("desc")
+    .filter(notDeleted)
+    .first();
 
-  // Handle empty array case - return -1 if no issues
-  if (issuesInStatus.length === 0) return -1;
-  return Math.max(...issuesInStatus.map((i) => i.order));
+  return latestIssue?.order ?? -1;
 }
 
 // Helper: Track field change and add to changes array
