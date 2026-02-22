@@ -20,6 +20,7 @@ import { logger } from "./lib/logger";
 import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { MINUTE } from "./lib/timeUtils";
 import {
   sanitizeUserForAuth,
   sanitizeUserForCurrent,
@@ -228,7 +229,7 @@ async function handleEmailChange(
 
   // Do NOT update email immediately. Start pending verification flow.
   const token = generateOTP();
-  const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+  const expiresAt = Date.now() + 15 * MINUTE; // 15 minutes
 
   const updates = {
     pendingEmail: newEmail,
