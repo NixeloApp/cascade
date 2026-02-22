@@ -245,6 +245,10 @@ export const setValue = authenticatedMutation({
       throw notFound("customField", args.fieldId);
     }
 
+    if (field.projectId !== issue.projectId) {
+      throw validation("fieldId", "Field does not belong to the same project as the issue");
+    }
+
     // Validate value based on field type
     validateCustomFieldValue(field, args.value);
 
