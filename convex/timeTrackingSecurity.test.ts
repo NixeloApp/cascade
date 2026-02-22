@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { DAY, HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -41,7 +42,7 @@ describe("Time Tracking Security", () => {
     // 3. Admin logs some time/cost
     await asAdmin.mutation(api.timeTracking.createTimeEntry, {
       projectId,
-      startTime: Date.now() - 3600000,
+      startTime: Date.now() - HOUR,
       endTime: Date.now(),
       billable: true,
     });
@@ -50,8 +51,8 @@ describe("Time Tracking Security", () => {
     await expect(
       asViewer.query(api.timeTracking.getBurnRate, {
         projectId,
-        startDate: Date.now() - 86400000,
-        endDate: Date.now() + 86400000,
+        startDate: Date.now() - DAY,
+        endDate: Date.now() + DAY,
       }),
     ).rejects.toThrow(/admin/i);
   });

@@ -10,6 +10,7 @@ import { internalAction, internalMutation, internalQuery } from "../_generated/s
 import { getVoyageApiKey } from "../lib/env";
 import { notFound, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { MINUTE } from "../lib/timeUtils";
 import { assertCanAccessProject } from "../projectAccess";
 import { chatRoles } from "../validators";
 
@@ -44,7 +45,7 @@ export const generateEmbedding = internalAction({
           model: "voyage-3-lite", // 512 dimensions, fast & cheap
         }),
       },
-      60000,
+      MINUTE,
     );
 
     if (!response.ok) {

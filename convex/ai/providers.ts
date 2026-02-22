@@ -7,6 +7,7 @@
 
 import { validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { MINUTE } from "../lib/timeUtils";
 import type { AIConfig } from "./config";
 
 export interface AIMessage {
@@ -44,7 +45,7 @@ async function callAnthropic(config: AIConfig, messages: AIMessage[]): Promise<A
         temperature: config.temperature || 0.7,
       }),
     },
-    60000,
+    MINUTE,
   );
 
   if (!response.ok) {

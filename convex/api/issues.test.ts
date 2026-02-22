@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MINUTE } from "../lib/timeUtils";
 import { issuesApiHandler } from "./issues";
 
 // Mock the API generated file
@@ -76,7 +77,7 @@ describe("API Issues Handler", () => {
     // Mock rateLimit mutation to return { ok: false }
     mockCtx.runMutation.mockResolvedValueOnce({
       ok: false,
-      retryAfter: 60000,
+      retryAfter: MINUTE,
     });
 
     const response = await issuesApiHandler(mockCtx, mockRequest);
