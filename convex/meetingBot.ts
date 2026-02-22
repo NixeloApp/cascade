@@ -9,6 +9,7 @@ import {
   query,
 } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import { generateIssueKey, getMaxOrderForStatus, getSearchContent } from "./issues/helpers";
 import { batchFetchCalendarEvents, batchFetchRecordings } from "./lib/batchHelpers";
 import { requireBotApiKey } from "./lib/botAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
@@ -735,27 +736,10 @@ export const createIssueFromActionItem = authenticatedMutation({
     const project = await ctx.db.get(args.projectId);
     if (!project) throw notFound("project", args.projectId);
 
-    // Get next issue number using efficient order desc first pattern
-    const latestIssue = await ctx.db
-      .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .order("desc")
-      .first();
-
-    let nextNumber = 1;
-    if (latestIssue) {
-      const match = latestIssue.key.match(/-(\d+)$/);
-      if (match) {
-        nextNumber = Number.parseInt(match[1], 10) + 1;
-      }
-    }
-
-    // Get approximate count for order
-    const issueCount = await ctx.db
-      .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter(notDeleted)
-      .take(BOUNDED_LIST_LIMIT);
+    const status = project.workflowStates[0]?.id ?? "todo";
+    const issueKey = await generateIssueKey(ctx, args.projectId, project.key);
+    const maxOrder = await getMaxOrderForStatus(ctx, args.projectId, status);
+    const description = "Created from meeting action item";
 
     const now = Date.now();
 
@@ -765,11 +749,11 @@ export const createIssueFromActionItem = authenticatedMutation({
       organizationId: project.organizationId,
       workspaceId: project.workspaceId,
       teamId: project.teamId,
-      key: `${project.key}-${nextNumber}`,
+      key: issueKey,
       title: actionItem.description,
-      description: `Created from meeting action item`,
+      description,
       type: "task",
-      status: project.workflowStates[0]?.id ?? "todo",
+      status,
       priority: actionItem.priority ?? "medium",
       assigneeId: actionItem.assigneeUserId,
       reporterId: ctx.userId,
@@ -778,7 +762,8 @@ export const createIssueFromActionItem = authenticatedMutation({
       linkedDocuments: [],
       attachments: [],
       loggedHours: 0,
-      order: issueCount.length,
+      order: maxOrder + 1,
+      searchContent: getSearchContent(actionItem.description, description),
     });
 
     // Update the action item with the created issue
