@@ -151,6 +151,7 @@ describe("issue helpers", () => {
       const issue = {
         title: "Old Title",
         description: "Old Description",
+        type: "task",
         priority: "low" as const,
         assigneeId: undefined,
         labels: [],
@@ -182,6 +183,7 @@ describe("issue helpers", () => {
       const issue = {
         title: "Title",
         description: "Old Desc",
+        type: "task",
         priority: "medium" as const,
         assigneeId: undefined,
         labels: [],
@@ -206,6 +208,7 @@ describe("issue helpers", () => {
       const issue = {
         title: "Title",
         description: undefined,
+        type: "task",
         priority: "medium" as const,
         assigneeId: undefined,
         labels: ["bug"],

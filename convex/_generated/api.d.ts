@@ -57,6 +57,7 @@ import type * as http_githubOAuth from "../http/githubOAuth.js";
 import type * as http_googleOAuth from "../http/googleOAuth.js";
 import type * as inbox from "../inbox.js";
 import type * as integrations_zoom from "../integrations/zoom.js";
+import type * as integrations_zoomDb from "../integrations/zoomDb.js";
 import type * as internal_ai from "../internal/ai.js";
 import type * as invites from "../invites.js";
 import type * as ipRestrictions from "../ipRestrictions.js";
@@ -213,6 +214,7 @@ declare const fullApi: ApiFromModules<{
   "http/googleOAuth": typeof http_googleOAuth;
   inbox: typeof inbox;
   "integrations/zoom": typeof integrations_zoom;
+  "integrations/zoomDb": typeof integrations_zoomDb;
   "internal/ai": typeof internal_ai;
   invites: typeof invites;
   ipRestrictions: typeof ipRestrictions;
