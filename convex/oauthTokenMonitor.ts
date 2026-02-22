@@ -405,7 +405,14 @@ export const performTokenHealthCheck = internalAction({
 
     // Check each connection's token health
     for (const connection of connections) {
-      await processConnectionHealth(ctx, connection._id, stats, autoRefresh);
+      try {
+        await processConnectionHealth(ctx, connection._id, stats, autoRefresh);
+      } catch (error) {
+        console.error(
+          `[Token Monitor] Error checking connection ${connection._id}:`,
+          error instanceof Error ? error.message : error,
+        );
+      }
     }
 
     const durationMs = Date.now() - startTime;
