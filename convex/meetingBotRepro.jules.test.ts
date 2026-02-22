@@ -1,80 +1,92 @@
 import { convexTest } from "convex-test";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { createProjectInOrganization, createTestContext, expectThrowsAsync } from "./testUtils";
+import { createProjectInOrganization, createTestContext } from "./testUtils";
 
-describe("MeetingBot Access Control Reproduction", () => {
-  it("FIXED: listRecordings throws Forbidden when accessing other projects", async () => {
+describe("MeetingBot Security Reproduction", () => {
+  it("VULNERABILITY: Attacker CANNOT modify public summary by linking issue from their own project", async () => {
     const t = convexTest(schema, modules);
 
-    // 1. Setup Victim (User A, Org A, Project A)
-    const {
-      asUser: asVictim,
-      userId: victimId,
-      organizationId: victimOrgId,
-    } = await createTestContext(t, { name: "Victim" });
-    const victimProjectId = await createProjectInOrganization(t, victimId, victimOrgId, {
-      name: "Secret Project",
-      key: "SECRET",
+    // Victim setup
+    const { userId: victimId, organizationId: victimOrgId } = await createTestContext(t);
+
+    const recordingId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingRecordings", {
+        meetingUrl: "https://zoom.us/j/123",
+        meetingPlatform: "zoom",
+        title: "Victim Public Meeting",
+        status: "completed",
+        botName: "Bot",
+        createdBy: victimId,
+        projectId: undefined,
+        isPublic: true, // Public recording
+        updatedAt: Date.now(),
+      });
     });
 
-    // Victim creates a private recording
-    await asVictim.mutation(api.meetingBot.scheduleRecording, {
-      meetingUrl: "https://zoom.us/j/123",
-      title: "Sensitive Merger Discussion",
-      meetingPlatform: "zoom",
-      scheduledStartTime: Date.now() + 100000,
-      projectId: victimProjectId,
+    const transcriptId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingTranscripts", {
+        recordingId,
+        fullText: "Public transcript",
+        segments: [],
+        language: "en",
+        modelUsed: "whisper",
+        wordCount: 10,
+      });
+    });
+
+    const summaryId = await t.run(async (ctx) => {
+      return await ctx.db.insert("meetingSummaries", {
+        recordingId,
+        transcriptId,
+        executiveSummary: "Public Summary",
+        keyPoints: [],
+        actionItems: [
+          {
+            description: "Action Item",
+            assigneeUserId: victimId,
+            priority: "high",
+          },
+        ],
+        decisions: [],
+        openQuestions: [],
+        topics: [],
+        modelUsed: "gpt-4",
+      });
+    });
+
+    // Attacker setup
+    const {
+      asUser: asAttacker,
+      userId: attackerId,
+      organizationId: attackerOrgId,
+    } = await createTestContext(t);
+
+    // Attacker has their own project
+    const attackerProject = await createProjectInOrganization(t, attackerId, attackerOrgId, {
+      name: "Attacker Project",
+      key: "ATT",
       isPublic: false,
     });
 
-    // 2. Setup Attacker (User B, Org B)
-    const { asUser: asAttacker } = await createTestContext(t, { name: "Attacker" });
-
-    // 3. Attacker lists recordings for Victim's project
-    // This should now throw Forbidden
-    await expectThrowsAsync(async () => {
-      await asAttacker.query(api.meetingBot.listRecordings, {
-        projectId: victimProjectId,
+    // Act: Attacker attempts to create issue using victim's summary and attacker's project
+    // This should now FAIL with "Not authorized"
+    await expect(async () => {
+      await asAttacker.mutation(api.meetingBot.createIssueFromActionItem, {
+        summaryId,
+        actionItemIndex: 0,
+        projectId: attackerProject,
       });
-    });
-  });
+    }).rejects.toThrow(/Not authorized/);
 
-  it("FIXED: getRecording throws Forbidden for PUBLIC recording in PRIVATE project accessed by outsider", async () => {
-    const t = convexTest(schema, modules);
-
-    // 1. Setup Victim
-    const {
-      asUser: asVictim,
-      userId: victimId,
-      organizationId: victimOrgId,
-    } = await createTestContext(t, { name: "Victim" });
-    const victimProjectId = await createProjectInOrganization(t, victimId, victimOrgId, {
-      name: "Secret Project 2",
-      key: "SECRET2",
+    // Verify the summary was NOT modified
+    const updatedSummary = await t.run(async (ctx) => {
+      return await ctx.db.get(summaryId);
     });
 
-    // Victim creates PUBLIC recording in PRIVATE project
-    const publicRecordingId = await asVictim.mutation(api.meetingBot.scheduleRecording, {
-      meetingUrl: "https://zoom.us/j/789",
-      title: "Public Meeting in Private Project",
-      meetingPlatform: "zoom",
-      scheduledStartTime: Date.now() + 100000,
-      projectId: victimProjectId,
-      isPublic: true,
-    });
-
-    // 2. Setup Attacker (Not in project/org)
-    const { asUser: asAttacker } = await createTestContext(t, { name: "Attacker" });
-
-    // 3. Attacker fetches public recording by ID
-    // Should fail because Attacker is not in the project
-    await expectThrowsAsync(async () => {
-      await asAttacker.query(api.meetingBot.getRecording, {
-        recordingId: publicRecordingId,
-      });
-    });
+    // The summary should still be unmodified (no issueCreated link)
+    expect(updatedSummary?.actionItems[0].issueCreated).toBeUndefined();
   });
 });

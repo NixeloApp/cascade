@@ -79,7 +79,7 @@ describe("MeetingBot Security", () => {
         actionItemIndex: 0,
         projectId: victimProject,
       });
-    }).rejects.toThrow(/Not authorized to access this recording/);
+    }).rejects.toThrow(/Not authorized to edit this recording summary/);
 
     // Verify no issue was created
     const issues = await t.run(async (ctx) =>

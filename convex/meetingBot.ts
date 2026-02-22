@@ -17,7 +17,7 @@ import { conflict, forbidden, getErrorMessage, notFound, validation } from "./li
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { MINUTE } from "./lib/timeUtils";
-import { assertCanAccessProject, assertCanEditProject } from "./projectAccess";
+import { assertCanAccessProject, assertCanEditProject, canEditProject } from "./projectAccess";
 import { meetingPlatforms, meetingStatuses, simplePriorities } from "./validators";
 
 const BOT_SERVICE_TIMEOUT_MS = 30000;
@@ -721,8 +721,14 @@ export const createIssueFromActionItem = authenticatedMutation({
     const recording = await ctx.db.get(summary.recordingId);
     if (!recording) throw notFound("recording", summary.recordingId);
 
-    if (recording.createdBy !== ctx.userId && !recording.isPublic) {
-      throw forbidden(undefined, "Not authorized to access this recording");
+    // Security Check: Ensure user has WRITE access to the recording (owner or project editor)
+    // Public access only grants read permission, so we cannot rely on isPublic here.
+    const canEditRecording =
+      recording.createdBy === ctx.userId ||
+      (recording.projectId && (await canEditProject(ctx, recording.projectId, ctx.userId)));
+
+    if (!canEditRecording) {
+      throw forbidden(undefined, "Not authorized to edit this recording summary");
     }
 
     const actionItem = summary.actionItems[args.actionItemIndex];
