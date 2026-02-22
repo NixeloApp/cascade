@@ -23,7 +23,7 @@ describe("Document Security - Project Viewers", () => {
       slug: "test-workspace",
       organizationId: orgId,
     });
-    const projectId = await asOwner.mutation(api.projects.createProject, {
+    const { projectId } = await asOwner.mutation(api.projects.createProject, {
       name: "Test Project",
       organizationId: orgId,
       workspaceId: workspaceId,
@@ -90,7 +90,7 @@ describe("Document Security - Project Viewers", () => {
       slug: "test-workspace",
       organizationId: orgId,
     });
-    const projectId = await asOwner.mutation(api.projects.createProject, {
+    const { projectId } = await asOwner.mutation(api.projects.createProject, {
       name: "Test Project",
       organizationId: orgId,
       workspaceId: workspaceId,

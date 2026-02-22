@@ -2,10 +2,9 @@ import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { batchFetchCalendarEvents, batchFetchUsers } from "./lib/batchHelpers";
+import { batchFetchCalendarEvents, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
-import { getUserName } from "./lib/userUtils";
 import { attendanceStatuses } from "./validators";
 
 /**
