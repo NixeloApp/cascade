@@ -66,9 +66,10 @@ describe("Reactions", () => {
 
     // Add user2 to organization
     const project = await t.run(async (ctx) => ctx.db.get(projectId));
+    if (!project) throw new Error("Project not found");
     await t.run(async (ctx) => {
       await ctx.db.insert("organizationMembers", {
-        organizationId: project?.organizationId,
+        organizationId: project.organizationId,
         userId: user2Id,
         role: "member",
         addedBy: user1Id,
