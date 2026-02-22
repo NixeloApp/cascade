@@ -10,6 +10,7 @@ import { getSiteUrl } from "./lib/env";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { WEEK } from "./lib/timeUtils";
+import { getUserName } from "./lib/userUtils";
 import { inviteRoles, projectRoles } from "./validators";
 
 // Helper: Check if user is a organization admin
@@ -456,7 +457,7 @@ export const getInviteByToken = query({
       ...invite,
       createdAt: invite._creationTime,
       isExpired,
-      inviterName: inviter?.name || inviter?.email || "Unknown",
+      inviterName: getUserName(inviter),
       projectName,
     };
   },
@@ -665,10 +666,8 @@ export const listInvites = authenticatedQuery({
       return {
         ...invite,
         createdAt: invite._creationTime,
-        inviterName: inviter?.name || inviter?.email || "Unknown",
-        acceptedByName: acceptedUser
-          ? acceptedUser.name || acceptedUser.email || "Unknown"
-          : undefined,
+        inviterName: getUserName(inviter),
+        acceptedByName: acceptedUser ? getUserName(acceptedUser) : undefined,
         projectName: project?.name,
       };
     });
@@ -747,7 +746,7 @@ export const listUsers = authenticatedQuery({
     const usersWithInfo = users.map((user) => ({
       _id: user._id,
       _creationTime: user._creationTime,
-      name: user.name ?? user.email ?? "Unknown User",
+      name: getUserName(user, "Unknown User"),
       email: user.email,
       image: user.image,
       emailVerificationTime: user.emailVerificationTime,

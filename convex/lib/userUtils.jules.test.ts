@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Doc } from "../_generated/dataModel";
 import {
+  getUserName,
   sanitizeUserForAuth,
   sanitizeUserForCurrent,
   sanitizeUserForPublic,
@@ -149,6 +150,27 @@ describe("User Sanitization Utils", () => {
         image: mockUser.image,
       });
       expect(result[1]).toBeNull();
+    });
+  });
+
+  describe("getUserName", () => {
+    it("should return name if present", () => {
+      expect(getUserName({ name: "Bob" } as any)).toBe("Bob");
+    });
+    it("should return email if name missing", () => {
+      expect(getUserName({ email: "bob@example.com" } as any)).toBe("bob@example.com");
+    });
+    it("should return Unknown if both missing", () => {
+      expect(getUserName({} as any)).toBe("Unknown");
+    });
+    it("should return Unknown if user is null/undefined", () => {
+      expect(getUserName(null)).toBe("Unknown");
+      expect(getUserName(undefined)).toBe("Unknown");
+    });
+
+    it("should return custom default if user is null/undefined or missing fields", () => {
+      expect(getUserName(null, "Custom Default")).toBe("Custom Default");
+      expect(getUserName({} as any, "Custom Default")).toBe("Custom Default");
     });
   });
 });

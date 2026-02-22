@@ -57,10 +57,21 @@ export function sanitizeUserForAuth(
 
   return {
     _id: user._id,
-    name: user.name || user.email || "Unknown",
+    name: getUserName(user),
     email: user.email,
     image: user.image,
   };
+}
+
+/**
+ * Get the user's name or fallback to email or "Unknown".
+ */
+export function getUserName(
+  user: Doc<"users"> | null | undefined,
+  defaultName = "Unknown",
+): string {
+  if (!user) return defaultName;
+  return user.name || user.email || defaultName;
 }
 
 /**

@@ -21,6 +21,7 @@ import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organiz
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { MINUTE } from "./lib/timeUtils";
 import {
+  getUserName,
   sanitizeUserForAuth,
   sanitizeUserForCurrent,
   sanitizeUserForPublic,
@@ -890,7 +891,7 @@ export const listWithDigestPreference = internalQuery({
         if (!user) return null;
         return {
           _id: user._id,
-          name: user.name ?? user.email ?? "Unknown",
+          name: getUserName(user),
           email: user.email,
           image: user.image,
           createdAt: user._creationTime,

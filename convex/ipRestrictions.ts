@@ -18,6 +18,7 @@ import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
+import { getUserName } from "./lib/userUtils";
 
 // ============================================================================
 // IP Utility Functions
@@ -220,9 +221,7 @@ export const listIpAllowlist = authenticatedQuery({
     // Batch fetch creator names
     const creatorIds = [...new Set(allowlist.map((e) => e.createdBy))];
     const creators = await Promise.all(creatorIds.map((id) => ctx.db.get(id)));
-    const creatorMap = new Map(
-      creators.map((c, i) => [creatorIds[i].toString(), c?.name ?? c?.email ?? "Unknown"]),
-    );
+    const creatorMap = new Map(creators.map((c, i) => [creatorIds[i].toString(), getUserName(c)]));
 
     return allowlist.map((entry) => ({
       _id: entry._id,

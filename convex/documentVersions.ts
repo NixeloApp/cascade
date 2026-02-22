@@ -3,6 +3,7 @@ import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
+import { getUserName } from "./lib/userUtils";
 
 // List all versions for a document
 export const listVersions = authenticatedQuery({
@@ -34,7 +35,7 @@ export const listVersions = authenticatedQuery({
       const user = userMap.get(version.createdBy);
       return {
         ...version,
-        createdByName: user?.name || user?.email || "Unknown",
+        createdByName: getUserName(user),
       };
     });
   },
@@ -66,7 +67,7 @@ export const getVersion = authenticatedQuery({
     const user = await ctx.db.get(version.createdBy);
     return {
       ...version,
-      createdByName: user?.name || user?.email || "Unknown",
+      createdByName: getUserName(user),
     };
   },
 });

@@ -9,6 +9,7 @@ import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAccess";
 import { MAX_ORG_MEMBERS } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { getUserName } from "./lib/userUtils";
 import { isReservedSlug } from "./shared/constants";
 import {
   nullableOrganizationRoles,
@@ -628,12 +629,12 @@ export const getOrganizationMembers = authenticatedQuery({
         user: user
           ? {
               _id: user._id,
-              name: user.name ?? "Unknown",
+              name: getUserName(user),
               email: user.email,
               image: user.image,
             }
           : null,
-        addedByName: addedBy?.name || addedBy?.email || "Unknown",
+        addedByName: getUserName(addedBy),
       };
     });
 
