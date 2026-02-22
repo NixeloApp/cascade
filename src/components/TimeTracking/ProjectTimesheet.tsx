@@ -9,6 +9,6 @@ interface ProjectTimesheetProps {
 /**
  * Wrapper for TimeTrackingPage scoped to a single project
  */
-export default function ProjectTimesheet({ projectId, userRole }: ProjectTimesheetProps) {
+export function ProjectTimesheet({ projectId, userRole }: ProjectTimesheetProps) {
   return <TimeTrackingPage projectId={projectId} userRole={userRole} />;
 }
