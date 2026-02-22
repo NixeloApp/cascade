@@ -2,7 +2,8 @@ import { MINUTE } from "@convex-dev/rate-limiter";
 import { v } from "convex/values";
 import { asyncMap, pruneNull } from "convex-helpers";
 import { components } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
+import type { MutationCtx } from "../_generated/server";
 import {
   authenticatedMutation,
   issueMutation,
@@ -483,6 +484,60 @@ export const bulkUpdateStatus = authenticatedMutation({
   },
 });
 
+// Helper for bulk updates to reduce code duplication
+async function performBulkUpdate(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  issueIds: Id<"issues">[],
+  getUpdate: (issue: Doc<"issues">) => Promise<{
+    patch: Partial<Doc<"issues">>;
+    activity: {
+      action: string;
+      field?: string;
+      oldValue?: string;
+      newValue?: string;
+    };
+  } | null>,
+  checkPermission: (
+    ctx: MutationCtx,
+    projectId: Id<"projects">,
+    userId: Id<"users">,
+  ) => Promise<void> = assertCanEditProject,
+) {
+  const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
+  const now = Date.now();
+
+  const results = await Promise.all(
+    issues.map(async (issue) => {
+      if (!issue || issue.isDeleted) return 0;
+
+      try {
+        await checkPermission(ctx, issue.projectId as Id<"projects">, ctx.userId);
+      } catch {
+        return 0;
+      }
+
+      const update = await getUpdate(issue);
+      if (!update) return 0;
+
+      await ctx.db.patch(issue._id, {
+        ...update.patch,
+        updatedAt: now,
+      });
+
+      // Type assertion for activity log as the schema might be strict or loose
+      await ctx.db.insert("issueActivity", {
+        issueId: issue._id,
+        userId: ctx.userId,
+        ...update.activity,
+      });
+
+      return 1;
+    }),
+  );
+
+  return { updated: results.reduce((a: number, b) => a + b, 0) };
+}
+
 export const bulkUpdatePriority = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -495,41 +550,17 @@ export const bulkUpdatePriority = authenticatedMutation({
     ),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        const oldPriority = issue.priority;
-
-        await ctx.db.patch(issue._id, {
-          priority: args.priority,
-          updatedAt: now,
-        });
-
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      return {
+        patch: { priority: args.priority },
+        activity: {
           action: "updated",
           field: "priority",
-          oldValue: oldPriority,
+          oldValue: issue.priority,
           newValue: args.priority,
-        });
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+        },
+      };
+    });
   },
 });
 
@@ -539,41 +570,17 @@ export const bulkAssign = authenticatedMutation({
     assigneeId: v.union(v.id("users"), v.null()),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        const oldAssignee = issue.assigneeId;
-
-        await ctx.db.patch(issue._id, {
-          assigneeId: args.assigneeId ?? undefined,
-          updatedAt: now,
-        });
-
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      return {
+        patch: { assigneeId: args.assigneeId ?? undefined },
+        activity: {
           action: "updated",
           field: "assignee",
-          oldValue: oldAssignee ? String(oldAssignee) : "",
+          oldValue: issue.assigneeId ? String(issue.assigneeId) : "",
           newValue: args.assigneeId ? String(args.assigneeId) : "",
-        });
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+        },
+      };
+    });
   },
 });
 
@@ -583,41 +590,18 @@ export const bulkAddLabels = authenticatedMutation({
     labels: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        const updatedLabels = Array.from(new Set([...issue.labels, ...args.labels]));
-
-        await ctx.db.patch(issue._id, {
-          labels: updatedLabels,
-          updatedAt: now,
-        });
-
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      const updatedLabels = Array.from(new Set([...issue.labels, ...args.labels]));
+      return {
+        patch: { labels: updatedLabels },
+        activity: {
           action: "updated",
           field: "labels",
           oldValue: issue.labels.join(", "),
           newValue: updatedLabels.join(", "),
-        });
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+        },
+      };
+    });
   },
 });
 
@@ -627,41 +611,17 @@ export const bulkMoveToSprint = authenticatedMutation({
     sprintId: v.union(v.id("sprints"), v.null()),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        const oldSprint = issue.sprintId;
-
-        await ctx.db.patch(issue._id, {
-          sprintId: args.sprintId ?? undefined,
-          updatedAt: now,
-        });
-
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      return {
+        patch: { sprintId: args.sprintId ?? undefined },
+        activity: {
           action: "updated",
           field: "sprint",
-          oldValue: oldSprint ? String(oldSprint) : "",
+          oldValue: issue.sprintId ? String(issue.sprintId) : "",
           newValue: args.sprintId ? String(args.sprintId) : "",
-        });
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+        },
+      };
+    });
   },
 });
 
@@ -877,45 +837,25 @@ export const bulkUpdateDueDate = authenticatedMutation({
     dueDate: v.union(v.number(), v.null()), // null to clear
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      // Validate: due date should not be before start date
+      if (args.dueDate !== null && issue.startDate && args.dueDate < issue.startDate) {
+        return null; // Skip issues where due date would be before start date
+      }
 
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Validate: due date should not be before start date
-        if (args.dueDate !== null && issue.startDate && args.dueDate < issue.startDate) {
-          return 0; // Skip issues where due date would be before start date
-        }
-
-        await ctx.db.patch(issue._id, {
+      return {
+        patch: {
           dueDate: args.dueDate ?? undefined,
-          updatedAt: now,
           version: (issue.version ?? 1) + 1,
-        });
-
-        // Log activity
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
+        },
+        activity: {
           action: "updated",
           field: "dueDate",
           oldValue: issue.dueDate ? new Date(issue.dueDate).toISOString() : undefined,
           newValue: args.dueDate ? new Date(args.dueDate).toISOString() : undefined,
-        });
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+        },
+      };
+    });
   },
 });
 
@@ -929,44 +869,24 @@ export const bulkUpdateStartDate = authenticatedMutation({
     startDate: v.union(v.number(), v.null()), // null to clear
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      // Validate: start date should not be after due date
+      if (args.startDate !== null && issue.dueDate && args.startDate > issue.dueDate) {
+        return null; // Skip issues where start date would be after due date
+      }
 
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Validate: start date should not be after due date
-        if (args.startDate !== null && issue.dueDate && args.startDate > issue.dueDate) {
-          return 0; // Skip issues where start date would be after due date
-        }
-
-        await ctx.db.patch(issue._id, {
+      return {
+        patch: {
           startDate: args.startDate ?? undefined,
-          updatedAt: now,
           version: (issue.version ?? 1) + 1,
-        });
-
-        // Log activity
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
+        },
+        activity: {
           action: "updated",
           field: "startDate",
           oldValue: issue.startDate ? new Date(issue.startDate).toISOString() : undefined,
           newValue: args.startDate ? new Date(args.startDate).toISOString() : undefined,
-        });
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+        },
+      };
+    });
   },
 });
