@@ -78,13 +78,14 @@ export const getUnreadCount = authenticatedQuery({
 /** Mark a single notification as read. Only the notification owner can perform this action. */
 export const markAsRead = authenticatedMutation({
   args: { id: v.id("notifications") },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     requireOwned(notification, ctx.userId, "notification");
 
     await ctx.db.patch(args.id, { isRead: true });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -113,13 +114,14 @@ export const markAllAsRead = authenticatedMutation({
 /** Soft-delete a notification. Only the notification owner can perform this action. */
 export const softDeleteNotification = authenticatedMutation({
   args: { id: v.id("notifications") },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     requireOwned(notification, ctx.userId, "notification");
 
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
