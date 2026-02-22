@@ -12,7 +12,7 @@ import {
 import { validate } from "../lib/constrainedValidators";
 import { conflict, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
-import { assertCanEditProject, assertIsProjectAdmin } from "../projectAccess";
+import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   assertVersionMatch,
@@ -336,14 +336,18 @@ export const update = issueMutation({
       args.assigneeId &&
       args.assigneeId !== ctx.userId
     ) {
-      // Dynamic import to avoid cycles
-      const { sendEmailNotification } = await import("../email/helpers");
-      await sendEmailNotification(ctx, {
-        userId: args.assigneeId,
-        type: "assigned",
-        issueId: ctx.issue._id,
-        actorId: ctx.userId,
-      });
+      const assigneeHasAccess = await canAccessProject(ctx, ctx.issue.projectId, args.assigneeId);
+
+      if (assigneeHasAccess) {
+        // Dynamic import to avoid cycles
+        const { sendEmailNotification } = await import("../email/helpers");
+        await sendEmailNotification(ctx, {
+          userId: args.assigneeId,
+          type: "assigned",
+          issueId: ctx.issue._id,
+          actorId: ctx.userId,
+        });
+      }
     }
 
     if (Object.keys(updates).length > 0) {
@@ -417,8 +421,19 @@ export const addComment = issueViewerMutation({
 
     // Notify mentioned users in parallel
     const mentionedOthers = mentions.filter((id) => id !== ctx.userId);
+
+    // Filter mentions by project access to prevent leaks
+    const validMentions = (
+      await Promise.all(
+        mentionedOthers.map(async (userId) => {
+          const hasAccess = await canAccessProject(ctx, ctx.projectId, userId);
+          return hasAccess ? userId : null;
+        }),
+      )
+    ).filter((id): id is Id<"users"> => id !== null);
+
     await Promise.all(
-      mentionedOthers.flatMap((mentionedUserId) => [
+      validMentions.flatMap((mentionedUserId) => [
         ctx.db.insert("notifications", {
           userId: mentionedUserId,
           type: "issue_mentioned",
@@ -439,23 +454,27 @@ export const addComment = issueViewerMutation({
     );
 
     if (ctx.issue.reporterId !== ctx.userId) {
-      await ctx.db.insert("notifications", {
-        userId: ctx.issue.reporterId,
-        type: "issue_comment",
-        title: "New comment",
-        message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
-        issueId: ctx.issue._id,
-        projectId: ctx.projectId,
-        isRead: false,
-      });
+      const reporterHasAccess = await canAccessProject(ctx, ctx.projectId, ctx.issue.reporterId);
 
-      await sendEmailNotification(ctx, {
-        userId: ctx.issue.reporterId,
-        type: "comment",
-        issueId: ctx.issue._id,
-        actorId: ctx.userId,
-        commentText: args.content,
-      });
+      if (reporterHasAccess) {
+        await ctx.db.insert("notifications", {
+          userId: ctx.issue.reporterId,
+          type: "issue_comment",
+          title: "New comment",
+          message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
+          issueId: ctx.issue._id,
+          projectId: ctx.projectId,
+          isRead: false,
+        });
+
+        await sendEmailNotification(ctx, {
+          userId: ctx.issue.reporterId,
+          type: "comment",
+          issueId: ctx.issue._id,
+          actorId: ctx.userId,
+          commentText: args.content,
+        });
+      }
     }
 
     return commentId;
