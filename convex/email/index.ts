@@ -269,17 +269,7 @@ export async function sendEmail(
   }
 
   // Send email
-  let result: EmailSendResult;
-  try {
-    result = await selected.provider.send(params);
-  } catch (e) {
-    logger.error("Provider send failed", { error: e, provider: selected.name });
-    result = {
-      id: "",
-      success: false,
-      error: e instanceof Error ? e.message : "Unknown error during send",
-    };
-  }
+  const result = await selected.provider.send(params);
 
   // Record usage if successful and we have mutation context
   if (ctx && result.success && "scheduler" in ctx) {
@@ -313,17 +303,7 @@ export async function sendEmailWithProvider(
   }
 
   const provider = config.factory();
-  let result: EmailSendResult;
-  try {
-    result = await provider.send(params);
-  } catch (e) {
-    logger.error("Provider send failed", { error: e, provider: providerName });
-    result = {
-      id: "",
-      success: false,
-      error: e instanceof Error ? e.message : "Unknown error during send",
-    };
-  }
+  const result = await provider.send(params);
 
   if (ctx && result.success) {
     try {
@@ -410,17 +390,7 @@ export const sendEmailAction = internalAction({
       };
     }
 
-    let result: EmailSendResult;
-    try {
-      result = await provider.send(args);
-    } catch (e) {
-      logger.error("Provider send failed in action", { error: e, provider: providerName });
-      result = {
-        id: "",
-        success: false,
-        error: e instanceof Error ? e.message : "Unknown error during send",
-      };
-    }
+    const result = await provider.send(args);
 
     // 4. Record usage via mutation
     // Skip in tests if explicitly requested (to avoid "Write outside of transaction" errors in convex-test)

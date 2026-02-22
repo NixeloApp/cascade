@@ -658,6 +658,80 @@ describe("Analytics", () => {
       expect(activity).toEqual([]);
     });
 
+    it("should return activity for comments on older issues", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      // Create 5 issues
+      const issueIds = [];
+      for (let i = 0; i < 5; i++) {
+        issueIds.push(
+          await asUser.mutation(api.issues.create, {
+            projectId,
+            title: `Issue ${i}`,
+            type: "task",
+            priority: "medium",
+          }),
+        );
+      }
+
+      // Update the first 3 issues to make them "newer"
+      for (let i = 0; i < 3; i++) {
+        await asUser.mutation(api.issues.update, {
+          issueId: issueIds[i],
+          title: `Updated Issue ${i}`,
+        });
+      }
+
+      // Comment on the 5th issue (oldest updated)
+      // This should bring it to the top of recent activity
+      await asUser.mutation(api.issues.addComment, {
+        issueId: issueIds[4],
+        content: "New comment on old issue",
+      });
+
+      const activity = await asUser.query(api.analytics.getRecentActivity, {
+        projectId,
+        limit: 5,
+      });
+
+      // The comment activity should be the most recent
+      expect(activity[0].action).toBe("commented");
+      expect(activity[0].issueId).toBe(issueIds[4]);
+    });
+
+    it("should return activity for deleted issues", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const issueId = await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "To be deleted",
+        type: "task",
+        priority: "medium",
+      });
+
+      // Delete the issue
+      await asUser.mutation(api.issues.bulkDelete, {
+        issueIds: [issueId],
+      });
+
+      const activity = await asUser.query(api.analytics.getRecentActivity, {
+        projectId,
+        limit: 5,
+      });
+
+      // The delete activity should be present
+      expect(activity[0].action).toBe("deleted");
+      expect(activity[0].issueId).toBe(issueId);
+    });
+
     it("should deny unauthenticated users", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);

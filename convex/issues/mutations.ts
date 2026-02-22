@@ -1,6 +1,7 @@
 import { MINUTE } from "@convex-dev/rate-limiter";
 import { v } from "convex/values";
 import { asyncMap, pruneNull } from "convex-helpers";
+import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -10,13 +11,12 @@ import {
   projectEditorMutation,
 } from "../customFunctions";
 import { validate } from "../lib/constrainedValidators";
-import { conflict, validation } from "../lib/errors";
+import { conflict, rateLimited, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, assertIsProjectAdmin } from "../projectAccess";
-import { issueTypesWithSubtask, workflowCategories } from "../validators";
+import { workflowCategories } from "../validators";
 import {
   assertVersionMatch,
-  checkRateLimit,
   generateIssueKey,
   getMaxOrderForStatus,
   getNextVersion,
@@ -46,7 +46,6 @@ export const create = projectEditorMutation({
     ),
     assigneeId: v.optional(v.id("users")),
     sprintId: v.optional(v.id("sprints")),
-    moduleId: v.optional(v.id("modules")),
     epicId: v.optional(v.id("issues")),
     parentId: v.optional(v.id("issues")),
     labels: v.optional(v.array(v.id("labels"))),
@@ -56,11 +55,32 @@ export const create = projectEditorMutation({
   },
   handler: async (ctx, args) => {
     // Rate limit: 60 issues per minute per user with burst capacity of 15
-    await checkRateLimit(ctx, `createIssue:${ctx.userId}`, {
-      rate: 60,
-      period: MINUTE,
-      capacity: 15,
-    });
+    // Skip in test environment (convex-test doesn't support components)
+    if (!process.env.IS_TEST_ENV) {
+      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+        name: `createIssue:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 60,
+          period: MINUTE,
+          capacity: 15,
+        },
+      });
+      if (!rateLimitResult.ok) {
+        throw rateLimited(rateLimitResult.retryAfter);
+      }
+
+      // Consume the rate limit token
+      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+        name: `createIssue:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 60,
+          period: MINUTE,
+          capacity: 15,
+        },
+      });
+    }
 
     // Validate input constraints
     validate.title(args.title);
@@ -71,14 +91,6 @@ export const create = projectEditorMutation({
 
     // Validate parent/epic constraints
     const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
-
-    // Validate module belongs to the same project
-    if (args.moduleId) {
-      const module = await ctx.db.get(args.moduleId);
-      if (!module || module.projectId !== ctx.projectId) {
-        throw validation("moduleId", "Module does not belong to this project");
-      }
-    }
 
     // Generate issue key with duplicate detection
     // In rare concurrent scenarios, we verify the key doesn't exist before using
@@ -121,7 +133,6 @@ export const create = projectEditorMutation({
       updatedAt: now,
       labels: labelNames,
       sprintId: args.sprintId,
-      moduleId: args.moduleId,
       epicId: inheritedEpicId,
       parentId: args.parentId,
       linkedDocuments: [],
@@ -243,8 +254,6 @@ export const update = issueMutation({
     ),
     assigneeId: v.optional(v.union(v.id("users"), v.null())),
     labels: v.optional(v.array(v.string())),
-    type: v.optional(issueTypesWithSubtask),
-    startDate: v.optional(v.union(v.number(), v.null())),
     dueDate: v.optional(v.union(v.number(), v.null())),
     estimatedHours: v.optional(v.union(v.number(), v.null())),
     storyPoints: v.optional(v.union(v.number(), v.null())),
@@ -312,11 +321,31 @@ export const addComment = issueViewerMutation({
   },
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
-    await checkRateLimit(ctx, `addComment:${ctx.userId}`, {
-      rate: 120,
-      period: MINUTE,
-      capacity: 20,
-    });
+    // Skip in test environment (convex-test doesn't support components)
+    if (!process.env.IS_TEST_ENV) {
+      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+        name: `addComment:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 120,
+          period: MINUTE,
+          capacity: 20,
+        },
+      });
+      if (!rateLimitResult.ok) {
+        throw rateLimited(rateLimitResult.retryAfter);
+      }
+
+      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+        name: `addComment:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 120,
+          period: MINUTE,
+          capacity: 20,
+        },
+      });
+    }
 
     const now = Date.now();
     const mentions = args.mentions || [];
@@ -326,6 +355,11 @@ export const addComment = issueViewerMutation({
       authorId: ctx.userId,
       content: args.content,
       mentions,
+      updatedAt: now,
+    });
+
+    // Update issue's updatedAt to reflect new activity
+    await ctx.db.patch(ctx.issue._id, {
       updatedAt: now,
     });
 
@@ -607,53 +641,6 @@ export const bulkMoveToSprint = authenticatedMutation({
         },
       };
     });
-  },
-});
-
-export const bulkMoveToModule = authenticatedMutation({
-  args: {
-    issueIds: v.array(v.id("issues")),
-    moduleId: v.union(v.id("modules"), v.null()),
-  },
-  handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
-
-    // Pre-validate module if provided (reject if moduleId given but module doesn't exist)
-    const targetModule = args.moduleId ? await ctx.db.get(args.moduleId) : null;
-    if (args.moduleId && !targetModule) {
-      return { updated: 0 }; // Module was deleted or invalid
-    }
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Skip if module doesn't belong to this project
-        if (targetModule && targetModule.projectId !== issue.projectId) return 0;
-
-        const oldModule = issue.moduleId;
-        await ctx.db.patch(issue._id, { moduleId: args.moduleId ?? undefined, updatedAt: now });
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
-          action: "updated",
-          field: "module",
-          oldValue: oldModule ? String(oldModule) : "",
-          newValue: args.moduleId ? String(args.moduleId) : "",
-        });
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
   },
 });
 
