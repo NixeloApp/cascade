@@ -228,8 +228,8 @@ async function exchangeCodeForTokens(code: string) {
   });
 
   if (!tokenResponse.ok) {
-    const _errorData = await tokenResponse.text();
-    throw validation("oauth", "Failed to exchange Google authorization code");
+    const errorData = await tokenResponse.text();
+    throw validation("oauth", `Failed to exchange Google authorization code: ${errorData}`);
   }
 
   const tokens = await tokenResponse.json();
@@ -420,7 +420,8 @@ export const handleCallbackHandler = async (
     // Real OAuth flow - exchange code with Google
     try {
       result = await exchangeCodeForTokens(code);
-    } catch (_error) {
+    } catch (error) {
+      console.error(error);
       return new Response(errorPageHtml, {
         status: 500,
         headers: {
