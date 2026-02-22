@@ -380,11 +380,11 @@ export const IssueCard = memo(function IssueCard({
           <Flex align="center" gap="sm">
             {issue.assignee && (
               <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-                {/* biome-ignore lint/a11y/noStaticElementInteractions: Redundant interactive element handled by overlay button */}
-                {/* biome-ignore lint/a11y/useKeyWithClickEvents: Redundant interactive element handled by overlay button */}
-                <div
-                  className="pointer-events-auto flex items-center gap-1 cursor-pointer"
+                <Button
+                  variant="unstyled"
+                  className="pointer-events-auto flex items-center gap-1 cursor-pointer p-0 h-auto rounded-full"
                   onClick={handleClick}
+                  tabIndex={-1} // Remove from tab order as the overlay button handles keyboard
                 >
                   {issue.assignee.image ? (
                     <img
@@ -403,7 +403,7 @@ export const IssueCard = memo(function IssueCard({
                       {issue.assignee.name.charAt(0).toUpperCase()}
                     </Flex>
                   )}
-                </div>
+                </Button>
               </Tooltip>
             )}
           </Flex>

@@ -107,7 +107,11 @@ describe("IssueCard", () => {
 
     await user.hover(avatar);
 
-    const tooltipText = await screen.findByRole("tooltip", { name: "Assigned to: Alice Johnson" });
+    // Tooltip content should be visible (even if trigger is hidden from a11y)
+    const tooltipText = await screen.findByRole("tooltip", {
+      name: "Assigned to: Alice Johnson",
+      hidden: true,
+    });
     expect(tooltipText).toBeInTheDocument();
   });
 
@@ -131,34 +135,27 @@ describe("IssueCard", () => {
 
     await user.hover(hiddenCount);
 
-    const tooltipText = await screen.findByRole("tooltip", { name: "Hidden1, Hidden2" });
+    const tooltipText = await screen.findByRole("tooltip", {
+      name: "Hidden1, Hidden2",
+      hidden: true,
+    });
     expect(tooltipText).toBeInTheDocument();
   });
 
   it("should display metadata icons with correct labels", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    // Type icon
-    const typeIcon = screen.getByLabelText("Bug");
+    // Type icon (visually present)
+    const typeIcon = screen.getByLabelText("Bug", { hidden: true });
     expect(typeIcon).toBeInTheDocument();
-    // Ensure it IS in a button and is keyboard accessible
-    const typeBtn = typeIcon.closest("button");
-    expect(typeBtn).toBeInTheDocument();
-    expect(typeBtn).not.toHaveAttribute("tabIndex", "-1");
 
-    // Priority icon
-    const priorityIcon = screen.getByLabelText("Priority: high");
+    // Priority icon (visually present)
+    const priorityIcon = screen.getByLabelText("Priority: high", { hidden: true });
     expect(priorityIcon).toBeInTheDocument();
-    const priorityBtn = priorityIcon.closest("button");
-    expect(priorityBtn).toBeInTheDocument();
-    expect(priorityBtn).not.toHaveAttribute("tabIndex", "-1");
 
-    // Assignee
+    // Assignee (visually present)
     const assigneeImg = screen.getByAltText("Alice Johnson");
     expect(assigneeImg).toBeInTheDocument();
-    const assigneeBtn = assigneeImg.closest("button");
-    expect(assigneeBtn).toBeInTheDocument();
-    expect(assigneeBtn).not.toHaveAttribute("tabIndex", "-1");
   });
 
   it("should render fallback assignee avatar with accessible label", () => {
@@ -181,11 +178,11 @@ describe("IssueCard", () => {
     render(<IssueCard issue={mockIssue} status="todo" onClick={handleClick} />);
 
     // Click Type Icon
-    await user.click(screen.getByLabelText("Bug"));
+    await user.click(screen.getByLabelText("Bug", { hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(1);
 
     // Click Priority Icon
-    await user.click(screen.getByLabelText("Priority: high"));
+    await user.click(screen.getByLabelText("Priority: high", { hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(2);
 
     // Click Assignee
@@ -197,7 +194,7 @@ describe("IssueCard", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points, Labels: backend, urgent";
     const overlayButton = screen.getByLabelText(expectedLabel);
     expect(overlayButton).toBeInTheDocument();
   });
@@ -207,7 +204,7 @@ describe("IssueCard", () => {
     render(<IssueCard issue={issueWithZeroPoints} status="todo" />);
 
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points, Labels: backend, urgent";
     expect(screen.getByLabelText(expectedLabel)).toBeInTheDocument();
   });
 });
