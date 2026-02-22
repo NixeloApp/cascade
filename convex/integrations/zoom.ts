@@ -15,6 +15,8 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { action, internalAction } from "../_generated/server";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { logger } from "../lib/logger";
 
 // ============================================================================
 // OAuth CSRF Protection
@@ -156,22 +158,41 @@ export const exchangeCodeForToken = internalAction({
 
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
-    const response = await fetch(ZOOM_TOKEN_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${credentials}`,
-      },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        code: args.code,
-        redirect_uri: args.redirectUri,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetchWithTimeout(
+        ZOOM_TOKEN_URL,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Authorization: `Basic ${credentials}`,
+          },
+          body: new URLSearchParams({
+            grant_type: "authorization_code",
+            code: args.code,
+            redirect_uri: args.redirectUri,
+          }),
+        },
+        10000,
+      );
+    } catch (error) {
+      logger.error("Zoom OAuth exchange failed", { error, redirectUri: args.redirectUri });
+      throw new Error("Failed to exchange Zoom OAuth code. Please try again.");
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to exchange code: ${error}`);
+      let errorText: string;
+      try {
+        errorText = await response.text();
+      } catch {
+        errorText = "Unknown error (failed to read response body)";
+      }
+      logger.error("Zoom OAuth exchange returned error", {
+        status: response.status,
+        error: errorText,
+      });
+      throw new Error(`Failed to exchange code: ${errorText}`);
     }
 
     const data = (await response.json()) as ZoomTokenResponse;
@@ -208,21 +229,40 @@ export const refreshAccessToken = internalAction({
 
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
-    const response = await fetch(ZOOM_TOKEN_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${credentials}`,
-      },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: args.refreshToken,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetchWithTimeout(
+        ZOOM_TOKEN_URL,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Authorization: `Basic ${credentials}`,
+          },
+          body: new URLSearchParams({
+            grant_type: "refresh_token",
+            refresh_token: args.refreshToken,
+          }),
+        },
+        10000,
+      );
+    } catch (error) {
+      logger.error("Zoom token refresh failed", { error });
+      throw new Error("Failed to refresh Zoom token. Please try again.");
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to refresh token: ${error}`);
+      let errorText: string;
+      try {
+        errorText = await response.text();
+      } catch {
+        errorText = "Unknown error (failed to read response body)";
+      }
+      logger.error("Zoom token refresh returned error", {
+        status: response.status,
+        error: errorText,
+      });
+      throw new Error(`Failed to refresh token: ${errorText}`);
     }
 
     const data = (await response.json()) as ZoomTokenResponse;
@@ -250,15 +290,34 @@ export const getUserInfo = internalAction({
     firstName: string;
     lastName: string;
   }> => {
-    const response = await fetch(`${ZOOM_API_BASE}/users/me`, {
-      headers: {
-        Authorization: `Bearer ${args.accessToken}`,
-      },
-    });
+    let response: Response;
+    try {
+      response = await fetchWithTimeout(
+        `${ZOOM_API_BASE}/users/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${args.accessToken}`,
+          },
+        },
+        10000,
+      );
+    } catch (error) {
+      logger.error("Zoom user info fetch failed", { error });
+      throw new Error("Failed to get Zoom user info. Please try again.");
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to get user info: ${error}`);
+      let errorText: string;
+      try {
+        errorText = await response.text();
+      } catch {
+        errorText = "Unknown error (failed to read response body)";
+      }
+      logger.error("Zoom user info fetch returned error", {
+        status: response.status,
+        error: errorText,
+      });
+      throw new Error(`Failed to get user info: ${errorText}`);
     }
 
     const data = (await response.json()) as ZoomUserInfoResponse;
@@ -388,32 +447,52 @@ export const createMeeting = action({
     }
 
     // Create meeting via Zoom API
-    const response = await fetch(`${ZOOM_API_BASE}/users/me/meetings`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        topic: args.topic,
-        type: 2, // Scheduled meeting
-        start_time: new Date(args.startTime).toISOString(),
-        duration: args.duration,
-        timezone: "UTC",
-        agenda: args.agenda,
-        settings: {
-          host_video: true,
-          participant_video: true,
-          join_before_host: true,
-          waiting_room: false,
-          auto_recording: "none",
+    let response: Response;
+    try {
+      response = await fetchWithTimeout(
+        `${ZOOM_API_BASE}/users/me/meetings`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            topic: args.topic,
+            type: 2, // Scheduled meeting
+            start_time: new Date(args.startTime).toISOString(),
+            duration: args.duration,
+            timezone: "UTC",
+            agenda: args.agenda,
+            settings: {
+              host_video: true,
+              participant_video: true,
+              join_before_host: true,
+              waiting_room: false,
+              auto_recording: "none",
+            },
+          }),
         },
-      }),
-    });
+        15000,
+      ); // Slightly longer timeout for creation
+    } catch (error) {
+      logger.error("Zoom meeting creation failed", { error, topic: args.topic });
+      throw new Error("Failed to create Zoom meeting. Please try again.");
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to create Zoom meeting: ${error}`);
+      let errorText: string;
+      try {
+        errorText = await response.text();
+      } catch {
+        errorText = "Unknown error (failed to read response body)";
+      }
+      logger.error("Zoom meeting creation returned error", {
+        status: response.status,
+        error: errorText,
+        topic: args.topic,
+      });
+      throw new Error(`Failed to create Zoom meeting: ${errorText}`);
     }
 
     const data = (await response.json()) as ZoomMeetingResponse;
