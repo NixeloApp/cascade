@@ -336,7 +336,6 @@ export const getWorkspaceProjects = authenticatedQuery({
     }
 
     // Check if user is in organization
-    const { isOrganizationMember } = await import("./lib/organizationAccess");
     const isMember = await isOrganizationMember(ctx, workspace.organizationId, ctx.userId);
     if (!isMember) {
       throw forbidden("member", "You must be an organization member to access this workspace");

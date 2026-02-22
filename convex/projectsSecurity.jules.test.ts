@@ -10,7 +10,7 @@ import {
   createTestUser,
 } from "./testUtils";
 
-test("Ghost Membership: User can be added to project without being in organization", async () => {
+test("Ghost Membership Prevention: User cannot be added to project without being in organization", async () => {
   const t = convexTest(schema, modules);
 
   // 1. Setup Admin and Organization
@@ -32,7 +32,7 @@ test("Ghost Membership: User can be added to project without being in organizati
   // Currently getProject throws forbidden if access check fails
   await expect(async () => {
     await outsider.query(api.projects.getProject, { id: projectId });
-  }).rejects.toThrow();
+  }).rejects.toThrow(/Not authorized/);
 
   // 5. Admin attempts to add Outsider to project
   // Should fail because outsider is not in the organization
@@ -47,5 +47,5 @@ test("Ghost Membership: User can be added to project without being in organizati
   // 6. Verify Outsider still cannot access project
   await expect(async () => {
     await outsider.query(api.projects.getProject, { id: projectId });
-  }).rejects.toThrow();
+  }).rejects.toThrow(/Not authorized/);
 });
