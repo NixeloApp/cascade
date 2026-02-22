@@ -5,9 +5,14 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
-import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
-import { MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
+import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
+import {
+  MAX_ACTIVITY_FOR_ANALYTICS,
+  MAX_SPRINT_ISSUES,
+  MAX_VELOCITY_SPRINTS,
+} from "./lib/queryLimits";
 import { DAY } from "./lib/timeUtils";
+import { getUserName } from "./lib/userUtils";
 
 // Helper: Build issues by status from workflow states and counts
 function buildIssuesByStatus(

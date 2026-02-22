@@ -3,12 +3,7 @@ import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedQuery } from "./customFunctions";
-import {
-  batchFetchIssues,
-  batchFetchProjects,
-  batchFetchUsers,
-  getUserName,
-} from "./lib/batchHelpers";
+import { batchFetchIssues, batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import {
   DEFAULT_SEARCH_PAGE_SIZE,
@@ -18,6 +13,7 @@ import {
 } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { WEEK } from "./lib/timeUtils";
+import { getUserName } from "./lib/userUtils";
 import { issueActivityFields, issuesFields, projectsFields } from "./schemaFields";
 import { projectRoles } from "./validators";
 

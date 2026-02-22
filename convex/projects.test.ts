@@ -431,6 +431,16 @@ describe("Projects", () => {
       const editorId = await createTestUser(t, { name: "Editor", email: "editor@test.com" });
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
+      // Add editor to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: editorId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
+
       const asAdmin = asAuthenticatedUser(t, adminId);
       const projectId = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
@@ -498,6 +508,16 @@ describe("Projects", () => {
         });
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
+        // Add new member to organization
+        await t.run(async (ctx) => {
+          await ctx.db.insert("organizationMembers", {
+            organizationId,
+            userId: newMemberId,
+            role: "member",
+            addedBy: adminId,
+          });
+        });
+
         const asAdmin = asAuthenticatedUser(t, adminId);
         const projectId = await asAdmin.mutation(api.projects.createProject, {
           name: "Team Project",
@@ -531,8 +551,24 @@ describe("Projects", () => {
           name: "Editor",
           email: "editor@test.com",
         });
-        await createTestUser(t, { name: "New", email: "new@test.com" });
+        const newUserId = await createTestUser(t, { name: "New", email: "new@test.com" });
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
+
+        // Add both users to organization
+        await t.run(async (ctx) => {
+          await ctx.db.insert("organizationMembers", {
+            organizationId,
+            userId: editorId,
+            role: "member",
+            addedBy: adminId,
+          });
+          await ctx.db.insert("organizationMembers", {
+            organizationId,
+            userId: newUserId,
+            role: "member",
+            addedBy: adminId,
+          });
+        });
 
         const asAdmin = asAuthenticatedUser(t, adminId);
         const projectId = await asAdmin.mutation(api.projects.createProject, {
@@ -572,6 +608,16 @@ describe("Projects", () => {
           email: "member@test.com",
         });
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
+
+        // Add member to organization
+        await t.run(async (ctx) => {
+          await ctx.db.insert("organizationMembers", {
+            organizationId,
+            userId: memberId,
+            role: "member",
+            addedBy: adminId,
+          });
+        });
 
         const asAdmin = asAuthenticatedUser(t, adminId);
         const projectId = await asAdmin.mutation(api.projects.createProject, {
@@ -614,6 +660,16 @@ describe("Projects", () => {
           email: "member@test.com",
         });
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
+
+        // Add member to organization
+        await t.run(async (ctx) => {
+          await ctx.db.insert("organizationMembers", {
+            organizationId,
+            userId: memberId,
+            role: "member",
+            addedBy: adminId,
+          });
+        });
 
         const asAdmin = asAuthenticatedUser(t, adminId);
         const projectId = await asAdmin.mutation(api.projects.createProject, {
@@ -835,6 +891,16 @@ describe("Projects", () => {
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
+      // Add viewer to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
+
       const asAdmin = asAuthenticatedUser(t, adminId);
       const projectId = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
@@ -893,6 +959,16 @@ describe("Projects", () => {
       const ownerId = await createTestUser(t, { name: "Owner" });
       const memberId = await createTestUser(t, { name: "Member", email: "member@test.com" });
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, ownerId);
+
+      // Add member to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: memberId,
+          role: "member",
+          addedBy: ownerId,
+        });
+      });
 
       const asOwner = asAuthenticatedUser(t, ownerId);
       const projectId = await asOwner.mutation(api.projects.createProject, {
@@ -1131,6 +1207,16 @@ describe("Projects", () => {
       const editorId = await createTestUser(t, { name: "Editor", email: "editor@test.com" });
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
+      // Add editor to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: editorId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
+
       const asAdmin = asAuthenticatedUser(t, adminId);
       const projectId = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
@@ -1182,8 +1268,18 @@ describe("Projects", () => {
     it("should reject duplicate members", async () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t, { name: "Admin" });
-      await createTestUser(t, { name: "Member", email: "dup@test.com" });
+      const dupMemberId = await createTestUser(t, { name: "Member", email: "dup@test.com" });
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
+
+      // Add member to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: dupMemberId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
       const projectId = await asAdmin.mutation(api.projects.createProject, {

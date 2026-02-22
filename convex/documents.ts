@@ -5,7 +5,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, rateLimited, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
@@ -18,6 +18,7 @@ import {
 } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { getUserName } from "./lib/userUtils";
 import { isWorkspaceEditor } from "./lib/workspaceAccess";
 import { assertCanAccessProject, assertCanEditProject, canAccessProject } from "./projectAccess";
 

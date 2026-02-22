@@ -64,6 +64,17 @@ describe("Reactions", () => {
     const user2Id = await createTestUser(t, { name: "User 2", email: "user2@test.com" });
     const projectId = await createTestProject(t, user1Id);
 
+    // Add user2 to organization
+    const project = await t.run(async (ctx) => ctx.db.get(projectId));
+    await t.run(async (ctx) => {
+      await ctx.db.insert("organizationMembers", {
+        organizationId: project?.organizationId,
+        userId: user2Id,
+        role: "member",
+        addedBy: user1Id,
+      });
+    });
+
     // Add user2 to project
     const asUser1 = asAuthenticatedUser(t, user1Id);
     await asUser1.mutation(api.projects.addProjectMember, {
