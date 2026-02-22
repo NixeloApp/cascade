@@ -10,6 +10,7 @@ import { internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { notFound } from "./lib/errors";
+import { MINUTE, SECOND } from "./lib/timeUtils";
 
 /**
  * Get Y.js document state for a document
@@ -245,7 +246,7 @@ export const getAwareness = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     // Get awareness states from the last 30 seconds (active users)
-    const cutoff = Date.now() - 30 * 1000;
+    const cutoff = Date.now() - 30 * SECOND;
 
     const awarenessRecords = await ctx.db
       .query("yjsAwareness")
@@ -304,7 +305,7 @@ export const cleanupStaleAwareness = internalMutation({
   args: {},
   handler: async (ctx) => {
     // Remove awareness records older than 1 minute
-    const cutoff = Date.now() - 60 * 1000;
+    const cutoff = Date.now() - MINUTE;
 
     const staleRecords = await ctx.db
       .query("yjsAwareness")

@@ -10,6 +10,7 @@ import {
 } from "./lib/batchHelpers";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
+import { DAY, HOUR, SECOND } from "./lib/timeUtils";
 import { assertCanAccessProject, assertIsProjectAdmin } from "./projectAccess";
 import { rateTypes } from "./validators";
 
@@ -50,8 +51,8 @@ function calculateTimeEntryCost(
   endTime: number,
   hourlyRate?: number,
 ): { duration: number; totalCost: number } {
-  const duration = Math.floor((endTime - startTime) / 1000);
-  const hours = duration / 3600;
+  const duration = Math.floor((endTime - startTime) / SECOND);
+  const hours = duration / (HOUR / SECOND);
   const totalCost = hourlyRate ? hours * hourlyRate : 0;
 
   return { duration, totalCost };
@@ -138,8 +139,8 @@ export const stopTimer = authenticatedMutation({
     }
 
     const now = Date.now();
-    const duration = Math.floor((now - entry.startTime) / 1000); // seconds
-    const hours = duration / 3600;
+    const duration = Math.floor((now - entry.startTime) / SECOND); // seconds
+    const hours = duration / (HOUR / SECOND);
     const totalCost = entry.hourlyRate ? hours * entry.hourlyRate : 0;
 
     await ctx.db.patch(args.entryId, {
@@ -179,8 +180,8 @@ export const createTimeEntry = authenticatedMutation({
     // Get user's current rate
     const rate = await getUserCurrentRate(ctx, ctx.userId, args.projectId);
 
-    const duration = Math.floor((args.endTime - args.startTime) / 1000);
-    const hours = duration / 3600;
+    const duration = Math.floor((args.endTime - args.startTime) / SECOND);
+    const hours = duration / (HOUR / SECOND);
     const totalCost = rate?.hourlyRate ? hours * rate.hourlyRate : 0;
 
     const now = Date.now();
@@ -303,8 +304,8 @@ export const getRunningTimer = authenticatedQuery({
 
     // Calculate current duration
     const now = Date.now();
-    const currentDuration = Math.floor((now - runningTimer.startTime) / 1000);
-    const hours = currentDuration / 3600;
+    const currentDuration = Math.floor((now - runningTimer.startTime) / SECOND);
+    const hours = currentDuration / (HOUR / SECOND);
     const currentCost = runningTimer.hourlyRate ? hours * runningTimer.hourlyRate : 0;
 
     return {
@@ -473,7 +474,7 @@ export const getCurrentWeekTimesheet = authenticatedQuery({
     const enrichedEntries = entries.map((entry) => {
       const project = entry.projectId ? projectMap.get(entry.projectId) : undefined;
       const issue = entry.issueId ? issueMap.get(entry.issueId) : undefined;
-      const hours = entry.duration / 3600;
+      const hours = entry.duration / (HOUR / SECOND);
 
       return {
         ...entry,
@@ -546,7 +547,7 @@ export const getBurnRate = authenticatedQuery({
     const userCosts: Record<string, { hours: number; cost: number; name: string }> = {};
 
     for (const entry of entries) {
-      const hours = entry.duration / 3600;
+      const hours = entry.duration / (HOUR / SECOND);
       const cost = entry.totalCost || 0;
 
       totalHours += hours;
@@ -572,7 +573,7 @@ export const getBurnRate = authenticatedQuery({
     }
 
     // Calculate burn rate (cost per day/week/month)
-    const days = Math.max(1, (args.endDate - args.startDate) / (1000 * 60 * 60 * 24));
+    const days = Math.max(1, (args.endDate - args.startDate) / DAY);
     const burnRatePerDay = totalCost / days;
     const burnRatePerWeek = burnRatePerDay * 7;
     const burnRatePerMonth = burnRatePerDay * 30;
@@ -653,7 +654,7 @@ export const getTeamCosts = authenticatedQuery({
         };
       }
 
-      const hours = entry.duration / 3600;
+      const hours = entry.duration / (HOUR / SECOND);
       const cost = entry.totalCost || 0;
 
       userCosts[userIdStr].hours += hours;
@@ -816,7 +817,7 @@ export const getProjectBilling = authenticatedQuery({
     > = {};
 
     for (const entry of entries) {
-      const hours = entry.duration / 3600;
+      const hours = entry.duration / (HOUR / SECOND);
       totalHours += hours;
 
       if (entry.billable) {

@@ -6,6 +6,7 @@ import { batchFetchUsers } from "./lib/batchHelpers";
 import { forbidden, notFound } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { DAY } from "./lib/timeUtils";
 import { sanitizeUserForAuth } from "./lib/userUtils";
 import { employmentTypes } from "./validators";
 
@@ -452,7 +453,7 @@ export const getEquityHoursStats = authenticatedQuery({
     const totalEquityValue = allEntries.reduce((sum, entry) => sum + (entry.equityValue || 0), 0);
 
     // Calculate weeks in period
-    const periodDays = (args.endDate - args.startDate) / (1000 * 60 * 60 * 24);
+    const periodDays = (args.endDate - args.startDate) / DAY;
     const weeksInPeriod = Math.ceil(periodDays / 7);
 
     return {

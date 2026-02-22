@@ -8,6 +8,7 @@ import { RateLimiter } from "@convex-dev/rate-limiter";
 
 import { components } from "./_generated/api";
 import type { ActionCtx, MutationCtx } from "./_generated/server";
+import { HOUR, MINUTE } from "./lib/timeUtils";
 
 // Helper to detect test/dev/CI environments for relaxed rate limits
 const isTestEnv =
@@ -18,26 +19,26 @@ const isTestEnv =
 
 const rateLimiter = new RateLimiter(components.rateLimiter, {
   // AI Chat: 10 messages per minute per user
-  aiChat: { kind: "fixed window", rate: 10, period: 60_000 }, // 1 minute
+  aiChat: { kind: "fixed window", rate: 10, period: MINUTE }, // 1 minute
 
   // AI Suggestions: 20 per hour per user (more expensive)
-  aiSuggestion: { kind: "fixed window", rate: 20, period: 3_600_000 }, // 1 hour
+  aiSuggestion: { kind: "fixed window", rate: 20, period: HOUR }, // 1 hour
 
   // Semantic Search: 30 per minute per user
-  semanticSearch: { kind: "token bucket", rate: 30, period: 60_000, capacity: 10 },
+  semanticSearch: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 10 },
 
   // Issue Creation: Prevent spam
-  createIssue: { kind: "token bucket", rate: 10, period: 60_000, capacity: 3 },
+  createIssue: { kind: "token bucket", rate: 10, period: MINUTE, capacity: 3 },
 
   // API Endpoints: General rate limit
-  apiEndpoint: { kind: "fixed window", rate: 100, period: 60_000 }, // 100/min
+  apiEndpoint: { kind: "fixed window", rate: 100, period: MINUTE }, // 100/min
 
   // Password Reset (IP-based): Strict limit to prevent spam/DoS
   // Increased capacity/rate significantly for test/CI environments where all traffic may share one IP (localhost/runner)
   passwordReset: {
     kind: "token bucket",
     rate: isTestEnv ? 1000 : 20,
-    period: 60_000,
+    period: MINUTE,
     capacity: isTestEnv ? 1000 : 20,
   }, // 20 per minute default to prevent blocking legit users/tests if env detection fails
 
@@ -45,7 +46,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   authAttempt: {
     kind: "token bucket",
     rate: isTestEnv ? 1000 : 20,
-    period: 60_000,
+    period: MINUTE,
     capacity: isTestEnv ? 1000 : 20,
   },
 
@@ -54,20 +55,20 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   passwordResetByEmail: {
     kind: "token bucket",
     rate: isTestEnv ? 1000 : 5,
-    period: 60_000,
+    period: MINUTE,
     capacity: isTestEnv ? 1000 : 5,
   }, // 5 per minute per email - more strict than IP since it's per-target
 
   // Email Change Verification: Strict limit to prevent OTP brute-forcing
   // User-based (authenticated), so low limit is safe even for parallel tests
-  emailChange: { kind: "token bucket", rate: 5, period: 60_000, capacity: 5 },
+  emailChange: { kind: "token bucket", rate: 5, period: MINUTE, capacity: 5 },
 
   // Email Verification: Strict limit to prevent spam/DoS
   // Similar to password reset
   emailVerification: {
     kind: "token bucket",
     rate: isTestEnv ? 1000 : 20,
-    period: 60_000,
+    period: MINUTE,
     capacity: isTestEnv ? 1000 : 20,
   },
 });

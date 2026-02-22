@@ -6,7 +6,7 @@ import { batchFetchBookingPages } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate, validateEmail } from "./lib/constrainedValidators";
 import { conflict, notFound, rateLimited, requireOwned, validation } from "./lib/errors";
-import { DAY, MINUTE } from "./lib/timeUtils";
+import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
 import { bookerAnswers } from "./validators";
 
 /**
@@ -63,11 +63,11 @@ export const createBooking = mutation({
     }
 
     // Calculate end time
-    const endTime = args.startTime + page.duration * 60 * 1000;
+    const endTime = args.startTime + page.duration * MINUTE;
 
     // Check minimum notice
     const now = Date.now();
-    const hoursUntilMeeting = (args.startTime - now) / (1000 * 60 * 60);
+    const hoursUntilMeeting = (args.startTime - now) / HOUR;
     if (hoursUntilMeeting < page.minimumNotice) {
       throw validation("startTime", `Requires at least ${page.minimumNotice} hours notice`);
     }
@@ -209,21 +209,21 @@ export const getAvailableSlots = query({
     endTime.setHours(endHour, endMinute, 0, 0);
 
     // Generate all possible slots
-    while (currentTime.getTime() + slotDuration * 60 * 1000 <= endTime.getTime()) {
+    while (currentTime.getTime() + slotDuration * MINUTE <= endTime.getTime()) {
       const slotStart = currentTime.getTime();
-      const slotEnd = slotStart + slotDuration * 60 * 1000;
+      const slotEnd = slotStart + slotDuration * MINUTE;
 
       // Check if slot conflicts with existing bookings
       const hasConflict = existingBookings.some((booking) => {
         // Add buffer time
-        const bufferedStart = booking.startTime - page.bufferTimeBefore * 60 * 1000;
-        const bufferedEnd = booking.endTime + page.bufferTimeAfter * 60 * 1000;
+        const bufferedStart = booking.startTime - page.bufferTimeBefore * MINUTE;
+        const bufferedEnd = booking.endTime + page.bufferTimeAfter * MINUTE;
 
         return slotStart < bufferedEnd && slotEnd > bufferedStart;
       });
 
       // Check minimum notice
-      const hoursUntilSlot = (slotStart - Date.now()) / (1000 * 60 * 60);
+      const hoursUntilSlot = (slotStart - Date.now()) / HOUR;
 
       if (!hasConflict && hoursUntilSlot >= page.minimumNotice) {
         slots.push(slotStart);
