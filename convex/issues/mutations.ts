@@ -2,7 +2,6 @@ import { MINUTE } from "@convex-dev/rate-limiter";
 import { v } from "convex/values";
 import { asyncMap, pruneNull } from "convex-helpers";
 import { components } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
 import {
   authenticatedMutation,
   issueMutation,
@@ -22,6 +21,7 @@ import {
   getSearchContent,
   issueKeyExists,
   processIssueUpdates,
+  runBulkMutation,
   validateParentIssue,
 } from "./helpers";
 
@@ -420,44 +420,18 @@ export const bulkUpdateStatus = authenticatedMutation({
     newStatus: v.string(),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    // Collect unique project IDs to fetch projects in batch
-    const projectIds = new Set<Id<"projects">>();
-    for (const issue of issues) {
-      if (issue && !issue.isDeleted && issue.projectId) {
-        projectIds.add(issue.projectId);
-      }
-    }
-
-    // Fetch all relevant projects once
-    const projects = await asyncMap([...projectIds], (id) => ctx.db.get(id));
-    const projectMap = new Map(projects.map((p) => [p?._id.toString(), p]));
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        const projectId = issue.projectId as Id<"projects">;
-        const project = projectMap.get(projectId);
+    const updated = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue, project) => {
         if (!project) return 0;
-
-        try {
-          // Verify permissions using cached project (or re-check if needed, but permissions usually need DB)
-          // Since assertCanEditProject hits DB, we might want to optimize this too, but for now let's keep permission check robust
-          // Actually, assertCanEditProject does a get(), so we could optimize it by passing project, but the helper might not support it.
-          // Let's assume permission check is fast enough or cached at convex level.
-          await assertCanEditProject(ctx, projectId, ctx.userId);
-        } catch {
-          return 0;
-        }
 
         const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
         if (!isValidStatus) return 0;
 
         const oldStatus = issue.status;
+        const now = Date.now();
 
         await ctx.db.patch(issue._id, {
           status: args.newStatus,
@@ -474,12 +448,10 @@ export const bulkUpdateStatus = authenticatedMutation({
             newValue: args.newStatus,
           });
         }
-
-        return 1;
-      }),
+      },
     );
 
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+    return { updated };
   },
 });
 
@@ -495,21 +467,13 @@ export const bulkUpdatePriority = authenticatedMutation({
     ),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
+    const updated = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue) => {
         const oldPriority = issue.priority;
+        const now = Date.now();
 
         await ctx.db.patch(issue._id, {
           priority: args.priority,
@@ -524,12 +488,10 @@ export const bulkUpdatePriority = authenticatedMutation({
           oldValue: oldPriority,
           newValue: args.priority,
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+    return { updated };
   },
 });
 
@@ -539,21 +501,13 @@ export const bulkAssign = authenticatedMutation({
     assigneeId: v.union(v.id("users"), v.null()),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
+    const updated = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue) => {
         const oldAssignee = issue.assigneeId;
+        const now = Date.now();
 
         await ctx.db.patch(issue._id, {
           assigneeId: args.assigneeId ?? undefined,
@@ -568,12 +522,10 @@ export const bulkAssign = authenticatedMutation({
           oldValue: oldAssignee ? String(oldAssignee) : "",
           newValue: args.assigneeId ? String(args.assigneeId) : "",
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+    return { updated };
   },
 });
 
@@ -583,21 +535,13 @@ export const bulkAddLabels = authenticatedMutation({
     labels: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
+    const updated = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue) => {
         const updatedLabels = Array.from(new Set([...issue.labels, ...args.labels]));
+        const now = Date.now();
 
         await ctx.db.patch(issue._id, {
           labels: updatedLabels,
@@ -612,12 +556,10 @@ export const bulkAddLabels = authenticatedMutation({
           oldValue: issue.labels.join(", "),
           newValue: updatedLabels.join(", "),
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+    return { updated };
   },
 });
 
@@ -627,21 +569,13 @@ export const bulkMoveToSprint = authenticatedMutation({
     sprintId: v.union(v.id("sprints"), v.null()),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
+    const updated = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue) => {
         const oldSprint = issue.sprintId;
+        const now = Date.now();
 
         await ctx.db.patch(issue._id, {
           sprintId: args.sprintId ?? undefined,
@@ -656,12 +590,10 @@ export const bulkMoveToSprint = authenticatedMutation({
           oldValue: oldSprint ? String(oldSprint) : "",
           newValue: args.sprintId ? String(args.sprintId) : "",
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+    return { updated };
   },
 });
 
@@ -670,18 +602,11 @@ export const bulkDelete = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertIsProjectAdmin(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
+    const deleted = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertIsProjectAdmin,
+      async (ctx, issue) => {
         // Soft delete issue
         await ctx.db.patch(issue._id, softDeleteFields(ctx.userId));
 
@@ -691,12 +616,10 @@ export const bulkDelete = authenticatedMutation({
           userId: ctx.userId,
           action: "deleted",
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { deleted: results.reduce((a: number, b) => a + b, 0) };
+    return { deleted };
   },
 });
 
@@ -782,45 +705,34 @@ export const bulkArchive = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted || issue.archivedAt) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Check if issue is in "done" category
-        const project = await ctx.db.get(issue.projectId);
+    const archived = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue, project) => {
+        if (issue.archivedAt) return 0;
         if (!project) return 0;
 
         const state = project.workflowStates.find((s) => s.id === issue.status);
         if (!state || state.category !== "done") return 0;
 
-        // Archive the issue
+        const now = Date.now();
+
         await ctx.db.patch(issue._id, {
           archivedAt: now,
           archivedBy: ctx.userId,
           updatedAt: now,
         });
 
-        // Log activity
         await ctx.db.insert("issueActivity", {
           issueId: issue._id,
           userId: ctx.userId,
           action: "archived",
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { archived: results.reduce((a: number, b) => a + b, 0) };
+    return { archived };
   },
 });
 
@@ -832,38 +744,30 @@ export const bulkRestore = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
+    const restored = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue) => {
+        if (!issue.archivedAt) return 0;
 
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted || !issue.archivedAt) return 0;
+        const now = Date.now();
 
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Restore the issue
         await ctx.db.patch(issue._id, {
           archivedAt: undefined,
           archivedBy: undefined,
           updatedAt: now,
         });
 
-        // Log activity
         await ctx.db.insert("issueActivity", {
           issueId: issue._id,
           userId: ctx.userId,
           action: "restored",
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { restored: results.reduce((a: number, b) => a + b, 0) };
+    return { restored };
   },
 });
 
@@ -877,23 +781,17 @@ export const bulkUpdateDueDate = authenticatedMutation({
     dueDate: v.union(v.number(), v.null()), // null to clear
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
+    const updated = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue) => {
         // Validate: due date should not be before start date
         if (args.dueDate !== null && issue.startDate && args.dueDate < issue.startDate) {
           return 0; // Skip issues where due date would be before start date
         }
+
+        const now = Date.now();
 
         await ctx.db.patch(issue._id, {
           dueDate: args.dueDate ?? undefined,
@@ -901,7 +799,6 @@ export const bulkUpdateDueDate = authenticatedMutation({
           version: (issue.version ?? 1) + 1,
         });
 
-        // Log activity
         await ctx.db.insert("issueActivity", {
           issueId: issue._id,
           userId: ctx.userId,
@@ -910,12 +807,10 @@ export const bulkUpdateDueDate = authenticatedMutation({
           oldValue: issue.dueDate ? new Date(issue.dueDate).toISOString() : undefined,
           newValue: args.dueDate ? new Date(args.dueDate).toISOString() : undefined,
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+    return { updated };
   },
 });
 
@@ -929,23 +824,17 @@ export const bulkUpdateStartDate = authenticatedMutation({
     startDate: v.union(v.number(), v.null()), // null to clear
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
+    const updated = await runBulkMutation(
+      ctx,
+      args.issueIds,
+      assertCanEditProject,
+      async (ctx, issue) => {
         // Validate: start date should not be after due date
         if (args.startDate !== null && issue.dueDate && args.startDate > issue.dueDate) {
           return 0; // Skip issues where start date would be after due date
         }
+
+        const now = Date.now();
 
         await ctx.db.patch(issue._id, {
           startDate: args.startDate ?? undefined,
@@ -953,7 +842,6 @@ export const bulkUpdateStartDate = authenticatedMutation({
           version: (issue.version ?? 1) + 1,
         });
 
-        // Log activity
         await ctx.db.insert("issueActivity", {
           issueId: issue._id,
           userId: ctx.userId,
@@ -962,11 +850,9 @@ export const bulkUpdateStartDate = authenticatedMutation({
           oldValue: issue.startDate ? new Date(issue.startDate).toISOString() : undefined,
           newValue: args.startDate ? new Date(args.startDate).toISOString() : undefined,
         });
-
-        return 1;
-      }),
+      },
     );
 
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
+    return { updated };
   },
 });

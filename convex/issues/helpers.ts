@@ -1,4 +1,5 @@
-import type { Id } from "../_generated/dataModel";
+import { asyncMap } from "convex-helpers";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
 
@@ -352,4 +353,54 @@ export function matchesSearchFilters(
   if (!matchesDateRange(issue._creationTime, filters.dateFrom, filters.dateTo)) return false;
 
   return true;
+}
+
+// Helper: Run bulk mutation on issues
+export async function runBulkMutation(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  issueIds: Id<"issues">[],
+  permissionCheck: (
+    ctx: MutationCtx,
+    projectId: Id<"projects">,
+    userId: Id<"users">,
+  ) => Promise<void>,
+  process: (
+    ctx: MutationCtx & { userId: Id<"users"> },
+    issue: Doc<"issues">,
+    project: Doc<"projects"> | null,
+    // biome-ignore lint/suspicious/noConfusingVoidType: allow void return
+  ) => Promise<void | number | undefined>,
+) {
+  const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
+
+  // Pre-fetch projects to minimize DB calls and allow project access in callbacks
+  const projectIds = new Set<Id<"projects">>();
+  for (const issue of issues) {
+    if (issue && !issue.isDeleted && issue.projectId) {
+      projectIds.add(issue.projectId);
+    }
+  }
+  const projects = await asyncMap([...projectIds], (id) => ctx.db.get(id));
+  const projectMap = new Map(projects.map((p) => [p?._id.toString(), p]));
+
+  const results = await Promise.all(
+    issues.map(async (issue) => {
+      if (!issue || issue.isDeleted) return 0;
+
+      const projectId = issue.projectId as Id<"projects">;
+      const project = projectMap.get(projectId.toString()) ?? null;
+
+      try {
+        await permissionCheck(ctx, projectId, ctx.userId);
+      } catch {
+        return 0;
+      }
+
+      // Allow callback to return explicit 0 for failure (e.g. validation), or void/undefined for success (count as 1)
+      const result = await process(ctx, issue, project);
+      return typeof result === "number" ? result : 1;
+    }),
+  );
+
+  return results.reduce((a: number, b) => a + b, 0);
 }
