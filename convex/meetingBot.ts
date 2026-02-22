@@ -16,6 +16,7 @@ import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
 import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { MINUTE } from "./lib/timeUtils";
 import { assertCanAccessProject, assertCanEditProject } from "./projectAccess";
 import { meetingPlatforms, meetingStatuses, simplePriorities } from "./validators";
 
@@ -277,7 +278,7 @@ export const getPendingJobs = query({
     const readyJobs = await ctx.db
       .query("meetingBotJobs")
       .withIndex("by_status_scheduled", (q) =>
-        q.eq("status", "pending").lte("scheduledTime", now + 5 * 60 * 1000),
+        q.eq("status", "pending").lte("scheduledTime", now + 5 * MINUTE),
       )
       .take(BOUNDED_LIST_LIMIT);
 
@@ -965,7 +966,7 @@ export const markJobFailed = internalMutation({
 
     if (newAttempts < job.maxAttempts) {
       // Retry in 1 minute
-      const nextAttempt = Date.now() + 60 * 1000;
+      const nextAttempt = Date.now() + MINUTE;
       await ctx.db.patch(args.jobId, {
         attempts: newAttempts,
         lastAttemptAt: Date.now(),
