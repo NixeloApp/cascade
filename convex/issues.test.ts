@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createProjectInOrganization,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Issues", () => {
   describe("create", () => {
@@ -127,7 +133,20 @@ describe("Issues", () => {
         name: "Viewer",
         email: "viewer@test.com",
       });
-      const projectId = await createTestProject(t, adminId);
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
+      const projectId = await createProjectInOrganization(t, adminId, organizationId, {
+        name: "Test Project",
+      });
+
+      // Add viewer to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
 
       // Add viewer
       const asAdmin = asAuthenticatedUser(t, adminId);
@@ -256,7 +275,20 @@ describe("Issues", () => {
         name: "Viewer",
         email: "viewer@test.com",
       });
-      const projectId = await createTestProject(t, adminId);
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
+      const projectId = await createProjectInOrganization(t, adminId, organizationId, {
+        name: "Test Project",
+      });
+
+      // Add viewer to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
       const issueId = await asAdmin.mutation(api.issues.create, {
@@ -564,7 +596,20 @@ describe("Issues", () => {
         name: "Viewer",
         email: "viewer@test.com",
       });
-      const projectId = await createTestProject(t, adminId);
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
+      const projectId = await createProjectInOrganization(t, adminId, organizationId, {
+        name: "Test Project",
+      });
+
+      // Add viewer to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
       const issueId = await asAdmin.mutation(api.issues.create, {

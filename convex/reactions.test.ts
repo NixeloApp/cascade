@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createProjectInOrganization,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Reactions", () => {
   it("should toggle reactions on a comment", async () => {
@@ -62,7 +68,18 @@ describe("Reactions", () => {
     const t = convexTest(schema, modules);
     const user1Id = await createTestUser(t, { name: "User 1", email: "user1@test.com" });
     const user2Id = await createTestUser(t, { name: "User 2", email: "user2@test.com" });
-    const projectId = await createTestProject(t, user1Id);
+    const { organizationId } = await createOrganizationAdmin(t, user1Id);
+    const projectId = await createProjectInOrganization(t, user1Id, organizationId);
+
+    // Add user2 to organization
+    await t.run(async (ctx) => {
+      await ctx.db.insert("organizationMembers", {
+        organizationId,
+        userId: user2Id,
+        role: "member",
+        addedBy: user1Id,
+      });
+    });
 
     // Add user2 to project
     const asUser1 = asAuthenticatedUser(t, user1Id);
