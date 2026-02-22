@@ -1,11 +1,35 @@
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  asAuthenticatedUser,
+  createTestContext,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Invites Security", () => {
+  // Helper to create an unverified user
+  async function createUnverifiedTestUser(
+    t: any,
+    userData?: { name?: string; email?: string },
+  ): Promise<Id<"users">> {
+    return await t.run(async (ctx: any) => {
+      const name = userData?.name || `Test User ${Date.now()}`;
+      const email = userData?.email || `test${Date.now()}@example.com`;
+
+      return await ctx.db.insert("users", {
+        name,
+        email,
+        emailVerificationTime: undefined, // Explicitly unverified
+        image: undefined,
+      });
+    });
+  }
+
   beforeEach(() => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ success: true, message_ids: ["msg_123"] }), {
@@ -75,5 +99,38 @@ describe("Invites Security", () => {
     // If a user is invited to a project, they must be made a member of the organization
     // to ensure proper access control and billing boundaries.
     expect(orgMember).not.toBeNull();
+  });
+
+  it("should prevent unverified users from accepting invites", async () => {
+    const t = convexTest(schema, modules);
+    const { organizationId, asUser: asAdmin } = await createTestContext(t);
+
+    // 1. Admin sends an invite to 'victim@example.com'
+    const result = await asAdmin.mutation(api.invites.sendInvite, {
+      email: "victim@example.com",
+      role: "user",
+      organizationId,
+    });
+
+    // Type narrowing to access token
+    if (!("token" in result)) {
+      throw new Error("Expected invite token");
+    }
+    const { token } = result;
+
+    // 2. Attacker signs up as 'victim@example.com' but is NOT verified
+    // In a real attack, they would just sign up and not complete verification,
+    // or change their email to this (if allowed before verification).
+    const attackerId = await createUnverifiedTestUser(t, {
+      name: "Attacker",
+      email: "victim@example.com",
+    });
+    const asAttacker = asAuthenticatedUser(t, attackerId);
+
+    // 3. Attacker tries to accept the invite using the token (assume they intercepted it)
+    // This SHOULD fail if we enforce email verification.
+    await expect(async () => {
+      await asAttacker.mutation(api.invites.acceptInvite, { token });
+    }).rejects.toThrow("You must verify your email address before accepting an invitation");
   });
 });
