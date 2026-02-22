@@ -92,7 +92,7 @@ export const issueActivityFields = {
   field: v.optional(v.string()), // Field that was changed
   oldValue: v.optional(v.string()),
   newValue: v.optional(v.string()),
-  // Soft Delete
+  // Soft Delete (cascaded from issue)
   isDeleted: v.optional(v.boolean()),
   deletedAt: v.optional(v.number()),
   deletedBy: v.optional(v.id("users")),

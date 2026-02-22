@@ -3,13 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createOrganizationAdmin,
-  createProjectInOrganization,
-  createTestProject,
-  createTestUser,
-} from "./testUtils";
+import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
 
 describe("Automation Rules", () => {
   describe("list", () => {
@@ -80,18 +74,7 @@ describe("Automation Rules", () => {
         name: "Member",
         email: "member@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
-
-      // Add member to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: member,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      const projectId = await createTestProject(t, owner);
 
       // Add member
       const asOwner = asAuthenticatedUser(t, owner);
@@ -181,18 +164,7 @@ describe("Automation Rules", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
-
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      const projectId = await createTestProject(t, owner);
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
@@ -339,18 +311,7 @@ describe("Automation Rules", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
-
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      const projectId = await createTestProject(t, owner);
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
@@ -460,18 +421,7 @@ describe("Automation Rules", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
-
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      const projectId = await createTestProject(t, owner);
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
