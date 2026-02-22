@@ -52,6 +52,7 @@ export const removeAttachment = issueMutation({
   args: {
     storageId: v.id("_storage"),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const issue = ctx.issue;
 
@@ -78,7 +79,7 @@ export const removeAttachment = issueMutation({
       field: "attachment",
     });
 
-    return true;
+    return { success: true } as const;
   },
 });
 
