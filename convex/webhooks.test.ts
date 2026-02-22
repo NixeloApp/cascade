@@ -3,7 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 // Mock DNS resolution
 vi.mock("./lib/dns", () => ({
@@ -83,8 +88,14 @@ describe("Webhooks", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -177,8 +188,14 @@ describe("Webhooks", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -313,8 +330,14 @@ describe("Webhooks", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -473,8 +496,14 @@ describe("Webhooks", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -632,8 +661,14 @@ describe("Webhooks", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -749,8 +784,14 @@ describe("Webhooks", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -871,8 +912,14 @@ describe("Webhooks", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",

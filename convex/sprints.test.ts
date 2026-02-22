@@ -5,6 +5,7 @@ import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addUserToOrganization,
   asAuthenticatedUser,
   createOrganizationAdmin,
   createTestProject,
@@ -78,8 +79,14 @@ describe("Sprints", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add member to project
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add member to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, member, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "member@test.com",
@@ -453,8 +460,14 @@ describe("Sprints", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add member
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add member to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, member, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "member@test.com",
@@ -616,8 +629,14 @@ describe("Sprints", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       // Add member
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add member to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, member, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "member@test.com",

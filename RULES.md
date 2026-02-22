@@ -316,6 +316,57 @@ CRITICAL: Command produced no output. This is NOT success.
 
 ---
 
+## Convex Backend Conventions
+
+> **Full documentation**: See `docs/convex/STANDARDS.md` for detailed patterns.
+
+### Envelope Pattern (REQUIRED)
+
+All mutations that create resources MUST return an object, not a raw ID:
+
+```typescript
+// ✅ CORRECT - Envelope Pattern
+export const createProject = authenticatedMutation({
+  args: { /* ... */ },
+  returns: v.object({ projectId: v.id("projects") }),
+  handler: async (ctx, args) => {
+    const projectId = await ctx.db.insert("projects", { /* ... */ });
+    return { projectId };
+  },
+});
+
+// ❌ WRONG - Raw ID return
+return projectId;  // Never do this!
+```
+
+### Test Destructuring (REQUIRED)
+
+When calling create mutations in tests, always destructure the result:
+
+```typescript
+// ✅ CORRECT
+const { projectId } = await asUser.mutation(api.projects.createProject, { /* ... */ });
+
+// ❌ WRONG
+const projectId = await asUser.mutation(api.projects.createProject, { /* ... */ });
+```
+
+### Security: Organization Membership Check (REQUIRED)
+
+When adding users to projects or teams, ALWAYS verify organization membership:
+
+```typescript
+// REQUIRED in addProjectMember, addTeamMember, etc.
+const isMember = await isOrganizationMember(ctx, organizationId, userId);
+if (!isMember) {
+  throw validation("userEmail", "User must be a member of the organization");
+}
+```
+
+### The validator `scripts/validate/check-convex-patterns.js` enforces these rules.
+
+---
+
 ## Communication
 
 - Focus on specific requests

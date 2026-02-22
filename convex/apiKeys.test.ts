@@ -5,7 +5,12 @@ import { api, internal } from "./_generated/api";
 import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("API Keys", () => {
   describe("generate", () => {
@@ -76,7 +81,13 @@ describe("API Keys", () => {
       const member = await createTestUser(t, { email: "member@example.com" });
       const projectId = await createTestProject(t, owner);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add member to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, member, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "member@example.com",

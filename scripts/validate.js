@@ -13,6 +13,7 @@
  *   9. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
  *  10. E2E quality          — catches broad selectors, networkidle, waitForSelector
  *  11. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
+ *  12. Convex patterns       — Envelope Pattern returns, security checks, test destructuring
  *
  * Exit code 1 if any check fails. No warning levels — everything is an error.
  *
@@ -23,6 +24,7 @@
 import { run as runApiCallsCheck } from "./validate/check-api-calls.js";
 import { run as runArbitraryTailwindCheck } from "./validate/check-arbitrary-tw.js";
 import { run as runColorAudit } from "./validate/check-colors.js";
+import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
 import { run as runEmojiCheck } from "./validate/check-emoji.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
@@ -47,6 +49,7 @@ const checks = [
   { name: "Test ID constants", fn: runTestIdsCheck },
   { name: "E2E quality", fn: runE2EQualityCheck },
   { name: "UI patterns", fn: runUIPatternsCheck },
+  { name: "Convex patterns", fn: runConvexPatternsCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

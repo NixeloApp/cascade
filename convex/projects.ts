@@ -12,7 +12,7 @@ const MAX_ISSUE_COUNT = 1000;
 import { logAudit } from "./lib/audit";
 import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
-import { getOrganizationRole } from "./lib/organizationAccess";
+import { getOrganizationRole, isOrganizationMember } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { cascadeRestore, cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -70,6 +70,11 @@ export const createProject = authenticatedMutation({
     isPublic: v.optional(v.boolean()), // Visible to all organization members
     sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Share with specific teams
   },
+  // Envelope Pattern: Always return objects, not raw IDs
+  // See: docs/convex/STANDARDS.md
+  returns: v.object({
+    projectId: v.id("projects"),
+  }),
   handler: async (ctx, args) => {
     // Validate input constraints
     validate.name(args.name, "name");
@@ -174,7 +179,7 @@ export const createProject = authenticatedMutation({
       },
     });
 
-    return projectId;
+    return { projectId };
   },
 });
 
@@ -336,7 +341,6 @@ export const getWorkspaceProjects = authenticatedQuery({
     }
 
     // Check if user is in organization
-    const { isOrganizationMember } = await import("./lib/organizationAccess");
     const isMember = await isOrganizationMember(ctx, workspace.organizationId, ctx.userId);
     if (!isMember) {
       throw forbidden("member", "You must be an organization member to access this workspace");
@@ -693,6 +697,15 @@ export const addProjectMember = projectAdminMutation({
       .first();
 
     if (!user) throw notFound("user");
+
+    // Security: User must be an organization member before being added to a project
+    const isMember = await isOrganizationMember(ctx, ctx.project.organizationId, user._id);
+    if (!isMember) {
+      throw validation(
+        "userEmail",
+        "User must be a member of the organization to be added to this project",
+      );
+    }
 
     // Check if already a member
     const existingMembership = await ctx.db

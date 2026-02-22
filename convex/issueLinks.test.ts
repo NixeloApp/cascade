@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Issue Links", () => {
   describe("create", () => {
@@ -96,6 +101,10 @@ describe("Issue Links", () => {
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
       const projectId = await createTestProject(t, adminId);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const asAdmin = asAuthenticatedUser(t, adminId);
       const issue1Id = await asAdmin.mutation(api.issues.create, {
         projectId,
@@ -110,6 +119,8 @@ describe("Issue Links", () => {
         priority: "medium",
       });
 
+      // Add viewer to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, viewerId, adminId);
       await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",
@@ -180,6 +191,10 @@ describe("Issue Links", () => {
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
       const projectId = await createTestProject(t, adminId);
 
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
+
       const asAdmin = asAuthenticatedUser(t, adminId);
       const issue1Id = await asAdmin.mutation(api.issues.create, {
         projectId,
@@ -200,6 +215,8 @@ describe("Issue Links", () => {
         linkType: "relates",
       });
 
+      // Add viewer to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, viewerId, adminId);
       await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",

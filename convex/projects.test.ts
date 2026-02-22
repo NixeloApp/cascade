@@ -4,6 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addUserToOrganization,
   asAuthenticatedUser,
   createOrganizationAdmin,
   createTestContext,
@@ -16,7 +17,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { userId, organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "TEST",
         description: "A test project",
@@ -46,7 +47,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "test",
         isPublic: false,
@@ -65,7 +66,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "ADMIN",
         isPublic: false,
@@ -137,7 +138,7 @@ describe("Projects", () => {
         name: "Owner",
       });
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "My Project",
         key: "MINE",
         description: "Owner's project",
@@ -174,7 +175,7 @@ describe("Projects", () => {
 
       // Create organization-visible project as owner
       const asOwner = asAuthenticatedUser(t, owner);
-      const projectId = await asOwner.mutation(api.projects.createProject, {
+      const { projectId } = await asOwner.mutation(api.projects.createProject, {
         name: "organization Visible Project",
         key: "COMPVIS",
         isPublic: true, // isPublic means organization-visible
@@ -200,7 +201,7 @@ describe("Projects", () => {
 
       // Create private project
       const asOwner = asAuthenticatedUser(t, owner);
-      const projectId = await asOwner.mutation(api.projects.createProject, {
+      const { projectId } = await asOwner.mutation(api.projects.createProject, {
         name: "Private Project",
         key: "PRIVATE",
         isPublic: false,
@@ -223,7 +224,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
       // Create and delete a project to test non-existent ID behavior
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "To Delete",
         key: "DELETE",
         isPublic: false,
@@ -342,7 +343,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Count Project",
         key: "COUNT",
         isPublic: false,
@@ -395,7 +396,7 @@ describe("Projects", () => {
         name: "Admin",
       });
 
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
+      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
         name: "Workflow Project",
         key: "WF",
         isPublic: false,
@@ -432,7 +433,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
+      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "DENY",
         isPublic: false,
@@ -442,6 +443,8 @@ describe("Projects", () => {
         teamId,
       });
 
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, organizationId, editorId, adminId);
       // Add editor as member
       await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
@@ -466,7 +469,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
       const asAdmin = asAuthenticatedUser(t, adminId);
 
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
+      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "UNAUTH",
         isPublic: false,
@@ -499,7 +502,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-        const projectId = await asAdmin.mutation(api.projects.createProject, {
+        const { projectId } = await asAdmin.mutation(api.projects.createProject, {
           name: "Team Project",
           key: "TEAM",
           isPublic: false,
@@ -509,6 +512,8 @@ describe("Projects", () => {
           teamId,
         });
 
+        // Add new member to organization first (required by security check)
+        await addUserToOrganization(t, organizationId, newMemberId, adminId);
         const result = await asAdmin.mutation(api.projects.addProjectMember, {
           projectId,
           userEmail: "newmember@test.com",
@@ -531,11 +536,11 @@ describe("Projects", () => {
           name: "Editor",
           email: "editor@test.com",
         });
-        await createTestUser(t, { name: "New", email: "new@test.com" });
+        const newId = await createTestUser(t, { name: "New", email: "new@test.com" });
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-        const projectId = await asAdmin.mutation(api.projects.createProject, {
+        const { projectId } = await asAdmin.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "NOADD",
           isPublic: false,
@@ -545,6 +550,8 @@ describe("Projects", () => {
           teamId,
         });
 
+        // Add editor to organization first (required by security check)
+        await addUserToOrganization(t, organizationId, editorId, adminId);
         await asAdmin.mutation(api.projects.addProjectMember, {
           projectId,
           userEmail: "editor@test.com",
@@ -552,6 +559,8 @@ describe("Projects", () => {
         });
 
         // Try to add member as editor - should be forbidden (requires admin)
+        // Note: new user must be in organization first for the test to check the admin permission
+        await addUserToOrganization(t, organizationId, newId, adminId);
         const asEditor = asAuthenticatedUser(t, editorId);
         await expect(async () => {
           await asEditor.mutation(api.projects.addProjectMember, {
@@ -574,7 +583,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-        const projectId = await asAdmin.mutation(api.projects.createProject, {
+        const { projectId } = await asAdmin.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "ROLE",
           isPublic: false,
@@ -584,6 +593,8 @@ describe("Projects", () => {
           teamId,
         });
 
+        // Add member to organization first (required by security check)
+        await addUserToOrganization(t, organizationId, memberId, adminId);
         await asAdmin.mutation(api.projects.addProjectMember, {
           projectId,
           userEmail: "member@test.com",
@@ -616,7 +627,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-        const projectId = await asAdmin.mutation(api.projects.createProject, {
+        const { projectId } = await asAdmin.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "REMOVE",
           isPublic: false,
@@ -626,6 +637,8 @@ describe("Projects", () => {
           teamId,
         });
 
+        // Add member to organization first (required by security check)
+        await addUserToOrganization(t, organizationId, memberId, adminId);
         await asAdmin.mutation(api.projects.addProjectMember, {
           projectId,
           userEmail: "member@test.com",
@@ -652,7 +665,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, creatorId);
 
         const asCreator = asAuthenticatedUser(t, creatorId);
-        const projectId = await asCreator.mutation(api.projects.createProject, {
+        const { projectId } = await asCreator.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "NOCREATOR",
           isPublic: false,
@@ -678,7 +691,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, creatorId);
 
         const asCreator = asAuthenticatedUser(t, creatorId);
-        const projectId = await asCreator.mutation(api.projects.createProject, {
+        const { projectId } = await asCreator.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "NOCHANGE",
           isPublic: false,
@@ -761,7 +774,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Original Name",
         key: "UPDATE",
         isPublic: false,
@@ -785,7 +798,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "DESC",
         isPublic: false,
@@ -809,7 +822,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "VIS",
         isPublic: false,
@@ -836,7 +849,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
+      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "NOUPDATE",
         isPublic: false,
@@ -846,6 +859,8 @@ describe("Projects", () => {
         teamId,
       });
 
+      // Add viewer to organization first (required by security check)
+      await addUserToOrganization(t, organizationId, viewerId, adminId);
       await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",
@@ -868,7 +883,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "To Delete",
         key: "DEL",
         isPublic: false,
@@ -895,7 +910,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, ownerId);
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const projectId = await asOwner.mutation(api.projects.createProject, {
+      const { projectId } = await asOwner.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "NODEL",
         isPublic: false,
@@ -905,6 +920,8 @@ describe("Projects", () => {
         teamId,
       });
 
+      // Add member to organization first (required by security check)
+      await addUserToOrganization(t, organizationId, memberId, ownerId);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "member@test.com",
@@ -924,7 +941,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "To Restore",
         key: "REST",
         isPublic: false,
@@ -949,7 +966,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Active Project",
         key: "ACTIVE",
         isPublic: false,
@@ -972,7 +989,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, ownerId);
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const projectId = await asOwner.mutation(api.projects.createProject, {
+      const { projectId } = await asOwner.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "NORESTORE",
         isPublic: false,
@@ -1110,7 +1127,7 @@ describe("Projects", () => {
       const t = convexTest(schema, modules);
       const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.projects.createProject, {
+      const { projectId } = await asUser.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "ROLE",
         isPublic: false,
@@ -1132,7 +1149,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
+      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "EDITROLE",
         isPublic: false,
@@ -1142,6 +1159,8 @@ describe("Projects", () => {
         teamId,
       });
 
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, organizationId, editorId, adminId);
       await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -1161,7 +1180,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, ownerId);
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const projectId = await asOwner.mutation(api.projects.createProject, {
+      const { projectId } = await asOwner.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "NOTROLE",
         isPublic: false,
@@ -1182,11 +1201,11 @@ describe("Projects", () => {
     it("should reject duplicate members", async () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t, { name: "Admin" });
-      await createTestUser(t, { name: "Member", email: "dup@test.com" });
+      const dupMemberId = await createTestUser(t, { name: "Member", email: "dup@test.com" });
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
+      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "NODUP",
         isPublic: false,
@@ -1196,6 +1215,8 @@ describe("Projects", () => {
         teamId,
       });
 
+      // Add member to organization first (required by security check)
+      await addUserToOrganization(t, organizationId, dupMemberId, adminId);
       await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "dup@test.com",
@@ -1218,7 +1239,7 @@ describe("Projects", () => {
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
+      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
         name: "Test Project",
         key: "NOUSER",
         isPublic: false,

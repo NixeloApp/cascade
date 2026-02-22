@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Reactions", () => {
   it("should toggle reactions on a comment", async () => {
@@ -64,8 +69,14 @@ describe("Reactions", () => {
     const user2Id = await createTestUser(t, { name: "User 2", email: "user2@test.com" });
     const projectId = await createTestProject(t, user1Id);
 
+    // Get the organization ID from the project
+    const project = await t.run(async (ctx) => ctx.db.get(projectId));
+    if (!project) throw new Error("Project not found");
+
     // Add user2 to project
     const asUser1 = asAuthenticatedUser(t, user1Id);
+    // Add user2 to organization first (required by security check)
+    await addUserToOrganization(t, project.organizationId, user2Id, user1Id);
     await asUser1.mutation(api.projects.addProjectMember, {
       projectId,
       userEmail: "user2@test.com",
