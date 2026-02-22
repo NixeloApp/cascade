@@ -150,7 +150,7 @@ export const checkGoogleOAuthHealth = internalAction({
     try {
       // Step 0: Verify OAuth endpoint is accessible (catches nginx/routing issues)
       if (convexSiteUrl) {
-        const endpointResponse = await fetch(`${convexSiteUrl}/google/auth`, {
+        const endpointResponse = await fetchWithTimeout(`${convexSiteUrl}/google/auth`, {
           method: "GET",
           redirect: "manual", // Don't follow redirects
         });

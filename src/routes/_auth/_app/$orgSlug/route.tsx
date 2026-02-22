@@ -164,6 +164,12 @@ function OrganizationLayoutInner() {
 
   return (
     <SidebarProvider>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:bg-ui-bg focus:p-2 focus:border focus:border-ui-border focus:shadow-md focus:rounded-md focus:text-ui-text font-medium"
+      >
+        Skip to content
+      </a>
       <Flex className="h-screen overflow-hidden bg-ui-bg-secondary">
         {/* Unified sidebar */}
         <AppSidebar />
@@ -177,7 +183,13 @@ function OrganizationLayoutInner() {
           />
 
           {/* Page content */}
-          <FlexItem as="main" flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
+          <FlexItem
+            as="main"
+            flex="1"
+            className="overflow-auto bg-ui-bg scrollbar-subtle"
+            id="main-content"
+            tabIndex={-1}
+          >
             <Outlet />
           </FlexItem>
         </Flex>
