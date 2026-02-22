@@ -1,3 +1,6 @@
+// @vitest-environment node
+"use node";
+
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 // Hoist mock function

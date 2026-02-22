@@ -125,8 +125,3 @@
 **Vulnerability:** Accepting a project-level invite added the user to the project but failed to verify or enforce organization-level membership. This created a "ghost member" state where a user could access project resources without being a recognized member of the organization, potentially bypassing organization-level policies, billing, and audit logs.
 **Learning:** Resource-specific access (e.g., Project) must always be a subset of container membership (e.g., Organization). When granting access to a child resource via an invite, the system must explicitly verify and enforce membership in the parent container.
 **Prevention:** Updated `acceptInvite` to check for organization membership and automatically add the user if missing, ensuring consistent hierarchical access control.
-
-## 2026-03-08 - Ghost Membership via Project Access
-**Vulnerability:** `addProjectMember` allowed adding any user to a project, even if they were not a member of the organization. This bypassed organization-level access controls.
-**Learning:** Always verify parent container membership when adding users to child resources. Access to a child (Project) should imply membership in the parent (Organization).
-**Prevention:** Added `isOrganizationMember` check in `addProjectMember` in `convex/projects.ts`.

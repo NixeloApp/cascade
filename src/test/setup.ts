@@ -3,7 +3,7 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 
 // PointerEvent polyfill for Radix Tooltip hover tests in CI environments
-if (!globalThis.PointerEvent) {
+if (typeof globalThis.MouseEvent !== "undefined" && !globalThis.PointerEvent) {
   globalThis.PointerEvent = MouseEvent as unknown as typeof PointerEvent;
 }
 

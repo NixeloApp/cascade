@@ -5,9 +5,14 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
-import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
-import { MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
+import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
+import {
+  MAX_ACTIVITY_FOR_ANALYTICS,
+  MAX_SPRINT_ISSUES,
+  MAX_VELOCITY_SPRINTS,
+} from "./lib/queryLimits";
 import { DAY } from "./lib/timeUtils";
+import { getUserName } from "./lib/userUtils";
 
 // Helper: Build issues by status from workflow states and counts
 function buildIssuesByStatus(
@@ -264,42 +269,30 @@ export const getTeamVelocity = projectQuery({
 export const getRecentActivity = projectQuery({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const limit = args.limit || 20;
-
-    // Optimization: Fetch top recently updated issues for the project
-    // This avoids scanning the global issueActivity table and filtering in memory
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_project_updated", (q) => q.eq("projectId", ctx.projectId))
+    // Get recent activity (global, limited)
+    const activities = await ctx.db
+      .query("issueActivity")
       .order("desc")
-      .take(limit + 5); // Fetch a few more to be safe
+      .take(MAX_ACTIVITY_FOR_ANALYTICS);
 
-    // Fetch activities for these issues in parallel
-    const activitiesArrays = await Promise.all(
-      issues.map((issue) =>
-        ctx.db
-          .query("issueActivity")
-          .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
-          .order("desc")
-          .take(limit),
-      ),
-    );
+    // Batch fetch all referenced issues (NOT all project issues!)
+    const activityIssueIds = activities.map((a) => a.issueId);
+    const issueMap = await batchFetchIssues(ctx, activityIssueIds);
 
-    // Flatten, sort by creation time, and take top limit
-    const allActivities = activitiesArrays
-      .flat()
-      .sort((a, b) => b._creationTime - a._creationTime)
-      .slice(0, limit);
+    // Filter to only activities for this project's issues
+    const projectActivities = activities
+      .filter((a) => {
+        const issue = issueMap.get(a.issueId);
+        return issue && issue.projectId === ctx.projectId;
+      })
+      .slice(0, args.limit || 20);
 
-    // Create issue map from fetched issues
-    const issueMap = new Map(issues.map((i) => [i._id, i]));
-
-    // Batch fetch users
-    const userIds = allActivities.map((a) => a.userId);
+    // Batch fetch users for filtered activities
+    const userIds = projectActivities.map((a) => a.userId);
     const userMap = await batchFetchUsers(ctx, userIds);
 
-    // Enrich
-    return allActivities.map((activity) => {
+    // Enrich with pre-fetched data (no N+1)
+    return projectActivities.map((activity) => {
       const user = userMap.get(activity.userId);
       const issue = issueMap.get(activity.issueId);
 
