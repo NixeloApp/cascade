@@ -1,7 +1,6 @@
-
 import { describe, expect, it, vi } from "vitest";
-import { sendEmail } from "./index";
 import { logger } from "../lib/logger";
+import { sendEmail } from "./index";
 
 // Mock the logger
 vi.mock("../lib/logger", () => ({
@@ -34,7 +33,6 @@ vi.mock("./sendpulse", () => ({
   },
 }));
 
-
 describe("sendEmail Error Handling", () => {
   it("should catch provider error and return success: false", async () => {
     // Configure mock to reject
@@ -49,10 +47,12 @@ describe("sendEmail Error Handling", () => {
       html: "<p>Test</p>",
     });
 
-    expect(result).toEqual(expect.objectContaining({
-      success: false,
-      error: "Provider Crashed",
-    }));
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: false,
+        error: "Provider Crashed",
+      }),
+    );
 
     // Verify error was logged
     expect(logger.error).toHaveBeenCalledWith(
