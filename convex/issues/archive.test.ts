@@ -24,9 +24,9 @@ describe("Issue Archive", () => {
     });
 
     // Try to archive (should fail because not done)
-    const result1 = await asUser.mutation(api.issues.archive, { issueId });
-    expect(result1.success).toBe(false);
-    expect(result1.error).toContain("Only completed issues can be archived");
+    await expect(asUser.mutation(api.issues.archive, { issueId })).rejects.toThrow(
+      "Only completed issues can be archived",
+    );
 
     // Move to done
     await asUser.mutation(api.issues.updateStatusByCategory, {
