@@ -499,7 +499,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
+        const { projectId } = await asAdmin.mutation(api.projects.createProject, {
           name: "Team Project",
           key: "TEAM",
           isPublic: false,
@@ -535,7 +535,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
+        const { projectId } = await asAdmin.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "NOADD",
           isPublic: false,
@@ -574,7 +574,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
+        const { projectId } = await asAdmin.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "ROLE",
           isPublic: false,
@@ -616,7 +616,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
+        const { projectId } = await asAdmin.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "REMOVE",
           isPublic: false,
@@ -652,7 +652,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, creatorId);
 
         const asCreator = asAuthenticatedUser(t, creatorId);
-      const { projectId } = await asCreator.mutation(api.projects.createProject, {
+        const { projectId } = await asCreator.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "NOCREATOR",
           isPublic: false,
@@ -678,7 +678,7 @@ describe("Projects", () => {
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, creatorId);
 
         const asCreator = asAuthenticatedUser(t, creatorId);
-      const { projectId } = await asCreator.mutation(api.projects.createProject, {
+        const { projectId } = await asCreator.mutation(api.projects.createProject, {
           name: "Test Project",
           key: "NOCHANGE",
           isPublic: false,
