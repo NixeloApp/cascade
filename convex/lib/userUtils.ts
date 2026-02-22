@@ -27,6 +27,17 @@ export type AuthenticatedUser = Omit<PublicUser, "email"> & {
 };
 
 /**
+ * Get the user's name or fallback to email or "Unknown".
+ */
+export function getUserName(
+  user: Doc<"users"> | null | undefined,
+  defaultName = "Unknown",
+): string {
+  if (!user) return defaultName;
+  return user.name || user.email || defaultName;
+}
+
+/**
  * Sanitize user object for public contexts
  * Strips all sensitive fields like email, phone, etc.
  *
@@ -61,17 +72,6 @@ export function sanitizeUserForAuth(
     email: user.email,
     image: user.image,
   };
-}
-
-/**
- * Get the user's name or fallback to email or "Unknown".
- */
-export function getUserName(
-  user: Doc<"users"> | null | undefined,
-  defaultName = "Unknown",
-): string {
-  if (!user) return defaultName;
-  return user.name || user.email || defaultName;
 }
 
 /**

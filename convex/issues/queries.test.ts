@@ -188,13 +188,12 @@ describe("issue queries", () => {
       // Create subtasks directly
       await t.run(async (runCtx) => {
         const project = await runCtx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
         await runCtx.db.insert("issues", {
           projectId,
-          organizationId: project.organizationId,
-          workspaceId: project.workspaceId,
-          teamId: project.teamId,
-          key: `${project.key}-100`,
+          organizationId: project?.organizationId,
+          workspaceId: project?.workspaceId,
+          teamId: project?.teamId,
+          key: `${project?.key}-100`,
           title: "Subtask 1",
           type: "subtask",
           status: "todo",
@@ -210,10 +209,10 @@ describe("issue queries", () => {
         });
         await runCtx.db.insert("issues", {
           projectId,
-          organizationId: project.organizationId,
-          workspaceId: project.workspaceId,
-          teamId: project.teamId,
-          key: `${project.key}-101`,
+          organizationId: project?.organizationId,
+          workspaceId: project?.workspaceId,
+          teamId: project?.teamId,
+          key: `${project?.key}-101`,
           title: "Subtask 2",
           type: "subtask",
           status: "todo",
