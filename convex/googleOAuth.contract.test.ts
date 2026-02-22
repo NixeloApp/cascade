@@ -13,6 +13,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { HOUR } from "./lib/timeUtils";
 
 // =============================================================================
 // GOOGLE API RESPONSE CONTRACTS
@@ -533,7 +534,7 @@ describe("Google OAuth Callback Response Contract", () => {
         providerAccountId: "user@gmail.com",
         accessToken: "access-token-123",
         refreshToken: "refresh-token-456",
-        expiresAt: Date.now() + 3600000,
+        expiresAt: Date.now() + HOUR,
       });
 
       expect(html).toContain("google-calendar-connected");

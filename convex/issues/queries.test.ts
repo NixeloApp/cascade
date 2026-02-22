@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import { DAY } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import {
@@ -469,7 +470,7 @@ describe("issue queries", () => {
           status: "todo",
           priority: "medium",
           reporterId: ctx.userId,
-          dueDate: Date.now() + 86400000,
+          dueDate: Date.now() + DAY,
           updatedAt: Date.now(),
           labels: [],
           linkedDocuments: [],
@@ -541,7 +542,7 @@ describe("issue queries", () => {
       const result = await asOther.query(api.issues.queries.listIssuesByDateRange, {
         projectId,
         from: Date.now(),
-        to: Date.now() + 86400000,
+        to: Date.now() + DAY,
       });
 
       expect(result).toHaveLength(0);

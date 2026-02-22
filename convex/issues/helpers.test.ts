@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import type { Id } from "../_generated/dataModel";
+import { DAY } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createTestIssue, createTestProject, createTestUser } from "../testUtils";
@@ -312,8 +313,8 @@ describe("issue helpers", () => {
 
   describe("matchesDateRange", () => {
     const now = Date.now();
-    const yesterday = now - 86400000;
-    const tomorrow = now + 86400000;
+    const yesterday = now - DAY;
+    const tomorrow = now + DAY;
 
     it("should return true when no date filters", () => {
       expect(matchesDateRange(now, undefined, undefined)).toBe(true);

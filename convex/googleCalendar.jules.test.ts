@@ -2,6 +2,7 @@ import { register } from "@convex-dev/rate-limiter/test";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
+import { DAY, HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
@@ -18,7 +19,7 @@ describe("Google Calendar Integration", () => {
       providerAccountId: "google-user-123",
       accessToken: "access-token-123",
       refreshToken: "refresh-token-123",
-      expiresAt: Date.now() + 3600000,
+      expiresAt: Date.now() + HOUR,
       syncDirection: "bidirectional",
     });
 
@@ -53,7 +54,7 @@ describe("Google Calendar Integration", () => {
         title: "Meeting 1",
         description: "Discuss project",
         startTime: now,
-        endTime: now + 3600000,
+        endTime: now + HOUR,
         allDay: false,
         location: "Room A",
         attendees: ["user@example.com"],
@@ -61,8 +62,8 @@ describe("Google Calendar Integration", () => {
       {
         googleEventId: "evt-2",
         title: "All Day Event",
-        startTime: now + 86400000,
-        endTime: now + 86400000 * 2,
+        startTime: now + DAY,
+        endTime: now + DAY * 2,
         allDay: true,
       },
     ];
@@ -118,7 +119,7 @@ describe("Google Calendar Integration", () => {
         googleEventId: "evt-3",
         title: "Should Not Import",
         startTime: Date.now(),
-        endTime: Date.now() + 3600000,
+        endTime: Date.now() + HOUR,
         allDay: false,
       },
     ];
