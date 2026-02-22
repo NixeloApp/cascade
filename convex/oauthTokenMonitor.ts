@@ -23,7 +23,7 @@ import {
 import { BOUNDED_DELETE_BATCH, BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { encrypt } from "./lib/encryption";
 import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "./lib/env";
-import { MINUTE } from "./lib/timeUtils";
+import { MINUTE, SECOND } from "./lib/timeUtils";
 
 // Token status types
 export type TokenStatus = "healthy" | "expiring_soon" | "expired" | "invalid" | "missing";
@@ -180,7 +180,9 @@ export const refreshConnectionToken = internalAction({
       };
 
       // Calculate new expiration time
-      const expiresAt = newTokens.expires_in ? Date.now() + newTokens.expires_in * 1000 : undefined;
+      const expiresAt = newTokens.expires_in
+        ? Date.now() + newTokens.expires_in * SECOND
+        : undefined;
 
       // Encrypt and store the new access token
       const encryptedAccessToken = await encrypt(newTokens.access_token);

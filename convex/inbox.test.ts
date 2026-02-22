@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { WEEK } from "./lib/timeUtils";
+import { SECOND, WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -223,7 +223,7 @@ describe("Inbox", () => {
       });
 
       const inboxIssueId = await createInboxIssue(t, projectId, issueId, userId);
-      const pastDate = Date.now() - 1000; // 1 second ago
+      const pastDate = Date.now() - SECOND; // 1 second ago
 
       await expect(
         asUser.mutation(api.inbox.snooze, {
