@@ -7,7 +7,11 @@ import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 // Lazy load the timesheet component for better performance
-const ProjectTimesheet = React.lazy(() => import("@/components/TimeTracking/ProjectTimesheet"));
+const ProjectTimesheet = React.lazy(() =>
+  import("@/components/TimeTracking/ProjectTimesheet").then((module) => ({
+    default: module.ProjectTimesheet,
+  })),
+);
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/timesheet")({
   component: TimesheetPage,
