@@ -96,6 +96,17 @@ describe("Issue Links", () => {
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
       const projectId = await createTestProject(t, adminId);
 
+      // Add viewer to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project?.organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
+
       const asAdmin = asAuthenticatedUser(t, adminId);
       const issue1Id = await asAdmin.mutation(api.issues.create, {
         projectId,
@@ -179,6 +190,17 @@ describe("Issue Links", () => {
       const adminId = await createTestUser(t, { name: "Admin" });
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
       const projectId = await createTestProject(t, adminId);
+
+      // Add viewer to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project?.organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
       const issue1Id = await asAdmin.mutation(api.issues.create, {

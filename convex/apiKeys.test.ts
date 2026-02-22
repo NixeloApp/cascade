@@ -76,6 +76,17 @@ describe("API Keys", () => {
       const member = await createTestUser(t, { email: "member@example.com" });
       const projectId = await createTestProject(t, owner);
 
+      // Add member to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project?.organizationId,
+          userId: member,
+          role: "member",
+          addedBy: owner,
+        });
+      });
+
       const asOwner = asAuthenticatedUser(t, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,

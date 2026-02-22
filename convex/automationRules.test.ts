@@ -76,6 +76,17 @@ describe("Automation Rules", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Add member to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project?.organizationId,
+          userId: member,
+          role: "member",
+          addedBy: owner,
+        });
+      });
+
       // Add member
       const asOwner = asAuthenticatedUser(t, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
@@ -165,6 +176,17 @@ describe("Automation Rules", () => {
         email: "editor@test.com",
       });
       const projectId = await createTestProject(t, owner);
+
+      // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project?.organizationId,
+          userId: editor,
+          role: "member",
+          addedBy: owner,
+        });
+      });
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
@@ -313,6 +335,17 @@ describe("Automation Rules", () => {
       });
       const projectId = await createTestProject(t, owner);
 
+      // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project?.organizationId,
+          userId: editor,
+          role: "member",
+          addedBy: owner,
+        });
+      });
+
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
@@ -422,6 +455,17 @@ describe("Automation Rules", () => {
         email: "editor@test.com",
       });
       const projectId = await createTestProject(t, owner);
+
+      // Add editor to organization
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId: project?.organizationId,
+          userId: editor,
+          role: "member",
+          addedBy: owner,
+        });
+      });
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
