@@ -550,6 +550,10 @@ const applicationTables = {
     toIssueId: v.id("issues"),
     linkType: linkTypes,
     createdBy: v.id("users"),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_from_issue", ["fromIssueId"])
     .index("by_to_issue", ["toIssueId"]),
@@ -561,6 +565,10 @@ const applicationTables = {
   issueWatchers: defineTable({
     issueId: v.id("issues"),
     userId: v.id("users"),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
     .index("by_user", ["userId"])
@@ -589,6 +597,10 @@ const applicationTables = {
     description: v.optional(v.string()),
     displayOrder: v.number(),
     createdBy: v.id("users"),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_project_name", ["projectId", "name"])
@@ -601,6 +613,10 @@ const applicationTables = {
     color: v.string(), // Hex: "#3B82F6"
     displayOrder: v.optional(v.number()),
     createdBy: v.id("users"),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_project_name", ["projectId", "name"])
@@ -620,6 +636,10 @@ const applicationTables = {
     defaultStoryPoints: v.optional(v.number()), // Pre-fill story points
     isDefault: v.optional(v.boolean()), // Mark as project's default template
     createdBy: v.id("users"),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_project_type", ["projectId", "type"])
@@ -679,6 +699,10 @@ const applicationTables = {
     }),
     isPublic: v.boolean(),
     updatedAt: v.number(),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_user", ["userId"])
@@ -701,6 +725,10 @@ const applicationTables = {
     isRequired: v.boolean(),
     description: v.optional(v.string()),
     createdBy: v.id("users"),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_project_key", ["projectId", "fieldKey"]),
@@ -710,6 +738,10 @@ const applicationTables = {
     fieldId: v.id("customFields"),
     value: v.string(),
     updatedAt: v.number(),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
     .index("by_field", ["fieldId"])
@@ -734,6 +766,10 @@ const applicationTables = {
     createdBy: v.id("users"),
     updatedAt: v.number(),
     executionCount: v.number(),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_project", ["projectId"])
     .index("by_active", ["isActive"])
@@ -1357,6 +1393,10 @@ const applicationTables = {
     approvedBy: v.optional(v.id("users")),
     approvedAt: v.optional(v.number()),
     updatedAt: v.number(),
+    // Soft Delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_user", ["userId"])
     .index("by_project", ["projectId"])
