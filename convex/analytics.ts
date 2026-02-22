@@ -5,12 +5,8 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
-import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
-import {
-  MAX_ACTIVITY_FOR_ANALYTICS,
-  MAX_SPRINT_ISSUES,
-  MAX_VELOCITY_SPRINTS,
-} from "./lib/queryLimits";
+import { batchFetchUsers } from "./lib/batchHelpers";
+import { MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
 import { DAY } from "./lib/timeUtils";
 import { getUserName } from "./lib/userUtils";
 
@@ -287,12 +283,13 @@ export const getRecentActivity = projectQuery({
     }
 
     // Parallel fetch: Get recent activities for each of these issues
-    const activitiesPromises = recentIssues.map((issue) =>
-      ctx.db
-        .query("issueActivity")
-        .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
-        .order("desc")
-        .take(limit) // Fetch up to limit per issue to ensure we don't miss dense activity
+    const activitiesPromises = recentIssues.map(
+      (issue) =>
+        ctx.db
+          .query("issueActivity")
+          .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+          .order("desc")
+          .take(limit), // Fetch up to limit per issue to ensure we don't miss dense activity
     );
 
     const activitiesPerIssue = await Promise.all(activitiesPromises);
