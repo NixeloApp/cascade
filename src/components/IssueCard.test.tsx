@@ -146,11 +146,11 @@ describe("IssueCard", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
     // Type icon (visually present)
-    const typeIcon = screen.getByLabelText("Bug", { hidden: true });
+    const typeIcon = screen.getByRole("img", { name: "Bug", hidden: true });
     expect(typeIcon).toBeInTheDocument();
 
     // Priority icon (visually present)
-    const priorityIcon = screen.getByLabelText("Priority: high", { hidden: true });
+    const priorityIcon = screen.getByRole("img", { name: "Priority: high", hidden: true });
     expect(priorityIcon).toBeInTheDocument();
 
     // Assignee (visually present)
@@ -178,11 +178,11 @@ describe("IssueCard", () => {
     render(<IssueCard issue={mockIssue} status="todo" onClick={handleClick} />);
 
     // Click Type Icon
-    await user.click(screen.getByLabelText("Bug", { hidden: true }));
+    await user.click(screen.getByRole("img", { name: "Bug", hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(1);
 
     // Click Priority Icon
-    await user.click(screen.getByLabelText("Priority: high", { hidden: true }));
+    await user.click(screen.getByRole("img", { name: "Priority: high", hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(2);
 
     // Click Assignee
