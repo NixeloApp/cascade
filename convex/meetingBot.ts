@@ -35,7 +35,12 @@ async function assertRecordingAccess(
     await assertCanAccessProject(ctx, recording.projectId, ctx.userId);
   }
 
-  if (recording.createdBy !== ctx.userId && !recording.isPublic) {
+  // Security: If a recording is orphaned (no project), we ignore the isPublic flag
+  // because "Public" would imply globally public across all organizations (data leak).
+  // Orphaned recordings are only accessible by their creator.
+  const isEffectivelyPublic = recording.isPublic && !!recording.projectId;
+
+  if (recording.createdBy !== ctx.userId && !isEffectivelyPublic) {
     throw forbidden(undefined, "Not authorized to view this recording");
   }
 }
