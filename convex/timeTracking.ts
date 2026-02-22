@@ -10,7 +10,7 @@ import {
 } from "./lib/batchHelpers";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
-import { DAY, SECOND } from "./lib/timeUtils";
+import { DAY, HOUR, SECOND } from "./lib/timeUtils";
 import { assertCanAccessProject, assertIsProjectAdmin } from "./projectAccess";
 import { rateTypes } from "./validators";
 
@@ -52,7 +52,7 @@ function calculateTimeEntryCost(
   hourlyRate?: number,
 ): { duration: number; totalCost: number } {
   const duration = Math.floor((endTime - startTime) / SECOND);
-  const hours = duration / 3600;
+  const hours = duration / (HOUR / SECOND);
   const totalCost = hourlyRate ? hours * hourlyRate : 0;
 
   return { duration, totalCost };
@@ -140,7 +140,7 @@ export const stopTimer = authenticatedMutation({
 
     const now = Date.now();
     const duration = Math.floor((now - entry.startTime) / SECOND); // seconds
-    const hours = duration / 3600;
+    const hours = duration / (HOUR / SECOND);
     const totalCost = entry.hourlyRate ? hours * entry.hourlyRate : 0;
 
     await ctx.db.patch(args.entryId, {
@@ -181,7 +181,7 @@ export const createTimeEntry = authenticatedMutation({
     const rate = await getUserCurrentRate(ctx, ctx.userId, args.projectId);
 
     const duration = Math.floor((args.endTime - args.startTime) / SECOND);
-    const hours = duration / 3600;
+    const hours = duration / (HOUR / SECOND);
     const totalCost = rate?.hourlyRate ? hours * rate.hourlyRate : 0;
 
     const now = Date.now();
@@ -305,7 +305,7 @@ export const getRunningTimer = authenticatedQuery({
     // Calculate current duration
     const now = Date.now();
     const currentDuration = Math.floor((now - runningTimer.startTime) / SECOND);
-    const hours = currentDuration / 3600;
+    const hours = currentDuration / (HOUR / SECOND);
     const currentCost = runningTimer.hourlyRate ? hours * runningTimer.hourlyRate : 0;
 
     return {
@@ -474,7 +474,7 @@ export const getCurrentWeekTimesheet = authenticatedQuery({
     const enrichedEntries = entries.map((entry) => {
       const project = entry.projectId ? projectMap.get(entry.projectId) : undefined;
       const issue = entry.issueId ? issueMap.get(entry.issueId) : undefined;
-      const hours = entry.duration / 3600;
+      const hours = entry.duration / (HOUR / SECOND);
 
       return {
         ...entry,
@@ -547,7 +547,7 @@ export const getBurnRate = authenticatedQuery({
     const userCosts: Record<string, { hours: number; cost: number; name: string }> = {};
 
     for (const entry of entries) {
-      const hours = entry.duration / 3600;
+      const hours = entry.duration / (HOUR / SECOND);
       const cost = entry.totalCost || 0;
 
       totalHours += hours;
@@ -654,7 +654,7 @@ export const getTeamCosts = authenticatedQuery({
         };
       }
 
-      const hours = entry.duration / 3600;
+      const hours = entry.duration / (HOUR / SECOND);
       const cost = entry.totalCost || 0;
 
       userCosts[userIdStr].hours += hours;
@@ -817,7 +817,7 @@ export const getProjectBilling = authenticatedQuery({
     > = {};
 
     for (const entry of entries) {
-      const hours = entry.duration / 3600;
+      const hours = entry.duration / (HOUR / SECOND);
       totalHours += hours;
 
       if (entry.billable) {
