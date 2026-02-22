@@ -83,6 +83,8 @@ export const markAsRead = authenticatedMutation({
     requireOwned(notification, ctx.userId, "notification");
 
     await ctx.db.patch(args.id, { isRead: true });
+
+    return { success: true };
   },
 });
 
@@ -116,6 +118,8 @@ export const softDeleteNotification = authenticatedMutation({
     requireOwned(notification, ctx.userId, "notification");
 
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
+
+    return { success: true };
   },
 });
 

@@ -78,7 +78,7 @@ export const removeAttachment = issueMutation({
       field: "attachment",
     });
 
-    return true;
+    return { success: true };
   },
 });
 

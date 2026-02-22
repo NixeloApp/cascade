@@ -119,6 +119,8 @@ export const updateWebhook = authenticatedMutation({
       targetType: "webhooks",
       metadata: updates,
     });
+
+    return { success: true };
   },
 });
 
@@ -143,6 +145,8 @@ export const softDeleteWebhook = authenticatedMutation({
       targetId: args.id,
       targetType: "webhooks",
     });
+
+    return { success: true };
   },
 });
 
