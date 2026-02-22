@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { internal } from "./_generated/api";
 import { securePasswordResetHandler } from "./authWrapper";
+
+// Mock logger
+const logger = vi.hoisted(() => ({
+  error: vi.fn(),
+  info: vi.fn(),
+}));
+
+vi.mock("./lib/logger", () => ({ logger }));
 
 // Mock internal api
 vi.mock("./_generated/api", () => ({
@@ -10,143 +19,222 @@ vi.mock("./_generated/api", () => ({
       schedulePasswordReset: "schedulePasswordReset",
     },
   },
-}));
-
-// Mock rateLimits to avoid top-level execution requiring components
-vi.mock("./rateLimits", () => ({
-  rateLimit: vi.fn(),
-  checkRateLimit: vi.fn(),
-}));
-
-// Mock logger
-vi.mock("./lib/logger", () => ({
-  logger: {
-    error: vi.fn(),
+  components: {
+    rateLimiter: {},
   },
 }));
 
-describe("securePasswordResetHandler", () => {
-  let mockCtx: any;
-  let mockRunMutation: any;
+// Mock console.error to keep test output clean
+vi.spyOn(console, "error").mockImplementation(() => {});
 
+describe("securePasswordResetHandler", () => {
   beforeEach(() => {
-    mockRunMutation = vi.fn();
-    mockCtx = {
-      runMutation: mockRunMutation,
-    };
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
+    // Default to test environment
+    vi.stubEnv("NODE_ENV", "test");
   });
 
   const createRequest = (body: any, headers: Record<string, string> = {}) => {
-    return new Request("https://api.convex.dev/auth/request-reset", {
+    return new Request("http://localhost/api/auth/request-reset", {
       method: "POST",
       headers: new Headers(headers),
       body: JSON.stringify(body),
     });
   };
 
-  it("should return 429 if IP rate limit is exceeded", async () => {
-    // Simulate rate limit failure
-    mockRunMutation.mockRejectedValueOnce(new Error("Rate limit exceeded"));
+  const createCtx = () => {
+    return {
+      runMutation: vi.fn(),
+      runAction: vi.fn(),
+      scheduler: {
+        runAfter: vi.fn(),
+      },
+    } as any;
+  };
 
-    const request = createRequest({ email: "test@example.com" }, { "x-forwarded-for": "1.2.3.4" });
-    const response = await securePasswordResetHandler(mockCtx, request);
+  it("should handle a successful request", async () => {
+    const ctx = createCtx();
+    const request = createRequest(
+      { email: "user@example.com" },
+      { "cf-connecting-ip": "203.0.113.1" },
+    );
 
-    expect(response.status).toBe(429);
+    const response = await securePasswordResetHandler(ctx, request);
     const body = await response.json();
-    expect(body).toEqual({ success: false, error: "Rate limit exceeded" });
-    expect(mockRunMutation).toHaveBeenCalledWith("checkPasswordResetRateLimit", { ip: "1.2.3.4" });
-  });
-
-  it("should return 200 (silent success) if email is invalid", async () => {
-    mockRunMutation.mockResolvedValue(undefined);
-
-    const request = createRequest({ email: 123 }, { "x-forwarded-for": "1.2.3.4" });
-    const response = await securePasswordResetHandler(mockCtx, request);
 
     expect(response.status).toBe(200);
-    expect(mockRunMutation).toHaveBeenCalledWith("checkPasswordResetRateLimit", { ip: "1.2.3.4" });
-    expect(mockRunMutation).not.toHaveBeenCalledWith("schedulePasswordReset", expect.anything());
-  });
+    expect(body).toEqual({ success: true });
 
-  it("should return 200 (silent success) if email is empty", async () => {
-    mockRunMutation.mockResolvedValue(undefined);
-
-    const request = createRequest({ email: "" }, { "x-forwarded-for": "1.2.3.4" });
-    const response = await securePasswordResetHandler(mockCtx, request);
-
-    expect(response.status).toBe(200);
-    expect(mockRunMutation).not.toHaveBeenCalledWith("schedulePasswordReset", expect.anything());
-  });
-
-  it("should return 200 (silent success) if email rate limit is exceeded", async () => {
-    // IP check passes
-    mockRunMutation.mockResolvedValueOnce(undefined);
-    // Email check fails
-    mockRunMutation.mockRejectedValueOnce(new Error("Rate limit exceeded"));
-
-    const request = createRequest({ email: "test@example.com" }, { "x-forwarded-for": "1.2.3.4" });
-    const response = await securePasswordResetHandler(mockCtx, request);
-
-    expect(response.status).toBe(200);
-    expect(mockRunMutation).toHaveBeenCalledWith("checkPasswordResetRateLimit", { ip: "1.2.3.4" });
-    expect(mockRunMutation).toHaveBeenCalledWith("checkPasswordResetRateLimitByEmail", {
-      email: "test@example.com",
+    // Verify IP rate limit check
+    expect(ctx.runMutation).toHaveBeenCalledWith(internal.authWrapper.checkPasswordResetRateLimit, {
+      ip: "203.0.113.1",
     });
-    expect(mockRunMutation).not.toHaveBeenCalledWith("schedulePasswordReset", expect.anything());
-  });
 
-  it("should return 200 and schedule reset on success", async () => {
-    mockRunMutation.mockResolvedValue(undefined);
+    // Verify Email rate limit check
+    expect(ctx.runMutation).toHaveBeenCalledWith(
+      internal.authWrapper.checkPasswordResetRateLimitByEmail,
+      { email: "user@example.com" },
+    );
 
-    const request = createRequest({ email: "Test@Example.Com" }, { "x-forwarded-for": "1.2.3.4" });
-    const response = await securePasswordResetHandler(mockCtx, request);
-
-    expect(response.status).toBe(200);
-
-    // Check normalization
-    expect(mockRunMutation).toHaveBeenCalledWith("checkPasswordResetRateLimitByEmail", {
-      email: "test@example.com",
-    });
-    expect(mockRunMutation).toHaveBeenCalledWith("schedulePasswordReset", {
-      email: "test@example.com",
+    // Verify Schedule reset
+    expect(ctx.runMutation).toHaveBeenCalledWith(internal.authWrapper.schedulePasswordReset, {
+      email: "user@example.com",
     });
   });
 
-  it("should default to 127.0.0.1 in test environment if no IP headers provided", async () => {
-    mockRunMutation.mockResolvedValue(undefined);
+  it("should use fallback IP in dev/test environment if no headers present", async () => {
+    const ctx = createCtx();
+    const request = createRequest({ email: "user@example.com" });
 
-    const request = createRequest({ email: "test@example.com" });
-    const response = await securePasswordResetHandler(mockCtx, request);
+    // Ensure we are in test env (already set in beforeEach)
+    vi.stubEnv("NODE_ENV", "test");
 
+    const response = await securePasswordResetHandler(ctx, request);
     expect(response.status).toBe(200);
-    expect(mockRunMutation).toHaveBeenCalledWith("checkPasswordResetRateLimit", {
+
+    // Verify IP rate limit check uses fallback IP
+    expect(ctx.runMutation).toHaveBeenCalledWith(internal.authWrapper.checkPasswordResetRateLimit, {
       ip: "127.0.0.1",
     });
   });
 
-  it("should return 200 on unexpected errors", async () => {
-    // IP check throws generic error (not rate limit, but treated similarly or just caught)
-    // Actually the code catches rate limit specifically for the first try/catch block for IP
-    // Wait, the code says:
-    /*
-    try {
-      await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimit, { ip: clientIp });
-    } catch {
-      // Rate limit exceeded
-      return new Response(...)
-    }
-    */
-    // So ANY error from checkPasswordResetRateLimit will cause a 429.
+  it("should fail gracefully in production if no IP headers present", async () => {
+    const ctx = createCtx();
+    const request = createRequest({ email: "user@example.com" });
 
-    // But if something else fails, e.g. request.json() fails
-    const badRequest = new Request("https://api.convex.dev/auth/request-reset", {
-      method: "POST",
-      headers: new Headers({ "x-forwarded-for": "1.2.3.4" }),
-      body: "invalid-json",
+    // Simulate production environment
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("E2E_TEST_MODE", "");
+    vi.stubEnv("CI", "");
+
+    const response = await securePasswordResetHandler(ctx, request);
+    const body = await response.json();
+
+    // Should return 200 { success: true } to prevent info leak
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ success: true });
+
+    // Should log the error
+    expect(logger.error).toHaveBeenCalledWith(
+      "Secure password reset failed",
+      expect.objectContaining({
+        error: expect.objectContaining({
+          message: "Could not determine client IP for security-sensitive action",
+        }),
+      }),
+    );
+
+    // Should NOT schedule reset
+    expect(ctx.runMutation).not.toHaveBeenCalledWith(
+      internal.authWrapper.schedulePasswordReset,
+      expect.anything(),
+    );
+  });
+
+  it("should return 429 if IP rate limit is exceeded", async () => {
+    const ctx = createCtx();
+    const request = createRequest(
+      { email: "user@example.com" },
+      { "cf-connecting-ip": "203.0.113.1" },
+    );
+
+    // Mock IP rate limit failure
+    ctx.runMutation.mockImplementation(async (mutation: any) => {
+      if (mutation === internal.authWrapper.checkPasswordResetRateLimit) {
+        throw new Error("Rate limit exceeded");
+      }
     });
 
-    const response = await securePasswordResetHandler(mockCtx, badRequest);
+    const response = await securePasswordResetHandler(ctx, request);
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body).toEqual({ success: false, error: "Rate limit exceeded" });
+
+    // Should NOT proceed to email check or schedule
+    expect(ctx.runMutation).not.toHaveBeenCalledWith(
+      internal.authWrapper.checkPasswordResetRateLimitByEmail,
+      expect.anything(),
+    );
+  });
+
+  it("should return 200 (silent failure) if Email rate limit is exceeded", async () => {
+    const ctx = createCtx();
+    const request = createRequest(
+      { email: "user@example.com" },
+      { "cf-connecting-ip": "203.0.113.1" },
+    );
+
+    // Mock Email rate limit failure
+    ctx.runMutation.mockImplementation(async (mutation: any) => {
+      if (mutation === internal.authWrapper.checkPasswordResetRateLimitByEmail) {
+        throw new Error("Rate limit exceeded");
+      }
+    });
+
+    const response = await securePasswordResetHandler(ctx, request);
+    const body = await response.json();
+
     expect(response.status).toBe(200);
+    expect(body).toEqual({ success: true });
+
+    // Should check IP first (implicitly verified by flow reaching email check)
+
+    // Should NOT schedule reset
+    expect(ctx.runMutation).not.toHaveBeenCalledWith(
+      internal.authWrapper.schedulePasswordReset,
+      expect.anything(),
+    );
+  });
+
+  it("should handle invalid body or missing email gracefully", async () => {
+    const ctx = createCtx();
+    const request = createRequest({ notEmail: "something" }, { "cf-connecting-ip": "203.0.113.1" });
+
+    const response = await securePasswordResetHandler(ctx, request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ success: true });
+
+    // Should check IP first
+    expect(ctx.runMutation).toHaveBeenCalledWith(
+      internal.authWrapper.checkPasswordResetRateLimit,
+      expect.anything(),
+    );
+
+    // Should NOT check email rate limit (no email)
+    expect(ctx.runMutation).not.toHaveBeenCalledWith(
+      internal.authWrapper.checkPasswordResetRateLimitByEmail,
+      expect.anything(),
+    );
+
+    // Should NOT schedule reset
+    expect(ctx.runMutation).not.toHaveBeenCalledWith(
+      internal.authWrapper.schedulePasswordReset,
+      expect.anything(),
+    );
+  });
+
+  it("should normalize email address", async () => {
+    const ctx = createCtx();
+    const request = createRequest(
+      { email: "  User@Example.COM  " },
+      { "cf-connecting-ip": "203.0.113.1" },
+    );
+
+    await securePasswordResetHandler(ctx, request);
+
+    // Verify Email rate limit check uses normalized email
+    expect(ctx.runMutation).toHaveBeenCalledWith(
+      internal.authWrapper.checkPasswordResetRateLimitByEmail,
+      { email: "user@example.com" },
+    );
+
+    // Verify Schedule reset uses normalized email
+    expect(ctx.runMutation).toHaveBeenCalledWith(internal.authWrapper.schedulePasswordReset, {
+      email: "user@example.com",
+    });
   });
 });
