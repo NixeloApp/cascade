@@ -9,6 +9,7 @@ import { IssueCard } from "./IssueCard";
 vi.mock("@/lib/issue-utils", () => ({
   getTypeLabel: vi.fn(() => "Task"),
   getPriorityColor: vi.fn(() => "text-priority-medium"),
+  getIssueAccessibleLabel: vi.fn(() => "Task TEST-123: Title"),
   ISSUE_TYPE_ICONS: {
     bug: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
     task: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
