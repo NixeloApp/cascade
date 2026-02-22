@@ -269,30 +269,42 @@ export const getTeamVelocity = projectQuery({
 export const getRecentActivity = projectQuery({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    // Get recent activity (global, limited)
-    const activities = await ctx.db
-      .query("issueActivity")
+    const limit = args.limit || 20;
+
+    // Optimization: Fetch top recently updated issues for the project
+    // This avoids scanning the global issueActivity table and filtering in memory
+    const issues = await ctx.db
+      .query("issues")
+      .withIndex("by_project_updated", (q) => q.eq("projectId", ctx.projectId))
       .order("desc")
-      .take(MAX_ACTIVITY_FOR_ANALYTICS);
+      .take(limit + 5); // Fetch a few more to be safe
 
-    // Batch fetch all referenced issues (NOT all project issues!)
-    const activityIssueIds = activities.map((a) => a.issueId);
-    const issueMap = await batchFetchIssues(ctx, activityIssueIds);
+    // Fetch activities for these issues in parallel
+    const activitiesArrays = await Promise.all(
+      issues.map((issue) =>
+        ctx.db
+          .query("issueActivity")
+          .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+          .order("desc")
+          .take(limit),
+      ),
+    );
 
-    // Filter to only activities for this project's issues
-    const projectActivities = activities
-      .filter((a) => {
-        const issue = issueMap.get(a.issueId);
-        return issue && issue.projectId === ctx.projectId;
-      })
-      .slice(0, args.limit || 20);
+    // Flatten, sort by creation time, and take top limit
+    const allActivities = activitiesArrays
+      .flat()
+      .sort((a, b) => b._creationTime - a._creationTime)
+      .slice(0, limit);
 
-    // Batch fetch users for filtered activities
-    const userIds = projectActivities.map((a) => a.userId);
+    // Create issue map from fetched issues
+    const issueMap = new Map(issues.map((i) => [i._id, i]));
+
+    // Batch fetch users
+    const userIds = allActivities.map((a) => a.userId);
     const userMap = await batchFetchUsers(ctx, userIds);
 
-    // Enrich with pre-fetched data (no N+1)
-    return projectActivities.map((activity) => {
+    // Enrich
+    return allActivities.map((activity) => {
       const user = userMap.get(activity.userId);
       const issue = issueMap.get(activity.issueId);
 
