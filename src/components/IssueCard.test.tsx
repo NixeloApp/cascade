@@ -102,12 +102,19 @@ describe("IssueCard", () => {
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    const avatar = screen.getByAltText("Alice Johnson");
+    // We can find hidden elements since aria-hidden="true" is on the wrapper
+    // Use getByRole which supports hidden option in types
+    const avatar = screen.getByRole("img", { name: "Alice Johnson", hidden: true });
     expect(avatar).toBeInTheDocument();
 
     await user.hover(avatar);
 
-    const tooltipText = await screen.findByRole("tooltip", { name: "Assigned to: Alice Johnson" });
+    // Use findByText to be more robust against accessible role visibility
+    // Pass hidden: true because tooltip might be rendered inside the aria-hidden container in tests
+    const tooltipText = await screen.findByRole("tooltip", {
+      name: /Assigned to: Alice Johnson/,
+      hidden: true,
+    });
     expect(tooltipText).toBeInTheDocument();
   });
 
@@ -125,40 +132,44 @@ describe("IssueCard", () => {
     };
     render(<IssueCard issue={issueWithManyLabels} status="todo" />);
 
-    // The text "+2" should be present
-    const hiddenCount = screen.getByText("+2");
+    // The text "+2" should be present (hidden from accessibility tree)
+    // biome-ignore lint/suspicious/noExplicitAny: hidden option is supported at runtime but types might be strict
+    const hiddenCount = screen.getByText("+2", { hidden: true } as any);
     expect(hiddenCount).toBeInTheDocument();
 
     await user.hover(hiddenCount);
 
-    const tooltipText = await screen.findByRole("tooltip", { name: "Hidden1, Hidden2" });
+    const tooltipText = await screen.findByRole("tooltip", {
+      name: /Hidden1, Hidden2/,
+      hidden: true,
+    });
     expect(tooltipText).toBeInTheDocument();
   });
 
   it("should display metadata icons with correct labels", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    // Type icon
-    const typeIcon = screen.getByLabelText("Bug");
+    // Type icon - use hidden: true because they are aria-hidden
+    const typeIcon = screen.getByRole("img", { name: "Bug", hidden: true });
     expect(typeIcon).toBeInTheDocument();
-    // Ensure it IS in a button and is keyboard accessible
+    // Ensure it IS in a button but REMOVED from tab order
     const typeBtn = typeIcon.closest("button");
     expect(typeBtn).toBeInTheDocument();
-    expect(typeBtn).not.toHaveAttribute("tabIndex", "-1");
+    expect(typeBtn).toHaveAttribute("tabIndex", "-1");
 
     // Priority icon
-    const priorityIcon = screen.getByLabelText("Priority: high");
+    const priorityIcon = screen.getByRole("img", { name: "Priority: high", hidden: true });
     expect(priorityIcon).toBeInTheDocument();
     const priorityBtn = priorityIcon.closest("button");
     expect(priorityBtn).toBeInTheDocument();
-    expect(priorityBtn).not.toHaveAttribute("tabIndex", "-1");
+    expect(priorityBtn).toHaveAttribute("tabIndex", "-1");
 
     // Assignee
-    const assigneeImg = screen.getByAltText("Alice Johnson");
+    const assigneeImg = screen.getByRole("img", { name: "Alice Johnson", hidden: true });
     expect(assigneeImg).toBeInTheDocument();
     const assigneeBtn = assigneeImg.closest("button");
     expect(assigneeBtn).toBeInTheDocument();
-    expect(assigneeBtn).not.toHaveAttribute("tabIndex", "-1");
+    expect(assigneeBtn).toHaveAttribute("tabIndex", "-1");
   });
 
   it("should render fallback assignee avatar with accessible label", () => {

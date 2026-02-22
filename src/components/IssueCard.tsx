@@ -266,7 +266,7 @@ export const IssueCard = memo(function IssueCard({
       />
 
       {/* Content Wrapper - pointer-events-none allows clicks to pass through to overlay */}
-      <div className="relative z-10 pointer-events-none">
+      <div className="relative z-10 pointer-events-none" aria-hidden="true">
         {/* Header */}
         <Flex align="start" justify="between" className="mb-2">
           <Flex align="center" gap="sm">
@@ -276,10 +276,7 @@ export const IssueCard = memo(function IssueCard({
                 ref={dragHandleRef}
                 className="cursor-grab active:cursor-grabbing pointer-events-auto"
               >
-                <GripVertical
-                  className="w-3 h-3 text-ui-text-tertiary opacity-0 group-hover:opacity-40 transition-fast -ml-0.5 shrink-0"
-                  aria-hidden="true"
-                />
+                <GripVertical className="w-3 h-3 text-ui-text-tertiary opacity-0 group-hover:opacity-40 transition-fast -ml-0.5 shrink-0" />
               </div>
             )}
             {/* Checkbox */}
@@ -295,10 +292,11 @@ export const IssueCard = memo(function IssueCard({
             )}
             <Tooltip content={getTypeLabel(issue.type)}>
               {/* Tooltip trigger needs pointer events */}
-              <Button
-                variant="unstyled"
+              <button
+                type="button"
+                tabIndex={-1}
                 onClick={handleClick}
-                className="pointer-events-auto p-0 h-auto rounded-sm"
+                className="pointer-events-auto p-0 h-auto rounded-sm inline-flex items-center justify-center cursor-pointer bg-transparent border-0"
               >
                 <Icon
                   icon={ISSUE_TYPE_ICONS[issue.type]}
@@ -307,7 +305,7 @@ export const IssueCard = memo(function IssueCard({
                   role="img"
                   aria-label={getTypeLabel(issue.type)}
                 />
-              </Button>
+              </button>
             </Tooltip>
             <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
               {issue.key}
@@ -316,10 +314,11 @@ export const IssueCard = memo(function IssueCard({
           <Tooltip
             content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
           >
-            <Button
-              variant="unstyled"
+            <button
+              type="button"
+              tabIndex={-1}
               onClick={handleClick}
-              className="pointer-events-auto p-0 h-auto rounded-sm"
+              className="pointer-events-auto p-0 h-auto rounded-sm inline-flex items-center justify-center cursor-pointer bg-transparent border-0"
             >
               <Icon
                 icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
@@ -329,7 +328,7 @@ export const IssueCard = memo(function IssueCard({
                 role="img"
                 className={cn("cursor-help", getPriorityColor(issue.priority))}
               />
-            </Button>
+            </button>
           </Tooltip>
         </Flex>
 
@@ -366,15 +365,16 @@ export const IssueCard = memo(function IssueCard({
                   .map((l) => l.name)
                   .join(", ")}
               >
-                <Button
-                  variant="unstyled"
+                <button
+                  type="button"
+                  tabIndex={-1}
                   onClick={handleClick}
-                  className="pointer-events-auto p-0 h-auto rounded-sm"
+                  className="pointer-events-auto p-0 h-auto rounded-sm inline-flex items-center justify-center cursor-pointer bg-transparent border-0"
                 >
                   <Badge variant="neutral" size="sm" className="cursor-help">
                     +{issue.labels.length - 3}
                   </Badge>
-                </Button>
+                </button>
               </Tooltip>
             )}
           </Flex>
@@ -391,10 +391,11 @@ export const IssueCard = memo(function IssueCard({
           <Flex align="center" gap="sm">
             {issue.assignee && (
               <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-                <Button
-                  variant="unstyled"
+                <button
+                  type="button"
+                  tabIndex={-1}
                   onClick={handleClick}
-                  className="pointer-events-auto p-0 h-auto rounded-sm flex items-center gap-1"
+                  className="pointer-events-auto p-0 h-auto rounded-sm inline-flex items-center justify-center cursor-pointer gap-1 bg-transparent border-0"
                 >
                   {issue.assignee.image ? (
                     <img
@@ -413,7 +414,7 @@ export const IssueCard = memo(function IssueCard({
                       {issue.assignee.name.charAt(0).toUpperCase()}
                     </Flex>
                   )}
-                </Button>
+                </button>
               </Tooltip>
             )}
           </Flex>

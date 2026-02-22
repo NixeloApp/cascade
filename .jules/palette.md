@@ -61,3 +61,7 @@
 ## 2026-02-21 - Robust ID Generation
 **Learning:** Generating IDs from labels (e.g., `label.toLowerCase().replace(...)`) causes duplicate IDs when the same label is used multiple times on a page (e.g., in a modal and on the page), breaking accessibility.
 **Action:** Use `React.useId()` to generate unique, stable IDs for form inputs, error messages, and helper text. Use the generated ID as a fallback if no `id` prop is provided.
+
+## 2026-03-05 - Reducing Tab Stop Noise in Cards
+**Learning:** Cards with dense information (icons, labels, avatars) often wrap each element in a button for tooltips, creating excessive tab stops for keyboard users without adding value (if the whole card is clickable).
+**Action:** Remove inner buttons and use `tabIndex="-1"` on informational elements if they only replicate the card's main action. Ensure the card's main overlay button has a comprehensive `aria-label` covering all information. Use `aria-hidden="true"` on the content wrapper to prevent screen reader redundancy. For tests, remember that `aria-hidden` content requires `hidden: true` option in testing-library queries.
