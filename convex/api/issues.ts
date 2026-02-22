@@ -11,11 +11,7 @@ import {
   hasScope,
   verifyProjectAccess,
 } from "../lib/apiAuth";
-import {
-  type ErrorCode,
-  getErrorCode,
-  getErrorMessage,
-} from "../lib/errors";
+import { type ErrorCode, getErrorCode, getErrorMessage } from "../lib/errors";
 import { logger } from "../lib/logger";
 import { getClientIp } from "../lib/ssrf";
 
@@ -122,7 +118,6 @@ function mapErrorCodeToStatus(code: ErrorCode): number {
       return 409;
     case "RATE_LIMITED":
       return 429;
-    case "INTERNAL":
     default:
       return 500;
   }
