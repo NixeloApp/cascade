@@ -301,20 +301,26 @@ async function handleDeleteRelation(ctx: MutationCtx, rel: Relationship, recordI
 }
 
 /**
- * Automatically cascade delete all related records
- * Handles multi-level cascading (parent → child → grandchild)
+ * Automatically cascade delete all related child records.
+ *
+ * IMPORTANT: This function does NOT delete the parent record itself.
+ * The caller must delete the parent record after calling this function.
+ *
+ * Handles multi-level cascading (parent → child → grandchild).
  *
  * @param ctx - Mutation context
  * @param table - Parent table name
- * @param recordId - ID of parent record to delete
+ * @param recordId - ID of parent record being deleted
  *
  * @warning This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
  * If a parent has more than 100 children in a relationship (e.g. >100 comments), the remaining
  * children will be orphaned. For large deletions, use `collectInBatches` or handle manually.
  *
  * @example
+ * // Delete children first
  * await cascadeDelete(ctx, "issues", issueId);
- * // Deletes issue AND all comments, activities, links, watchers, time entries
+ * // Then delete the parent manually
+ * await ctx.db.delete(issueId);
  */
 export async function cascadeDelete<T extends TableNames>(
   ctx: MutationCtx,
@@ -380,19 +386,25 @@ async function handleSoftDeleteRelation(
 }
 
 /**
- * Soft delete version - cascades isDeleted flag to children
- * Used when implementing soft deletes
+ * Soft delete version - cascades isDeleted flag to children.
+ *
+ * IMPORTANT: This function does NOT update the parent record itself.
+ * The caller must update the parent record after calling this function.
+ *
+ * Used when implementing soft deletes.
  *
  * @param ctx - Mutation context
  * @param table - Parent table name
- * @param recordId - ID of parent record to soft delete
+ * @param recordId - ID of parent record being soft deleted
  * @param deletedBy - User ID who performed the deletion
  * @param deletedAt - Timestamp of deletion
  *
  * @example
  * const now = Date.now();
+ * // Mark children as deleted
  * await cascadeSoftDelete(ctx, "issues", issueId, userId, now);
- * // Marks issue AND all children as deleted
+ * // Then mark the parent as deleted
+ * await ctx.db.patch(issueId, { isDeleted: true, deletedAt: now, deletedBy: userId });
  */
 export async function cascadeSoftDelete<T extends TableNames>(
   ctx: MutationCtx,
@@ -438,20 +450,26 @@ async function handleRestoreRelation(
 }
 
 /**
- * Restore cascade - removes isDeleted flag from children
- * Used when restoring a soft-deleted record
+ * Restore cascade - removes isDeleted flag from children.
+ *
+ * IMPORTANT: This function does NOT restore the parent record itself.
+ * The caller must restore the parent record after calling this function.
+ *
+ * Used when restoring a soft-deleted record.
  *
  * @param ctx - Mutation context
  * @param table - Parent table name
- * @param recordId - ID of parent record to restore
+ * @param recordId - ID of parent record being restored
  *
  * @warning This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
  * If a parent has more than 100 children in a relationship, the remaining children will not be
  * restored. For large datasets, handle restoration manually or in batches.
  *
  * @example
+ * // Restore children
  * await cascadeRestore(ctx, "issues", issueId);
- * // Restores issue AND all children from soft delete
+ * // Then restore the parent
+ * await ctx.db.patch(issueId, { isDeleted: undefined, deletedAt: undefined, deletedBy: undefined });
  */
 export async function cascadeRestore<T extends TableNames>(
   ctx: MutationCtx,
