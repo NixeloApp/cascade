@@ -903,6 +903,7 @@ const applicationTables = {
   })
     .index("by_user", ["userId"])
     .index("by_user_read", ["userId", "isRead", "isDeleted"])
+    .index("by_user_deleted", ["userId", "isDeleted"])
     .index("by_deleted", ["isDeleted"]),
 
   notificationPreferences: defineTable({
