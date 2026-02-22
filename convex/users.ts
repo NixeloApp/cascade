@@ -1,4 +1,9 @@
-import type { FilterBuilder, FunctionReference, GenericTableInfo } from "convex/server";
+import {
+  type FilterBuilder,
+  type FunctionReference,
+  type GenericTableInfo,
+  paginationOptsValidator,
+} from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import { internal } from "./_generated/api";
@@ -881,33 +886,25 @@ export const getUserStats = authenticatedQuery({
 export const listWithDigestPreference = internalQuery({
   args: {
     frequency: digestFrequencies,
+    paginationOpts: paginationOptsValidator,
   },
-  returns: v.array(
-    v.object({
-      _id: v.id("users"),
-      name: v.optional(v.string()),
-      email: v.optional(v.string()),
-      image: v.optional(v.string()),
-      createdAt: v.number(),
-    }),
-  ),
   handler: async (ctx, args) => {
     // Optimized query: Use by_digest_frequency index to find matching users directly
     // This avoids scanning irrelevant records and fixes the bug where users beyond the first 1000 were ignored
-    const filtered = await ctx.db
+    const results = await ctx.db
       .query("notificationPreferences")
       .withIndex("by_digest_frequency", (q) =>
         q.eq("emailEnabled", true).eq("emailDigest", args.frequency),
       )
-      .take(1000); // Bounded limit to capture users efficiently
+      .paginate(args.paginationOpts);
 
     // Batch fetch users to avoid N+1 queries
-    const userIds = filtered.map((pref) => pref.userId);
+    const userIds = results.page.map((pref) => pref.userId);
     const userMap = await batchFetchUsers(ctx, userIds);
 
     // Return users that exist (filter out deleted users)
-    return pruneNull(
-      filtered.map((pref) => {
+    const enrichedPage = pruneNull(
+      results.page.map((pref) => {
         const user = userMap.get(pref.userId);
         if (!user) return null;
         return {
@@ -919,5 +916,10 @@ export const listWithDigestPreference = internalQuery({
         };
       }),
     );
+
+    return {
+      ...results,
+      page: enrichedPage,
+    };
   },
 });
