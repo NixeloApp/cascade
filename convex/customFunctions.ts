@@ -49,8 +49,16 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { customAction, customMutation, customQuery } from "convex-helpers/server/customFunctions";
+import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { action, type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
+import {
+  action,
+  internalQuery,
+  type MutationCtx,
+  mutation,
+  type QueryCtx,
+  query,
+} from "./_generated/server";
 import { forbidden, notFound, unauthenticated } from "./lib/errors";
 import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAccess";
 import { getTeamRole } from "./lib/teamAccess";
@@ -94,6 +102,35 @@ async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<"users">> {
 
   return userId;
 }
+
+/**
+ * Internal query to verify 2FA for actions.
+ * Actions don't have ctx.db, so we need to call this via ctx.runQuery.
+ */
+export const verifyTwoFactorForAction = internalQuery({
+  args: { userId: v.id("users"), sessionId: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (user?.twoFactorEnabled && user.twoFactorSecret) {
+      if (!args.sessionId) {
+        throw forbidden(undefined, "Two-factor authentication required");
+      }
+
+      const sessionVerification = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_user_session", (q) =>
+          q.eq("userId", args.userId).eq("sessionId", args.sessionId as string),
+        )
+        .first();
+
+      const twentyFourHoursAgo = Date.now() - DAY;
+      if (!sessionVerification || sessionVerification.verifiedAt < twentyFourHoursAgo) {
+        throw forbidden(undefined, "Two-factor authentication required");
+      }
+    }
+    return true;
+  },
+});
 
 // =============================================================================
 // Role Checking Helpers
@@ -174,6 +211,12 @@ export const authenticatedAction = customAction(action, {
     if (!userId) {
       throw unauthenticated();
     }
+    // Enforce 2FA verification if enabled (via internal query since actions lack ctx.db)
+    const sessionId = await getAuthSessionId(ctx);
+    await ctx.runQuery(internal.customFunctions.verifyTwoFactorForAction, {
+      userId,
+      sessionId: sessionId ?? undefined,
+    });
     return { ctx: { ...ctx, userId }, args: {} };
   },
 });
