@@ -1,5 +1,7 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { conflict, notFound, unauthenticated } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -181,6 +183,62 @@ async function hashBackupCode(code: string): Promise<string> {
   // Convert to hex string
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+async function validateDisableCode(
+  user: Doc<"users">,
+  code: string,
+  isBackupCode?: boolean,
+): Promise<{ isValid: boolean }> {
+  if (isBackupCode) {
+    const backupCodes = user.twoFactorBackupCodes ?? [];
+    const hashedInput = await hashBackupCode(code);
+    return { isValid: backupCodes.includes(hashedInput) };
+  }
+
+  if (!user.twoFactorSecret) return { isValid: false };
+
+  const result = await verifyTOTP(user.twoFactorSecret, code);
+  if (result.isValid && result.timeStep) {
+    if (result.timeStep <= (user.twoFactorLastUsedTime ?? 0)) {
+      return { isValid: false };
+    }
+    return { isValid: true };
+  }
+
+  return { isValid: false };
+}
+
+async function handleFailedAttempt(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  user: Doc<"users">,
+  errorMsg = "Invalid verification code",
+) {
+  const now = Date.now();
+  const failedAttempts = (user.twoFactorFailedAttempts ?? 0) + 1;
+
+  if (failedAttempts >= MAX_VERIFICATION_ATTEMPTS) {
+    const lockedUntil = now + LOCKOUT_DURATION_MS;
+    await ctx.db.patch(userId, {
+      twoFactorFailedAttempts: failedAttempts,
+      twoFactorLockedUntil: lockedUntil,
+    });
+    return {
+      success: false,
+      error: "Too many failed attempts. Account temporarily locked.",
+      lockedUntil,
+    };
+  }
+
+  await ctx.db.patch(userId, {
+    twoFactorFailedAttempts: failedAttempts,
+  });
+  return { success: false, error: errorMsg };
 }
 
 // =============================================================================
@@ -369,39 +427,13 @@ export const verifyCode = mutation({
     // Verify the code
     const { isValid, timeStep } = await verifyTOTP(user.twoFactorSecret, args.code);
     if (!isValid || !timeStep) {
-      // Increment failed attempts
-      const failedAttempts = (user.twoFactorFailedAttempts ?? 0) + 1;
-
-      if (failedAttempts >= MAX_VERIFICATION_ATTEMPTS) {
-        // Lock the account
-        const lockedUntil = now + LOCKOUT_DURATION_MS;
-        await ctx.db.patch(userId, {
-          twoFactorFailedAttempts: failedAttempts,
-          twoFactorLockedUntil: lockedUntil,
-        });
-        return {
-          success: false,
-          error: "Too many failed attempts. Account temporarily locked.",
-          lockedUntil,
-        };
-      }
-
-      await ctx.db.patch(userId, {
-        twoFactorFailedAttempts: failedAttempts,
-      });
-      return { success: false, error: "Invalid verification code" };
+      return await handleFailedAttempt(ctx, userId, user);
     }
 
     // Check for replay attacks
     const lastUsed = user.twoFactorLastUsedTime ?? 0;
     if (timeStep <= lastUsed) {
-      // Replay detected! Treat as invalid code.
-      // Increment failed attempts
-      const failedAttempts = (user.twoFactorFailedAttempts ?? 0) + 1;
-      await ctx.db.patch(userId, {
-        twoFactorFailedAttempts: failedAttempts,
-      });
-      return { success: false, error: "Invalid verification code" };
+      return await handleFailedAttempt(ctx, userId, user);
     }
 
     // Success - reset failed attempts
@@ -599,27 +631,8 @@ export const disable = mutation({
       return { success: false, error: "2FA is not enabled" };
     }
 
-    let isValid = false;
-
-    if (args.isBackupCode) {
-      // Verify backup code
-      const backupCodes = user.twoFactorBackupCodes ?? [];
-      const hashedInput = await hashBackupCode(args.code);
-      isValid = backupCodes.includes(hashedInput);
-    } else {
-      // Verify TOTP code
-      const result = await verifyTOTP(user.twoFactorSecret, args.code);
-      isValid = result.isValid;
-
-      if (result.isValid && result.timeStep) {
-        // Check for replay attacks
-        if (result.timeStep <= (user.twoFactorLastUsedTime ?? 0)) {
-          isValid = false;
-        }
-      }
-    }
-
-    if (!isValid) {
+    const validationResult = await validateDisableCode(user, args.code, args.isBackupCode);
+    if (!validationResult.isValid) {
       return { success: false, error: "Invalid verification code" };
     }
 

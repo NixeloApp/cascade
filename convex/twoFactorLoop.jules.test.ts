@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
@@ -59,7 +59,12 @@ async function generateTestTOTP(secret: string, timestamp = Date.now()): Promise
 }
 
 describe("Two Factor Authentication Loop", () => {
+  const FIXED_TIME = 1678886400000; // 2023-03-15T16:00:00.000Z
+
   it("should fail verification if session ID is missing", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_TIME);
+
     const t = convexTest(schema, modules);
 
     // Create user in DB
@@ -76,7 +81,7 @@ describe("Two Factor Authentication Loop", () => {
 
     // Enable 2FA
     const { secret } = await asSetup.mutation(api.twoFactor.beginSetup);
-    const code = await generateTestTOTP(secret);
+    const code = await generateTestTOTP(secret, FIXED_TIME);
     await asSetup.mutation(api.twoFactor.completeSetup, { code });
 
     // Now simulate a session WITHOUT a session ID (just user ID)
@@ -87,8 +92,12 @@ describe("Two Factor Authentication Loop", () => {
     const dest = await asNoSession.query(api.auth.getRedirectDestination);
     expect(dest).toBe("/verify-2fa");
 
+    // Advance time to avoid replay detection (30s)
+    const newTime = FIXED_TIME + 30000;
+    vi.setSystemTime(newTime);
+
     // Try to verify
-    const verifyCode = await generateTestTOTP(secret);
+    const verifyCode = await generateTestTOTP(secret, newTime);
 
     // CURRENT BEHAVIOR: Returns success: true, but doesn't record session verification
     // DESIRED BEHAVIOR: Should fail or throw because no session to verify
@@ -97,5 +106,7 @@ describe("Two Factor Authentication Loop", () => {
     // If this assertion fails, it means the bug is present (it returned success)
     expect(result.success).toBe(false);
     expect(result.error).toContain("Session ID required");
+
+    vi.useRealTimers();
   });
 });
