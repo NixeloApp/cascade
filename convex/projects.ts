@@ -3,7 +3,8 @@ import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
-import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
+import { getUserName } from "./lib/userUtils";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
 
 /** Maximum issue count to compute for a project list view */

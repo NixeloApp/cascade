@@ -11,7 +11,8 @@ import {
   teamQuery,
 } from "./customFunctions";
 import { logAudit } from "./lib/audit";
-import { batchFetchTeams, batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { batchFetchTeams, batchFetchUsers } from "./lib/batchHelpers";
+import { getUserName } from "./lib/userUtils";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";

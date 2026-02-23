@@ -7,8 +7,8 @@ import {
   batchFetchIssues,
   batchFetchProjects,
   batchFetchUsers,
-  getUserName,
 } from "./lib/batchHelpers";
+import { getUserName } from "./lib/userUtils";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import {
   DEFAULT_SEARCH_PAGE_SIZE,

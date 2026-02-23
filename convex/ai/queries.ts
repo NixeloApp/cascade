@@ -4,7 +4,8 @@
 
 import { v } from "convex/values";
 import { authenticatedQuery } from "../customFunctions";
-import { batchFetchUsers, getUserName } from "../lib/batchHelpers";
+import { batchFetchUsers } from "../lib/batchHelpers";
+import { getUserName } from "../lib/userUtils";
 import { forbidden, notFound, requireOwned } from "../lib/errors";
 import { MAX_PAGE_SIZE } from "../lib/queryLimits";
 import type { AIProvider } from "./config";

@@ -5,7 +5,8 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
-import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { batchFetchUsers } from "./lib/batchHelpers";
+import { getUserName } from "./lib/userUtils";
 import { MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
 import { DAY } from "./lib/timeUtils";
 

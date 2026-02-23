@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { authenticatedMutation, projectQuery, projectViewerMutation } from "./customFunctions";
-import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { batchFetchUsers } from "./lib/batchHelpers";
+import { getUserName } from "./lib/userUtils";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
 import { issuePriorities, issueTypes } from "./validators";

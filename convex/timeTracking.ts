@@ -6,8 +6,8 @@ import {
   batchFetchIssues,
   batchFetchProjects,
   batchFetchUsers,
-  getUserName,
 } from "./lib/batchHelpers";
+import { getUserName } from "./lib/userUtils";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { DAY, HOUR, SECOND } from "./lib/timeUtils";

@@ -6,6 +6,7 @@ import {
   sanitizeUserForPublic,
   sanitizeUsersForAuth,
   sanitizeUsersForPublic,
+  getUserName,
 } from "./userUtils";
 
 describe("User Sanitization Utils", () => {
@@ -149,6 +150,25 @@ describe("User Sanitization Utils", () => {
         image: mockUser.image,
       });
       expect(result[1]).toBeNull();
+    });
+  });
+
+  describe("getUserName", () => {
+    it("should return name if present", () => {
+      expect(getUserName({ name: "Bob" } as any)).toBe("Bob");
+    });
+    it("should return email if name missing", () => {
+      expect(getUserName({ email: "bob@example.com" } as any)).toBe("bob@example.com");
+    });
+    it("should return Unknown if both missing", () => {
+      expect(getUserName({} as any)).toBe("Unknown");
+    });
+    it("should return Unknown if user is null/undefined", () => {
+      expect(getUserName(null)).toBe("Unknown");
+      expect(getUserName(undefined)).toBe("Unknown");
+    });
+    it("should use default name if provided", () => {
+      expect(getUserName(null, "Deleted User")).toBe("Deleted User");
     });
   });
 });
