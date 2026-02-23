@@ -27,22 +27,45 @@ interface IconProps
   icon: LucideIcon;
   /** Additional className for the icon */
   className?: string;
+  /** Tooltip/Title for the icon (accessibility) */
+  title?: string;
 }
 
 /**
  * Generic icon wrapper with consistent size presets.
+ * Automatically handles accessibility by hiding decorative icons unless a label is provided.
  *
  * @example
  * ```tsx
  * import { Bug, Calendar } from "@/lib/icons";
  *
+ * // Decorative (hidden from screen readers)
  * <Icon icon={Bug} size="lg" />
- * <Icon icon={Calendar} size="sm" className="text-brand" />
+ *
+ * // Interactive/Meaningful (announced as "Calendar")
+ * <Icon icon={Calendar} size="sm" aria-label="Calendar" />
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon: IconComponent, size, className, ...props }, ref) => {
-    return <IconComponent ref={ref} className={cn(iconVariants({ size }), className)} {...props} />;
+  ({ icon: IconComponent, size, className, title, ...props }, ref) => {
+    // Determine accessibility attributes
+    const ariaLabel = props["aria-label"];
+    const ariaHiddenProp = props["aria-hidden"];
+
+    // Default to hidden if no label/title provided, unless explicitly set
+    const isDecorative = !ariaLabel && !title;
+    const ariaHidden = ariaHiddenProp ?? (isDecorative ? "true" : undefined);
+
+    return (
+      <IconComponent
+        ref={ref}
+        className={cn(iconVariants({ size }), className)}
+        {...props}
+        // @ts-expect-error - Lucide types don't include title but it's valid SVG attribute
+        title={title}
+        aria-hidden={ariaHidden}
+      />
+    );
   },
 );
 Icon.displayName = "Icon";
