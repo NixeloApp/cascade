@@ -25,7 +25,6 @@ import {
   performBulkUpdate,
   processIssueUpdates,
   resolveLabelNames,
-  validateAssignee,
   validateParentIssue,
 } from "./helpers";
 
@@ -83,9 +82,6 @@ async function createIssueImpl(
 
   // Validate parent/epic constraints
   const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
-
-  // Validate assignee access
-  await validateAssignee(ctx, ctx.projectId, args.assigneeId);
 
   // Generate issue key with duplicate detection
   let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
@@ -279,9 +275,6 @@ export const update = issueMutation({
   handler: async (ctx, args) => {
     // Verify optimistic lock - throws conflict error if version mismatch
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
-
-    // Validate assignee access
-    await validateAssignee(ctx, ctx.issue.projectId, args.assigneeId);
 
     const _now = Date.now();
     const changes: Array<{
@@ -555,9 +548,6 @@ export const bulkAssign = authenticatedMutation({
   },
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
-      // Validate assignee access
-      await validateAssignee(ctx, issue.projectId, args.assigneeId);
-
       return {
         patch: { assigneeId: args.assigneeId ?? undefined },
         activity: {
