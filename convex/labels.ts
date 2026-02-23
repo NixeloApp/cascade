@@ -1,12 +1,59 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { authenticatedMutation, projectEditorMutation, projectQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, notFound, validation } from "./lib/errors";
 import { assertCanEditProject } from "./projectAccess";
 
+// Shared implementation
+async function createLabelImpl(
+  ctx: MutationCtx & { userId: Id<"users">; projectId: Id<"projects"> },
+  args: {
+    name: string;
+    color: string;
+    groupId?: Id<"labelGroups">;
+  },
+) {
+  // Check if label with same name already exists in project
+  const existing = await ctx.db
+    .query("labels")
+    .withIndex("by_project_name", (q) => q.eq("projectId", ctx.projectId).eq("name", args.name))
+    .first();
+
+  if (existing) {
+    throw conflict("Label with this name already exists");
+  }
+
+  // If groupId is provided, verify it belongs to the same project
+  if (args.groupId) {
+    const group = await ctx.db.get(args.groupId);
+    if (!group || group.projectId !== ctx.projectId) {
+      throw validation("groupId", "Label group not found or belongs to a different project");
+    }
+  }
+
+  // Get max display order for labels in this group (or ungrouped)
+  const labelsInGroup = await ctx.db
+    .query("labels")
+    .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+    .take(BOUNDED_LIST_LIMIT);
+  const maxOrder = labelsInGroup.reduce((max, l) => Math.max(max, l.displayOrder ?? 0), 0);
+
+  const labelId = await ctx.db.insert("labels", {
+    projectId: ctx.projectId,
+    name: args.name,
+    color: args.color,
+    groupId: args.groupId,
+    displayOrder: maxOrder + 1,
+    createdBy: ctx.userId,
+  });
+
+  return { labelId };
+}
+
 /**
- * Create a new label
- * Requires editor role on project
+ * @deprecated Use `createLabel` instead.
  */
 export const create = projectEditorMutation({
   args: {
@@ -15,41 +62,22 @@ export const create = projectEditorMutation({
     groupId: v.optional(v.id("labelGroups")),
   },
   handler: async (ctx, args) => {
-    // Check if label with same name already exists in project
-    const existing = await ctx.db
-      .query("labels")
-      .withIndex("by_project_name", (q) => q.eq("projectId", ctx.projectId).eq("name", args.name))
-      .first();
-
-    if (existing) {
-      throw conflict("Label with this name already exists");
-    }
-
-    // If groupId is provided, verify it belongs to the same project
-    if (args.groupId) {
-      const group = await ctx.db.get(args.groupId);
-      if (!group || group.projectId !== ctx.projectId) {
-        throw validation("groupId", "Label group not found or belongs to a different project");
-      }
-    }
-
-    // Get max display order for labels in this group (or ungrouped)
-    const labelsInGroup = await ctx.db
-      .query("labels")
-      .withIndex("by_group", (q) => q.eq("groupId", args.groupId))
-      .take(BOUNDED_LIST_LIMIT);
-    const maxOrder = labelsInGroup.reduce((max, l) => Math.max(max, l.displayOrder ?? 0), 0);
-
-    const labelId = await ctx.db.insert("labels", {
-      projectId: ctx.projectId,
-      name: args.name,
-      color: args.color,
-      groupId: args.groupId,
-      displayOrder: maxOrder + 1,
-      createdBy: ctx.userId,
-    });
-
+    const { labelId } = await createLabelImpl(ctx, args);
     return labelId;
+  },
+});
+
+export const createLabel = projectEditorMutation({
+  args: {
+    name: v.string(),
+    color: v.string(),
+    groupId: v.optional(v.id("labelGroups")),
+  },
+  returns: v.object({
+    labelId: v.id("labels"),
+  }),
+  handler: async (ctx, args) => {
+    return await createLabelImpl(ctx, args);
   },
 });
 
