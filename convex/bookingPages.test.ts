@@ -456,7 +456,6 @@ describe("Booking Pages", () => {
         "custom",
       ];
 
-      // Note: Sequential execution required - each iteration depends on query result
       for (const location of locations) {
         const { pageId } = await asUser.mutation(api.bookingPages.create, {
           slug: `${location}-meeting`,

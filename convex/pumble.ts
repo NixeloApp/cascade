@@ -224,17 +224,18 @@ export const sendMessage = action({
         const error = await response.text();
         throw validation("pumble", `Pumble API error: ${response.status} ${error}`);
       }
+
+      // Success
+      await updateStats(ctx, args.webhookId, true);
+
+      return { success: true };
     } catch (error) {
       // Failure
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       await updateStats(ctx, args.webhookId, false, errorMessage);
+
       throw error;
     }
-
-    // Success — update stats outside try/catch so a stats failure can never
-    // re-enter the catch block and mask the successful send.
-    await updateStats(ctx, args.webhookId, true);
-    return { success: true };
   },
 });
 
@@ -445,7 +446,7 @@ function buildPumblePayload(
         ...(fields && { fields }),
       },
     ];
-    payload.text = title || (text.length > 50 ? `${text.substring(0, 50)}...` : text);
+    payload.text = title || `${text.substring(0, 50)}...`;
   }
   return payload;
 }
