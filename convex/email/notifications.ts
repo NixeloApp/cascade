@@ -56,8 +56,8 @@ export const sendMentionEmail = internalAction({
       }),
     );
 
-    // Send email (null ctx because internalAction doesn't have db access)
-    const result = await sendEmail(null, {
+    // Send email (pass ctx for provider rotation and usage tracking)
+    const result = await sendEmail(ctx, {
       to,
       subject: `${mentionedByName} mentioned you in ${issueKey}`,
       html,
@@ -121,7 +121,7 @@ export const sendAssignmentEmail = internalAction({
       }),
     );
 
-    const result = await sendEmail(null, {
+    const result = await sendEmail(ctx, {
       to,
       subject: `You were assigned to ${issueKey}: ${issueTitle}`,
       html,
@@ -171,7 +171,7 @@ export const sendCommentEmail = internalAction({
       }),
     );
 
-    const result = await sendEmail(null, {
+    const result = await sendEmail(ctx, {
       to,
       subject: `${commenterName} commented on ${issueKey}`,
       html,
@@ -340,8 +340,8 @@ export const sendDigestEmail = internalAction({
       }),
     );
 
-    // Send email (null ctx because internalAction doesn't have db access)
-    const result = await sendEmail(null, {
+    // Send email
+    const result = await sendEmail(ctx, {
       to: user.email,
       subject: `Your ${frequency} digest: ${items.length} notification${items.length !== 1 ? "s" : ""}`,
       html,
@@ -424,7 +424,7 @@ export const sendEventReminder = internalAction({
     );
 
     // Send email
-    const result = await sendEmail(null, {
+    const result = await sendEmail(ctx, {
       to: user.email,
       subject: `Reminder: ${event.title} in ${reminderText}`,
       html,

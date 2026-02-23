@@ -1,7 +1,9 @@
-import type { Id } from "../_generated/dataModel";
+import { asyncMap, pruneNull } from "convex-helpers";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
 import { notDeleted } from "../lib/softDeleteHelpers";
+import { assertCanEditProject } from "../projectAccess";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
 
@@ -356,4 +358,83 @@ export function matchesSearchFilters(
   if (!matchesDateRange(issue._creationTime, filters.dateFrom, filters.dateTo)) return false;
 
   return true;
+}
+
+// Activity action types for type safety
+export type IssueActivityAction =
+  | "created"
+  | "updated"
+  | "archived"
+  | "restored"
+  | "deleted"
+  | "commented";
+
+// Helper for bulk updates to reduce code duplication
+export async function performBulkUpdate(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  issueIds: Id<"issues">[],
+  getUpdate: (
+    issue: Doc<"issues">,
+    now: number,
+  ) => Promise<{
+    patch: Partial<Doc<"issues">>;
+    activity?: {
+      action: IssueActivityAction;
+      field?: string;
+      oldValue?: string;
+      newValue?: string;
+    };
+  } | null>,
+  checkPermission: (
+    ctx: MutationCtx,
+    projectId: Id<"projects">,
+    userId: Id<"users">,
+  ) => Promise<void> = assertCanEditProject,
+) {
+  const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
+  const now = Date.now();
+
+  const results = await Promise.all(
+    issues.map(async (issue) => {
+      if (!issue || issue.isDeleted) return 0;
+
+      try {
+        await checkPermission(ctx, issue.projectId as Id<"projects">, ctx.userId);
+      } catch {
+        return 0;
+      }
+
+      const update = await getUpdate(issue, now);
+      if (!update) return 0;
+
+      await ctx.db.patch(issue._id, {
+        ...update.patch,
+        updatedAt: now,
+      });
+
+      if (update.activity) {
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          ...update.activity,
+        });
+      }
+
+      return 1;
+    }),
+  );
+
+  return { updated: results.reduce((a: number, b) => a + b, 0) };
+}
+
+// Helper: Resolve label names from IDs
+export async function resolveLabelNames(
+  ctx: MutationCtx,
+  labelIds: Id<"labels">[] | undefined,
+): Promise<string[]> {
+  if (!labelIds || labelIds.length === 0) {
+    return [];
+  }
+  const labels = await asyncMap(labelIds, (id) => ctx.db.get(id));
+  return pruneNull(labels).map((l) => l.name);
 }
