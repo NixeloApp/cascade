@@ -56,11 +56,12 @@ describe("Files", () => {
   async function createTestFile(t: ReturnType<typeof convexTest>, contentType = "text/plain") {
     return await t.run(async (ctx) => {
       const blob = new Blob(["test content"], { type: contentType });
-      // Helper to make Blob work in this environment if needed
-      if (!blob.arrayBuffer) {
-        (blob as any).arrayBuffer = async () => new TextEncoder().encode("test content").buffer;
+      // Polyfill arrayBuffer for environments that don't support it (typed intersection for type-safety)
+      const blobWithPolyfill = blob as Blob & { arrayBuffer?: () => Promise<ArrayBuffer> };
+      if (!blobWithPolyfill.arrayBuffer) {
+        blobWithPolyfill.arrayBuffer = async () => new TextEncoder().encode("test content").buffer;
       }
-      return await ctx.storage.store(blob);
+      return await ctx.storage.store(blobWithPolyfill);
     });
   }
 
