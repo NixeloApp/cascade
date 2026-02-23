@@ -57,7 +57,7 @@ export function sanitizeUserForAuth(
 
   return {
     _id: user._id,
-    name: getUserName(user),
+    name: user.name || user.email || "Unknown",
     email: user.email,
     image: user.image,
   };
