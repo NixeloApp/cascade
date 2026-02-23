@@ -5,10 +5,9 @@ import type { Doc } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
-import { efficientCount } from "./lib/boundedQueries";
 import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
-import { softDeleteFields } from "./lib/softDeleteHelpers";
+import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 
 /** Get paginated notifications for the current user, optionally filtered to unread only. */
 export const list = authenticatedQuery({
@@ -31,10 +30,10 @@ export const list = authenticatedQuery({
               q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
             );
         }
-        // Optimization: Use by_user_deleted index to avoid scanning deleted notifications
         return db
           .query("notifications")
-          .withIndex("by_user_deleted", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true));
+          .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+          .filter(notDeleted);
       },
     });
 
@@ -64,14 +63,14 @@ export const getUnreadCount = authenticatedQuery({
   handler: async (ctx) => {
     // Cap at 100 - UI typically shows "99+" anyway
     const MAX_UNREAD_COUNT = 100;
-    return await efficientCount(
-      ctx.db
-        .query("notifications")
-        .withIndex("by_user_read", (q) =>
-          q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
-        ),
-      MAX_UNREAD_COUNT,
-    );
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_read", (q) =>
+        q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
+      )
+      .take(MAX_UNREAD_COUNT);
+
+    return notifications.length;
   },
 });
 

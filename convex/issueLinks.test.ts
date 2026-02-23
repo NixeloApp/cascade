@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createProjectInOrganization,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Issue Links", () => {
   describe("create", () => {
@@ -94,7 +100,18 @@ describe("Issue Links", () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t, { name: "Admin" });
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
-      const projectId = await createTestProject(t, adminId);
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
+      const projectId = await createProjectInOrganization(t, adminId, organizationId);
+
+      // Add viewer to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
       const issue1Id = await asAdmin.mutation(api.issues.create, {
@@ -110,22 +127,7 @@ describe("Issue Links", () => {
         priority: "medium",
       });
 
-      // Add viewer
-      const asAdminUser = asAuthenticatedUser(t, adminId);
-
-      // Add viewer to organization first
-      await t.run(async (ctx) => {
-        const project = await ctx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
-        await ctx.db.insert("organizationMembers", {
-          organizationId: project.organizationId,
-          userId: viewerId,
-          role: "member",
-          addedBy: adminId,
-        });
-      });
-
-      await asAdminUser.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",
         role: "viewer",
@@ -193,7 +195,18 @@ describe("Issue Links", () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t, { name: "Admin" });
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
-      const projectId = await createTestProject(t, adminId);
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
+      const projectId = await createProjectInOrganization(t, adminId, organizationId);
+
+      // Add viewer to organization
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: viewerId,
+          role: "member",
+          addedBy: adminId,
+        });
+      });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
       const issue1Id = await asAdmin.mutation(api.issues.create, {
@@ -215,22 +228,7 @@ describe("Issue Links", () => {
         linkType: "relates",
       });
 
-      // Add viewer
-      const asAdminUser = asAuthenticatedUser(t, adminId);
-
-      // Add viewer to organization first
-      await t.run(async (ctx) => {
-        const project = await ctx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
-        await ctx.db.insert("organizationMembers", {
-          organizationId: project.organizationId,
-          userId: viewerId,
-          role: "member",
-          addedBy: adminId,
-        });
-      });
-
-      await asAdminUser.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",
         role: "viewer",
