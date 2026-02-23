@@ -4,28 +4,22 @@
  * These run on Convex backend and can make external API calls
  */
 
-import { getAuthUserId } from "@convex-dev/auth/server";
-
 import { v } from "convex/values";
 import { api } from "../_generated/api";
-import { type ActionCtx, action } from "../_generated/server";
-import { unauthenticated } from "../lib/errors";
+import { authenticatedAction } from "../customFunctions";
 import { getAIConfig } from "./config";
 import { type AIMessage, callAI } from "./providers";
 
 /**
  * Send a chat message to AI assistant
  */
-export const sendChatMessage = action({
+export const sendChatMessage = authenticatedAction({
   args: {
     chatId: v.id("aiChats"),
     message: v.string(),
     projectId: v.optional(v.id("projects")),
   },
-  handler: async (ctx: ActionCtx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw unauthenticated();
-
+  handler: async (ctx, args) => {
     const startTime = Date.now();
 
     // Get chat history for context
@@ -106,7 +100,7 @@ export const sendChatMessage = action({
 /**
  * Generate AI suggestions for an issue
  */
-export const generateIssueSuggestions = action({
+export const generateIssueSuggestions = authenticatedAction({
   args: {
     projectId: v.id("projects"),
     issueTitle: v.string(),
@@ -120,10 +114,7 @@ export const generateIssueSuggestions = action({
       ),
     ),
   },
-  handler: async (ctx: ActionCtx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw unauthenticated();
-
+  handler: async (ctx, args) => {
     const startTime = Date.now();
 
     // Get project context
@@ -197,14 +188,11 @@ Format your response as JSON with keys: description, priority, priorityReason, l
 /**
  * Generate analytics insights for a project
  */
-export const generateProjectInsights = action({
+export const generateProjectInsights = authenticatedAction({
   args: {
     projectId: v.id("projects"),
   },
-  handler: async (ctx: ActionCtx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw unauthenticated();
-
+  handler: async (ctx, args) => {
     const startTime = Date.now();
 
     // Get comprehensive project analytics
@@ -310,15 +298,12 @@ Format as JSON with keys: healthScore (0-100), risks (array), recommendations (a
 /**
  * Answer a natural language question about project data
  */
-export const answerQuestion = action({
+export const answerQuestion = authenticatedAction({
   args: {
     projectId: v.id("projects"),
     question: v.string(),
   },
-  handler: async (ctx: ActionCtx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw unauthenticated();
-
+  handler: async (ctx, args) => {
     const startTime = Date.now();
 
     // Get project context
