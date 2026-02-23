@@ -42,32 +42,33 @@ describe("Avatar", () => {
 
   describe("initials generation (visual only)", () => {
     // These tests verify that initials are generated correctly, even if hidden from screen readers
-    // We use hidden: true to find them
+    // We query the container text content or specific element since getByText doesn't support hidden: true
+    // with certain TypeScript configurations for SelectorMatcherOptions.
     it("uses first and last name initials", async () => {
-      render(<Avatar name="John William Doe" />);
+      const { container } = render(<Avatar name="John William Doe" />);
       await waitFor(() => {
-        expect(screen.getByText("JD", { hidden: true })).toBeInTheDocument();
+        expect(container.textContent).toContain("JD");
       });
     });
 
     it("handles names with extra whitespace", async () => {
-      render(<Avatar name="  John   Doe  " />);
+      const { container } = render(<Avatar name="  John   Doe  " />);
       await waitFor(() => {
-        expect(screen.getByText("JD", { hidden: true })).toBeInTheDocument();
+        expect(container.textContent).toContain("JD");
       });
     });
 
     it("converts initials to uppercase", async () => {
-      render(<Avatar name="john doe" />);
+      const { container } = render(<Avatar name="john doe" />);
       await waitFor(() => {
-        expect(screen.getByText("JD", { hidden: true })).toBeInTheDocument();
+        expect(container.textContent).toContain("JD");
       });
     });
 
     it("handles email with uppercase", async () => {
-      render(<Avatar email="John@example.com" />);
+      const { container } = render(<Avatar email="John@example.com" />);
       await waitFor(() => {
-        expect(screen.getByText("J", { hidden: true })).toBeInTheDocument();
+        expect(container.textContent).toContain("J");
       });
     });
   });
