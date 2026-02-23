@@ -38,8 +38,6 @@ export function run() {
     "src/components/Analytics/", // Dashboard components
     "src/components/Automation/", // Automation forms
     "src/components/Dashboard/", // Dashboard widgets
-    "src/components/GanttView/", // Gantt chart with precise positioning and calculations
-    "src/components/SpreadsheetView/", // Spreadsheet with HTML table elements (td/th)
   ];
 
   // Individual files with edge case patterns (responsive, semantic HTML, etc.)
@@ -73,7 +71,6 @@ export function run() {
     "/UserMenu.tsx", // Dropdown menu styling
     "/UserProfile.tsx", // Dialog overrides
     "/VersionHistory.tsx", // Dialog with flex layout
-    "/ModuleManager.tsx", // Module cards with progress bars and layout
   ];
 
   // File extensions to always allow

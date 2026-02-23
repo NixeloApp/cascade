@@ -2,11 +2,15 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { batchFetchIssues, batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
+import {
+  batchFetchIssues,
+  batchFetchProjects,
+  batchFetchUsers,
+  getUserName,
+} from "./lib/batchHelpers";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { DAY, HOUR, SECOND } from "./lib/timeUtils";
-import { getUserName } from "./lib/userUtils";
 import { assertCanAccessProject, assertIsProjectAdmin } from "./projectAccess";
 import { rateTypes } from "./validators";
 

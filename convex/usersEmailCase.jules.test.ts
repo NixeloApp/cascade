@@ -1,4 +1,3 @@
-
 import { register } from "@convex-dev/rate-limiter/test";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -38,7 +37,7 @@ describe("Users Email Case Sensitivity", () => {
     });
 
     // Verify User 2 has the pending email
-    let user2 = await t.run(async (ctx) => ctx.db.get(user2Id));
+    const user2 = await t.run(async (ctx) => ctx.db.get(user2Id));
     // After fix, this should be normalized. Before fix, it's original case.
     // We'll assert the normalization behavior first as part of the fix verification.
     expect(user2?.pendingEmail).toBe("user@example.com");
