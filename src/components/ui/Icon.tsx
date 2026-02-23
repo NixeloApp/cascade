@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { LucideIcon, LucideProps } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { forwardRef, type SVGProps } from "react";
 import { cn } from "@/lib/utils";
 
@@ -27,45 +27,22 @@ interface IconProps
   icon: LucideIcon;
   /** Additional className for the icon */
   className?: string;
-  /** Tooltip/Title for the icon (accessibility) */
-  title?: string;
 }
 
 /**
  * Generic icon wrapper with consistent size presets.
- * Automatically handles accessibility by hiding decorative icons unless a label is provided.
  *
  * @example
  * ```tsx
  * import { Bug, Calendar } from "@/lib/icons";
  *
- * // Decorative (hidden from screen readers)
  * <Icon icon={Bug} size="lg" />
- *
- * // Interactive/Meaningful (announced as "Calendar")
- * <Icon icon={Calendar} size="sm" aria-label="Calendar" />
+ * <Icon icon={Calendar} size="sm" className="text-brand" />
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon: IconComponent, size, className, title, ...props }, ref) => {
-    // Determine accessibility attributes
-    const ariaLabel = props["aria-label"];
-    const ariaHiddenProp = props["aria-hidden"];
-
-    // Default to hidden if no label/title provided, unless explicitly set
-    const isDecorative = !ariaLabel && !title;
-    const ariaHidden = ariaHiddenProp ?? (isDecorative ? "true" : undefined);
-
-    // Cast props to satisfy LucideProps which might be missing strict title typing
-    // but ultimately passes through to SVG
-    const iconProps = {
-      ...props,
-      title,
-      "aria-hidden": ariaHidden,
-      className: cn(iconVariants({ size }), className),
-    } as LucideProps;
-
-    return <IconComponent ref={ref} {...iconProps} />;
+  ({ icon: IconComponent, size, className, ...props }, ref) => {
+    return <IconComponent ref={ref} className={cn(iconVariants({ size }), className)} {...props} />;
   },
 );
 Icon.displayName = "Icon";

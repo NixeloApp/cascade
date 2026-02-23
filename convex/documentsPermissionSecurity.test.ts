@@ -46,7 +46,7 @@ describe("Document Security - Project Viewers", () => {
     });
 
     // Add viewer to project explicitly as "viewer"
-    await asOwner.mutation(api.projectMembers.add, {
+    await asOwner.mutation(api.projects.addProjectMember, {
       projectId: projectId, // Passed via ctx/args? Wait, projectAdminMutation takes args...
       userEmail: "viewer@example.com",
       role: "viewer",
@@ -113,7 +113,7 @@ describe("Document Security - Project Viewers", () => {
       });
     });
 
-    await asOwner.mutation(api.projectMembers.add, {
+    await asOwner.mutation(api.projects.addProjectMember, {
       projectId: projectId,
       userEmail: "viewer@example.com",
       role: "viewer",

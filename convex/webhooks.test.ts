@@ -96,7 +96,7 @@ describe("Webhooks", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -196,7 +196,7 @@ describe("Webhooks", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -338,7 +338,7 @@ describe("Webhooks", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -505,7 +505,7 @@ describe("Webhooks", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -670,7 +670,7 @@ describe("Webhooks", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -793,7 +793,7 @@ describe("Webhooks", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -921,7 +921,7 @@ describe("Webhooks", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
