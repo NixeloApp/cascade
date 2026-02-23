@@ -137,16 +137,18 @@ async function exchangeCodeForTokens(
     throw validation("oauth", `Failed to exchange GitHub authorization code: ${errorText}`);
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: response structure varies
-  let tokens: any;
+  let tokens: Record<string, unknown>;
   try {
-    tokens = await tokenResponse.json();
+    tokens = (await tokenResponse.json()) as Record<string, unknown>;
   } catch (_e) {
     throw validation("oauth", "Invalid JSON response from GitHub token endpoint");
   }
 
   if (tokens.error) {
-    throw validation("oauth", tokens.error_description || tokens.error);
+    throw validation(
+      "oauth",
+      (tokens.error_description as string) || (tokens.error as string) || "Unknown OAuth error",
+    );
   }
 
   return tokens.access_token as string;
@@ -173,10 +175,9 @@ async function fetchGitHubUserInfo(accessToken: string) {
     throw validation("github", `Failed to get GitHub user info: ${errorText}`);
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: response structure varies
-  let userInfo: any;
+  let userInfo: Record<string, unknown>;
   try {
-    userInfo = await userResponse.json();
+    userInfo = (await userResponse.json()) as Record<string, unknown>;
   } catch (_e) {
     throw validation("github", "Invalid JSON response from GitHub user endpoint");
   }
@@ -489,36 +490,30 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
       });
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: response structure varies
-    let repos: any;
+    let repos: unknown[];
     try {
-      repos = await reposResponse.json();
+      const json = await reposResponse.json();
+      if (!Array.isArray(json)) {
+        throw new Error("GitHub repositories response is not an array");
+      }
+      repos = json;
     } catch (_e) {
       throw validation("github", "Invalid JSON response from GitHub repositories endpoint");
     }
 
-    if (!Array.isArray(repos)) {
-      throw validation("github", "GitHub repositories response is not an array");
-    }
-
     // Transform to a simpler format
-    const simplifiedRepos = repos.map(
-      (repo: {
-        id: number;
-        name: string;
-        full_name: string;
-        owner: { login: string };
-        private: boolean;
-        description: string | null;
-      }) => ({
-        id: String(repo.id),
-        name: repo.name,
-        fullName: repo.full_name,
-        owner: repo.owner.login,
-        private: repo.private,
-        description: repo.description,
-      }),
-    );
+    const simplifiedRepos = repos.map((repo) => {
+      const r = repo as Record<string, unknown>;
+      const owner = (r.owner as Record<string, unknown>) || {};
+      return {
+        id: String(r.id),
+        name: String(r.name),
+        fullName: String(r.full_name),
+        owner: String(owner.login || ""),
+        private: !!r.private,
+        description: r.description ? String(r.description) : null,
+      };
+    });
 
     return new Response(JSON.stringify({ repos: simplifiedRepos }), {
       status: 200,

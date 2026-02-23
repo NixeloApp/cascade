@@ -118,7 +118,7 @@ describe("GitHub OAuth Error Handling", () => {
 
       // Improved behavior: 400 with specific error message (changed from 500 to 400 as per refactor)
       expect(response.status).toBe(400);
-      expect(json.error).toBe("GitHub repositories response is not an array");
+      expect(json.error).toBe("Invalid JSON response from GitHub repositories endpoint");
     });
   });
 });
