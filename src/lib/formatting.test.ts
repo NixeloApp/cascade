@@ -1,4 +1,4 @@
-import { DAY, HOUR } from "@convex/lib/timeUtils";
+import { DAY, HOUR, MINUTE, SECOND } from "@convex/shared/time";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   formatCurrency,
@@ -48,9 +48,9 @@ describe("formatting utilities", () => {
   describe("formatDurationMs", () => {
     it("should convert milliseconds to formatted duration", () => {
       expect(formatDurationMs(0)).toBe("00:00:00");
-      expect(formatDurationMs(1000)).toBe("00:00:01");
-      expect(formatDurationMs(60000)).toBe("00:01:00");
-      expect(formatDurationMs(3600000)).toBe("01:00:00");
+      expect(formatDurationMs(SECOND)).toBe("00:00:01");
+      expect(formatDurationMs(MINUTE)).toBe("00:01:00");
+      expect(formatDurationMs(HOUR)).toBe("01:00:00");
     });
 
     it("should floor milliseconds", () => {
@@ -199,12 +199,12 @@ describe("formatting utilities", () => {
     });
 
     it("should format seconds ago", () => {
-      const timestamp = Date.now() - 30 * 1000;
+      const timestamp = Date.now() - 30 * SECOND;
       expect(formatRelativeTime(timestamp)).toMatch(/30 seconds ago/);
     });
 
     it("should format minutes ago", () => {
-      const timestamp = Date.now() - 5 * 60 * 1000;
+      const timestamp = Date.now() - 5 * MINUTE;
       expect(formatRelativeTime(timestamp)).toMatch(/5 minutes ago/);
     });
 
