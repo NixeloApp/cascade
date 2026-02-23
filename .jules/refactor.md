@@ -14,7 +14,3 @@ This journal tracks critical learnings and major refactoring decisions.
 ## 2026-02-20 - Projects Enrichment Refactor
 - Refactored `convex/projects.ts` to extract `enrichProject` helper for `getProject` and `getByKey`.
 - Learned: When extracting enrichment logic, separate it from access control if the access control failure behavior differs (e.g., throw vs return null). The enrichment helper should operate on an already-accessible document.
-
-## 2026-02-20 - Organizations Efficient Count
-- Refactored `getUserOrganizations` in `convex/organizations.ts` to use `efficientCount` instead of `take(1000).length`.
-- Learned: When replacing naive counting with `efficientCount`, verify that the behavior around limits (e.g. 1000 items) is consistent with expectations. In this case, `efficientCount` uses the underlying `count()` operation which is much faster and doesn't load documents into memory.

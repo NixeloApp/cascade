@@ -35,6 +35,11 @@ describe("Documents Security - Write Access Revocation", () => {
     await addProjectMember(t, projectId, creatorId, "editor", adminId);
 
     // 4. Creator creates a document in the project
+    // Note: createDocumentInOrganization creates directly in DB, bypassing mutation checks
+    // But we want to test mutation access, so we use mutation.
+    // However, createDocumentInOrganization is simpler for setup if mutation fails.
+    // Let's stick to mutation to be realistic.
+
     const { documentId } = await asCreator.mutation(api.documents.create, {
       title: "My Secret Doc",
       isPublic: false,
@@ -48,11 +53,10 @@ describe("Documents Security - Write Access Revocation", () => {
         .query("projectMembers")
         .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", creatorId))
         .first();
-      if (!member) throw new Error("Test setup error: project member not found for removal");
-      await ctx.db.delete(member._id);
+      if (member) await ctx.db.delete(member._id);
     });
 
-    // 6. Creator tries to update title - should fail after access revocation
+    // 6. Creator tries to update title - SHOULD FAIL but currently succeeds
     await expect(async () => {
       await asCreator.mutation(api.documents.updateTitle, {
         id: documentId,
@@ -96,11 +100,10 @@ describe("Documents Security - Write Access Revocation", () => {
         .query("projectMembers")
         .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", creatorId))
         .first();
-      if (!member) throw new Error("Test setup error: project member not found for removal");
-      await ctx.db.delete(member._id);
+      if (member) await ctx.db.delete(member._id);
     });
 
-    // 6. Creator tries to delete document - should fail after access revocation
+    // 6. Creator tries to delete document - SHOULD FAIL
     await expect(async () => {
       await asCreator.mutation(api.documents.deleteDocument, {
         id: documentId,

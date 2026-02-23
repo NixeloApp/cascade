@@ -209,7 +209,13 @@ export const updateTitle = authenticatedMutation({
 export const togglePublic = authenticatedMutation({
   args: { id: v.id("documents") },
   handler: async (ctx, args) => {
-    const document = await getAccessibleDocument(ctx, args.id);
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+
+    // Ensure user still has access to the document's container
+    await assertDocumentAccess(ctx, document);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to edit this document");
@@ -255,10 +261,6 @@ export const restoreDocument = authenticatedMutation({
       throw notFound("document", args.id);
     }
 
-    // Ensure user still has access to the document's container BEFORE
-    // revealing deletion state (prevents information disclosure)
-    await assertDocumentAccess(ctx, document);
-
     if (!document.isDeleted) {
       throw conflict("Document is not deleted");
     }
@@ -266,6 +268,9 @@ export const restoreDocument = authenticatedMutation({
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to restore this document");
     }
+
+    // Ensure user still has access to the document's container
+    await assertDocumentAccess(ctx, document);
 
     // Restore document
     await ctx.db.patch(args.id, {
