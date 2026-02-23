@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Doc } from "../_generated/dataModel";
 import {
+  getUserName,
   sanitizeUserForAuth,
   sanitizeUserForCurrent,
   sanitizeUserForPublic,
   sanitizeUsersForAuth,
   sanitizeUsersForPublic,
-  getUserName,
 } from "./userUtils";
 
 describe("User Sanitization Utils", () => {

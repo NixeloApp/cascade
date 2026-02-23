@@ -80,5 +80,4 @@ describe("batchHelpers", () => {
       expect(map.get(user1Id)?.name).toBe("User 1");
     });
   });
-
 });

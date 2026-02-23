@@ -4,8 +4,8 @@ import { pruneNull } from "convex-helpers";
 import type { Doc } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
-import { getUserName } from "./lib/userUtils";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
+import { getUserName } from "./lib/userUtils";
 
 /** Maximum issue count to compute for a project list view */
 const MAX_ISSUE_COUNT = 1000;
