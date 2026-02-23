@@ -27,6 +27,7 @@ export const create = authenticatedMutation({
     reminderType: reminderTypes,
     minutesBefore: v.number(),
   },
+  returns: v.object({ reminderId: v.id("eventReminders") }),
   handler: async (ctx, args) => {
     // Get the event
     const event = await ctx.db.get(args.eventId);
@@ -59,7 +60,7 @@ export const create = authenticatedMutation({
         sent: false,
         sentAt: undefined,
       });
-      return existing._id;
+      return { reminderId: existing._id };
     }
 
     // Calculate scheduled time
@@ -75,7 +76,7 @@ export const create = authenticatedMutation({
       sent: false,
     });
 
-    return reminderId;
+    return { reminderId };
   },
 });
 

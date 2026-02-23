@@ -51,7 +51,7 @@ describe("Calendar Events Attendance", () => {
         isRequired: true,
       });
 
-      const attendanceId = await asUser.mutation(api.calendarEventsAttendance.markAttendance, {
+      const { attendanceId } = await asUser.mutation(api.calendarEventsAttendance.markAttendance, {
         eventId,
         userId: attendeeId,
         status: "present",
@@ -77,19 +77,22 @@ describe("Calendar Events Attendance", () => {
       });
 
       // Mark as present first
-      const attendanceId = await asUser.mutation(api.calendarEventsAttendance.markAttendance, {
+      const { attendanceId } = await asUser.mutation(api.calendarEventsAttendance.markAttendance, {
         eventId,
         userId: attendeeId,
         status: "present",
       });
 
       // Update to tardy
-      const updatedId = await asUser.mutation(api.calendarEventsAttendance.markAttendance, {
-        eventId,
-        userId: attendeeId,
-        status: "tardy",
-        notes: "Arrived 15 minutes late",
-      });
+      const { attendanceId: updatedId } = await asUser.mutation(
+        api.calendarEventsAttendance.markAttendance,
+        {
+          eventId,
+          userId: attendeeId,
+          status: "tardy",
+          notes: "Arrived 15 minutes late",
+        },
+      );
 
       // Should return same ID (updated, not created new)
       expect(updatedId).toBe(attendanceId);

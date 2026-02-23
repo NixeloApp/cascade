@@ -33,7 +33,7 @@ describe("Time Tracking", () => {
         rateType: "billable",
       });
 
-      const entryId = await asUser.mutation(api.timeTracking.startTimer, {
+      const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {
         description: "Working",
       });
 
@@ -74,7 +74,7 @@ describe("Time Tracking", () => {
       const startTime = Date.now() - 2 * HOUR; // 2 hours ago
       const endTime = Date.now();
 
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime,
         endTime,
         billable: true,
@@ -219,7 +219,7 @@ describe("Time Tracking", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR,
         endTime: now,
         description: "Original",
@@ -254,7 +254,7 @@ describe("Time Tracking", () => {
       });
 
       const now = Date.now();
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR, // 1 hour ago
         endTime: now,
         billable: true,
@@ -277,7 +277,7 @@ describe("Time Tracking", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR,
         endTime: now,
       });
@@ -304,7 +304,7 @@ describe("Time Tracking", () => {
       const asUser2 = asAuthenticatedUser(t, user2);
 
       const now = Date.now();
-      const entryId = await asUser1.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser1.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR,
         endTime: now,
       });
@@ -326,7 +326,7 @@ describe("Time Tracking", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR,
         endTime: now,
       });
@@ -344,7 +344,7 @@ describe("Time Tracking", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR,
         endTime: now,
       });
@@ -365,7 +365,7 @@ describe("Time Tracking", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR,
         endTime: now,
         billable: true,
@@ -404,7 +404,7 @@ describe("Time Tracking", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR,
         endTime: now,
         isEquityHour: true,
@@ -444,7 +444,7 @@ describe("Time Tracking", () => {
       });
       const issueId = await createTestIssue(t, projectId, userId, { title: "Timer Issue" });
 
-      const entryId = await asUser.mutation(api.timeTracking.startTimer, {
+      const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {
         projectId,
         issueId,
         description: "Working on issue",
@@ -464,7 +464,7 @@ describe("Time Tracking", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const entryId = await asUser.mutation(api.timeTracking.startTimer, {});
+      const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {});
       await asUser.mutation(api.timeTracking.stopTimer, { entryId });
 
       await expect(asUser.mutation(api.timeTracking.stopTimer, { entryId })).rejects.toThrow(
@@ -480,7 +480,7 @@ describe("Time Tracking", () => {
       const asUser1 = asAuthenticatedUser(t, user1);
       const asUser2 = asAuthenticatedUser(t, user2);
 
-      const entryId = await asUser1.mutation(api.timeTracking.startTimer, {});
+      const { entryId } = await asUser1.mutation(api.timeTracking.startTimer, {});
 
       await expect(asUser2.mutation(api.timeTracking.stopTimer, { entryId })).rejects.toThrow();
       await t.finishInProgressScheduledFunctions();
@@ -510,7 +510,7 @@ describe("Time Tracking", () => {
         rateType: "billable",
       });
 
-      const entryId = await asUser.mutation(api.timeTracking.startTimer, {});
+      const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {});
 
       // Patch the start time to 1 hour ago
       await t.run(async (ctx) => {
@@ -553,7 +553,7 @@ describe("Time Tracking", () => {
       });
 
       // Verify rate was set by checking time entries use it
-      const entryId = await asUser.mutation(api.timeTracking.startTimer, {});
+      const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {});
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
       expect(entry?.hourlyRate).toBe(75);
       expect(entry?.currency).toBe("EUR");
@@ -580,7 +580,7 @@ describe("Time Tracking", () => {
 
       // Verify rate is used for project entries
       const now = Date.now();
-      const entryId = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         projectId,
         startTime: now - HOUR,
         endTime: now,

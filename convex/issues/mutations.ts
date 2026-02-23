@@ -14,7 +14,7 @@ import { validate } from "../lib/constrainedValidators";
 import { conflict, rateLimited, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
-import { workflowCategories } from "../validators";
+import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   assertVersionMatch,
   generateIssueKey,
@@ -290,6 +290,8 @@ export const update = issueMutation({
     ),
     assigneeId: v.optional(v.union(v.id("users"), v.null())),
     labels: v.optional(v.array(v.string())),
+    type: v.optional(issueTypesWithSubtask),
+    startDate: v.optional(v.union(v.number(), v.null())),
     dueDate: v.optional(v.union(v.number(), v.null())),
     estimatedHours: v.optional(v.union(v.number(), v.null())),
     storyPoints: v.optional(v.union(v.number(), v.null())),
@@ -371,32 +373,6 @@ export const addComment = issueViewerMutation({
   },
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
-    // Skip in test environment (convex-test doesn't support components)
-    if (!process.env.IS_TEST_ENV) {
-      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
-        name: `addComment:${ctx.userId}`,
-        config: {
-          kind: "token bucket",
-          rate: 120,
-          period: MINUTE,
-          capacity: 20,
-        },
-      });
-      if (!rateLimitResult.ok) {
-        throw rateLimited(rateLimitResult.retryAfter);
-      }
-
-      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
-        name: `addComment:${ctx.userId}`,
-        config: {
-          kind: "token bucket",
-          rate: 120,
-          period: MINUTE,
-          capacity: 20,
-        },
-      });
-    }
-
     const now = Date.now();
     const mentions = args.mentions || [];
 
@@ -405,11 +381,6 @@ export const addComment = issueViewerMutation({
       authorId: ctx.userId,
       content: args.content,
       mentions,
-      updatedAt: now,
-    });
-
-    // Update issue's updatedAt to reflect new activity
-    await ctx.db.patch(ctx.issue._id, {
       updatedAt: now,
     });
 
@@ -724,10 +695,7 @@ export const bulkDelete = authenticatedMutation({
         }
 
         // Soft delete issue
-        await ctx.db.patch(issue._id, {
-          ...softDeleteFields(ctx.userId),
-          updatedAt: Date.now(),
-        });
+        await ctx.db.patch(issue._id, softDeleteFields(ctx.userId));
 
         // Log activity
         await ctx.db.insert("issueActivity", {

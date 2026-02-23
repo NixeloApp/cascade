@@ -190,7 +190,7 @@ describe("Project Templates", () => {
       const templates = await t.query(api.projectTemplates.list, {});
       const templateId = templates[0]._id;
 
-      const projectId = await asUser.mutation(api.projectTemplates.createFromTemplate, {
+      const { projectId } = await asUser.mutation(api.projectTemplates.createFromTemplate, {
         templateId,
         projectName: "My Project",
         projectKey: "MYPROJ",
@@ -215,7 +215,7 @@ describe("Project Templates", () => {
       const templates = await t.query(api.projectTemplates.list, {});
       const template = templates[0];
 
-      const projectId = await asUser.mutation(api.projectTemplates.createFromTemplate, {
+      const { projectId } = await asUser.mutation(api.projectTemplates.createFromTemplate, {
         templateId: template._id,
         projectName: "Workflow Test",
         projectKey: "WFT",
@@ -235,7 +235,7 @@ describe("Project Templates", () => {
       const templates = await t.query(api.projectTemplates.list, {});
       const template = templates[0];
 
-      const projectId = await asUser.mutation(api.projectTemplates.createFromTemplate, {
+      const { projectId } = await asUser.mutation(api.projectTemplates.createFromTemplate, {
         templateId: template._id,
         projectName: "Labels Test",
         projectKey: "LBL",
@@ -266,7 +266,7 @@ describe("Project Templates", () => {
       await t.mutation(api.projectTemplates.initializeBuiltInTemplates, {});
       const templates = await t.query(api.projectTemplates.list, {});
 
-      const projectId = await asUser.mutation(api.projectTemplates.createFromTemplate, {
+      const { projectId } = await asUser.mutation(api.projectTemplates.createFromTemplate, {
         templateId: templates[0]._id,
         projectName: "Member Test",
         projectKey: "MBR",

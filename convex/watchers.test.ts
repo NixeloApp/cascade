@@ -26,7 +26,7 @@ describe("Issue Watchers", () => {
         title: "Test Issue",
       });
 
-      const watcherId = await asUser.mutation(api.watchers.watch, { issueId });
+      const { watcherId } = await asUser.mutation(api.watchers.watch, { issueId });
       expect(watcherId).toBeDefined();
 
       const isWatching = await asUser.query(api.watchers.isWatching, { issueId });
@@ -46,8 +46,8 @@ describe("Issue Watchers", () => {
         title: "Test Issue",
       });
 
-      const watcherId1 = await asUser.mutation(api.watchers.watch, { issueId });
-      const watcherId2 = await asUser.mutation(api.watchers.watch, { issueId });
+      const { watcherId: watcherId1 } = await asUser.mutation(api.watchers.watch, { issueId });
+      const { watcherId: watcherId2 } = await asUser.mutation(api.watchers.watch, { issueId });
 
       expect(watcherId2).toBe(watcherId1);
     });

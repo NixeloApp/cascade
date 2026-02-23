@@ -234,7 +234,7 @@ export const create = mutation({
     type: ssoTypeValidator,
     name: v.string(),
   },
-  returns: v.id("ssoConnections"),
+  returns: v.object({ connectionId: v.id("ssoConnections") }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -256,7 +256,7 @@ export const create = mutation({
       updatedAt: Date.now(),
     });
 
-    return connectionId;
+    return { connectionId };
   },
 });
 

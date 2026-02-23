@@ -23,7 +23,7 @@ describe("Document Templates", () => {
       const t = convexTest(schema, modules);
       const { asUser } = await createTestContext(t);
 
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "Test Template",
         description: "A test template",
         category: "general",
@@ -44,7 +44,7 @@ describe("Document Templates", () => {
       const t = convexTest(schema, modules);
       const { asUser } = await createTestContext(t);
 
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "Public Template",
         category: "shared",
         icon: "🌐",
@@ -176,7 +176,7 @@ describe("Document Templates", () => {
       const t = convexTest(schema, modules);
       const { asUser } = await createTestContext(t);
 
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "Get Test Template",
         category: "test",
         icon: "🔍",
@@ -198,7 +198,7 @@ describe("Document Templates", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const templateId = await asUser1.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser1.mutation(api.documentTemplates.create, {
         name: "Public Accessible",
         category: "public",
         icon: "🌐",
@@ -218,7 +218,7 @@ describe("Document Templates", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const templateId = await asUser1.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser1.mutation(api.documentTemplates.create, {
         name: "Private Only",
         category: "private",
         icon: "🔒",
@@ -236,7 +236,7 @@ describe("Document Templates", () => {
       const { asUser } = await createTestContext(t);
 
       // Create and delete to get valid non-existent ID
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "Temp",
         category: "temp",
         icon: "🗑️",
@@ -255,7 +255,7 @@ describe("Document Templates", () => {
       const t = convexTest(schema, modules);
       const { asUser } = await createTestContext(t);
 
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "Original Name",
         category: "original",
         icon: "📄",
@@ -284,7 +284,7 @@ describe("Document Templates", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const templateId = await asUser1.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser1.mutation(api.documentTemplates.create, {
         name: "User1 Template",
         category: "test",
         icon: "📄",
@@ -305,7 +305,7 @@ describe("Document Templates", () => {
       const { asUser } = await createTestContext(t);
 
       // Create and delete to get valid non-existent ID
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "Temp",
         category: "temp",
         icon: "🗑️",
@@ -328,7 +328,7 @@ describe("Document Templates", () => {
       const t = convexTest(schema, modules);
       const { asUser } = await createTestContext(t);
 
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "To Delete",
         category: "temp",
         icon: "🗑️",
@@ -350,7 +350,7 @@ describe("Document Templates", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const templateId = await asUser1.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser1.mutation(api.documentTemplates.create, {
         name: "User1 Template",
         category: "test",
         icon: "📄",
@@ -369,7 +369,7 @@ describe("Document Templates", () => {
       const t = convexTest(schema, modules);
       const { organizationId, asUser } = await createTestContext(t);
 
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "Doc Template",
         category: "docs",
         icon: "📄",
@@ -395,7 +395,7 @@ describe("Document Templates", () => {
 
       const asUser1 = asAuthenticatedUser(t, user1Id);
 
-      const templateId = await asUser1.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser1.mutation(api.documentTemplates.create, {
         name: "Public Doc Template",
         category: "public",
         icon: "🌐",
@@ -420,7 +420,7 @@ describe("Document Templates", () => {
 
       const asUser1 = asAuthenticatedUser(t, user1Id);
 
-      const templateId = await asUser1.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser1.mutation(api.documentTemplates.create, {
         name: "Private Doc Template",
         category: "private",
         icon: "🔒",
@@ -443,7 +443,7 @@ describe("Document Templates", () => {
       const { organizationId, asUser } = await createTestContext(t);
 
       // Create and delete to get valid non-existent ID
-      const templateId = await asUser.mutation(api.documentTemplates.create, {
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
         name: "Temp",
         category: "temp",
         icon: "🗑️",

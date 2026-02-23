@@ -4,9 +4,8 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addUserToOrganization,
   asAuthenticatedUser,
-  createOrganizationAdmin,
-  createProjectInOrganization,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -19,20 +18,20 @@ describe("Issue Links", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
       });
 
-      const linkId = await asUser.mutation(api.issueLinks.create, {
+      const { linkId } = await asUser.mutation(api.issueLinks.create, {
         fromIssueId: issue1Id,
         toIssueId: issue2Id,
         linkType: "blocks",
@@ -66,13 +65,13 @@ describe("Issue Links", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -100,33 +99,28 @@ describe("Issue Links", () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t, { name: "Admin" });
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
-      const { organizationId } = await createOrganizationAdmin(t, adminId);
-      const projectId = await createProjectInOrganization(t, adminId, organizationId);
+      const projectId = await createTestProject(t, adminId);
 
-      // Add viewer to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: viewerId,
-          role: "member",
-          addedBy: adminId,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const issue1Id = await asAdmin.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asAdmin.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asAdmin.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asAdmin.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
       });
 
+      // Add viewer to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, viewerId, adminId);
       await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",
@@ -152,20 +146,20 @@ describe("Issue Links", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
       });
 
-      const linkId = await asUser.mutation(api.issueLinks.create, {
+      const { linkId } = await asUser.mutation(api.issueLinks.create, {
         fromIssueId: issue1Id,
         toIssueId: issue2Id,
         linkType: "relates",
@@ -195,39 +189,34 @@ describe("Issue Links", () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t, { name: "Admin" });
       const viewerId = await createTestUser(t, { name: "Viewer", email: "viewer@test.com" });
-      const { organizationId } = await createOrganizationAdmin(t, adminId);
-      const projectId = await createProjectInOrganization(t, adminId, organizationId);
+      const projectId = await createTestProject(t, adminId);
 
-      // Add viewer to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: viewerId,
-          role: "member",
-          addedBy: adminId,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const issue1Id = await asAdmin.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asAdmin.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asAdmin.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asAdmin.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 2",
         type: "task",
         priority: "medium",
       });
 
-      const linkId = await asAdmin.mutation(api.issueLinks.create, {
+      const { linkId } = await asAdmin.mutation(api.issueLinks.create, {
         fromIssueId: issue1Id,
         toIssueId: issue2Id,
         linkType: "relates",
       });
 
+      // Add viewer to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, viewerId, adminId);
       await asAdmin.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "viewer@test.com",
@@ -249,19 +238,19 @@ describe("Issue Links", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const issueAId = await asUser.mutation(api.issues.create, {
+      const { issueId: issueAId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue A",
         type: "task",
         priority: "medium",
       });
-      const issueBId = await asUser.mutation(api.issues.create, {
+      const { issueId: issueBId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue B",
         type: "task",
         priority: "medium",
       });
-      const issueCId = await asUser.mutation(api.issues.create, {
+      const { issueId: issueCId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue C",
         type: "task",

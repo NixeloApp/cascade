@@ -156,7 +156,7 @@ async function checkUserComplianceInternal(
     periodStart: number;
     periodEnd: number;
   },
-): Promise<Id<"hourComplianceRecords">> {
+): Promise<{ recordId: Id<"hourComplianceRecords"> }> {
   // Get user profile
   const profile = await ctx.db
     .query("userProfiles")
@@ -256,7 +256,7 @@ async function checkUserComplianceInternal(
     now,
   );
 
-  return recordId;
+  return { recordId };
 }
 
 // Helper: Send compliance notifications

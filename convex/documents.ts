@@ -46,6 +46,7 @@ export const create = authenticatedMutation({
     projectId: v.optional(v.id("projects")),
     parentId: v.optional(v.id("documents")),
   },
+  returns: v.object({ documentId: v.id("documents") }),
   handler: async (ctx, args) => {
     await checkRateLimit(ctx);
     await validateOrganizationMembership(ctx, args.organizationId);
@@ -75,7 +76,7 @@ export const create = authenticatedMutation({
     }
 
     const now = Date.now();
-    return await ctx.db.insert("documents", {
+    const documentId = await ctx.db.insert("documents", {
       title: args.title,
       isPublic: args.isPublic,
       createdBy: ctx.userId,
@@ -86,6 +87,8 @@ export const create = authenticatedMutation({
       parentId: args.parentId,
       order,
     });
+
+    return { documentId };
   },
 });
 
@@ -952,6 +955,7 @@ export const addComment = authenticatedMutation({
     mentions: v.optional(v.array(v.id("users"))),
     parentId: v.optional(v.id("documentComments")),
   },
+  returns: v.object({ commentId: v.id("documentComments") }),
   handler: async (ctx, args) => {
     // Rate limit: 60 comments per minute per user
     if (!process.env.IS_TEST_ENV) {
@@ -1005,7 +1009,7 @@ export const addComment = authenticatedMutation({
       parentId: args.parentId,
     });
 
-    return commentId;
+    return { commentId };
   },
 });
 

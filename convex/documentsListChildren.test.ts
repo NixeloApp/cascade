@@ -11,14 +11,14 @@ describe("Documents listChildren", () => {
     const { organizationId, asUser } = await createTestContext(t);
 
     // 1. Create Grandparent (GP)
-    const gpId = await asUser.mutation(api.documents.create, {
+    const { documentId: gpId } = await asUser.mutation(api.documents.create, {
       title: "Grandparent",
       isPublic: true,
       organizationId,
     });
 
     // 2. Create Parent (P) under GP
-    const pId = await asUser.mutation(api.documents.create, {
+    const { documentId: pId } = await asUser.mutation(api.documents.create, {
       title: "Parent",
       isPublic: true,
       organizationId,
@@ -26,7 +26,7 @@ describe("Documents listChildren", () => {
     });
 
     // 3. Create Child (C) under P
-    const cId = await asUser.mutation(api.documents.create, {
+    const { documentId: cId } = await asUser.mutation(api.documents.create, {
       title: "Child",
       isPublic: true,
       organizationId,
@@ -59,14 +59,14 @@ describe("Documents listChildren", () => {
     const { organizationId, asUser } = await createTestContext(t);
 
     // 1. Create Root 1 (with child)
-    const r1Id = await asUser.mutation(api.documents.create, {
+    const { documentId: r1Id } = await asUser.mutation(api.documents.create, {
       title: "Root 1",
       isPublic: true,
       organizationId,
     });
 
     // 2. Create Root 2 (without child)
-    const r2Id = await asUser.mutation(api.documents.create, {
+    const { documentId: r2Id } = await asUser.mutation(api.documents.create, {
       title: "Root 2",
       isPublic: true,
       organizationId,

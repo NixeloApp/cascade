@@ -17,7 +17,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -45,7 +45,7 @@ describe("Workspaces", () => {
       const role = await asUser.query(api.organizations.getUserRole, { organizationId });
       expect(role).toBe("owner");
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -99,7 +99,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -134,7 +134,7 @@ describe("Workspaces", () => {
         role: "admin",
       });
 
-      const workspaceId = await asCreator.mutation(api.workspaces.create, {
+      const { workspaceId } = await asCreator.mutation(api.workspaces.create, {
         name: "Creator's Workspace",
         slug: "creators-workspace",
         organizationId,
@@ -173,7 +173,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -204,7 +204,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -240,7 +240,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -324,7 +324,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -348,7 +348,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Temp Workspace",
         slug: "temp-workspace",
         organizationId,
@@ -373,7 +373,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -397,7 +397,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Temp Workspace",
         slug: "temp-workspace",
         organizationId,
@@ -511,7 +511,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Original Name",
         slug: "test-workspace",
         organizationId,
@@ -536,7 +536,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -562,7 +562,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -596,7 +596,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -618,7 +618,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asUser.mutation(api.workspaces.create, {
+      const { workspaceId } = await asUser.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -680,7 +680,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -694,15 +694,15 @@ describe("Workspaces", () => {
       });
 
       // Add to workspace
-      const membershipId = await asOwner.mutation(api.workspaces.addMember, {
+      const { memberId: workspaceMemberId } = await asOwner.mutation(api.workspaces.addMember, {
         workspaceId,
         userId: memberId,
         role: "member",
       });
 
-      expect(membershipId).toBeDefined();
+      expect(workspaceMemberId).toBeDefined();
 
-      const membership = await t.run(async (ctx) => ctx.db.get(membershipId));
+      const membership = await t.run(async (ctx) => ctx.db.get(workspaceMemberId));
       expect(membership?.userId).toBe(memberId);
       expect(membership?.role).toBe("member");
     });
@@ -718,7 +718,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -744,7 +744,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -784,7 +784,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -796,7 +796,7 @@ describe("Workspaces", () => {
         role: "member",
       });
 
-      const membershipId = await asOwner.mutation(api.workspaces.addMember, {
+      const { memberId: workspaceMemberId } = await asOwner.mutation(api.workspaces.addMember, {
         workspaceId,
         userId: memberId,
         role: "member",
@@ -808,7 +808,7 @@ describe("Workspaces", () => {
         role: "admin",
       });
 
-      const membership = await t.run(async (ctx) => ctx.db.get(membershipId));
+      const membership = await t.run(async (ctx) => ctx.db.get(workspaceMemberId));
       expect(membership?.role).toBe("admin");
     });
 
@@ -823,7 +823,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -851,7 +851,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -863,7 +863,7 @@ describe("Workspaces", () => {
         role: "member",
       });
 
-      const membershipId = await asOwner.mutation(api.workspaces.addMember, {
+      const { memberId: workspaceMemberId } = await asOwner.mutation(api.workspaces.addMember, {
         workspaceId,
         userId: memberId,
         role: "member",
@@ -874,7 +874,7 @@ describe("Workspaces", () => {
         userId: memberId,
       });
 
-      const membership = await t.run(async (ctx) => ctx.db.get(membershipId));
+      const membership = await t.run(async (ctx) => ctx.db.get(workspaceMemberId));
       expect(membership?.isDeleted).toBe(true);
       expect(membership?.deletedAt).toBeDefined();
     });
@@ -890,7 +890,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -917,7 +917,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -954,7 +954,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,
@@ -992,7 +992,7 @@ describe("Workspaces", () => {
         timezone: "America/New_York",
       });
 
-      const workspaceId = await asOwner.mutation(api.workspaces.create, {
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
         name: "Test Workspace",
         slug: "test-workspace",
         organizationId,

@@ -25,7 +25,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
     });
 
     // Create Todo issues (orders 2, 0, 1) - mixed insertion
-    const todo1 = await asUser.mutation(api.issues.create, {
+    const { issueId: todo1Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo 1 (Order 2)",
       type: "task",
@@ -35,10 +35,10 @@ describe("Smart Issue List - Sprint Optimization", () => {
     });
     // Manually set order
     await t.run(async (ctx) => {
-      await ctx.db.patch(todo1, { order: 2 });
+      await ctx.db.patch(todo1Id, { order: 2 });
     });
 
-    const todo2 = await asUser.mutation(api.issues.create, {
+    const { issueId: todo2Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo 2 (Order 0)",
       type: "task",
@@ -46,10 +46,10 @@ describe("Smart Issue List - Sprint Optimization", () => {
       sprintId,
     });
     await t.run(async (ctx) => {
-      await ctx.db.patch(todo2, { order: 0 });
+      await ctx.db.patch(todo2Id, { order: 0 });
     });
 
-    const todo3 = await asUser.mutation(api.issues.create, {
+    const { issueId: todo3Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo 3 (Order 1)",
       type: "task",
@@ -57,12 +57,12 @@ describe("Smart Issue List - Sprint Optimization", () => {
       sprintId,
     });
     await t.run(async (ctx) => {
-      await ctx.db.patch(todo3, { order: 1 });
+      await ctx.db.patch(todo3Id, { order: 1 });
     });
 
     // Create Done issues (timestamps T, T+1000, T+2000)
     const now = Date.now();
-    const done1 = await asUser.mutation(api.issues.create, {
+    const { issueId: done1Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Done 1 (Oldest)",
       type: "task",
@@ -70,10 +70,10 @@ describe("Smart Issue List - Sprint Optimization", () => {
       sprintId,
     });
     await t.run(async (ctx) => {
-      await ctx.db.patch(done1, { status: "done", updatedAt: now });
+      await ctx.db.patch(done1Id, { status: "done", updatedAt: now });
     });
 
-    const done2 = await asUser.mutation(api.issues.create, {
+    const { issueId: done2Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Done 2 (Middle)",
       type: "task",
@@ -81,10 +81,10 @@ describe("Smart Issue List - Sprint Optimization", () => {
       sprintId,
     });
     await t.run(async (ctx) => {
-      await ctx.db.patch(done2, { status: "done", updatedAt: now + 1000 });
+      await ctx.db.patch(done2Id, { status: "done", updatedAt: now + 1000 });
     });
 
-    const done3 = await asUser.mutation(api.issues.create, {
+    const { issueId: done3Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Done 3 (Newest)",
       type: "task",
@@ -92,7 +92,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       sprintId,
     });
     await t.run(async (ctx) => {
-      await ctx.db.patch(done3, { status: "done", updatedAt: now + 2000 });
+      await ctx.db.patch(done3Id, { status: "done", updatedAt: now + 2000 });
     });
 
     // Fetch smart list with sprintId
@@ -108,16 +108,16 @@ describe("Smart Issue List - Sprint Optimization", () => {
     // Check Todo - should be sorted by order: todo2 (0), todo3 (1), todo1 (2)
     const todos = result.issuesByStatus.todo;
     expect(todos).toHaveLength(3);
-    expect(todos[0]._id).toBe(todo2);
-    expect(todos[1]._id).toBe(todo3);
-    expect(todos[2]._id).toBe(todo1);
+    expect(todos[0]._id).toBe(todo2Id);
+    expect(todos[1]._id).toBe(todo3Id);
+    expect(todos[2]._id).toBe(todo1Id);
 
     // Check Done - should be sorted by updatedAt asc: done1, done2, done3
     const done = result.issuesByStatus.done;
     expect(done).toHaveLength(3);
-    expect(done[0]._id).toBe(done1);
-    expect(done[1]._id).toBe(done2);
-    expect(done[2]._id).toBe(done3);
+    expect(done[0]._id).toBe(done1Id);
+    expect(done[1]._id).toBe(done2Id);
+    expect(done[2]._id).toBe(done3Id);
 
     // Check limit enforcement (manually verify logic)
     // If we set page size to 2 via internal change (hard to test without mocking const),

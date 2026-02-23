@@ -12,7 +12,7 @@ describe("Availability", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const slotId = await asUser.mutation(api.availability.setDayAvailability, {
+      const { slotId } = await asUser.mutation(api.availability.setDayAvailability, {
         dayOfWeek: "monday",
         startTime: "09:00",
         endTime: "17:00",
@@ -34,14 +34,14 @@ describe("Availability", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const slotId1 = await asUser.mutation(api.availability.setDayAvailability, {
+      const { slotId: slotId1 } = await asUser.mutation(api.availability.setDayAvailability, {
         dayOfWeek: "monday",
         startTime: "09:00",
         endTime: "17:00",
         timezone: "America/New_York",
       });
 
-      const slotId2 = await asUser.mutation(api.availability.setDayAvailability, {
+      const { slotId: slotId2 } = await asUser.mutation(api.availability.setDayAvailability, {
         dayOfWeek: "monday",
         startTime: "10:00",
         endTime: "18:00",
@@ -92,7 +92,7 @@ describe("Availability", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const slotId = await asUser.mutation(api.availability.setDayAvailability, {
+      const { slotId } = await asUser.mutation(api.availability.setDayAvailability, {
         dayOfWeek: "monday",
         startTime: "09:00",
         endTime: "17:00",
@@ -285,7 +285,7 @@ describe("Availability", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const slotId = await asUser.mutation(api.availability.setDayAvailability, {
+      const { slotId } = await asUser.mutation(api.availability.setDayAvailability, {
         dayOfWeek: "monday",
         startTime: "09:00",
         endTime: "17:00",
@@ -319,7 +319,7 @@ describe("Availability", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const slotId = await asUser1.mutation(api.availability.setDayAvailability, {
+      const { slotId } = await asUser1.mutation(api.availability.setDayAvailability, {
         dayOfWeek: "monday",
         startTime: "09:00",
         endTime: "17:00",
@@ -341,7 +341,7 @@ describe("Availability", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const slotId = await asUser.mutation(api.availability.setDayAvailability, {
+      const { slotId } = await asUser.mutation(api.availability.setDayAvailability, {
         dayOfWeek: "monday",
         startTime: "09:00",
         endTime: "17:00",
@@ -362,7 +362,7 @@ describe("Availability", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const slotId = await asUser1.mutation(api.availability.setDayAvailability, {
+      const { slotId } = await asUser1.mutation(api.availability.setDayAvailability, {
         dayOfWeek: "monday",
         startTime: "09:00",
         endTime: "17:00",

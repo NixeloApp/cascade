@@ -15,7 +15,7 @@ describe("MeetingBot", () => {
     const title = "Test Meeting";
     const meetingPlatform = "zoom";
 
-    const recordingId = await asUser.mutation(api.meetingBot.scheduleRecording, {
+    const { recordingId } = await asUser.mutation(api.meetingBot.scheduleRecording, {
       meetingUrl,
       title,
       meetingPlatform,
@@ -106,7 +106,7 @@ describe("MeetingBot", () => {
     });
 
     // Act: Create issue from the action item (index 0)
-    const issueId = await asUser.mutation(api.meetingBot.createIssueFromActionItem, {
+    const { issueId } = await asUser.mutation(api.meetingBot.createIssueFromActionItem, {
       summaryId,
       actionItemIndex: 0,
       projectId,

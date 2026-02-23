@@ -139,7 +139,7 @@ export const createBooking = mutation({
       await ctx.db.patch(bookingId, { calendarEventId: eventId });
     }
 
-    return bookingId;
+    return { bookingId };
   },
 });
 

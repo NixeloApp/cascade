@@ -27,7 +27,7 @@ export const create = projectViewerMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert("savedFilters", {
+    const filterId = await ctx.db.insert("savedFilters", {
       projectId: ctx.projectId,
       userId: ctx.userId,
       name: args.name,
@@ -35,6 +35,7 @@ export const create = projectViewerMutation({
       isPublic: args.isPublic,
       updatedAt: now,
     });
+    return { filterId };
   },
 });
 
