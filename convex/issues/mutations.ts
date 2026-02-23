@@ -12,7 +12,7 @@ import { validate } from "../lib/constrainedValidators";
 import { conflict, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
-import { workflowCategories } from "../validators";
+import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   assertVersionMatch,
   generateIssueKey,
@@ -224,15 +224,7 @@ export const update = issueMutation({
     ),
     assigneeId: v.optional(v.union(v.id("users"), v.null())),
     labels: v.optional(v.array(v.string())),
-    type: v.optional(
-      v.union(
-        v.literal("task"),
-        v.literal("bug"),
-        v.literal("story"),
-        v.literal("epic"),
-        v.literal("subtask"),
-      ),
-    ),
+    type: v.optional(issueTypesWithSubtask),
     startDate: v.optional(v.union(v.number(), v.null())),
     dueDate: v.optional(v.union(v.number(), v.null())),
     estimatedHours: v.optional(v.union(v.number(), v.null())),
