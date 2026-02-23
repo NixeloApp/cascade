@@ -802,7 +802,7 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_user", ["userId"])
+    .index("by_user", ["userId", "_creationTime"])
     .index("by_user_read", ["userId", "isRead", "isDeleted"])
     .index("by_deleted", ["isDeleted"]),
 
