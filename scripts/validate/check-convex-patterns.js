@@ -163,7 +163,7 @@ export function run() {
   /**
    * Check 3: Async operations should not be inside loops (use Promise.all)
    */
-  function checkAsyncInLoops(filePath, content, lines) {
+  function checkAsyncInLoops(filePath, _content, lines) {
     if (CONFIG.asyncInLoopsLevel === "off") return;
 
     const rel = relPath(filePath);

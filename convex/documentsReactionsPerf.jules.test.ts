@@ -1,7 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "./testUtils";
