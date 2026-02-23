@@ -821,7 +821,7 @@ interface ProjectMember {
   name: string;
   email: string | undefined;
   image: string | undefined;
-  role: "admin" | "editor" | "viewer";
+  role: Doc<"projectMembers">["role"];
   addedAt: number;
 }
 
