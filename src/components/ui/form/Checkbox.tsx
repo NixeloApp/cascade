@@ -32,10 +32,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     const helperId = `${checkboxId}-helper`;
 
     // Combine external aria-describedby with internal helper/error IDs
-    const describedBy = [
-      error ? errorId : helperText ? helperId : undefined,
-      ariaDescribedBy,
-    ]
+    const describedBy = [error ? errorId : helperText ? helperId : undefined, ariaDescribedBy]
       .filter(Boolean)
       .join(" ");
 

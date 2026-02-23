@@ -31,10 +31,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const helperId = `${textareaId}-helper`;
 
     // Combine external aria-describedby with internal helper/error IDs
-    const describedBy = [
-      error ? errorId : helperText ? helperId : undefined,
-      ariaDescribedBy,
-    ]
+    const describedBy = [error ? errorId : helperText ? helperId : undefined, ariaDescribedBy]
       .filter(Boolean)
       .join(" ");
 

@@ -31,10 +31,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const helperId = `${inputId}-helper`;
 
     // Combine external aria-describedby with internal helper/error IDs
-    const describedBy = [
-      error ? errorId : helperText ? helperId : undefined,
-      ariaDescribedBy,
-    ]
+    const describedBy = [error ? errorId : helperText ? helperId : undefined, ariaDescribedBy]
       .filter(Boolean)
       .join(" ");
 
