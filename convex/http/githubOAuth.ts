@@ -107,6 +107,94 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
  */
 export const initiateAuth = httpAction(initiateAuthHandler);
 
+// Helper to exchange code for tokens
+async function exchangeCodeForTokens(
+  code: string,
+  config: ReturnType<typeof getGitHubOAuthConfig>,
+) {
+  const tokenResponse = await fetchWithTimeout("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      code,
+      redirect_uri: config.redirectUri,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    let errorText = "Unknown error";
+    try {
+      errorText = await tokenResponse.text();
+      console.error("GitHub OAuth error: Failed to exchange code", errorText);
+    } catch (e) {
+      console.error("GitHub OAuth error: Failed to exchange code (and failed to read body)", e);
+    }
+    throw validation("oauth", `Failed to exchange GitHub authorization code: ${errorText}`);
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: response structure varies
+  let tokens: any;
+  try {
+    tokens = await tokenResponse.json();
+  } catch (_e) {
+    throw validation("oauth", "Invalid JSON response from GitHub token endpoint");
+  }
+
+  if (tokens.error) {
+    throw validation("oauth", tokens.error_description || tokens.error);
+  }
+
+  return tokens.access_token as string;
+}
+
+// Helper to fetch user info
+async function fetchGitHubUserInfo(accessToken: string) {
+  const userResponse = await fetchWithTimeout("https://api.github.com/user", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/vnd.github.v3+json",
+      "User-Agent": "Nixelo-App",
+    },
+  });
+
+  if (!userResponse.ok) {
+    let errorText = "Unknown error";
+    try {
+      errorText = await userResponse.text();
+      console.error("GitHub OAuth error: Failed to get user info", errorText);
+    } catch (e) {
+      console.error("GitHub OAuth error: Failed to get user info (and failed to read body)", e);
+    }
+    throw validation("github", `Failed to get GitHub user info: ${errorText}`);
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: response structure varies
+  let userInfo: any;
+  try {
+    userInfo = await userResponse.json();
+  } catch (_e) {
+    throw validation("github", "Invalid JSON response from GitHub user endpoint");
+  }
+
+  // Validate required fields
+  if (!userInfo || !userInfo.id || !userInfo.login) {
+    // Only log keys to avoid leaking PII
+    const keys = userInfo ? Object.keys(userInfo) : "null";
+    console.error(`GitHub OAuth error: Invalid user info structure. Keys: ${keys}`);
+    throw validation("github", "Invalid GitHub user info: missing id or login");
+  }
+
+  return {
+    githubUserId: String(userInfo.id),
+    githubUsername: userInfo.login as string,
+  };
+}
+
 /**
  * Handle OAuth callback from GitHub handler
  *
@@ -190,86 +278,14 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
   const config = getGitHubOAuthConfig();
 
   try {
-    // Exchange authorization code for access token
-    const tokenResponse = await fetchWithTimeout("https://github.com/login/oauth/access_token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        client_id: config.clientId,
-        client_secret: config.clientSecret,
-        code,
-        redirect_uri: config.redirectUri,
-      }),
-    });
-
-    if (!tokenResponse.ok) {
-      let errorText = "Unknown error";
-      try {
-        errorText = await tokenResponse.text();
-        console.error("GitHub OAuth error: Failed to exchange code", errorText);
-      } catch (e) {
-        console.error("GitHub OAuth error: Failed to exchange code (and failed to read body)", e);
-      }
-      throw validation("oauth", `Failed to exchange GitHub authorization code: ${errorText}`);
-    }
-
-    let tokens;
-    try {
-      tokens = await tokenResponse.json();
-    } catch (_e) {
-      throw validation("oauth", "Invalid JSON response from GitHub token endpoint");
-    }
-
-    if (tokens.error) {
-      throw validation("oauth", tokens.error_description || tokens.error);
-    }
-
-    const { access_token } = tokens;
-
-    // Get user info from GitHub
-    const userResponse = await fetchWithTimeout("https://api.github.com/user", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        Accept: "application/vnd.github.v3+json",
-        "User-Agent": "Nixelo-App",
-      },
-    });
-
-    if (!userResponse.ok) {
-      let errorText = "Unknown error";
-      try {
-        errorText = await userResponse.text();
-        console.error("GitHub OAuth error: Failed to get user info", errorText);
-      } catch (e) {
-        console.error("GitHub OAuth error: Failed to get user info (and failed to read body)", e);
-      }
-      throw validation("github", `Failed to get GitHub user info: ${errorText}`);
-    }
-
-    let userInfo;
-    try {
-      userInfo = await userResponse.json();
-    } catch (_e) {
-      throw validation("github", "Invalid JSON response from GitHub user endpoint");
-    }
-
-    // Validate required fields
-    if (!userInfo || !userInfo.id || !userInfo.login) {
-      console.error("GitHub OAuth error: Invalid user info structure", userInfo);
-      throw validation("github", "Invalid GitHub user info: missing id or login");
-    }
-
-    const githubUserId = String(userInfo.id);
-    const githubUsername = userInfo.login;
+    const accessToken = await exchangeCodeForTokens(code, config);
+    const { githubUserId, githubUsername } = await fetchGitHubUserInfo(accessToken);
 
     // Connection data to pass to the frontend
     const connectionData = {
       githubUserId,
       githubUsername,
-      accessToken: access_token,
+      accessToken,
     };
 
     // Return success page that passes tokens to opener window
@@ -473,15 +489,16 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
       });
     }
 
-    let repos;
+    // biome-ignore lint/suspicious/noExplicitAny: response structure varies
+    let repos: any;
     try {
       repos = await reposResponse.json();
     } catch (_e) {
-      throw new Error("Invalid JSON response from GitHub repositories endpoint");
+      throw validation("github", "Invalid JSON response from GitHub repositories endpoint");
     }
 
     if (!Array.isArray(repos)) {
-      throw new Error("GitHub repositories response is not an array");
+      throw validation("github", "GitHub repositories response is not an array");
     }
 
     // Transform to a simpler format
