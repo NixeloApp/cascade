@@ -5,6 +5,7 @@ import { action, internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
+import { logger } from "./lib/logger";
 import { safeFetch } from "./lib/safeFetch";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
@@ -381,8 +382,12 @@ export const sendIssueNotification = action({
             },
           ],
         });
-      } catch (_error) {
-        // Intentionally ignore Pumble notification failures - non-critical
+      } catch (error) {
+        // Log the error but don't fail the whole action
+        logger.error("Failed to send Pumble notification", {
+          webhookId: webhook._id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
   },
