@@ -17,7 +17,7 @@ describe("Roadmap Issues Optimization", () => {
     const now = Date.now();
 
     // 1. Bug due today
-    await asUser.mutation(api.issues.createIssue, {
+    await asUser.mutation(api.issues.create, {
       projectId,
       title: "Bug Today",
       type: "bug",
@@ -26,7 +26,7 @@ describe("Roadmap Issues Optimization", () => {
     });
 
     // 2. Story due tomorrow
-    await asUser.mutation(api.issues.createIssue, {
+    await asUser.mutation(api.issues.create, {
       projectId,
       title: "Story Tomorrow",
       type: "story",
@@ -35,7 +35,7 @@ describe("Roadmap Issues Optimization", () => {
     });
 
     // 3. Task due next year
-    await asUser.mutation(api.issues.createIssue, {
+    await asUser.mutation(api.issues.create, {
       projectId,
       title: "Task Next Year",
       type: "task",
@@ -44,7 +44,7 @@ describe("Roadmap Issues Optimization", () => {
     });
 
     // 4. Epic due next week
-    const { issueId: epic } = await asUser.mutation(api.issues.createIssue, {
+    const epic = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Epic Next Week",
       type: "epic",
@@ -54,14 +54,14 @@ describe("Roadmap Issues Optimization", () => {
 
     // 5. Subtask due today (should be excluded)
     // Create a parent task first
-    const { issueId: parentTask } = await asUser.mutation(api.issues.createIssue, {
+    const parentTask = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Parent Task",
       type: "task",
       priority: "medium",
     });
 
-    await asUser.mutation(api.issues.createIssue, {
+    await asUser.mutation(api.issues.create, {
       projectId,
       title: "Subtask Today",
       type: "subtask",

@@ -1,11 +1,11 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
+import type { QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
-import { batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
+import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
-import { getUserName } from "./lib/userUtils";
 
 /** Maximum issue count to compute for a project list view */
 const MAX_ISSUE_COUNT = 1000;
@@ -389,28 +389,7 @@ export const getProject = authenticatedQuery({
 
     const creator = await ctx.db.get(project.createdBy);
 
-    // Get members with their roles from projectMembers table (bounded)
-    const projectMembers = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", project._id))
-      .filter(notDeleted)
-      .take(BOUNDED_LIST_LIMIT);
-
-    // Batch fetch all members to avoid N+1
-    const memberUserIds = projectMembers.map((m) => m.userId);
-    const memberMap = await batchFetchUsers(ctx, memberUserIds);
-
-    const members = projectMembers.map((membership) => {
-      const member = memberMap.get(membership.userId);
-      return {
-        _id: membership.userId,
-        name: member?.name || member?.email || "Unknown",
-        email: member?.email,
-        image: member?.image,
-        role: membership.role,
-        addedAt: membership._creationTime,
-      };
-    });
+    const members = await getProjectMembers(ctx, project._id);
 
     const userRole = await getProjectRole(ctx, project._id, ctx.userId);
 
@@ -453,28 +432,7 @@ export const getByKey = authenticatedQuery({
 
     const creator = await ctx.db.get(project.createdBy);
 
-    // Get members with their roles from projectMembers table (bounded)
-    const memberships = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", project._id))
-      .filter(notDeleted)
-      .take(BOUNDED_LIST_LIMIT);
-
-    // Batch fetch all members to avoid N+1
-    const memberUserIds = memberships.map((m) => m.userId);
-    const memberMap = await batchFetchUsers(ctx, memberUserIds);
-
-    const members = memberships.map((membership) => {
-      const member = memberMap.get(membership.userId);
-      return {
-        _id: membership.userId,
-        name: member?.name || member?.email || "Unknown",
-        email: member?.email,
-        image: member?.image,
-        role: membership.role,
-        addedAt: membership._creationTime,
-      };
-    });
+    const members = await getProjectMembers(ctx, project._id);
 
     const userRole = await getProjectRole(ctx, project._id, ctx.userId);
 
@@ -857,3 +815,42 @@ export const getProjectUserRole = authenticatedQuery({
     return await getProjectRole(ctx, args.projectId, ctx.userId);
   },
 });
+
+interface ProjectMember {
+  _id: Id<"users">;
+  name: string;
+  email: string | undefined;
+  image: string | undefined;
+  role: Doc<"projectMembers">["role"];
+  addedAt: number;
+}
+
+async function getProjectMembers(
+  ctx: QueryCtx,
+  projectId: Id<"projects">,
+): Promise<ProjectMember[]> {
+  // Get members with their roles from projectMembers table (bounded)
+  const memberships = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_project", (q) => q.eq("projectId", projectId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  // Batch fetch all members to avoid N+1
+  const memberUserIds = memberships.map((m) => m.userId);
+  const memberMap = await batchFetchUsers(ctx, memberUserIds);
+
+  return memberships.map((membership) => {
+    const member = memberMap.get(membership.userId);
+    // Only use name if it's a non-empty string; fall back to "Unknown" (avoid exposing email as display name)
+    const displayName = member?.name?.trim() ? member.name : "Unknown";
+    return {
+      _id: membership.userId,
+      name: displayName,
+      email: member?.email,
+      image: member?.image,
+      role: membership.role,
+      addedAt: membership._creationTime,
+    };
+  });
+}

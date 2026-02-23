@@ -353,7 +353,7 @@ describe("Projects", () => {
       });
 
       // Create an active issue
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         title: "Active Issue",
         type: "task",
         priority: "medium",
@@ -361,7 +361,7 @@ describe("Projects", () => {
       });
 
       // Create an issue and then delete it
-      const { issueId: deletedIssueId } = await asUser.mutation(api.issues.createIssue, {
+      const deletedIssueId = await asUser.mutation(api.issues.create, {
         title: "Deleted Issue",
         type: "bug",
         priority: "high",

@@ -1,57 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
-import { fetchJSON, HttpError } from "../lib/fetchWithTimeout";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler } from "./githubOAuth";
 
-// Define error type for testing
-interface AppErrorData {
-  code: string;
-  message: string;
-}
-
-interface AppError extends Error {
-  data: AppErrorData;
-}
-
 // Mock dependencies
-vi.mock("../lib/fetchWithTimeout", () => {
-  class MockHttpError extends Error {
-    status: number;
-    body: string;
-    constructor(status: number, body: string) {
-      super(`HTTP ${status}: ${body}`);
-      this.name = "HttpError";
-      this.status = status;
-      this.body = body;
-    }
-  }
-  return {
-    fetchWithTimeout: vi.fn(),
-    fetchJSON: vi.fn(),
-    HttpError: MockHttpError,
-  };
-});
+vi.mock("../lib/fetchWithTimeout", () => ({
+  fetchWithTimeout: vi.fn(),
+}));
 
 // Mock env library
 vi.mock("../lib/env", () => ({
   getGitHubClientId: vi.fn(),
   getGitHubClientSecret: vi.fn(),
   isGitHubOAuthConfigured: vi.fn(),
-}));
-
-// Mock errors library (the actual module githubOAuth.ts imports from)
-vi.mock("../lib/errors", () => ({
-  isAppError: (err: unknown): err is AppError =>
-    typeof err === "object" &&
-    err !== null &&
-    "data" in err &&
-    typeof (err as AppError).data?.code === "string",
-  validation: (_type: string, msg: string): AppError => {
-    const err = new Error(msg) as AppError;
-    err.data = { code: "VALIDATION", message: msg };
-    return err;
-  },
 }));
 
 describe("GitHub OAuth Error Handling", () => {
@@ -85,8 +47,13 @@ describe("GitHub OAuth Error Handling", () => {
   });
 
   it("should fail generically BUT log detailed error when GitHub returns 400 (fixed behavior)", async () => {
-    // Setup mock to throw (simulating fetchJSON behavior on non-OK)
-    vi.mocked(fetchJSON).mockRejectedValue(new HttpError(400, JSON.stringify(mockErrorResponse)));
+    // Setup mock to return 400 with detailed error
+    vi.mocked(fetchWithTimeout).mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => mockErrorResponse,
+      text: async () => JSON.stringify(mockErrorResponse),
+    } as Response);
 
     const request = new Request(
       "https://api.convex.site/github/callback?code=bad_code&state=valid_state",
@@ -102,26 +69,26 @@ describe("GitHub OAuth Error Handling", () => {
     expect(html).toContain("Failed to exchange GitHub authorization code");
 
     // Check that we DID log the detailed error
-    // Note: The implementation logs the *error object*, not necessarily the stringified body directly in the message argument
-    // but likely as the second argument.
-    // In githubOAuth.ts: console.error("GitHub OAuth error: Failed to exchange code", e);
-    // So the second arg is the HttpError object.
     expect(consoleSpy).toHaveBeenCalledWith(
       "GitHub OAuth error: Failed to exchange code",
-      expect.objectContaining({
-        body: expect.stringContaining("The code passed is incorrect or expired."),
-      }),
+      expect.stringContaining("The code passed is incorrect or expired."),
     );
   });
 
   it("should fail generically BUT log detailed error when user info fetch returns 400", async () => {
     // Mock token exchange success
-    vi.mocked(fetchJSON).mockResolvedValueOnce({ access_token: "token" });
+    vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ access_token: "token" }),
+    } as Response);
 
     // Mock user info fetch failure
-    vi.mocked(fetchJSON).mockRejectedValueOnce(
-      new HttpError(400, JSON.stringify({ message: "Bad credentials" })),
-    );
+    vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      json: async () => ({ message: "Bad credentials" }),
+      text: async () => JSON.stringify({ message: "Bad credentials" }),
+    } as Response);
 
     const request = new Request(
       "https://api.convex.site/github/callback?code=valid_code&state=valid_state",
@@ -139,9 +106,7 @@ describe("GitHub OAuth Error Handling", () => {
     // Check that we DID log the detailed error
     expect(consoleSpy).toHaveBeenCalledWith(
       "GitHub OAuth error: Failed to get user info",
-      expect.objectContaining({
-        body: expect.stringContaining("Bad credentials"),
-      }),
+      expect.stringContaining("Bad credentials"),
     );
   });
 });
