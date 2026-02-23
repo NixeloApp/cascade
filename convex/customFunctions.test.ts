@@ -198,9 +198,9 @@ describe("Custom Functions Access Control", () => {
     it("should fail if user is not authenticated", async () => {
       const t = convexTest(schema, modules);
       // Use an action that uses authenticatedAction (api.ai.chat.chat)
-      await expect(
-        t.action(api.ai.chat.chat, { message: "Hello" })
-      ).rejects.toThrow("Not authenticated");
+      await expect(t.action(api.ai.chat.chat, { message: "Hello" })).rejects.toThrow(
+        "Not authenticated",
+      );
     });
   });
 });
