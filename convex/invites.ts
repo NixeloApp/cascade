@@ -505,6 +505,13 @@ export const acceptInvite = authenticatedMutation({
       throw forbidden(undefined, "This invitation was sent to a different email address");
     }
 
+    if (!user.emailVerificationTime) {
+      throw forbidden(
+        undefined,
+        "You must verify your email address before accepting an invitation.",
+      );
+    }
+
     // Mark invite as accepted
     await ctx.db.patch(invite._id, {
       status: "accepted",
