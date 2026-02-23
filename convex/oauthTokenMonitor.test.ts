@@ -235,19 +235,21 @@ describe("OAuth Token Monitor", () => {
       const t = convexTest(schema, modules);
 
       // Insert 105 records
-      for (let i = 0; i < 105; i++) {
-        await t.mutation(internal.oauthTokenMonitor.recordTokenHealthCheck, {
-          totalConnections: i,
-          healthyCount: i,
-          expiringSoonCount: 0,
-          expiredCount: 0,
-          invalidCount: 0,
-          missingCount: 0,
-          refreshedCount: 0,
-          refreshFailedCount: 0,
-          durationMs: 100,
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 105 }, (_, i) =>
+          t.mutation(internal.oauthTokenMonitor.recordTokenHealthCheck, {
+            totalConnections: i,
+            healthyCount: i,
+            expiringSoonCount: 0,
+            expiredCount: 0,
+            invalidCount: 0,
+            missingCount: 0,
+            refreshedCount: 0,
+            refreshFailedCount: 0,
+            durationMs: 100,
+          }),
+        ),
+      );
 
       // Check only 100 remain
       const allRecords = await t.run(async (ctx) => {
