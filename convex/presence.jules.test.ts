@@ -1,4 +1,3 @@
-
 import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
@@ -14,7 +13,6 @@ const { mockPresenceList, mockPresenceHeartbeat } = vi.hoisted(() => ({
 vi.mock("@convex-dev/presence", () => {
   return {
     Presence: class MockPresence {
-      constructor() {}
       async list(...args: any[]) {
         return mockPresenceList(...args);
       }
@@ -109,7 +107,7 @@ describe("presence", () => {
     const t = convexTest(schema, modules);
 
     const userId = await t.run(async (ctx) => {
-        return await ctx.db.insert("users", { name: "User" });
+      return await ctx.db.insert("users", { name: "User" });
     });
 
     const args = {
@@ -125,7 +123,7 @@ describe("presence", () => {
       args.roomId,
       userId,
       args.sessionId,
-      args.interval
+      args.interval,
     );
   });
 
@@ -133,9 +131,9 @@ describe("presence", () => {
     const t = convexTest(schema, modules);
 
     const args = {
-        roomId: "room1",
-        sessionId: "session1",
-        interval: 1000,
+      roomId: "room1",
+      sessionId: "session1",
+      interval: 1000,
     };
 
     // We expect the error message to contain "Not authenticated" or the code "UNAUTHENTICATED"
