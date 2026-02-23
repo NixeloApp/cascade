@@ -1,5 +1,5 @@
 import { type Infer, v } from "convex/values";
-import { asyncMap, pruneNull } from "convex-helpers";
+import { asyncMap } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -11,7 +11,7 @@ import {
 import { validate } from "../lib/constrainedValidators";
 import { conflict, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
-import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
+import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { enforceRateLimit } from "../rateLimits";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
@@ -20,8 +20,11 @@ import {
   getMaxOrderForStatus,
   getNextVersion,
   getSearchContent,
+  type IssueActivityAction,
   issueKeyExists,
+  performBulkUpdate,
   processIssueUpdates,
+  resolveLabelNames,
   validateAssignee,
   validateParentIssue,
 } from "./helpers";
@@ -95,11 +98,7 @@ async function createIssueImpl(
   const defaultStatus = ctx.project.workflowStates[0]?.id || "todo";
   const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
 
-  let labelNames: string[] = [];
-  if (args.labels && args.labels.length > 0) {
-    const labels = await asyncMap(args.labels, (id) => ctx.db.get(id));
-    labelNames = pruneNull(labels).map((l) => l.name);
-  }
+  const labelNames = await resolveLabelNames(ctx, args.labels);
 
   const now = Date.now();
   const issueId = await ctx.db.insert("issues", {
@@ -450,72 +449,6 @@ export const addComment = issueViewerMutation({
  * @param newStatus - The ID of the new status (workflow state).
  * @returns Object containing the number of updated issues.
  */
-// Activity action types for type safety
-type IssueActivityAction =
-  | "created"
-  | "updated"
-  | "archived"
-  | "restored"
-  | "deleted"
-  | "commented";
-
-// Helper for bulk updates to reduce code duplication
-async function performBulkUpdate(
-  ctx: MutationCtx & { userId: Id<"users"> },
-  issueIds: Id<"issues">[],
-  getUpdate: (
-    issue: Doc<"issues">,
-    now: number,
-  ) => Promise<{
-    patch: Partial<Doc<"issues">>;
-    activity?: {
-      action: IssueActivityAction;
-      field?: string;
-      oldValue?: string;
-      newValue?: string;
-    };
-  } | null>,
-  checkPermission: (
-    ctx: MutationCtx,
-    projectId: Id<"projects">,
-    userId: Id<"users">,
-  ) => Promise<void> = assertCanEditProject,
-) {
-  const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
-  const now = Date.now();
-
-  const results = await Promise.all(
-    issues.map(async (issue) => {
-      if (!issue || issue.isDeleted) return 0;
-
-      try {
-        await checkPermission(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        return 0;
-      }
-
-      const update = await getUpdate(issue, now);
-      if (!update) return 0;
-
-      await ctx.db.patch(issue._id, {
-        ...update.patch,
-        updatedAt: now,
-      });
-
-      if (update.activity) {
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
-          ...update.activity,
-        });
-      }
-
-      return 1;
-    }),
-  );
-
-  return { updated: results.reduce((a: number, b) => a + b, 0) };
-}
 
 /**
  * Bulk update the status of multiple issues.
