@@ -112,7 +112,7 @@ describe("Multi-Tenant Isolation", () => {
         boardType: "kanban",
       });
 
-      const { issueId: issueIdA } = await asUserA.mutation(api.issues.mutations.create, {
+      const { issueId: issueIdA } = await asUserA.mutation(api.issues.mutations.createIssue, {
         projectId: projectIdA,
         title: "Secret Issue from Org A",
         type: "task",
@@ -292,7 +292,7 @@ describe("Multi-Tenant Isolation", () => {
       // User B should NOT be able to create an issue in User A's project
       const asUserB = asAuthenticatedUser(t, userOrgB);
       await expect(
-        asUserB.mutation(api.issues.mutations.create, {
+        asUserB.mutation(api.issues.mutations.createIssue, {
           projectId: projectIdA,
           title: "Injected Issue from Org B",
           type: "task",

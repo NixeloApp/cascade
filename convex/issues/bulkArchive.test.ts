@@ -26,7 +26,7 @@ describe("Issue Bulk Archive/Restore Mutations", () => {
     if (!todoState) throw new Error("No todo state found");
 
     // Create one issue in "done" and one in "todo"
-    const { issueId: doneIssueId } = await asUser.mutation(api.issues.create, {
+    const { issueId: doneIssueId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Done Issue",
       type: "task",
@@ -39,7 +39,7 @@ describe("Issue Bulk Archive/Restore Mutations", () => {
       newOrder: 0,
     });
 
-    const { issueId: todoIssueId } = await asUser.mutation(api.issues.create, {
+    const { issueId: todoIssueId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo Issue",
       type: "task",
@@ -76,7 +76,7 @@ describe("Issue Bulk Archive/Restore Mutations", () => {
     const doneState = project?.workflowStates.find((s) => s.category === "done");
     if (!doneState) throw new Error("No done state found");
 
-    const { issueId } = await asUser.mutation(api.issues.create, {
+    const { issueId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "To Restore",
       type: "task",

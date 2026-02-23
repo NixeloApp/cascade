@@ -19,7 +19,7 @@ describe("Reactions", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create issue
-    const { issueId } = await asUser.mutation(api.issues.create, {
+    const { issueId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Test Issue",
       type: "task",
@@ -84,7 +84,7 @@ describe("Reactions", () => {
     });
 
     // Create issue and comment
-    const { issueId } = await asUser1.mutation(api.issues.create, {
+    const { issueId } = await asUser1.mutation(api.issues.createIssue, {
       projectId,
       title: "Test Issue",
       type: "task",

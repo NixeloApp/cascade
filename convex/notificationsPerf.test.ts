@@ -34,10 +34,11 @@ describe("Notifications Performance", () => {
     const ONE_MINUTE = 60 * 1000;
     expect(latestTime - earliestTime).toBeLessThan(ONE_MINUTE);
 
-    // Query with startTime at or before all notifications - should return all
+    // Query with startTime before all notifications - should return all
+    // Note: listForDigest uses .gt() so we need startTime < earliestTime
     const digest = await t.query(internal.notifications.listForDigest, {
       userId,
-      startTime: earliestTime,
+      startTime: earliestTime - 1,
     });
 
     expect(digest).toHaveLength(5);
