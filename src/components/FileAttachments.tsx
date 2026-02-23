@@ -53,7 +53,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
     try {
       for (const file of Array.from(files)) {
         // Get upload URL
-        const uploadUrl = await generateUploadUrl();
+        const { uploadUrl } = await generateUploadUrl();
 
         // Upload file
         const result = await fetch(uploadUrl, {

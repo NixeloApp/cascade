@@ -7,8 +7,10 @@ import { validateAttachment } from "./lib/fileValidators";
 // Generate upload URL for files
 export const generateUploadUrl = authenticatedMutation({
   args: {},
+  returns: v.object({ uploadUrl: v.string() }),
   handler: async (ctx) => {
-    return await ctx.storage.generateUploadUrl();
+    const uploadUrl = await ctx.storage.generateUploadUrl();
+    return { uploadUrl };
   },
 });
 
@@ -20,6 +22,7 @@ export const addAttachment = issueMutation({
     contentType: v.string(),
     size: v.number(),
   },
+  returns: v.object({ storageId: v.id("_storage") }),
   handler: async (ctx, args) => {
     // Validate file type before linking
     await validateAttachment(ctx, args.storageId);
@@ -43,7 +46,7 @@ export const addAttachment = issueMutation({
       newValue: args.filename,
     });
 
-    return args.storageId;
+    return { storageId: args.storageId };
   },
 });
 
@@ -52,7 +55,7 @@ export const removeAttachment = issueMutation({
   args: {
     storageId: v.id("_storage"),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const issue = ctx.issue;
 
@@ -79,7 +82,7 @@ export const removeAttachment = issueMutation({
       field: "attachment",
     });
 
-    return { success: true } as const;
+    return { success: true, deleted: true } as const;
   },
 });
 

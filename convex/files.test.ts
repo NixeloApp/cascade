@@ -48,7 +48,7 @@ describe("Files", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const uploadUrl = await asUser.mutation(api.files.generateUploadUrl, {});
+      const { uploadUrl } = await asUser.mutation(api.files.generateUploadUrl, {});
 
       expect(uploadUrl).toBeDefined();
       expect(typeof uploadUrl).toBe("string");
@@ -59,8 +59,8 @@ describe("Files", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const url1 = await asUser.mutation(api.files.generateUploadUrl, {});
-      const url2 = await asUser.mutation(api.files.generateUploadUrl, {});
+      const { uploadUrl: url1 } = await asUser.mutation(api.files.generateUploadUrl, {});
+      const { uploadUrl: url2 } = await asUser.mutation(api.files.generateUploadUrl, {});
 
       // URLs should be unique
       expect(url1).not.toBe(url2);
