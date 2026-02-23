@@ -353,7 +353,7 @@ describe("Projects", () => {
       });
 
       // Create an active issue
-      await asUser.mutation(api.issues.create, {
+      await asUser.mutation(api.issues.createIssue, {
         title: "Active Issue",
         type: "task",
         priority: "medium",
@@ -361,7 +361,7 @@ describe("Projects", () => {
       });
 
       // Create an issue and then delete it
-      const deletedIssueId = await asUser.mutation(api.issues.create, {
+      const { issueId: deletedIssueId } = await asUser.mutation(api.issues.createIssue, {
         title: "Deleted Issue",
         type: "bug",
         priority: "high",
@@ -508,7 +508,7 @@ describe("Projects", () => {
         });
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
-        // Add new member to organization
+        // Add newMember to organization
         await t.run(async (ctx) => {
           await ctx.db.insert("organizationMembers", {
             organizationId,
@@ -551,10 +551,11 @@ describe("Projects", () => {
           name: "Editor",
           email: "editor@test.com",
         });
-        const newUserId = await createTestUser(t, { name: "New", email: "new@test.com" });
+        // Create new user AND add to org (otherwise addProjectMember would fail on org check first)
+        const newId = await createTestUser(t, { name: "New", email: "new@test.com" });
         const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
-        // Add both users to organization
+        // Add editor and new user to organization
         await t.run(async (ctx) => {
           await ctx.db.insert("organizationMembers", {
             organizationId,
@@ -564,7 +565,7 @@ describe("Projects", () => {
           });
           await ctx.db.insert("organizationMembers", {
             organizationId,
-            userId: newUserId,
+            userId: newId,
             role: "member",
             addedBy: adminId,
           });
@@ -1268,14 +1269,14 @@ describe("Projects", () => {
     it("should reject duplicate members", async () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t, { name: "Admin" });
-      const dupMemberId = await createTestUser(t, { name: "Member", email: "dup@test.com" });
+      const memberId = await createTestUser(t, { name: "Member", email: "dup@test.com" });
       const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
 
       // Add member to organization
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
           organizationId,
-          userId: dupMemberId,
+          userId: memberId,
           role: "member",
           addedBy: adminId,
         });

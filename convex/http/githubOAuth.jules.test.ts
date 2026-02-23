@@ -1,13 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
-import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { fetchJSON, HttpError } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler, initiateAuthHandler, listReposHandler } from "./githubOAuth";
 
 // Mock dependencies
-vi.mock("../lib/fetchWithTimeout", () => ({
-  fetchWithTimeout: vi.fn(),
-}));
+vi.mock("../lib/fetchWithTimeout", () => {
+  class MockHttpError extends Error {
+    status: number;
+    body: string;
+    constructor(status: number, body: string) {
+      super(`HTTP ${status}: ${body}`);
+      this.name = "HttpError";
+      this.status = status;
+      this.body = body;
+    }
+  }
+  return {
+    fetchWithTimeout: vi.fn(),
+    fetchJSON: vi.fn(),
+    HttpError: MockHttpError,
+  };
+});
 
 // Mock env library
 vi.mock("../lib/env", () => ({
@@ -104,16 +118,10 @@ describe("GitHub OAuth", () => {
 
     it("should succeed with valid state and code", async () => {
       // Mock token exchange
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ access_token: "token" }),
-      } as Response);
+      vi.mocked(fetchJSON).mockResolvedValueOnce({ access_token: "token" });
 
       // Mock user info
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ id: 123, login: "testuser" }),
-      } as Response);
+      vi.mocked(fetchJSON).mockResolvedValueOnce({ id: 123, login: "testuser" });
 
       const request = new Request(
         "https://api.convex.site/github/callback?code=some_code&state=valid_state",
@@ -141,16 +149,10 @@ describe("GitHub OAuth", () => {
     });
 
     it("should return 401 Unauthorized when GitHub returns 401", async () => {
-      // Setup mock to return 401
-      (fetchWithTimeout as any).mockResolvedValue({
-        ok: false,
-        status: 401,
-        json: async () => ({
-          message: "Bad credentials",
-          documentation_url: "https://docs.github.com/rest",
-        }),
-        text: async () => JSON.stringify({ message: "Bad credentials" }),
-      });
+      // Setup mock to throw HttpError (simulating fetchJSON behavior)
+      vi.mocked(fetchJSON).mockRejectedValueOnce(
+        new HttpError(401, JSON.stringify({ message: "Bad credentials" })),
+      );
 
       const response = await listReposHandler(mockCtx, mockRequest);
       const body = await response.json();
@@ -160,15 +162,10 @@ describe("GitHub OAuth", () => {
     });
 
     it("should return 403 Forbidden when GitHub returns 403", async () => {
-      // Setup mock to return 403
-      (fetchWithTimeout as any).mockResolvedValue({
-        ok: false,
-        status: 403,
-        json: async () => ({
-          message: "API rate limit exceeded",
-        }),
-        text: async () => JSON.stringify({ message: "API rate limit exceeded" }),
-      });
+      // Setup mock to throw HttpError
+      vi.mocked(fetchJSON).mockRejectedValueOnce(
+        new HttpError(403, JSON.stringify({ message: "API rate limit exceeded" })),
+      );
 
       const response = await listReposHandler(mockCtx, mockRequest);
       const body = await response.json();
@@ -178,8 +175,8 @@ describe("GitHub OAuth", () => {
     });
 
     it("should return 500 Internal Server Error when fetch throws (e.g. timeout)", async () => {
-      // Setup mock to throw
-      (fetchWithTimeout as any).mockRejectedValue(new Error("Request timed out"));
+      // Setup mock to throw generic error
+      vi.mocked(fetchJSON).mockRejectedValue(new Error("Request timed out"));
 
       const response = await listReposHandler(mockCtx, mockRequest);
       const body = await response.json();

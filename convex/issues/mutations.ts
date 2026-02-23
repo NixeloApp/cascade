@@ -1,6 +1,7 @@
 import { MINUTE } from "@convex-dev/rate-limiter";
 import { type Infer, v } from "convex/values";
 import { asyncMap, pruneNull } from "convex-helpers";
+import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -10,13 +11,12 @@ import {
   projectEditorMutation,
 } from "../customFunctions";
 import { validate } from "../lib/constrainedValidators";
-import { conflict, validation } from "../lib/errors";
+import { conflict, rateLimited, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
-import { assertCanEditProject, assertIsProjectAdmin } from "../projectAccess";
-import { issueTypesWithSubtask, workflowCategories } from "../validators";
+import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
+import { workflowCategories } from "../validators";
 import {
   assertVersionMatch,
-  checkRateLimit,
   generateIssueKey,
   getMaxOrderForStatus,
   getNextVersion,
@@ -45,7 +45,6 @@ const createIssueArgs = {
   ),
   assigneeId: v.optional(v.id("users")),
   sprintId: v.optional(v.id("sprints")),
-  moduleId: v.optional(v.id("modules")),
   epicId: v.optional(v.id("issues")),
   parentId: v.optional(v.id("issues")),
   labels: v.optional(v.array(v.id("labels"))),
@@ -70,11 +69,31 @@ async function createIssueImpl(
   args: CreateIssueArgs,
 ) {
   // Rate limit: 60 issues per minute per user with burst capacity of 15
-  await checkRateLimit(ctx, `createIssue:${ctx.userId}`, {
-    rate: 60,
-    period: MINUTE,
-    capacity: 15,
-  });
+  // Skip in test environment (convex-test doesn't support components)
+  if (!process.env.IS_TEST_ENV) {
+    const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+      name: `createIssue:${ctx.userId}`,
+      config: {
+        kind: "token bucket",
+        rate: 60,
+        period: MINUTE,
+        capacity: 15,
+      },
+    });
+    if (!rateLimitResult.ok) {
+      throw rateLimited(rateLimitResult.retryAfter);
+    }
+
+    await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+      name: `createIssue:${ctx.userId}`,
+      config: {
+        kind: "token bucket",
+        rate: 60,
+        period: MINUTE,
+        capacity: 15,
+      },
+    });
+  }
 
   // Validate input constraints
   validate.title(args.title);
@@ -85,14 +104,6 @@ async function createIssueImpl(
 
   // Validate parent/epic constraints
   const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
-
-  // Validate module belongs to the same project
-  if (args.moduleId) {
-    const module = await ctx.db.get(args.moduleId);
-    if (!module || module.projectId !== ctx.projectId) {
-      throw validation("moduleId", "Module does not belong to this project");
-    }
-  }
 
   // Generate issue key with duplicate detection
   let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
@@ -128,7 +139,6 @@ async function createIssueImpl(
     updatedAt: now,
     labels: labelNames,
     sprintId: args.sprintId,
-    moduleId: args.moduleId,
     epicId: inheritedEpicId,
     parentId: args.parentId,
     linkedDocuments: [],
@@ -166,13 +176,14 @@ async function createIssueImpl(
  */
 export const createIssue = projectEditorMutation({
   args: createIssueArgs,
+  returns: v.object({ issueId: v.id("issues"), key: v.string() }),
   handler: async (ctx, args) => {
     return await createIssueImpl(ctx, args);
   },
 });
 
 /**
- * @deprecated Use `createIssue` instead.
+ * @deprecated Use `createIssue` instead. This mutation returns just the ID, while `createIssue` returns `{ issueId, key }`.
  */
 export const create = projectEditorMutation({
   args: createIssueArgs,
@@ -182,15 +193,6 @@ export const create = projectEditorMutation({
   },
 });
 
-/**
- * Update an issue's status and order in the board.
- *
- * Supports optimistic locking to prevent overwriting concurrent changes.
- *
- * @param newStatus - The new status ID.
- * @param newOrder - The new order/rank in the column.
- * @param expectedVersion - The expected version number for optimistic locking.
- */
 export const updateStatus = issueMutation({
   args: {
     newStatus: v.string(),
@@ -226,16 +228,6 @@ export const updateStatus = issueMutation({
   },
 });
 
-/**
- * Update an issue's status by workflow category.
- *
- * Finds the first status in the project that matches the given category.
- * Useful for "Move to Done" actions where the specific status ID is not known.
- *
- * @param category - The target workflow category (todo, inprogress, done, etc.).
- * @param newOrder - The new order/rank in the column.
- * @param expectedVersion - The expected version number for optimistic locking.
- */
 export const updateStatusByCategory = issueMutation({
   args: {
     category: workflowCategories,
@@ -283,23 +275,6 @@ export const updateStatusByCategory = issueMutation({
   },
 });
 
-/**
- * Update issue details.
- *
- * Handles partial updates, notifications for assignees, and activity logging.
- *
- * @param title - New title.
- * @param description - New description.
- * @param priority - New priority.
- * @param assigneeId - New assignee (or null to unassign).
- * @param labels - New array of label names (replaces existing).
- * @param type - New issue type.
- * @param startDate - New start date.
- * @param dueDate - New due date.
- * @param estimatedHours - New estimate.
- * @param storyPoints - New story points.
- * @param expectedVersion - Optimistic locking version.
- */
 export const update = issueMutation({
   args: {
     title: v.optional(v.string()),
@@ -315,8 +290,6 @@ export const update = issueMutation({
     ),
     assigneeId: v.optional(v.union(v.id("users"), v.null())),
     labels: v.optional(v.array(v.string())),
-    type: v.optional(issueTypesWithSubtask),
-    startDate: v.optional(v.union(v.number(), v.null())),
     dueDate: v.optional(v.union(v.number(), v.null())),
     estimatedHours: v.optional(v.union(v.number(), v.null())),
     storyPoints: v.optional(v.union(v.number(), v.null())),
@@ -345,14 +318,18 @@ export const update = issueMutation({
       args.assigneeId &&
       args.assigneeId !== ctx.userId
     ) {
-      // Dynamic import to avoid cycles
-      const { sendEmailNotification } = await import("../email/helpers");
-      await sendEmailNotification(ctx, {
-        userId: args.assigneeId,
-        type: "assigned",
-        issueId: ctx.issue._id,
-        actorId: ctx.userId,
-      });
+      const assigneeHasAccess = await canAccessProject(ctx, ctx.issue.projectId, args.assigneeId);
+
+      if (assigneeHasAccess) {
+        // Dynamic import to avoid cycles
+        const { sendEmailNotification } = await import("../email/helpers");
+        await sendEmailNotification(ctx, {
+          userId: args.assigneeId,
+          type: "assigned",
+          issueId: ctx.issue._id,
+          actorId: ctx.userId,
+        });
+      }
     }
 
     if (Object.keys(updates).length > 0) {
@@ -394,11 +371,31 @@ export const addComment = issueViewerMutation({
   },
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
-    await checkRateLimit(ctx, `addComment:${ctx.userId}`, {
-      rate: 120,
-      period: MINUTE,
-      capacity: 20,
-    });
+    // Skip in test environment (convex-test doesn't support components)
+    if (!process.env.IS_TEST_ENV) {
+      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+        name: `addComment:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 120,
+          period: MINUTE,
+          capacity: 20,
+        },
+      });
+      if (!rateLimitResult.ok) {
+        throw rateLimited(rateLimitResult.retryAfter);
+      }
+
+      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+        name: `addComment:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 120,
+          period: MINUTE,
+          capacity: 20,
+        },
+      });
+    }
 
     const now = Date.now();
     const mentions = args.mentions || [];
@@ -411,14 +408,16 @@ export const addComment = issueViewerMutation({
       updatedAt: now,
     });
 
+    // Update issue's updatedAt to reflect new activity
+    await ctx.db.patch(ctx.issue._id, {
+      updatedAt: now,
+    });
+
     await ctx.db.insert("issueActivity", {
       issueId: ctx.issue._id,
       userId: ctx.userId,
       action: "commented",
     });
-
-    // Update issue timestamp to reflect recent activity
-    await ctx.db.patch(ctx.issue._id, { updatedAt: now });
 
     const author = await ctx.db.get(ctx.userId);
     // Dynamic import to avoid cycles
@@ -426,8 +425,19 @@ export const addComment = issueViewerMutation({
 
     // Notify mentioned users in parallel
     const mentionedOthers = mentions.filter((id) => id !== ctx.userId);
+
+    // Filter mentions by project access to prevent leaks
+    const validMentions = (
+      await Promise.all(
+        mentionedOthers.map(async (userId) => {
+          const hasAccess = await canAccessProject(ctx, ctx.projectId, userId);
+          return hasAccess ? userId : null;
+        }),
+      )
+    ).filter((id): id is Id<"users"> => id !== null);
+
     await Promise.all(
-      mentionedOthers.flatMap((mentionedUserId) => [
+      validMentions.flatMap((mentionedUserId) => [
         ctx.db.insert("notifications", {
           userId: mentionedUserId,
           type: "issue_mentioned",
@@ -448,39 +458,33 @@ export const addComment = issueViewerMutation({
     );
 
     if (ctx.issue.reporterId !== ctx.userId) {
-      await ctx.db.insert("notifications", {
-        userId: ctx.issue.reporterId,
-        type: "issue_comment",
-        title: "New comment",
-        message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
-        issueId: ctx.issue._id,
-        projectId: ctx.projectId,
-        isRead: false,
-      });
+      const reporterHasAccess = await canAccessProject(ctx, ctx.projectId, ctx.issue.reporterId);
 
-      await sendEmailNotification(ctx, {
-        userId: ctx.issue.reporterId,
-        type: "comment",
-        issueId: ctx.issue._id,
-        actorId: ctx.userId,
-        commentText: args.content,
-      });
+      if (reporterHasAccess) {
+        await ctx.db.insert("notifications", {
+          userId: ctx.issue.reporterId,
+          type: "issue_comment",
+          title: "New comment",
+          message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
+          issueId: ctx.issue._id,
+          projectId: ctx.projectId,
+          isRead: false,
+        });
+
+        await sendEmailNotification(ctx, {
+          userId: ctx.issue.reporterId,
+          type: "comment",
+          issueId: ctx.issue._id,
+          actorId: ctx.userId,
+          commentText: args.content,
+        });
+      }
     }
 
     return { commentId };
   },
 });
 
-/**
- * Update the status of multiple issues.
- *
- * Verifies that the new status exists in the project's workflow.
- * Checks permissions for each project involved (since issues can come from multiple projects).
- *
- * @param issueIds - Array of issue IDs to update.
- * @param newStatus - The new status ID.
- * @returns Object with count of updated issues.
- */
 export const bulkUpdateStatus = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -615,12 +619,6 @@ async function performBulkUpdate(
   return { updated: results.reduce((a: number, b) => a + b, 0) };
 }
 
-/**
- * Update the priority of multiple issues.
- *
- * @param issueIds - Array of issue IDs to update.
- * @param priority - New priority level.
- */
 export const bulkUpdatePriority = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -647,12 +645,6 @@ export const bulkUpdatePriority = authenticatedMutation({
   },
 });
 
-/**
- * Assign or unassign multiple issues.
- *
- * @param issueIds - Array of issue IDs.
- * @param assigneeId - User ID to assign, or null to unassign.
- */
 export const bulkAssign = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -673,14 +665,6 @@ export const bulkAssign = authenticatedMutation({
   },
 });
 
-/**
- * Add labels to multiple issues.
- *
- * Merges new labels with existing ones (does not overwrite).
- *
- * @param issueIds - Array of issue IDs.
- * @param labels - Array of label names to add.
- */
 export const bulkAddLabels = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -702,12 +686,6 @@ export const bulkAddLabels = authenticatedMutation({
   },
 });
 
-/**
- * Move multiple issues to a sprint (or backlog).
- *
- * @param issueIds - Array of issue IDs.
- * @param sprintId - Target sprint ID, or null for backlog.
- */
 export const bulkMoveToSprint = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -728,69 +706,6 @@ export const bulkMoveToSprint = authenticatedMutation({
   },
 });
 
-/**
- * Move multiple issues to a module.
- *
- * Validates that the module belongs to the same project as the issues.
- *
- * @param issueIds - Array of issue IDs.
- * @param moduleId - Target module ID, or null to remove from module.
- */
-export const bulkMoveToModule = authenticatedMutation({
-  args: {
-    issueIds: v.array(v.id("issues")),
-    moduleId: v.union(v.id("modules"), v.null()),
-  },
-  handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const now = Date.now();
-
-    // Pre-validate module if provided (reject if moduleId given but module doesn't exist)
-    const targetModule = args.moduleId ? await ctx.db.get(args.moduleId) : null;
-    if (args.moduleId && !targetModule) {
-      return { updated: 0 }; // Module was deleted or invalid
-    }
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertCanEditProject(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Skip if module doesn't belong to this project
-        if (targetModule && targetModule.projectId !== issue.projectId) return 0;
-
-        const oldModule = issue.moduleId;
-        await ctx.db.patch(issue._id, { moduleId: args.moduleId ?? undefined, updatedAt: now });
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
-          action: "updated",
-          field: "module",
-          oldValue: oldModule ? String(oldModule) : "",
-          newValue: args.moduleId ? String(args.moduleId) : "",
-        });
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
-  },
-});
-
-/**
- * Soft delete multiple issues.
- *
- * Requires project admin permissions for each issue's project.
- *
- * @param issueIds - Array of issue IDs to delete.
- * @returns Object with count of deleted issues.
- */
 export const bulkDelete = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -809,7 +724,10 @@ export const bulkDelete = authenticatedMutation({
         }
 
         // Soft delete issue
-        await ctx.db.patch(issue._id, softDeleteFields(ctx.userId));
+        await ctx.db.patch(issue._id, {
+          ...softDeleteFields(ctx.userId),
+          updatedAt: Date.now(),
+        });
 
         // Log activity
         await ctx.db.insert("issueActivity", {

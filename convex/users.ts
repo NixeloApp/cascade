@@ -224,11 +224,12 @@ async function handleEmailChange(
       pendingEmailVerificationExpires: number;
     }
 > {
-  validate.email(newEmail);
+  const normalizedEmail = newEmail.trim().toLowerCase();
+  validate.email(normalizedEmail);
 
   // Check if email actually changed
   const currentUser = await ctx.db.get(ctx.userId);
-  if (currentUser?.email === newEmail) {
+  if (currentUser?.email === normalizedEmail) {
     return {};
   }
 
@@ -240,7 +241,7 @@ async function handleEmailChange(
   const expiresAt = Date.now() + 15 * MINUTE; // 15 minutes
 
   const updates = {
-    pendingEmail: newEmail,
+    pendingEmail: normalizedEmail,
     pendingEmailVerificationToken: token,
     pendingEmailVerificationExpires: expiresAt,
   };
@@ -248,7 +249,7 @@ async function handleEmailChange(
   // Check if email is already taken by ANOTHER user
   const existingUser = await ctx.db
     .query("users")
-    .withIndex("email", (q) => q.eq("email", newEmail))
+    .withIndex("email", (q) => q.eq("email", normalizedEmail))
     .first();
 
   // Only send verification email if the email is NOT taken
@@ -267,7 +268,7 @@ async function handleEmailChange(
     // E2E tests run against real deployments where IS_TEST_ENV is false, so they will run this.
     if (!process.env.IS_TEST_ENV) {
       await ctx.scheduler.runAfter(0, usersInternal.sendVerificationEmailAction, {
-        email: newEmail,
+        email: normalizedEmail,
         token,
         isTestUser: currentUser?.isTestUser,
       });
@@ -685,6 +686,48 @@ async function countIssuesByAssignee(
 }
 
 /**
+ * Helper to count comments by a user without project restrictions.
+ */
+async function countCommentsUnrestricted(ctx: QueryCtx, userId: Id<"users">) {
+  return await efficientCount(
+    ctx.db
+      .query("issueComments")
+      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true)),
+    MAX_COMMENTS_FOR_STATS,
+  );
+}
+
+/**
+ * Helper to count comments by a user in specific projects (filtered).
+ * Since we don't have a direct index for comments by project, "fast" and "filtered" strategies are the same.
+ */
+async function countCommentsFiltered(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  allowedProjectIds: Set<string>,
+) {
+  const commentsAll = await ctx.db
+    .query("issueComments")
+    .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true))
+    .order("desc") // Optimization: Count recent comments first
+    .take(MAX_COMMENTS_FOR_STATS);
+
+  // Batch fetch unique issue IDs to check project membership using batchFetchIssues
+  // This avoids unbounded Promise.all calls
+  const issueIds = [...new Set(commentsAll.map((c) => c.issueId))];
+  const issueMap = await batchFetchIssues(ctx, issueIds);
+
+  const allowedIssueIds = new Set<string>();
+  for (const [issueId, issue] of issueMap.entries()) {
+    if (issue.projectId && allowedProjectIds.has(issue.projectId)) {
+      allowedIssueIds.add(issueId);
+    }
+  }
+
+  return commentsAll.filter((c) => allowedIssueIds.has(c.issueId)).length;
+}
+
+/**
  * Count comments made by a specific user.
  *
  * Checks that the comment's issue belongs to an allowed project.
@@ -698,33 +741,13 @@ async function countComments(
   userId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  if (allowedProjectIds) {
-    const commentsAll = await ctx.db
-      .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true))
-      .order("desc") // Optimization: Count recent comments first
-      .take(MAX_COMMENTS_FOR_STATS);
-
-    // Batch fetch unique issue IDs to check project membership using batchFetchIssues
-    // This avoids unbounded Promise.all calls
-    const issueIds = [...new Set(commentsAll.map((c) => c.issueId))];
-    const issueMap = await batchFetchIssues(ctx, issueIds);
-
-    const allowedIssueIds = new Set<string>();
-    for (const [issueId, issue] of issueMap.entries()) {
-      if (issue.projectId && allowedProjectIds.has(issue.projectId)) {
-        allowedIssueIds.add(issueId);
-      }
-    }
-
-    return commentsAll.filter((c) => allowedIssueIds.has(c.issueId)).length;
-  }
-  return await efficientCount(
-    ctx.db
-      .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true)),
-    MAX_COMMENTS_FOR_STATS,
-  );
+  return await executeCountStrategy(allowedProjectIds, 0, {
+    unrestricted: () => countCommentsUnrestricted(ctx, userId),
+    // Comments don't have a "fast" path (no project index), so we use the filtered strategy for both.
+    // The "filtered" strategy already limits fetching to MAX_COMMENTS_FOR_STATS, so it is safe.
+    fast: (ids) => countCommentsFiltered(ctx, userId, ids),
+    filtered: (ids) => countCommentsFiltered(ctx, userId, ids),
+  });
 }
 
 /**
@@ -866,10 +889,23 @@ export const listWithDigestPreference = internalQuery({
     frequency: digestFrequencies,
     paginationOpts: paginationOptsValidator,
   },
+  returns: v.object({
+    page: v.array(
+      v.object({
+        _id: v.id("users"),
+        name: v.optional(v.string()),
+        email: v.optional(v.string()),
+        image: v.optional(v.string()),
+        createdAt: v.number(),
+      }),
+    ),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+  }),
   handler: async (ctx, args) => {
     // Optimized query: Use by_digest_frequency index to find matching users directly
     // This avoids scanning irrelevant records and fixes the bug where users beyond the first 1000 were ignored
-    const results = await ctx.db
+    const result = await ctx.db
       .query("notificationPreferences")
       .withIndex("by_digest_frequency", (q) =>
         q.eq("emailEnabled", true).eq("emailDigest", args.frequency),
@@ -877,12 +913,12 @@ export const listWithDigestPreference = internalQuery({
       .paginate(args.paginationOpts);
 
     // Batch fetch users to avoid N+1 queries
-    const userIds = results.page.map((pref) => pref.userId);
+    const userIds = result.page.map((pref) => pref.userId);
     const userMap = await batchFetchUsers(ctx, userIds);
 
     // Return users that exist (filter out deleted users)
     const enrichedPage = pruneNull(
-      results.page.map((pref) => {
+      result.page.map((pref) => {
         const user = userMap.get(pref.userId);
         if (!user) return null;
         return {
@@ -896,7 +932,7 @@ export const listWithDigestPreference = internalQuery({
     );
 
     return {
-      ...results,
+      ...result,
       page: enrichedPage,
     };
   },

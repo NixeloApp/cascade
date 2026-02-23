@@ -15,7 +15,7 @@ describe("Load More Done Issues", () => {
     // Create 3 issues and move them to Done sequentially
     const issues = [];
     for (let i = 1; i <= 3; i++) {
-      const id = await asUser.mutation(api.issues.create, {
+      const { issueId: id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: `Issue ${i}`,
         type: "task",
@@ -82,7 +82,7 @@ describe("Load More Done Issues", () => {
     // Create 3 issues in sprint and move them to Done sequentially
     const issues = [];
     for (let i = 1; i <= 3; i++) {
-      const id = await asUser.mutation(api.issues.create, {
+      const { issueId: id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: `Sprint Issue ${i}`,
         type: "task",

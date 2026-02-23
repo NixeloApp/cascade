@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createProjectInOrganization,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Automation Rules", () => {
   describe("list", () => {
@@ -74,23 +80,21 @@ describe("Automation Rules", () => {
         name: "Member",
         email: "member@test.com",
       });
-      const projectId = await createTestProject(t, owner);
+      const { organizationId } = await createOrganizationAdmin(t, owner);
+      const projectId = await createProjectInOrganization(t, owner, organizationId);
 
-      // Add member
-      const asOwner = asAuthenticatedUser(t, owner);
-
-      // Add member to organization first
+      // Add member to organization
       await t.run(async (ctx) => {
-        const project = await ctx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
         await ctx.db.insert("organizationMembers", {
-          organizationId: project.organizationId,
+          organizationId,
           userId: member,
           role: "member",
           addedBy: owner,
         });
       });
 
+      // Add member
+      const asOwner = asAuthenticatedUser(t, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "member@test.com",
@@ -177,23 +181,21 @@ describe("Automation Rules", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const projectId = await createTestProject(t, owner);
+      const { organizationId } = await createOrganizationAdmin(t, owner);
+      const projectId = await createProjectInOrganization(t, owner, organizationId);
 
-      // Add editor
-      const asOwner = asAuthenticatedUser(t, owner);
-
-      // Add editor to organization first
+      // Add editor to organization
       await t.run(async (ctx) => {
-        const project = await ctx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
         await ctx.db.insert("organizationMembers", {
-          organizationId: project.organizationId,
+          organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
         });
       });
 
+      // Add editor
+      const asOwner = asAuthenticatedUser(t, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -337,23 +339,21 @@ describe("Automation Rules", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const projectId = await createTestProject(t, owner);
+      const { organizationId } = await createOrganizationAdmin(t, owner);
+      const projectId = await createProjectInOrganization(t, owner, organizationId);
 
-      // Add editor
-      const asOwner = asAuthenticatedUser(t, owner);
-
-      // Add editor to organization first
+      // Add editor to organization
       await t.run(async (ctx) => {
-        const project = await ctx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
         await ctx.db.insert("organizationMembers", {
-          organizationId: project.organizationId,
+          organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
         });
       });
 
+      // Add editor
+      const asOwner = asAuthenticatedUser(t, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -460,23 +460,21 @@ describe("Automation Rules", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const projectId = await createTestProject(t, owner);
+      const { organizationId } = await createOrganizationAdmin(t, owner);
+      const projectId = await createProjectInOrganization(t, owner, organizationId);
 
-      // Add editor
-      const asOwner = asAuthenticatedUser(t, owner);
-
-      // Add editor to organization first
+      // Add editor to organization
       await t.run(async (ctx) => {
-        const project = await ctx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
         await ctx.db.insert("organizationMembers", {
-          organizationId: project.organizationId,
+          organizationId,
           userId: editor,
           role: "member",
           addedBy: owner,
         });
       });
 
+      // Add editor
+      const asOwner = asAuthenticatedUser(t, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -561,7 +559,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -598,7 +596,7 @@ describe("Automation Rules", () => {
       });
 
       // Create bug issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Bug Issue",
         type: "bug",
@@ -635,7 +633,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -671,7 +669,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -719,7 +717,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -755,7 +753,7 @@ describe("Automation Rules", () => {
       });
 
       // Create first issue
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 1",
         type: "task",
@@ -769,7 +767,7 @@ describe("Automation Rules", () => {
       });
 
       // Create second issue
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -808,7 +806,7 @@ describe("Automation Rules", () => {
       });
 
       // Create task (should NOT trigger)
-      const taskId = await asUser.mutation(api.issues.create, {
+      const { issueId: taskId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Task",
         type: "task",
@@ -826,7 +824,7 @@ describe("Automation Rules", () => {
       expect(task?.priority).toBe("medium"); // Unchanged
 
       // Create bug (should trigger)
-      const bugId = await asUser.mutation(api.issues.create, {
+      const { issueId: bugId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Bug",
         type: "bug",

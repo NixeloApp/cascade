@@ -22,20 +22,26 @@ interface DigestResult {
 export const sendDailyDigests = internalAction({
   args: {},
   handler: async (ctx): Promise<{ sent: number; skipped: number; failed: number }> => {
-    // Get all users who have daily digest enabled
     let sent = 0;
     let skipped = 0;
     let failed = 0;
-    let cursor: string | null = null;
+
     let isDone = false;
+    let cursor: string | null = null;
 
     while (!isDone) {
+      // Get batch of users who have daily digest enabled
       const result = (await ctx.runQuery(internal.users.listWithDigestPreference, {
         frequency: "daily",
-        paginationOpts: { cursor, numItems: 100 },
+        paginationOpts: {
+          cursor,
+          numItems: 100, // Process 100 users at a time
+        },
       })) as PaginationResult<{ _id: Id<"users"> }>;
 
       const users = result.page;
+      isDone = result.isDone;
+      cursor = result.continueCursor;
 
       // Send digest to each user in this batch
       const batchResults = await Promise.allSettled(
@@ -47,11 +53,12 @@ export const sendDailyDigests = internalAction({
         ),
       );
 
-      for (const batchResult of batchResults) {
-        if (batchResult.status === "rejected") {
+      // Count results for this batch
+      for (const res of batchResults) {
+        if (res.status === "rejected") {
           failed++;
         } else {
-          const value = batchResult.value as DigestResult;
+          const value = res.value as DigestResult;
           if (value.skipped) {
             skipped++;
           } else {
@@ -59,9 +66,6 @@ export const sendDailyDigests = internalAction({
           }
         }
       }
-
-      isDone = result.isDone;
-      cursor = result.continueCursor;
     }
 
     return { sent, skipped, failed };
@@ -74,20 +78,26 @@ export const sendDailyDigests = internalAction({
 export const sendWeeklyDigests = internalAction({
   args: {},
   handler: async (ctx): Promise<{ sent: number; skipped: number; failed: number }> => {
-    // Get all users who have weekly digest enabled
     let sent = 0;
     let skipped = 0;
     let failed = 0;
-    let cursor: string | null = null;
+
     let isDone = false;
+    let cursor: string | null = null;
 
     while (!isDone) {
+      // Get batch of users who have weekly digest enabled
       const result = (await ctx.runQuery(internal.users.listWithDigestPreference, {
         frequency: "weekly",
-        paginationOpts: { cursor, numItems: 100 },
+        paginationOpts: {
+          cursor,
+          numItems: 100, // Process 100 users at a time
+        },
       })) as PaginationResult<{ _id: Id<"users"> }>;
 
       const users = result.page;
+      isDone = result.isDone;
+      cursor = result.continueCursor;
 
       // Send digest to each user in this batch
       const batchResults = await Promise.allSettled(
@@ -99,11 +109,12 @@ export const sendWeeklyDigests = internalAction({
         ),
       );
 
-      for (const batchResult of batchResults) {
-        if (batchResult.status === "rejected") {
+      // Count results for this batch
+      for (const res of batchResults) {
+        if (res.status === "rejected") {
           failed++;
         } else {
-          const value = batchResult.value as DigestResult;
+          const value = res.value as DigestResult;
           if (value.skipped) {
             skipped++;
           } else {
@@ -111,9 +122,6 @@ export const sendWeeklyDigests = internalAction({
           }
         }
       }
-
-      isDone = result.isDone;
-      cursor = result.continueCursor;
     }
 
     return { sent, skipped, failed };

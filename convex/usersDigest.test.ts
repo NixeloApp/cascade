@@ -89,8 +89,9 @@ describe("Users Digest Preference", () => {
     // Query for DAILY digests
     const dailyResult = await t.query(internal.users.listWithDigestPreference, {
       frequency: "daily",
-      paginationOpts: { numItems: 100, cursor: null },
+      paginationOpts: { numItems: 10, cursor: null },
     });
+
     const dailyUsers = dailyResult.page;
 
     // Should include userDailyId and userDaily2Id
@@ -103,8 +104,9 @@ describe("Users Digest Preference", () => {
     // Query for WEEKLY digests
     const weeklyResult = await t.query(internal.users.listWithDigestPreference, {
       frequency: "weekly",
-      paginationOpts: { numItems: 100, cursor: null },
+      paginationOpts: { numItems: 10, cursor: null },
     });
+
     const weeklyUsers = weeklyResult.page;
 
     // Should include userWeeklyId
