@@ -13,8 +13,39 @@ export async function safeFetch(
   init?: RequestInit,
   timeoutMs = 10000,
 ): Promise<Response> {
-  const urlStr = input instanceof Request ? input.url : input.toString();
-  const options = init || {};
+  let urlStr: string;
+  let options: RequestInit = init || {};
+
+  if (input instanceof Request) {
+    urlStr = input.url;
+    // Extract properties from Request object
+    // We create a new headers object by merging request headers and init headers
+    const headers = new Headers(input.headers);
+    if (init?.headers) {
+      new Headers(init.headers).forEach((value, key) => {
+        headers.set(key, value);
+      });
+    }
+
+    options = {
+      method: input.method,
+      body: input.body,
+      referrer: input.referrer,
+      referrerPolicy: input.referrerPolicy,
+      mode: input.mode,
+      credentials: input.credentials,
+      cache: input.cache,
+      redirect: input.redirect,
+      integrity: input.integrity,
+      keepalive: input.keepalive,
+      signal: input.signal,
+      ...init,
+      headers, // Use merged headers
+    };
+  } else {
+    urlStr = input.toString();
+  }
+
   // Normalize headers to a Headers object to handle Record, string[][], or Headers input
   const headers = new Headers(options.headers);
 
