@@ -19,7 +19,7 @@ export const create = projectEditorMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert("modules", {
+    const moduleId = await ctx.db.insert("modules", {
       projectId: ctx.projectId,
       name: args.name,
       description: args.description,
@@ -30,6 +30,7 @@ export const create = projectEditorMutation({
       createdBy: ctx.userId,
       updatedAt: now,
     });
+    return { moduleId };
   },
 });
 

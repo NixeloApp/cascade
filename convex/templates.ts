@@ -26,6 +26,7 @@ export const create = projectEditorMutation({
     defaultStoryPoints: v.optional(v.number()),
     isDefault: v.optional(v.boolean()),
   },
+  returns: v.object({ templateId: v.id("issueTemplates") }),
   handler: async (ctx, args) => {
     // If setting as default, clear any existing default
     if (args.isDefault) {
@@ -55,7 +56,7 @@ export const create = projectEditorMutation({
       createdBy: ctx.userId,
     });
 
-    return templateId;
+    return { templateId };
   },
 });
 

@@ -43,7 +43,7 @@ describe("Event Reminders", () => {
 
       const eventId = await createCalendarEvent(t, userId);
 
-      const reminderId = await asUser.mutation(api.eventReminders.create, {
+      const { reminderId } = await asUser.mutation(api.eventReminders.create, {
         eventId,
         reminderType: "email",
         minutesBefore: 15,
@@ -67,7 +67,7 @@ describe("Event Reminders", () => {
       });
 
       const asAttendee = asAuthenticatedUser(t, attendeeId);
-      const reminderId = await asAttendee.mutation(api.eventReminders.create, {
+      const { reminderId } = await asAttendee.mutation(api.eventReminders.create, {
         eventId,
         reminderType: "in_app",
         minutesBefore: 30,
@@ -100,14 +100,14 @@ describe("Event Reminders", () => {
       const eventId = await createCalendarEvent(t, userId);
 
       // Create first reminder
-      const reminderId1 = await asUser.mutation(api.eventReminders.create, {
+      const { reminderId: reminderId1 } = await asUser.mutation(api.eventReminders.create, {
         eventId,
         reminderType: "email",
         minutesBefore: 15,
       });
 
       // Create second reminder with same type - should update
-      const reminderId2 = await asUser.mutation(api.eventReminders.create, {
+      const { reminderId: reminderId2 } = await asUser.mutation(api.eventReminders.create, {
         eventId,
         reminderType: "email",
         minutesBefore: 30,
@@ -213,7 +213,7 @@ describe("Event Reminders", () => {
       const { userId, asUser } = await createTestContext(t);
 
       const eventId = await createCalendarEvent(t, userId);
-      const reminderId = await asUser.mutation(api.eventReminders.create, {
+      const { reminderId } = await asUser.mutation(api.eventReminders.create, {
         eventId,
         reminderType: "email",
         minutesBefore: 15,
@@ -235,7 +235,7 @@ describe("Event Reminders", () => {
       });
 
       const asUser1 = asAuthenticatedUser(t, user1Id);
-      const reminderId = await asUser1.mutation(api.eventReminders.create, {
+      const { reminderId } = await asUser1.mutation(api.eventReminders.create, {
         eventId,
         reminderType: "email",
         minutesBefore: 15,

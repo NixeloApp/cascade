@@ -15,7 +15,7 @@ describe("Load More Done Issues", () => {
     // Create 3 issues and move them to Done sequentially
     const issues = [];
     for (let i = 1; i <= 3; i++) {
-      const id = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: `Issue ${i}`,
         type: "task",
@@ -23,11 +23,11 @@ describe("Load More Done Issues", () => {
       });
       // Move to done
       await asUser.mutation(api.issues.updateStatus, {
-        issueId: id,
+        issueId,
         newStatus: "done",
         newOrder: 0,
       });
-      issues.push(id);
+      issues.push(issueId);
       // Small delay to ensure distinct timestamps
       await new Promise((r) => setTimeout(r, 10));
     }
@@ -72,7 +72,7 @@ describe("Load More Done Issues", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create a sprint
-    const sprintId = await asUser.mutation(api.sprints.create, {
+    const { sprintId } = await asUser.mutation(api.sprints.create, {
       projectId,
       name: "Sprint 1",
       startDate: Date.now(),
@@ -82,7 +82,7 @@ describe("Load More Done Issues", () => {
     // Create 3 issues in sprint and move them to Done sequentially
     const issues = [];
     for (let i = 1; i <= 3; i++) {
-      const id = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: `Sprint Issue ${i}`,
         type: "task",
@@ -91,11 +91,11 @@ describe("Load More Done Issues", () => {
       });
       // Move to done
       await asUser.mutation(api.issues.updateStatus, {
-        issueId: id,
+        issueId,
         newStatus: "done",
         newOrder: 0,
       });
-      issues.push(id);
+      issues.push(issueId);
       // Small delay to ensure distinct timestamps
       await new Promise((r) => setTimeout(r, 10));
     }

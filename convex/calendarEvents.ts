@@ -188,7 +188,7 @@ export const create = authenticatedMutation({
       updatedAt: now,
     });
 
-    return eventId;
+    return { eventId };
   },
 });
 

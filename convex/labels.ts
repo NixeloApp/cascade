@@ -14,6 +14,7 @@ export const create = projectEditorMutation({
     color: v.string(),
     groupId: v.optional(v.id("labelGroups")),
   },
+  returns: v.object({ labelId: v.id("labels") }),
   handler: async (ctx, args) => {
     // Check if label with same name already exists in project
     const existing = await ctx.db
@@ -49,7 +50,7 @@ export const create = projectEditorMutation({
       createdBy: ctx.userId,
     });
 
-    return labelId;
+    return { labelId };
   },
 });
 

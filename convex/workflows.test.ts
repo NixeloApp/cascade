@@ -16,7 +16,7 @@ describe("Workflows", () => {
       const userId = await createTestUser(t);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "Booking Confirmation",
         description: "Send confirmation email on booking",
         trigger: "booking_created",
@@ -37,7 +37,7 @@ describe("Workflows", () => {
       const userId = await createTestUser(t);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "Event Reminder",
         trigger: "event_reminder",
         triggerOffset: -24 * 60 * 60 * 1000, // 24 hours before
@@ -62,7 +62,7 @@ describe("Workflows", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "Issue Assignment",
         projectId,
         trigger: "issue_assigned",
@@ -133,7 +133,7 @@ describe("Workflows", () => {
       const userId = await createTestUser(t);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "Old Name",
         trigger: "booking_created",
         actions: [{ type: "email_host", template: "Test" }],
@@ -153,7 +153,7 @@ describe("Workflows", () => {
       const userId = await createTestUser(t);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "Test Workflow",
         trigger: "booking_created",
         actions: [{ type: "email_host", template: "Test" }],
@@ -173,7 +173,7 @@ describe("Workflows", () => {
       const userId = await createTestUser(t);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "Test Workflow",
         trigger: "booking_created",
         actions: [{ type: "email_attendee", template: "Old template" }],
@@ -200,7 +200,7 @@ describe("Workflows", () => {
       const userId = await createTestUser(t);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "Toggle Test",
         trigger: "booking_created",
         actions: [{ type: "email_host", template: "Test" }],
@@ -229,14 +229,16 @@ describe("Workflows", () => {
       const userId = await createTestUser(t);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "Original Workflow",
         description: "Original description",
         trigger: "booking_created",
         actions: [{ type: "email_host", template: "Test" }],
       });
 
-      const duplicateId = await asUser.mutation(api.workflows.duplicate, { workflowId });
+      const { workflowId: duplicateId } = await asUser.mutation(api.workflows.duplicate, {
+        workflowId,
+      });
       expect(duplicateId).toBeDefined();
       expect(duplicateId).not.toBe(workflowId);
 
@@ -254,7 +256,7 @@ describe("Workflows", () => {
       const userId = await createTestUser(t);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const workflowId = await asUser.mutation(api.workflows.create, {
+      const { workflowId } = await asUser.mutation(api.workflows.create, {
         name: "To Delete",
         trigger: "booking_created",
         actions: [{ type: "email_host", template: "Test" }],
@@ -272,7 +274,7 @@ describe("Workflows", () => {
       const otherUser = await createTestUser(t, { name: "Other" });
 
       const asOwner = asAuthenticatedUser(t, owner);
-      const workflowId = await asOwner.mutation(api.workflows.create, {
+      const { workflowId } = await asOwner.mutation(api.workflows.create, {
         name: "Owner's Workflow",
         trigger: "booking_created",
         actions: [{ type: "email_host", template: "Test" }],

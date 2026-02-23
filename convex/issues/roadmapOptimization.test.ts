@@ -54,7 +54,7 @@ describe("Roadmap Issues Optimization", () => {
 
     // 5. Subtask due today (should be excluded)
     // Create a parent task first
-    const parentTask = await asUser.mutation(api.issues.create, {
+    const { issueId: parentTask } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Parent Task",
       type: "task",

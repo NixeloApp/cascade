@@ -30,7 +30,7 @@ describe("Roadmap Issues Due Date Performance", () => {
     // Create 50 subtasks due today (earlier than tasks)
     // In the old implementation (scan), these would be scanned first because they have earlier due date.
     // In the new implementation (type index), these should be skipped entirely.
-    const parentTask = await asUser.mutation(api.issues.create, {
+    const { issueId: parentTask } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Parent Task",
       type: "task",

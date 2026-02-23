@@ -18,7 +18,7 @@ describe("Document Security - Project Viewers", () => {
       timezone: "America/New_York",
     });
     // Need a workspace first
-    const workspaceId = await asOwner.mutation(api.workspaces.create, {
+    const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
       name: "Test Workspace",
       slug: "test-workspace",
       organizationId: orgId,
@@ -85,7 +85,7 @@ describe("Document Security - Project Viewers", () => {
       timezone: "America/New_York",
     });
     // Need a workspace first
-    const workspaceId = await asOwner.mutation(api.workspaces.create, {
+    const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
       name: "Test Workspace",
       slug: "test-workspace",
       organizationId: orgId,
@@ -120,7 +120,7 @@ describe("Document Security - Project Viewers", () => {
     });
 
     // 3. Create PRIVATE document (Allowed for viewer)
-    const docId = await asViewer.mutation(api.documents.create, {
+    const { documentId: docId } = await asViewer.mutation(api.documents.create, {
       title: "My Private Note",
       isPublic: false,
       organizationId: orgId,

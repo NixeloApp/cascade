@@ -13,7 +13,7 @@ describe("Booking Pages", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const pageId = await asUser.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser.mutation(api.bookingPages.create, {
         slug: "my-meeting",
         title: "30 Minute Meeting",
         description: "A quick sync",
@@ -36,7 +36,7 @@ describe("Booking Pages", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const pageId = await asUser.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser.mutation(api.bookingPages.create, {
         slug: "full-meeting",
         title: "Full Options Meeting",
         duration: 60,
@@ -141,7 +141,7 @@ describe("Booking Pages", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const pageId = await asUser.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser.mutation(api.bookingPages.create, {
         slug: "inactive-page",
         title: "Inactive",
         duration: 30,
@@ -230,7 +230,7 @@ describe("Booking Pages", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const pageId = await asUser.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser.mutation(api.bookingPages.create, {
         slug: "update-test",
         title: "Original Title",
         duration: 30,
@@ -260,7 +260,7 @@ describe("Booking Pages", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const pageId = await asUser1.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser1.mutation(api.bookingPages.create, {
         slug: "user1-only",
         title: "User 1 Only",
         duration: 30,
@@ -282,7 +282,7 @@ describe("Booking Pages", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const pageId = await asUser.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser.mutation(api.bookingPages.create, {
         slug: "to-delete",
         title: "To Delete",
         duration: 30,
@@ -300,7 +300,7 @@ describe("Booking Pages", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const pageId = await asUser.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser.mutation(api.bookingPages.create, {
         slug: "has-bookings",
         title: "Has Bookings",
         duration: 30,
@@ -334,7 +334,7 @@ describe("Booking Pages", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const pageId = await asUser.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser.mutation(api.bookingPages.create, {
         slug: "cancelled-bookings",
         title: "Cancelled Bookings",
         duration: 30,
@@ -372,7 +372,7 @@ describe("Booking Pages", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const pageId = await asUser1.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser1.mutation(api.bookingPages.create, {
         slug: "protected-page",
         title: "Protected",
         duration: 30,
@@ -391,7 +391,7 @@ describe("Booking Pages", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const pageId = await asUser.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser.mutation(api.bookingPages.create, {
         slug: "toggle-test",
         title: "Toggle Test",
         duration: 30,
@@ -425,7 +425,7 @@ describe("Booking Pages", () => {
       const asUser1 = asAuthenticatedUser(t, user1Id);
       const asUser2 = asAuthenticatedUser(t, user2Id);
 
-      const pageId = await asUser1.mutation(api.bookingPages.create, {
+      const { pageId } = await asUser1.mutation(api.bookingPages.create, {
         slug: "user1-page",
         title: "User 1 Page",
         duration: 30,
@@ -457,7 +457,7 @@ describe("Booking Pages", () => {
       ];
 
       for (const location of locations) {
-        const pageId = await asUser.mutation(api.bookingPages.create, {
+        const { pageId } = await asUser.mutation(api.bookingPages.create, {
           slug: `${location}-meeting`,
           title: `${location} Meeting`,
           duration: 30,

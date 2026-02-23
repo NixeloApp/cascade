@@ -39,7 +39,7 @@ describe("Sprint Workflow Integration", () => {
       });
 
       // Step 1: Create a sprint
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
         goal: "Complete initial feature set",
@@ -56,7 +56,7 @@ describe("Sprint Workflow Integration", () => {
       expect(sprint?.goal).toBe("Complete initial feature set");
 
       // Step 2: Create issues and add them to the sprint
-      const issue1Id = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Implement user authentication",
         type: "story",
@@ -65,7 +65,7 @@ describe("Sprint Workflow Integration", () => {
         storyPoints: 5,
       });
 
-      const _issue2Id = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId: _issue2Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Add login form",
         type: "task",
@@ -74,7 +74,7 @@ describe("Sprint Workflow Integration", () => {
         storyPoints: 3,
       });
 
-      const _issue3Id = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId: _issue3Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Fix security vulnerability",
         type: "bug",
@@ -145,18 +145,18 @@ describe("Sprint Workflow Integration", () => {
       });
 
       // Create two sprints
-      const sprint1Id = await asUser.mutation(api.sprints.create, {
+      const { sprintId: sprint1Id } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
 
-      const sprint2Id = await asUser.mutation(api.sprints.create, {
+      const { sprintId: sprint2Id } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 2",
       });
 
       // Create issues in sprint 1
-      const issue1Id = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Issue to complete",
         type: "task",
@@ -164,7 +164,7 @@ describe("Sprint Workflow Integration", () => {
         sprintId: sprint1Id,
       });
 
-      const issue2Id = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Issue to move",
         type: "task",
@@ -225,27 +225,27 @@ describe("Sprint Workflow Integration", () => {
         boardType: "scrum",
       });
 
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
 
       // Create multiple issues without sprint assignment
-      const issue1Id = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Backlog Issue 1",
         type: "task",
         priority: "low",
       });
 
-      const issue2Id = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Backlog Issue 2",
         type: "task",
         priority: "low",
       });
 
-      const issue3Id = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId: issue3Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Backlog Issue 3",
         type: "task",
@@ -282,13 +282,13 @@ describe("Sprint Workflow Integration", () => {
         boardType: "scrum",
       });
 
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
 
       // Create issue in sprint
-      const issueId = await asUser.mutation(api.issues.mutations.create, {
+      const { issueId } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Sprint Issue",
         type: "task",
@@ -329,12 +329,12 @@ describe("Sprint Workflow Integration", () => {
       });
 
       // Create two sprints
-      const sprint1Id = await asUser.mutation(api.sprints.create, {
+      const { sprintId: sprint1Id } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
 
-      const sprint2Id = await asUser.mutation(api.sprints.create, {
+      const { sprintId: sprint2Id } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 2",
       });
@@ -381,7 +381,7 @@ describe("Sprint Workflow Integration", () => {
         boardType: "scrum",
       });
 
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });

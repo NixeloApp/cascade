@@ -20,9 +20,9 @@ const CONFIG = {
   // Security checks are always enforced
   enforceSecurityChecks: true,
   // Envelope pattern: 'error' | 'warn' | 'off'
-  envelopePatternLevel: "off", // Many existing violations, enable later
+  envelopePatternLevel: "error",
   // Test destructuring: 'error' | 'warn' | 'off'
-  testDestructuringLevel: "off", // Many existing violations, enable later
+  testDestructuringLevel: "error",
 };
 
 export function run() {

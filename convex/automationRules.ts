@@ -37,7 +37,7 @@ export const create = projectAdminMutation({
 
     // adminMutation handles auth + admin check
     const now = Date.now();
-    return await ctx.db.insert("automationRules", {
+    const ruleId = await ctx.db.insert("automationRules", {
       projectId: ctx.projectId,
       name: args.name,
       description: args.description,
@@ -50,6 +50,7 @@ export const create = projectAdminMutation({
       updatedAt: now,
       executionCount: 0,
     });
+    return { ruleId };
   },
 });
 

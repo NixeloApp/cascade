@@ -34,7 +34,7 @@ export const create = authenticatedMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert("workflows", {
+    const workflowId = await ctx.db.insert("workflows", {
       name: args.name,
       description: args.description,
       userId: ctx.userId,
@@ -48,6 +48,7 @@ export const create = authenticatedMutation({
       updatedAt: now,
       executionCount: 0,
     });
+    return { workflowId };
   },
 });
 
@@ -223,7 +224,7 @@ export const duplicate = authenticatedMutation({
     }
 
     const now = Date.now();
-    return await ctx.db.insert("workflows", {
+    const workflowId = await ctx.db.insert("workflows", {
       name: `${workflow.name} (copy)`,
       description: workflow.description,
       userId: ctx.userId,
@@ -237,6 +238,7 @@ export const duplicate = authenticatedMutation({
       updatedAt: now,
       executionCount: 0,
     });
+    return { workflowId };
   },
 });
 

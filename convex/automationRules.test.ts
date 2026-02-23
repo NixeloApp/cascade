@@ -20,7 +20,7 @@ describe("Automation Rules", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create automation rule
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Auto-assign bugs",
         description: "Automatically assign bugs to lead",
@@ -120,7 +120,7 @@ describe("Automation Rules", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Auto-prioritize bugs",
         description: "Set bugs to high priority",
@@ -151,7 +151,7 @@ describe("Automation Rules", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Simple Rule",
         trigger: "issue_created",
@@ -229,7 +229,7 @@ describe("Automation Rules", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Original Name",
         trigger: "issue_created",
@@ -260,7 +260,7 @@ describe("Automation Rules", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Test Rule",
         trigger: "issue_created",
@@ -298,7 +298,7 @@ describe("Automation Rules", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Original Name",
         description: "Original Description",
@@ -344,7 +344,7 @@ describe("Automation Rules", () => {
         role: "editor",
       });
 
-      const ruleId = await asOwner.mutation(api.automationRules.create, {
+      const { ruleId } = await asOwner.mutation(api.automationRules.create, {
         projectId,
         name: "Test Rule",
         trigger: "issue_created",
@@ -368,7 +368,7 @@ describe("Automation Rules", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Test Rule",
         trigger: "issue_created",
@@ -392,7 +392,7 @@ describe("Automation Rules", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create and delete a rule to get a valid but non-existent ID
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Temp Rule",
         trigger: "issue_created",
@@ -420,7 +420,7 @@ describe("Automation Rules", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "To Delete",
         trigger: "issue_created",
@@ -460,7 +460,7 @@ describe("Automation Rules", () => {
         role: "editor",
       });
 
-      const ruleId = await asOwner.mutation(api.automationRules.create, {
+      const { ruleId } = await asOwner.mutation(api.automationRules.create, {
         projectId,
         name: "Test Rule",
         trigger: "issue_created",
@@ -481,7 +481,7 @@ describe("Automation Rules", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Test Rule",
         trigger: "issue_created",
@@ -502,7 +502,7 @@ describe("Automation Rules", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create and delete a rule to get a valid but non-existent ID
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Temp Rule",
         trigger: "issue_created",
@@ -538,7 +538,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -575,7 +575,7 @@ describe("Automation Rules", () => {
       });
 
       // Create bug issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Bug Issue",
         type: "bug",
@@ -612,7 +612,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -648,7 +648,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -681,7 +681,7 @@ describe("Automation Rules", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create inactive rule
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Inactive Rule",
         trigger: "issue_created",
@@ -696,7 +696,7 @@ describe("Automation Rules", () => {
       });
 
       // Create issue
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -723,7 +723,7 @@ describe("Automation Rules", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create rule
-      const ruleId = await asUser.mutation(api.automationRules.create, {
+      const { ruleId } = await asUser.mutation(api.automationRules.create, {
         projectId,
         name: "Test Rule",
         trigger: "issue_created",
@@ -732,7 +732,7 @@ describe("Automation Rules", () => {
       });
 
       // Create first issue
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
@@ -746,7 +746,7 @@ describe("Automation Rules", () => {
       });
 
       // Create second issue
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -785,7 +785,7 @@ describe("Automation Rules", () => {
       });
 
       // Create task (should NOT trigger)
-      const taskId = await asUser.mutation(api.issues.create, {
+      const { issueId: taskId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task",
         type: "task",
@@ -803,7 +803,7 @@ describe("Automation Rules", () => {
       expect(task?.priority).toBe("medium"); // Unchanged
 
       // Create bug (should trigger)
-      const bugId = await asUser.mutation(api.issues.create, {
+      const { issueId: bugId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Bug",
         type: "bug",

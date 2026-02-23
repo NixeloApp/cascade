@@ -17,7 +17,7 @@ describe("Modules", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const moduleId = await asUser.mutation(api.modules.create, {
+      const { moduleId } = await asUser.mutation(api.modules.create, {
         projectId,
         name: "User Authentication",
         description: "Auth related features",
@@ -35,7 +35,7 @@ describe("Modules", () => {
       const targetDate = startDate + 7 * 24 * 60 * 60 * 1000; // 7 days later
 
       const asUser = asAuthenticatedUser(t, userId);
-      const moduleId = await asUser.mutation(api.modules.create, {
+      const { moduleId } = await asUser.mutation(api.modules.create, {
         projectId,
         name: "Sprint Feature",
         startDate,
@@ -83,7 +83,7 @@ describe("Modules", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const moduleId1 = await asUser.mutation(api.modules.create, {
+      const { moduleId: moduleId1 } = await asUser.mutation(api.modules.create, {
         projectId,
         name: "In Progress Module",
       });
@@ -115,7 +115,7 @@ describe("Modules", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const moduleId = await asUser.mutation(api.modules.create, {
+      const { moduleId } = await asUser.mutation(api.modules.create, {
         projectId,
         name: "Old Name",
       });
@@ -136,7 +136,7 @@ describe("Modules", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const moduleId = await asUser.mutation(api.modules.create, {
+      const { moduleId } = await asUser.mutation(api.modules.create, {
         projectId,
         name: "Test Module",
       });
@@ -159,7 +159,7 @@ describe("Modules", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const moduleId = await asUser.mutation(api.modules.create, {
+      const { moduleId } = await asUser.mutation(api.modules.create, {
         projectId,
         name: "To Delete",
       });

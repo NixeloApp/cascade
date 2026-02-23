@@ -142,7 +142,7 @@ export const create = projectEditorMutation({
       action: "created",
     });
 
-    return issueId;
+    return { issueId };
   },
 });
 
@@ -382,7 +382,7 @@ export const addComment = issueViewerMutation({
       });
     }
 
-    return commentId;
+    return { commentId };
   },
 });
 

@@ -15,7 +15,7 @@ test("getCommentReactions fetches reactions for multiple comments correctly", as
   const user = asAuthenticatedUser(t, userId);
 
   // 2. Create Document
-  const documentId = await user.mutation(api.documents.create, {
+  const { documentId } = await user.mutation(api.documents.create, {
     title: "Test Doc",
     organizationId,
     isPublic: false,
@@ -24,7 +24,7 @@ test("getCommentReactions fetches reactions for multiple comments correctly", as
   // 3. Add multiple comments
   const commentIds: Id<"documentComments">[] = [];
   for (let i = 0; i < 5; i++) {
-    const commentId = await user.mutation(api.documents.addComment, {
+    const { commentId } = await user.mutation(api.documents.addComment, {
       documentId,
       content: `Comment ${i}`,
     });

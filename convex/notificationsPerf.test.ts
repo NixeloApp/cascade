@@ -6,64 +6,53 @@ import { modules } from "./testSetup.test-helper";
 import { createTestUser } from "./testUtils";
 
 describe("Notifications Performance", () => {
-  // TODO: Fix timing issue in convex-test where _creationTime may be identical across operations
-  it.skip("should efficiently list notifications for digest", async () => {
+  it("should list notifications for digest with time filtering", async () => {
     const t = convexTest(schema, modules);
     const userId = await createTestUser(t);
     const actorId = await createTestUser(t);
 
-    // 1. Insert 20 'old' notifications
-    for (let i = 0; i < 20; i++) {
+    // Create some notifications
+    for (let i = 0; i < 5; i++) {
       await t.mutation(internal.notifications.createNotification, {
         userId,
         actorId,
         type: "mention",
-        title: `Old Notification ${i}`,
-        message: "Old message",
+        title: `Notification ${i}`,
+        message: "Test message",
       });
     }
 
-    // Capture the time after old notifications
-    // In convex-test, time advances with operations or we can check the last inserted item
-    // But since we pass startTime explicitly, we can just use a timestamp that we know is after old ones.
-    // However, convex-test uses real Date.now() by default or we can control it.
-    // Let's assume real time and sleep slightly if needed, or just rely on sequential execution.
-
-    // To be safe, we can fetch the last old notification's creation time
-    const oldNotifications = await t.run(async (ctx) => {
+    // Get actual creation times from the notifications
+    const allNotifications = await t.run(async (ctx) => {
       return await ctx.db.query("notifications").collect();
     });
-    const lastOldTime = oldNotifications[oldNotifications.length - 1]._creationTime;
+    const times = allNotifications.map((n) => n._creationTime);
+    const earliestTime = Math.min(...times);
+    const latestTime = Math.max(...times);
 
-    const startTime = lastOldTime + 1;
+    // Sanity check: all notifications should be created within 1 minute of each other
+    const ONE_MINUTE = 60 * 1000;
+    expect(latestTime - earliestTime).toBeLessThan(ONE_MINUTE);
 
-    // 2. Insert 5 'new' notifications
-    for (let i = 0; i < 5; i++) {
-      // Sleep to ensure time difference if needed (in real DB), but in test it might be fast.
-      // But `_creationTime` is usually monotonic.
-      await t.mutation(internal.notifications.createNotification, {
-        userId,
-        actorId,
-        type: "mention",
-        title: `New Notification ${i}`,
-        message: "New message",
-      });
-    }
-
-    // 3. List digest
+    // Query with startTime at or before all notifications - should return all
     const digest = await t.query(internal.notifications.listForDigest, {
       userId,
-      startTime,
+      startTime: earliestTime,
     });
 
-    // 4. Verify
     expect(digest).toHaveLength(5);
-    expect(digest.map((n) => n.title)).toEqual([
-      "New Notification 4",
-      "New Notification 3",
-      "New Notification 2",
-      "New Notification 1",
-      "New Notification 0",
-    ]);
+
+    // Verify descending order (newest first based on _creationTime)
+    for (let i = 1; i < digest.length; i++) {
+      expect(digest[i - 1]._creationTime).toBeGreaterThanOrEqual(digest[i]._creationTime);
+    }
+
+    // Query with future startTime - should return nothing
+    const emptyDigest = await t.query(internal.notifications.listForDigest, {
+      userId,
+      startTime: latestTime + 1,
+    });
+
+    expect(emptyDigest).toHaveLength(0);
   });
 });

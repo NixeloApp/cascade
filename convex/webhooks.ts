@@ -28,6 +28,7 @@ export const createWebhook = projectAdminMutation({
     events: v.array(v.string()),
     secret: v.optional(v.string()),
   },
+  returns: v.object({ webhookId: v.id("webhooks") }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check
     validateDestination(args.url);
@@ -54,7 +55,7 @@ export const createWebhook = projectAdminMutation({
       },
     });
 
-    return webhookId;
+    return { webhookId };
   },
 });
 
@@ -195,11 +196,15 @@ async function triggerSingleWebhook(
     });
 
     // Create execution log
-    executionId = await ctx.runMutation(internal.webhooks.createExecution, {
-      webhookId: webhook._id,
-      event: event,
-      requestPayload,
-    });
+    const { executionId: createdExecutionId } = await ctx.runMutation(
+      internal.webhooks.createExecution,
+      {
+        webhookId: webhook._id,
+        event: event,
+        requestPayload,
+      },
+    );
+    executionId = createdExecutionId;
 
     const result = await deliverWebhook(webhook.url, requestPayload, event, webhook.secret);
 
@@ -331,7 +336,7 @@ export const deliverTestWebhook = internalAction({
     });
 
     // Create execution log
-    const executionId = await ctx.runMutation(internal.webhooks.createExecution, {
+    const { executionId } = await ctx.runMutation(internal.webhooks.createExecution, {
       webhookId: webhook._id,
       event: "ping",
       requestPayload,
@@ -374,14 +379,16 @@ export const createExecution = internalMutation({
     event: v.string(),
     requestPayload: v.string(),
   },
+  returns: v.object({ executionId: v.id("webhookExecutions") }),
   handler: async (ctx, args) => {
-    return await ctx.db.insert("webhookExecutions", {
+    const executionId = await ctx.db.insert("webhookExecutions", {
       webhookId: args.webhookId,
       event: args.event,
       requestPayload: args.requestPayload,
       status: "retrying",
       attempts: 1,
     });
+    return { executionId };
   },
 });
 

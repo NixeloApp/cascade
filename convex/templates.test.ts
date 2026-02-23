@@ -27,7 +27,7 @@ describe("Issue Templates", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await createContextWithProject(t);
 
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Bug Report",
         type: "bug",
@@ -50,7 +50,7 @@ describe("Issue Templates", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await createContextWithProject(t);
 
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Story Template",
         type: "story",
@@ -75,7 +75,7 @@ describe("Issue Templates", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await createContextWithProject(t);
 
-      const template1Id = await asUser.mutation(api.templates.create, {
+      const { templateId: template1Id } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Template 1",
         type: "task",
@@ -86,7 +86,7 @@ describe("Issue Templates", () => {
         isDefault: true,
       });
 
-      const template2Id = await asUser.mutation(api.templates.create, {
+      const { templateId: template2Id } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Template 2",
         type: "task",
@@ -256,7 +256,7 @@ describe("Issue Templates", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await createContextWithProject(t);
 
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Test Template",
         type: "task",
@@ -277,7 +277,7 @@ describe("Issue Templates", () => {
       const { projectId, asUser } = await createContextWithProject(t);
 
       // Create and delete to get valid non-existent ID
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Temp",
         type: "task",
@@ -298,7 +298,7 @@ describe("Issue Templates", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await createContextWithProject(t);
 
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Original Name",
         type: "task",
@@ -327,7 +327,7 @@ describe("Issue Templates", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await createContextWithProject(t);
 
-      const template1Id = await asUser.mutation(api.templates.create, {
+      const { templateId: template1Id } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Template 1",
         type: "task",
@@ -338,7 +338,7 @@ describe("Issue Templates", () => {
         isDefault: true,
       });
 
-      const template2Id = await asUser.mutation(api.templates.create, {
+      const { templateId: template2Id } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Template 2",
         type: "task",
@@ -368,7 +368,7 @@ describe("Issue Templates", () => {
       const outsiderId = await createTestUser(t, { name: "Outsider", email: "outsider@test.com" });
       const asOutsider = asAuthenticatedUser(t, outsiderId);
 
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Protected Template",
         type: "task",
@@ -391,7 +391,7 @@ describe("Issue Templates", () => {
       const { projectId, asUser } = await createContextWithProject(t);
 
       // Create and delete
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Temp",
         type: "task",
@@ -416,7 +416,7 @@ describe("Issue Templates", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await createContextWithProject(t);
 
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "To Delete",
         type: "task",
@@ -438,7 +438,7 @@ describe("Issue Templates", () => {
       const outsiderId = await createTestUser(t, { name: "Outsider", email: "outsider@test.com" });
       const asOutsider = asAuthenticatedUser(t, outsiderId);
 
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Protected Template",
         type: "task",
@@ -458,7 +458,7 @@ describe("Issue Templates", () => {
       const { projectId, asUser } = await createContextWithProject(t);
 
       // Create and delete
-      const templateId = await asUser.mutation(api.templates.create, {
+      const { templateId } = await asUser.mutation(api.templates.create, {
         projectId,
         name: "Temp",
         type: "task",
@@ -483,7 +483,7 @@ describe("Issue Templates", () => {
       const issueTypes: Array<"epic" | "story" | "task" | "bug"> = ["epic", "story", "task", "bug"];
 
       for (const type of issueTypes) {
-        const templateId = await asUser.mutation(api.templates.create, {
+        const { templateId } = await asUser.mutation(api.templates.create, {
           projectId,
           name: `${type} Template`,
           type,
@@ -513,7 +513,7 @@ describe("Issue Templates", () => {
       ];
 
       for (const priority of priorities) {
-        const templateId = await asUser.mutation(api.templates.create, {
+        const { templateId } = await asUser.mutation(api.templates.create, {
           projectId,
           name: `${priority} Priority Template`,
           type: "task",
@@ -539,7 +539,7 @@ describe("Issue Templates", () => {
       await addProjectMember(t, projectId, editorId, "editor", userId);
       const asEditor = asAuthenticatedUser(t, editorId);
 
-      const templateId = await asEditor.mutation(api.templates.create, {
+      const { templateId } = await asEditor.mutation(api.templates.create, {
         projectId,
         name: "Editor Template",
         type: "task",

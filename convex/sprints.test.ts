@@ -23,7 +23,7 @@ describe("Sprints", () => {
       const startDate = Date.now();
       const endDate = startDate + 2 * WEEK; // 2 weeks
 
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
         goal: "Complete user authentication",
@@ -54,7 +54,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -95,7 +95,7 @@ describe("Sprints", () => {
 
       // Member creates sprint
       const asMember = asAuthenticatedUser(t, member);
-      const sprintId = await asMember.mutation(api.sprints.create, {
+      const { sprintId } = await asMember.mutation(api.sprints.create, {
         projectId,
         name: "Member Sprint",
       });
@@ -186,7 +186,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -219,13 +219,13 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
 
       // Create done issues in the sprint
-      const doneIssue1 = await asUser.mutation(api.issues.create, {
+      const { issueId: doneIssue1 } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Done Issue 1",
         type: "task",
@@ -238,7 +238,7 @@ describe("Sprints", () => {
         newOrder: 0,
       });
 
-      const doneIssue2 = await asUser.mutation(api.issues.create, {
+      const { issueId: doneIssue2 } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Done Issue 2",
         type: "task",
@@ -261,7 +261,7 @@ describe("Sprints", () => {
       });
 
       // Create done issue NOT in the sprint
-      const otherIssue = await asUser.mutation(api.issues.create, {
+      const { issueId: otherIssue } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Done Issue Other",
         type: "task",
@@ -287,7 +287,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, owner, { isPublic: false });
 
       const asOwner = asAuthenticatedUser(t, owner);
-      await asOwner.mutation(api.sprints.create, {
+      const { sprintId } = await asOwner.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -334,7 +334,7 @@ describe("Sprints", () => {
       });
 
       const asOwner = asAuthenticatedUser(t, owner);
-      await asOwner.mutation(api.sprints.create, {
+      const { sprintId } = await asOwner.mutation(api.sprints.create, {
         projectId,
         name: "organization Sprint",
       });
@@ -382,7 +382,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -415,7 +415,7 @@ describe("Sprints", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create and start first sprint
-      const sprint1Id = await asUser.mutation(api.sprints.create, {
+      const { sprintId: sprint1Id } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -427,7 +427,7 @@ describe("Sprints", () => {
       });
 
       // Create and start second sprint
-      const sprint2Id = await asUser.mutation(api.sprints.create, {
+      const { sprintId: sprint2Id } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 2",
       });
@@ -474,7 +474,7 @@ describe("Sprints", () => {
         role: "editor",
       });
 
-      const sprintId = await asOwner.mutation(api.sprints.create, {
+      const { sprintId } = await asOwner.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -502,7 +502,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -523,7 +523,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, owner);
 
       const asOwner = asAuthenticatedUser(t, owner);
-      const sprintId = await asOwner.mutation(api.sprints.create, {
+      const { sprintId } = await asOwner.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -545,7 +545,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -572,7 +572,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -603,7 +603,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -643,7 +643,7 @@ describe("Sprints", () => {
         role: "editor",
       });
 
-      const sprintId = await asOwner.mutation(api.sprints.create, {
+      const { sprintId } = await asOwner.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -666,7 +666,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -683,7 +683,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, owner);
 
       const asOwner = asAuthenticatedUser(t, owner);
-      const sprintId = await asOwner.mutation(api.sprints.create, {
+      const { sprintId } = await asOwner.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });
@@ -701,7 +701,7 @@ describe("Sprints", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const sprintId = await asUser.mutation(api.sprints.create, {
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
         projectId,
         name: "Sprint 1",
       });

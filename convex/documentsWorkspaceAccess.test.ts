@@ -37,7 +37,7 @@ describe("Documents Workspace Access", () => {
 
     // 4. User A (Org Admin) should be able to create a document in the workspace
     // (Org Admins typically have access to all workspaces)
-    const adminDocId = await asAdmin.mutation(api.documents.create, {
+    const { documentId: adminDocId } = await asAdmin.mutation(api.documents.create, {
       title: "Admin Document",
       isPublic: false,
       organizationId,

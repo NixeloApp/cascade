@@ -84,6 +84,7 @@ export const markAttendance = authenticatedMutation({
     status: attendanceStatuses,
     notes: v.optional(v.string()),
   },
+  returns: v.object({ attendanceId: v.id("meetingAttendance") }),
   handler: async (ctx, args) => {
     // Get event
     const event = await ctx.db.get(args.eventId);
@@ -110,7 +111,7 @@ export const markAttendance = authenticatedMutation({
         markedBy: ctx.userId,
         markedAt: now,
       });
-      return existing._id;
+      return { attendanceId: existing._id };
     }
 
     // Create new attendance record
@@ -122,7 +123,7 @@ export const markAttendance = authenticatedMutation({
       markedAt: now,
       notes: args.notes,
     });
-    return attendanceId;
+    return { attendanceId };
   },
 });
 

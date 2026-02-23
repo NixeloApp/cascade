@@ -19,7 +19,7 @@ describe("Reactions", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create issue
-    const issueId = await asUser.mutation(api.issues.create, {
+    const { issueId } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Test Issue",
       type: "task",
@@ -27,7 +27,7 @@ describe("Reactions", () => {
     });
 
     // Add comment
-    const commentId = await asUser.mutation(api.issues.addComment, {
+    const { commentId } = await asUser.mutation(api.issues.addComment, {
       issueId,
       content: "Nice work!",
     });
@@ -84,13 +84,13 @@ describe("Reactions", () => {
     });
 
     // Create issue and comment
-    const issueId = await asUser1.mutation(api.issues.create, {
+    const { issueId } = await asUser1.mutation(api.issues.create, {
       projectId,
       title: "Test Issue",
       type: "task",
       priority: "medium",
     });
-    const commentId = await asUser1.mutation(api.issues.addComment, {
+    const { commentId } = await asUser1.mutation(api.issues.addComment, {
       issueId,
       content: "Shared comment",
     });

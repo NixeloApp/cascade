@@ -26,7 +26,7 @@ describe("Documents Security - Private Project Isolation", () => {
 
     // 2. Admin creates a "Public" document in the Private Project
     // (Intended to be shared with project members, but currently leaks to Org)
-    const docId = await asAdmin.mutation(api.documents.create, {
+    const { documentId: docId } = await asAdmin.mutation(api.documents.create, {
       title: "Secret Launch Plan",
       isPublic: true,
       organizationId,
@@ -85,7 +85,7 @@ describe("Documents Security - Access Revocation", () => {
     });
 
     // Create a document
-    const docId = await asOwner.mutation(api.documents.create, {
+    const { documentId: docId } = await asOwner.mutation(api.documents.create, {
       title: "Team Document",
       isPublic: true,
       organizationId,
@@ -93,7 +93,7 @@ describe("Documents Security - Access Revocation", () => {
 
     // Member adds a comment
     const asMember = asAuthenticatedUser(t, member);
-    const commentId = await asMember.mutation(api.documents.addComment, {
+    const { commentId } = await asMember.mutation(api.documents.addComment, {
       documentId: docId,
       content: "Initial comment",
     });
@@ -130,7 +130,7 @@ describe("Documents Security - Access Revocation", () => {
     });
 
     // Create a document
-    const docId = await asOwner.mutation(api.documents.create, {
+    const { documentId: docId } = await asOwner.mutation(api.documents.create, {
       title: "Team Document",
       isPublic: true,
       organizationId,
@@ -138,7 +138,7 @@ describe("Documents Security - Access Revocation", () => {
 
     // Member adds a comment
     const asMember = asAuthenticatedUser(t, member);
-    const commentId = await asMember.mutation(api.documents.addComment, {
+    const { commentId } = await asMember.mutation(api.documents.addComment, {
       documentId: docId,
       content: "To be deleted",
     });
@@ -174,7 +174,7 @@ describe("Documents Security - Access Revocation", () => {
     });
 
     // Create a document
-    const docId = await asOwner.mutation(api.documents.create, {
+    const { documentId: docId } = await asOwner.mutation(api.documents.create, {
       title: "Team Document",
       isPublic: true,
       organizationId,
@@ -182,7 +182,7 @@ describe("Documents Security - Access Revocation", () => {
 
     // Member adds a comment
     const asMember = asAuthenticatedUser(t, member);
-    const commentId = await asMember.mutation(api.documents.addComment, {
+    const { commentId } = await asMember.mutation(api.documents.addComment, {
       documentId: docId,
       content: "React to me",
     });
@@ -219,7 +219,7 @@ describe("Documents Security - Access Revocation", () => {
     });
 
     // Create a document
-    const docId = await asOwner.mutation(api.documents.create, {
+    const { documentId: docId } = await asOwner.mutation(api.documents.create, {
       title: "Team Document",
       isPublic: true,
       organizationId,
@@ -227,7 +227,7 @@ describe("Documents Security - Access Revocation", () => {
 
     // Member adds a comment and reaction
     const asMember = asAuthenticatedUser(t, member);
-    const commentId = await asMember.mutation(api.documents.addComment, {
+    const { commentId } = await asMember.mutation(api.documents.addComment, {
       documentId: docId,
       content: "React to me",
     });

@@ -21,7 +21,7 @@ describe("Refactor Issues Smart Queries", () => {
     });
     // Default status is usually the first one (todo)
 
-    const issue2Id = await asUser.mutation(api.issues.create, {
+    const { issueId: issue2Id } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "InProgress Issue",
       type: "task",
@@ -88,7 +88,7 @@ describe("Refactor Issues Smart Queries", () => {
       priority: "medium",
     });
 
-    const issue2Id = await asUser.mutation(api.issues.create, {
+    const { issueId: issue2Id } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Team Issue InProgress",
       type: "task",

@@ -112,7 +112,7 @@ describe("Multi-Tenant Isolation", () => {
         boardType: "kanban",
       });
 
-      const issueIdA = await asUserA.mutation(api.issues.mutations.create, {
+      const { issueId: issueIdA } = await asUserA.mutation(api.issues.mutations.create, {
         projectId: projectIdA,
         title: "Secret Issue from Org A",
         type: "task",
@@ -213,7 +213,7 @@ describe("Multi-Tenant Isolation", () => {
         boardType: "kanban",
       });
 
-      const docIdA = await asUserA.mutation(api.documents.create, {
+      const { documentId: docIdA } = await asUserA.mutation(api.documents.create, {
         title: "Secret Document from Org A",
         isPublic: false,
         projectId: projectIdA,
