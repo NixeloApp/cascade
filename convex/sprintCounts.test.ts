@@ -19,28 +19,30 @@ describe("Sprint Issue Counts", () => {
     });
 
     // Create 3 Todo issues in sprint
-    for (let i = 0; i < 3; i++) {
-      await asUser.mutation(api.issues.createIssue, {
-        projectId,
-        title: `Todo ${i}`,
-        type: "task",
-        priority: "medium",
-        sprintId,
-      });
-    }
+    await Promise.all(
+      Array.from({ length: 3 }, (_, i) =>
+        asUser.mutation(api.issues.createIssue, {
+          projectId,
+          title: `Todo ${i}`,
+          type: "task",
+          priority: "medium",
+          sprintId,
+        }),
+      ),
+    );
 
     // Create 2 Done issues in sprint
-    const doneIssueIds = [];
-    for (let i = 0; i < 2; i++) {
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
-        projectId,
-        title: `Done ${i}`,
-        type: "task",
-        priority: "medium",
-        sprintId,
-      });
-      doneIssueIds.push(issueId);
-    }
+    const doneIssueIds = await Promise.all(
+      Array.from({ length: 2 }, (_, i) =>
+        asUser.mutation(api.issues.createIssue, {
+          projectId,
+          title: `Done ${i}`,
+          type: "task",
+          priority: "medium",
+          sprintId,
+        }),
+      ),
+    ).then((results) => results.map(({ issueId }) => issueId));
 
     // Move to done
     await asUser.mutation(api.issues.bulkUpdateStatus, {
