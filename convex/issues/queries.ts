@@ -698,7 +698,18 @@ export const search = authenticatedQuery({
         "issue search",
       );
     } else if (args.projectId) {
-      issues = await fetchProjectIssuesOptimized(ctx, args.projectId, args, fetchLimit, ctx.userId);
+      const projectId = args.projectId;
+      // Bounded: project issues limited
+      issues = await safeCollect(
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_deleted", (q) =>
+            q.eq("projectId", projectId).lt("isDeleted", true),
+          )
+          .order("desc"),
+        fetchLimit,
+        "issue search by project",
+      );
     } else if (args.organizationId) {
       const organizationId = args.organizationId;
       // Bounded: organization issues limited
@@ -1214,93 +1225,3 @@ export const listIssuesByDateRange = authenticatedQuery({
     return issues;
   },
 });
-
-// Helper: Optimized project issue fetching strategy
-async function fetchProjectIssuesOptimized(
-  ctx: QueryCtx,
-  projectId: Id<"projects">,
-  args: {
-    assigneeId?: Id<"users"> | "unassigned" | "me";
-    status?: string[];
-  },
-  fetchLimit: number,
-  userId: Id<"users"> | null,
-) {
-  // Determine efficient query strategy based on filters
-  // We prioritize specific indexes to avoid scanning the entire project
-  const targetAssigneeId =
-    args.assigneeId === "me"
-      ? userId
-      : args.assigneeId !== "unassigned"
-        ? args.assigneeId
-        : undefined;
-
-  const hasSpecificAssignee = targetAssigneeId !== undefined && targetAssigneeId !== null;
-  const hasSingleStatus = args.status?.length === 1;
-
-  if (hasSpecificAssignee && hasSingleStatus) {
-    const status = args.status?.[0];
-    if (!status) return []; // Should be unreachable given check above
-
-    // Best case: Filter by assignee AND status
-    // Index: by_project_assignee_status ["projectId", "assigneeId", "status", "isDeleted"]
-    return await safeCollect(
-      ctx.db
-        .query("issues")
-        .withIndex("by_project_assignee_status", (q) =>
-          q
-            .eq("projectId", projectId)
-            .eq("assigneeId", targetAssigneeId as Id<"users">)
-            .eq("status", status)
-            .lt("isDeleted", true),
-        )
-        .order("desc"),
-      fetchLimit,
-      "issue search by project assignee status",
-    );
-  }
-
-  if (hasSpecificAssignee) {
-    // Filter by assignee
-    // Index: by_project_assignee ["projectId", "assigneeId", "isDeleted"]
-    return await safeCollect(
-      ctx.db
-        .query("issues")
-        .withIndex("by_project_assignee", (q) =>
-          q.eq("projectId", projectId).eq("assigneeId", targetAssigneeId).lt("isDeleted", true),
-        )
-        .order("desc"),
-      fetchLimit,
-      "issue search by project assignee",
-    );
-  }
-
-  if (hasSingleStatus) {
-    const status = args.status?.[0];
-    if (!status) return []; // Should be unreachable given check above
-
-    // Filter by status
-    // Index: by_project_status ["projectId", "status", "isDeleted", "order"]
-    return await safeCollect(
-      ctx.db
-        .query("issues")
-        .withIndex("by_project_status", (q) =>
-          q.eq("projectId", projectId).eq("status", status).lt("isDeleted", true),
-        )
-        .order("desc"),
-      fetchLimit,
-      "issue search by project status",
-    );
-  }
-
-  // Fallback: Scan all project issues
-  // Index: by_project_deleted ["projectId", "isDeleted"]
-  return await safeCollect(
-    ctx.db
-      .query("issues")
-      .withIndex("by_project_deleted", (q) => q.eq("projectId", projectId).lt("isDeleted", true))
-      .order("desc"),
-    fetchLimit,
-    "issue search by project",
-  );
-}

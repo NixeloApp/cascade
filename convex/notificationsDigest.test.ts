@@ -59,8 +59,7 @@ describe("Notifications Digest", () => {
 
     // Get actual creation time of n2
     const n2Doc = await t.run(async (ctx) => ctx.db.get(n2));
-    if (!n2Doc) throw new Error("n2Doc not found");
-    const startTime = n2Doc._creationTime;
+    const startTime = n2Doc!._creationTime;
 
     // Query with startTime equal to middle notification
     const result = await t.query(internal.notifications.listForDigest, {
@@ -230,8 +229,7 @@ describe("Notifications Digest", () => {
     });
 
     const notification = await t.run(async (ctx) => ctx.db.get(notificationId));
-    if (!notification) throw new Error("notification not found");
-    const startTime = notification._creationTime;
+    const startTime = notification!._creationTime;
 
     const result = await t.query(internal.notifications.listForDigest, {
       userId,
