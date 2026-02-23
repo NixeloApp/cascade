@@ -3,12 +3,12 @@
  *
  * Validates Convex backend code follows established patterns:
  * 1. Security: addProjectMember/addTeamMember must check org membership (ENFORCED)
- * 2. Mutations that create resources must return objects (Envelope Pattern) - warnings only
- * 3. Test files must destructure API returns - disabled for gradual adoption
+ * 2. Mutations that create resources must return objects (Envelope Pattern)
+ * 3. Test files must destructure API returns
+ * 4. Async operations should not be inside loops (use Promise.all)
  *
  * NOTE: This validator focuses on SECURITY issues first.
- * Envelope Pattern and test destructuring are documented standards but not
- * strictly enforced yet to allow gradual adoption across the codebase.
+ * Other checks can be configured via CONFIG object.
  */
 
 import fs from "node:fs";
@@ -23,6 +23,8 @@ const CONFIG = {
   envelopePatternLevel: "error",
   // Test destructuring: 'error' | 'warn' | 'off'
   testDestructuringLevel: "error",
+  // Async in loops: 'error' | 'warn' | 'off'
+  asyncInLoopsLevel: "error",
 };
 
 export function run() {
@@ -147,8 +149,84 @@ export function run() {
     }
   }
 
+  // Files/tests where sequential async is intentional (with justification)
+  const SEQUENTIAL_ASYNC_ALLOWED = [
+    "rateLimits", // Rate limit tests MUST be sequential
+    "twoFactor.test.ts", // Rate limit/lockout tests
+    "oauthHealthCheck", // Time-based ordering tests
+    "issuesLoadMore", // Pagination tests need distinct timestamps
+    "userSettings.test.ts", // Sequential mutation verification
+    "bookingPages.test.ts", // Query after each mutation
+    "calendarEvents.test.ts", // Query after each mutation
+  ];
+
   /**
-   * Check 3: addProjectMember must verify organization membership
+   * Check 3: Async operations should not be inside loops (use Promise.all)
+   */
+  function checkAsyncInLoops(filePath, content, lines) {
+    if (CONFIG.asyncInLoopsLevel === "off") return;
+
+    const rel = relPath(filePath);
+
+    // Only check test files (production code may have valid sequential needs)
+    if (!rel.includes(".test.")) return;
+
+    // Skip files with intentionally sequential async
+    if (SEQUENTIAL_ASYNC_ALLOWED.some((pattern) => rel.includes(pattern))) return;
+
+    // Track loop contexts
+    let inLoop = false;
+    let loopStartLine = 0;
+    let braceDepth = 0;
+    let loopBraceDepth = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Detect loop start: for, while, do
+      if (/^\s*(for|while)\s*\(/.test(line) || /^\s*do\s*\{/.test(line)) {
+        inLoop = true;
+        loopStartLine = i + 1;
+        loopBraceDepth = braceDepth;
+      }
+
+      // Track brace depth
+      const opens = (line.match(/\{/g) || []).length;
+      const closes = (line.match(/\}/g) || []).length;
+      braceDepth += opens - closes;
+
+      // Check if we're still in the loop
+      if (inLoop && braceDepth <= loopBraceDepth && closes > 0) {
+        inLoop = false;
+      }
+
+      // If inside loop, check for await
+      if (inLoop && /\bawait\b/.test(line)) {
+        // Skip if it's a comment
+        if (/^\s*\/\//.test(line)) continue;
+
+        // Skip allowed patterns (e.g., Promise.all inside loop is fine)
+        if (/Promise\.all/.test(line)) continue;
+
+        // Skip if using asyncMap (batch helper)
+        if (/asyncMap/.test(line)) continue;
+
+        // Skip if line has sequential-ok comment
+        if (/sequential-ok/.test(lines[i - 1] || "")) continue;
+
+        const message = `Async operation inside loop (line ${loopStartLine}). Consider using Promise.all for parallel execution.`;
+
+        if (CONFIG.asyncInLoopsLevel === "error") {
+          reportError(filePath, i + 1, message);
+        } else {
+          reportWarning(filePath, i + 1, message);
+        }
+      }
+    }
+  }
+
+  /**
+   * Check 4: addProjectMember must verify organization membership
    */
   function checkSecurityPatterns(filePath, content, _lines) {
     if (!CONFIG.enforceSecurityChecks) return;
@@ -211,6 +289,7 @@ export function run() {
 
     checkEnvelopePattern(filePath, content, lines);
     checkTestDestructuring(filePath, content, lines);
+    checkAsyncInLoops(filePath, content, lines);
     checkSecurityPatterns(filePath, content, lines);
   }
 
