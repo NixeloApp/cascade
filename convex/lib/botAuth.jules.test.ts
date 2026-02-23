@@ -1,4 +1,3 @@
-
 import { ConvexError } from "convex/values";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { requireBotApiKey } from "./botAuth";
@@ -47,7 +46,7 @@ describe("convex/lib/botAuth", () => {
 
     it("should throw FORBIDDEN if API key is incorrect (same length)", () => {
       // Modify one character to keep same length but different content
-      const invalidKey = MOCK_API_KEY.slice(0, -1) + "X";
+      const invalidKey = `${MOCK_API_KEY.slice(0, -1)}X`;
       expect(invalidKey.length).toBe(MOCK_API_KEY.length);
 
       try {
