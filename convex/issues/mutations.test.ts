@@ -544,6 +544,9 @@ describe("Issue Mutations", () => {
           key: "BULKA",
         });
 
+        // Add assignee to project so they can be assigned issues
+        await addProjectMember(t, projectId, assigneeId, "viewer", userId);
+
         const issue1 = await createTestIssue(t, projectId, userId, { title: "Issue 1" });
         const issue2 = await createTestIssue(t, projectId, userId, { title: "Issue 2" });
 

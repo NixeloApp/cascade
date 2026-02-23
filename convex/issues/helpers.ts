@@ -2,8 +2,23 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
 import { notDeleted } from "../lib/softDeleteHelpers";
+import { canAccessProject } from "../projectAccess";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
+
+// Helper: Validate assignee access
+export async function validateAssignee(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+  assigneeId: Id<"users"> | null | undefined,
+): Promise<void> {
+  if (!assigneeId) return;
+
+  const hasAccess = await canAccessProject(ctx, projectId, assigneeId);
+  if (!hasAccess) {
+    throw validation("assigneeId", "Assignee must be a member of the project or organization");
+  }
+}
 
 // Helper: Combined searchable content for issues
 export function getSearchContent(title: string, description?: string) {
