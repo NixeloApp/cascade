@@ -6,12 +6,13 @@ import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
 // Mock validateAttachment to bypass storage metadata check which is not supported in convex-test
-vi.mock("./lib/fileValidators", async (importOriginal) => {
+vi.mock("./lib/fileValidators", async (_importOriginal) => {
   return {
     validateAttachment: vi.fn().mockResolvedValue({ contentType: "image/png", size: 1024 }),
     ALLOWED_MIME_TYPES: new Set(["image/png"]),
   };
 });
+
 import {
   addProjectMember,
   asAuthenticatedUser,
@@ -57,7 +58,7 @@ describe("Files", () => {
       const blob = new Blob(["test content"], { type: contentType });
       // Helper to make Blob work in this environment if needed
       if (!blob.arrayBuffer) {
-        // @ts-ignore
+        // @ts-expect-error
         blob.arrayBuffer = async () => new TextEncoder().encode("test content").buffer;
       }
       return await ctx.storage.store(blob);

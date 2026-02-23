@@ -59,7 +59,7 @@ describe("Notifications Digest", () => {
 
     // Get actual creation time of n2
     const n2Doc = await t.run(async (ctx) => ctx.db.get(n2));
-    const startTime = n2Doc!._creationTime;
+    const startTime = n2Doc?._creationTime ?? 0;
 
     // Query with startTime equal to middle notification
     const result = await t.query(internal.notifications.listForDigest, {
@@ -229,7 +229,7 @@ describe("Notifications Digest", () => {
     });
 
     const notification = await t.run(async (ctx) => ctx.db.get(notificationId));
-    const startTime = notification!._creationTime;
+    const startTime = notification?._creationTime ?? 0;
 
     const result = await t.query(internal.notifications.listForDigest, {
       userId,
