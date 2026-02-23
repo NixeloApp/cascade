@@ -2,8 +2,6 @@ import { getErrorMessage } from "./errors";
 import { safeFetch } from "./safeFetch";
 
 const WEBHOOK_TIMEOUT_MS = 10000;
-// Limit response body reading to 2KB to prevent OOM
-const RESPONSE_BODY_LIMIT = 2048;
 
 export type WebhookDeliveryResult = {
   status: "success" | "failed";
@@ -41,7 +39,7 @@ export async function deliverWebhook(
       signal: controller.signal,
     });
 
-    const responseBody = await readLimitedBody(response, RESPONSE_BODY_LIMIT);
+    const responseBody = await response.text();
 
     if (!response.ok) {
       return {
@@ -70,35 +68,6 @@ export async function deliverWebhook(
   } finally {
     clearTimeout(timeoutId);
   }
-}
-
-// Helper to safely read limited amount of response body
-async function readLimitedBody(response: Response, limit: number): Promise<string> {
-  if (!response.body) {
-    return await response.text();
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let result = "";
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      result += decoder.decode(value, { stream: true });
-      if (result.length > limit) {
-        await reader.cancel();
-        return result.substring(0, limit);
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
-
-  result += decoder.decode();
-  return result;
 }
 
 // Helper function to generate HMAC signature

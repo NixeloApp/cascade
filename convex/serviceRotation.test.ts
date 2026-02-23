@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { api, internal } from "./_generated/api";
+import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -83,7 +83,7 @@ describe("Service Rotation", () => {
       const t = convexTest(schema, modules);
       await setupProviders(t);
 
-      const result = await t.query(internal.serviceRotation.selectProvider, {
+      const result = await t.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
       });
 
@@ -110,7 +110,7 @@ describe("Service Rotation", () => {
         });
       });
 
-      const result = await t.query(internal.serviceRotation.selectProvider, {
+      const result = await t.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
       });
 
@@ -160,7 +160,7 @@ describe("Service Rotation", () => {
         }
       });
 
-      const result = await t.query(internal.serviceRotation.selectProvider, {
+      const result = await t.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
       });
 
@@ -199,7 +199,7 @@ describe("Service Rotation", () => {
         });
       });
 
-      const result = await t.query(internal.serviceRotation.selectProvider, {
+      const result = await t.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
       });
 
@@ -341,7 +341,7 @@ describe("Service Rotation", () => {
         unitsUsed: 120, // 20 over limit
       });
 
-      const summary = await t.query(internal.serviceRotation.getUsageSummary, {
+      const summary = await t.query(api.serviceRotation.getUsageSummary, {
         serviceType: "transcription",
         month: "2024-01",
       });

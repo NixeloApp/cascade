@@ -1,7 +1,6 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
-import { type MutationCtx, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { conflict, notFound, unauthenticated } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { MINUTE, SECOND } from "./lib/timeUtils";
@@ -180,71 +179,6 @@ async function hashBackupCode(code: string): Promise<string> {
 }
 
 // =============================================================================
-// Rate Limiting Helpers
-// =============================================================================
-
-function checkLockout(user: Doc<"users">) {
-  const now = Date.now();
-  if (user.twoFactorLockedUntil && user.twoFactorLockedUntil > now) {
-    return {
-      locked: true,
-      error: "Too many failed attempts. Please try again later.",
-      lockedUntil: user.twoFactorLockedUntil,
-    };
-  }
-  return { locked: false };
-}
-
-async function handleFailure(ctx: MutationCtx, user: Doc<"users">) {
-  const now = Date.now();
-  const failedAttempts = (user.twoFactorFailedAttempts ?? 0) + 1;
-
-  if (failedAttempts >= MAX_VERIFICATION_ATTEMPTS) {
-    const lockedUntil = now + LOCKOUT_DURATION_MS;
-    await ctx.db.patch(user._id, {
-      twoFactorFailedAttempts: failedAttempts,
-      twoFactorLockedUntil: lockedUntil,
-    });
-    return {
-      locked: true,
-      error: "Too many failed attempts. Account temporarily locked.",
-      lockedUntil,
-    };
-  }
-
-  await ctx.db.patch(user._id, {
-    twoFactorFailedAttempts: failedAttempts,
-  });
-  return { locked: false };
-}
-
-async function handleSuccess(ctx: MutationCtx, userId: Id<"users">) {
-  // Only reset if there were failed attempts or a lockout set
-  // This optimization saves a write if the user wasn't failing
-  await ctx.db.patch(userId, {
-    twoFactorFailedAttempts: 0,
-    twoFactorLockedUntil: undefined,
-  });
-}
-
-/**
- * Verify code for disable mutation (TOTP or backup code)
- */
-async function verifyDisableCode(
-  user: Doc<"users">,
-  code: string,
-  isBackupCode?: boolean,
-): Promise<boolean> {
-  if (isBackupCode) {
-    const backupCodes = user.twoFactorBackupCodes ?? [];
-    const hashedInput = await hashBackupCode(code);
-    return backupCodes.includes(hashedInput);
-  }
-  if (!user.twoFactorSecret) return false;
-  return await verifyTOTP(user.twoFactorSecret, code);
-}
-
-// =============================================================================
 // Queries
 // =============================================================================
 
@@ -417,31 +351,46 @@ export const verifyCode = mutation({
     }
 
     // Check if account is locked
-    const lockout = checkLockout(user);
-    if (lockout.locked) {
+    const now = Date.now();
+    if (user.twoFactorLockedUntil && user.twoFactorLockedUntil > now) {
       return {
         success: false,
-        error: lockout.error,
-        lockedUntil: lockout.lockedUntil,
+        error: "Too many failed attempts. Please try again later.",
+        lockedUntil: user.twoFactorLockedUntil,
       };
     }
 
     // Verify the code
     const isValid = await verifyTOTP(user.twoFactorSecret, args.code);
     if (!isValid) {
-      const failure = await handleFailure(ctx, user);
-      if (failure.locked) {
+      // Increment failed attempts
+      const failedAttempts = (user.twoFactorFailedAttempts ?? 0) + 1;
+
+      if (failedAttempts >= MAX_VERIFICATION_ATTEMPTS) {
+        // Lock the account
+        const lockedUntil = now + LOCKOUT_DURATION_MS;
+        await ctx.db.patch(userId, {
+          twoFactorFailedAttempts: failedAttempts,
+          twoFactorLockedUntil: lockedUntil,
+        });
         return {
           success: false,
-          error: failure.error,
-          lockedUntil: failure.lockedUntil,
+          error: "Too many failed attempts. Account temporarily locked.",
+          lockedUntil,
         };
       }
+
+      await ctx.db.patch(userId, {
+        twoFactorFailedAttempts: failedAttempts,
+      });
       return { success: false, error: "Invalid verification code" };
     }
 
     // Success - reset failed attempts
-    await handleSuccess(ctx, userId);
+    await ctx.db.patch(userId, {
+      twoFactorFailedAttempts: 0,
+      twoFactorLockedUntil: undefined,
+    });
 
     // Mark current session as verified
     const sessionId = await getAuthSessionId(ctx);
@@ -455,7 +404,6 @@ export const verifyCode = mutation({
       .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
       .first();
 
-    const now = Date.now();
     if (existingSession) {
       await ctx.db.patch(existingSession._id, {
         verifiedAt: now,
@@ -483,7 +431,6 @@ export const verifyBackupCode = mutation({
     success: v.boolean(),
     remainingCodes: v.optional(v.number()),
     error: v.optional(v.string()),
-    lockedUntil: v.optional(v.number()),
   }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -500,20 +447,8 @@ export const verifyBackupCode = mutation({
       return { success: false, error: "2FA is not enabled" };
     }
 
-    // Check if account is locked
-    const lockout = checkLockout(user);
-    if (lockout.locked) {
-      return {
-        success: false,
-        error: lockout.error,
-        lockedUntil: lockout.lockedUntil,
-      };
-    }
-
     const backupCodes = user.twoFactorBackupCodes ?? [];
     if (backupCodes.length === 0) {
-      // Don't treat empty backup codes as a failure attempt unless we want to,
-      // but standard behavior is just "no codes available"
       return { success: false, error: "No backup codes available" };
     }
 
@@ -522,19 +457,8 @@ export const verifyBackupCode = mutation({
     const codeIndex = backupCodes.indexOf(hashedInput);
 
     if (codeIndex === -1) {
-      const failure = await handleFailure(ctx, user);
-      if (failure.locked) {
-        return {
-          success: false,
-          error: failure.error,
-          lockedUntil: failure.lockedUntil,
-        };
-      }
       return { success: false, error: "Invalid backup code" };
     }
-
-    // Success - reset failed attempts
-    await handleSuccess(ctx, userId);
 
     // Remove the used code
     const newCodes = [...backupCodes];
@@ -586,7 +510,6 @@ export const regenerateBackupCodes = mutation({
     success: v.boolean(),
     backupCodes: v.optional(v.array(v.string())),
     error: v.optional(v.string()),
-    lockedUntil: v.optional(v.number()),
   }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -603,32 +526,11 @@ export const regenerateBackupCodes = mutation({
       return { success: false, error: "2FA is not enabled" };
     }
 
-    // Check if account is locked
-    const lockout = checkLockout(user);
-    if (lockout.locked) {
-      return {
-        success: false,
-        error: lockout.error,
-        lockedUntil: lockout.lockedUntil,
-      };
-    }
-
     // Verify TOTP code first
     const isValid = await verifyTOTP(user.twoFactorSecret, args.totpCode);
     if (!isValid) {
-      const failure = await handleFailure(ctx, user);
-      if (failure.locked) {
-        return {
-          success: false,
-          error: failure.error,
-          lockedUntil: failure.lockedUntil,
-        };
-      }
       return { success: false, error: "Invalid verification code" };
     }
-
-    // Success - reset failed attempts
-    await handleSuccess(ctx, userId);
 
     // Generate new backup codes
     const backupCodes = generateBackupCodes();
@@ -656,7 +558,6 @@ export const disable = mutation({
   returns: v.object({
     success: v.boolean(),
     error: v.optional(v.string()),
-    lockedUntil: v.optional(v.number()),
   }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -669,36 +570,25 @@ export const disable = mutation({
       throw notFound("user", userId);
     }
 
-    if (!user.twoFactorEnabled) {
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
       return { success: false, error: "2FA is not enabled" };
     }
 
-    // Check if account is locked
-    const lockout = checkLockout(user);
-    if (lockout.locked) {
-      return {
-        success: false,
-        error: lockout.error,
-        lockedUntil: lockout.lockedUntil,
-      };
-    }
+    let isValid = false;
 
-    const isValid = await verifyDisableCode(user, args.code, args.isBackupCode);
+    if (args.isBackupCode) {
+      // Verify backup code
+      const backupCodes = user.twoFactorBackupCodes ?? [];
+      const hashedInput = await hashBackupCode(args.code);
+      isValid = backupCodes.includes(hashedInput);
+    } else {
+      // Verify TOTP code
+      isValid = await verifyTOTP(user.twoFactorSecret, args.code);
+    }
 
     if (!isValid) {
-      const failure = await handleFailure(ctx, user);
-      if (failure.locked) {
-        return {
-          success: false,
-          error: failure.error,
-          lockedUntil: failure.lockedUntil,
-        };
-      }
       return { success: false, error: "Invalid verification code" };
     }
-
-    // Success - reset failed attempts
-    await handleSuccess(ctx, userId);
 
     // Disable 2FA
     await ctx.db.patch(userId, {
@@ -708,24 +598,20 @@ export const disable = mutation({
       twoFactorVerifiedAt: undefined,
     });
 
-    // Cleanup all sessions for this user
-    await cleanupTwoFactorSessions(ctx, userId);
+    // Cleanup all sessions for this user (iterative delete)
+    while (true) {
+      const sessions = await ctx.db
+        .query("twoFactorSessions")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .take(MAX_PAGE_SIZE);
+
+      if (sessions.length === 0) break;
+
+      for (const session of sessions) {
+        await ctx.db.delete(session._id);
+      }
+    }
 
     return { success: true };
   },
 });
-
-async function cleanupTwoFactorSessions(ctx: MutationCtx, userId: Id<"users">) {
-  while (true) {
-    const sessions = await ctx.db
-      .query("twoFactorSessions")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .take(MAX_PAGE_SIZE);
-
-    if (sessions.length === 0) break;
-
-    for (const session of sessions) {
-      await ctx.db.delete(session._id);
-    }
-  }
-}
