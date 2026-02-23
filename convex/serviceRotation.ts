@@ -6,7 +6,7 @@
  */
 
 import { v } from "convex/values";
-import { internalMutation, internalQuery, mutation } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { requireBotApiKey } from "./lib/botAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { notFound } from "./lib/errors";
@@ -23,7 +23,7 @@ function getCurrentMonth(): string {
 // ============================================
 
 /** Selects the best available provider for a service type, prioritizing those with remaining free tier capacity. */
-export const selectProvider = internalQuery({
+export const selectProvider = query({
   args: {
     serviceType: serviceTypes,
     unitsNeeded: v.optional(v.number()), // Estimate of units needed (optional)
@@ -109,7 +109,7 @@ export const selectProvider = internalQuery({
 /**
  * Get usage summary for all providers of a service type
  */
-export const getUsageSummary = internalQuery({
+export const getUsageSummary = query({
   args: {
     serviceType: serviceTypes,
     month: v.optional(v.string()),

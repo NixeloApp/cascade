@@ -514,10 +514,6 @@ export const softDeleteProject = authenticatedMutation({
   args: {
     projectId: v.id("projects"),
   },
-  returns: v.object({
-    success: v.boolean(),
-    deleted: v.boolean(),
-  }),
   handler: async (ctx, args) => {
     const project = await ctx.db.get(args.projectId);
     if (!project) throw notFound("project", args.projectId);
@@ -559,10 +555,6 @@ export const restoreProject = authenticatedMutation({
   args: {
     projectId: v.id("projects"),
   },
-  returns: v.object({
-    success: v.boolean(),
-    restored: v.boolean(),
-  }),
   handler: async (ctx, args) => {
     const project = await ctx.db.get(args.projectId);
     if (!project) throw notFound("project", args.projectId);
