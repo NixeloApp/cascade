@@ -35,7 +35,6 @@ export async function safeFetch(
       mode: input.mode,
       credentials: input.credentials,
       cache: input.cache,
-      redirect: input.redirect,
       integrity: input.integrity,
       keepalive: input.keepalive,
       signal: input.signal,
@@ -47,7 +46,9 @@ export async function safeFetch(
   }
 
   // Normalize headers to a Headers object to handle Record, string[][], or Headers input
-  const headers = new Headers(options.headers);
+  // (already a Headers instance when input is a Request)
+  const headers =
+    options.headers instanceof Headers ? options.headers : new Headers(options.headers);
 
   // 1. Validate destination URL (SSRF protection) and get safe IP
   const resolvedIp = await validateDestinationResolved(urlStr);

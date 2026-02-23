@@ -109,11 +109,8 @@ describe("safeFetch", () => {
     const [url, options] = mockFetchWithTimeout.mock.calls[0];
     expect(url).toBe("http://1.2.3.4/api");
     expect(options.method).toBe("POST");
-    // Verify body is preserved (it will be a ReadableStream or similar)
     expect(options.body).toBeDefined();
-    // Headers from Request should be preserved too?
-    // Request constructor sets Content-Type if body is string? No, unless we set it.
-    // But Request object has headers.
+    expect(options.redirect).toBe("error");
   });
 
   it("merges Request headers with init headers", async () => {
@@ -133,6 +130,7 @@ describe("safeFetch", () => {
     expect(headers.get("x-init")).toBe("init-val");
     expect(headers.get("x-common")).toBe("init-val"); // Init overrides request
     expect(headers.get("host")).toBe("example.com");
+    expect(options.redirect).toBe("error");
   });
 
   it("passes custom timeout", async () => {
