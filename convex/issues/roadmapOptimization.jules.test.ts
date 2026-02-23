@@ -14,10 +14,11 @@ describe("listRoadmapIssues ordering", () => {
 
     // Create 105 issues
     // Issue 0 is oldest, Issue 104 is newest
-    for (let i = 0; i < 105; i++) {
-      await t.run(async (ctx) => {
-        const project = await ctx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
+    await t.run(async (ctx) => {
+      const project = await ctx.db.get(projectId);
+      if (!project) throw new Error("Project not found");
+
+      for (let i = 0; i < 105; i++) {
         await ctx.db.insert("issues", {
           projectId,
           organizationId,
@@ -35,8 +36,8 @@ describe("listRoadmapIssues ordering", () => {
           attachments: [],
           order: i,
         });
-      });
-    }
+      }
+    });
 
     // Query roadmap issues (default limit is 100)
     const issues = await asUser.query(api.issues.queries.listRoadmapIssues, {
