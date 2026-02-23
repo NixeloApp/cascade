@@ -175,7 +175,7 @@ export const createProject = authenticatedMutation({
       },
     });
 
-    return projectId;
+    return { projectId };
   },
 });
 
