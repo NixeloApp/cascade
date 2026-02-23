@@ -38,7 +38,12 @@ describe("organizationAccess", () => {
     });
   };
 
-  const addMember = async (t: any, organizationId: any, userId: any, role: "owner" | "admin" | "member") => {
+  const addMember = async (
+    t: any,
+    organizationId: any,
+    userId: any,
+    role: "owner" | "admin" | "member",
+  ) => {
     return t.run(async (ctx: any) => {
       return ctx.db.insert("organizationMembers", {
         organizationId,
@@ -77,29 +82,31 @@ describe("organizationAccess", () => {
     await t.run(async (ctx) => {
       const promises = [];
       for (let i = 0; i < 105; i++) {
-        promises.push((async () => {
-          const orgId = await ctx.db.insert("organizations", {
-            name: `Org ${i}`,
-            slug: `org-${i}`,
-            timezone: "UTC",
-            settings: {
-              defaultMaxHoursPerWeek: 40,
-              defaultMaxHoursPerDay: 8,
-              requiresTimeApproval: false,
-              billingEnabled: false,
-            },
-            createdBy: userId,
-            updatedAt: Date.now(),
-          });
-          await ctx.db.insert("organizationMembers", {
-            organizationId: orgId,
-            userId,
-            role: "member",
-            addedBy: userId,
-            joinedAt: Date.now(),
-          });
-          return orgId;
-        })());
+        promises.push(
+          (async () => {
+            const orgId = await ctx.db.insert("organizations", {
+              name: `Org ${i}`,
+              slug: `org-${i}`,
+              timezone: "UTC",
+              settings: {
+                defaultMaxHoursPerWeek: 40,
+                defaultMaxHoursPerDay: 8,
+                requiresTimeApproval: false,
+                billingEnabled: false,
+              },
+              createdBy: userId,
+              updatedAt: Date.now(),
+            });
+            await ctx.db.insert("organizationMembers", {
+              organizationId: orgId,
+              userId,
+              role: "member",
+              addedBy: userId,
+              joinedAt: Date.now(),
+            });
+            return orgId;
+          })(),
+        );
       }
       await Promise.all(promises);
     });
@@ -120,7 +127,7 @@ describe("organizationAccess", () => {
       // Actually, since we want to test the fallback, let's pick an org ID
       // that is NOT in the returned items.
       const returnedOrgIds = new Set(items.map((i) => i.organizationId));
-      let targetOrgId = lastOrgId;
+      const targetOrgId = lastOrgId;
 
       if (returnedOrgIds.has(lastOrgId)) {
         // This is unlikely if sorted by creation time/id, but just in case:
@@ -196,7 +203,7 @@ describe("organizationAccess", () => {
       // Check Non-member (create another user)
       const userStranger = await ctx.db.insert("users", {
         name: "Stranger",
-        email: "stranger@example.com"
+        email: "stranger@example.com",
       });
       expect(await isOrganizationAdmin(ctx, org, userStranger)).toBe(false);
       expect(await isOrganizationMember(ctx, org, userStranger)).toBe(false);
