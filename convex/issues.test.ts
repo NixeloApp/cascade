@@ -443,7 +443,7 @@ describe("Issues", () => {
         priority: "medium",
       });
 
-      const commentId = await asUser.mutation(api.issues.addComment, {
+      const { commentId } = await asUser.mutation(api.issues.addComment, {
         issueId,
         content: "This is a test comment",
       });
@@ -607,7 +607,7 @@ describe("Issues", () => {
       });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
+      const { projectId } = await asAdmin.mutation(api.projects.createProject, {
         name: "Test",
         key: "BULK",
         organizationId,

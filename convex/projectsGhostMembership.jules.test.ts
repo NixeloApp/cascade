@@ -15,7 +15,7 @@ describe("Projects Ghost Membership Vulnerability", () => {
     const asAdmin = asAuthenticatedUser(t, adminUser);
 
     // 2. Create a Project in Organization A
-    const projectId = await asAdmin.mutation(api.projects.createProject, {
+    const { projectId } = await asAdmin.mutation(api.projects.createProject, {
       name: "Secret Project",
       key: "SEC",
       organizationId,

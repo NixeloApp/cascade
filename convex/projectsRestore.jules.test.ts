@@ -11,7 +11,7 @@ describe("Project Restore", () => {
     const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t);
 
     // 1. Create a project
-    const projectId = await asUser.mutation(api.projects.createProject, {
+    const { projectId } = await asUser.mutation(api.projects.createProject, {
       name: "Restore Test Project",
       key: "RESTORE",
       isPublic: false,
