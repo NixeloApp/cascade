@@ -13,8 +13,6 @@ describe("Load More Done Issues", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create 3 issues and move them to Done sequentially
-    // NOTE: Sequential execution is required here - the timestamps must be distinct and ordered
-    // to properly test pagination by updatedAt. Cannot parallelize.
     const issues = [];
     for (let i = 1; i <= 3; i++) {
       const { issueId } = await asUser.mutation(api.issues.createIssue, {
@@ -82,8 +80,6 @@ describe("Load More Done Issues", () => {
     });
 
     // Create 3 issues in sprint and move them to Done sequentially
-    // NOTE: Sequential execution is required here - the timestamps must be distinct and ordered
-    // to properly test pagination by updatedAt. Cannot parallelize.
     const issues = [];
     for (let i = 1; i <= 3; i++) {
       const { issueId } = await asUser.mutation(api.issues.createIssue, {

@@ -658,15 +658,15 @@ export const addProjectMember = projectAdminMutation({
       .withIndex("email", (q) => q.eq("email", args.userEmail))
       .first();
 
-    if (!user) throw notFound("user");
+    // Security: User must be an organization member to be added to a project.
+    // We check both existence and membership, and throw the SAME error if either fails.
+    // This prevents attackers from enumerating valid emails in the system (global user enumeration).
+    const isMember = user
+      ? await isOrganizationMember(ctx, ctx.project.organizationId, user._id)
+      : false;
 
-    // Security: User must be an organization member before being added to a project
-    const isMember = await isOrganizationMember(ctx, ctx.project.organizationId, user._id);
-    if (!isMember) {
-      throw validation(
-        "userEmail",
-        "User must be a member of the organization to be added to this project",
-      );
+    if (!user || !isMember) {
+      throw notFound("user");
     }
 
     // Check if already a member

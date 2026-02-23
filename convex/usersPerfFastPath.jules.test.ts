@@ -28,24 +28,22 @@ describe("Users Performance Optimization (Fast Path)", () => {
     // Current threshold is 10, so this triggers "filtered" path (slow scan).
     // After optimization (threshold 50), this will trigger "fast" path.
     const projectCount = 15;
+    const projectIds = [];
 
-    const projectIds = await Promise.all(
-      Array.from({ length: projectCount }, async () => {
-        const project = await createProjectInOrganization(t, userA, orgA);
+    for (let i = 0; i < projectCount; i++) {
+      const project = await createProjectInOrganization(t, userA, orgA);
+      projectIds.push(project);
 
-        // Add User B to Project
-        await t.run(async (ctx) => {
-          await ctx.db.insert("projectMembers", {
-            projectId: project,
-            userId: userB,
-            role: "viewer",
-            addedBy: userA,
-          });
+      // Add User B to Project
+      await t.run(async (ctx) => {
+        await ctx.db.insert("projectMembers", {
+          projectId: project,
+          userId: userB,
+          role: "viewer",
+          addedBy: userA,
         });
-
-        return project;
-      }),
-    );
+      });
+    }
 
     // Add User B to organization members
     await t.run(async (ctx) => {
@@ -58,9 +56,37 @@ describe("Users Performance Optimization (Fast Path)", () => {
     });
 
     // Create issues in each project for User B
-    await Promise.all(
-      projectIds.map(async (projectId, i) => {
-        // 1 Active Issue
+    for (let i = 0; i < projectCount; i++) {
+      const projectId = projectIds[i];
+      // 1 Active Issue
+      await t.run(async (ctx) => {
+        const p = await ctx.db.get(projectId);
+        if (!p) throw new Error("Project missing");
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId: p.organizationId,
+          // biome-ignore lint/style/noNonNullAssertion: testing convenience
+          workspaceId: p.workspaceId!,
+          // biome-ignore lint/style/noNonNullAssertion: testing convenience
+          teamId: p.teamId!,
+          key: `KEY-A-${i}`,
+          title: `Active ${i}`,
+          status: "todo",
+          priority: "medium",
+          type: "task",
+          reporterId: userB,
+          assigneeId: userB,
+          updatedAt: Date.now(),
+          labels: [],
+          order: 0,
+          linkedDocuments: [],
+          attachments: [],
+          embedding: [],
+        });
+      });
+
+      // 1 Completed Issue (only for even projects to mix it up)
+      if (i % 2 === 0) {
         await t.run(async (ctx) => {
           const p = await ctx.db.get(projectId);
           if (!p) throw new Error("Project missing");
@@ -71,9 +97,9 @@ describe("Users Performance Optimization (Fast Path)", () => {
             workspaceId: p.workspaceId!,
             // biome-ignore lint/style/noNonNullAssertion: testing convenience
             teamId: p.teamId!,
-            key: `KEY-A-${i}`,
-            title: `Active ${i}`,
-            status: "todo",
+            key: `KEY-D-${i}`,
+            title: `Done ${i}`,
+            status: "done",
             priority: "medium",
             type: "task",
             reporterId: userB,
@@ -86,37 +112,8 @@ describe("Users Performance Optimization (Fast Path)", () => {
             embedding: [],
           });
         });
-
-        // 1 Completed Issue (only for even projects to mix it up)
-        if (i % 2 === 0) {
-          await t.run(async (ctx) => {
-            const p = await ctx.db.get(projectId);
-            if (!p) throw new Error("Project missing");
-            await ctx.db.insert("issues", {
-              projectId,
-              organizationId: p.organizationId,
-              // biome-ignore lint/style/noNonNullAssertion: testing convenience
-              workspaceId: p.workspaceId!,
-              // biome-ignore lint/style/noNonNullAssertion: testing convenience
-              teamId: p.teamId!,
-              key: `KEY-D-${i}`,
-              title: `Done ${i}`,
-              status: "done",
-              priority: "medium",
-              type: "task",
-              reporterId: userB,
-              assigneeId: userB,
-              updatedAt: Date.now(),
-              labels: [],
-              order: 0,
-              linkedDocuments: [],
-              attachments: [],
-              embedding: [],
-            });
-          });
-        }
-      }),
-    );
+      }
+    }
 
     // Expected Stats:
     // Projects: 15
