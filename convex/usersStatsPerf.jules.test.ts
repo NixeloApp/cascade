@@ -50,52 +50,56 @@ describe("Users Stats Performance", () => {
       if (!project) throw new Error("Project not found");
 
       // 10 Active
-      for (let i = 0; i < 10; i++) {
-        await ctx.db.insert("issues", {
-          projectId,
-          organizationId,
-          workspaceId: project.workspaceId,
-          teamId: project.teamId,
-          key: `TODO-${i}`,
-          title: `Todo ${i}`,
-          status: "todo",
-          priority: "medium",
-          type: "task",
-          reporterId: viewerId,
-          assigneeId: targetId,
-          updatedAt: Date.now(),
-          labels: [],
-          order: i,
-          linkedDocuments: [],
-          attachments: [],
-          embedding: [],
-          searchContent: "",
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 10 }, (_, i) =>
+          ctx.db.insert("issues", {
+            projectId,
+            organizationId,
+            workspaceId: project.workspaceId,
+            teamId: project.teamId,
+            key: `TODO-${i}`,
+            title: `Todo ${i}`,
+            status: "todo",
+            priority: "medium",
+            type: "task",
+            reporterId: viewerId,
+            assigneeId: targetId,
+            updatedAt: Date.now(),
+            labels: [],
+            order: i,
+            linkedDocuments: [],
+            attachments: [],
+            embedding: [],
+            searchContent: "",
+          }),
+        ),
+      );
 
       // 5 Completed
-      for (let i = 0; i < 5; i++) {
-        await ctx.db.insert("issues", {
-          projectId,
-          organizationId,
-          workspaceId: project.workspaceId,
-          teamId: project.teamId,
-          key: `DONE-${i}`,
-          title: `Done ${i}`,
-          status: "done",
-          priority: "medium",
-          type: "task",
-          reporterId: viewerId,
-          assigneeId: targetId,
-          updatedAt: Date.now(),
-          labels: [],
-          order: i + 10,
-          linkedDocuments: [],
-          attachments: [],
-          embedding: [],
-          searchContent: "",
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 5 }, (_, i) =>
+          ctx.db.insert("issues", {
+            projectId,
+            organizationId,
+            workspaceId: project.workspaceId,
+            teamId: project.teamId,
+            key: `DONE-${i}`,
+            title: `Done ${i}`,
+            status: "done",
+            priority: "medium",
+            type: "task",
+            reporterId: viewerId,
+            assigneeId: targetId,
+            updatedAt: Date.now(),
+            labels: [],
+            order: i + 10,
+            linkedDocuments: [],
+            attachments: [],
+            embedding: [],
+            searchContent: "",
+          }),
+        ),
+      );
     });
 
     // Query stats as Viewer looking at Target
