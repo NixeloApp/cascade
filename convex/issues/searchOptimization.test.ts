@@ -27,7 +27,10 @@ describe("issue search optimization", () => {
 
   it("should find issues assigned to specific user", async () => {
     await createTestIssue(t, projectId, ctx.userId, { title: "My Issue", assigneeId: ctx.userId });
-    await createTestIssue(t, projectId, ctx.userId, { title: "Other Issue", assigneeId: otherUserId });
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "Other Issue",
+      assigneeId: otherUserId,
+    });
 
     const result = await ctx.asUser.query(api.issues.queries.search, {
       query: "",
@@ -41,7 +44,10 @@ describe("issue search optimization", () => {
 
   it("should find issues assigned to 'me'", async () => {
     await createTestIssue(t, projectId, ctx.userId, { title: "My Issue", assigneeId: ctx.userId });
-    await createTestIssue(t, projectId, ctx.userId, { title: "Other Issue", assigneeId: otherUserId });
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "Other Issue",
+      assigneeId: otherUserId,
+    });
 
     const result = await ctx.asUser.query(api.issues.queries.search, {
       query: "",
@@ -69,19 +75,19 @@ describe("issue search optimization", () => {
 
   it("should combine assigneeId and status filters", async () => {
     await createTestIssue(t, projectId, ctx.userId, {
-        title: "My Todo",
-        assigneeId: ctx.userId,
-        status: "todo"
+      title: "My Todo",
+      assigneeId: ctx.userId,
+      status: "todo",
     });
     await createTestIssue(t, projectId, ctx.userId, {
-        title: "My Done",
-        assigneeId: ctx.userId,
-        status: "done"
+      title: "My Done",
+      assigneeId: ctx.userId,
+      status: "done",
     });
     await createTestIssue(t, projectId, ctx.userId, {
-        title: "Other Todo",
-        assigneeId: otherUserId,
-        status: "todo"
+      title: "Other Todo",
+      assigneeId: otherUserId,
+      status: "todo",
     });
 
     const result = await ctx.asUser.query(api.issues.queries.search, {
@@ -96,16 +102,19 @@ describe("issue search optimization", () => {
   });
 
   it("should return correct results when querying with status only", async () => {
-      await createTestIssue(t, projectId, ctx.userId, { status: "todo", title: "Todo 1" });
-      await createTestIssue(t, projectId, ctx.userId, { status: "inprogress", title: "In Progress 1" });
+    await createTestIssue(t, projectId, ctx.userId, { status: "todo", title: "Todo 1" });
+    await createTestIssue(t, projectId, ctx.userId, {
+      status: "inprogress",
+      title: "In Progress 1",
+    });
 
-      const result = await ctx.asUser.query(api.issues.queries.search, {
-        query: "",
-        projectId,
-        status: ["todo"]
-      });
+    const result = await ctx.asUser.query(api.issues.queries.search, {
+      query: "",
+      projectId,
+      status: ["todo"],
+    });
 
-      expect(result.page).toHaveLength(1);
-      expect(result.page[0].title).toBe("Todo 1");
+    expect(result.page).toHaveLength(1);
+    expect(result.page[0].title).toBe("Todo 1");
   });
 });
