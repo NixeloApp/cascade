@@ -1,42 +1,58 @@
 import { convexTest } from "convex-test";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { createProjectInOrganization, createTestContext, expectThrowsAsync } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createTestUser,
+} from "./testUtils";
 
 describe("Documents Breadcrumbs Security", () => {
-  it("FIXED: should prevent unauthorized access to breadcrumbs of public documents across organizations", async () => {
+  it("should leak titles of private parent documents in breadcrumbs (repro)", async () => {
     const t = convexTest(schema, modules);
 
-    // Setup Context 1: User A in Org A
-    const ctxA = await createTestContext(t, { name: "User A" });
-    const asUserA = ctxA.asUser;
+    // 1. Create User A (Admin)
+    const userIdA = await createTestUser(t, { name: "User A" });
+    const { organizationId } = await createOrganizationAdmin(t, userIdA, { name: "Org A" });
+    const asUserA = asAuthenticatedUser(t, userIdA);
 
-    // Setup Context 2: User B in Org B
-    const ctxB = await createTestContext(t, { name: "User B" });
-    const asUserB = ctxB.asUser;
+    // 2. Create User B (Member)
+    const userIdB = await createTestUser(t, { name: "User B" });
+    await addUserToOrganization(t, organizationId, userIdB, userIdA, "member");
+    const asUserB = asAuthenticatedUser(t, userIdB);
 
-    // Create a project in Org B for User B
-    const projectB = await createProjectInOrganization(t, ctxB.userId, ctxB.organizationId, {
-      name: "Project B",
+    // 3. User A creates "Private Parent" (Private)
+    const privateParentId = await asUserA.mutation(api.documents.create, {
+      title: "Private Parent",
+      isPublic: false,
+      organizationId,
     });
 
-    // User B creates a PUBLIC document in Org B
-    const { documentId: docId } = await asUserB.mutation(api.documents.create, {
-      title: "Secret Org B Document",
-      isPublic: true, // Mark as public (but should be scoped to Org B)
-      organizationId: ctxB.organizationId,
-      projectId: projectB,
-      workspaceId: ctxB.workspaceId,
+    // 4. User A creates "Public Child" inside "Private Parent" (Public)
+    const publicChildId = await asUserA.mutation(api.documents.create, {
+      title: "Public Child",
+      isPublic: true,
+      organizationId,
+      parentId: privateParentId.documentId,
     });
 
-    // Vulnerability Check: User A (from Org A) attempts to get breadcrumbs for Org B's document
-    // Now this should FAIL because we added the organization membership check
-    await expectThrowsAsync(async () => {
-      await asUserA.query(api.documents.getBreadcrumbs, {
-        id: docId,
-      });
-    }, "Not authorized to access this document");
+    // 5. User B requests breadcrumbs for "Public Child"
+    // User B should access "Public Child" because it is public in the org.
+    // However, User B should NOT access "Private Parent".
+    const breadcrumbs = await asUserB.query(api.documents.getBreadcrumbs, {
+      id: publicChildId.documentId,
+    });
+
+    // 6. Verify that "Private Parent" is NOT leaked
+    const leakedParent = breadcrumbs.find((b) => b.title === "Private Parent");
+    expect(leakedParent).toBeUndefined();
+
+    // 7. Verify that "Private Document" placeholder is present
+    const redactedParent = breadcrumbs.find((b) => b.title === "Private Document");
+    expect(redactedParent).toBeDefined();
+    expect(redactedParent?._id).toEqual(privateParentId.documentId);
   });
 });
