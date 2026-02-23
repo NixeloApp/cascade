@@ -209,13 +209,7 @@ export const updateTitle = authenticatedMutation({
 export const togglePublic = authenticatedMutation({
   args: { id: v.id("documents") },
   handler: async (ctx, args) => {
-    const document = await ctx.db.get(args.id);
-    if (!document) {
-      throw notFound("document", args.id);
-    }
-
-    // Ensure user still has access to the document's container
-    await assertDocumentAccess(ctx, document);
+    const document = await getAccessibleDocument(ctx, args.id);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to edit this document");
