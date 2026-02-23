@@ -103,8 +103,10 @@ export function Avatar({
       <AvatarPrimitive.Fallback
         className={cn(fallbackVariants({ size, variant }))}
         delayMs={src ? 600 : 0}
+        aria-label={altText}
+        role="img"
       >
-        {initials}
+        <span aria-hidden="true">{initials}</span>
       </AvatarPrimitive.Fallback>
     </AvatarPrimitive.Root>
   );
