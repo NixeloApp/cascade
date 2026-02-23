@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
-import { action, internalMutation } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { type ActionCtx, action, internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
@@ -207,31 +207,7 @@ export const sendMessage = action({
       throw validation("webhook", "Webhook is not active");
     }
 
-    // Build Pumble message payload
-    const payload: {
-      text: string;
-      attachments?: Array<{
-        title?: string;
-        text: string;
-        color?: string;
-        fields?: Array<{ title: string; value: string; short?: boolean }>;
-      }>;
-    } = {
-      text: args.text,
-    };
-
-    // Add rich formatting if provided
-    if (args.title || args.fields || args.color) {
-      payload.attachments = [
-        {
-          ...(args.title && { title: args.title }),
-          text: args.text,
-          ...(args.color && { color: args.color }),
-          ...(args.fields && { fields: args.fields }),
-        },
-      ];
-      payload.text = args.title || `${args.text.substring(0, 50)}...`;
-    }
+    const payload = buildPumblePayload(args.text, args.title, args.color, args.fields);
 
     try {
       // Send message to Pumble
@@ -249,20 +225,14 @@ export const sendMessage = action({
         throw validation("pumble", `Pumble API error: ${response.status} ${error}`);
       }
 
-      // Update webhook stats
-      await ctx.runMutation(internal.pumble.updateWebhookStats, {
-        webhookId: args.webhookId,
-        success: true,
-      });
+      // Success
+      await updateStats(ctx, args.webhookId, true);
 
       return { success: true };
     } catch (error) {
-      // Update webhook stats with error
-      await ctx.runMutation(internal.pumble.updateWebhookStats, {
-        webhookId: args.webhookId,
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+      // Failure
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      await updateStats(ctx, args.webhookId, false, errorMessage);
 
       throw error;
     }
@@ -426,4 +396,57 @@ function getTitleForEvent(event: string, _issue: unknown): string {
     default:
       return `📋 Issue Event`;
   }
+}
+
+async function updateStats(
+  ctx: ActionCtx,
+  webhookId: Id<"pumbleWebhooks">,
+  success: boolean,
+  error?: string,
+) {
+  try {
+    await ctx.runMutation(internal.pumble.updateWebhookStats, {
+      webhookId,
+      success,
+      error,
+    });
+  } catch (statsError) {
+    logger.error(`Failed to update Pumble webhook stats on ${success ? "success" : "failure"}`, {
+      webhookId,
+      originalError: error,
+      statsError: statsError instanceof Error ? statsError.message : String(statsError),
+    });
+  }
+}
+
+function buildPumblePayload(
+  text: string,
+  title?: string,
+  color?: string,
+  fields?: Array<{ title: string; value: string; short?: boolean }>,
+) {
+  const payload: {
+    text: string;
+    attachments?: Array<{
+      title?: string;
+      text: string;
+      color?: string;
+      fields?: Array<{ title: string; value: string; short?: boolean }>;
+    }>;
+  } = {
+    text: text,
+  };
+
+  if (title || fields || color) {
+    payload.attachments = [
+      {
+        ...(title && { title }),
+        text,
+        ...(color && { color }),
+        ...(fields && { fields }),
+      },
+    ];
+    payload.text = title || `${text.substring(0, 50)}...`;
+  }
+  return payload;
 }

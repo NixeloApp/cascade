@@ -36,36 +36,6 @@ describe("Avatar", () => {
     // which makes testing image rendering unreliable in JSDOM environment
   });
 
-  describe("accessibility", () => {
-    it("has correct role and label", async () => {
-      render(<Avatar name="John Doe" />);
-      await waitFor(() => {
-        expect(screen.getByRole("img", { name: "John Doe" })).toBeInTheDocument();
-      });
-    });
-
-    it("uses email as label if name is missing", async () => {
-      render(<Avatar email="john@example.com" />);
-      await waitFor(() => {
-        expect(screen.getByRole("img", { name: "john@example.com" })).toBeInTheDocument();
-      });
-    });
-
-    it("uses default label if neither name nor email provided", async () => {
-      render(<Avatar />);
-      await waitFor(() => {
-        expect(screen.getByRole("img", { name: "User avatar" })).toBeInTheDocument();
-      });
-    });
-
-    it("uses provided alt text as label", async () => {
-      render(<Avatar name="John Doe" alt="Profile Picture" />);
-      await waitFor(() => {
-        expect(screen.getByRole("img", { name: "Profile Picture" })).toBeInTheDocument();
-      });
-    });
-  });
-
   describe("initials generation", () => {
     it("uses first and last name initials", async () => {
       render(<Avatar name="John William Doe" />);

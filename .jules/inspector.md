@@ -31,7 +31,3 @@
 ## 2024-05-22 - OAuth Data Validation
 **Learning:** OAuth integrations often assume valid JSON and complete user profiles from providers. However, API changes or failures can result in invalid JSON or partial data (e.g. `undefined` user IDs), leading to silent data corruption or runtime crashes when processing the callback.
 **Action:** Always validate the structure and required fields of OAuth user profiles and wrap JSON parsing in try/catch blocks before persisting or using the data.
-
-## 2024-05-22 - Silent Request Property Loss
-**Learning:** `safeFetch` (SSRF protection wrapper) silently ignored `method`, `body`, and `headers` when a `Request` object was passed as input, defaulting to `GET` without a body. This created a silent failure mode where API calls appeared successful but sent incorrect data.
-**Action:** When wrapping `fetch` or creating utility functions that accept `Request | string`, always manually extract and merge `Request` properties (method, body, headers, signal) into the `init` options, as standard `fetch` behavior is not automatically preserved when rewriting the URL.

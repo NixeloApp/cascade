@@ -91,22 +91,17 @@ describe("customFields", () => {
 
       const types = ["text", "number", "select", "multiselect", "date", "checkbox", "url"] as const;
 
-      const results = await Promise.all(
-        types.map((fieldType) =>
-          asUser.mutation(api.customFields.create, {
-            projectId,
-            name: `${fieldType} Field`,
-            fieldKey: `${fieldType}_field`,
-            fieldType,
-            options: fieldType === "select" || fieldType === "multiselect" ? ["A", "B"] : undefined,
-            isRequired: false,
-          }),
-        ),
-      );
-
-      results.forEach(({ fieldId }) => {
+      for (const fieldType of types) {
+        const { fieldId } = await asUser.mutation(api.customFields.create, {
+          projectId,
+          name: `${fieldType} Field`,
+          fieldKey: `${fieldType}_field`,
+          fieldType,
+          options: fieldType === "select" || fieldType === "multiselect" ? ["A", "B"] : undefined,
+          isRequired: false,
+        });
         expect(fieldId).toBeDefined();
-      });
+      }
 
       const fields = await asUser.query(api.customFields.list, { projectId });
       expect(fields.length).toBe(types.length);

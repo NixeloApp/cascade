@@ -14,100 +14,94 @@ describe("Users Performance Optimization", () => {
     const projectId = await createTestProject(t, userId);
 
     // Create 5 active issues assigned to user
-    await Promise.all(
-      Array.from({ length: 5 }, (_, i) =>
-        t.run(async (ctx) => {
-          const project = await ctx.db.get(projectId);
-          if (!project) throw new Error("Project not found");
-          if (!project.workspaceId || !project.teamId)
-            throw new Error("Project missing workspace or team");
-          await ctx.db.insert("issues", {
-            projectId,
-            organizationId: project.organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: `ACTIVE-${i}`,
-            title: `Active Issue ${i}`,
-            status: "todo",
-            priority: "medium",
-            type: "task",
-            reporterId: userId,
-            assigneeId: userId,
-            updatedAt: Date.now(),
-            labels: [],
-            order: i,
-            linkedDocuments: [],
-            attachments: [],
-            embedding: [],
-          });
-        }),
-      ),
-    );
+    for (let i = 0; i < 5; i++) {
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        if (!project.workspaceId || !project.teamId)
+          throw new Error("Project missing workspace or team");
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId: project.organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: `ACTIVE-${i}`,
+          title: `Active Issue ${i}`,
+          status: "todo",
+          priority: "medium",
+          type: "task",
+          reporterId: userId,
+          assigneeId: userId,
+          updatedAt: Date.now(),
+          labels: [],
+          order: i,
+          linkedDocuments: [],
+          attachments: [],
+          embedding: [],
+        });
+      });
+    }
 
     // Create 3 deleted issues assigned to user
-    await Promise.all(
-      Array.from({ length: 3 }, (_, i) =>
-        t.run(async (ctx) => {
-          const project = await ctx.db.get(projectId);
-          if (!project) throw new Error("Project not found");
-          if (!project.workspaceId || !project.teamId)
-            throw new Error("Project missing workspace or team");
-          await ctx.db.insert("issues", {
-            projectId,
-            organizationId: project.organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: `DELETED-${i}`,
-            title: `Deleted Issue ${i}`,
-            status: "todo",
-            priority: "medium",
-            type: "task",
-            reporterId: userId,
-            assigneeId: userId,
-            updatedAt: Date.now(),
-            labels: [],
-            order: i,
-            linkedDocuments: [],
-            attachments: [],
-            embedding: [],
-            isDeleted: true,
-            deletedAt: Date.now(),
-            deletedBy: userId,
-          });
-        }),
-      ),
-    );
+    for (let i = 0; i < 3; i++) {
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        if (!project.workspaceId || !project.teamId)
+          throw new Error("Project missing workspace or team");
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId: project.organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: `DELETED-${i}`,
+          title: `Deleted Issue ${i}`,
+          status: "todo",
+          priority: "medium",
+          type: "task",
+          reporterId: userId,
+          assigneeId: userId,
+          updatedAt: Date.now(),
+          labels: [],
+          order: i,
+          linkedDocuments: [],
+          attachments: [],
+          embedding: [],
+          isDeleted: true,
+          deletedAt: Date.now(),
+          deletedBy: userId,
+        });
+      });
+    }
 
     // Create 2 done issues (active)
-    await Promise.all(
-      Array.from({ length: 2 }, (_, i) =>
-        t.run(async (ctx) => {
-          const project = await ctx.db.get(projectId);
-          if (!project) throw new Error("Project not found");
-          if (!project.workspaceId || !project.teamId)
-            throw new Error("Project missing workspace or team");
-          await ctx.db.insert("issues", {
-            projectId,
-            organizationId: project.organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: `DONE-${i}`,
-            title: `Done Issue ${i}`,
-            status: "done",
-            priority: "medium",
-            type: "task",
-            reporterId: userId,
-            assigneeId: userId,
-            updatedAt: Date.now(),
-            labels: [],
-            order: i,
-            linkedDocuments: [],
-            attachments: [],
-            embedding: [],
-          });
-        }),
-      ),
-    );
+    for (let i = 0; i < 2; i++) {
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        if (!project.workspaceId || !project.teamId)
+          throw new Error("Project missing workspace or team");
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId: project.organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: `DONE-${i}`,
+          title: `Done Issue ${i}`,
+          status: "done",
+          priority: "medium",
+          type: "task",
+          reporterId: userId,
+          assigneeId: userId,
+          updatedAt: Date.now(),
+          labels: [],
+          order: i,
+          linkedDocuments: [],
+          attachments: [],
+          embedding: [],
+        });
+      });
+    }
 
     // Create 1 done issue (deleted)
     await t.run(async (ctx) => {
