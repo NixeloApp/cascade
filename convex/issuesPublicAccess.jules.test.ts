@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  addProjectMember,
+  asAuthenticatedUser,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Public Issue Access Vulnerability", () => {
   it("should NOT allow unauthenticated users to access issues in public projects", async () => {
@@ -17,6 +22,8 @@ describe("Public Issue Access Vulnerability", () => {
       key: "PUB",
       isPublic: true,
     });
+
+    await addProjectMember(t, projectId, assigneeId, "viewer", ownerId);
 
     const asOwner = asAuthenticatedUser(t, ownerId);
 
