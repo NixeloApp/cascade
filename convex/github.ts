@@ -17,7 +17,6 @@ export const connectGitHub = authenticatedMutation({
     refreshToken: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
   },
-  returns: v.object({ connectionId: v.id("githubConnections") }),
   handler: async (ctx, args) => {
     // Encrypt tokens before storage
     const encryptedAccessToken = await encrypt(args.accessToken);
@@ -41,11 +40,11 @@ export const connectGitHub = authenticatedMutation({
         expiresAt: args.expiresAt,
         updatedAt: now,
       });
-      return { connectionId: existing._id };
+      return existing._id;
     }
 
     // Create new connection
-    const connectionId = await ctx.db.insert("githubConnections", {
+    return await ctx.db.insert("githubConnections", {
       userId: ctx.userId,
       githubUserId: args.githubUserId,
       githubUsername: args.githubUsername,
@@ -54,7 +53,6 @@ export const connectGitHub = authenticatedMutation({
       expiresAt: args.expiresAt,
       updatedAt: now,
     });
-    return { connectionId };
   },
 });
 
@@ -132,7 +130,6 @@ export const linkRepository = authenticatedMutation({
     syncIssues: v.optional(v.boolean()),
     autoLinkCommits: v.optional(v.boolean()),
   },
-  returns: v.object({ repositoryId: v.id("githubRepositories") }),
   handler: async (ctx, args) => {
     // Verify user has access to project
     const project = await ctx.db.get(args.projectId);
@@ -168,7 +165,7 @@ export const linkRepository = authenticatedMutation({
 
     const now = Date.now();
 
-    const repositoryId = await ctx.db.insert("githubRepositories", {
+    return await ctx.db.insert("githubRepositories", {
       projectId: args.projectId,
       repoOwner: args.repoOwner,
       repoName: args.repoName,
@@ -180,7 +177,6 @@ export const linkRepository = authenticatedMutation({
       linkedBy: ctx.userId,
       updatedAt: now,
     });
-    return { repositoryId };
   },
 });
 
@@ -263,7 +259,6 @@ export const upsertPullRequest = internalMutation({
     checksStatus: v.optional(ciStatuses),
     issueKey: v.optional(v.string()), // e.g., "PROJ-123"
   },
-  returns: v.object({ pullRequestId: v.id("githubPullRequests") }),
   handler: async (ctx, args) => {
     const repo = await ctx.db.get(args.repositoryId);
     if (!repo) throw notFound("repository", args.repositoryId);
@@ -305,11 +300,11 @@ export const upsertPullRequest = internalMutation({
         issueId,
         updatedAt: now,
       });
-      return { pullRequestId: existing._id };
+      return existing._id;
     }
 
     // Create new PR
-    const pullRequestId = await ctx.db.insert("githubPullRequests", {
+    return await ctx.db.insert("githubPullRequests", {
       issueId,
       projectId: repo.projectId,
       repositoryId: args.repositoryId,
@@ -326,7 +321,6 @@ export const upsertPullRequest = internalMutation({
       checksStatus: args.checksStatus,
       updatedAt: now,
     });
-    return { pullRequestId };
   },
 });
 
@@ -404,7 +398,6 @@ export const upsertCommit = internalMutation({
     committedAt: v.number(),
     issueKey: v.optional(v.string()),
   },
-  returns: v.object({ commitId: v.id("githubCommits") }),
   handler: async (ctx, args) => {
     const repo = await ctx.db.get(args.repositoryId);
     if (!repo) throw notFound("repository", args.repositoryId);
@@ -437,11 +430,11 @@ export const upsertCommit = internalMutation({
       if (issueId && existing.issueId !== issueId) {
         await ctx.db.patch(existing._id, { issueId });
       }
-      return { commitId: existing._id };
+      return existing._id;
     }
 
     // Create new commit
-    const commitId = await ctx.db.insert("githubCommits", {
+    return await ctx.db.insert("githubCommits", {
       issueId,
       projectId: repo.projectId,
       repositoryId: args.repositoryId,
@@ -452,7 +445,6 @@ export const upsertCommit = internalMutation({
       htmlUrl: args.htmlUrl,
       committedAt: args.committedAt,
     });
-    return { commitId };
   },
 });
 

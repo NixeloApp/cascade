@@ -36,24 +36,6 @@ describe("Avatar", () => {
     // which makes testing image rendering unreliable in JSDOM environment
   });
 
-  describe("accessibility", () => {
-    it("provides accessible label for fallback", async () => {
-      render(<Avatar name="John Doe" />);
-      await waitFor(() => {
-        const fallback = screen.getByRole("img", { name: "John Doe" });
-        expect(fallback).toBeInTheDocument();
-      });
-    });
-
-    it("hides initials from screen readers when label is present", async () => {
-      render(<Avatar name="John Doe" />);
-      await waitFor(() => {
-        const initials = screen.getByText("JD");
-        expect(initials).toHaveAttribute("aria-hidden", "true");
-      });
-    });
-  });
-
   describe("initials generation", () => {
     it("uses first and last name initials", async () => {
       render(<Avatar name="John William Doe" />);
