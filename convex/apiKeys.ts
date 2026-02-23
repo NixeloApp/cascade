@@ -28,6 +28,27 @@ function generateApiKey(): string {
   return `${prefix}_${randomPart}`;
 }
 
+const VALID_SCOPES = [
+  "issues:read",
+  "issues:write",
+  "issues:delete",
+  "projects:read",
+  "projects:write",
+  "comments:read",
+  "comments:write",
+  "documents:read",
+  "documents:write",
+  "search:read",
+];
+
+function validateScopes(scopes: string[]) {
+  for (const scope of scopes) {
+    if (!VALID_SCOPES.includes(scope)) {
+      throw validation("scopes", `Invalid scope: ${scope}`);
+    }
+  }
+}
+
 /** Validates an API key for HTTP actions, returning auth context if valid and active. */
 export const validateApiKey = internalQuery({
   args: {
@@ -90,24 +111,7 @@ export const generate = authenticatedMutation({
     }
 
     // Validate scopes
-    const validScopes = [
-      "issues:read",
-      "issues:write",
-      "issues:delete",
-      "projects:read",
-      "projects:write",
-      "comments:read",
-      "comments:write",
-      "documents:read",
-      "documents:write",
-      "search:read",
-    ];
-
-    for (const scope of args.scopes) {
-      if (!validScopes.includes(scope)) {
-        throw validation("scopes", `Invalid scope: ${scope}`);
-      }
-    }
+    validateScopes(args.scopes);
 
     // Create API key record
     const keyId = await ctx.db.insert("apiKeys", {
@@ -239,7 +243,12 @@ export const update = authenticatedMutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const _key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
+    const key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
+
+    // Verify access if project-scoped
+    if (key.projectId) {
+      await assertCanAccessProject(ctx, key.projectId, ctx.userId);
+    }
 
     const updates: Partial<{
       name: string;
@@ -249,7 +258,10 @@ export const update = authenticatedMutation({
     }> = {};
 
     if (args.name !== undefined) updates.name = args.name;
-    if (args.scopes !== undefined) updates.scopes = args.scopes;
+    if (args.scopes !== undefined) {
+      validateScopes(args.scopes);
+      updates.scopes = args.scopes;
+    }
     if (args.rateLimit !== undefined) updates.rateLimit = args.rateLimit;
     if (args.expiresAt !== undefined) updates.expiresAt = args.expiresAt;
 

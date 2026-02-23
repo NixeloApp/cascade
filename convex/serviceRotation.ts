@@ -314,7 +314,7 @@ export const upsertProvider = internalMutation({
     priority: v.number(),
     notes: v.optional(v.string()),
   },
-  returns: v.id("serviceProviders"),
+  returns: v.object({ providerId: v.id("serviceProviders") }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("serviceProviders")
@@ -328,13 +328,14 @@ export const upsertProvider = internalMutation({
         ...args,
         updatedAt: now,
       });
-      return existing._id;
-    } else {
-      return await ctx.db.insert("serviceProviders", {
-        ...args,
-        updatedAt: now,
-      });
+      return { providerId: existing._id };
     }
+
+    const providerId = await ctx.db.insert("serviceProviders", {
+      ...args,
+      updatedAt: now,
+    });
+    return { providerId };
   },
 });
 
@@ -496,7 +497,7 @@ export const setProviderConfigured = internalMutation({
     provider: v.string(),
     isConfigured: v.boolean(),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("serviceProviders")
@@ -511,5 +512,7 @@ export const setProviderConfigured = internalMutation({
       isConfigured: args.isConfigured,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
