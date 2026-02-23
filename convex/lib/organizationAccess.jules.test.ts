@@ -100,7 +100,7 @@ describe("Organization Access", () => {
 
       // Verify the shared org is NOT in the returned items (due to truncation + insertion order)
       // Note: This assertion assumes the query returns items in insertion order (creation time).
-      const sharedInPage = items.some(m => m.organizationId === sharedOrgId);
+      const sharedInPage = items.some((m) => m.organizationId === sharedOrgId);
 
       // Verify reproduction: shared org should be missing from the page
       expect(sharedInPage).toBe(false);
