@@ -183,12 +183,8 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     ?.split("=")[1];
 
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
-    return new Response("Invalid state or missing authorization code", {
-      status: 400,
-      headers: {
-        "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
-      },
-    });
+    // Use handleOAuthError to return consistent HTML error page
+    return handleOAuthError(validation("oauth", "Invalid state or missing authorization code"));
   }
 
   const config = getGitHubOAuthConfig();
@@ -210,16 +206,22 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     });
 
     if (!tokenResponse.ok) {
+      let errorText = "Unknown error";
       try {
-        const errorText = await tokenResponse.text();
+        errorText = await tokenResponse.text();
         console.error("GitHub OAuth error: Failed to exchange code", errorText);
       } catch (e) {
         console.error("GitHub OAuth error: Failed to exchange code (and failed to read body)", e);
       }
-      throw validation("oauth", "Failed to exchange GitHub authorization code");
+      throw validation("oauth", `Failed to exchange GitHub authorization code: ${errorText}`);
     }
 
-    const tokens = await tokenResponse.json();
+    let tokens;
+    try {
+      tokens = await tokenResponse.json();
+    } catch (_e) {
+      throw validation("oauth", "Invalid JSON response from GitHub token endpoint");
+    }
 
     if (tokens.error) {
       throw validation("oauth", tokens.error_description || tokens.error);
@@ -237,16 +239,29 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     });
 
     if (!userResponse.ok) {
+      let errorText = "Unknown error";
       try {
-        const errorText = await userResponse.text();
+        errorText = await userResponse.text();
         console.error("GitHub OAuth error: Failed to get user info", errorText);
       } catch (e) {
         console.error("GitHub OAuth error: Failed to get user info (and failed to read body)", e);
       }
-      throw validation("github", "Failed to get GitHub user info");
+      throw validation("github", `Failed to get GitHub user info: ${errorText}`);
     }
 
-    const userInfo = await userResponse.json();
+    let userInfo;
+    try {
+      userInfo = await userResponse.json();
+    } catch (_e) {
+      throw validation("github", "Invalid JSON response from GitHub user endpoint");
+    }
+
+    // Validate required fields
+    if (!userInfo || !userInfo.id || !userInfo.login) {
+      console.error("GitHub OAuth error: Invalid user info structure", userInfo);
+      throw validation("github", "Invalid GitHub user info: missing id or login");
+    }
+
     const githubUserId = String(userInfo.id);
     const githubUsername = userInfo.login;
 
@@ -458,7 +473,16 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
       });
     }
 
-    const repos = await reposResponse.json();
+    let repos;
+    try {
+      repos = await reposResponse.json();
+    } catch (_e) {
+      throw new Error("Invalid JSON response from GitHub repositories endpoint");
+    }
+
+    if (!Array.isArray(repos)) {
+      throw new Error("GitHub repositories response is not an array");
+    }
 
     // Transform to a simpler format
     const simplifiedRepos = repos.map(

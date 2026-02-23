@@ -23,3 +23,7 @@
 ## 2024-05-22 - ProseMirror Sync Silent Failure
 **Learning:** The `onSnapshot` callback in `convex/prosemirror.ts` was silently swallowing `JSON.parse` errors, leading to data inconsistencies (missing versions, outdated timestamps) without client feedback.
 **Action:** Ensure all callbacks in third-party integrations (like `prosemirror-sync`) have explicit error handling (logging and re-throwing as appropriate errors) to prevent silent failures.
+
+## 2024-05-22 - OAuth Data Validation
+**Learning:** OAuth integrations often assume valid JSON and complete user profiles from providers. However, API changes or failures can result in invalid JSON or partial data (e.g. `undefined` user IDs), leading to silent data corruption or runtime crashes when processing the callback.
+**Action:** Always validate the structure and required fields of OAuth user profiles and wrap JSON parsing in try/catch blocks before persisting or using the data.
