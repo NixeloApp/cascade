@@ -708,20 +708,24 @@ export const disable = mutation({
       twoFactorVerifiedAt: undefined,
     });
 
-    // Cleanup all sessions for this user (iterative delete)
-    while (true) {
-      const sessions = await ctx.db
-        .query("twoFactorSessions")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .take(MAX_PAGE_SIZE);
-
-      if (sessions.length === 0) break;
-
-      for (const session of sessions) {
-        await ctx.db.delete(session._id);
-      }
-    }
+    // Cleanup all sessions for this user
+    await cleanupTwoFactorSessions(ctx, userId);
 
     return { success: true };
   },
 });
+
+async function cleanupTwoFactorSessions(ctx: MutationCtx, userId: Id<"users">) {
+  while (true) {
+    const sessions = await ctx.db
+      .query("twoFactorSessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(MAX_PAGE_SIZE);
+
+    if (sessions.length === 0) break;
+
+    for (const session of sessions) {
+      await ctx.db.delete(session._id);
+    }
+  }
+}

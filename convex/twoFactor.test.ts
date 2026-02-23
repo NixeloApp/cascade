@@ -337,7 +337,9 @@ describe("Two Factor Authentication", () => {
 
     // Try to regenerate with invalid code multiple times
     for (let i = 0; i < 5; i++) {
-      const result = await asUser.mutation(api.twoFactor.regenerateBackupCodes, { totpCode: "000000" });
+      const result = await asUser.mutation(api.twoFactor.regenerateBackupCodes, {
+        totpCode: "000000",
+      });
       if (i < 4) {
         expect(result.success).toBe(false);
         expect(result.error).toBe("Invalid verification code");
