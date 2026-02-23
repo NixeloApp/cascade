@@ -477,7 +477,8 @@ describe("Webhooks", () => {
         events: ["issue.created"],
       });
 
-      await asUser.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
+      const result = await asUser.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const webhook = await t.run(async (ctx) => {
         return await ctx.db.get(webhookId);

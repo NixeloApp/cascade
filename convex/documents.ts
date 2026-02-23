@@ -239,7 +239,7 @@ export const togglePublic = authenticatedMutation({
 
 export const deleteDocument = authenticatedMutation({
   args: { id: v.id("documents") },
-  returns: v.object({ success: v.boolean(), deleted: v.boolean() }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await getAccessibleDocument(ctx, args.id);
 
@@ -252,13 +252,13 @@ export const deleteDocument = authenticatedMutation({
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
     await cascadeSoftDelete(ctx, "documents", args.id, ctx.userId, deletedAt);
 
-    return { success: true, deleted: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
 export const restoreDocument = authenticatedMutation({
   args: { id: v.id("documents") },
-  returns: v.object({ success: v.boolean(), restored: v.boolean() }),
+  returns: v.object({ success: v.literal(true), restored: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -283,7 +283,7 @@ export const restoreDocument = authenticatedMutation({
       deletedBy: undefined,
     });
 
-    return { success: true, restored: true };
+    return { success: true, restored: true } as const;
   },
 });
 
@@ -1263,16 +1263,11 @@ async function fetchAndMergeAccessibleDocuments(
   // Buffer size scales with limit to ensure we have enough results
   const fetchBuffer = limit * FETCH_BUFFER_MULTIPLIER;
 
-  // Get user's private documents (their own non-public docs)
-  const privateDocuments = await fetchPrivateDocuments(
-    ctx,
-    ctx.userId,
-    organizationId,
-    fetchBuffer,
-  );
-
-  // Get public documents (must be scoped to organization)
-  const publicDocuments = await fetchPublicDocuments(ctx, ctx.userId, organizationId, fetchBuffer);
+  // Get user's private and public documents in parallel
+  const [privateDocuments, publicDocuments] = await Promise.all([
+    fetchPrivateDocuments(ctx, ctx.userId, organizationId, fetchBuffer),
+    fetchPublicDocuments(ctx, ctx.userId, organizationId, fetchBuffer),
+  ]);
 
   // Combine and deduplicate (user's public docs appear in both queries)
   const seenIds = new Set<string>();
