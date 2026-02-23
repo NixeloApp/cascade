@@ -698,7 +698,7 @@ export const search = authenticatedQuery({
         "issue search",
       );
     } else if (args.projectId) {
-      issues = await fetchProjectIssuesOptimized(ctx, args.projectId, args, fetchLimit);
+      issues = await fetchProjectIssuesOptimized(ctx, args.projectId, args, fetchLimit, ctx.userId);
     } else if (args.organizationId) {
       const organizationId = args.organizationId;
       // Bounded: organization issues limited
@@ -1224,17 +1224,18 @@ async function fetchProjectIssuesOptimized(
     status?: string[];
   },
   fetchLimit: number,
+  userId: Id<"users"> | null,
 ) {
   // Determine efficient query strategy based on filters
   // We prioritize specific indexes to avoid scanning the entire project
   const targetAssigneeId =
     args.assigneeId === "me"
-      ? ctx.userId
+      ? userId
       : args.assigneeId !== "unassigned"
         ? args.assigneeId
         : undefined;
 
-  const hasSpecificAssignee = targetAssigneeId !== undefined;
+  const hasSpecificAssignee = targetAssigneeId !== undefined && targetAssigneeId !== null;
   const hasSingleStatus = args.status?.length === 1;
 
   if (hasSpecificAssignee && hasSingleStatus) {
@@ -1249,7 +1250,7 @@ async function fetchProjectIssuesOptimized(
         .withIndex("by_project_assignee_status", (q) =>
           q
             .eq("projectId", projectId)
-            .eq("assigneeId", targetAssigneeId)
+            .eq("assigneeId", targetAssigneeId as Id<"users">)
             .eq("status", status)
             .lt("isDeleted", true),
         )
