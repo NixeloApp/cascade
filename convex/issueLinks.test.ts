@@ -18,13 +18,13 @@ describe("Issue Links", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -65,13 +65,13 @@ describe("Issue Links", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -106,13 +106,13 @@ describe("Issue Links", () => {
       if (!project) throw new Error("Project not found");
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const issue1Id = await asAdmin.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asAdmin.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asAdmin.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asAdmin.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -146,13 +146,13 @@ describe("Issue Links", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const issue1Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asUser.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -196,13 +196,13 @@ describe("Issue Links", () => {
       if (!project) throw new Error("Project not found");
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const issue1Id = await asAdmin.mutation(api.issues.create, {
+      const { issueId: issue1Id } = await asAdmin.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asAdmin.mutation(api.issues.create, {
+      const { issueId: issue2Id } = await asAdmin.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -238,19 +238,19 @@ describe("Issue Links", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const issueAId = await asUser.mutation(api.issues.create, {
+      const { issueId: issueAId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue A",
         type: "task",
         priority: "medium",
       });
-      const issueBId = await asUser.mutation(api.issues.create, {
+      const { issueId: issueBId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue B",
         type: "task",
         priority: "medium",
       });
-      const issueCId = await asUser.mutation(api.issues.create, {
+      const { issueId: issueCId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue C",
         type: "task",

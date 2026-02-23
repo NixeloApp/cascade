@@ -44,7 +44,7 @@ describe("Roadmap Issues Optimization", () => {
     });
 
     // 4. Epic due next week
-    const epic = await asUser.mutation(api.issues.create, {
+    const { issueId: _epicId } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Epic Next Week",
       type: "epic",
@@ -54,7 +54,7 @@ describe("Roadmap Issues Optimization", () => {
 
     // 5. Subtask due today (should be excluded)
     // Create a parent task first
-    const parentTask = await asUser.mutation(api.issues.create, {
+    const { issueId: parentTaskId } = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Parent Task",
       type: "task",
@@ -67,7 +67,7 @@ describe("Roadmap Issues Optimization", () => {
       type: "subtask",
       priority: "medium",
       dueDate: now,
-      parentId: parentTask,
+      parentId: parentTaskId,
     });
 
     // Query roadmap issues with due date

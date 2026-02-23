@@ -579,7 +579,7 @@ describe("Analytics", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create issue (generates activity)
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -588,7 +588,7 @@ describe("Analytics", () => {
 
       // Update issue (generates more activity)
       await asUser.mutation(api.issues.update, {
-        issueId: issueId,
+        issueId,
         title: "Updated Issue",
       });
 
@@ -710,7 +710,7 @@ describe("Analytics", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.create, {
         projectId,
         title: "To be deleted",
         type: "task",

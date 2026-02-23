@@ -56,7 +56,7 @@ describe("Sprint Workflow Integration", () => {
       expect(sprint?.goal).toBe("Complete initial feature set");
 
       // Step 2: Create issues and add them to the sprint
-      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Implement user authentication",
         type: "story",
@@ -65,7 +65,7 @@ describe("Sprint Workflow Integration", () => {
         storyPoints: 5,
       });
 
-      const { issueId: _issue2Id } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId: _issue2Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Add login form",
         type: "task",
@@ -74,7 +74,7 @@ describe("Sprint Workflow Integration", () => {
         storyPoints: 3,
       });
 
-      const { issueId: _issue3Id } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId: _issue3Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Fix security vulnerability",
         type: "bug",
@@ -156,7 +156,7 @@ describe("Sprint Workflow Integration", () => {
       });
 
       // Create issues in sprint 1
-      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Issue to complete",
         type: "task",
@@ -164,7 +164,7 @@ describe("Sprint Workflow Integration", () => {
         sprintId: sprint1Id,
       });
 
-      const { issueId: issue2Id } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Issue to move",
         type: "task",
@@ -231,21 +231,21 @@ describe("Sprint Workflow Integration", () => {
       });
 
       // Create multiple issues without sprint assignment
-      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId: issue1Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Backlog Issue 1",
         type: "task",
         priority: "low",
       });
 
-      const { issueId: issue2Id } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId: issue2Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Backlog Issue 2",
         type: "task",
         priority: "low",
       });
 
-      const { issueId: issue3Id } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId: issue3Id } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Backlog Issue 3",
         type: "task",
@@ -288,7 +288,7 @@ describe("Sprint Workflow Integration", () => {
       });
 
       // Create issue in sprint
-      const { issueId } = await asUser.mutation(api.issues.mutations.createIssue, {
+      const { issueId } = await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Sprint Issue",
         type: "task",
@@ -387,7 +387,7 @@ describe("Sprint Workflow Integration", () => {
       });
 
       // Create issues with story points
-      await asUser.mutation(api.issues.mutations.createIssue, {
+      await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Large Feature",
         type: "story",
@@ -396,7 +396,7 @@ describe("Sprint Workflow Integration", () => {
         storyPoints: 8,
       });
 
-      await asUser.mutation(api.issues.mutations.createIssue, {
+      await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Medium Task",
         type: "task",
@@ -405,7 +405,7 @@ describe("Sprint Workflow Integration", () => {
         storyPoints: 5,
       });
 
-      await asUser.mutation(api.issues.mutations.createIssue, {
+      await asUser.mutation(api.issues.mutations.create, {
         projectId,
         title: "Small Bug Fix",
         type: "bug",
