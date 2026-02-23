@@ -57,7 +57,7 @@ export function run() {
   /**
    * Check 1: Mutations should use Envelope Pattern (return objects, not raw IDs)
    */
-  function checkEnvelopePattern(filePath, _content, lines) {
+  function checkEnvelopePattern(filePath, lines) {
     if (CONFIG.envelopePatternLevel === "off") return;
 
     const rel = relPath(filePath);
@@ -113,7 +113,7 @@ export function run() {
   /**
    * Check 2: Test files should destructure API returns
    */
-  function checkTestDestructuring(filePath, _content, lines) {
+  function checkTestDestructuring(filePath, lines) {
     if (CONFIG.testDestructuringLevel === "off") return;
 
     const rel = relPath(filePath);
@@ -163,7 +163,7 @@ export function run() {
   /**
    * Check 3: Async operations should not be inside loops (use Promise.all)
    */
-  function checkAsyncInLoops(filePath, _content, lines) {
+  function checkAsyncInLoops(filePath, lines) {
     if (CONFIG.asyncInLoopsLevel === "off") return;
 
     const rel = relPath(filePath);
@@ -228,7 +228,7 @@ export function run() {
   /**
    * Check 4: addProjectMember must verify organization membership
    */
-  function checkSecurityPatterns(filePath, content, _lines) {
+  function checkSecurityPatterns(filePath, content) {
     if (!CONFIG.enforceSecurityChecks) return;
 
     const rel = relPath(filePath);
@@ -287,10 +287,10 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
-    checkEnvelopePattern(filePath, content, lines);
-    checkTestDestructuring(filePath, content, lines);
-    checkAsyncInLoops(filePath, content, lines);
-    checkSecurityPatterns(filePath, content, lines);
+    checkEnvelopePattern(filePath, lines);
+    checkTestDestructuring(filePath, lines);
+    checkAsyncInLoops(filePath, lines);
+    checkSecurityPatterns(filePath, content);
   }
 
   return {
