@@ -65,3 +65,7 @@
 ## 2026-02-23 - Accessible Checkbox Labels
 **Learning:** `Checkbox` inputs often lack accessible names when used without a visible label in list items (e.g., in a Subtasks list). This forces screen reader users to rely on context or generic announcements.
 **Action:** Always provide an `aria-label` to `Checkbox` components when a visible `label` prop is not used. The `aria-label` should describe the action (e.g., "Mark [Task Name] as complete") to provide clear context.
+
+## 2026-03-05 - Robust aria-describedby Merging
+**Learning:** When using `...props` to spread attributes onto an input, explicit props like `aria-describedby` can inadvertently override internal accessibility logic (e.g., error messages).
+**Action:** Destructure `aria-describedby` from props and merge it with internal IDs (e.g., `[errorId, helperId, externalId].filter(Boolean).join(" ")`) to ensure all descriptions are preserved.

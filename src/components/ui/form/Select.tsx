@@ -23,11 +23,32 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
  * ```
  */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, helperText, id, options, children, ...props }, ref) => {
+  (
+    {
+      className,
+      label,
+      error,
+      helperText,
+      id,
+      options,
+      children,
+      "aria-describedby": ariaDescribedBy,
+      ...props
+    },
+    ref,
+  ) => {
     const generatedId = useId();
     const selectId = id || generatedId;
     const errorId = `${selectId}-error`;
     const helperId = `${selectId}-helper`;
+
+    // Combine external aria-describedby with internal helper/error IDs
+    const describedBy = [
+      error ? errorId : helperText ? helperId : undefined,
+      ariaDescribedBy,
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     return (
       <div className="w-full">
@@ -49,7 +70,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             className,
           )}
           aria-invalid={error ? "true" : "false"}
-          aria-describedby={error ? errorId : helperText ? helperId : undefined}
+          aria-describedby={describedBy || undefined}
           {...props}
         >
           {options

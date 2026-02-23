@@ -21,11 +21,22 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
  * ```
  */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, label, error, helperText, id, ...props }, ref) => {
+  (
+    { className, label, error, helperText, id, "aria-describedby": ariaDescribedBy, ...props },
+    ref,
+  ) => {
     const generatedId = useId();
     const textareaId = id || generatedId;
     const errorId = `${textareaId}-error`;
     const helperId = `${textareaId}-helper`;
+
+    // Combine external aria-describedby with internal helper/error IDs
+    const describedBy = [
+      error ? errorId : helperText ? helperId : undefined,
+      ariaDescribedBy,
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     return (
       <div className="w-full">
@@ -48,7 +59,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             className,
           )}
           aria-invalid={error ? "true" : "false"}
-          aria-describedby={error ? errorId : helperText ? helperId : undefined}
+          aria-describedby={describedBy || undefined}
           {...props}
         />
         {error && (
