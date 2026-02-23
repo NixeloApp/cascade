@@ -752,8 +752,7 @@ async function countProjectsUnrestricted(ctx: QueryCtx, userId: Id<"users">) {
   return await efficientCount(
     ctx.db
       .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter(notDeleted),
+      .withIndex("by_user", (q) => q.eq("userId", userId).lt("isDeleted", true)),
     MAX_PROJECTS_FOR_STATS, // Optimization: Allow counting up to 500 projects (was 100)
   );
 }
@@ -793,8 +792,7 @@ async function countProjectsFiltered(
 ) {
   const projectMembershipsAll = await ctx.db
     .query("projectMembers")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .filter(notDeleted)
+    .withIndex("by_user", (q) => q.eq("userId", userId).lt("isDeleted", true))
     .take(MAX_PROJECTS_FOR_STATS); // Optimization: Allow counting up to 500 projects (was 100)
 
   return projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId)).length;
