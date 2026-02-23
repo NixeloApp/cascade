@@ -95,6 +95,9 @@ describe("Invite Security", () => {
 
     // Verify invite was NOT accepted
     const invite = await t.run(async (ctx) => ctx.db.get(inviteId));
+    if (invite === null) {
+      throw new Error("Invite not found");
+    }
     expect(invite.status).toBe("pending");
     expect(invite.acceptedBy).toBeUndefined();
   });
