@@ -39,13 +39,8 @@ const RadioGroupItem = React.forwardRef<
 >(({ className, label, description, id, ...props }, ref) => {
   const generatedId = React.useId();
   const radioId = id || generatedId;
-  const descriptionId = `${radioId}-description`;
 
   const hasLabel = !!(label || description);
-
-  const ariaDescribedBy = [props["aria-describedby"], description ? descriptionId : undefined]
-    .filter(Boolean)
-    .join(" ");
 
   const radioElement = (
     <RadioGroupPrimitive.Item
@@ -56,7 +51,6 @@ const RadioGroupItem = React.forwardRef<
         className,
       )}
       {...props}
-      aria-describedby={ariaDescribedBy || undefined}
     >
       <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
         <span className="h-1.5 w-1.5 rounded-full bg-brand-foreground" />
@@ -81,7 +75,7 @@ const RadioGroupItem = React.forwardRef<
           </label>
         )}
         {description && (
-          <Typography variant="muted" className="text-sm" id={descriptionId}>
+          <Typography variant="muted" className="text-sm">
             {description}
           </Typography>
         )}

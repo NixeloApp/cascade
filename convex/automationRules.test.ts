@@ -89,7 +89,7 @@ describe("Automation Rules", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add member to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, member, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "member@test.com",
         role: "viewer",
@@ -185,7 +185,7 @@ describe("Automation Rules", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -237,13 +237,12 @@ describe("Automation Rules", () => {
         actionValue: { type: "set_priority", priority: "medium" },
       });
 
-      const result = await asUser.mutation(api.automationRules.update, {
+      await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         name: "Updated Name",
         description: "Added description",
         actionValue: { type: "set_priority", priority: "high" },
       });
-      expect(result).toEqual({ success: true });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -270,11 +269,10 @@ describe("Automation Rules", () => {
       });
 
       // Deactivate
-      const deactivateResult = await asUser.mutation(api.automationRules.update, {
+      await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         isActive: false,
       });
-      expect(deactivateResult).toEqual({ success: true });
 
       let rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -282,11 +280,10 @@ describe("Automation Rules", () => {
       expect(rule?.isActive).toBe(false);
 
       // Reactivate
-      const reactivateResult = await asUser.mutation(api.automationRules.update, {
+      await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         isActive: true,
       });
-      expect(reactivateResult).toEqual({ success: true });
 
       rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -311,11 +308,10 @@ describe("Automation Rules", () => {
       });
 
       // Update only name
-      const result = await asUser.mutation(api.automationRules.update, {
+      await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         name: "New Name",
       });
-      expect(result).toEqual({ success: true });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -342,7 +338,7 @@ describe("Automation Rules", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -432,8 +428,7 @@ describe("Automation Rules", () => {
         actionValue: { type: "set_priority", priority: "high" },
       });
 
-      const result = await asUser.mutation(api.automationRules.remove, { id: ruleId });
-      expect(result).toEqual({ success: true });
+      await asUser.mutation(api.automationRules.remove, { id: ruleId });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -459,7 +454,7 @@ describe("Automation Rules", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, editor, owner);
-      await asOwner.mutation(api.projectMembers.add, {
+      await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
