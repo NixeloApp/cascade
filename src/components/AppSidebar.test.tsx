@@ -192,4 +192,53 @@ describe("AppSidebar Accessibility", () => {
     const documentsLink = screen.getByRole("link", { name: "Documents" });
     expect(documentsLink).toHaveAttribute("aria-label", "Documents");
   });
+
+  describe("AppSidebar Mobile Behavior", () => {
+    it("shows Close button and hides Toggle button when isMobileOpen is true", () => {
+      vi.mocked(useSidebarState).mockReturnValue({
+        isCollapsed: false,
+        isMobileOpen: true,
+        toggleCollapse: vi.fn(),
+        closeMobile: vi.fn(),
+        toggleMobile: vi.fn(),
+      });
+
+      render(<AppSidebar />);
+
+      // Check for Close buttons (Overlay + Header Button)
+      const closeButtons = screen.getAllByLabelText("Close sidebar");
+      // One is the overlay, one is the header button. Both are good.
+      expect(closeButtons.length).toBeGreaterThanOrEqual(2);
+
+      // Ensure at least one has the lg:hidden class (which makes it mobile-only)
+      const mobileCloseBtn = closeButtons.find(btn => btn.className.includes("lg:hidden") && !btn.className.includes("fixed inset-0"));
+      expect(mobileCloseBtn).toBeInTheDocument();
+
+      // Check Toggle button
+      const toggleBtn = screen.getByLabelText("Collapse sidebar");
+      expect(toggleBtn).toBeInTheDocument();
+      expect(toggleBtn).toHaveClass("hidden", "lg:flex");
+    });
+
+    it("renders expanded content and correct width class when isCollapsed=true but isMobileOpen=true", () => {
+      vi.mocked(useSidebarState).mockReturnValue({
+        isCollapsed: true, // Collapsed preference
+        isMobileOpen: true, // But mobile is open
+        toggleCollapse: vi.fn(),
+        closeMobile: vi.fn(),
+        toggleMobile: vi.fn(),
+      });
+
+      render(<AppSidebar />);
+
+      // Sidebar should have correct classes for mobile width override
+      const aside = screen.getByRole("complementary"); // AppSidebar renders <aside>
+
+      expect(aside).toHaveClass("lg:w-16", "w-64");
+
+      // Items should be expanded (text visible)
+      // "Dashboard" text should be visible (getByText throws if not found)
+      expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    });
+  });
 });
