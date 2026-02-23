@@ -8,7 +8,35 @@ import {
   isLocalhost,
 } from "../lib/env";
 import { getErrorMessage, validation } from "../lib/errors";
-import { fetchJSON, HttpError } from "../lib/fetchWithTimeout";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+
+/** Error thrown when an HTTP request returns a non-OK status */
+class HttpError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly body: string,
+  ) {
+    super(`HTTP ${status}: ${body.slice(0, 100)}`);
+    this.name = "HttpError";
+  }
+}
+
+/** Helper to fetch JSON with timeout and error handling */
+async function fetchJSON<T>(url: string, init?: RequestInit, timeoutMs = 10000): Promise<T> {
+  const response = await fetchWithTimeout(url, init, timeoutMs);
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new HttpError(response.status, text);
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(`Invalid JSON response from ${url}`);
+  }
+}
+
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 import { HOUR, SECOND } from "../lib/timeUtils";
 
@@ -268,7 +296,10 @@ async function exchangeCodeForTokens(code: string) {
     });
   } catch (e) {
     if (e instanceof HttpError) {
-      throw validation("oauth", `Failed to fetch user info from Google: ${parseGoogleOAuthError(e)}`);
+      throw validation(
+        "oauth",
+        `Failed to fetch user info from Google: ${parseGoogleOAuthError(e)}`,
+      );
     }
     throw e;
   }

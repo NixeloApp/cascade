@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
-import { fetchJSON, HttpError } from "../lib/fetchWithTimeout";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler, initiateAuthHandler, triggerSyncHandler } from "./googleOAuth";
 
 // Mock env library
@@ -12,19 +12,28 @@ vi.mock("../lib/env", () => ({
   getConvexSiteUrl: vi.fn(),
 }));
 
-// Mock fetchWithTimeout
+// Mock fetchWithTimeout - googleOAuth.ts has local fetchJSON/HttpError that use this
 vi.mock("../lib/fetchWithTimeout", () => ({
-  fetchJSON: vi.fn(),
-  HttpError: class extends Error {
-    status: number;
-    body: string;
-    constructor(status: number, body: string) {
-      super(`HTTP ${status}: ${body}`);
-      this.status = status;
-      this.body = body;
-    }
-  },
+  fetchWithTimeout: vi.fn(),
 }));
+
+/** Helper to create a mock successful Response */
+function mockOkResponse(data: unknown): Response {
+  return {
+    ok: true,
+    status: 200,
+    text: async () => JSON.stringify(data),
+  } as Response;
+}
+
+/** Helper to create a mock failed Response */
+function mockErrorResponse(status: number, body: string): Response {
+  return {
+    ok: false,
+    status,
+    text: async () => body,
+  } as Response;
+}
 
 // Mock api/internal
 vi.mock("../_generated/api", () => ({
@@ -146,15 +155,19 @@ describe("Google OAuth Flow", () => {
     });
 
     it("should exchange code for token and return success HTML", async () => {
-      // Mock token exchange response (fetchJSON)
-      vi.mocked(fetchJSON).mockResolvedValueOnce({
-        access_token: "google_access_token",
-        refresh_token: "google_refresh_token",
-        expires_in: 3600,
-      });
+      // Mock token exchange response
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
+        mockOkResponse({
+          access_token: "google_access_token",
+          refresh_token: "google_refresh_token",
+          expires_in: 3600,
+        }),
+      );
 
-      // Mock user info response (fetchJSON)
-      vi.mocked(fetchJSON).mockResolvedValueOnce({ email: "test@example.com" });
+      // Mock user info response
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
+        mockOkResponse({ email: "test@example.com" }),
+      );
 
       const request = new Request(
         "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
@@ -173,15 +186,17 @@ describe("Google OAuth Flow", () => {
       expect(setCookie).toContain("google-oauth-state=;");
       expect(setCookie).toContain("Max-Age=0");
 
-      expect(fetchJSON).toHaveBeenCalledTimes(2);
-      expect(vi.mocked(fetchJSON).mock.calls[0][0]).toBe("https://oauth2.googleapis.com/token");
-      expect(vi.mocked(fetchJSON).mock.calls[1][0]).toBe(
+      expect(fetchWithTimeout).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(fetchWithTimeout).mock.calls[0][0]).toBe(
+        "https://oauth2.googleapis.com/token",
+      );
+      expect(vi.mocked(fetchWithTimeout).mock.calls[1][0]).toBe(
         "https://www.googleapis.com/oauth2/v2/userinfo",
       );
     });
 
     it("should handle token exchange failure", async () => {
-      vi.mocked(fetchJSON).mockRejectedValueOnce(new HttpError(400, "invalid_grant"));
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockErrorResponse(400, "invalid_grant"));
 
       const request = new Request(
         "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
@@ -195,11 +210,17 @@ describe("Google OAuth Flow", () => {
     });
 
     it("should handle user info fetch failure", async () => {
-      vi.mocked(fetchJSON).mockResolvedValueOnce({
-        access_token: "token",
-      });
+      // Token exchange succeeds but doesn't return refresh_token
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
+        mockOkResponse({
+          access_token: "token",
+          refresh_token: "refresh_token",
+          expires_in: 3600,
+        }),
+      );
 
-      vi.mocked(fetchJSON).mockRejectedValueOnce(new HttpError(401, "unauthorized"));
+      // User info fetch fails
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockErrorResponse(401, "unauthorized"));
 
       const request = new Request(
         "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
@@ -253,17 +274,19 @@ describe("Google OAuth Flow", () => {
       vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
       vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ imported: 5 });
 
-      // Mock events fetch (fetchJSON)
-      vi.mocked(fetchJSON).mockResolvedValueOnce({
-        items: [
-          {
-            id: "evt1",
-            summary: "Event 1",
-            start: { dateTime: "2023-01-01T10:00:00Z" },
-            end: { dateTime: "2023-01-01T11:00:00Z" },
-          },
-        ],
-      });
+      // Mock events fetch
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
+        mockOkResponse({
+          items: [
+            {
+              id: "evt1",
+              summary: "Event 1",
+              start: { dateTime: "2023-01-01T10:00:00Z" },
+              end: { dateTime: "2023-01-01T11:00:00Z" },
+            },
+          ],
+        }),
+      );
 
       const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
@@ -289,7 +312,9 @@ describe("Google OAuth Flow", () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
       vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
 
-      vi.mocked(fetchJSON).mockRejectedValueOnce(new HttpError(500, "Internal Server Error"));
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
+        mockErrorResponse(500, "Internal Server Error"),
+      );
 
       const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
@@ -311,7 +336,9 @@ describe("Google OAuth Flow", () => {
         },
       };
 
-      vi.mocked(fetchJSON).mockRejectedValueOnce(new HttpError(403, JSON.stringify(googleError)));
+      vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
+        mockErrorResponse(403, JSON.stringify(googleError)),
+      );
 
       const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);

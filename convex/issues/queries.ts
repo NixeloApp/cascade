@@ -266,9 +266,7 @@ export const listRoadmapIssues = authenticatedQuery({
       issues = issues.filter((i) => i.dueDate !== undefined);
     }
 
-    const enriched = await enrichIssues(ctx, issues);
-    // Optimization: Strip description to reduce payload size for list views
-    return enriched.map((i) => ({ ...i, description: undefined }));
+    return await enrichIssues(ctx, issues);
   },
 });
 

@@ -63,19 +63,14 @@ export const getUnreadCount = authenticatedQuery({
   handler: async (ctx) => {
     // Cap at 100 - UI typically shows "99+" anyway
     const MAX_UNREAD_COUNT = 100;
-
-    // Optimization: explicitly use .take(limit).length instead of efficientCount()
-    // efficientCount() uses .count() which scans all matching index entries (O(N)),
-    // whereas .take(limit) stops after finding enough matches (O(limit)).
-    // For users with thousands of unread notifications, this is much faster.
-    const items = await ctx.db
+    const notifications = await ctx.db
       .query("notifications")
       .withIndex("by_user_read", (q) =>
         q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
       )
       .take(MAX_UNREAD_COUNT);
 
-    return items.length;
+    return notifications.length;
   },
 });
 
@@ -207,18 +202,28 @@ export const listForDigest = internalQuery({
     // Limit for digest - most recent notifications since startTime
     const MAX_DIGEST_NOTIFICATIONS = 100;
 
-    // Optimization: Use range query on _creationTime (implicit in by_user index)
+    // Optimization: Manual scan using index order to stop early.
     // The "by_user" index is ordered by userId, then _creationTime.
-    // .gt("_creationTime", args.startTime) efficiently seeks and scans only relevant items.
-    // .filter(notDeleted) excludes deleted items while scanning.
-    // .take(MAX_DIGEST_NOTIFICATIONS) caps the result size.
-
-    const notifications = await ctx.db
+    // By iterating in descending order, we see newest items first.
+    // We can stop scanning as soon as we see an item older than startTime.
+    // This avoids scanning the entire notification history for the user when there are no recent notifications.
+    const notifications: Doc<"notifications">[] = [];
+    for await (const notification of ctx.db
       .query("notifications")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId).gt("_creationTime", args.startTime))
-      .order("desc")
-      .filter(notDeleted)
-      .take(MAX_DIGEST_NOTIFICATIONS);
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")) {
+      if (notification._creationTime < args.startTime) {
+        break;
+      }
+      // Skip soft-deleted notifications
+      if (notification.isDeleted) {
+        continue;
+      }
+      notifications.push(notification);
+      if (notifications.length >= MAX_DIGEST_NOTIFICATIONS) {
+        break;
+      }
+    }
 
     // Batch fetch all actors and issues (avoid N+1!)
     const actorIds = notifications.map((n) => n.actorId);

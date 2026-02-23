@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
-import { fetchJSON, fetchWithTimeout, HttpError } from "../lib/fetchWithTimeout";
+import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler } from "./googleOAuth";
 
 // Mock env library
@@ -13,19 +13,9 @@ vi.mock("../lib/env", () => ({
   validation: (_type: string, msg: string) => new Error(msg),
 }));
 
-// Mock fetchWithTimeout
+// Mock fetchWithTimeout - googleOAuth.ts has local fetchJSON/HttpError that use this
 vi.mock("../lib/fetchWithTimeout", () => ({
   fetchWithTimeout: vi.fn(),
-  fetchJSON: vi.fn(),
-  HttpError: class extends Error {
-    status: number;
-    body: string;
-    constructor(status: number, body: string) {
-      super(`HTTP ${status}: ${body}`);
-      this.status = status;
-      this.body = body;
-    }
-  },
 }));
 
 // Mock api/internal
@@ -59,10 +49,13 @@ describe("Google OAuth Error Handling", () => {
     // Mock token exchange failure
     const errorBody = JSON.stringify({ error: "invalid_grant", error_description: "Bad Request" });
 
-    // Mock fetchJSON to throw HttpError, simulating upstream failure
-    vi.mocked(fetchJSON).mockRejectedValueOnce(
-      new HttpError(400, errorBody)
-    );
+    // Mock fetchWithTimeout to return a failed response
+    // googleOAuth.ts's local fetchJSON will convert this to an HttpError
+    vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      text: async () => errorBody,
+    } as Response);
 
     const request = new Request(
       "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
