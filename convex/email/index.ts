@@ -244,10 +244,7 @@ async function selectProviderWithContext(
   return getFirstProvider();
 }
 
-async function recordUsageWithContext(
-  ctx: DbContext | null,
-  providerName: string,
-): Promise<void> {
+async function recordUsageWithContext(ctx: DbContext | null, providerName: string): Promise<void> {
   if (!ctx) return;
 
   if ("db" in ctx && "scheduler" in ctx) {
