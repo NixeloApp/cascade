@@ -20,7 +20,7 @@ import { cascadeRestore, cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getWorkspaceRole } from "./lib/workspaceAccess";
 import { canAccessProject, getProjectRole } from "./projectAccess";
-import { boardTypes, workflowCategories } from "./validators";
+import { boardTypes, projectRoles, workflowCategories } from "./validators";
 
 /**
  * Create a new project.
@@ -629,6 +629,194 @@ export const updateWorkflow = projectAdminMutation({
     });
 
     return { success: true };
+  },
+});
+
+/**
+ * Add a new member to the project.
+ *
+ * Finds the user by email and creates a membership record.
+ * Requires project admin permissions.
+ *
+ * @param userEmail - Email address of the user to add.
+ * @param role - Role to assign (e.g., "member", "admin").
+ *
+ * @throws {ConvexError} "NotFound" if user doesn't exist.
+ * @throws {ConvexError} "Conflict" if user is already a member.
+ */
+export const addProjectMember = projectAdminMutation({
+  args: {
+    userEmail: v.string(),
+    role: projectRoles,
+  },
+  handler: async (ctx, args) => {
+    // adminMutation handles auth + admin check + provides ctx.projectId
+
+    // Find user by email
+    const user = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.userEmail))
+      .first();
+
+    // Security: User must be an organization member to be added to a project.
+    // We check both existence and membership, and throw the SAME error if either fails.
+    // This prevents attackers from enumerating valid emails in the system (global user enumeration).
+    const isMember = user
+      ? await isOrganizationMember(ctx, ctx.project.organizationId, user._id)
+      : false;
+
+    if (!user || !isMember) {
+      throw notFound("user");
+    }
+
+    // Check if already a member
+    const existingMembership = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project_user", (q) => q.eq("projectId", ctx.projectId).eq("userId", user._id))
+      .first();
+
+    if (existingMembership) throw conflict("User is already a member");
+
+    const _now = Date.now();
+
+    // Add to projectMembers table
+    await ctx.db.insert("projectMembers", {
+      projectId: ctx.projectId,
+      userId: user._id,
+      role: args.role,
+      addedBy: ctx.userId,
+    });
+
+    await logAudit(ctx, {
+      action: "member_added",
+      actorId: ctx.userId,
+      targetId: ctx.projectId,
+      targetType: "projects",
+      metadata: {
+        memberId: user._id,
+        role: args.role,
+      },
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Update a project member's role.
+ *
+ * Cannot change the role of the project owner.
+ * Requires project admin permissions.
+ *
+ * @param memberId - User ID of the member.
+ * @param newRole - New role to assign.
+ *
+ * @throws {ConvexError} "Forbidden" if trying to change the project owner's role.
+ * @throws {ConvexError} "NotFound" if membership doesn't exist.
+ */
+export const updateProjectMemberRole = projectAdminMutation({
+  args: {
+    memberId: v.id("users"),
+    newRole: projectRoles,
+  },
+  handler: async (ctx, args) => {
+    // adminMutation handles auth + admin check + provides ctx.projectId, ctx.project
+
+    // Can't change project owner's role
+    if (ctx.project.ownerId === args.memberId || ctx.project.createdBy === args.memberId) {
+      throw forbidden(undefined, "Cannot change project owner's role");
+    }
+
+    // Find membership
+    const membership = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project_user", (q) =>
+        q.eq("projectId", ctx.projectId).eq("userId", args.memberId),
+      )
+      .first();
+
+    if (!membership) throw notFound("membership");
+
+    await ctx.db.patch(membership._id, {
+      role: args.newRole,
+    });
+
+    await logAudit(ctx, {
+      action: "member_role_updated",
+      actorId: ctx.userId,
+      targetId: ctx.projectId,
+      targetType: "projects",
+      metadata: {
+        memberId: args.memberId,
+        newRole: args.newRole,
+      },
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Remove a member from the project.
+ *
+ * Cannot remove the project owner.
+ * Requires project admin permissions.
+ *
+ * @param memberId - User ID of the member to remove.
+ *
+ * @throws {ConvexError} "Forbidden" if trying to remove the project owner.
+ */
+export const removeProjectMember = projectAdminMutation({
+  args: {
+    memberId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // adminMutation handles auth + admin check + provides ctx.projectId, ctx.project
+
+    // Can't remove the project owner
+    if (ctx.project.ownerId === args.memberId || ctx.project.createdBy === args.memberId) {
+      throw forbidden(undefined, "Cannot remove project owner");
+    }
+
+    // Find and delete membership
+    const membership = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project_user", (q) =>
+        q.eq("projectId", ctx.projectId).eq("userId", args.memberId),
+      )
+      .first();
+
+    if (membership) {
+      await ctx.db.delete(membership._id);
+
+      await logAudit(ctx, {
+        action: "member_removed",
+        actorId: ctx.userId,
+        targetId: ctx.projectId,
+        targetType: "projects",
+        metadata: {
+          memberId: args.memberId,
+        },
+      });
+    }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Get the current user's role in a project.
+ *
+ * @param projectId - The project ID.
+ *
+ * @returns The role string ("admin", "member", etc.) or null if not a member.
+ */
+export const getProjectUserRole = authenticatedQuery({
+  args: {
+    projectId: v.id("projects"),
+  },
+  handler: async (ctx, args) => {
+    return await getProjectRole(ctx, args.projectId, ctx.userId);
   },
 });
 
