@@ -188,12 +188,27 @@ export const create = projectEditorMutation({
  * Create a new issue in the project.
  * Returns an object with the issue ID and key.
  *
+ * This is the preferred variant of {@link create} and returns both the
+ * issue document ID and the generated issue key.
+ *
+ * @param title - Title of the issue.
+ * @param description - Optional description of the issue.
+ * @param type - Issue type (task, bug, story, epic, or subtask).
+ * @param priority - Priority of the issue (lowest, low, medium, high, highest).
+ * @param assigneeId - Optional ID of the user assigned to the issue.
+ * @param sprintId - Optional ID of the sprint the issue belongs to.
+ * @param moduleId - Optional ID of the module the issue belongs to.
+ * @param epicId - Optional ID of the epic this issue is linked to.
+ * @param parentId - Optional ID of the parent issue if this is a subtask.
+ * @param labels - Optional list of label IDs applied to the issue.
  * @returns { issueId: Id<"issues">, key: string }
+ * @throws {validation} If required fields are missing or invalid.
+ * @throws {forbidden} If user lacks permission to create issues in the project.
  */
 export const createIssue = projectEditorMutation({
   args: createIssueArgs,
   handler: async (ctx, args) => {
-    return await createIssueImpl(ctx, args);
+    return createIssueImpl(ctx, args);
   },
 });
 
