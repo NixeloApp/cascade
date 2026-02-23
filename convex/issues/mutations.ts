@@ -13,7 +13,7 @@ import {
 import { validate } from "../lib/constrainedValidators";
 import { conflict, rateLimited, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
-import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
+import { assertCanEditProject, assertIsProjectAdmin } from "../projectAccess";
 import { workflowCategories } from "../validators";
 import {
   assertVersionMatch,
@@ -26,9 +26,6 @@ import {
   validateParentIssue,
 } from "./helpers";
 
-/**
- * @deprecated Use `createIssue` instead. This mutation returns just the ID, while `createIssue` returns `{ issueId, key }`.
- */
 export const create = projectEditorMutation({
   args: {
     title: v.string(),
@@ -57,167 +54,108 @@ export const create = projectEditorMutation({
     storyPoints: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { issueId } = await createIssueImpl(ctx, args);
+    // Rate limit: 60 issues per minute per user with burst capacity of 15
+    // Skip in test environment (convex-test doesn't support components)
+    if (!process.env.IS_TEST_ENV) {
+      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+        name: `createIssue:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 60,
+          period: MINUTE,
+          capacity: 15,
+        },
+      });
+      if (!rateLimitResult.ok) {
+        throw rateLimited(rateLimitResult.retryAfter);
+      }
+
+      // Consume the rate limit token
+      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+        name: `createIssue:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 60,
+          period: MINUTE,
+          capacity: 15,
+        },
+      });
+    }
+
+    // Validate input constraints
+    validate.title(args.title);
+    validate.description(args.description);
+    if (args.labels) {
+      validate.tags(args.labels, "labels");
+    }
+
+    // Validate parent/epic constraints
+    const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
+
+    // Generate issue key with duplicate detection
+    // In rare concurrent scenarios, we verify the key doesn't exist before using
+    let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
+
+    // Double-check for duplicates (handles race conditions)
+    if (await issueKeyExists(ctx, issueKey)) {
+      // Regenerate with timestamp suffix to guarantee uniqueness
+      const suffix = Date.now() % 10000;
+      issueKey = `${issueKey}-${suffix}`;
+    }
+
+    // Get the first workflow state as default status
+    const defaultStatus = ctx.project.workflowStates[0]?.id || "todo";
+
+    // Get max order for the status column
+    const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
+
+    // Get label names from IDs
+    let labelNames: string[] = [];
+    if (args.labels && args.labels.length > 0) {
+      const labels = await asyncMap(args.labels, (id) => ctx.db.get(id));
+      labelNames = pruneNull(labels).map((l) => l.name);
+    }
+
+    const now = Date.now();
+    const issueId = await ctx.db.insert("issues", {
+      projectId: ctx.projectId,
+      organizationId: ctx.project.organizationId, // Cache from project
+      workspaceId: ctx.project.workspaceId, // Always present since projects require workspaceId
+      teamId: ctx.project.teamId, // Cached from project (can be undefined for workspace-level projects)
+      key: issueKey,
+      title: args.title,
+      description: args.description,
+      type: args.type,
+      status: defaultStatus,
+      priority: args.priority,
+      assigneeId: args.assigneeId,
+      reporterId: ctx.userId,
+      updatedAt: now,
+      labels: labelNames,
+      sprintId: args.sprintId,
+      epicId: inheritedEpicId,
+      parentId: args.parentId,
+      linkedDocuments: [],
+      attachments: [],
+      estimatedHours: args.estimatedHours,
+      dueDate: args.dueDate,
+      storyPoints: args.storyPoints,
+      searchContent: getSearchContent(args.title, args.description),
+      loggedHours: 0,
+      order: maxOrder + 1,
+      version: 1, // Initial version for optimistic locking
+    });
+
+    // Log activity
+    await ctx.db.insert("issueActivity", {
+      issueId,
+      userId: ctx.userId,
+      action: "created",
+    });
+
     return issueId;
   },
 });
-
-export const createIssue = projectEditorMutation({
-  args: {
-    title: v.string(),
-    description: v.optional(v.string()),
-    type: v.union(
-      v.literal("task"),
-      v.literal("bug"),
-      v.literal("story"),
-      v.literal("epic"),
-      v.literal("subtask"),
-    ),
-    priority: v.union(
-      v.literal("lowest"),
-      v.literal("low"),
-      v.literal("medium"),
-      v.literal("high"),
-      v.literal("highest"),
-    ),
-    assigneeId: v.optional(v.id("users")),
-    sprintId: v.optional(v.id("sprints")),
-    epicId: v.optional(v.id("issues")),
-    parentId: v.optional(v.id("issues")),
-    labels: v.optional(v.array(v.id("labels"))),
-    estimatedHours: v.optional(v.number()),
-    dueDate: v.optional(v.number()),
-    storyPoints: v.optional(v.number()),
-  },
-  returns: v.object({ issueId: v.id("issues"), key: v.string() }),
-  handler: async (ctx, args) => {
-    return await createIssueImpl(ctx, args);
-  },
-});
-
-// Shared implementation for create and createIssue
-async function createIssueImpl(
-  ctx: MutationCtx & {
-    userId: Id<"users">;
-    projectId: Id<"projects">;
-    project: Doc<"projects">;
-  },
-  args: {
-    title: string;
-    description?: string;
-    type: "task" | "bug" | "story" | "epic" | "subtask";
-    priority: "lowest" | "low" | "medium" | "high" | "highest";
-    assigneeId?: Id<"users">;
-    sprintId?: Id<"sprints">;
-    epicId?: Id<"issues">;
-    parentId?: Id<"issues">;
-    labels?: Id<"labels">[];
-    estimatedHours?: number;
-    dueDate?: number;
-    storyPoints?: number;
-  },
-) {
-  // Rate limit: 60 issues per minute per user with burst capacity of 15
-  // Skip in test environment (convex-test doesn't support components)
-  if (!process.env.IS_TEST_ENV) {
-    const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
-      name: `createIssue:${ctx.userId}`,
-      config: {
-        kind: "token bucket",
-        rate: 60,
-        period: MINUTE,
-        capacity: 15,
-      },
-    });
-    if (!rateLimitResult.ok) {
-      throw rateLimited(rateLimitResult.retryAfter);
-    }
-
-    // Consume the rate limit token
-    await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
-      name: `createIssue:${ctx.userId}`,
-      config: {
-        kind: "token bucket",
-        rate: 60,
-        period: MINUTE,
-        capacity: 15,
-      },
-    });
-  }
-
-  // Validate input constraints
-  validate.title(args.title);
-  validate.description(args.description);
-  if (args.labels) {
-    validate.tags(args.labels, "labels");
-  }
-
-  // Validate parent/epic constraints
-  const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
-
-  // Generate issue key with duplicate detection
-  // In rare concurrent scenarios, we verify the key doesn't exist before using
-  let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
-
-  // Double-check for duplicates (handles race conditions)
-  if (await issueKeyExists(ctx, issueKey)) {
-    // Regenerate with timestamp suffix to guarantee uniqueness
-    const suffix = Date.now() % 10000;
-    issueKey = `${issueKey}-${suffix}`;
-  }
-
-  // Get the first workflow state as default status
-  const defaultStatus = ctx.project.workflowStates[0]?.id || "todo";
-
-  // Get max order for the status column
-  const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
-
-  // Get label names from IDs
-  let labelNames: string[] = [];
-  if (args.labels && args.labels.length > 0) {
-    const labels = await asyncMap(args.labels, (id) => ctx.db.get(id));
-    labelNames = pruneNull(labels).map((l) => l.name);
-  }
-
-  const now = Date.now();
-  const issueId = await ctx.db.insert("issues", {
-    projectId: ctx.projectId,
-    organizationId: ctx.project.organizationId, // Cache from project
-    workspaceId: ctx.project.workspaceId, // Always present since projects require workspaceId
-    teamId: ctx.project.teamId, // Cached from project (can be undefined for workspace-level projects)
-    key: issueKey,
-    title: args.title,
-    description: args.description,
-    type: args.type,
-    status: defaultStatus,
-    priority: args.priority,
-    assigneeId: args.assigneeId,
-    reporterId: ctx.userId,
-    updatedAt: now,
-    labels: labelNames,
-    sprintId: args.sprintId,
-    epicId: inheritedEpicId,
-    parentId: args.parentId,
-    linkedDocuments: [],
-    attachments: [],
-    estimatedHours: args.estimatedHours,
-    dueDate: args.dueDate,
-    storyPoints: args.storyPoints,
-    searchContent: getSearchContent(args.title, args.description),
-    loggedHours: 0,
-    order: maxOrder + 1,
-    version: 1, // Initial version for optimistic locking
-  });
-
-  // Log activity
-  await ctx.db.insert("issueActivity", {
-    issueId,
-    userId: ctx.userId,
-    action: "created",
-  });
-
-  return { issueId, key: issueKey };
-}
 
 export const updateStatus = issueMutation({
   args: {
@@ -344,18 +282,14 @@ export const update = issueMutation({
       args.assigneeId &&
       args.assigneeId !== ctx.userId
     ) {
-      const assigneeHasAccess = await canAccessProject(ctx, ctx.issue.projectId, args.assigneeId);
-
-      if (assigneeHasAccess) {
-        // Dynamic import to avoid cycles
-        const { sendEmailNotification } = await import("../email/helpers");
-        await sendEmailNotification(ctx, {
-          userId: args.assigneeId,
-          type: "assigned",
-          issueId: ctx.issue._id,
-          actorId: ctx.userId,
-        });
-      }
+      // Dynamic import to avoid cycles
+      const { sendEmailNotification } = await import("../email/helpers");
+      await sendEmailNotification(ctx, {
+        userId: args.assigneeId,
+        type: "assigned",
+        issueId: ctx.issue._id,
+        actorId: ctx.userId,
+      });
     }
 
     if (Object.keys(updates).length > 0) {
@@ -441,19 +375,8 @@ export const addComment = issueViewerMutation({
 
     // Notify mentioned users in parallel
     const mentionedOthers = mentions.filter((id) => id !== ctx.userId);
-
-    // Filter mentions by project access to prevent leaks
-    const validMentions = (
-      await Promise.all(
-        mentionedOthers.map(async (userId) => {
-          const hasAccess = await canAccessProject(ctx, ctx.projectId, userId);
-          return hasAccess ? userId : null;
-        }),
-      )
-    ).filter((id): id is Id<"users"> => id !== null);
-
     await Promise.all(
-      validMentions.flatMap((mentionedUserId) => [
+      mentionedOthers.flatMap((mentionedUserId) => [
         ctx.db.insert("notifications", {
           userId: mentionedUserId,
           type: "issue_mentioned",
@@ -474,27 +397,23 @@ export const addComment = issueViewerMutation({
     );
 
     if (ctx.issue.reporterId !== ctx.userId) {
-      const reporterHasAccess = await canAccessProject(ctx, ctx.projectId, ctx.issue.reporterId);
+      await ctx.db.insert("notifications", {
+        userId: ctx.issue.reporterId,
+        type: "issue_comment",
+        title: "New comment",
+        message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
+        issueId: ctx.issue._id,
+        projectId: ctx.projectId,
+        isRead: false,
+      });
 
-      if (reporterHasAccess) {
-        await ctx.db.insert("notifications", {
-          userId: ctx.issue.reporterId,
-          type: "issue_comment",
-          title: "New comment",
-          message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
-          issueId: ctx.issue._id,
-          projectId: ctx.projectId,
-          isRead: false,
-        });
-
-        await sendEmailNotification(ctx, {
-          userId: ctx.issue.reporterId,
-          type: "comment",
-          issueId: ctx.issue._id,
-          actorId: ctx.userId,
-          commentText: args.content,
-        });
-      }
+      await sendEmailNotification(ctx, {
+        userId: ctx.issue.reporterId,
+        type: "comment",
+        issueId: ctx.issue._id,
+        actorId: ctx.userId,
+        commentText: args.content,
+      });
     }
 
     return commentId;

@@ -22,7 +22,7 @@ describe("Project Restore", () => {
     });
 
     // 2. Create an issue in the project
-    const { issueId } = await asUser.mutation(api.issues.createIssue, {
+    const issueId = await asUser.mutation(api.issues.create, {
       title: "Test Issue",
       type: "task",
       priority: "medium",

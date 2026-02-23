@@ -106,3 +106,51 @@ export const batchFetchCustomFields = (ctx: QueryCtx, ids: (Id<"customFields"> |
 /** Batch fetch recordings by ID */
 export const batchFetchRecordings = (ctx: QueryCtx, ids: (Id<"meetingRecordings"> | undefined)[]) =>
   batchFetch(ctx, "meetingRecordings", ids);
+
+// ============================================================================
+// FORMATTING HELPERS
+// ============================================================================
+
+/**
+ * Format user for API response
+ */
+export function formatUser(user: Doc<"users"> | undefined | null) {
+  if (!user) return null;
+  return {
+    _id: user._id,
+    name: user.name || user.email || "Unknown",
+    email: user.email,
+    image: user.image,
+  };
+}
+
+/**
+ * Get user name with fallback
+ */
+export function getUserName(user: Doc<"users"> | undefined | null): string {
+  return user?.name || user?.email || "Unknown";
+}
+
+/**
+ * Format project/project for API response
+ */
+export function formatProject(project: Doc<"projects"> | undefined | null) {
+  if (!project) return null;
+  return {
+    _id: project._id,
+    name: project.name,
+    key: project.key,
+  };
+}
+
+/**
+ * Format issue for API response (minimal)
+ */
+export function formatIssueMinimal(issue: Doc<"issues"> | undefined | null) {
+  if (!issue) return null;
+  return {
+    _id: issue._id,
+    key: issue.key,
+    title: issue.title,
+  };
+}
