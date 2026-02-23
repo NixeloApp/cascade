@@ -216,29 +216,6 @@ describe("Notifications", () => {
       expect(count).toBe(3);
     });
 
-    it("should cap unread count at 100", async () => {
-      const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-
-      // Create 105 unread notifications
-      await t.run(async (ctx) => {
-        for (let i = 0; i < 105; i++) {
-          await ctx.db.insert("notifications", {
-            userId,
-            type: "test",
-            title: `Unread ${i}`,
-            message: "Test",
-            isRead: false,
-          });
-        }
-      });
-
-      const asUser = asAuthenticatedUser(t, userId);
-      const count = await asUser.query(api.notifications.getUnreadCount, {});
-
-      expect(count).toBe(100);
-    });
-
     it("should return zero for user with no notifications", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);

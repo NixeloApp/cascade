@@ -22,7 +22,7 @@ describe("Issues", () => {
       });
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         description: "This is a test issue",
@@ -50,14 +50,14 @@ describe("Issues", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const { issueId: issue1Id } = await asUser.mutation(api.issues.createIssue, {
+      const issue1Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "First Issue",
         type: "task",
         priority: "medium",
       });
 
-      const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
+      const issue2Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Second Issue",
         type: "bug",
@@ -78,7 +78,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Status Test",
         type: "task",
@@ -97,7 +97,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, reporterId);
 
       const asReporter = asAuthenticatedUser(t, reporterId);
-      const { issueId } = await asReporter.mutation(api.issues.createIssue, {
+      const issueId = await asReporter.mutation(api.issues.create, {
         projectId,
         title: "Assigned Issue",
         type: "task",
@@ -116,7 +116,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       await expect(async () => {
-        await t.mutation(api.issues.createIssue, {
+        await t.mutation(api.issues.create, {
           projectId,
           title: "Unauthorized",
           type: "task",
@@ -160,7 +160,7 @@ describe("Issues", () => {
       const asViewer = asAuthenticatedUser(t, viewerId);
       // Viewer should not be able to create issues - requires editor role
       await expect(async () => {
-        await asViewer.mutation(api.issues.createIssue, {
+        await asViewer.mutation(api.issues.create, {
           projectId,
           title: "Should Fail",
           type: "task",
@@ -178,7 +178,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Detailed Issue",
         description: "Detailed description",
@@ -201,7 +201,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "To Delete",
         type: "task",
@@ -223,7 +223,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, owner, { isPublic: false });
 
       const asOwner = asAuthenticatedUser(t, owner);
-      const { issueId } = await asOwner.mutation(api.issues.createIssue, {
+      const issueId = await asOwner.mutation(api.issues.create, {
         projectId,
         title: "Private Issue",
         type: "task",
@@ -246,7 +246,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Original Title",
         description: "Original description",
@@ -291,7 +291,7 @@ describe("Issues", () => {
       });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const { issueId } = await asAdmin.mutation(api.issues.createIssue, {
+      const issueId = await asAdmin.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -323,7 +323,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Status Test",
         type: "task",
@@ -360,7 +360,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test",
         type: "task",
@@ -387,19 +387,19 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "bug",
         priority: "high",
       });
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 3",
         type: "story",
@@ -439,7 +439,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -473,7 +473,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test",
         type: "task",
@@ -498,13 +498,13 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId: issue1Id } = await asUser.mutation(api.issues.createIssue, {
+      const issue1Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
+      const issue2Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -530,13 +530,13 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId: issue1Id } = await asUser.mutation(api.issues.createIssue, {
+      const issue1Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "low",
       });
-      const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
+      const issue2Id = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -563,13 +563,13 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, reporterId);
 
       const asReporter = asAuthenticatedUser(t, reporterId);
-      const { issueId: issue1Id } = await asReporter.mutation(api.issues.createIssue, {
+      const issue1Id = await asReporter.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
       });
-      const { issueId: issue2Id } = await asReporter.mutation(api.issues.createIssue, {
+      const issue2Id = await asReporter.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -612,7 +612,7 @@ describe("Issues", () => {
       });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const { issueId } = await asAdmin.mutation(api.issues.createIssue, {
+      const issueId = await asAdmin.mutation(api.issues.create, {
         projectId,
         title: "Test",
         type: "task",
@@ -649,19 +649,19 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Fix login bug",
         type: "bug",
         priority: "high",
       });
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Add login feature",
         type: "story",
         priority: "medium",
       });
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Update dashboard",
         type: "task",
@@ -684,7 +684,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Normal Title",
         description: "Contains unique_word_in_desc",
@@ -707,7 +707,7 @@ describe("Issues", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Update Test",
         description: "Initial description",
@@ -741,7 +741,7 @@ describe("Issues", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create an epic
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Epic 1",
         type: "epic",
@@ -749,7 +749,7 @@ describe("Issues", () => {
       });
 
       // Create a task
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 1",
         type: "task",
@@ -780,7 +780,7 @@ describe("Issues", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create an epic
-      const { issueId: epicId } = await asUser.mutation(api.issues.createIssue, {
+      const epicId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Epic 1",
         type: "epic",
@@ -788,7 +788,7 @@ describe("Issues", () => {
       });
 
       // Create task IN the epic
-      const { issueId: taskInEpicId } = await asUser.mutation(api.issues.createIssue, {
+      const taskInEpicId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task in Epic",
         type: "task",
@@ -797,7 +797,7 @@ describe("Issues", () => {
       });
 
       // Create task NOT in the epic
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task not in Epic",
         type: "task",

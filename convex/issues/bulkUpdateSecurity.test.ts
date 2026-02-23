@@ -16,7 +16,7 @@ describe("Bulk Update Deleted Issue Reproduction", () => {
     });
 
     // Create an issue
-    const { issueId } = await asUser.mutation(api.issues.createIssue, {
+    const issueId = await asUser.mutation(api.issues.create, {
       projectId,
       title: "Issue to Delete",
       type: "task",
