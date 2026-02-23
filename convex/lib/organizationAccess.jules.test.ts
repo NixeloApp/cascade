@@ -30,7 +30,7 @@ describe("Organization Access", () => {
       // Use Promise.all instead of loop to avoid "Async operation inside loop" validation error
       const results = await Promise.all([
         getOrganizationMemberships(ctx, userId),
-        getOrganizationMemberships(ctx, userId)
+        getOrganizationMemberships(ctx, userId),
       ]);
       expect(results[0].items.length).toBeGreaterThanOrEqual(2);
     });
