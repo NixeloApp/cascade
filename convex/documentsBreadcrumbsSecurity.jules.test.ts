@@ -25,25 +25,25 @@ describe("Documents Breadcrumbs Security", () => {
     const asUserB = asAuthenticatedUser(t, userIdB);
 
     // 3. User A creates "Private Parent" (Private)
-    const privateParentId = await asUserA.mutation(api.documents.create, {
+    const { documentId: privateParentId } = await asUserA.mutation(api.documents.create, {
       title: "Private Parent",
       isPublic: false,
       organizationId,
     });
 
     // 4. User A creates "Public Child" inside "Private Parent" (Public)
-    const publicChildId = await asUserA.mutation(api.documents.create, {
+    const { documentId: publicChildId } = await asUserA.mutation(api.documents.create, {
       title: "Public Child",
       isPublic: true,
       organizationId,
-      parentId: privateParentId.documentId,
+      parentId: privateParentId,
     });
 
     // 5. User B requests breadcrumbs for "Public Child"
     // User B should access "Public Child" because it is public in the org.
     // However, User B should NOT access "Private Parent".
     const breadcrumbs = await asUserB.query(api.documents.getBreadcrumbs, {
-      id: publicChildId.documentId,
+      id: publicChildId,
     });
 
     // 6. Verify that "Private Parent" is NOT leaked
@@ -53,6 +53,6 @@ describe("Documents Breadcrumbs Security", () => {
     // 7. Verify that "Private Document" placeholder is present
     const redactedParent = breadcrumbs.find((b) => b.title === "Private Document");
     expect(redactedParent).toBeDefined();
-    expect(redactedParent?._id).toEqual(privateParentId.documentId);
+    expect(redactedParent?._id).toEqual(privateParentId);
   });
 });
