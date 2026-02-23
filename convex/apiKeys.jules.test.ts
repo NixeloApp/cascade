@@ -29,7 +29,7 @@ describe("API Keys Security", () => {
     // Add member to organization first (required by security check)
     await addUserToOrganization(t, organizationId, memberId, creatorId);
     // Add member to project
-    await asCreator.mutation(api.projects.addProjectMember, {
+    await asCreator.mutation(api.projectMembers.add, {
       projectId,
       userEmail: memberEmail,
       role: "viewer",
@@ -44,7 +44,7 @@ describe("API Keys Security", () => {
     });
 
     // 4. Member is removed from the project
-    await asCreator.mutation(api.projects.removeProjectMember, {
+    await asCreator.mutation(api.projectMembers.remove, {
       projectId,
       memberId,
     });

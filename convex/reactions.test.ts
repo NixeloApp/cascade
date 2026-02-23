@@ -77,7 +77,7 @@ describe("Reactions", () => {
     const asUser1 = asAuthenticatedUser(t, user1Id);
     // Add user2 to organization first (required by security check)
     await addUserToOrganization(t, project.organizationId, user2Id, user1Id);
-    await asUser1.mutation(api.projects.addProjectMember, {
+    await asUser1.mutation(api.projectMembers.add, {
       projectId,
       userEmail: "user2@test.com",
       role: "editor",
