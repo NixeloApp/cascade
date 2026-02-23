@@ -61,3 +61,7 @@
 ## 2026-02-21 - Robust ID Generation
 **Learning:** Generating IDs from labels (e.g., `label.toLowerCase().replace(...)`) causes duplicate IDs when the same label is used multiple times on a page (e.g., in a modal and on the page), breaking accessibility.
 **Action:** Use `React.useId()` to generate unique, stable IDs for form inputs, error messages, and helper text. Use the generated ID as a fallback if no `id` prop is provided.
+
+## 2026-02-23 - Accessible Checkbox Labels
+**Learning:** `Checkbox` inputs often lack accessible names when used without a visible label in list items (e.g., in a Subtasks list). This forces screen reader users to rely on context or generic announcements.
+**Action:** Always provide an `aria-label` to `Checkbox` components when a visible `label` prop is not used. The `aria-label` should describe the action (e.g., "Mark [Task Name] as complete") to provide clear context.
