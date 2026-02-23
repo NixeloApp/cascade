@@ -699,17 +699,82 @@ export const search = authenticatedQuery({
       );
     } else if (args.projectId) {
       const projectId = args.projectId;
-      // Bounded: project issues limited
-      issues = await safeCollect(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_deleted", (q) =>
-            q.eq("projectId", projectId).lt("isDeleted", true),
-          )
-          .order("desc"),
-        fetchLimit,
-        "issue search by project",
-      );
+
+      // Determine efficient query strategy based on filters
+      // We prioritize specific indexes to avoid scanning the entire project
+      const targetAssigneeId =
+        args.assigneeId === "me"
+          ? ctx.userId
+          : args.assigneeId !== "unassigned"
+            ? args.assigneeId
+            : undefined;
+
+      const hasSpecificAssignee = targetAssigneeId !== undefined;
+      const hasSingleStatus = args.status?.length === 1;
+
+      if (hasSpecificAssignee && hasSingleStatus) {
+        // Best case: Filter by assignee AND status
+        // Index: by_project_assignee_status ["projectId", "assigneeId", "status", "isDeleted"]
+        issues = await safeCollect(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_assignee_status", (q) =>
+              q
+                .eq("projectId", projectId)
+                .eq("assigneeId", targetAssigneeId)
+                .eq("status", args.status![0])
+                .lt("isDeleted", true),
+            )
+            .order("desc"),
+          fetchLimit,
+          "issue search by project assignee status",
+        );
+      } else if (hasSpecificAssignee) {
+        // Filter by assignee
+        // Index: by_project_assignee ["projectId", "assigneeId", "isDeleted"]
+        issues = await safeCollect(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_assignee", (q) =>
+              q
+                .eq("projectId", projectId)
+                .eq("assigneeId", targetAssigneeId)
+                .lt("isDeleted", true),
+            )
+            .order("desc"),
+          fetchLimit,
+          "issue search by project assignee",
+        );
+      } else if (hasSingleStatus) {
+        // Filter by status
+        // Index: by_project_status ["projectId", "status", "isDeleted", "order"]
+        issues = await safeCollect(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_status", (q) =>
+              q
+                .eq("projectId", projectId)
+                .eq("status", args.status![0])
+                .lt("isDeleted", true),
+            )
+            .order("desc"),
+          fetchLimit,
+          "issue search by project status",
+        );
+      } else {
+        // Fallback: Scan all project issues
+        // Index: by_project_deleted ["projectId", "isDeleted"]
+        issues = await safeCollect(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_deleted", (q) =>
+              q.eq("projectId", projectId).lt("isDeleted", true),
+            )
+            .order("desc"),
+          fetchLimit,
+          "issue search by project",
+        );
+      }
     } else if (args.organizationId) {
       const organizationId = args.organizationId;
       // Bounded: organization issues limited
