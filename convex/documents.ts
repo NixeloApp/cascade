@@ -237,6 +237,7 @@ export const togglePublic = authenticatedMutation({
 
 export const deleteDocument = authenticatedMutation({
   args: { id: v.id("documents") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await getAccessibleDocument(ctx, args.id);
 
@@ -249,12 +250,13 @@ export const deleteDocument = authenticatedMutation({
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
     await cascadeSoftDelete(ctx, "documents", args.id, ctx.userId, deletedAt);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
 export const restoreDocument = authenticatedMutation({
   args: { id: v.id("documents") },
+  returns: v.object({ success: v.literal(true), restored: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -279,7 +281,7 @@ export const restoreDocument = authenticatedMutation({
       deletedBy: undefined,
     });
 
-    return { success: true };
+    return { success: true, restored: true } as const;
   },
 });
 
