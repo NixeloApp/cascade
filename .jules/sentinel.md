@@ -108,7 +108,7 @@
 **Vulnerability:** The `updateProfile` mutation synchronously called `sendEmail` (which uses `fetch`) when a user changed their email to a new address. If the email was already taken, the sending logic was skipped. This created two vulnerabilities:
 1. **Crash:** `fetch` is illegal in Convex mutations, causing the mutation to fail for valid new emails in production.
 2. **Timing Attack:** The execution difference (attempting `fetch` vs skipping it) allowed attackers to enumerate registered emails by observing response times (or error states).
-**Learning:** Sending emails or performing external I/O must always be a done in Actions, not Mutations. To avoid timing attacks when logic is conditional (e.g. "send if not taken"), decouple the side effect from the request response by scheduling an asynchronous action.
+**Learning:** Sending emails or performing external I/O must always be done in Actions, not Mutations. To avoid timing attacks when logic is conditional (e.g. "send if not taken"), decouple the side effect from the request response by scheduling an asynchronous action.
 **Prevention:** Refactored `updateProfile` to use `ctx.scheduler.runAfter` to schedule a new `sendVerificationEmailAction`. This ensures the mutation returns immediately and consistently for all inputs, while the email sending happens asynchronously in the background.
 
 ## 2026-02-20 - Cross-Tenant Access via Public Document Breadcrumbs
@@ -140,8 +140,3 @@
 **Vulnerability:** `respondToSuggestion` and `getProjectLabels` were public endpoints, allowing unauthenticated users to modify suggestion status and access project metadata.
 **Learning:** All endpoints that modify or expose project data must be protected by authentication and explicit permission checks (`assertCanAccessProject`, `assertCanEditProject`). Public mutations are dangerous defaults.
 **Prevention:** Converted public functions in `convex/ai/suggestions.ts` to `authenticatedMutation` and `authenticatedQuery` and added explicit permission checks.
-
-## 2026-03-10 - API Key Privilege Escalation via Missing Scope Validation and Access Checks
-**Vulnerability:** The `apiKeys.update` mutation failed to validate if the user still had access to the project scoped by the API key, and also allowed arbitrary strings as scopes. This allowed a user removed from a project to maintain access via the API key (privilege persistence) and potentially escalate privileges by adding invalid scopes.
-**Learning:** Credentials (like API keys) that are scoped to a resource must be re-validated against that resource's access control list (ACL) whenever they are modified. Also, all user inputs, especially security-critical ones like scopes, must be strictly validated against an allowlist, not just at creation time but at update time too.
-**Prevention:** Added `assertCanAccessProject` check in `apiKeys.update` and implemented strict `validateScopes` helper used in both `generate` and `update`.

@@ -79,7 +79,7 @@ describe("Global User Enumeration", () => {
     // 1. Try to add User B (exists globally, but not in Org 1)
     let errorUserB: any;
     try {
-      await asUserA.mutation(api.projectMembers.add, {
+      await asUserA.mutation(api.projects.addProjectMember, {
         projectId: projectId,
         userEmail: "userB@example.com",
         role: "viewer",
@@ -91,7 +91,7 @@ describe("Global User Enumeration", () => {
     // 2. Try to add Non-existent user
     let errorNonExistent: any;
     try {
-      await asUserA.mutation(api.projectMembers.add, {
+      await asUserA.mutation(api.projects.addProjectMember, {
         projectId: projectId,
         userEmail: "nonexistent@example.com",
         role: "viewer",

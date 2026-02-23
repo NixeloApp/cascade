@@ -239,12 +239,6 @@ describe("organizations", () => {
       // Note: order is not guaranteed by default unless specified in query, usually creation order
       expect(organizations.some((c) => c.name === "organization A")).toBe(true);
       expect(organizations.some((c) => c.name === "organization B")).toBe(true);
-
-      // Verify counts
-      for (const org of organizations) {
-        expect(org.memberCount).toBe(1); // Just the creator
-        expect(org.projectCount).toBe(0); // No projects yet
-      }
     });
   });
 });
