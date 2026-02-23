@@ -12,7 +12,7 @@ import { validate } from "../lib/constrainedValidators";
 import { conflict, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
-import { issueTypesWithSubtask, workflowCategories } from "../validators";
+import { issueTypesWithSubtask, workflowCategories } from "../validators/index";
 import {
   assertVersionMatch,
   generateIssueKey,
