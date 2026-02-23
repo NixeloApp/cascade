@@ -58,8 +58,7 @@ describe("Files", () => {
       const blob = new Blob(["test content"], { type: contentType });
       // Helper to make Blob work in this environment if needed
       if (!blob.arrayBuffer) {
-        // @ts-expect-error
-        blob.arrayBuffer = async () => new TextEncoder().encode("test content").buffer;
+        (blob as any).arrayBuffer = async () => new TextEncoder().encode("test content").buffer;
       }
       return await ctx.storage.store(blob);
     });
