@@ -816,7 +816,19 @@ export const getProjectUserRole = authenticatedQuery({
   },
 });
 
-async function getProjectMembers(ctx: QueryCtx, projectId: Id<"projects">) {
+interface ProjectMember {
+  _id: Id<"users">;
+  name: string;
+  email: string | undefined;
+  image: string | undefined;
+  role: "admin" | "editor" | "viewer";
+  addedAt: number;
+}
+
+async function getProjectMembers(
+  ctx: QueryCtx,
+  projectId: Id<"projects">,
+): Promise<ProjectMember[]> {
   // Get members with their roles from projectMembers table (bounded)
   const memberships = await ctx.db
     .query("projectMembers")
@@ -830,9 +842,11 @@ async function getProjectMembers(ctx: QueryCtx, projectId: Id<"projects">) {
 
   return memberships.map((membership) => {
     const member = memberMap.get(membership.userId);
+    // Only use name if it's a non-empty string; fall back to "Unknown" (avoid exposing email as display name)
+    const displayName = member?.name?.trim() ? member.name : "Unknown";
     return {
       _id: membership.userId,
-      name: member?.name || member?.email || "Unknown",
+      name: displayName,
       email: member?.email,
       image: member?.image,
       role: membership.role,
