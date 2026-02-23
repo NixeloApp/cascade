@@ -80,34 +80,29 @@ describe("organizationAccess", () => {
     // We do this in batches to avoid overwhelming the transaction if needed,
     // but convex-test handles it.
     await t.run(async (ctx) => {
-      const promises = [];
-      for (let i = 0; i < 105; i++) {
-        promises.push(
-          (async () => {
-            const orgId = await ctx.db.insert("organizations", {
-              name: `Org ${i}`,
-              slug: `org-${i}`,
-              timezone: "UTC",
-              settings: {
-                defaultMaxHoursPerWeek: 40,
-                defaultMaxHoursPerDay: 8,
-                requiresTimeApproval: false,
-                billingEnabled: false,
-              },
-              createdBy: userId,
-              updatedAt: Date.now(),
-            });
-            await ctx.db.insert("organizationMembers", {
-              organizationId: orgId,
-              userId,
-              role: "member",
-              addedBy: userId,
-              joinedAt: Date.now(),
-            });
-            return orgId;
-          })(),
-        );
-      }
+      const promises = Array.from({ length: 105 }).map(async (_, i) => {
+        const orgId = await ctx.db.insert("organizations", {
+          name: `Org ${i}`,
+          slug: `org-${i}`,
+          timezone: "UTC",
+          settings: {
+            defaultMaxHoursPerWeek: 40,
+            defaultMaxHoursPerDay: 8,
+            requiresTimeApproval: false,
+            billingEnabled: false,
+          },
+          createdBy: userId,
+          updatedAt: Date.now(),
+        });
+        await ctx.db.insert("organizationMembers", {
+          organizationId: orgId,
+          userId,
+          role: "member",
+          addedBy: userId,
+          joinedAt: Date.now(),
+        });
+        return orgId;
+      });
       await Promise.all(promises);
     });
 
