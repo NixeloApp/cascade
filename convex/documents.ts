@@ -1263,16 +1263,11 @@ async function fetchAndMergeAccessibleDocuments(
   // Buffer size scales with limit to ensure we have enough results
   const fetchBuffer = limit * FETCH_BUFFER_MULTIPLIER;
 
-  // Get user's private documents (their own non-public docs)
-  const privateDocuments = await fetchPrivateDocuments(
-    ctx,
-    ctx.userId,
-    organizationId,
-    fetchBuffer,
-  );
-
-  // Get public documents (must be scoped to organization)
-  const publicDocuments = await fetchPublicDocuments(ctx, ctx.userId, organizationId, fetchBuffer);
+  // Get user's private and public documents in parallel
+  const [privateDocuments, publicDocuments] = await Promise.all([
+    fetchPrivateDocuments(ctx, ctx.userId, organizationId, fetchBuffer),
+    fetchPublicDocuments(ctx, ctx.userId, organizationId, fetchBuffer),
+  ]);
 
   // Combine and deduplicate (user's public docs appear in both queries)
   const seenIds = new Set<string>();
