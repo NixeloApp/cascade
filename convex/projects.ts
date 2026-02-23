@@ -6,6 +6,7 @@ import type { QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
+import { getTeamRole } from "./lib/teamAccess";
 
 /** Maximum issue count to compute for a project list view */
 const MAX_ISSUE_COUNT = 1000;
@@ -128,6 +129,32 @@ export const createProject = authenticatedMutation({
       if (!team) throw notFound("team", args.teamId);
       if (team.workspaceId !== args.workspaceId) {
         throw validation("teamId", "Team must belong to the specified workspace");
+      }
+
+      // Security: User must be team member OR Org Admin to assign project to team
+      const teamRole = await getTeamRole(ctx, args.teamId, ctx.userId);
+      if (!(teamRole || isOrgAdmin)) {
+        throw forbidden(
+          "member",
+          "You must be a team member or organization admin to assign this project to the team",
+        );
+      }
+    }
+
+    // Validate: sharedWithTeamIds must belong to the organization
+    if (args.sharedWithTeamIds && args.sharedWithTeamIds.length > 0) {
+      const teams = await Promise.all(args.sharedWithTeamIds.map((id) => ctx.db.get(id)));
+      for (let i = 0; i < teams.length; i++) {
+        const team = teams[i];
+        if (!team) {
+          throw notFound("team", args.sharedWithTeamIds[i]);
+        }
+        if (team.organizationId !== args.organizationId) {
+          throw validation(
+            "sharedWithTeamIds",
+            "Shared team must belong to the specified organization",
+          );
+        }
       }
     }
 
