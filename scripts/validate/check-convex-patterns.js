@@ -2,30 +2,15 @@
  * CHECK: Convex Patterns
  *
  * Validates Convex backend code follows established patterns:
- * 1. Security: addProjectMember/addTeamMember must check org membership (ENFORCED)
+ * 1. Security: addProjectMember/addTeamMember must check org membership
  * 2. Mutations that create resources must return objects (Envelope Pattern)
  * 3. Test files must destructure API returns
  * 4. Async operations should not be inside loops (use Promise.all)
- *
- * NOTE: This validator focuses on SECURITY issues first.
- * Other checks can be configured via CONFIG object.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
-
-// Configuration for gradual adoption
-const CONFIG = {
-  // Security checks are always enforced
-  enforceSecurityChecks: true,
-  // Envelope pattern: 'error' | 'warn' | 'off'
-  envelopePatternLevel: "error",
-  // Test destructuring: 'error' | 'warn' | 'off'
-  testDestructuringLevel: "error",
-  // Async in loops: 'error' | 'warn' | 'off'
-  asyncInLoopsLevel: "error",
-};
 
 export function run() {
   const CONVEX_DIR = path.join(ROOT, "convex");
@@ -35,9 +20,20 @@ export function run() {
 
   // Known exceptions (with justification)
   const ENVELOPE_EXCEPTIONS = [
-    // Internal mutations called only by other mutations
     "convex/lib/", // Helper functions, not public API
     "convex/internal/", // Internal actions
+  ];
+
+  // Files/tests where sequential async is intentional OR uses async IIFE pattern
+  const SEQUENTIAL_ASYNC_ALLOWED = [
+    "rateLimits", // Rate limit tests MUST be sequential
+    "twoFactor.test.ts", // Rate limit/lockout tests
+    "oauthHealthCheck", // Time-based ordering tests
+    "issuesLoadMore", // Pagination tests need distinct timestamps
+    "userSettings.test.ts", // Sequential mutation verification
+    "bookingPages.test.ts", // Query after each mutation
+    "calendarEvents.test.ts", // Query after each mutation
+    "organizationAccess.jules.test.ts", // Uses async IIFE + Promise.all pattern
   ];
 
   let errorCount = 0;
@@ -49,17 +45,10 @@ export function run() {
     errorCount++;
   }
 
-  function reportWarning(filePath, line, message) {
-    const rel = relPath(filePath);
-    errors.push(`  ${c.yellow}WARN${c.reset} ${rel}:${line} - ${message}`);
-  }
-
   /**
    * Check 1: Mutations should use Envelope Pattern (return objects, not raw IDs)
    */
   function checkEnvelopePattern(filePath, lines) {
-    if (CONFIG.envelopePatternLevel === "off") return;
-
     const rel = relPath(filePath);
 
     // Skip exceptions
@@ -92,19 +81,11 @@ export function run() {
         }
 
         if (insideMutation) {
-          if (CONFIG.envelopePatternLevel === "error") {
-            reportError(
-              filePath,
-              i + 1,
-              `Raw ID return 'return ${varName};'. Use Envelope Pattern: 'return { ${varName} };'`,
-            );
-          } else {
-            reportWarning(
-              filePath,
-              i + 1,
-              `Raw ID return 'return ${varName};'. Use Envelope Pattern: 'return { ${varName} };'`,
-            );
-          }
+          reportError(
+            filePath,
+            i + 1,
+            `Raw ID return 'return ${varName};'. Use Envelope Pattern: 'return { ${varName} };'`,
+          );
         }
       }
     }
@@ -114,8 +95,6 @@ export function run() {
    * Check 2: Test files should destructure API returns
    */
   function checkTestDestructuring(filePath, lines) {
-    if (CONFIG.testDestructuringLevel === "off") return;
-
     const rel = relPath(filePath);
 
     // Only check test files
@@ -131,41 +110,19 @@ export function run() {
 
       if (match) {
         const varName = match[1];
-
-        if (CONFIG.testDestructuringLevel === "error") {
-          reportError(
-            filePath,
-            i + 1,
-            `Raw assignment 'const ${varName} = await ...'. Use destructuring: 'const { ${varName} } = await ...'`,
-          );
-        } else {
-          reportWarning(
-            filePath,
-            i + 1,
-            `Raw assignment 'const ${varName} = await ...'. Use destructuring: 'const { ${varName} } = await ...'`,
-          );
-        }
+        reportError(
+          filePath,
+          i + 1,
+          `Raw assignment 'const ${varName} = await ...'. Use destructuring: 'const { ${varName} } = await ...'`,
+        );
       }
     }
   }
-
-  // Files/tests where sequential async is intentional (with justification)
-  const SEQUENTIAL_ASYNC_ALLOWED = [
-    "rateLimits", // Rate limit tests MUST be sequential
-    "twoFactor.test.ts", // Rate limit/lockout tests
-    "oauthHealthCheck", // Time-based ordering tests
-    "issuesLoadMore", // Pagination tests need distinct timestamps
-    "userSettings.test.ts", // Sequential mutation verification
-    "bookingPages.test.ts", // Query after each mutation
-    "calendarEvents.test.ts", // Query after each mutation
-  ];
 
   /**
    * Check 3: Async operations should not be inside loops (use Promise.all)
    */
   function checkAsyncInLoops(filePath, lines) {
-    if (CONFIG.asyncInLoopsLevel === "off") return;
-
     const rel = relPath(filePath);
 
     // Only check test files (production code may have valid sequential needs)
@@ -214,13 +171,11 @@ export function run() {
         // Skip if line has sequential-ok comment
         if (/sequential-ok/.test(lines[i - 1] || "")) continue;
 
-        const message = `Async operation inside loop (line ${loopStartLine}). Consider using Promise.all for parallel execution.`;
-
-        if (CONFIG.asyncInLoopsLevel === "error") {
-          reportError(filePath, i + 1, message);
-        } else {
-          reportWarning(filePath, i + 1, message);
-        }
+        reportError(
+          filePath,
+          i + 1,
+          `Async operation inside loop (line ${loopStartLine}). Consider using Promise.all for parallel execution.`,
+        );
       }
     }
   }
@@ -229,8 +184,6 @@ export function run() {
    * Check 4: addProjectMember must verify organization membership
    */
   function checkSecurityPatterns(filePath, content) {
-    if (!CONFIG.enforceSecurityChecks) return;
-
     const rel = relPath(filePath);
 
     // Only check specific files
