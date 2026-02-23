@@ -14,7 +14,7 @@ import { validate } from "../lib/constrainedValidators";
 import { conflict, rateLimited, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
-import { issueTypesWithSubtask, workflowCategories } from "../validators";
+import { workflowCategories } from "../validators";
 import {
   assertVersionMatch,
   generateIssueKey,
