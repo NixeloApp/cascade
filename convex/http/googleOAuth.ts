@@ -9,6 +9,8 @@ import {
 } from "../lib/env";
 import { getErrorMessage, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { escapeHtml, escapeScriptJson } from "../lib/html";
+import { HOUR, SECOND } from "../lib/timeUtils";
 
 /** Error thrown when an HTTP request returns a non-OK status */
 class HttpError extends Error {
@@ -36,9 +38,6 @@ async function fetchJSON<T>(url: string, init?: RequestInit, timeoutMs = 10000):
     throw new Error(`Invalid JSON response from ${url}`);
   }
 }
-
-import { escapeHtml, escapeScriptJson } from "../lib/html";
-import { HOUR, SECOND } from "../lib/timeUtils";
 
 /** Generic error page HTML - no internal details exposed */
 const errorPageHtml = `
@@ -612,8 +611,14 @@ function parseGoogleOAuthError(e: HttpError): string {
     } else if (errorBody.error_description) {
       message = errorBody.error_description;
     } else if (errorBody.error) {
-      // Sometimes it's just { error: "invalid_grant" }
-      message = errorBody.error;
+      // Sometimes it's just { error: "invalid_grant" } or { error: { ... } }
+      if (typeof errorBody.error === "string") {
+        message = errorBody.error;
+      } else if (typeof errorBody.error === "object" && errorBody.error.message) {
+        message = errorBody.error.message;
+      } else {
+        message = JSON.stringify(errorBody.error).slice(0, 200);
+      }
     }
   } catch {
     // Ignore JSON parse error, fallback to default

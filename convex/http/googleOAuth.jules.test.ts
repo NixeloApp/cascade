@@ -210,7 +210,7 @@ describe("Google OAuth Flow", () => {
     });
 
     it("should handle user info fetch failure", async () => {
-      // Token exchange succeeds but doesn't return refresh_token
+      // Token exchange succeeds and returns refresh_token
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
         mockOkResponse({
           access_token: "token",
