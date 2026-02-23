@@ -76,12 +76,12 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
   const groupForm = useEntityForm<GroupFormData>(DEFAULT_GROUP_FORM);
 
   // Label mutations
-  const createLabel = useMutation(api.labels.create);
+  const createLabel = useMutation(api.labels.createLabel);
   const updateLabel = useMutation(api.labels.update);
   const deleteLabelMutation = useMutation(api.labels.remove);
 
   // Group mutations
-  const createGroup = useMutation(api.labelGroups.create);
+  const createGroup = useMutation(api.labelGroups.createLabelGroup);
   const updateGroup = useMutation(api.labelGroups.update);
   const deleteGroupMutation = useMutation(api.labelGroups.remove);
 

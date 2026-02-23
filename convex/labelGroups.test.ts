@@ -43,7 +43,7 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      const groupId = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: groupId } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Priority",
         description: "Priority labels",
@@ -64,13 +64,13 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      await asUser.mutation(api.labelGroups.create, {
+      await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Status",
       });
 
       await expect(
-        asUser.mutation(api.labelGroups.create, {
+        asUser.mutation(api.labelGroups.createLabelGroup, {
           projectId,
           name: "Status",
         }),
@@ -86,9 +86,18 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      await asUser.mutation(api.labelGroups.create, { projectId, name: "Group 1" });
-      await asUser.mutation(api.labelGroups.create, { projectId, name: "Group 2" });
-      await asUser.mutation(api.labelGroups.create, { projectId, name: "Group 3" });
+      await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Group 1",
+      });
+      await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Group 2",
+      });
+      await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Group 3",
+      });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const namedGroups = groups.filter((g) => g.name !== "Ungrouped");
@@ -109,7 +118,7 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      const groupId = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: groupId } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Priority",
       });
@@ -154,9 +163,18 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      await asUser.mutation(api.labelGroups.create, { projectId, name: "Zebra" });
-      await asUser.mutation(api.labelGroups.create, { projectId, name: "Alpha" });
-      await asUser.mutation(api.labelGroups.create, { projectId, name: "Middle" });
+      await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Zebra",
+      });
+      await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Alpha",
+      });
+      await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Middle",
+      });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const namedGroups = groups.filter((g) => g.name !== "Ungrouped");
@@ -178,7 +196,7 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      const groupId = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: groupId } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Old Name",
       });
@@ -206,8 +224,11 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      await asUser.mutation(api.labelGroups.create, { projectId, name: "Existing" });
-      const groupId = await asUser.mutation(api.labelGroups.create, {
+      await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Existing",
+      });
+      const { labelGroupId: groupId } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "To Update",
       });
@@ -234,7 +255,7 @@ describe("Label Groups", () => {
       await addProjectMember(t, projectId, viewerId, "viewer", ownerId);
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const groupId = await asOwner.mutation(api.labelGroups.create, {
+      const { labelGroupId: groupId } = await asOwner.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Test Group",
       });
@@ -259,7 +280,7 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      const groupId = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: groupId } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "To Delete",
       });
@@ -290,9 +311,18 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      const group1 = await asUser.mutation(api.labelGroups.create, { projectId, name: "First" });
-      const group2 = await asUser.mutation(api.labelGroups.create, { projectId, name: "Second" });
-      const group3 = await asUser.mutation(api.labelGroups.create, { projectId, name: "Third" });
+      const { labelGroupId: group1 } = await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "First",
+      });
+      const { labelGroupId: group2 } = await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Second",
+      });
+      const { labelGroupId: group3 } = await asUser.mutation(api.labelGroups.createLabelGroup, {
+        projectId,
+        name: "Third",
+      });
 
       // Reorder: Third, First, Second
       const result = await asUser.mutation(api.labelGroups.reorder, {
@@ -322,11 +352,11 @@ describe("Label Groups", () => {
         key: "P2",
       });
 
-      const group1 = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: group1 } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId: project1,
         name: "Group 1",
       });
-      const group2 = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: group2 } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId: project2,
         name: "Group 2",
       });
@@ -350,11 +380,11 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      const group1 = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: group1 } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Group 1",
       });
-      const group2 = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: group2 } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Group 2",
       });
@@ -383,7 +413,7 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      const groupId = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: groupId } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Source Group",
       });
@@ -414,7 +444,7 @@ describe("Label Groups", () => {
         key: "LBL",
       });
 
-      const groupId = await asUser.mutation(api.labelGroups.create, {
+      const { labelGroupId: groupId } = await asUser.mutation(api.labelGroups.createLabelGroup, {
         projectId,
         name: "Test Group",
       });
