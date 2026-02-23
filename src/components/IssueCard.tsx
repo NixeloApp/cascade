@@ -295,19 +295,13 @@ export const IssueCard = memo(function IssueCard({
             )}
             <Tooltip content={getTypeLabel(issue.type)}>
               {/* Tooltip trigger needs pointer events */}
-              <Button
-                variant="unstyled"
+              <span
                 onClick={handleClick}
-                className="pointer-events-auto p-0 h-auto rounded-sm"
+                className="pointer-events-auto inline-flex items-center justify-center rounded-sm cursor-default"
+                aria-hidden="true"
               >
-                <Icon
-                  icon={ISSUE_TYPE_ICONS[issue.type]}
-                  size="sm"
-                  className="cursor-help"
-                  role="img"
-                  aria-label={getTypeLabel(issue.type)}
-                />
-              </Button>
+                <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" className="cursor-help" />
+              </span>
             </Tooltip>
             <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
               {issue.key}
@@ -316,20 +310,18 @@ export const IssueCard = memo(function IssueCard({
           <Tooltip
             content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
           >
-            <Button
-              variant="unstyled"
+            <span
               onClick={handleClick}
-              className="pointer-events-auto p-0 h-auto rounded-sm"
+              className="pointer-events-auto inline-flex items-center justify-center rounded-sm cursor-default"
+              aria-hidden="true"
             >
               <Icon
                 icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
                 size="sm"
                 data-testid={TEST_IDS.ISSUE.PRIORITY}
-                aria-label={`Priority: ${issue.priority}`}
-                role="img"
                 className={cn("cursor-help", getPriorityColor(issue.priority))}
               />
-            </Button>
+            </span>
           </Tooltip>
         </Flex>
 
@@ -366,15 +358,15 @@ export const IssueCard = memo(function IssueCard({
                   .map((l) => l.name)
                   .join(", ")}
               >
-                <Button
-                  variant="unstyled"
+                <span
                   onClick={handleClick}
-                  className="pointer-events-auto p-0 h-auto rounded-sm"
+                  className="pointer-events-auto inline-flex items-center justify-center rounded-sm cursor-default"
+                  aria-hidden="true"
                 >
                   <Badge variant="neutral" size="sm" className="cursor-help">
                     +{issue.labels.length - 3}
                   </Badge>
-                </Button>
+                </span>
               </Tooltip>
             )}
           </Flex>
@@ -391,10 +383,10 @@ export const IssueCard = memo(function IssueCard({
           <Flex align="center" gap="sm">
             {issue.assignee && (
               <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-                <Button
-                  variant="unstyled"
+                <span
                   onClick={handleClick}
-                  className="pointer-events-auto p-0 h-auto rounded-sm flex items-center gap-1"
+                  className="pointer-events-auto inline-flex items-center justify-center rounded-sm gap-1 cursor-default"
+                  aria-hidden="true"
                 >
                   {issue.assignee.image ? (
                     <img
@@ -407,13 +399,11 @@ export const IssueCard = memo(function IssueCard({
                       align="center"
                       justify="center"
                       className="size-5 rounded-full bg-ui-bg-tertiary text-ui-text-secondary"
-                      aria-label={issue.assignee.name}
-                      role="img"
                     >
                       {issue.assignee.name.charAt(0).toUpperCase()}
                     </Flex>
                   )}
-                </Button>
+                </span>
               </Tooltip>
             )}
           </Flex>
