@@ -143,7 +143,9 @@ describe("Issue Mutations", () => {
           .query("issueActivity")
           .withIndex("by_issue", (q) => q.eq("issueId", issueId))
           .collect();
-        await Promise.all(activities.map((a) => ctx.db.delete(a._id)));
+        for (const a of activities) {
+          await ctx.db.delete(a._id);
+        }
       });
 
       // Update to same status

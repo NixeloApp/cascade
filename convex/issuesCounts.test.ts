@@ -14,29 +14,26 @@ describe("Issue Counts Performance", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create 3 Todo issues
-    await Promise.all(
-      Array.from({ length: 3 }, (_, i) =>
-        asUser.mutation(api.issues.createIssue, {
-          projectId,
-          title: `Todo ${i}`,
-          type: "task",
-          priority: "medium",
-        }),
-      ),
-    );
+    for (let i = 0; i < 3; i++) {
+      await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: `Todo ${i}`,
+        type: "task",
+        priority: "medium",
+      });
+    }
 
     // Create 2 Done issues
-    const doneResults = await Promise.all(
-      Array.from({ length: 2 }, (_, i) =>
-        asUser.mutation(api.issues.createIssue, {
-          projectId,
-          title: `Done ${i}`,
-          type: "task",
-          priority: "medium",
-        }),
-      ),
-    );
-    const doneIssueIds = doneResults.map((r) => r.issueId);
+    const doneIssueIds = [];
+    for (let i = 0; i < 2; i++) {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: `Done ${i}`,
+        type: "task",
+        priority: "medium",
+      });
+      doneIssueIds.push(issueId);
+    }
 
     // Move to done
     await asUser.mutation(api.issues.bulkUpdateStatus, {

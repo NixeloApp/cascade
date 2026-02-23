@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "./testUtils";
@@ -21,15 +22,14 @@ test("getCommentReactions fetches reactions for multiple comments correctly", as
   });
 
   // 3. Add multiple comments
-  const commentIds = await Promise.all(
-    Array.from({ length: 5 }, async (_, i) => {
-      const { commentId } = await user.mutation(api.documents.addComment, {
-        documentId,
-        content: `Comment ${i}`,
-      });
-      return commentId;
-    }),
-  );
+  const commentIds: Id<"documentComments">[] = [];
+  for (let i = 0; i < 5; i++) {
+    const { commentId } = await user.mutation(api.documents.addComment, {
+      documentId,
+      content: `Comment ${i}`,
+    });
+    commentIds.push(commentId);
+  }
 
   // 4. Add reactions
   // Comment 0: 👍

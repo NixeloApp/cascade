@@ -18,25 +18,28 @@ describe("listRoadmapIssues ordering", () => {
       const project = await ctx.db.get(projectId);
       if (!project) throw new Error("Project not found");
 
-      for (let i = 0; i < 105; i++) {
-        await ctx.db.insert("issues", {
-          projectId,
-          organizationId,
-          workspaceId: project.workspaceId,
-          teamId: project.teamId,
-          key: `PROJ-${i + 1}`,
-          title: `Issue ${i}`,
-          type: "task",
-          status: "todo",
-          priority: "medium",
-          reporterId: userId,
-          updatedAt: Date.now() + i * 1000, // Ensure increasing timestamps if relevant
-          labels: [],
-          linkedDocuments: [],
-          attachments: [],
-          order: i,
-        });
-      }
+      // Batch insert using Promise.all to avoid async-in-loop validation error
+      await Promise.all(
+        Array.from({ length: 105 }, (_, i) =>
+          ctx.db.insert("issues", {
+            projectId,
+            organizationId,
+            workspaceId: project.workspaceId,
+            teamId: project.teamId,
+            key: `PROJ-${i + 1}`,
+            title: `Issue ${i}`,
+            type: "task",
+            status: "todo",
+            priority: "medium",
+            reporterId: userId,
+            updatedAt: Date.now() + i * 1000, // Ensure increasing timestamps if relevant
+            labels: [],
+            linkedDocuments: [],
+            attachments: [],
+            order: i,
+          }),
+        ),
+      );
     });
 
     // Query roadmap issues (default limit is 100)

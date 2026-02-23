@@ -40,53 +40,47 @@ describe("Users Comments Performance Optimization", () => {
     });
 
     // Create 5 active comments
-    await Promise.all(
-      Array.from({ length: 5 }, (_, i) =>
-        t.run(async (ctx) => {
-          await ctx.db.insert("issueComments", {
-            issueId,
-            authorId: userId,
-            content: `Active Comment ${i}`,
-            mentions: [],
-            updatedAt: Date.now(),
-          });
-        }),
-      ),
-    );
+    for (let i = 0; i < 5; i++) {
+      await t.run(async (ctx) => {
+        await ctx.db.insert("issueComments", {
+          issueId,
+          authorId: userId,
+          content: `Active Comment ${i}`,
+          mentions: [],
+          updatedAt: Date.now(),
+        });
+      });
+    }
 
     // Create 3 deleted comments
-    await Promise.all(
-      Array.from({ length: 3 }, (_, i) =>
-        t.run(async (ctx) => {
-          await ctx.db.insert("issueComments", {
-            issueId,
-            authorId: userId,
-            content: `Deleted Comment ${i}`,
-            mentions: [],
-            updatedAt: Date.now(),
-            isDeleted: true,
-            deletedAt: Date.now(),
-            deletedBy: userId,
-          });
-        }),
-      ),
-    );
+    for (let i = 0; i < 3; i++) {
+      await t.run(async (ctx) => {
+        await ctx.db.insert("issueComments", {
+          issueId,
+          authorId: userId,
+          content: `Deleted Comment ${i}`,
+          mentions: [],
+          updatedAt: Date.now(),
+          isDeleted: true,
+          deletedAt: Date.now(),
+          deletedBy: userId,
+        });
+      });
+    }
 
     // Create 2 comments by another user (should be ignored)
     const otherUserId = await createTestUser(t);
-    await Promise.all(
-      Array.from({ length: 2 }, (_, i) =>
-        t.run(async (ctx) => {
-          await ctx.db.insert("issueComments", {
-            issueId,
-            authorId: otherUserId,
-            content: `Other User Comment ${i}`,
-            mentions: [],
-            updatedAt: Date.now(),
-          });
-        }),
-      ),
-    );
+    for (let i = 0; i < 2; i++) {
+      await t.run(async (ctx) => {
+        await ctx.db.insert("issueComments", {
+          issueId,
+          authorId: otherUserId,
+          content: `Other User Comment ${i}`,
+          mentions: [],
+          updatedAt: Date.now(),
+        });
+      });
+    }
 
     // Check stats
     const stats = await asUser.query(api.users.getUserStats, { userId });
