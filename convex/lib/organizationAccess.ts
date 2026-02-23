@@ -150,23 +150,6 @@ export async function hasSharedOrganization(
     return false;
   }
 
-  // OPTIMIZATION: Check individual memberships if the list is small (<= 10).
-  // This is faster (N index lookups vs 1 filtered scan + larger result set)
-  // and more correct (handles user2 having >100 memberships).
-  if (orgs1.length <= 10) {
-    const checks = await Promise.all(
-      orgs1.map((m) =>
-        ctx.db
-          .query("organizationMembers")
-          .withIndex("by_organization_user", (q) =>
-            q.eq("organizationId", m.organizationId).eq("userId", userId2),
-          )
-          .first(),
-      ),
-    );
-    return checks.some((m) => m !== null);
-  }
-
   // Get memberships for the second user
   const { items: orgs2 } = await getOrganizationMemberships(ctx, userId2);
 

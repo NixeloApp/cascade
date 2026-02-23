@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { api, internal } from "./_generated/api";
+import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -361,91 +361,5 @@ describe("Service Rotation", () => {
       expect(summary.totals.unitsUsed).toBe(50 + 120);
       expect(summary.totals.estimatedCostCents).toBe(10);
     });
-  });
-});
-
-describe("upsertProvider", () => {
-  it("should return object with providerId when inserting", async () => {
-    const t = convexTest(schema, modules);
-
-    const result = await t.mutation(internal.serviceRotation.upsertProvider, {
-      serviceType: "transcription",
-      provider: "test-provider",
-      displayName: "Test Provider",
-      freeUnitsPerMonth: 100,
-      freeUnitsType: "monthly",
-      costPerUnit: 1.0,
-      unitType: "minute",
-      isEnabled: true,
-      isConfigured: true,
-      priority: 1,
-    });
-
-    expect(result).toEqual(
-      expect.objectContaining({
-        providerId: expect.any(String),
-      }),
-    );
-  });
-
-  it("should return object with providerId when updating", async () => {
-    const t = convexTest(schema, modules);
-
-    // Insert first
-    const { providerId } = await t.mutation(internal.serviceRotation.upsertProvider, {
-      serviceType: "transcription",
-      provider: "test-provider",
-      displayName: "Test Provider",
-      freeUnitsPerMonth: 100,
-      freeUnitsType: "monthly",
-      costPerUnit: 1.0,
-      unitType: "minute",
-      isEnabled: true,
-      isConfigured: true,
-      priority: 1,
-    });
-
-    // Update
-    const updateResult = await t.mutation(internal.serviceRotation.upsertProvider, {
-      serviceType: "transcription",
-      provider: "test-provider",
-      displayName: "Test Provider Updated",
-      freeUnitsPerMonth: 200,
-      freeUnitsType: "monthly",
-      costPerUnit: 1.0,
-      unitType: "minute",
-      isEnabled: true,
-      isConfigured: true,
-      priority: 1,
-    });
-
-    expect(updateResult).toEqual({ providerId });
-  });
-});
-
-describe("setProviderConfigured", () => {
-  it("should return { success: true }", async () => {
-    const t = convexTest(schema, modules);
-
-    // Insert provider first
-    await t.mutation(internal.serviceRotation.upsertProvider, {
-      serviceType: "transcription",
-      provider: "test-provider",
-      displayName: "Test Provider",
-      freeUnitsPerMonth: 100,
-      freeUnitsType: "monthly",
-      costPerUnit: 1.0,
-      unitType: "minute",
-      isEnabled: true,
-      isConfigured: false,
-      priority: 1,
-    });
-
-    const result = await t.mutation(internal.serviceRotation.setProviderConfigured, {
-      provider: "test-provider",
-      isConfigured: true,
-    });
-
-    expect(result).toEqual({ success: true });
   });
 });

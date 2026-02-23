@@ -66,7 +66,6 @@ export const update = authenticatedMutation({
     actionType: v.optional(automationActionTypes),
     actionValue: v.optional(automationActionValue),
   },
-  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const rule = await ctx.db.get(args.id);
     if (!rule) {
@@ -99,8 +98,6 @@ export const update = authenticatedMutation({
     if (args.actionValue !== undefined) updates.actionValue = args.actionValue;
 
     await ctx.db.patch(args.id, updates);
-
-    return { success: true };
   },
 });
 
@@ -108,7 +105,6 @@ export const remove = authenticatedMutation({
   args: {
     id: v.id("automationRules"),
   },
-  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const rule = await ctx.db.get(args.id);
     if (!rule) {
@@ -122,8 +118,6 @@ export const remove = authenticatedMutation({
     await assertIsProjectAdmin(ctx, rule.projectId, ctx.userId);
 
     await ctx.db.delete(args.id);
-
-    return { success: true };
   },
 });
 
