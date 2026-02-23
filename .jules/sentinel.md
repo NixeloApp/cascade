@@ -135,3 +135,8 @@
 **Vulnerability:** The `updateProfile` mutation failed to normalize email addresses before checking for uniqueness. This allowed a user to register `User@Example.com` even if `user@example.com` already existed, leading to account duplication, potential confusion, or denial of service if case-insensitive logic (like login) collided.
 **Learning:** User input that serves as a unique identifier (like email or username) must always be normalized (e.g., lowercased) before being used in uniqueness checks or storage, even if the database supports case-sensitive uniqueness.
 **Prevention:** Updated `handleEmailChange` in `convex/users.ts` to normalize the new email address to lowercase before validation and processing.
+
+## 2026-03-16 - Rate Limit Bypass in 2FA Operations
+**Vulnerability:** Critical 2FA operations (`disable`, `regenerateBackupCodes`, `verifyBackupCode`) lacked the rate limiting and lockout protection present in the main `verifyCode` flow. This allowed attackers with session access to brute-force 2FA verification.
+**Learning:** All authentication-related verification endpoints must enforce consistent rate limiting policies. Protecting only the primary login flow is insufficient if secondary flows (like disabling auth) remain unprotected.
+**Prevention:** Implemented shared rate limiting helpers in `convex/twoFactor.ts` and applied them to all 2FA verification mutations.
