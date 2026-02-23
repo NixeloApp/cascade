@@ -4,6 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addProjectMember,
   addUserToOrganization,
   asAuthenticatedUser,
   createTestProject,
@@ -94,6 +95,8 @@ describe("Issues", () => {
       const reporterId = await createTestUser(t, { name: "Reporter" });
       const assigneeId = await createTestUser(t, { name: "Assignee" });
       const projectId = await createTestProject(t, reporterId);
+
+      await addProjectMember(t, projectId, assigneeId, "viewer", reporterId);
 
       const asReporter = asAuthenticatedUser(t, reporterId);
       const { issueId } = await asReporter.mutation(api.issues.createIssue, {
@@ -546,6 +549,8 @@ describe("Issues", () => {
       const reporterId = await createTestUser(t, { name: "Reporter" });
       const assigneeId = await createTestUser(t, { name: "Assignee" });
       const projectId = await createTestProject(t, reporterId);
+
+      await addProjectMember(t, projectId, assigneeId, "viewer", reporterId);
 
       const asReporter = asAuthenticatedUser(t, reporterId);
       const { issueId: issue1Id } = await asReporter.mutation(api.issues.createIssue, {
