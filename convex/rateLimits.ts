@@ -8,6 +8,7 @@ import { RateLimiter } from "@convex-dev/rate-limiter";
 
 import { components } from "./_generated/api";
 import type { ActionCtx, MutationCtx } from "./_generated/server";
+import { rateLimited } from "./lib/errors";
 import { HOUR, MINUTE } from "./lib/timeUtils";
 
 // Helper to detect test/dev/CI environments for relaxed rate limits
@@ -15,9 +16,10 @@ const isTestEnv =
   process.env.NODE_ENV === "test" ||
   process.env.NODE_ENV === "development" ||
   process.env.E2E_TEST_MODE ||
-  process.env.CI;
+  process.env.CI ||
+  process.env.IS_TEST_ENV;
 
-const rateLimiter = new RateLimiter(components.rateLimiter, {
+const rateLimitConfig = {
   // AI Chat: 10 messages per minute per user
   aiChat: { kind: "fixed window", rate: 10, period: MINUTE }, // 1 minute
 
@@ -28,7 +30,13 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   semanticSearch: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 10 },
 
   // Issue Creation: Prevent spam
-  createIssue: { kind: "token bucket", rate: 10, period: MINUTE, capacity: 3 },
+  createIssue: { kind: "token bucket", rate: 60, period: MINUTE, capacity: 15 },
+
+  // Document Creation: Prevent spam
+  createDocument: { kind: "token bucket", rate: 60, period: MINUTE, capacity: 15 },
+
+  // Document Comment: Prevent spam
+  addDocumentComment: { kind: "token bucket", rate: 60, period: MINUTE, capacity: 10 },
 
   // API Endpoints: General rate limit
   apiEndpoint: { kind: "fixed window", rate: 100, period: MINUTE }, // 100/min
@@ -71,7 +79,9 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
     period: MINUTE,
     capacity: isTestEnv ? 1000 : 20,
   },
-});
+} as const;
+
+const rateLimiter = new RateLimiter(components.rateLimiter, rateLimitConfig);
 
 /**
  * Rate limit an operation - throws if limit exceeded (unless throws: false)
@@ -83,6 +93,24 @@ export const rateLimit = async (
 ) => {
   // biome-ignore lint/suspicious/noExplicitAny: library limitation
   return await rateLimiter.limit(ctx, name as any, { throws: true, ...options });
+};
+
+/**
+ * Enforce rate limit for a user.
+ * Skips checks in test environments.
+ * Throws a standardized `rateLimited` error if the limit is exceeded.
+ */
+export const enforceRateLimit = async (
+  ctx: MutationCtx,
+  name: keyof typeof rateLimitConfig,
+  userId: string,
+) => {
+  if (isTestEnv) return;
+
+  const { ok, retryAfter } = await rateLimiter.limit(ctx, name, { key: userId, throws: false });
+  if (!ok) {
+    throw rateLimited(retryAfter);
+  }
 };
 
 /**

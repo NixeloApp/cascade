@@ -1,13 +1,11 @@
-import { MINUTE } from "@convex-dev/rate-limiter";
 import { v } from "convex/values";
-import { components } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
-import { conflict, forbidden, notFound, rateLimited, validation } from "./lib/errors";
+import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import {
   DEFAULT_PAGE_SIZE,
@@ -20,6 +18,7 @@ import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { isWorkspaceEditor } from "./lib/workspaceAccess";
 import { assertCanAccessProject, assertCanEditProject, canAccessProject } from "./projectAccess";
+import { enforceRateLimit } from "./rateLimits";
 
 /**
  * Create a new document.
@@ -48,7 +47,7 @@ export const create = authenticatedMutation({
   },
   returns: v.object({ documentId: v.id("documents") }),
   handler: async (ctx, args) => {
-    await checkRateLimit(ctx);
+    await enforceRateLimit(ctx, "createDocument", ctx.userId);
     await validateOrganizationMembership(ctx, args.organizationId);
     await validateProjectIntegrity(ctx, args.projectId, args.organizationId, args.isPublic);
     await validateWorkspaceIntegrity(ctx, args.workspaceId, args.organizationId);
@@ -377,33 +376,6 @@ async function canAccessDocument(
 
   // Otherwise, deny (e.g. private document created by someone else)
   return false;
-}
-
-async function checkRateLimit(ctx: MutationCtx & { userId: Id<"users"> }) {
-  if (!process.env.IS_TEST_ENV) {
-    const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
-      name: `createDocument:${ctx.userId}`,
-      config: {
-        kind: "token bucket",
-        rate: 60,
-        period: MINUTE,
-        capacity: 15,
-      },
-    });
-    if (!rateLimitResult.ok) {
-      throw rateLimited(rateLimitResult.retryAfter);
-    }
-
-    await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
-      name: `createDocument:${ctx.userId}`,
-      config: {
-        kind: "token bucket",
-        rate: 60,
-        period: MINUTE,
-        capacity: 15,
-      },
-    });
-  }
 }
 
 async function validateOrganizationMembership(
@@ -958,30 +930,7 @@ export const addComment = authenticatedMutation({
   returns: v.object({ commentId: v.id("documentComments") }),
   handler: async (ctx, args) => {
     // Rate limit: 60 comments per minute per user
-    if (!process.env.IS_TEST_ENV) {
-      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
-        name: `addDocumentComment:${ctx.userId}`,
-        config: {
-          kind: "token bucket",
-          rate: 60,
-          period: MINUTE,
-          capacity: 10,
-        },
-      });
-      if (!rateLimitResult.ok) {
-        throw rateLimited(rateLimitResult.retryAfter);
-      }
-
-      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
-        name: `addDocumentComment:${ctx.userId}`,
-        config: {
-          kind: "token bucket",
-          rate: 60,
-          period: MINUTE,
-          capacity: 10,
-        },
-      });
-    }
+    await enforceRateLimit(ctx, "addDocumentComment", ctx.userId);
 
     // Verify document exists and user has access
     await getAccessibleDocument(ctx, args.documentId);
