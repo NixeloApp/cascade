@@ -192,10 +192,7 @@ export const updateTitle = authenticatedMutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const document = await ctx.db.get(args.id);
-    if (!document) {
-      throw notFound("document", args.id);
-    }
+    const document = await getAccessibleDocument(ctx, args.id);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to edit this document");
@@ -219,6 +216,9 @@ export const togglePublic = authenticatedMutation({
       throw notFound("document", args.id);
     }
 
+    // Ensure user still has access to the document's container
+    await assertDocumentAccess(ctx, document);
+
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to edit this document");
     }
@@ -241,10 +241,7 @@ export const deleteDocument = authenticatedMutation({
   args: { id: v.id("documents") },
   returns: v.object({ success: v.boolean(), deleted: v.boolean() }),
   handler: async (ctx, args) => {
-    const document = await ctx.db.get(args.id);
-    if (!document) {
-      throw notFound("document", args.id);
-    }
+    const document = await getAccessibleDocument(ctx, args.id);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to delete this document");
@@ -275,6 +272,9 @@ export const restoreDocument = authenticatedMutation({
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to restore this document");
     }
+
+    // Ensure user still has access to the document's container
+    await assertDocumentAccess(ctx, document);
 
     // Restore document
     await ctx.db.patch(args.id, {
@@ -803,10 +803,7 @@ export const moveDocument = authenticatedMutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const document = await ctx.db.get(args.id);
-    if (!document || document.isDeleted) {
-      throw notFound("document", args.id);
-    }
+    const document = await getAccessibleDocument(ctx, args.id);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to move this document");
@@ -855,6 +852,10 @@ export const reorderDocuments = authenticatedMutation({
       if (!doc || doc.isDeleted) {
         throw notFound("document", args.documentIds[i]);
       }
+
+      // Ensure user still has access to the document's container
+      await assertDocumentAccess(ctx, doc);
+
       if (doc.createdBy !== ctx.userId) {
         throw forbidden(undefined, "Not authorized to reorder this document");
       }
