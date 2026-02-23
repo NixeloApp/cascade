@@ -782,31 +782,47 @@ export const bulkArchive = authenticatedMutation({
   },
   handler: async (ctx, args) => {
     // Pre-fetch all issues to build project map (avoids N+1 reads)
-    const { projectMap } = await fetchProjectsForIssues(ctx, args.issueIds);
+    const { issues, projectMap } = await fetchProjectsForIssues(ctx, args.issueIds);
 
-    const result = await performBulkUpdate(ctx, args.issueIds, async (issue, now) => {
-      // Already archived?
-      if (issue.archivedAt) return null;
+    const now = Date.now();
 
-      // Check if issue is in "done" category using cached project
-      const project = projectMap.get(issue.projectId.toString());
-      if (!project) return null;
+    const results = await Promise.all(
+      issues.map(async (issue) => {
+        // Already archived?
+        if (issue.archivedAt) return 0;
 
-      const state = project.workflowStates.find((s) => s.id === issue.status);
-      if (!state || state.category !== "done") return null;
+        const projectId = issue.projectId as Id<"projects">;
 
-      return {
-        patch: {
+        // Check if issue is in "done" category using cached project
+        const project = projectMap.get(projectId.toString());
+        if (!project) return 0;
+
+        const state = project.workflowStates.find((s) => s.id === issue.status);
+        if (!state || state.category !== "done") return 0;
+
+        try {
+          await assertCanEditProject(ctx, projectId, ctx.userId);
+        } catch {
+          return 0;
+        }
+
+        await ctx.db.patch(issue._id, {
           archivedAt: now,
           archivedBy: ctx.userId,
-        },
-        activity: {
-          action: "archived",
-        },
-      };
-    });
+          updatedAt: now,
+        });
 
-    return { archived: result.updated };
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          action: "archived",
+        });
+
+        return 1;
+      }),
+    );
+
+    return { archived: results.reduce((a: number, b) => a + b, 0) };
   },
 });
 
