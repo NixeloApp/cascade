@@ -4,12 +4,7 @@ import { api } from "./_generated/api";
 import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  addProjectMember,
-  asAuthenticatedUser,
-  createTestProject,
-  createTestUser,
-} from "./testUtils";
+import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
 
 describe("Analytics", () => {
   describe("getProjectAnalytics", () => {
@@ -18,8 +13,6 @@ describe("Analytics", () => {
       const userId = await createTestUser(t, { name: "User 1" });
       const otherUserId = await createTestUser(t, { name: "User 2" });
       const projectId = await createTestProject(t, userId);
-
-      await addProjectMember(t, projectId, otherUserId, "viewer", userId);
 
       const asUser = asAuthenticatedUser(t, userId);
 

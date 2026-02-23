@@ -8,19 +8,7 @@ import { checkApiKeyRateLimit } from "./rateLimiter";
  * Helper functions for authenticating and authorizing API requests.
  */
 
-/**
- * Hashes an API key using SHA-256.
- *
- * Used to securely store API keys in the database.
- * The original key cannot be recovered from the hash.
- *
- * @param key - The raw API key string
- * @returns A promise resolving to the hexadecimal string representation of the hash
- *
- * @example
- * const hash = await hashApiKey("sk_live_12345");
- * // Returns "a1b2c3..."
- */
+// Hash API key using SHA-256
 export async function hashApiKey(key: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(key);
@@ -31,14 +19,10 @@ export async function hashApiKey(key: string): Promise<string> {
 
 /**
  * Constant-time string comparison to prevent timing attacks.
+ * Returns true if strings are equal, false otherwise.
  *
  * This function takes the same amount of time regardless of where the mismatch occurs,
- * preventing attackers from guessing the string character by character by measuring
- * response times.
- *
- * @param a - First string to compare
- * @param b - Second string to compare
- * @returns True if strings are equal, false otherwise
+ * preventing attackers from guessing the string character by character.
  */
 export function constantTimeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) {
@@ -51,37 +35,16 @@ export function constantTimeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
-/**
- * Context object returned after successful API authentication.
- */
 export interface ApiAuthContext {
-  /** The ID of the authenticated user */
   userId: Id<"users">;
-  /** The ID of the API key used for authentication */
   keyId: Id<"apiKeys">;
-  /** List of scopes granted to this API key */
   scopes: string[];
-  /** Optional project ID if the key is scoped to a specific project */
   projectId?: Id<"projects">;
-  /** Rate limit (requests per minute) associated with this key */
   rateLimit: number;
 }
 
 /**
- * Extracts the API key from the Authorization header.
- *
- * Supports both "Bearer <token>" and raw "<token>" formats.
- * Case-insensitive for "Bearer".
- *
- * @param headers - The request headers
- * @returns The extracted API key or null if missing/invalid
- *
- * @example
- * // Authorization: Bearer sk_123
- * extractApiKey(headers) // "sk_123"
- *
- * // Authorization: sk_123
- * extractApiKey(headers) // "sk_123"
+ * Extract API key from Authorization header
  */
 export function extractApiKey(headers: Headers): string | null {
   const authHeader = headers.get("authorization");
@@ -100,19 +63,8 @@ export function extractApiKey(headers: Headers): string | null {
 }
 
 /**
- * Validates an API key against the database.
- *
- * 1. Hashes the provided key
- * 2. Looks up the key by hash
- * 3. Checks if key is active
- * 4. Checks if key has expired
- *
- * Note: For HTTP actions, use `internal.apiKeys.validateApiKeyInternal` instead
- * to avoid exposing this logic directly.
- *
- * @param ctx - The Convex query context (needs db access)
- * @param apiKey - The raw API key to validate
- * @returns The auth context if valid, or null if invalid/inactive/expired
+ * Validate API key and return auth context (for use in queries/mutations)
+ * Note: For HTTP actions, use internal.apiKeys.validateApiKeyInternal instead
  */
 export async function validateApiKey(
   ctx: { db: QueryCtx["db"] },
@@ -141,21 +93,7 @@ export async function validateApiKey(
 }
 
 /**
- * Checks if the authenticated context has the required scope.
- *
- * Supports:
- * - Global wildcard `*`: Grants all permissions
- * - Resource wildcard `resource:*`: Grants all actions on a resource
- * - Exact match: Must match the required scope exactly
- *
- * @param auth - The authentication context
- * @param requiredScope - The scope to check for (e.g., "issues:read")
- * @returns True if the user has the required scope
- *
- * @example
- * const auth = { scopes: ["issues:*"] };
- * hasScope(auth, "issues:read") // true
- * hasScope(auth, "projects:read") // false
+ * Check if auth context has required scope
  */
 export function hasScope(auth: ApiAuthContext, requiredScope: string): boolean {
   // Wildcard scope grants all permissions
@@ -172,14 +110,7 @@ export function hasScope(auth: ApiAuthContext, requiredScope: string): boolean {
 }
 
 /**
- * Verifies if the API key has access to the requested project.
- *
- * - If the key is NOT project-scoped (projectId is undefined), it has access to ALL projects.
- * - If the key IS project-scoped, it only has access if the IDs match.
- *
- * @param auth - The authentication context
- * @param requestedProjectId - The ID of the project being accessed
- * @returns True if access is allowed
+ * Verify project access (if API key is scoped to a project)
  */
 export function verifyProjectAccess(
   auth: ApiAuthContext,
@@ -193,13 +124,8 @@ export function verifyProjectAccess(
 }
 
 /**
- * Checks the rate limit for an API key.
- *
- * Uses the token bucket algorithm via `checkApiKeyRateLimit`.
- *
- * @param ctx - Mutation or Query context
- * @param keyId - The ID of the API key
- * @returns Object indicating success or failure with retry time
+ * Rate limiting check using efficient token bucket algorithm
+ * Returns result indicating if allowed or rate limited with retry time
  */
 export async function checkRateLimit(
   ctx: MutationCtx | QueryCtx,
@@ -234,16 +160,6 @@ const SECURITY_HEADERS = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
 };
 
-/**
- * Creates a standardized JSON error response.
- *
- * Includes security headers (CSP, HSTS, etc.) by default.
- *
- * @param statusCode - HTTP status code (e.g., 400, 401, 500)
- * @param message - Human-readable error message
- * @param details - Optional additional error details
- * @returns A Response object
- */
 export function createErrorResponse(
   statusCode: number,
   message: string,
@@ -265,13 +181,7 @@ export function createErrorResponse(
 }
 
 /**
- * Creates a standardized JSON success response.
- *
- * Includes security headers by default.
- *
- * @param data - The data to return in the response body
- * @param statusCode - HTTP status code (default: 200)
- * @returns A Response object
+ * Create a standard API success response
  */
 export function createSuccessResponse(data: unknown, statusCode = 200): Response {
   return new Response(JSON.stringify(data), {
