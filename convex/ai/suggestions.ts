@@ -10,11 +10,17 @@ import { ActionCache } from "@convex-dev/action-cache";
 import { generateText } from "ai";
 import { v } from "convex/values";
 import { api, components, internal } from "../_generated/api";
-import { internalAction, mutation, query } from "../_generated/server";
-import { authenticatedAction } from "../customFunctions";
+import { internalAction } from "../_generated/server";
+import {
+  authenticatedAction,
+  authenticatedMutation,
+  authenticatedQuery,
+} from "../customFunctions";
 import { extractUsage } from "../lib/aiHelpers";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
+import { notFound } from "../lib/errors";
 import { HOUR } from "../lib/timeUtils";
+import { assertCanAccessProject, assertCanEditProject } from "../projectAccess";
 import { rateLimit } from "../rateLimits";
 import { issueTypes } from "../validators";
 
@@ -326,11 +332,13 @@ Labels:`;
 /**
  * Get project labels
  */
-export const getProjectLabels = query({
+export const getProjectLabels = authenticatedQuery({
   args: {
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
+    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+
     const labels = await ctx.db
       .query("labels")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
@@ -343,12 +351,18 @@ export const getProjectLabels = query({
 /**
  * Accept or dismiss a suggestion
  */
-export const respondToSuggestion = mutation({
+export const respondToSuggestion = authenticatedMutation({
   args: {
     suggestionId: v.id("aiSuggestions"),
     accepted: v.boolean(),
   },
   handler: async (ctx, args) => {
+    const suggestion = await ctx.db.get(args.suggestionId);
+    if (!suggestion) throw notFound("suggestion", args.suggestionId);
+
+    // Ensure user has edit access to the project
+    await assertCanEditProject(ctx, suggestion.projectId, ctx.userId);
+
     await ctx.db.patch(args.suggestionId, {
       accepted: args.accepted,
       dismissed: !args.accepted,
