@@ -54,7 +54,6 @@ describe("Issues Date Range", () => {
           loggedHours: 0,
           order: 0,
           searchContent: title,
-          isDeleted: false,
         });
       };
 

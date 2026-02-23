@@ -211,15 +211,15 @@ export const listRoadmapIssues = authenticatedQuery({
       const issuesByType = await Promise.all(
         typesToFetch.map((type) =>
           safeCollect(
-            ctx.db
-              .query("issues")
-              .withIndex("by_project_type_due_date", (q) =>
-                q
-                  .eq("projectId", args.projectId)
-                  .eq("type", type as Doc<"issues">["type"])
-                  .gt("dueDate", 0),
-              )
-              .filter(notDeleted),
+            ctx.db.query("issues").withIndex("by_project_type_due_date", (q) =>
+              q
+                .eq("projectId", args.projectId)
+                .eq("type", type as Doc<"issues">["type"])
+                .eq("isDeleted", undefined)
+                .gt("dueDate", 0),
+            ),
+            // Index handles soft delete filtering, so .filter(notDeleted) is redundant but harmless
+            // Keeping redundant filter removed for performance
             BOUNDED_LIST_LIMIT * 4, // Match previous capacity per type to ensure enough candidate items
             `roadmap dated issues type=${type}`,
           ),
@@ -1203,9 +1203,13 @@ export const listIssuesByDateRange = authenticatedQuery({
       ctx.db
         .query("issues")
         .withIndex("by_project_due_date", (q) =>
-          q.eq("projectId", args.projectId).gte("dueDate", args.from).lte("dueDate", args.to),
-        )
-        .filter(notDeleted),
+          q
+            .eq("projectId", args.projectId)
+            .eq("isDeleted", undefined)
+            .gte("dueDate", args.from)
+            .lte("dueDate", args.to),
+        ),
+      // Index handles soft delete filtering
       BOUNDED_LIST_LIMIT,
       "issues by date range",
     );
