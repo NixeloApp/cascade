@@ -16,6 +16,7 @@ export const connectGoogleInternal = internalMutation({
     expiresAt: v.optional(v.number()),
     syncDirection: v.optional(syncDirections),
   },
+  returns: v.object({ connectionId: v.id("calendarConnections") }),
   handler: async (ctx, args) => {
     const { userId, ...connectionArgs } = args;
 

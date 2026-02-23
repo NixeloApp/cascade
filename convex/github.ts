@@ -263,6 +263,7 @@ export const upsertPullRequest = internalMutation({
     checksStatus: v.optional(ciStatuses),
     issueKey: v.optional(v.string()), // e.g., "PROJ-123"
   },
+  returns: v.object({ pullRequestId: v.id("githubPullRequests") }),
   handler: async (ctx, args) => {
     const repo = await ctx.db.get(args.repositoryId);
     if (!repo) throw notFound("repository", args.repositoryId);
@@ -403,6 +404,7 @@ export const upsertCommit = internalMutation({
     committedAt: v.number(),
     issueKey: v.optional(v.string()),
   },
+  returns: v.object({ commitId: v.id("githubCommits") }),
   handler: async (ctx, args) => {
     const repo = await ctx.db.get(args.repositoryId);
     if (!repo) throw notFound("repository", args.repositoryId);
