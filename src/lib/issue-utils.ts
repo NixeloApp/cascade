@@ -170,12 +170,17 @@ export function getIssueAccessibleLabel(issue: {
   priority: string;
   assignee?: { name: string } | null;
   storyPoints?: number;
+  labels?: { name: string }[];
 }): string {
   const typeLabel = getTypeLabel(issue.type);
   const capitalizedPriority = issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1);
   const priorityLabel = `${capitalizedPriority} priority`;
   const assigneeLabel = issue.assignee ? `assigned to ${issue.assignee.name}` : "unassigned";
   const pointsLabel = issue.storyPoints !== undefined ? `, ${issue.storyPoints} points` : "";
+  const labelsLabel =
+    issue.labels && issue.labels.length > 0
+      ? `, Labels: ${issue.labels.map((l) => l.name).join(", ")}`
+      : "";
 
-  return `${typeLabel} ${issue.key}: ${issue.title}, ${priorityLabel}, ${assigneeLabel}${pointsLabel}`;
+  return `${typeLabel} ${issue.key}: ${issue.title}, ${priorityLabel}, ${assigneeLabel}${pointsLabel}${labelsLabel}`;
 }

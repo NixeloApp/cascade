@@ -2,6 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { IssueCard } from "./IssueCard";
 
@@ -135,33 +136,26 @@ describe("IssueCard", () => {
     expect(tooltipText).toBeInTheDocument();
   });
 
-  it("should display metadata icons with correct labels", () => {
+  it("should render metadata icons but hide them from accessibility tree (no redundant tab stops)", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    // Type icon
-    const typeIcon = screen.getByLabelText("Bug");
-    expect(typeIcon).toBeInTheDocument();
-    // Ensure it IS in a button and is keyboard accessible
-    const typeBtn = typeIcon.closest("button");
-    expect(typeBtn).toBeInTheDocument();
-    expect(typeBtn).not.toHaveAttribute("tabIndex", "-1");
-
-    // Priority icon
-    const priorityIcon = screen.getByLabelText("Priority: high");
+    // Priority icon (find via Test ID as it is hidden from a11y)
+    const priorityIcon = screen.getByTestId(TEST_IDS.ISSUE.PRIORITY);
     expect(priorityIcon).toBeInTheDocument();
-    const priorityBtn = priorityIcon.closest("button");
-    expect(priorityBtn).toBeInTheDocument();
-    expect(priorityBtn).not.toHaveAttribute("tabIndex", "-1");
+    // Ensure it is NOT inside a button
+    expect(priorityIcon.closest("button")).not.toBeInTheDocument();
+    // Ensure it is hidden from screen readers (part of aria-hidden container)
+    expect(priorityIcon.closest('[aria-hidden="true"]')).toBeInTheDocument();
 
-    // Assignee
-    const assigneeImg = screen.getByAltText("Alice Johnson");
+    // Assignee (find via alt text with hidden: true)
+    // @ts-expect-error - hidden option is supported by testing-library but types might be strict
+    const assigneeImg = screen.getByAltText("Alice Johnson", { hidden: true });
     expect(assigneeImg).toBeInTheDocument();
-    const assigneeBtn = assigneeImg.closest("button");
-    expect(assigneeBtn).toBeInTheDocument();
-    expect(assigneeBtn).not.toHaveAttribute("tabIndex", "-1");
+    expect(assigneeImg.closest("button")).not.toBeInTheDocument();
+    expect(assigneeImg.closest('[aria-hidden="true"]')).toBeInTheDocument();
   });
 
-  it("should render fallback assignee avatar with accessible label", () => {
+  it("should render fallback assignee avatar hidden from accessibility", () => {
     const issueWithoutAvatar = {
       ...mockIssue,
       // biome-ignore lint/style/noNonNullAssertion: testing mock data
@@ -169,35 +163,35 @@ describe("IssueCard", () => {
     };
     render(<IssueCard issue={issueWithoutAvatar} status="todo" />);
 
-    const fallbackAvatar = screen.getByLabelText("Alice Johnson");
-    expect(fallbackAvatar).toBeInTheDocument();
-    expect(fallbackAvatar).toHaveAttribute("role", "img");
-    expect(fallbackAvatar).toHaveTextContent("A"); // Initial
+    // Fallback avatar should be hidden from accessibility
+    expect(screen.queryByLabelText("Alice Johnson")).not.toBeInTheDocument();
+    // But verify it exists in DOM (using querySelector looking for initials)
+    const initials = screen.getByText("A", { selector: "div" });
+    expect(initials).toBeInTheDocument();
+    expect(initials.closest('[aria-hidden="true"]')).toBeInTheDocument();
   });
 
-  it("should trigger onClick when clicking on interactive elements", async () => {
+  it("should trigger onClick when clicking on interactive elements (mouse users)", async () => {
     const handleClick = vi.fn();
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" onClick={handleClick} />);
 
-    // Click Type Icon
-    await user.click(screen.getByLabelText("Bug"));
+    // Click Priority Icon (using testId)
+    await user.click(screen.getByTestId(TEST_IDS.ISSUE.PRIORITY));
     expect(handleClick).toHaveBeenCalledTimes(1);
 
-    // Click Priority Icon
-    await user.click(screen.getByLabelText("Priority: high"));
+    // Click Assignee (using alt text with hidden: true)
+    // @ts-expect-error - hidden option is supported by testing-library but types might be strict
+    await user.click(screen.getByAltText("Alice Johnson", { hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(2);
-
-    // Click Assignee
-    await user.click(screen.getByAltText("Alice Johnson"));
-    expect(handleClick).toHaveBeenCalledTimes(3);
   });
 
-  it("should have a descriptive accessible label for screen readers", () => {
+  it("should have a descriptive accessible label for screen readers including labels", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
+    // Updated expectation to include labels
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points, Labels: backend, urgent";
     const overlayButton = screen.getByLabelText(expectedLabel);
     expect(overlayButton).toBeInTheDocument();
   });
@@ -207,7 +201,7 @@ describe("IssueCard", () => {
     render(<IssueCard issue={issueWithZeroPoints} status="todo" />);
 
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points, Labels: backend, urgent";
     expect(screen.getByLabelText(expectedLabel)).toBeInTheDocument();
   });
 });
