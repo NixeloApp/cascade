@@ -149,7 +149,7 @@ describe("Custom Functions Access Control", () => {
 
       // 4. Viewer tries to create issue (editor action)
       await expectThrowsAsync(async () => {
-        await asViewer.mutation(api.issues.create, {
+        await asViewer.mutation(api.issues.createIssue, {
           projectId,
           title: "Viewer Issue",
           type: "task",
@@ -183,7 +183,7 @@ describe("Custom Functions Access Control", () => {
       await addProjectMember(t, projectId, editorId, "editor", adminId);
 
       // 4. Editor creates issue
-      const issueId = await asEditor.mutation(api.issues.create, {
+      const { issueId } = await asEditor.mutation(api.issues.createIssue, {
         projectId,
         title: "Editor Issue",
         type: "task",

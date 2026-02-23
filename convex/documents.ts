@@ -5,7 +5,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, rateLimited, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
@@ -18,6 +18,7 @@ import {
 } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { getUserName } from "./lib/userUtils";
 import { isWorkspaceEditor } from "./lib/workspaceAccess";
 import { assertCanAccessProject, assertCanEditProject, canAccessProject } from "./projectAccess";
 
@@ -62,6 +63,10 @@ export const create = authenticatedMutation({
       if (parent.organizationId !== args.organizationId) {
         throw validation("parentId", "Parent document must be in the same organization");
       }
+
+      // Check if user has access to the parent document
+      await assertDocumentAccess(ctx, parent);
+
       // Get max order among siblings (bounded)
       const siblings = await ctx.db
         .query("documents")
@@ -830,6 +835,13 @@ export const moveDocument = authenticatedMutation({
     // Validate new parent if provided
     if (args.newParentId) {
       await validateNewParent(ctx.db, args.id, args.newParentId, document.organizationId);
+
+      // Check if user has access to the new parent document
+      const newParent = await ctx.db.get(args.newParentId);
+      // Existence checked in validateNewParent
+      if (newParent) {
+        await assertDocumentAccess(ctx, newParent);
+      }
     }
 
     // Calculate new order if not provided
