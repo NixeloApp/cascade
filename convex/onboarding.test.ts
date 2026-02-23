@@ -245,7 +245,7 @@ describe("Onboarding", () => {
       const t = convexTest(schema, modules);
       const { asUser, userId, organizationId } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.onboarding.createSampleProject, {
+      const { projectId } = await asUser.mutation(api.onboarding.createSampleProject, {
         organizationId,
       });
 
@@ -271,7 +271,7 @@ describe("Onboarding", () => {
       const t = convexTest(schema, modules);
       const { asUser, organizationId } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.onboarding.createSampleProject, {
+      const { projectId } = await asUser.mutation(api.onboarding.createSampleProject, {
         organizationId,
       });
 
@@ -291,7 +291,7 @@ describe("Onboarding", () => {
       const t = convexTest(schema, modules);
       const { asUser, organizationId } = await createTestContext(t);
 
-      const projectId = await asUser.mutation(api.onboarding.createSampleProject, {
+      const { projectId } = await asUser.mutation(api.onboarding.createSampleProject, {
         organizationId,
       });
 
@@ -356,7 +356,7 @@ describe("Onboarding", () => {
       const { asUser, organizationId } = await createTestContext(t);
 
       // First create sample project
-      const projectId = await asUser.mutation(api.onboarding.createSampleProject, {
+      const { projectId } = await asUser.mutation(api.onboarding.createSampleProject, {
         organizationId,
       });
 

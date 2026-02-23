@@ -23,7 +23,7 @@ describe("Documents Breadcrumbs Security", () => {
     });
 
     // User B creates a PUBLIC document in Org B
-    const docId = await asUserB.mutation(api.documents.create, {
+    const { documentId: docId } = await asUserB.mutation(api.documents.create, {
       title: "Secret Org B Document",
       isPublic: true, // Mark as public (but should be scoped to Org B)
       organizationId: ctxB.organizationId,

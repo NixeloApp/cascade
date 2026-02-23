@@ -75,7 +75,7 @@ export function CreateProjectFromTemplate({
 
     setIsSubmitting(true);
     try {
-      const projectId = await createProject({
+      const { projectId } = await createProject({
         templateId: selectedTemplateId,
         projectName: projectName.trim(),
         projectKey: projectKey.trim().toUpperCase(),

@@ -49,10 +49,10 @@ export const setDayAvailability = authenticatedMutation({
         timezone: args.timezone,
         isActive: args.isActive ?? true,
       });
-      return existing._id;
+      return { slotId: existing._id };
     } else {
       // Create new slot
-      return await ctx.db.insert("availabilitySlots", {
+      const slotId = await ctx.db.insert("availabilitySlots", {
         userId,
         dayOfWeek: args.dayOfWeek,
         startTime: args.startTime,
@@ -60,6 +60,7 @@ export const setDayAvailability = authenticatedMutation({
         timezone: args.timezone,
         isActive: args.isActive ?? true,
       });
+      return { slotId };
     }
   },
 });

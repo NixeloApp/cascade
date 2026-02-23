@@ -88,10 +88,12 @@ export const chat = authenticatedAction({
     // Create or get chat
     const chatId: Id<"aiChats"> =
       args.chatId ??
-      (await ctx.runMutation(api.ai.mutations.createChat, {
-        projectId: args.projectId,
-        title: args.message.slice(0, 100), // First 100 chars as title
-      }));
+      (
+        await ctx.runMutation(api.ai.mutations.createChat, {
+          projectId: args.projectId,
+          title: args.message.slice(0, 100), // First 100 chars as title
+        })
+      ).chatId;
 
     // Store user message
     await ctx.runMutation(api.ai.mutations.addMessage, {

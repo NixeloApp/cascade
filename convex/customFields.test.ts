@@ -27,7 +27,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Customer Name",
         fieldKey: "customer_name",
@@ -48,7 +48,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await setupProject(t);
 
-      const _fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId: _fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Priority Level",
         fieldKey: "priority_level",
@@ -92,7 +92,7 @@ describe("customFields", () => {
       const types = ["text", "number", "select", "multiselect", "date", "checkbox", "url"] as const;
 
       for (const fieldType of types) {
-        const fieldId = await asUser.mutation(api.customFields.create, {
+        const { fieldId } = await asUser.mutation(api.customFields.create, {
           projectId,
           name: `${fieldType} Field`,
           fieldKey: `${fieldType}_field`,
@@ -132,7 +132,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Original Name",
         fieldKey: "field_key",
@@ -158,7 +158,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Admin Field",
         fieldKey: "admin_field",
@@ -184,7 +184,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "To Delete",
         fieldKey: "to_delete",
@@ -221,7 +221,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Notes",
         fieldKey: "notes",
@@ -247,7 +247,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Status",
         fieldKey: "status",
@@ -278,7 +278,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Story Points",
         fieldKey: "story_points",
@@ -309,7 +309,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Documentation Link",
         fieldKey: "doc_link",
@@ -340,7 +340,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Environment",
         fieldKey: "environment",
@@ -372,7 +372,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Tags",
         fieldKey: "tags",
@@ -404,7 +404,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Notes",
         fieldKey: "notes",
@@ -433,7 +433,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Notes",
         fieldKey: "notes",
@@ -465,7 +465,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Notes",
         fieldKey: "notes",
@@ -488,7 +488,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const field1Id = await asUser.mutation(api.customFields.create, {
+      const { fieldId: field1Id } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Field 1",
         fieldKey: "field_1",
@@ -496,7 +496,7 @@ describe("customFields", () => {
         isRequired: false,
       });
 
-      const field2Id = await asUser.mutation(api.customFields.create, {
+      const { fieldId: field2Id } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Field 2",
         fieldKey: "field_2",
@@ -528,7 +528,7 @@ describe("customFields", () => {
       const t = convexTest(schema, modules);
       const { projectId, userId, asUser } = await setupProject(t);
 
-      const fieldId = await asUser.mutation(api.customFields.create, {
+      const { fieldId } = await asUser.mutation(api.customFields.create, {
         projectId,
         name: "Priority",
         fieldKey: "priority",

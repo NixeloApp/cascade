@@ -169,7 +169,7 @@ export const createSampleProject = authenticatedMutation({
   args: {
     organizationId: v.optional(v.id("organizations")), // Optional: use existing organization
   },
-  returns: v.id("projects"),
+  returns: v.object({ projectId: v.id("projects") }),
   handler: async (ctx, args) => {
     // Check if sample project already exists
     const onboarding = await ctx.db
@@ -507,7 +507,7 @@ export const createSampleProject = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return projectId;
+    return { projectId };
   },
 });
 

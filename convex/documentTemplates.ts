@@ -22,6 +22,7 @@ export const create = authenticatedMutation({
     isPublic: v.boolean(),
     projectId: v.optional(v.id("projects")),
   },
+  returns: v.object({ templateId: v.id("documentTemplates") }),
   handler: async (ctx, args) => {
     const templateId = await ctx.db.insert("documentTemplates", {
       name: args.name,
@@ -36,7 +37,7 @@ export const create = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return templateId;
+    return { templateId };
   },
 });
 

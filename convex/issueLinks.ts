@@ -16,6 +16,7 @@ export const create = authenticatedMutation({
     toIssueId: v.id("issues"),
     linkType: linkTypes,
   },
+  returns: v.object({ linkId: v.id("issueLinks") }),
   handler: async (ctx, args) => {
     const fromIssue = await ctx.db.get(args.fromIssueId);
     if (!fromIssue) {
@@ -59,7 +60,7 @@ export const create = authenticatedMutation({
       newValue: toIssue?.key || args.toIssueId,
     });
 
-    return linkId;
+    return { linkId };
   },
 });
 

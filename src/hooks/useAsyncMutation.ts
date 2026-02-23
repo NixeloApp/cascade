@@ -23,7 +23,7 @@ export interface UseAsyncMutationReturn<TArgs extends unknown[], TResult> {
  * Useful for wrapping Convex mutations or any async operation
  *
  * @example
- * const createIssue = useMutation(api.issues.create);
+ * const createIssue = useMutation(api.issues.createIssue);
  * const { mutate, isLoading } = useAsyncMutation(createIssue, {
  *   onSuccess: () => toast.success("Created!"),
  *   showErrorToast: true,

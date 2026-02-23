@@ -63,7 +63,7 @@ export function useAIChat({
   useEffect(() => {
     if (!chatId) {
       createChat({ projectId, title: "New Chat" })
-        .then((newChatId) => {
+        .then(({ chatId: newChatId }) => {
           setChatId(newChatId);
           onChatCreated?.(newChatId);
         })

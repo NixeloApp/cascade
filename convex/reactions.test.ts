@@ -4,9 +4,8 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addUserToOrganization,
   asAuthenticatedUser,
-  createOrganizationAdmin,
-  createProjectInOrganization,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -20,7 +19,7 @@ describe("Reactions", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create issue
-    const issueId = await asUser.mutation(api.issues.create, {
+    const { issueId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Test Issue",
       type: "task",
@@ -28,7 +27,7 @@ describe("Reactions", () => {
     });
 
     // Add comment
-    const commentId = await asUser.mutation(api.issues.addComment, {
+    const { commentId } = await asUser.mutation(api.issues.addComment, {
       issueId,
       content: "Nice work!",
     });
@@ -68,21 +67,16 @@ describe("Reactions", () => {
     const t = convexTest(schema, modules);
     const user1Id = await createTestUser(t, { name: "User 1", email: "user1@test.com" });
     const user2Id = await createTestUser(t, { name: "User 2", email: "user2@test.com" });
-    const { organizationId } = await createOrganizationAdmin(t, user1Id);
-    const projectId = await createProjectInOrganization(t, user1Id, organizationId);
+    const projectId = await createTestProject(t, user1Id);
 
-    // Add user2 to organization
-    await t.run(async (ctx) => {
-      await ctx.db.insert("organizationMembers", {
-        organizationId,
-        userId: user2Id,
-        role: "member",
-        addedBy: user1Id,
-      });
-    });
+    // Get the organization ID from the project
+    const project = await t.run(async (ctx) => ctx.db.get(projectId));
+    if (!project) throw new Error("Project not found");
 
     // Add user2 to project
     const asUser1 = asAuthenticatedUser(t, user1Id);
+    // Add user2 to organization first (required by security check)
+    await addUserToOrganization(t, project.organizationId, user2Id, user1Id);
     await asUser1.mutation(api.projects.addProjectMember, {
       projectId,
       userEmail: "user2@test.com",
@@ -90,13 +84,13 @@ describe("Reactions", () => {
     });
 
     // Create issue and comment
-    const issueId = await asUser1.mutation(api.issues.create, {
+    const { issueId } = await asUser1.mutation(api.issues.createIssue, {
       projectId,
       title: "Test Issue",
       type: "task",
       priority: "medium",
     });
-    const commentId = await asUser1.mutation(api.issues.addComment, {
+    const { commentId } = await asUser1.mutation(api.issues.addComment, {
       issueId,
       content: "Shared comment",
     });

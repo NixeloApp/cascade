@@ -40,7 +40,7 @@ describe("Label Enrichment", () => {
       if (!label240Id) throw new Error("Label 240 not created");
 
       // Create an issue using the 240th label via API (which handles ID->Name resolution)
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -88,7 +88,7 @@ describe("Label Enrichment", () => {
       if (!label104Id) throw new Error("Label 104 not created");
 
       // Create an issue using the last label (which would be missing with take(100))
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Test Issue",
         type: "task",

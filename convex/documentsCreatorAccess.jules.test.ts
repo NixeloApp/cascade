@@ -45,7 +45,7 @@ describe("Documents Security - Creator Access Revocation", () => {
     });
 
     // 4. Creator creates a document in the project
-    const docId = await asCreator.mutation(api.documents.create, {
+    const { documentId: docId } = await asCreator.mutation(api.documents.create, {
       title: "My Secret Doc",
       isPublic: false,
       organizationId,
@@ -93,7 +93,7 @@ describe("Documents Security - Creator Access Revocation", () => {
     });
 
     // 3. Creator creates a document in the organization (no project)
-    const docId = await asCreator.mutation(api.documents.create, {
+    const { documentId: docId } = await asCreator.mutation(api.documents.create, {
       title: "Org Doc",
       isPublic: false,
       organizationId,

@@ -395,6 +395,35 @@ export async function createOrganizationAdmin(
 }
 
 /**
+ * Add a user as a member of an organization
+ *
+ * This is required before adding a user to projects or teams.
+ * The security check in addProjectMember verifies organization membership.
+ *
+ * @param t - Convex test helper
+ * @param organizationId - Organization to add user to
+ * @param userId - User to add
+ * @param addedBy - User performing the addition
+ * @param role - Role to assign (default: "member")
+ */
+export async function addUserToOrganization(
+  t: TestCtx,
+  organizationId: Id<"organizations">,
+  userId: Id<"users">,
+  addedBy: Id<"users">,
+  role: "owner" | "admin" | "member" = "member",
+): Promise<void> {
+  await t.run(async (ctx) => {
+    await ctx.db.insert("organizationMembers", {
+      organizationId,
+      userId,
+      role,
+      addedBy,
+    });
+  });
+}
+
+/**
  * Test context with commonly needed data already set up
  */
 export interface TestContext {

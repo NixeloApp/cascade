@@ -36,7 +36,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 
-      const workspaceId = await createWorkspace({
+      const { workspaceId } = await createWorkspace({
         name,
         slug,
         description: description.trim() || undefined,

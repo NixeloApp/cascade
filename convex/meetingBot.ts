@@ -334,7 +334,7 @@ export const scheduleRecording = authenticatedMutation({
     projectId: v.optional(v.id("projects")),
     isPublic: v.optional(v.boolean()),
   },
-  returns: v.id("meetingRecordings"),
+  returns: v.object({ recordingId: v.id("meetingRecordings") }),
   handler: async (ctx, args) => {
     const now = Date.now();
 
@@ -375,7 +375,7 @@ export const scheduleRecording = authenticatedMutation({
       { recordingId },
     );
 
-    return recordingId;
+    return { recordingId };
   },
 });
 
@@ -387,7 +387,7 @@ export const startRecordingNow = authenticatedMutation({
     meetingPlatform: meetingPlatforms,
     projectId: v.optional(v.id("projects")),
   },
-  returns: v.id("meetingRecordings"),
+  returns: v.object({ recordingId: v.id("meetingRecordings") }),
   handler: async (ctx, args) => {
     const now = Date.now();
 
@@ -423,7 +423,7 @@ export const startRecordingNow = authenticatedMutation({
       recordingId,
     });
 
-    return recordingId;
+    return { recordingId };
   },
 });
 
@@ -531,7 +531,7 @@ export const saveTranscript = mutation({
     wordCount: v.number(),
     speakerCount: v.optional(v.number()),
   },
-  returns: v.id("meetingTranscripts"),
+  returns: v.object({ transcriptId: v.id("meetingTranscripts") }),
   handler: async (ctx, args) => {
     // Validate bot service API key
     await requireBotApiKey(ctx, args.apiKey);
@@ -556,7 +556,7 @@ export const saveTranscript = mutation({
       updatedAt: Date.now(),
     });
 
-    return transcriptId;
+    return { transcriptId };
   },
 });
 
@@ -601,7 +601,7 @@ export const saveSummary = mutation({
     completionTokens: v.optional(v.number()),
     processingTime: v.optional(v.number()),
   },
-  returns: v.id("meetingSummaries"),
+  returns: v.object({ summaryId: v.id("meetingSummaries") }),
   handler: async (ctx, args) => {
     // Validate bot service API key
     await requireBotApiKey(ctx, args.apiKey);
@@ -644,7 +644,7 @@ export const saveSummary = mutation({
       });
     }
 
-    return summaryId;
+    return { summaryId };
   },
 });
 
@@ -738,6 +738,7 @@ export const createIssueFromActionItem = authenticatedMutation({
     actionItemIndex: v.number(),
     projectId: v.id("projects"),
   },
+  returns: v.object({ issueId: v.id("issues") }),
   handler: async (ctx, args) => {
     const summary = await ctx.db.get(args.summaryId);
     if (!summary) throw notFound("summary", args.summaryId);
@@ -818,7 +819,7 @@ export const createIssueFromActionItem = authenticatedMutation({
       actionItems: updatedActionItems,
     });
 
-    return issueId;
+    return { issueId };
   },
 });
 
