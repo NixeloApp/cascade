@@ -24,6 +24,10 @@
 **Learning:** The `onSnapshot` callback in `convex/prosemirror.ts` was silently swallowing `JSON.parse` errors, leading to data inconsistencies (missing versions, outdated timestamps) without client feedback.
 **Action:** Ensure all callbacks in third-party integrations (like `prosemirror-sync`) have explicit error handling (logging and re-throwing as appropriate errors) to prevent silent failures.
 
+## 2024-05-22 - Upstream Error Propagation
+**Learning:** When integrating with third-party APIs (like Google Calendar), swallowing the upstream error body (e.g., `rateLimitExceeded`) and returning a generic "Failed to fetch" validation error prevents users from understanding actionable failures.
+**Action:** Always capture the upstream `HttpError` body, attempt to parse it (e.g., as JSON), and include the specific upstream message in the `validation` error thrown to the client.
+
 ## 2024-05-22 - OAuth Data Validation
 **Learning:** OAuth integrations often assume valid JSON and complete user profiles from providers. However, API changes or failures can result in invalid JSON or partial data (e.g. `undefined` user IDs), leading to silent data corruption or runtime crashes when processing the callback.
 **Action:** Always validate the structure and required fields of OAuth user profiles and wrap JSON parsing in try/catch blocks before persisting or using the data.

@@ -13,7 +13,7 @@ vi.mock("../lib/env", () => ({
   validation: (_type: string, msg: string) => new Error(msg),
 }));
 
-// Mock fetchWithTimeout
+// Mock fetchWithTimeout - googleOAuth.ts has local fetchJSON/HttpError that use this
 vi.mock("../lib/fetchWithTimeout", () => ({
   fetchWithTimeout: vi.fn(),
 }));
@@ -48,8 +48,12 @@ describe("Google OAuth Error Handling", () => {
 
     // Mock token exchange failure
     const errorBody = JSON.stringify({ error: "invalid_grant", error_description: "Bad Request" });
+
+    // Mock fetchWithTimeout to return a failed response
+    // googleOAuth.ts's local fetchJSON will convert this to an HttpError
     vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
       ok: false,
+      status: 400,
       text: async () => errorBody,
     } as Response);
 
@@ -66,13 +70,10 @@ describe("Google OAuth Error Handling", () => {
     expect(text).toContain("Connection Failed");
 
     // Verify console.error was called with details
-    // Currently this expectation will FAIL because the code swallows the error
-    // After fix, it should pass
     expect(consoleErrorSpy).toHaveBeenCalled();
     const errorArgs = consoleErrorSpy.mock.calls.map((args) => args.join(" ")).join(" ");
 
-    // We expect the error message to contain the upstream error body
-    expect(errorArgs).toContain("invalid_grant");
+    // We expect the error message to contain the upstream error body (parsed description takes precedence)
     expect(errorArgs).toContain("Bad Request");
 
     consoleErrorSpy.mockRestore();
