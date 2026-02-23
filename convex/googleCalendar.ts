@@ -43,11 +43,11 @@ export const connectGoogleInternal = internalMutation({
         syncDirection: connectionArgs.syncDirection || "bidirectional",
         updatedAt: now,
       });
-      return existing._id;
+      return { connectionId: existing._id };
     }
 
     // Create new connection
-    return await ctx.db.insert("calendarConnections", {
+    const connectionId = await ctx.db.insert("calendarConnections", {
       userId,
       provider: "google",
       providerAccountId: connectionArgs.providerAccountId,
@@ -59,6 +59,7 @@ export const connectGoogleInternal = internalMutation({
       lastSyncAt: undefined,
       updatedAt: now,
     });
+    return { connectionId };
   },
 });
 
@@ -71,6 +72,7 @@ export const connectGoogle = authenticatedMutation({
     expiresAt: v.optional(v.number()),
     syncDirection: v.optional(syncDirections),
   },
+  returns: v.object({ connectionId: v.id("calendarConnections") }),
   handler: async (ctx, args) => {
     // Encrypt tokens before storage
     const encryptedAccessToken = await encrypt(args.accessToken);
@@ -93,11 +95,11 @@ export const connectGoogle = authenticatedMutation({
         expiresAt: args.expiresAt,
         updatedAt: now,
       });
-      return existing._id;
+      return { connectionId: existing._id };
     }
 
     // Create new connection
-    return await ctx.db.insert("calendarConnections", {
+    const connectionId = await ctx.db.insert("calendarConnections", {
       userId: ctx.userId,
       provider: "google",
       providerAccountId: args.providerAccountId,
@@ -109,6 +111,7 @@ export const connectGoogle = authenticatedMutation({
       lastSyncAt: undefined,
       updatedAt: now,
     });
+    return { connectionId };
   },
 });
 

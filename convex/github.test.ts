@@ -12,11 +12,12 @@ describe("GitHub Integration", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      await asUser.mutation(api.github.connectGitHub, {
+      const { connectionId } = await asUser.mutation(api.github.connectGitHub, {
         githubUserId: "12345",
         githubUsername: "testuser",
         accessToken: "gho_token",
       });
+      expect(connectionId).toBeDefined();
 
       const connection = await asUser.query(api.github.getConnection, {});
       expect(connection?.githubUsername).toBe("testuser");
@@ -58,7 +59,7 @@ describe("GitHub Integration", () => {
       const projectId = await createTestProject(t, userId);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const repoId = await asUser.mutation(api.github.linkRepository, {
+      const { repositoryId: repoId } = await asUser.mutation(api.github.linkRepository, {
         projectId,
         repoOwner: "owner",
         repoName: "repo",
@@ -78,7 +79,7 @@ describe("GitHub Integration", () => {
       const projectId = await createTestProject(t, userId);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const repoId = await asUser.mutation(api.github.linkRepository, {
+      const { repositoryId: repoId } = await asUser.mutation(api.github.linkRepository, {
         projectId,
         repoOwner: "owner",
         repoName: "repo",
@@ -122,7 +123,7 @@ describe("GitHub Integration", () => {
       const projectId = await createTestProject(t, userId);
       const asUser = asAuthenticatedUser(t, userId);
 
-      const repositoryId = await asUser.mutation(api.github.linkRepository, {
+      const { repositoryId } = await asUser.mutation(api.github.linkRepository, {
         projectId,
         repoOwner: "owner",
         repoName: "repo",
@@ -130,7 +131,7 @@ describe("GitHub Integration", () => {
       });
 
       // Creates new PR
-      const prId = await t.mutation(internal.github.upsertPullRequest, {
+      const { pullRequestId: prId } = await t.mutation(internal.github.upsertPullRequest, {
         repositoryId,
         prNumber: 1,
         prId: "pr_1",
@@ -164,7 +165,7 @@ describe("GitHub Integration", () => {
       const projectId = await createTestProject(t, userId, { key: "PROJ" });
       const asUser = asAuthenticatedUser(t, userId);
 
-      const repositoryId = await asUser.mutation(api.github.linkRepository, {
+      const { repositoryId } = await asUser.mutation(api.github.linkRepository, {
         projectId,
         repoOwner: "owner",
         repoName: "repo",
@@ -199,7 +200,7 @@ describe("GitHub Integration", () => {
       });
 
       // Upsert commit with issue key
-      const commitId = await t.mutation(internal.github.upsertCommit, {
+      const { commitId } = await t.mutation(internal.github.upsertCommit, {
         repositoryId,
         sha: "sha123",
         message: "Fixes PROJ-1: bugs",
