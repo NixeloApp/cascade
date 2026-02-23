@@ -106,7 +106,3 @@ export const batchFetchCustomFields = (ctx: QueryCtx, ids: (Id<"customFields"> |
 /** Batch fetch recordings by ID */
 export const batchFetchRecordings = (ctx: QueryCtx, ids: (Id<"meetingRecordings"> | undefined)[]) =>
   batchFetch(ctx, "meetingRecordings", ids);
-
-// ============================================================================
-// FORMATTING HELPERS
-// ============================================================================
