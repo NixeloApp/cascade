@@ -13,7 +13,7 @@ describe("Refactor Issues Smart Queries", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create issues in different statuses
-    const issue1 = await asUser.mutation(api.issues.create, {
+    const { issueId: _issue1Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo Issue",
       type: "task",
@@ -21,7 +21,7 @@ describe("Refactor Issues Smart Queries", () => {
     });
     // Default status is usually the first one (todo)
 
-    const issue2Id = await asUser.mutation(api.issues.create, {
+    const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "InProgress Issue",
       type: "task",
@@ -81,14 +81,14 @@ describe("Refactor Issues Smart Queries", () => {
     });
 
     // Create issues
-    const issue1 = await asUser.mutation(api.issues.create, {
+    const { issueId: _issue1Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Team Issue Todo",
       type: "task",
       priority: "medium",
     });
 
-    const issue2Id = await asUser.mutation(api.issues.create, {
+    const { issueId: issue2Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Team Issue InProgress",
       type: "task",

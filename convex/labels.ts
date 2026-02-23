@@ -61,9 +61,9 @@ export const create = projectEditorMutation({
     color: v.string(),
     groupId: v.optional(v.id("labelGroups")),
   },
+  returns: v.object({ labelId: v.id("labels") }),
   handler: async (ctx, args) => {
-    const { labelId } = await createLabelImpl(ctx, args);
-    return labelId;
+    return await createLabelImpl(ctx, args);
   },
 });
 

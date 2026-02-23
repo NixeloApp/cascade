@@ -12,7 +12,7 @@ describe("SSO Functionality", () => {
     const { organizationId } = await createOrganizationAdmin(t, userId);
     const asAdmin = asAuthenticatedUser(t, userId);
 
-    const connectionId = await asAdmin.mutation(api.sso.create, {
+    const { connectionId } = await asAdmin.mutation(api.sso.create, {
       organizationId,
       type: "saml",
       name: "Test SAML Connection",
@@ -31,7 +31,7 @@ describe("SSO Functionality", () => {
     const { organizationId } = await createOrganizationAdmin(t, userId);
     const asAdmin = asAuthenticatedUser(t, userId);
 
-    const connectionId = await asAdmin.mutation(api.sso.create, {
+    const { connectionId } = await asAdmin.mutation(api.sso.create, {
       organizationId,
       type: "saml",
       name: "Test SAML Connection",
@@ -57,7 +57,7 @@ describe("SSO Functionality", () => {
     const { organizationId } = await createOrganizationAdmin(t, userId);
     const asAdmin = asAuthenticatedUser(t, userId);
 
-    const connectionId = await asAdmin.mutation(api.sso.create, {
+    const { connectionId } = await asAdmin.mutation(api.sso.create, {
       organizationId,
       type: "saml",
       name: "Test SAML Connection",
@@ -96,7 +96,7 @@ describe("SSO Functionality", () => {
     const { organizationId } = await createOrganizationAdmin(t, userId);
     const asAdmin = asAuthenticatedUser(t, userId);
 
-    const connectionId = await asAdmin.mutation(api.sso.create, {
+    const { connectionId } = await asAdmin.mutation(api.sso.create, {
       organizationId,
       type: "saml",
       name: "Test SAML Connection",
@@ -117,7 +117,7 @@ describe("SSO Functionality", () => {
     const { organizationId: org2Id } = await createOrganizationAdmin(t, user2Id);
     const asAdmin2 = asAuthenticatedUser(t, user2Id);
 
-    const connection2Id = await asAdmin2.mutation(api.sso.create, {
+    const { connectionId: connection2Id } = await asAdmin2.mutation(api.sso.create, {
       organizationId: org2Id,
       type: "saml",
       name: "Another SAML Connection",
@@ -137,7 +137,7 @@ describe("SSO Functionality", () => {
     const { organizationId } = await createOrganizationAdmin(t, userId);
     const asAdmin = asAuthenticatedUser(t, userId);
 
-    const connectionId = await asAdmin.mutation(api.sso.create, {
+    const { connectionId } = await asAdmin.mutation(api.sso.create, {
       organizationId,
       type: "saml",
       name: "Test SAML Connection",
@@ -181,7 +181,7 @@ describe("SSO Functionality", () => {
     const { organizationId } = await createOrganizationAdmin(t, userId);
     const asAdmin = asAuthenticatedUser(t, userId);
 
-    const connectionId = await asAdmin.mutation(api.sso.create, {
+    const { connectionId } = await asAdmin.mutation(api.sso.create, {
       organizationId,
       type: "saml",
       name: "Test SAML Connection",

@@ -4,9 +4,8 @@ import { api, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addUserToOrganization,
   asAuthenticatedUser,
-  createOrganizationAdmin,
-  createProjectInOrganization,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -35,7 +34,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Issue Webhook",
         url: "https://example.com/webhook",
@@ -65,7 +64,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Simple Webhook",
         url: "https://example.com/hook",
@@ -87,21 +86,16 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -192,21 +186,16 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
@@ -241,7 +230,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Original Name",
         url: "https://example.com/original",
@@ -272,7 +261,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Test Webhook",
         url: "https://example.com/hook",
@@ -310,7 +299,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Original Name",
         url: "https://example.com/original",
@@ -339,28 +328,23 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
       });
 
-      const webhookId = await asOwner.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asOwner.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -384,7 +368,7 @@ describe("Webhooks", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -408,7 +392,7 @@ describe("Webhooks", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create and delete a webhook to get a valid but non-existent ID
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Temp",
         url: "https://example.com/temp",
@@ -486,7 +470,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "To Delete",
         url: "https://example.com/hook",
@@ -510,28 +494,23 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
       });
 
-      const webhookId = await asOwner.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asOwner.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -552,7 +531,7 @@ describe("Webhooks", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -573,7 +552,7 @@ describe("Webhooks", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create and delete a webhook to get a valid but non-existent ID
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Temp",
         url: "https://example.com/temp",
@@ -598,7 +577,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Test Webhook",
         url: "https://example.com/hook",
@@ -643,7 +622,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Test Webhook",
         url: "https://example.com/hook",
@@ -680,28 +659,23 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
       });
 
-      const webhookId = await asOwner.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asOwner.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -725,7 +699,7 @@ describe("Webhooks", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -749,7 +723,7 @@ describe("Webhooks", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create and delete a webhook to get a valid but non-existent ID
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Temp",
         url: "https://example.com/temp",
@@ -785,7 +759,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Test Webhook",
         url: "https://example.com/hook",
@@ -808,28 +782,23 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
       });
 
-      const webhookId = await asOwner.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asOwner.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -850,7 +819,7 @@ describe("Webhooks", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -871,7 +840,7 @@ describe("Webhooks", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create and delete a webhook to get a valid but non-existent ID
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Temp",
         url: "https://example.com/temp",
@@ -904,7 +873,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Test Webhook",
         url: "https://example.com/hook",
@@ -941,28 +910,23 @@ describe("Webhooks", () => {
         name: "Editor",
         email: "editor@test.com",
       });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
-      // Add editor to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: editor,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       // Add editor
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add editor to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, editor, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
       });
 
-      const webhookId = await asOwner.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asOwner.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -993,7 +957,7 @@ describe("Webhooks", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Webhook",
         url: "https://example.com/hook",
@@ -1023,7 +987,7 @@ describe("Webhooks", () => {
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      const webhookId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Temp",
         url: "https://example.com/temp",
@@ -1100,7 +1064,7 @@ describe("Webhooks", () => {
       });
 
       // Create and deactivate webhook
-      const inactiveId = await asUser.mutation(api.webhooks.createWebhook, {
+      const { webhookId: inactiveId } = await asUser.mutation(api.webhooks.createWebhook, {
         projectId,
         name: "Inactive Webhook",
         url: "https://example.com/hook2",

@@ -16,6 +16,7 @@ export const createChat = authenticatedMutation({
     title: v.optional(v.string()),
     projectId: v.optional(v.id("projects")),
   },
+  returns: v.object({ chatId: v.id("aiChats") }),
   handler: async (ctx, args) => {
     const now = Date.now();
 
@@ -26,7 +27,7 @@ export const createChat = authenticatedMutation({
       updatedAt: now,
     });
 
-    return chatId;
+    return { chatId };
   },
 });
 
@@ -85,6 +86,7 @@ export const addMessage = authenticatedMutation({
     tokensUsed: v.optional(v.number()),
     responseTime: v.optional(v.number()),
   },
+  returns: v.object({ messageId: v.id("aiMessages") }),
   handler: async (ctx, args) => {
     // Verify chat ownership
     const chat = await ctx.db.get(args.chatId);
@@ -115,7 +117,7 @@ export const addMessage = authenticatedMutation({
       });
     }
 
-    return messageId;
+    return { messageId };
   },
 });
 
@@ -140,6 +142,7 @@ export const createSuggestion = authenticatedMutation({
     modelUsed: v.string(),
     confidence: v.optional(v.number()),
   },
+  returns: v.object({ suggestionId: v.id("aiSuggestions") }),
   handler: async (ctx, args) => {
     const suggestionId = await ctx.db.insert("aiSuggestions", {
       userId: ctx.userId,
@@ -152,7 +155,7 @@ export const createSuggestion = authenticatedMutation({
       confidence: args.confidence,
     });
 
-    return suggestionId;
+    return { suggestionId };
   },
 });
 
@@ -216,6 +219,7 @@ export const trackUsage = authenticatedMutation({
     success: v.boolean(),
     errorMessage: v.optional(v.string()),
   },
+  returns: v.object({ usageId: v.id("aiUsage") }),
   handler: async (ctx, args) => {
     const usageId = await ctx.db.insert("aiUsage", {
       userId: ctx.userId,
@@ -232,6 +236,6 @@ export const trackUsage = authenticatedMutation({
       errorMessage: args.errorMessage,
     });
 
-    return usageId;
+    return { usageId };
   },
 });

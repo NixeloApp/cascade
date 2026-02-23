@@ -17,7 +17,7 @@ export const create = projectEditorMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert("sprints", {
+    const sprintId = await ctx.db.insert("sprints", {
       projectId: ctx.projectId,
       name: args.name,
       goal: args.goal,
@@ -27,6 +27,7 @@ export const create = projectEditorMutation({
       createdBy: ctx.userId,
       updatedAt: now,
     });
+    return { sprintId };
   },
 });
 

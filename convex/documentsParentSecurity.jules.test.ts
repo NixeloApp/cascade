@@ -28,7 +28,7 @@ describe("Documents Security - Parent Access Control", () => {
     });
 
     // 3. Owner creates a PRIVATE document
-    const parentId = await asOwner.mutation(api.documents.create, {
+    const { documentId: parentId } = await asOwner.mutation(api.documents.create, {
       title: "Secret Parent Document",
       isPublic: false,
       organizationId,
@@ -69,14 +69,14 @@ describe("Documents Security - Parent Access Control", () => {
     });
 
     // 3. Owner creates a PRIVATE document (Parent)
-    const parentId = await asOwner.mutation(api.documents.create, {
+    const { documentId: parentId } = await asOwner.mutation(api.documents.create, {
       title: "Secret Parent Document",
       isPublic: false,
       organizationId,
     });
 
     // 4. Attacker creates their own document
-    const docId = await asAttacker.mutation(api.documents.create, {
+    const { documentId: docId } = await asAttacker.mutation(api.documents.create, {
       title: "My Document",
       isPublic: false,
       organizationId,

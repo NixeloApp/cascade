@@ -30,7 +30,7 @@ describe("customFieldsSecurity", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create a custom field in Project A
-    const fieldIdA = await asUser.mutation(api.customFields.create, {
+    const { fieldId: fieldIdA } = await asUser.mutation(api.customFields.create, {
       projectId: projectIdA,
       name: "Field A",
       fieldKey: "field_a",

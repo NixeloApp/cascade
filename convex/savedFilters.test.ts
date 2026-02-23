@@ -22,7 +22,7 @@ describe("Saved Filters", () => {
         key: "TEST",
       });
 
-      const filterId = await asUser.mutation(api.savedFilters.create, {
+      const { filterId } = await asUser.mutation(api.savedFilters.create, {
         projectId,
         name: "My Filter",
         filters: {
@@ -109,7 +109,7 @@ describe("Saved Filters", () => {
         key: "TEST",
       });
 
-      const filterId = await asUser.mutation(api.savedFilters.create, {
+      const { filterId } = await asUser.mutation(api.savedFilters.create, {
         projectId,
         name: "Complex Filter",
         filters: {
@@ -207,7 +207,7 @@ describe("Saved Filters", () => {
         key: "TEST",
       });
 
-      const filterId = await asUser.mutation(api.savedFilters.create, {
+      const { filterId } = await asUser.mutation(api.savedFilters.create, {
         projectId,
         name: "Original Name",
         filters: { type: ["bug"] },
@@ -242,7 +242,7 @@ describe("Saved Filters", () => {
       });
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const filterId = await asOwner.mutation(api.savedFilters.create, {
+      const { filterId } = await asOwner.mutation(api.savedFilters.create, {
         projectId,
         name: "Owner Filter",
         filters: {},
@@ -267,7 +267,7 @@ describe("Saved Filters", () => {
         key: "TEST",
       });
 
-      const filterId = await asUser.mutation(api.savedFilters.create, {
+      const { filterId } = await asUser.mutation(api.savedFilters.create, {
         projectId,
         name: "Original",
         filters: { type: ["bug"] },
@@ -300,7 +300,7 @@ describe("Saved Filters", () => {
         key: "TEST",
       });
 
-      const filterId = await asUser.mutation(api.savedFilters.create, {
+      const { filterId } = await asUser.mutation(api.savedFilters.create, {
         projectId,
         name: "To Delete",
         filters: {},
@@ -327,7 +327,7 @@ describe("Saved Filters", () => {
       });
 
       const asOwner = asAuthenticatedUser(t, ownerId);
-      const filterId = await asOwner.mutation(api.savedFilters.create, {
+      const { filterId } = await asOwner.mutation(api.savedFilters.create, {
         projectId,
         name: "Owner Filter",
         filters: {},
@@ -350,7 +350,7 @@ describe("Saved Filters", () => {
       });
 
       // Create and delete to get valid non-existent ID
-      const filterId = await asUser.mutation(api.savedFilters.create, {
+      const { filterId } = await asUser.mutation(api.savedFilters.create, {
         projectId,
         name: "Temp",
         filters: {},

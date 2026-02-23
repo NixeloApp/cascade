@@ -24,7 +24,7 @@ describe("Issue Mutations", () => {
         key: "FULL",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Full Featured Issue",
         description: "A detailed description",
@@ -56,7 +56,7 @@ describe("Issue Mutations", () => {
         key: "EPIC",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Epic Issue",
         type: "epic",
@@ -77,7 +77,7 @@ describe("Issue Mutations", () => {
         key: "BUGP",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Bug Report",
         type: "bug",
@@ -99,7 +99,7 @@ describe("Issue Mutations", () => {
         key: "ACT",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Activity Test",
         type: "task",
@@ -130,7 +130,7 @@ describe("Issue Mutations", () => {
         key: "NOCH",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Status Test",
         type: "task",
@@ -176,7 +176,7 @@ describe("Issue Mutations", () => {
         key: "ORDER",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Order Test",
         type: "task",
@@ -207,7 +207,7 @@ describe("Issue Mutations", () => {
         key: "CAT",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Category Test",
         type: "task",
@@ -235,7 +235,7 @@ describe("Issue Mutations", () => {
         key: "INVAL",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Category Error Test",
         type: "task",
@@ -270,7 +270,7 @@ describe("Issue Mutations", () => {
         key: "MULTI",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Original Title",
         description: "Original description",
@@ -306,7 +306,7 @@ describe("Issue Mutations", () => {
         key: "CLEAR",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Clearable Issue",
         type: "task",
@@ -343,7 +343,7 @@ describe("Issue Mutations", () => {
         key: "LABEL",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Labels Issue",
         type: "task",
@@ -377,7 +377,7 @@ describe("Issue Mutations", () => {
         key: "COMM",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Comment Test",
         type: "task",
@@ -406,7 +406,7 @@ describe("Issue Mutations", () => {
         key: "ACTC",
       });
 
-      const issueId = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Activity Comment Test",
         type: "task",
@@ -442,7 +442,7 @@ describe("Issue Mutations", () => {
       });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const issueId = await asAdmin.mutation(api.issues.create, {
+      const { issueId } = await asAdmin.mutation(api.issues.createIssue, {
         projectId,
         title: "Viewer Comment Test",
         type: "task",
@@ -478,7 +478,7 @@ describe("Issue Mutations", () => {
         });
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-        const issueId = await asAdmin.mutation(api.issues.create, {
+        const { issueId } = await asAdmin.mutation(api.issues.createIssue, {
           projectId,
           title: "Bulk Skip Test",
           type: "task",
@@ -690,7 +690,7 @@ describe("Issue Mutations", () => {
         await addProjectMember(t, projectId, editorId, "editor", adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-        const issueId = await asAdmin.mutation(api.issues.create, {
+        const { issueId } = await asAdmin.mutation(api.issues.createIssue, {
           projectId,
           title: "Admin Only Delete",
           type: "task",

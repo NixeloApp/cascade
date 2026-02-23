@@ -198,13 +198,13 @@ describe("softDeleteHelpers", () => {
       const asAdmin = asAuthenticatedUser(t, adminId);
 
       // Create two issues - returns issue ID directly
-      const issue1Id = await asAdmin.mutation(api.issues.mutations.create, {
+      const { issueId: issue1Id } = await asAdmin.mutation(api.issues.mutations.createIssue, {
         title: "Active Issue",
         projectId,
         type: "task",
         priority: "medium",
       });
-      const issue2Id = await asAdmin.mutation(api.issues.mutations.create, {
+      const { issueId: issue2Id } = await asAdmin.mutation(api.issues.mutations.createIssue, {
         title: "Deleted Issue",
         projectId,
         type: "task",
@@ -237,7 +237,7 @@ describe("softDeleteHelpers", () => {
       const asAdmin = asAuthenticatedUser(t, adminId);
 
       // Create issue - returns issue ID directly
-      const issueId = await asAdmin.mutation(api.issues.mutations.create, {
+      const { issueId } = await asAdmin.mutation(api.issues.mutations.createIssue, {
         title: "Test Issue",
         projectId,
         type: "task",
@@ -263,7 +263,7 @@ describe("softDeleteHelpers", () => {
       const asAdmin = asAuthenticatedUser(t, adminId);
 
       // Create issue - returns issue ID directly
-      const issueId = await asAdmin.mutation(api.issues.mutations.create, {
+      const { issueId } = await asAdmin.mutation(api.issues.mutations.createIssue, {
         title: "Restore Test",
         projectId,
         type: "task",

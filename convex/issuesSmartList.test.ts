@@ -14,7 +14,7 @@ describe("Smart Issue List", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create Todo issue
-    const todoId = await asUser.mutation(api.issues.create, {
+    const { issueId: todoId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo Task",
       type: "task",
@@ -23,7 +23,7 @@ describe("Smart Issue List", () => {
     });
 
     // Create In Progress issue
-    const inProgressId = await asUser.mutation(api.issues.create, {
+    const { issueId: inProgressId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "In Progress Task",
       type: "task",
@@ -36,7 +36,7 @@ describe("Smart Issue List", () => {
     });
 
     // Create Done issue
-    const doneId = await asUser.mutation(api.issues.create, {
+    const { issueId: doneId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Done Task",
       type: "task",

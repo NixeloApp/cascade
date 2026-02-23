@@ -14,7 +14,7 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "Team Meeting",
         startTime: now + 1 * HOUR, // 1 hour from now
         endTime: now + 2 * HOUR, // 2 hours from now
@@ -56,7 +56,7 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "Full Featured Event",
         description: "A detailed description",
         startTime: now + HOUR,
@@ -92,7 +92,7 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "My Event",
         startTime: now + HOUR,
         endTime: now + 2 * HOUR,
@@ -114,7 +114,7 @@ describe("calendarEvents", () => {
       const asAttendee = asAuthenticatedUser(t, attendeeId);
 
       const now = Date.now();
-      const eventId = await asOrganizer.mutation(api.calendarEvents.create, {
+      const { eventId } = await asOrganizer.mutation(api.calendarEvents.create, {
         title: "Team Event",
         startTime: now + HOUR,
         endTime: now + 2 * HOUR,
@@ -136,7 +136,7 @@ describe("calendarEvents", () => {
       const asOther = asAuthenticatedUser(t, otherUserId);
 
       const now = Date.now();
-      const eventId = await asOrganizer.mutation(api.calendarEvents.create, {
+      const { eventId } = await asOrganizer.mutation(api.calendarEvents.create, {
         title: "Private Event",
         startTime: now + HOUR,
         endTime: now + 2 * HOUR,
@@ -156,7 +156,7 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "Original Title",
         startTime: now + HOUR,
         endTime: now + 2 * HOUR,
@@ -183,7 +183,7 @@ describe("calendarEvents", () => {
       const asAttendee = asAuthenticatedUser(t, attendeeId);
 
       const now = Date.now();
-      const eventId = await asOrganizer.mutation(api.calendarEvents.create, {
+      const { eventId } = await asOrganizer.mutation(api.calendarEvents.create, {
         title: "Team Event",
         startTime: now + HOUR,
         endTime: now + 2 * HOUR,
@@ -206,7 +206,7 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "Event",
         startTime: now + HOUR,
         endTime: now + 2 * HOUR,
@@ -231,7 +231,7 @@ describe("calendarEvents", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "To Delete",
         startTime: now + HOUR,
         endTime: now + 2 * HOUR,
@@ -253,7 +253,7 @@ describe("calendarEvents", () => {
       const asAttendee = asAuthenticatedUser(t, attendeeId);
 
       const now = Date.now();
-      const eventId = await asOrganizer.mutation(api.calendarEvents.create, {
+      const { eventId } = await asOrganizer.mutation(api.calendarEvents.create, {
         title: "Protected Event",
         startTime: now + HOUR,
         endTime: now + 2 * HOUR,
@@ -375,7 +375,7 @@ describe("calendarEvents", () => {
 
       const now = Date.now();
 
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "Cancelled Event",
         startTime: now + DAY,
         endTime: now + DAY + HOUR,
@@ -399,7 +399,7 @@ describe("calendarEvents", () => {
 
       const now = Date.now();
 
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "Cancelled Event",
         startTime: now + DAY,
         endTime: now + DAY + HOUR,
@@ -499,7 +499,7 @@ describe("calendarEvents", () => {
 
       const now = Date.now();
 
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "Cancelled Upcoming",
         startTime: now + DAY,
         endTime: now + DAY + HOUR,
@@ -565,7 +565,7 @@ describe("calendarEvents", () => {
       const types = ["meeting", "deadline", "timeblock", "personal"] as const;
 
       for (const eventType of types) {
-        const eventId = await asUser.mutation(api.calendarEvents.create, {
+        const { eventId } = await asUser.mutation(api.calendarEvents.create, {
           title: `${eventType} event`,
           startTime: now + HOUR,
           endTime: now + 2 * HOUR,
@@ -590,7 +590,7 @@ describe("calendarEvents", () => {
       const startOfDay = today.getTime();
       const endOfDay = startOfDay + DAY - 1;
 
-      const eventId = await asUser.mutation(api.calendarEvents.create, {
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
         title: "All Day Event",
         startTime: startOfDay,
         endTime: endOfDay,

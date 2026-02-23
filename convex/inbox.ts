@@ -217,6 +217,7 @@ export const submit = projectEditorMutation({
     source: v.optional(inboxIssueSources),
     sourceEmail: v.optional(v.string()),
   },
+  returns: v.object({ inboxIssueId: v.id("inboxIssues") }),
   handler: async (ctx, args) => {
     // Verify issue exists and belongs to this project
     const issue = await ctx.db.get(args.issueId);
@@ -249,7 +250,7 @@ export const submit = projectEditorMutation({
       updatedAt: now,
     });
 
-    return inboxIssueId;
+    return { inboxIssueId };
   },
 });
 

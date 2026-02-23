@@ -91,14 +91,14 @@ export function AppSidebar() {
 
   const handleCreateDocument = async () => {
     try {
-      const docId = await createDocument({
+      const { documentId } = await createDocument({
         title: "Untitled Document",
         isPublic: false,
         organizationId,
       });
       navigate({
         to: ROUTES.documents.detail.path,
-        params: { orgSlug, id: docId },
+        params: { orgSlug, id: documentId },
       });
       showSuccess("Document created");
       closeMobile();

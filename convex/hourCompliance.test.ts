@@ -62,7 +62,7 @@ describe("Hour Compliance", () => {
     });
 
     // Run compliance check as admin
-    const recordId = await adminCtx.asUser.mutation(api.hourCompliance.checkUserCompliance, {
+    const { recordId } = await adminCtx.asUser.mutation(api.hourCompliance.checkUserCompliance, {
       userId: employeeId,
       periodType: "week",
       periodStart: startOfWeek,
@@ -136,7 +136,7 @@ describe("Hour Compliance", () => {
       }
     });
 
-    const recordId = await adminCtx.asUser.mutation(api.hourCompliance.checkUserCompliance, {
+    const { recordId } = await adminCtx.asUser.mutation(api.hourCompliance.checkUserCompliance, {
       userId: employeeId,
       periodType: "week",
       periodStart: startOfWeek,
@@ -200,7 +200,7 @@ describe("Hour Compliance", () => {
       }
     });
 
-    const recordId = await adminCtx.asUser.mutation(api.hourCompliance.checkUserCompliance, {
+    const { recordId } = await adminCtx.asUser.mutation(api.hourCompliance.checkUserCompliance, {
       userId: employeeId,
       periodType: "week",
       periodStart: startOfWeek,

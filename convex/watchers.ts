@@ -13,6 +13,7 @@ export const watch = authenticatedMutation({
   args: {
     issueId: v.id("issues"),
   },
+  returns: v.object({ watcherId: v.id("issueWatchers") }),
   handler: async (ctx, args) => {
     // Check if already watching
     const existing = await ctx.db
@@ -21,7 +22,7 @@ export const watch = authenticatedMutation({
       .first();
 
     if (existing) {
-      return existing._id;
+      return { watcherId: existing._id };
     }
 
     // Add watcher
@@ -37,7 +38,7 @@ export const watch = authenticatedMutation({
       action: "started_watching",
     });
 
-    return watcherId;
+    return { watcherId };
   },
 });
 
