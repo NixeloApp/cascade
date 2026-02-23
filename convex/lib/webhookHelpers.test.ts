@@ -27,11 +27,7 @@ describe("deliverWebhook", () => {
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
 
     // Mock successful fetch response
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => "Success",
-    });
+    (global.fetch as any).mockResolvedValue(new Response("Success", { status: 200 }));
 
     const result = await deliverWebhook(url, payload, event, secret);
 
@@ -80,12 +76,9 @@ describe("deliverWebhook", () => {
 
   it("should return failure status for HTTP errors", async () => {
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
-    (global.fetch as any).mockResolvedValue({
-      ok: false,
-      status: 500,
-      statusText: "Internal Server Error",
-      text: async () => "Server Error",
-    });
+    (global.fetch as any).mockResolvedValue(
+      new Response("Server Error", { status: 500, statusText: "Internal Server Error" }),
+    );
 
     const result = await deliverWebhook(url, payload, event);
 
@@ -98,11 +91,7 @@ describe("deliverWebhook", () => {
     const httpsUrl = "https://example.com/webhook";
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
 
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => "Success",
-    });
+    (global.fetch as any).mockResolvedValue(new Response("Success", { status: 200 }));
 
     await deliverWebhook(httpsUrl, payload, event);
 
@@ -118,7 +107,7 @@ describe("deliverWebhook", () => {
 
   it("should generate correct HMAC signature", async () => {
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
-    (global.fetch as any).mockResolvedValue({ ok: true, text: async () => "" });
+    (global.fetch as any).mockResolvedValue(new Response("", { status: 200 }));
 
     await deliverWebhook(url, payload, event, secret);
 

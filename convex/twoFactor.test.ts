@@ -293,4 +293,68 @@ describe("Two Factor Authentication", () => {
     });
     expect(unlockedResult.success).toBe(true);
   });
+
+  it("should enforce rate limiting on disable attempts", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const asUser = asAuthenticatedUser(t, userId);
+
+    // Setup 2FA
+    const { secret } = await asUser.mutation(api.twoFactor.beginSetup);
+    const setupCode = await generateTestTOTP(secret, FIXED_TIME);
+    await asUser.mutation(api.twoFactor.completeSetup, { code: setupCode });
+
+    // Try to disable with invalid code multiple times
+    for (let i = 0; i < 5; i++) {
+      const result = await asUser.mutation(api.twoFactor.disable, { code: "000000" });
+      if (i < 4) {
+        expect(result.success).toBe(false);
+        expect(result.error).toBe("Invalid verification code");
+      } else {
+        // 5th attempt triggers lockout
+        expect(result.success).toBe(false);
+        expect(result.error).toContain("Account temporarily locked");
+        expect(result.lockedUntil).toBeGreaterThan(FIXED_TIME);
+      }
+    }
+
+    // Verify we are locked out
+    const validCode = await generateTestTOTP(secret, FIXED_TIME);
+    const result = await asUser.mutation(api.twoFactor.verifyCode, { code: validCode });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Too many failed attempts");
+  });
+
+  it("should enforce rate limiting on regenerateBackupCodes attempts", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const asUser = asAuthenticatedUser(t, userId);
+
+    // Setup 2FA
+    const { secret } = await asUser.mutation(api.twoFactor.beginSetup);
+    const setupCode = await generateTestTOTP(secret, FIXED_TIME);
+    await asUser.mutation(api.twoFactor.completeSetup, { code: setupCode });
+
+    // Try to regenerate with invalid code multiple times
+    for (let i = 0; i < 5; i++) {
+      const result = await asUser.mutation(api.twoFactor.regenerateBackupCodes, {
+        totpCode: "000000",
+      });
+      if (i < 4) {
+        expect(result.success).toBe(false);
+        expect(result.error).toBe("Invalid verification code");
+      } else {
+        // 5th attempt triggers lockout
+        expect(result.success).toBe(false);
+        expect(result.error).toContain("Account temporarily locked");
+        expect(result.lockedUntil).toBeGreaterThan(FIXED_TIME);
+      }
+    }
+
+    // Verify we are locked out
+    const validCode = await generateTestTOTP(secret, FIXED_TIME);
+    const result = await asUser.mutation(api.twoFactor.verifyCode, { code: validCode });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Too many failed attempts");
+  });
 });
