@@ -46,6 +46,7 @@ export const create = authenticatedMutation({
     projectId: v.optional(v.id("projects")),
     parentId: v.optional(v.id("documents")),
   },
+  returns: v.object({ documentId: v.id("documents") }),
   handler: async (ctx, args) => {
     await checkRateLimit(ctx);
     await validateOrganizationMembership(ctx, args.organizationId);
@@ -62,6 +63,9 @@ export const create = authenticatedMutation({
       if (parent.organizationId !== args.organizationId) {
         throw validation("parentId", "Parent document must be in the same organization");
       }
+
+      await assertDocumentAccess(ctx, parent);
+
       // Get max order among siblings (bounded)
       const siblings = await ctx.db
         .query("documents")
@@ -72,7 +76,7 @@ export const create = authenticatedMutation({
     }
 
     const now = Date.now();
-    return await ctx.db.insert("documents", {
+    const documentId = await ctx.db.insert("documents", {
       title: args.title,
       isPublic: args.isPublic,
       createdBy: ctx.userId,
@@ -83,6 +87,8 @@ export const create = authenticatedMutation({
       parentId: args.parentId,
       order,
     });
+
+    return { documentId };
   },
 });
 
@@ -778,7 +784,7 @@ async function isDescendant(
 
 /** Validate new parent for document move */
 async function validateNewParent(
-  db: QueryCtx["db"],
+  ctx: QueryCtx & { userId: Id<"users"> },
   docId: Id<"documents">,
   newParentId: Id<"documents">,
   organizationId: Id<"organizations">,
@@ -786,16 +792,18 @@ async function validateNewParent(
   if (newParentId === docId) {
     throw validation("newParentId", "Cannot move document to itself");
   }
-  if (await isDescendant(db, newParentId, docId)) {
+  if (await isDescendant(ctx.db, newParentId, docId)) {
     throw validation("newParentId", "Cannot move document to its own descendant");
   }
-  const newParent = await db.get(newParentId);
+  const newParent = await ctx.db.get(newParentId);
   if (!newParent || newParent.isDeleted) {
     throw notFound("new parent document", newParentId);
   }
   if (newParent.organizationId !== organizationId) {
     throw validation("newParentId", "Cannot move document to different organization");
   }
+
+  await assertDocumentAccess(ctx, newParent);
 }
 
 /**
@@ -829,7 +837,7 @@ export const moveDocument = authenticatedMutation({
 
     // Validate new parent if provided
     if (args.newParentId) {
-      await validateNewParent(ctx.db, args.id, args.newParentId, document.organizationId);
+      await validateNewParent(ctx, args.id, args.newParentId, document.organizationId);
     }
 
     // Calculate new order if not provided
@@ -947,6 +955,7 @@ export const addComment = authenticatedMutation({
     mentions: v.optional(v.array(v.id("users"))),
     parentId: v.optional(v.id("documentComments")),
   },
+  returns: v.object({ commentId: v.id("documentComments") }),
   handler: async (ctx, args) => {
     // Rate limit: 60 comments per minute per user
     if (!process.env.IS_TEST_ENV) {
@@ -1000,7 +1009,7 @@ export const addComment = authenticatedMutation({
       parentId: args.parentId,
     });
 
-    return commentId;
+    return { commentId };
   },
 });
 

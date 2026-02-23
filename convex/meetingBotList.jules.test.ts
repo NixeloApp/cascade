@@ -40,14 +40,17 @@ describe("MeetingBot List", () => {
 
     // 1. Create 1 public recording by User B (Oldest)
     // We want this to be the target we find.
-    const publicRecIdB = await asUserB_Accessor.mutation(api.meetingBot.scheduleRecording, {
-      title: "Public Recording B",
-      meetingUrl: "https://zoom.us/j/publicB",
-      meetingPlatform: "zoom",
-      scheduledStartTime: Date.now() - 100000,
-      projectId,
-      isPublic: true,
-    });
+    const { recordingId: publicRecIdB } = await asUserB_Accessor.mutation(
+      api.meetingBot.scheduleRecording,
+      {
+        title: "Public Recording B",
+        meetingUrl: "https://zoom.us/j/publicB",
+        meetingPlatform: "zoom",
+        scheduledStartTime: Date.now() - 100000,
+        projectId,
+        isPublic: true,
+      },
+    );
 
     // 2. Create 20 private recordings by User B (Newer)
     // These should clutter the "by_project" index if scanned sequentially (descending)

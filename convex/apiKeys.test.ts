@@ -6,9 +6,8 @@ import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addUserToOrganization,
   asAuthenticatedUser,
-  createOrganizationAdmin,
-  createProjectInOrganization,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -80,20 +79,15 @@ describe("API Keys", () => {
       const t = convexTest(schema, modules);
       const owner = await createTestUser(t, { name: "Owner" });
       const member = await createTestUser(t, { email: "member@example.com" });
-      const { organizationId } = await createOrganizationAdmin(t, owner);
-      const projectId = await createProjectInOrganization(t, owner, organizationId);
+      const projectId = await createTestProject(t, owner);
 
-      // Add member to organization
-      await t.run(async (ctx) => {
-        await ctx.db.insert("organizationMembers", {
-          organizationId,
-          userId: member,
-          role: "member",
-          addedBy: owner,
-        });
-      });
+      // Get the organization ID from the project
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      if (!project) throw new Error("Project not found");
 
       const asOwner = asAuthenticatedUser(t, owner);
+      // Add member to organization first (required by security check)
+      await addUserToOrganization(t, project.organizationId, member, owner);
       await asOwner.mutation(api.projects.addProjectMember, {
         projectId,
         userEmail: "member@example.com",

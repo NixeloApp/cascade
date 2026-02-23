@@ -32,6 +32,7 @@ export const createWorkspace = organizationAdminMutation({
     description: v.optional(v.string()),
     icon: v.optional(v.string()),
   },
+  returns: v.object({ workspaceId: v.id("workspaces") }),
   handler: async (ctx, args) => {
     // Check if slug is unique within organization
     const existing = await ctx.db
@@ -55,7 +56,7 @@ export const createWorkspace = organizationAdminMutation({
       updatedAt: Date.now(),
     });
 
-    return workspaceId;
+    return { workspaceId };
   },
 });
 
@@ -190,6 +191,7 @@ export const updateWorkspace = workspaceAdminMutation({
       }),
     ),
   },
+  returns: v.object({ workspaceId: v.id("workspaces") }),
   handler: async (ctx, args) => {
     // workspaceAdminMutation handles auth + org admin check
     await ctx.db.patch(ctx.workspaceId, {
@@ -197,7 +199,7 @@ export const updateWorkspace = workspaceAdminMutation({
       updatedAt: Date.now(),
     });
 
-    return ctx.workspaceId;
+    return { workspaceId: ctx.workspaceId };
   },
 });
 
@@ -295,6 +297,7 @@ export const addWorkspaceMember = workspaceAdminMutation({
     userId: v.id("users"),
     role: workspaceRoles,
   },
+  returns: v.object({ memberId: v.id("workspaceMembers") }),
   handler: async (ctx, args) => {
     // Check if user is already a member
     const existing = await ctx.db
@@ -327,7 +330,7 @@ export const addWorkspaceMember = workspaceAdminMutation({
       addedBy: ctx.userId,
     });
 
-    return memberId;
+    return { memberId };
   },
 });
 

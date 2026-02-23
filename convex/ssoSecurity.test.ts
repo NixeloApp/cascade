@@ -117,7 +117,7 @@ describe("SSO Security", () => {
       return orgId;
     });
 
-    const attackerConnectionId = await asAdmin.mutation(api.sso.create, {
+    const { connectionId: attackerConnectionId } = await asAdmin.mutation(api.sso.create, {
       organizationId: attackerOrgId,
       type: "saml",
       name: "Attacker SSO",

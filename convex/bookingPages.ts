@@ -102,7 +102,7 @@ export const create = authenticatedMutation({
 
     const now = Date.now();
 
-    return await ctx.db.insert("bookingPages", {
+    const pageId = await ctx.db.insert("bookingPages", {
       userId: ctx.userId,
       slug: args.slug,
       title: args.title,
@@ -120,6 +120,7 @@ export const create = authenticatedMutation({
       color: args.color || "#3B82F6",
       updatedAt: now,
     });
+    return { pageId };
   },
 });
 

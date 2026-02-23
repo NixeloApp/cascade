@@ -56,7 +56,7 @@ describe("Pumble Security", () => {
     const userId = await createTestUser(t);
     const asUser = asAuthenticatedUser(t, userId);
 
-    const webhookId = await asUser.mutation(api.pumble.addWebhook, {
+    const { webhookId } = await asUser.mutation(api.pumble.addWebhook, {
       name: "Valid",
       webhookUrl: "https://pumble.com/webhook",
       events: ["issue.created"],

@@ -17,7 +17,7 @@ describe("Roadmap Issues Due Date Performance", () => {
 
     // Create 10 tasks due tomorrow
     const taskPromises = Array.from({ length: 10 }).map((_, i) =>
-      asUser.mutation(api.issues.create, {
+      asUser.mutation(api.issues.createIssue, {
         projectId,
         title: `Task ${i}`,
         type: "task",
@@ -30,7 +30,7 @@ describe("Roadmap Issues Due Date Performance", () => {
     // Create 50 subtasks due today (earlier than tasks)
     // In the old implementation (scan), these would be scanned first because they have earlier due date.
     // In the new implementation (type index), these should be skipped entirely.
-    const parentTask = await asUser.mutation(api.issues.create, {
+    const { issueId: parentTaskId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Parent Task",
       type: "task",
@@ -38,13 +38,13 @@ describe("Roadmap Issues Due Date Performance", () => {
     });
 
     const subtaskPromises = Array.from({ length: 50 }).map((_, i) =>
-      asUser.mutation(api.issues.create, {
+      asUser.mutation(api.issues.createIssue, {
         projectId,
         title: `Subtask ${i}`,
         type: "subtask",
         priority: "medium",
         dueDate: now, // Earlier than tasks
-        parentId: parentTask,
+        parentId: parentTaskId,
       }),
     );
     await Promise.all(subtaskPromises);

@@ -14,14 +14,14 @@ test("getCommentReactions leaks reactions for inaccessible documents", async () 
   const asOwner = asAuthenticatedUser(t, ownerId);
 
   // 2. Create a private document
-  const documentId = await asOwner.mutation(api.documents.create, {
+  const { documentId } = await asOwner.mutation(api.documents.create, {
     title: "Secret Document",
     organizationId,
     isPublic: false,
   });
 
   // 3. Add a comment and reaction
-  const commentId = await asOwner.mutation(api.documents.addComment, {
+  const { commentId } = await asOwner.mutation(api.documents.addComment, {
     documentId,
     content: "Secret comment",
   });

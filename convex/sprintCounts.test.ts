@@ -13,14 +13,14 @@ describe("Sprint Issue Counts", () => {
 
     const asUser = asAuthenticatedUser(t, userId);
 
-    const sprintId = await asUser.mutation(api.sprints.create, {
+    const { sprintId } = await asUser.mutation(api.sprints.create, {
       projectId,
       name: "Sprint 1",
     });
 
     // Create 3 Todo issues in sprint
     for (let i = 0; i < 3; i++) {
-      await asUser.mutation(api.issues.create, {
+      await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: `Todo ${i}`,
         type: "task",
@@ -32,14 +32,14 @@ describe("Sprint Issue Counts", () => {
     // Create 2 Done issues in sprint
     const doneIssueIds = [];
     for (let i = 0; i < 2; i++) {
-      const id = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: `Done ${i}`,
         type: "task",
         priority: "medium",
         sprintId,
       });
-      doneIssueIds.push(id);
+      doneIssueIds.push(issueId);
     }
 
     // Move to done
@@ -49,7 +49,7 @@ describe("Sprint Issue Counts", () => {
     });
 
     // Create 1 Todo issue NOT in sprint
-    await asUser.mutation(api.issues.create, {
+    await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo Not In Sprint",
       type: "task",

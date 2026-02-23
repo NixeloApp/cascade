@@ -36,7 +36,7 @@ describe("Bookings", () => {
     // Booking time: 24 hours from now
     const startTime = Date.now() + DAY;
 
-    const bookingId = await t.mutation(api.bookings.createBooking, {
+    const { bookingId } = await t.mutation(api.bookings.createBooking, {
       bookingPageSlug: "test-page",
       bookerName: "Guest",
       bookerEmail: "guest@example.com",

@@ -113,7 +113,7 @@ export const create = projectAdminMutation({
       throw conflict("A field with this key already exists");
     }
 
-    return await ctx.db.insert("customFields", {
+    const fieldId = await ctx.db.insert("customFields", {
       projectId: ctx.projectId,
       name: args.name,
       fieldKey: args.fieldKey,
@@ -123,6 +123,7 @@ export const create = projectAdminMutation({
       description: args.description,
       createdBy: ctx.userId,
     });
+    return { fieldId };
   },
 });
 

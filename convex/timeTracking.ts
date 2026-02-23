@@ -92,7 +92,7 @@ export const startTimer = authenticatedMutation({
     const now = Date.now();
     const startOfDay = new Date(now).setHours(0, 0, 0, 0);
 
-    return await ctx.db.insert("timeEntries", {
+    const entryId = await ctx.db.insert("timeEntries", {
       userId: ctx.userId,
       projectId: args.projectId,
       issueId: args.issueId,
@@ -117,6 +117,7 @@ export const startTimer = authenticatedMutation({
       approvedAt: undefined,
       updatedAt: now,
     });
+    return { entryId };
   },
 });
 
@@ -187,7 +188,7 @@ export const createTimeEntry = authenticatedMutation({
     const now = Date.now();
     const startOfDay = new Date(args.startTime).setHours(0, 0, 0, 0);
 
-    return await ctx.db.insert("timeEntries", {
+    const entryId = await ctx.db.insert("timeEntries", {
       userId: ctx.userId,
       projectId: args.projectId,
       issueId: args.issueId,
@@ -212,6 +213,7 @@ export const createTimeEntry = authenticatedMutation({
       approvedAt: undefined,
       updatedAt: now,
     });
+    return { entryId };
   },
 });
 

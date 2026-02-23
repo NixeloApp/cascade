@@ -72,7 +72,7 @@ export const addWebhook = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return webhookId;
+    return { webhookId };
   },
 });
 

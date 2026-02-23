@@ -41,7 +41,7 @@ export const createFromTemplate = authenticatedMutation({
     workspaceId: v.id("workspaces"), // Required: workspace this project belongs to
     teamId: v.optional(v.id("teams")), // Required: team this project belongs to
   },
-  returns: v.id("projects"),
+  returns: v.object({ projectId: v.id("projects") }),
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.templateId);
     if (!template) {
@@ -109,7 +109,7 @@ export const createFromTemplate = authenticatedMutation({
       ),
     );
 
-    return projectId;
+    return { projectId };
   },
 });
 

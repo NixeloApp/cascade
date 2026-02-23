@@ -37,7 +37,7 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
   const [isCreatingSubtask, setIsCreatingSubtask] = useState(false);
   const [subtaskTitle, setSubtaskTitle] = useState("");
 
-  const createIssue = useMutation(api.issues.create);
+  const createIssue = useMutation(api.issues.createIssue);
 
   const handleCreateSubtask = async () => {
     if (!subtaskTitle.trim()) return;

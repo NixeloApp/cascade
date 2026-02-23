@@ -71,6 +71,8 @@ export const createProject = authenticatedMutation({
     isPublic: v.optional(v.boolean()), // Visible to all organization members
     sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Share with specific teams
   },
+  // Envelope Pattern: Always return objects, not raw IDs
+  // See: docs/convex/STANDARDS.md
   returns: v.object({
     projectId: v.id("projects"),
   }),
@@ -573,7 +575,6 @@ export const restoreProject = authenticatedMutation({
       deletedBy: undefined,
     });
 
-    // Cascade restore to all related resources
     await cascadeRestore(ctx, "projects", args.projectId);
 
     await logAudit(ctx, {
@@ -656,7 +657,7 @@ export const addProjectMember = projectAdminMutation({
 
     if (!user) throw notFound("user");
 
-    // Check if user is in the organization
+    // Security: User must be an organization member before being added to a project
     const isMember = await isOrganizationMember(ctx, ctx.project.organizationId, user._id);
     if (!isMember) {
       throw validation(

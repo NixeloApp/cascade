@@ -4,6 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addUserToOrganization,
   asAuthenticatedUser,
   createOrganizationAdmin,
   createProjectInOrganization,
@@ -25,16 +26,8 @@ describe("API Keys Security", () => {
     const memberEmail = "member@example.com";
     const memberId = await createTestUser(t, { name: "Member", email: memberEmail });
 
-    // Add member to organization
-    await t.run(async (ctx) => {
-      await ctx.db.insert("organizationMembers", {
-        organizationId,
-        userId: memberId,
-        role: "member",
-        addedBy: creatorId,
-      });
-    });
-
+    // Add member to organization first (required by security check)
+    await addUserToOrganization(t, organizationId, memberId, creatorId);
     // Add member to project
     await asCreator.mutation(api.projects.addProjectMember, {
       projectId,

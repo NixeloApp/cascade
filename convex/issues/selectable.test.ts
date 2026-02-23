@@ -14,28 +14,28 @@ describe("Issues Selectable", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Create root issues
-    const task = await asUser.mutation(api.issues.create, {
+    const { issueId: taskId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Task 1",
       type: "task",
       priority: "medium",
     });
 
-    const bug = await asUser.mutation(api.issues.create, {
+    const { issueId: _bugId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Bug 1",
       type: "bug",
       priority: "high",
     });
 
-    const story = await asUser.mutation(api.issues.create, {
+    const { issueId: _storyId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Story 1",
       type: "story",
       priority: "low",
     });
 
-    const epic = await asUser.mutation(api.issues.create, {
+    const { issueId: _epicId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Epic 1",
       type: "epic",
@@ -43,25 +43,25 @@ describe("Issues Selectable", () => {
     });
 
     // Create subtask (should be excluded)
-    await asUser.mutation(api.issues.create, {
+    await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Subtask 1",
       type: "subtask",
       priority: "medium",
-      parentId: task,
+      parentId: taskId,
     });
 
     // Create deleted issue (should be excluded)
-    const deletedIssue = await asUser.mutation(api.issues.create, {
+    const { issueId: deletedIssueId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Deleted Issue",
       type: "task",
       priority: "medium",
     });
-    await asUser.mutation(api.issues.bulkDelete, { issueIds: [deletedIssue] });
+    await asUser.mutation(api.issues.bulkDelete, { issueIds: [deletedIssueId] });
 
     // Create another task to check ordering
-    const recentTask = await asUser.mutation(api.issues.create, {
+    const { issueId: _recentTaskId } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Recent Task",
       type: "task",

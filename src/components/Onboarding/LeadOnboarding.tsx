@@ -71,7 +71,7 @@ export function LeadOnboarding({
   const handleCreateSample = async () => {
     setIsCreating(true);
     try {
-      const projectId = await createSampleProject({});
+      const { projectId } = await createSampleProject({});
       await completeOnboarding();
       showSuccess("Sample project created! Explore and customize it.");
 
@@ -79,7 +79,7 @@ export function LeadOnboarding({
       if (createdSlug && onWorkspaceCreated) {
         onWorkspaceCreated(createdSlug);
       } else {
-        onCreateProject(projectId as Id<"projects">);
+        onCreateProject(projectId);
       }
     } catch (error) {
       showError(error, "Failed to create sample project");
