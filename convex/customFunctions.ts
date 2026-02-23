@@ -48,9 +48,9 @@
 
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { customMutation, customQuery } from "convex-helpers/server/customFunctions";
+import { customAction, customMutation, customQuery } from "convex-helpers/server/customFunctions";
 import type { Id } from "./_generated/dataModel";
-import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
+import { action, type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
 import { forbidden, notFound, unauthenticated } from "./lib/errors";
 import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAccess";
 import { getTeamRole } from "./lib/teamAccess";
@@ -172,6 +172,34 @@ export const authenticatedMutation = customMutation(mutation, {
   args: {},
   input: async (ctx) => {
     const userId = await requireAuth(ctx);
+    return { ctx: { ...ctx, userId }, args: {} };
+  },
+});
+
+/**
+ * Authenticated Action - requires user to be logged in.
+ *
+ * Use this for any action that needs the current user's ID.
+ * Note: Does not currently enforce 2FA due to circular dependency constraints.
+ *
+ * @param ctx - The action context, augmented with:
+ *   - `userId`: The current user's ID.
+ *
+ * @example
+ * export const performAction = authenticatedAction({
+ *   args: { data: v.string() },
+ *   handler: async (ctx, args) => {
+ *     // ctx.userId is available
+ *   },
+ * });
+ */
+export const authenticatedAction = customAction(action, {
+  args: {},
+  input: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw unauthenticated();
+    }
     return { ctx: { ...ctx, userId }, args: {} };
   },
 });
