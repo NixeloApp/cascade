@@ -38,10 +38,11 @@ describe("RadioGroup", () => {
     // ID should not be null
     expect(descriptionId).toBeTruthy();
 
+    if (!descriptionId) {
+      throw new Error("Description ID should be present");
+    }
+
     // The radio should point to the description ID
-    expect(radio).toHaveAttribute(
-      "aria-describedby",
-      expect.stringContaining(descriptionId!),
-    );
+    expect(radio).toHaveAttribute("aria-describedby", expect.stringContaining(descriptionId));
   });
 });
