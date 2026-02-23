@@ -443,75 +443,6 @@ export const addComment = issueViewerMutation({
  * @param newStatus - The ID of the new status (workflow state).
  * @returns Object containing the number of updated issues.
  */
-export const bulkUpdateStatus = authenticatedMutation({
-  args: {
-    issueIds: v.array(v.id("issues")),
-    newStatus: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const now = Date.now();
-
-    // Collect unique project IDs to fetch projects in batch
-    const projectIds = new Set<Id<"projects">>();
-    for (const issue of issues) {
-      if (issue && !issue.isDeleted && issue.projectId) {
-        projectIds.add(issue.projectId);
-      }
-    }
-
-    // Fetch all relevant projects once
-    const projects = await asyncMap([...projectIds], (id) => ctx.db.get(id));
-    const projectMap = new Map(projects.map((p) => [p?._id.toString(), p]));
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        const projectId = issue.projectId as Id<"projects">;
-        const project = projectMap.get(projectId);
-        if (!project) return 0;
-
-        try {
-          // Verify permissions using cached project (or re-check if needed, but permissions usually need DB)
-          // Since assertCanEditProject hits DB, we might want to optimize this too, but for now let's keep permission check robust
-          // Actually, assertCanEditProject does a get(), so we could optimize it by passing project, but the helper might not support it.
-          // Let's assume permission check is fast enough or cached at convex level.
-          await assertCanEditProject(ctx, projectId, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
-        if (!isValidStatus) return 0;
-
-        const oldStatus = issue.status;
-
-        await ctx.db.patch(issue._id, {
-          status: args.newStatus,
-          updatedAt: now,
-        });
-
-        if (oldStatus !== args.newStatus) {
-          await ctx.db.insert("issueActivity", {
-            issueId: issue._id,
-            userId: ctx.userId,
-            action: "updated",
-            field: "status",
-            oldValue: oldStatus,
-            newValue: args.newStatus,
-          });
-        }
-
-        return 1;
-      }),
-    );
-
-    return { updated: results.reduce((a: number, b) => a + b, 0) };
-  },
-});
-
 // Activity action types for type safety
 type IssueActivityAction =
   | "created"
@@ -530,7 +461,7 @@ async function performBulkUpdate(
     now: number,
   ) => Promise<{
     patch: Partial<Doc<"issues">>;
-    activity: {
+    activity?: {
       action: IssueActivityAction;
       field?: string;
       oldValue?: string;
@@ -564,11 +495,13 @@ async function performBulkUpdate(
         updatedAt: now,
       });
 
-      await ctx.db.insert("issueActivity", {
-        issueId: issue._id,
-        userId: ctx.userId,
-        ...update.activity,
-      });
+      if (update.activity) {
+        await ctx.db.insert("issueActivity", {
+          issueId: issue._id,
+          userId: ctx.userId,
+          ...update.activity,
+        });
+      }
 
       return 1;
     }),
@@ -576,6 +509,56 @@ async function performBulkUpdate(
 
   return { updated: results.reduce((a: number, b) => a + b, 0) };
 }
+
+/**
+ * Bulk update the status of multiple issues.
+ *
+ * - Validates that the new status exists in the project's workflow.
+ * - Updates the status of each issue.
+ * - Logs activity for each issue.
+ * - Skips issues that the user does not have permission to edit.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param newStatus - The ID of the new status (workflow state).
+ * @returns Object containing the number of updated issues.
+ */
+export const bulkUpdateStatus = authenticatedMutation({
+  args: {
+    issueIds: v.array(v.id("issues")),
+    newStatus: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      // Fetch project to validate status
+      const project = await ctx.db.get(issue.projectId);
+      if (!project) return null;
+
+      const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
+      if (!isValidStatus) return null;
+
+      const oldStatus = issue.status;
+
+      // Strict behavior preservation: update even if status is unchanged, but only log if changed.
+      let activity:
+        | undefined
+        | { action: IssueActivityAction; field: string; oldValue: string; newValue: string };
+
+      if (oldStatus !== args.newStatus) {
+        activity = {
+          action: "updated",
+          field: "status",
+          oldValue: oldStatus,
+          newValue: args.newStatus,
+        };
+      }
+
+      return {
+        patch: { status: args.newStatus },
+        activity,
+      };
+    });
+  },
+});
 
 /**
  * Bulk update the priority of multiple issues.
