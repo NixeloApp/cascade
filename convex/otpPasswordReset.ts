@@ -20,14 +20,7 @@ import { logger } from "./lib/logger";
  * testOtpCodes table so E2E tests can retrieve it via /e2e/get-latest-otp.
  */
 
-// Convex Auth passes ctx as second param, but @auth/core types don't include it
-// Using type assertion to handle the library integration mismatch
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy code
-async function sendPasswordResetRequest(
-  { identifier: email, token }: { identifier: string; token: string },
-  ctx: ConvexAuthContext,
-) {
-  // Check rate limit first
+async function checkRateLimit(ctx: ConvexAuthContext, email: string) {
   if (ctx.runMutation) {
     try {
       await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimitByEmail, { email });
@@ -42,7 +35,9 @@ async function sendPasswordResetRequest(
       throw error;
     }
   }
+}
 
+async function storeTestResetOtp(ctx: ConvexAuthContext, email: string, token: string) {
   const isTestEmail = email.endsWith("@inbox.mailtrap.io");
   const isSafeEnvironment =
     process.env.NODE_ENV === "development" ||
@@ -50,8 +45,6 @@ async function sendPasswordResetRequest(
     !!process.env.CI ||
     !!process.env.E2E_API_KEY;
 
-  // For test emails, store plaintext OTP in testOtpCodes table if environment permits
-  // This matches OTPVerification behavior - store unconditionally for test emails in safe environments
   if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
     try {
       await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "reset" });
@@ -60,6 +53,16 @@ async function sendPasswordResetRequest(
       logger.error(`[otpPasswordReset] Failed to store test OTP: ${e}`);
     }
   }
+}
+
+// Convex Auth passes ctx as second param, but @auth/core types don't include it
+// Using type assertion to handle the library integration mismatch
+async function sendPasswordResetRequest(
+  { identifier: email, token }: { identifier: string; token: string },
+  ctx: ConvexAuthContext,
+) {
+  await checkRateLimit(ctx, email);
+  await storeTestResetOtp(ctx, email, token);
 
   // Render email using React Email template
   const { PasswordResetEmail } = await import("../emails/PasswordResetEmail");
@@ -73,6 +76,7 @@ async function sendPasswordResetRequest(
   });
 
   if (!result.success) {
+    const isTestEmail = email.endsWith("@inbox.mailtrap.io");
     // For test emails, don't fail - OTP is stored in testOtpCodes
     if (isTestEmail) {
       logger.warn(

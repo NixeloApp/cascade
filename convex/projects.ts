@@ -418,20 +418,7 @@ export const getProject = authenticatedQuery({
     const hasAccess = await canAccessProject(ctx, project._id, ctx.userId);
     if (!hasAccess) throw forbidden();
 
-    const creator = await ctx.db.get(project.createdBy);
-
-    const members = await getProjectMembers(ctx, project._id);
-
-    const userRole = await getProjectRole(ctx, project._id, ctx.userId);
-
-    return {
-      ...project,
-
-      creatorName: getUserName(creator),
-      members,
-      isOwner: project.ownerId === ctx.userId || project.createdBy === ctx.userId,
-      userRole,
-    };
+    return await enrichProject(ctx, project);
   },
 });
 
@@ -461,20 +448,7 @@ export const getByKey = authenticatedQuery({
       return null; // Return null instead of throwing for cleaner UI handling
     }
 
-    const creator = await ctx.db.get(project.createdBy);
-
-    const members = await getProjectMembers(ctx, project._id);
-
-    const userRole = await getProjectRole(ctx, project._id, ctx.userId);
-
-    return {
-      ...project,
-
-      creatorName: getUserName(creator),
-      members,
-      isOwner: project.ownerId === ctx.userId || project.createdBy === ctx.userId,
-      userRole,
-    };
+    return await enrichProject(ctx, project);
   },
 });
 
@@ -853,6 +827,20 @@ interface ProjectMember {
   image: string | undefined;
   role: Doc<"projectMembers">["role"];
   addedAt: number;
+}
+
+async function enrichProject(ctx: QueryCtx & { userId: Id<"users"> }, project: Doc<"projects">) {
+  const creator = await ctx.db.get(project.createdBy);
+  const members = await getProjectMembers(ctx, project._id);
+  const userRole = await getProjectRole(ctx, project._id, ctx.userId);
+
+  return {
+    ...project,
+    creatorName: getUserName(creator),
+    members,
+    isOwner: project.ownerId === ctx.userId || project.createdBy === ctx.userId,
+    userRole,
+  };
 }
 
 async function getProjectMembers(
