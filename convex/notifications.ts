@@ -30,10 +30,10 @@ export const list = authenticatedQuery({
               q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
             );
         }
-        // Optimization: Use by_user_deleted index to avoid scanning deleted notifications
         return db
           .query("notifications")
-          .withIndex("by_user_deleted", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true));
+          .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+          .filter(notDeleted);
       },
     });
 
