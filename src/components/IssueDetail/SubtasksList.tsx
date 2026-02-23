@@ -102,7 +102,7 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
               autoFocus
             />
             <Flex gap="sm">
-              <Button size="sm" onClick={handleCreateSubtask}>
+              <Button size="sm" onClick={handleCreateSubtask} aria-label="Add sub-task">
                 Add
               </Button>
               <Button
@@ -137,6 +137,11 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
                   // You can implement this later with a mutation
                 }}
                 className="mt-1"
+                aria-label={`Mark ${subtask.title} as ${
+                  subtask.status === "done" || subtask.status === "completed"
+                    ? "incomplete"
+                    : "complete"
+                }`}
               />
               <FlexItem flex="1">
                 <Metadata separator="-">
