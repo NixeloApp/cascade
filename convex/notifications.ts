@@ -5,7 +5,6 @@ import type { Doc } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
-import { efficientCount } from "./lib/boundedQueries";
 import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -216,9 +215,7 @@ export const listForDigest = internalQuery({
 
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user", (q) =>
-        q.eq("userId", args.userId).gt("_creationTime", args.startTime)
-      )
+      .withIndex("by_user", (q) => q.eq("userId", args.userId).gt("_creationTime", args.startTime))
       .order("desc")
       .filter(notDeleted)
       .take(MAX_DIGEST_NOTIFICATIONS);
