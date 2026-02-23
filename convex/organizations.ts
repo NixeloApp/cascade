@@ -543,7 +543,8 @@ export const getUserOrganizations = authenticatedQuery({
           efficientCount(
             ctx.db
               .query("projects")
-              .withIndex("by_organization", (q) => q.eq("organizationId", organizationId)),
+              .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+              .filter(notDeleted),
             1000,
           ),
         ),
