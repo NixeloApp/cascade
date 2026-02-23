@@ -1,11 +1,11 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
+import type { QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
-import { batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
+import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
-import { getUserName } from "./lib/userUtils";
 
 /** Maximum issue count to compute for a project list view */
 const MAX_ISSUE_COUNT = 1000;
@@ -13,7 +13,7 @@ const MAX_ISSUE_COUNT = 1000;
 import { logAudit } from "./lib/audit";
 import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
-import { getOrganizationRole } from "./lib/organizationAccess";
+import { getOrganizationRole, isOrganizationMember } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { cascadeRestore, cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -71,6 +71,9 @@ export const createProject = authenticatedMutation({
     isPublic: v.optional(v.boolean()), // Visible to all organization members
     sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Share with specific teams
   },
+  returns: v.object({
+    projectId: v.id("projects"),
+  }),
   handler: async (ctx, args) => {
     // Validate input constraints
     validate.name(args.name, "name");
@@ -175,7 +178,7 @@ export const createProject = authenticatedMutation({
       },
     });
 
-    return projectId;
+    return { projectId };
   },
 });
 
@@ -337,7 +340,6 @@ export const getWorkspaceProjects = authenticatedQuery({
     }
 
     // Check if user is in organization
-    const { isOrganizationMember } = await import("./lib/organizationAccess");
     const isMember = await isOrganizationMember(ctx, workspace.organizationId, ctx.userId);
     if (!isMember) {
       throw forbidden("member", "You must be an organization member to access this workspace");
@@ -387,28 +389,7 @@ export const getProject = authenticatedQuery({
 
     const creator = await ctx.db.get(project.createdBy);
 
-    // Get members with their roles from projectMembers table (bounded)
-    const projectMembers = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", project._id))
-      .filter(notDeleted)
-      .take(BOUNDED_LIST_LIMIT);
-
-    // Batch fetch all members to avoid N+1
-    const memberUserIds = projectMembers.map((m) => m.userId);
-    const memberMap = await batchFetchUsers(ctx, memberUserIds);
-
-    const members = projectMembers.map((membership) => {
-      const member = memberMap.get(membership.userId);
-      return {
-        _id: membership.userId,
-        name: member?.name || member?.email || "Unknown",
-        email: member?.email,
-        image: member?.image,
-        role: membership.role,
-        addedAt: membership._creationTime,
-      };
-    });
+    const members = await getProjectMembers(ctx, project._id);
 
     const userRole = await getProjectRole(ctx, project._id, ctx.userId);
 
@@ -451,28 +432,7 @@ export const getByKey = authenticatedQuery({
 
     const creator = await ctx.db.get(project.createdBy);
 
-    // Get members with their roles from projectMembers table (bounded)
-    const memberships = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", project._id))
-      .filter(notDeleted)
-      .take(BOUNDED_LIST_LIMIT);
-
-    // Batch fetch all members to avoid N+1
-    const memberUserIds = memberships.map((m) => m.userId);
-    const memberMap = await batchFetchUsers(ctx, memberUserIds);
-
-    const members = memberships.map((membership) => {
-      const member = memberMap.get(membership.userId);
-      return {
-        _id: membership.userId,
-        name: member?.name || member?.email || "Unknown",
-        email: member?.email,
-        image: member?.image,
-        role: membership.role,
-        addedAt: membership._creationTime,
-      };
-    });
+    const members = await getProjectMembers(ctx, project._id);
 
     const userRole = await getProjectRole(ctx, project._id, ctx.userId);
 
@@ -613,6 +573,7 @@ export const restoreProject = authenticatedMutation({
       deletedBy: undefined,
     });
 
+    // Cascade restore to all related resources
     await cascadeRestore(ctx, "projects", args.projectId);
 
     await logAudit(ctx, {
@@ -695,17 +656,13 @@ export const addProjectMember = projectAdminMutation({
 
     if (!user) throw notFound("user");
 
-    // Check organization membership
-    // Prevent "Ghost Membership": User must be a member of the organization to join the project
-    const orgMembership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_organization_user", (q) =>
-        q.eq("organizationId", ctx.project.organizationId).eq("userId", user._id),
-      )
-      .first();
-
-    if (!orgMembership) {
-      throw validation("userEmail", "User is not a member of the organization");
+    // Check if user is in the organization
+    const isMember = await isOrganizationMember(ctx, ctx.project.organizationId, user._id);
+    if (!isMember) {
+      throw validation(
+        "userEmail",
+        "User must be a member of the organization to be added to this project",
+      );
     }
 
     // Check if already a member
@@ -858,3 +815,42 @@ export const getProjectUserRole = authenticatedQuery({
     return await getProjectRole(ctx, args.projectId, ctx.userId);
   },
 });
+
+interface ProjectMember {
+  _id: Id<"users">;
+  name: string;
+  email: string | undefined;
+  image: string | undefined;
+  role: Doc<"projectMembers">["role"];
+  addedAt: number;
+}
+
+async function getProjectMembers(
+  ctx: QueryCtx,
+  projectId: Id<"projects">,
+): Promise<ProjectMember[]> {
+  // Get members with their roles from projectMembers table (bounded)
+  const memberships = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_project", (q) => q.eq("projectId", projectId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  // Batch fetch all members to avoid N+1
+  const memberUserIds = memberships.map((m) => m.userId);
+  const memberMap = await batchFetchUsers(ctx, memberUserIds);
+
+  return memberships.map((membership) => {
+    const member = memberMap.get(membership.userId);
+    // Only use name if it's a non-empty string; fall back to "Unknown" (avoid exposing email as display name)
+    const displayName = member?.name?.trim() ? member.name : "Unknown";
+    return {
+      _id: membership.userId,
+      name: displayName,
+      email: member?.email,
+      image: member?.image,
+      role: membership.role,
+      addedAt: membership._creationTime,
+    };
+  });
+}

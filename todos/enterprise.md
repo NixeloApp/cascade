@@ -31,6 +31,7 @@
 
 - [ ] **Visual regression testing** - Percy or similar
 - [ ] **Mobile viewport tests** - Responsive testing
+- [ ] **OAuth flow tests** - Test actual OAuth with mock providers
 - [ ] **Multi-browser testing** - Firefox, WebKit
 
 ### Technical Debt (Low Priority)

@@ -1,7 +1,6 @@
 # Auditor's Journal
 
-## Mission
-To find and fix inconsistencies that make the codebase harder to understand.
+## Daily Log
 
-## Journal
-- Initial creation.
+- **[Date]**: Initialized journal.
+- **[Date]**: Found inconsistency: Mutations returning raw IDs vs Objects. Selected fix: Standardize return types to Objects (Envelope Pattern).

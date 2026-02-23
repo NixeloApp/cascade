@@ -394,10 +394,13 @@ export const IssueCard = memo(function IssueCard({
           <Flex align="center" gap="sm">
             {issue.assignee && (
               <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-                <div
+                <Flex
+                  as="div"
                   role="none"
+                  align="center"
+                  gap="xs"
                   onClick={handleClick}
-                  className="pointer-events-auto p-0 h-auto rounded-sm flex items-center gap-1 cursor-pointer"
+                  className="pointer-events-auto p-0 h-auto rounded-sm cursor-pointer"
                   aria-hidden="true"
                 >
                   {issue.assignee.image ? (
@@ -417,7 +420,7 @@ export const IssueCard = memo(function IssueCard({
                       {issue.assignee.name.charAt(0).toUpperCase()}
                     </Flex>
                   )}
-                </div>
+                </Flex>
               </Tooltip>
             )}
           </Flex>

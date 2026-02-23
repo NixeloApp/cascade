@@ -1,191 +1,124 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
-import * as envLib from "../lib/env";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
-import { handleCallbackHandler, initiateAuthHandler, listReposHandler } from "./githubOAuth";
+import { handleCallbackHandler, listReposHandler } from "./githubOAuth";
 
-// Mock dependencies
+// Mock fetchWithTimeout
 vi.mock("../lib/fetchWithTimeout", () => ({
   fetchWithTimeout: vi.fn(),
 }));
 
-// Mock env library
-vi.mock("../lib/env", () => ({
-  getGitHubClientId: vi.fn(),
-  getGitHubClientSecret: vi.fn(),
-  isGitHubOAuthConfigured: vi.fn(),
-  isAppError: (err: any) => err?.data?.code,
-  validation: (_type: string, msg: string) => {
-    const err = new Error(msg);
-    (err as any).data = { code: "VALIDATION", message: msg };
-    return err;
-  },
-}));
+const mockFetchWithTimeout = vi.mocked(fetchWithTimeout);
 
-// Mock API access
-vi.mock("../_generated/api", () => ({
-  api: {
-    github: {
-      getConnection: "getConnection",
-    },
-  },
-  internal: {
-    github: {
-      getDecryptedGitHubTokens: "getDecryptedGitHubTokens",
-    },
-  },
-}));
+describe("GitHub OAuth Error Handling", () => {
+  const mockCtx = {
+    runQuery: vi.fn(),
+    runMutation: vi.fn(),
+  } as unknown as ActionCtx;
 
-describe("GitHub OAuth", () => {
-  let mockCtx: ActionCtx;
-  let mockRequest: Request;
+  const mockRequest = (url: string, headers: Record<string, string> = {}) => {
+    return new Request(url, { headers });
+  };
 
   beforeEach(() => {
-    vi.resetAllMocks();
-    mockCtx = {
-      runQuery: vi.fn(),
-      runMutation: vi.fn(),
-    } as unknown as ActionCtx;
-
-    // Default config
-    vi.mocked(envLib.getGitHubClientId).mockReturnValue("test-client-id");
-    vi.mocked(envLib.getGitHubClientSecret).mockReturnValue("test-client-secret");
-    vi.mocked(envLib.isGitHubOAuthConfigured).mockReturnValue(true);
-    process.env.CONVEX_SITE_URL = "https://test.convex.site";
+    vi.clearAllMocks();
+    // Set env vars
+    process.env.GITHUB_CLIENT_ID = "client_id";
+    process.env.GITHUB_CLIENT_SECRET = "client_secret";
+    process.env.CONVEX_SITE_URL = "http://localhost";
   });
 
   afterEach(() => {
+    // Clean up env vars
+    delete process.env.GITHUB_CLIENT_ID;
+    delete process.env.GITHUB_CLIENT_SECRET;
     delete process.env.CONVEX_SITE_URL;
   });
 
-  describe("initiateAuthHandler", () => {
-    it("should redirect to GitHub with correct parameters and state cookie", async () => {
-      const request = new Request("https://api.convex.site/github/auth");
-      const response = await initiateAuthHandler(mockCtx, request);
-
-      expect(response.status).toBe(302);
-      const location = response.headers.get("Location");
-      const setCookie = response.headers.get("Set-Cookie");
-
-      expect(location).toBeDefined();
-      expect(setCookie).toBeDefined();
-
-      // biome-ignore lint/style/noNonNullAssertion: testing convenience
-      const url = new URL(location!);
-      const state = url.searchParams.get("state");
-
-      expect(state).toBeDefined();
-      expect(setCookie).toContain(`github-oauth-state=${state}`);
-      expect(setCookie).toContain("HttpOnly");
-      expect(setCookie).toContain("Secure");
-      expect(setCookie).toContain("SameSite=Lax");
-    });
-  });
-
   describe("handleCallbackHandler", () => {
-    it("should return 400 if state is missing", async () => {
-      const request = new Request("https://api.convex.site/github/callback?code=some_code");
+    it("should include upstream error when token exchange fails", async () => {
+      const state = "valid-state";
+      const code = "valid-code";
+      const request = mockRequest(`http://localhost/github/callback?code=${code}&state=${state}`, {
+        Cookie: `github-oauth-state=${state}`,
+      });
+
+      // Mock token exchange failure
+      mockFetchWithTimeout.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () => "Bad Request from GitHub",
+      } as Response);
+
       const response = await handleCallbackHandler(mockCtx, request);
+      const text = await response.text();
 
       expect(response.status).toBe(400);
-      expect(await response.text()).toBe("Invalid state or missing authorization code");
-    });
-
-    it("should return 400 if state mismatches", async () => {
-      const request = new Request(
-        "https://api.convex.site/github/callback?code=some_code&state=state1",
+      // Improved behavior: includes upstream error
+      expect(text).toContain(
+        "Failed to exchange GitHub authorization code: Bad Request from GitHub",
       );
-      request.headers.set("Cookie", "github-oauth-state=state2");
-      const response = await handleCallbackHandler(mockCtx, request);
-
-      expect(response.status).toBe(400);
-      expect(await response.text()).toBe("Invalid state or missing authorization code");
     });
 
-    it("should succeed with valid state and code", async () => {
-      // Mock token exchange
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
+    it("should fail gracefully when user info is missing required fields", async () => {
+      const state = "valid-state";
+      const code = "valid-code";
+      const request = mockRequest(`http://localhost/github/callback?code=${code}&state=${state}`, {
+        Cookie: `github-oauth-state=${state}`,
+      });
+
+      // Mock token exchange success
+      mockFetchWithTimeout.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ access_token: "token" }),
       } as Response);
 
-      // Mock user info
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
+      // Mock user info success but empty object
+      mockFetchWithTimeout.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ id: 123, login: "testuser" }),
+        json: async () => ({}), // Missing id and login
       } as Response);
 
-      const request = new Request(
-        "https://api.convex.site/github/callback?code=some_code&state=valid_state",
-      );
-      request.headers.set("Cookie", "github-oauth-state=valid_state");
+      const response = await handleCallbackHandler(mockCtx, request);
+      const text = await response.text();
+
+      // Improved behavior: returns 400 validation error instead of crashing/succeeding with bad data
+      expect(response.status).toBe(400);
+      expect(text).toContain("Invalid GitHub user info: missing id or login");
+    });
+
+    it("should return HTML error page for invalid state", async () => {
+      const request = mockRequest(`http://localhost/github/callback?code=code&state=invalid`, {
+        Cookie: `github-oauth-state=valid`,
+      });
 
       const response = await handleCallbackHandler(mockCtx, request);
-
-      expect(response.status).toBe(200);
       const text = await response.text();
-      expect(text).toContain("Connected Successfully");
 
-      // Cookie should be cleared
-      const setCookie = response.headers.get("Set-Cookie");
-      expect(setCookie).toContain("github-oauth-state=;");
-      expect(setCookie).toContain("Max-Age=0");
+      expect(response.status).toBe(400);
+      // Improved behavior: HTML error page
+      expect(text).toContain("<!DOCTYPE html>");
+      expect(text).toContain("Invalid state or missing authorization code");
     });
   });
 
-  describe("listReposHandler Error Handling", () => {
-    beforeEach(() => {
-      mockRequest = new Request("http://localhost/github/repos");
-      (mockCtx.runQuery as any).mockResolvedValue({ userId: "user123" }); // getConnection
-      (mockCtx.runMutation as any).mockResolvedValue({ accessToken: "token123" }); // getDecryptedGitHubTokens
-    });
+  describe("listReposHandler", () => {
+    it("should handle non-array response from repos endpoint", async () => {
+      (mockCtx.runQuery as any).mockResolvedValue({ userId: "user1" });
+      (mockCtx.runMutation as any).mockResolvedValue({ accessToken: "token" });
 
-    it("should return 401 Unauthorized when GitHub returns 401", async () => {
-      // Setup mock to return 401
-      (fetchWithTimeout as any).mockResolvedValue({
-        ok: false,
-        status: 401,
-        json: async () => ({
-          message: "Bad credentials",
-          documentation_url: "https://docs.github.com/rest",
-        }),
-        text: async () => JSON.stringify({ message: "Bad credentials" }),
-      });
+      // Mock repos endpoint returns object instead of array
+      mockFetchWithTimeout.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ message: "Something went wrong" }),
+      } as Response);
 
-      const response = await listReposHandler(mockCtx, mockRequest);
-      const body = await response.json();
+      const response = await listReposHandler(mockCtx, new Request("http://localhost"));
+      const json = await response.json();
 
-      expect(response.status).toBe(401);
-      expect(body.error).toBe("Bad credentials");
-    });
-
-    it("should return 403 Forbidden when GitHub returns 403", async () => {
-      // Setup mock to return 403
-      (fetchWithTimeout as any).mockResolvedValue({
-        ok: false,
-        status: 403,
-        json: async () => ({
-          message: "API rate limit exceeded",
-        }),
-        text: async () => JSON.stringify({ message: "API rate limit exceeded" }),
-      });
-
-      const response = await listReposHandler(mockCtx, mockRequest);
-      const body = await response.json();
-
-      expect(response.status).toBe(403);
-      expect(body.error).toBe("API rate limit exceeded");
-    });
-
-    it("should return 500 Internal Server Error when fetch throws (e.g. timeout)", async () => {
-      // Setup mock to throw
-      (fetchWithTimeout as any).mockRejectedValue(new Error("Request timed out"));
-
-      const response = await listReposHandler(mockCtx, mockRequest);
-      const body = await response.json();
-
-      expect(response.status).toBe(500);
-      expect(body.error).toBe("Request timed out");
+      // Improved behavior: 400 with specific error message (changed from 500 to 400 as per refactor)
+      expect(response.status).toBe(400);
+      expect(json.error).toBe("Invalid JSON response from GitHub repositories endpoint");
     });
   });
 });

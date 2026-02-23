@@ -37,12 +37,9 @@ export const issuesApiHandler = async (ctx: ActionCtx, request: Request) => {
       auth = authResult.auth;
       // Route based on method and path
       if (method === "GET" && url.pathname.endsWith("/api/issues")) {
-        const result = await handleList(ctx, request, auth);
-        response = result.response;
-        error = result.error;
+        response = await handleList(ctx, request, auth);
       } else {
         response = createErrorResponse(404, "Not found");
-        error = "Not found";
       }
     } else {
       response = createErrorResponse(500, "Authentication error");
@@ -234,26 +231,16 @@ async function authenticateAndRateLimit(
   return { auth };
 }
 
-async function handleList(
-  ctx: ActionCtx,
-  request: Request,
-  auth: ApiAuthContext,
-): Promise<{ response: Response; error?: string }> {
+async function handleList(ctx: ActionCtx, request: Request, auth: ApiAuthContext) {
   if (!hasScope(auth, "issues:read")) {
-    return {
-      response: createErrorResponse(403, "Missing scope: issues:read"),
-      error: "Missing scope: issues:read",
-    };
+    return createErrorResponse(403, "Missing scope: issues:read");
   }
 
   const url = new URL(request.url);
   const projectId = url.searchParams.get("projectId") as Id<"projects"> | null;
 
   if (!projectId) {
-    return {
-      response: createErrorResponse(400, "projectId required"),
-      error: "projectId required",
-    };
+    return createErrorResponse(400, "projectId required");
   }
 
   // Check IP restrictions
@@ -264,18 +251,12 @@ async function handleList(
   });
 
   if (!isAllowed) {
-    return {
-      response: createErrorResponse(403, "IP address not allowed"),
-      error: "IP address not allowed",
-    };
+    return createErrorResponse(403, "IP address not allowed");
   }
 
   // 1. Check if the *key* allows this project (Key Scope)
   if (!verifyProjectAccess(auth, projectId)) {
-    return {
-      response: createErrorResponse(403, "Not authorized for this project"),
-      error: "Not authorized for this project",
-    };
+    return createErrorResponse(403, "Not authorized for this project");
   }
 
   // 2. Call internal query to check if the *user* allows this project and fetch data
@@ -285,5 +266,5 @@ async function handleList(
     userId: auth.userId,
   });
 
-  return { response: createSuccessResponse({ data: issues }) };
+  return createSuccessResponse({ data: issues });
 }

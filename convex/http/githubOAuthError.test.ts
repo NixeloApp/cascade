@@ -4,16 +4,6 @@ import * as envLib from "../lib/env";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler } from "./githubOAuth";
 
-// Define error type for testing
-interface AppErrorData {
-  code: string;
-  message: string;
-}
-
-interface AppError extends Error {
-  data: AppErrorData;
-}
-
 // Mock dependencies
 vi.mock("../lib/fetchWithTimeout", () => ({
   fetchWithTimeout: vi.fn(),
@@ -24,20 +14,6 @@ vi.mock("../lib/env", () => ({
   getGitHubClientId: vi.fn(),
   getGitHubClientSecret: vi.fn(),
   isGitHubOAuthConfigured: vi.fn(),
-}));
-
-// Mock errors library (the actual module githubOAuth.ts imports from)
-vi.mock("../lib/errors", () => ({
-  isAppError: (err: unknown): err is AppError =>
-    typeof err === "object" &&
-    err !== null &&
-    "data" in err &&
-    typeof (err as AppError).data?.code === "string",
-  validation: (_type: string, msg: string): AppError => {
-    const err = new Error(msg) as AppError;
-    err.data = { code: "VALIDATION", message: msg };
-    return err;
-  },
 }));
 
 describe("GitHub OAuth Error Handling", () => {

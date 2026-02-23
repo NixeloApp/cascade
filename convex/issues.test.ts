@@ -6,6 +6,7 @@ import { modules } from "./testSetup.test-helper";
 import {
   asAuthenticatedUser,
   createOrganizationAdmin,
+  createProjectInOrganization,
   createTestProject,
   createTestUser,
 } from "./testUtils";
@@ -147,14 +148,15 @@ describe("Issues", () => {
         name: "Viewer",
         email: "viewer@test.com",
       });
-      const projectId = await createTestProject(t, adminId);
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
+      const projectId = await createProjectInOrganization(t, adminId, organizationId, {
+        name: "Test Project",
+      });
 
       // Add viewer to organization
-      const project = await t.run(async (ctx) => ctx.db.get(projectId));
-      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project.organizationId,
+          organizationId,
           userId: viewerId,
           role: "member",
           addedBy: adminId,
@@ -304,14 +306,15 @@ describe("Issues", () => {
         name: "Viewer",
         email: "viewer@test.com",
       });
-      const projectId = await createTestProject(t, adminId);
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
+      const projectId = await createProjectInOrganization(t, adminId, organizationId, {
+        name: "Test Project",
+      });
 
       // Add viewer to organization
-      const project = await t.run(async (ctx) => ctx.db.get(projectId));
-      if (!project) throw new Error("Project not found");
       await t.run(async (ctx) => {
         await ctx.db.insert("organizationMembers", {
-          organizationId: project.organizationId,
+          organizationId,
           userId: viewerId,
           role: "member",
           addedBy: adminId,
@@ -489,7 +492,7 @@ describe("Issues", () => {
         priority: "medium",
       });
 
-      const commentId = await asUser.mutation(api.issues.addComment, {
+      const { commentId } = await asUser.mutation(api.issues.addComment, {
         issueId,
         content: "This is a test comment",
       });
@@ -651,8 +654,10 @@ describe("Issues", () => {
         name: "Viewer",
         email: "viewer@test.com",
       });
-
-      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, adminId);
+      const { organizationId } = await createOrganizationAdmin(t, adminId);
+      const projectId = await createProjectInOrganization(t, adminId, organizationId, {
+        name: "Test Project",
+      });
 
       // Add viewer to organization
       await t.run(async (ctx) => {
@@ -665,16 +670,6 @@ describe("Issues", () => {
       });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const projectId = await asAdmin.mutation(api.projects.createProject, {
-        name: "Test",
-        key: "BULK",
-        organizationId,
-        workspaceId,
-        teamId,
-        isPublic: false,
-        boardType: "kanban",
-      });
-
       const issueId = await asAdmin.mutation(api.issues.create, {
         projectId,
         title: "Test",
