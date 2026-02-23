@@ -446,7 +446,7 @@ describe("Issues", () => {
         priority: "medium",
       });
 
-      const commentId = await asUser.mutation(api.issues.addComment, {
+      const { commentId } = await asUser.mutation(api.issues.addComment, {
         issueId,
         content: "This is a test comment",
       });

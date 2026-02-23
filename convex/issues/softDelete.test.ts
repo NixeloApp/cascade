@@ -20,7 +20,7 @@ describe("Issue Soft Delete", () => {
     });
 
     // Add a comment to verify it's preserved
-    const commentId = await asUser.mutation(api.issues.addComment, {
+    const { commentId } = await asUser.mutation(api.issues.addComment, {
       issueId,
       content: "This comment should survive deletion",
     });

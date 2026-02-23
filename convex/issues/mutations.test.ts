@@ -14,7 +14,7 @@ import {
 } from "../testUtils";
 
 describe("Issue Mutations", () => {
-  describe("create", () => {
+  describe("createIssue", () => {
     it("should create issue with all optional fields", async () => {
       const t = convexTest(schema, modules);
       const { userId, organizationId, asUser } = await createTestContext(t);
@@ -384,7 +384,7 @@ describe("Issue Mutations", () => {
         priority: "medium",
       });
 
-      const commentId = await asUser.mutation(api.issues.addComment, {
+      const { commentId } = await asUser.mutation(api.issues.addComment, {
         issueId,
         content: "Check this @mention",
         mentions: [mentionedUser],
@@ -454,7 +454,7 @@ describe("Issue Mutations", () => {
 
       // Viewer should be able to comment
       const asViewer = asAuthenticatedUser(t, viewerId);
-      const commentId = await asViewer.mutation(api.issues.addComment, {
+      const { commentId } = await asViewer.mutation(api.issues.addComment, {
         issueId,
         content: "Viewer comment",
       });
@@ -626,27 +626,11 @@ describe("Issue Mutations", () => {
         });
 
         // Create issue with initial labels directly
-        const issueId = await t.run(async (ctx) => {
-          const project = await ctx.db.get(projectId);
-          if (!project) throw new Error("Project not found");
-          return await ctx.db.insert("issues", {
-            projectId,
-            organizationId: project.organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: "NODUP-1",
-            title: "Label Test",
-            type: "task",
-            status: "todo",
-            priority: "medium",
-            reporterId: userId,
-            updatedAt: Date.now(),
-            labels: ["existing"],
-            linkedDocuments: [],
-            attachments: [],
-            loggedHours: 0,
-            order: 0,
-          });
+        const issueId = await createTestIssue(t, projectId, userId, {
+          title: "Label Test",
+        });
+        await t.run(async (ctx) => {
+          await ctx.db.patch(issueId, { labels: ["existing"] });
         });
 
         // Bulk add with duplicate

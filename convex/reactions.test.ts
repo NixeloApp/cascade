@@ -28,7 +28,7 @@ describe("Reactions", () => {
     });
 
     // Add comment
-    const commentId = await asUser.mutation(api.issues.addComment, {
+    const { commentId } = await asUser.mutation(api.issues.addComment, {
       issueId,
       content: "Nice work!",
     });
@@ -96,7 +96,7 @@ describe("Reactions", () => {
       type: "task",
       priority: "medium",
     });
-    const commentId = await asUser1.mutation(api.issues.addComment, {
+    const { commentId } = await asUser1.mutation(api.issues.addComment, {
       issueId,
       content: "Shared comment",
     });
