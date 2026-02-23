@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
-import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { fetchJSON, HttpError } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler, initiateAuthHandler, triggerSyncHandler } from "./googleOAuth";
 
 // Mock env library
@@ -10,12 +10,20 @@ vi.mock("../lib/env", () => ({
   getGoogleClientSecret: vi.fn(),
   isGoogleOAuthConfigured: vi.fn(),
   getConvexSiteUrl: vi.fn(),
-  validation: (_type: string, msg: string) => new Error(msg),
 }));
 
 // Mock fetchWithTimeout
 vi.mock("../lib/fetchWithTimeout", () => ({
-  fetchWithTimeout: vi.fn(),
+  fetchJSON: vi.fn(),
+  HttpError: class extends Error {
+    status: number;
+    body: string;
+    constructor(status: number, body: string) {
+      super(`HTTP ${status}: ${body}`);
+      this.status = status;
+      this.body = body;
+    }
+  },
 }));
 
 // Mock api/internal
@@ -101,12 +109,10 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      // Security: Error page should NOT expose internal error details
       expect(text).not.toContain("access_denied");
     });
 
     it("should return HTML error if config is missing (throws)", async () => {
-      // Mock getGoogleClientId to throw, simulating missing env var
       vi.mocked(envLib.getGoogleClientId).mockImplementation(() => {
         throw new Error("Missing required environment variable: AUTH_GOOGLE_ID");
       });
@@ -117,27 +123,22 @@ describe("Google OAuth Flow", () => {
       request.headers.set("Cookie", "google-oauth-state=valid_state");
       const response = await handleCallbackHandler(mockCtx, request);
 
-      // Should catch the error and return 500 HTML page
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      // Security: Error page should NOT expose internal error details
       expect(text).not.toContain("Missing required environment variable");
     });
 
     it("should return 400 if state is missing or invalid", async () => {
-      // Missing state param
       let request = new Request("https://api.convex.site/google/callback?code=some_code");
       let response = await handleCallbackHandler(mockCtx, request);
       expect(response.status).toBe(400);
       expect(await response.text()).toContain("Invalid state");
 
-      // Missing cookie
       request = new Request("https://api.convex.site/google/callback?code=some_code&state=val");
       response = await handleCallbackHandler(mockCtx, request);
       expect(response.status).toBe(400);
 
-      // Mismatch
       request = new Request("https://api.convex.site/google/callback?code=some_code&state=val1");
       request.headers.set("Cookie", "google-oauth-state=val2");
       response = await handleCallbackHandler(mockCtx, request);
@@ -145,21 +146,15 @@ describe("Google OAuth Flow", () => {
     });
 
     it("should exchange code for token and return success HTML", async () => {
-      // Mock token exchange response
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          access_token: "google_access_token",
-          refresh_token: "google_refresh_token",
-          expires_in: 3600,
-        }),
-      } as Response);
+      // Mock token exchange response (fetchJSON)
+      vi.mocked(fetchJSON).mockResolvedValueOnce({
+        access_token: "google_access_token",
+        refresh_token: "google_refresh_token",
+        expires_in: 3600,
+      });
 
-      // Mock user info response
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ email: "test@example.com" }),
-      } as Response);
+      // Mock user info response (fetchJSON)
+      vi.mocked(fetchJSON).mockResolvedValueOnce({ email: "test@example.com" });
 
       const request = new Request(
         "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
@@ -174,28 +169,19 @@ describe("Google OAuth Flow", () => {
       expect(text).toContain("google_access_token");
       expect(text).toContain("google_refresh_token");
 
-      // Verify cookie cleared
       const setCookie = response.headers.get("Set-Cookie");
       expect(setCookie).toContain("google-oauth-state=;");
       expect(setCookie).toContain("Max-Age=0");
 
-      // Verify fetch calls
-      expect(fetchWithTimeout).toHaveBeenCalledTimes(2);
-      // Check token exchange call
-      expect(vi.mocked(fetchWithTimeout).mock.calls[0][0]).toBe(
-        "https://oauth2.googleapis.com/token",
-      );
-      // Check user info call
-      expect(vi.mocked(fetchWithTimeout).mock.calls[1][0]).toBe(
+      expect(fetchJSON).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(fetchJSON).mock.calls[0][0]).toBe("https://oauth2.googleapis.com/token");
+      expect(vi.mocked(fetchJSON).mock.calls[1][0]).toBe(
         "https://www.googleapis.com/oauth2/v2/userinfo",
       );
     });
 
     it("should handle token exchange failure", async () => {
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: false,
-        text: async () => "invalid_grant",
-      } as Response);
+      vi.mocked(fetchJSON).mockRejectedValueOnce(new HttpError(400, "invalid_grant"));
 
       const request = new Request(
         "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
@@ -209,16 +195,11 @@ describe("Google OAuth Flow", () => {
     });
 
     it("should handle user info fetch failure", async () => {
-      // Token success
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ access_token: "token" }),
-      } as Response);
+      vi.mocked(fetchJSON).mockResolvedValueOnce({
+        access_token: "token",
+      });
 
-      // User info failure
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: false,
-      } as Response);
+      vi.mocked(fetchJSON).mockRejectedValueOnce(new HttpError(401, "unauthorized"));
 
       const request = new Request(
         "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
@@ -226,7 +207,6 @@ describe("Google OAuth Flow", () => {
       request.headers.set("Cookie", "google-oauth-state=valid_state");
       const response = await handleCallbackHandler(mockCtx, request);
 
-      // It catches the error and returns HTML error page
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
@@ -270,25 +250,20 @@ describe("Google OAuth Flow", () => {
 
     it("should sync events successfully", async () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
-      // First mutation call: get tokens
       vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
-      // Second mutation call: sync result
       vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ imported: 5 });
 
-      // Mock events fetch
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          items: [
-            {
-              id: "evt1",
-              summary: "Event 1",
-              start: { dateTime: "2023-01-01T10:00:00Z" },
-              end: { dateTime: "2023-01-01T11:00:00Z" },
-            },
-          ],
-        }),
-      } as Response);
+      // Mock events fetch (fetchJSON)
+      vi.mocked(fetchJSON).mockResolvedValueOnce({
+        items: [
+          {
+            id: "evt1",
+            summary: "Event 1",
+            start: { dateTime: "2023-01-01T10:00:00Z" },
+            end: { dateTime: "2023-01-01T11:00:00Z" },
+          },
+        ],
+      });
 
       const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
@@ -298,7 +273,6 @@ describe("Google OAuth Flow", () => {
       expect(body.success).toBe(true);
       expect(body.imported).toBe(5);
 
-      // Verify sync mutation was called
       expect(mockCtx.runMutation).toHaveBeenCalledTimes(2);
       expect(vi.mocked(mockCtx.runMutation).mock.calls[1][1]).toMatchObject({
         connectionId: "conn1",
@@ -315,9 +289,7 @@ describe("Google OAuth Flow", () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
       vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
 
-      vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-        ok: false,
-      } as Response);
+      vi.mocked(fetchJSON).mockRejectedValueOnce(new HttpError(500, "Internal Server Error"));
 
       const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
@@ -325,7 +297,30 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const body = await response.json();
       expect(body.success).toBe(false);
-      expect(body.error).toContain("Failed to fetch Google Calendar events");
+      expect(body.error).toContain("Google Calendar Error: Internal Server Error");
+    });
+
+    it("should extract error message from Google JSON response", async () => {
+      vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
+      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
+
+      const googleError = {
+        error: {
+          code: 403,
+          message: "Rate Limit Exceeded",
+        },
+      };
+
+      vi.mocked(fetchJSON).mockRejectedValueOnce(new HttpError(403, JSON.stringify(googleError)));
+
+      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
+      const response = await triggerSyncHandler(mockCtx, request);
+
+      expect(response.status).toBe(500);
+      const body = await response.json();
+      expect(body.success).toBe(false);
+      // Verify we get the specific message
+      expect(body.error).toBe("Google Calendar Error: Rate Limit Exceeded");
     });
   });
 });

@@ -7,8 +7,8 @@ import {
   isGoogleOAuthConfigured,
   isLocalhost,
 } from "../lib/env";
-import { validation } from "../lib/errors";
-import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { getErrorMessage, validation } from "../lib/errors";
+import { fetchJSON, HttpError } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 import { HOUR, SECOND } from "../lib/timeUtils";
 
@@ -213,26 +213,37 @@ export const initiateAuth = httpAction(initiateAuthHandler);
 async function exchangeCodeForTokens(code: string) {
   const config = getGoogleOAuthConfig();
 
-  const tokenResponse = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      code,
-      client_id: config.clientId,
-      client_secret: config.clientSecret,
-      redirect_uri: config.redirectUri,
-      grant_type: "authorization_code",
-    }),
-  });
+  let tokens: {
+    access_token: string;
+    refresh_token?: string;
+    expires_in?: number;
+  };
 
-  if (!tokenResponse.ok) {
-    const errorData = await tokenResponse.text();
-    throw validation("oauth", `Failed to exchange Google authorization code: ${errorData}`);
+  try {
+    tokens = await fetchJSON(
+      "https://oauth2.googleapis.com/token",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          code,
+          client_id: config.clientId,
+          client_secret: config.clientSecret,
+          redirect_uri: config.redirectUri,
+          grant_type: "authorization_code",
+        }),
+      },
+      10000,
+    );
+  } catch (e) {
+    if (e instanceof HttpError) {
+      throw validation("oauth", `Failed to exchange Google authorization code: ${e.body}`);
+    }
+    throw e;
   }
 
-  const tokens = await tokenResponse.json();
   const { access_token, refresh_token, expires_in } = tokens;
 
   // Google may omit refresh_token even with access_type=offline
@@ -245,17 +256,20 @@ async function exchangeCodeForTokens(code: string) {
   }
 
   // Get user info from Google
-  const userInfoResponse = await fetchWithTimeout("https://www.googleapis.com/oauth2/v2/userinfo", {
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-    },
-  });
-
-  if (!userInfoResponse.ok) {
-    throw validation("oauth", "Failed to fetch user info from Google");
+  let userInfo: { email: string };
+  try {
+    userInfo = await fetchJSON("https://www.googleapis.com/oauth2/v2/userinfo", {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+  } catch (e) {
+    if (e instanceof HttpError) {
+      throw validation("oauth", `Failed to fetch user info from Google: ${e.body}`);
+    }
+    throw e;
   }
 
-  const userInfo = await userInfoResponse.json();
   if (!userInfo.email || typeof userInfo.email !== "string") {
     throw validation("oauth", "Invalid email received from Google");
   }
@@ -476,22 +490,7 @@ export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
     }
 
     // Fetch events from Google Calendar API
-    const eventsResponse = await fetchWithTimeout(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date().toISOString()}&maxResults=100`,
-      {
-        headers: {
-          Authorization: `Bearer ${tokens.accessToken}`,
-        },
-      },
-      30000,
-    );
-
-    if (!eventsResponse.ok) {
-      throw validation("googleCalendar", "Failed to fetch Google Calendar events");
-    }
-
-    const data = await eventsResponse.json();
-    const events = data.items || [];
+    const events = await fetchGoogleCalendarEvents(tokens.accessToken);
 
     // Transform Google Calendar events to Nixelo format
     // Filter out events with missing or invalid dates
@@ -533,7 +532,7 @@ export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : "Sync failed",
+        error: getErrorMessage(error),
       }),
       {
         status: 500,
@@ -542,6 +541,48 @@ export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
     );
   }
 };
+
+/**
+ * Helper to fetch events from Google Calendar
+ */
+async function fetchGoogleCalendarEvents(accessToken: string): Promise<GoogleCalendarEvent[]> {
+  try {
+    const data = await fetchJSON<{ items?: GoogleCalendarEvent[] }>(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date().toISOString()}&maxResults=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+      30000,
+    );
+    return data.items || [];
+  } catch (e) {
+    if (e instanceof HttpError) {
+      throw validation("googleCalendar", parseGoogleCalendarError(e));
+    }
+    throw e;
+  }
+}
+
+function parseGoogleCalendarError(e: HttpError): string {
+  let message = "Failed to fetch Google Calendar events";
+  try {
+    // Google Calendar API errors usually come as JSON
+    const errorBody = JSON.parse(e.body);
+    if (errorBody.error?.message) {
+      message = `Google Calendar Error: ${errorBody.error.message}`;
+    } else if (errorBody.error_description) {
+      message = `Google Calendar Error: ${errorBody.error_description}`;
+    }
+  } catch {
+    // If body is not JSON, use truncated body or default message
+    if (e.body && e.body.length < 200) {
+      message = `Google Calendar Error: ${e.body}`;
+    }
+  }
+  return message;
+}
 
 /**
  * Trigger manual sync
