@@ -301,13 +301,7 @@ export const IssueCard = memo(function IssueCard({
                 className="pointer-events-auto p-0 h-auto rounded-sm cursor-pointer"
                 aria-hidden="true"
               >
-                <Icon
-                  icon={ISSUE_TYPE_ICONS[issue.type]}
-                  size="sm"
-                  className="cursor-help"
-                  role="img"
-                  aria-label={getTypeLabel(issue.type)}
-                />
+                <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" className="cursor-help" />
               </div>
             </Tooltip>
             <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
@@ -327,8 +321,6 @@ export const IssueCard = memo(function IssueCard({
                 icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
                 size="sm"
                 data-testid={TEST_IDS.ISSUE.PRIORITY}
-                aria-label={`Priority: ${issue.priority}`}
-                role="img"
                 className={cn("cursor-help", getPriorityColor(issue.priority))}
               />
             </div>
@@ -404,18 +396,12 @@ export const IssueCard = memo(function IssueCard({
                   aria-hidden="true"
                 >
                   {issue.assignee.image ? (
-                    <img
-                      src={issue.assignee.image}
-                      alt={issue.assignee.name}
-                      className="w-5 h-5 rounded-full"
-                    />
+                    <img src={issue.assignee.image} alt="" className="w-5 h-5 rounded-full" />
                   ) : (
                     <Flex
                       align="center"
                       justify="center"
                       className="size-5 rounded-full bg-ui-bg-tertiary text-ui-text-secondary"
-                      aria-label={issue.assignee.name}
-                      role="img"
                     >
                       {issue.assignee.name.charAt(0).toUpperCase()}
                     </Flex>
