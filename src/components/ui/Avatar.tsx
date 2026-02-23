@@ -92,7 +92,11 @@ export function Avatar({
   const altText = alt || name || email || "User avatar";
 
   return (
-    <AvatarPrimitive.Root className={cn(avatarVariants({ size }), className)}>
+    <AvatarPrimitive.Root
+      className={cn(avatarVariants({ size }), className)}
+      role="img"
+      aria-label={altText}
+    >
       {src && (
         <AvatarPrimitive.Image
           src={src}
@@ -103,6 +107,7 @@ export function Avatar({
       <AvatarPrimitive.Fallback
         className={cn(fallbackVariants({ size, variant }))}
         delayMs={src ? 600 : 0}
+        aria-hidden="true"
       >
         {initials}
       </AvatarPrimitive.Fallback>
