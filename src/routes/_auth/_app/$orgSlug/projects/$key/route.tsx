@@ -15,7 +15,7 @@ function ProjectLayout() {
   const { user } = useCurrentUser();
   const project = useQuery(api.projects.getByKey, { key });
   const userRole = useQuery(
-    api.projectMembers.getRole,
+    api.projects.getProjectUserRole,
     project ? { projectId: project._id } : "skip",
   );
 

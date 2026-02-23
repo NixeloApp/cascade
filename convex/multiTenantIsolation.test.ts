@@ -324,7 +324,7 @@ describe("Multi-Tenant Isolation", () => {
       // addProjectMember uses projectAdminMutation and requires userEmail, not userId
       const asUserB = asAuthenticatedUser(t, userOrgB);
       await expect(
-        asUserB.mutation(api.projectMembers.add, {
+        asUserB.mutation(api.projects.addProjectMember, {
           projectId: projectIdA,
           userEmail: "userb@test.com",
           role: "admin",

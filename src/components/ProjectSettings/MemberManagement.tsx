@@ -54,9 +54,9 @@ export function MemberManagement({
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
   const [changingRoleFor, setChangingRoleFor] = useState<Id<"users"> | null>(null);
 
-  const addMember = useMutation(api.projectMembers.add);
-  const updateMemberRole = useMutation(api.projectMembers.updateRole);
-  const removeMember = useMutation(api.projectMembers.remove);
+  const addMember = useMutation(api.projects.addProjectMember);
+  const updateMemberRole = useMutation(api.projects.updateProjectMemberRole);
+  const removeMember = useMutation(api.projects.removeProjectMember);
 
   const handleAddMember = async () => {
     if (!email.trim()) {

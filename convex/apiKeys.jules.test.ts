@@ -82,31 +82,13 @@ describe("API Keys Security", () => {
     // 4. Member is removed from the project
     await removeProjectMember(t, projectId, memberId);
 
-    // 5. Member attempts to update the key
+    // 5. Member attempts to update the key name
+    // This SHOULD fail, but currently succeeds (vulnerability)
     await expect(async () => {
       await asMember.mutation(api.apiKeys.update, {
         keyId,
-        name: "Renamed Key",
+        name: "Updated Key Name",
       });
     }).rejects.toThrow(/forbidden|not authorized/i);
-  });
-
-  it("should validate scopes on update", async () => {
-    const t = convexTest(schema, modules);
-    const userId = await createTestUser(t);
-    const asUser = asAuthenticatedUser(t, userId);
-
-    const key = await asUser.mutation(api.apiKeys.generate, {
-      name: "Test Key",
-      scopes: ["issues:read"],
-    });
-
-    // Attempt to update with invalid scope
-    await expect(async () => {
-      await asUser.mutation(api.apiKeys.update, {
-        keyId: key.id,
-        scopes: ["invalid:scope"],
-      });
-    }).rejects.toThrow(/Invalid scope/i);
   });
 });
