@@ -7,23 +7,29 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
-import { authenticatedAction } from "../customFunctions";
+import { action } from "../_generated/server";
+import { unauthenticated } from "../lib/errors";
 import { asVectorResults } from "../lib/vectorSearchHelpers";
 import { rateLimit } from "../rateLimits";
 
 /**
  * Search for similar issues using semantic search
  */
-export const searchSimilarIssues = authenticatedAction({
+export const searchSimilarIssues = action({
   args: {
     query: v.string(),
     projectId: v.id("projects"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<(Doc<"issues"> & { similarity: number })[]> => {
+    const userId = await ctx.auth.getUserIdentity();
+    if (!userId) {
+      throw unauthenticated();
+    }
+
     // Rate limit: 30 searches per minute per user
     await rateLimit(ctx, "semanticSearch", {
-      key: ctx.userId,
+      key: userId.subject,
       throws: true,
     });
 
@@ -65,7 +71,7 @@ export const searchSimilarIssues = authenticatedAction({
 /**
  * Get related issues for a specific issue
  */
-export const getRelatedIssues = authenticatedAction({
+export const getRelatedIssues = action({
   args: {
     issueId: v.id("issues"),
     limit: v.optional(v.number()),
@@ -118,7 +124,7 @@ export const getRelatedIssues = authenticatedAction({
 /**
  * Find duplicate issues using semantic similarity
  */
-export const findPotentialDuplicates = authenticatedAction({
+export const findPotentialDuplicates = action({
   args: {
     title: v.string(),
     description: v.optional(v.string()),

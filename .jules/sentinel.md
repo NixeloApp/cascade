@@ -135,3 +135,8 @@
 **Vulnerability:** The `updateProfile` mutation failed to normalize email addresses before checking for uniqueness. This allowed a user to register `User@Example.com` even if `user@example.com` already existed, leading to account duplication, potential confusion, or denial of service if case-insensitive logic (like login) collided.
 **Learning:** User input that serves as a unique identifier (like email or username) must always be normalized (e.g., lowercased) before being used in uniqueness checks or storage, even if the database supports case-sensitive uniqueness.
 **Prevention:** Updated `handleEmailChange` in `convex/users.ts` to normalize the new email address to lowercase before validation and processing.
+
+## 2026-03-09 - Unauthorized Modification of AI Suggestions
+**Vulnerability:** `respondToSuggestion` and `getProjectLabels` were public endpoints, allowing unauthenticated users to modify suggestion status and access project metadata.
+**Learning:** All endpoints that modify or expose project data must be protected by authentication and explicit permission checks (`assertCanAccessProject`, `assertCanEditProject`). Public mutations are dangerous defaults.
+**Prevention:** Converted public functions in `convex/ai/suggestions.ts` to `authenticatedMutation` and `authenticatedQuery` and added explicit permission checks.

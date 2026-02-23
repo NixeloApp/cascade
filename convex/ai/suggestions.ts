@@ -1,20 +1,23 @@
 /**
  * AI-Powered Suggestions
  *
- * Generate intelligent suggestions for issues, sprints, and projects
- * Uses Claude Haiku 4.5 for fast, cost-effective suggestions
+ * Generate intelligent suggestions for issues, sprints, and projects.
+ * Uses Claude Haiku 4.5 for fast, cost-effective suggestions.
  */
 
 import { anthropic } from "@ai-sdk/anthropic";
 import { ActionCache } from "@convex-dev/action-cache";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { generateText } from "ai";
 import { v } from "convex/values";
 import { api, components, internal } from "../_generated/api";
-import { internalAction, mutation, query } from "../_generated/server";
-import { authenticatedAction } from "../customFunctions";
+import { action, internalAction } from "../_generated/server";
+import { authenticatedMutation, authenticatedQuery } from "../customFunctions";
 import { extractUsage } from "../lib/aiHelpers";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
+import { notFound, unauthenticated } from "../lib/errors";
 import { HOUR } from "../lib/timeUtils";
+import { assertCanAccessProject, assertCanEditProject } from "../projectAccess";
 import { rateLimit } from "../rateLimits";
 import { issueTypes } from "../validators";
 
@@ -91,16 +94,21 @@ const labelsCache = new ActionCache(components.actionCache, {
 /**
  * Generate AI suggestion for issue description
  */
-export const suggestIssueDescription = authenticatedAction({
+export const suggestIssueDescription = action({
   args: {
     title: v.string(),
     type: issueTypes,
     projectId: v.id("projects"),
   },
   handler: async (ctx, args): Promise<string> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw unauthenticated();
+    }
+
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
-      key: ctx.userId,
+      key: userId,
       throws: true,
     });
 
@@ -165,7 +173,7 @@ Description:`;
 /**
  * Suggest priority based on issue details
  */
-export const suggestPriority = authenticatedAction({
+export const suggestPriority = action({
   args: {
     title: v.string(),
     description: v.optional(v.string()),
@@ -173,9 +181,14 @@ export const suggestPriority = authenticatedAction({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args): Promise<"highest" | "high" | "medium" | "low" | "lowest"> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw unauthenticated();
+    }
+
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
-      key: ctx.userId,
+      key: userId,
       throws: true,
     });
 
@@ -242,7 +255,7 @@ Priority:`;
 /**
  * Suggest labels for an issue
  */
-export const suggestLabels = authenticatedAction({
+export const suggestLabels = action({
   args: {
     title: v.string(),
     description: v.optional(v.string()),
@@ -250,9 +263,14 @@ export const suggestLabels = authenticatedAction({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args): Promise<string[]> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw unauthenticated();
+    }
+
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
-      key: ctx.userId,
+      key: userId,
       throws: true,
     });
 
@@ -326,11 +344,13 @@ Labels:`;
 /**
  * Get project labels
  */
-export const getProjectLabels = query({
+export const getProjectLabels = authenticatedQuery({
   args: {
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
+    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+
     const labels = await ctx.db
       .query("labels")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
@@ -343,12 +363,18 @@ export const getProjectLabels = query({
 /**
  * Accept or dismiss a suggestion
  */
-export const respondToSuggestion = mutation({
+export const respondToSuggestion = authenticatedMutation({
   args: {
     suggestionId: v.id("aiSuggestions"),
     accepted: v.boolean(),
   },
   handler: async (ctx, args) => {
+    const suggestion = await ctx.db.get(args.suggestionId);
+    if (!suggestion) throw notFound("suggestion", args.suggestionId);
+
+    // Ensure user has edit access to the project
+    await assertCanEditProject(ctx, suggestion.projectId, ctx.userId);
+
     await ctx.db.patch(args.suggestionId, {
       accepted: args.accepted,
       dismissed: !args.accepted,

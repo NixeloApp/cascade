@@ -5,22 +5,28 @@
  */
 
 import { v } from "convex/values";
-import { authenticatedAction } from "../customFunctions";
+import { action } from "../_generated/server";
+import { unauthenticated } from "../lib/errors";
 import { rateLimit } from "../rateLimits";
 
 /**
  * Rate-limited AI chat
  */
-export const chatWithRateLimit = authenticatedAction({
+export const chatWithRateLimit = action({
   args: {
     chatId: v.optional(v.id("aiChats")),
     projectId: v.optional(v.id("projects")),
     message: v.string(),
   },
   handler: async (ctx, _args) => {
+    const userId = await ctx.auth.getUserIdentity();
+    if (!userId) {
+      throw unauthenticated();
+    }
+
     // Rate limit: 10 messages per minute per user
     await rateLimit(ctx, "aiChat", {
-      key: ctx.userId,
+      key: userId.subject,
       throws: true,
     });
 

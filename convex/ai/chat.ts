@@ -5,14 +5,14 @@
  */
 
 import { anthropic } from "@ai-sdk/anthropic";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { generateText } from "ai";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { internalAction } from "../_generated/server";
-import { authenticatedAction } from "../customFunctions";
+import { action, internalAction } from "../_generated/server";
 import { extractUsage } from "../lib/aiHelpers";
-import { notFound } from "../lib/errors";
+import { notFound, unauthenticated } from "../lib/errors";
 import { rateLimit } from "../rateLimits";
 
 // Claude model (using alias - auto-points to latest snapshot)
@@ -72,16 +72,21 @@ export const generateIssueEmbedding = internalAction({
  * AI Chat - Send message and get AI response
  * Uses Claude Opus 4.5 for high-quality responses
  */
-export const chat = authenticatedAction({
+export const chat = action({
   args: {
     chatId: v.optional(v.id("aiChats")),
     projectId: v.optional(v.id("projects")),
     message: v.string(),
   },
   handler: async (ctx, args): Promise<{ chatId: Id<"aiChats">; message: string }> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw unauthenticated();
+    }
+
     // Rate limit: 10 messages per minute per user
     await rateLimit(ctx, "aiChat", {
-      key: ctx.userId,
+      key: userId,
       throws: true,
     });
 
@@ -107,7 +112,7 @@ export const chat = authenticatedAction({
     if (args.projectId) {
       context = await ctx.runQuery(internal.internal.ai.getProjectContext, {
         projectId: args.projectId,
-        userId: ctx.userId,
+        userId,
       });
     }
 
