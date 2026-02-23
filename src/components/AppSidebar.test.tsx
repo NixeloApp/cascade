@@ -211,7 +211,9 @@ describe("AppSidebar Accessibility", () => {
       expect(closeButtons.length).toBeGreaterThanOrEqual(2);
 
       // Ensure at least one has the lg:hidden class (which makes it mobile-only)
-      const mobileCloseBtn = closeButtons.find(btn => btn.className.includes("lg:hidden") && !btn.className.includes("fixed inset-0"));
+      const mobileCloseBtn = closeButtons.find(
+        (btn) => btn.className.includes("lg:hidden") && !btn.className.includes("fixed inset-0"),
+      );
       expect(mobileCloseBtn).toBeInTheDocument();
 
       // Check Toggle button
