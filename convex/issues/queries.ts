@@ -1222,27 +1222,37 @@ async function fetchProjectIssuesOptimized(
   args: {
     assigneeId?: Id<"users"> | "unassigned" | "me";
     status?: string[];
+    reporterId?: Id<"users">;
   },
   fetchLimit: number,
   userId: Id<"users"> | null,
 ) {
   // Determine efficient query strategy based on filters
   // We prioritize specific indexes to avoid scanning the entire project
-  const targetAssigneeId =
-    args.assigneeId === "me"
-      ? userId
-      : args.assigneeId !== "unassigned"
-        ? args.assigneeId
-        : undefined;
 
-  const hasSpecificAssignee = targetAssigneeId !== undefined && targetAssigneeId !== null;
+  // Handle assignee filter logic
+  const isAssigneeFilterActive = args.assigneeId !== undefined;
+  let assigneeIndexValue: Id<"users"> | undefined;
+
+  if (args.assigneeId === "me") {
+    assigneeIndexValue = userId ?? undefined;
+  } else if (args.assigneeId === "unassigned") {
+    assigneeIndexValue = undefined;
+  } else {
+    assigneeIndexValue = args.assigneeId;
+  }
+
+  // Handle reporter filter logic
+  const isReporterFilterActive = args.reporterId !== undefined;
+  const reporterIndexValue = args.reporterId;
+
   const hasSingleStatus = args.status?.length === 1;
 
-  if (hasSpecificAssignee && hasSingleStatus) {
+  // 1. Assignee + Status (most specific)
+  if (isAssigneeFilterActive && hasSingleStatus) {
     const status = args.status?.[0];
     if (!status) return []; // Should be unreachable given check above
 
-    // Best case: Filter by assignee AND status
     // Index: by_project_assignee_status ["projectId", "assigneeId", "status", "isDeleted"]
     return await safeCollect(
       ctx.db
@@ -1250,7 +1260,7 @@ async function fetchProjectIssuesOptimized(
         .withIndex("by_project_assignee_status", (q) =>
           q
             .eq("projectId", projectId)
-            .eq("assigneeId", targetAssigneeId as Id<"users">)
+            .eq("assigneeId", assigneeIndexValue as any)
             .eq("status", status)
             .lt("isDeleted", true),
         )
@@ -1260,14 +1270,17 @@ async function fetchProjectIssuesOptimized(
     );
   }
 
-  if (hasSpecificAssignee) {
-    // Filter by assignee
+  // 2. Assignee (very common filter)
+  if (isAssigneeFilterActive) {
     // Index: by_project_assignee ["projectId", "assigneeId", "isDeleted"]
     return await safeCollect(
       ctx.db
         .query("issues")
         .withIndex("by_project_assignee", (q) =>
-          q.eq("projectId", projectId).eq("assigneeId", targetAssigneeId).lt("isDeleted", true),
+          q
+            .eq("projectId", projectId)
+            .eq("assigneeId", assigneeIndexValue as any)
+            .lt("isDeleted", true),
         )
         .order("desc"),
       fetchLimit,
@@ -1275,11 +1288,29 @@ async function fetchProjectIssuesOptimized(
     );
   }
 
+  // 3. Reporter (specific filter)
+  if (isReporterFilterActive) {
+    // Index: by_project_reporter ["projectId", "reporterId", "isDeleted"]
+    return await safeCollect(
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_reporter", (q) =>
+          q
+            .eq("projectId", projectId)
+            .eq("reporterId", reporterIndexValue as Id<"users">)
+            .lt("isDeleted", true),
+        )
+        .order("desc"),
+      fetchLimit,
+      "issue search by project reporter",
+    );
+  }
+
+  // 4. Status (common filter)
   if (hasSingleStatus) {
     const status = args.status?.[0];
     if (!status) return []; // Should be unreachable given check above
 
-    // Filter by status
     // Index: by_project_status ["projectId", "status", "isDeleted", "order"]
     return await safeCollect(
       ctx.db
@@ -1293,7 +1324,7 @@ async function fetchProjectIssuesOptimized(
     );
   }
 
-  // Fallback: Scan all project issues
+  // 5. Fallback: Scan all project issues
   // Index: by_project_deleted ["projectId", "isDeleted"]
   return await safeCollect(
     ctx.db
