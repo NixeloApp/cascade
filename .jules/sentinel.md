@@ -135,3 +135,8 @@
 **Vulnerability:** The `updateProfile` mutation failed to normalize email addresses before checking for uniqueness. This allowed a user to register `User@Example.com` even if `user@example.com` already existed, leading to account duplication, potential confusion, or denial of service if case-insensitive logic (like login) collided.
 **Learning:** User input that serves as a unique identifier (like email or username) must always be normalized (e.g., lowercased) before being used in uniqueness checks or storage, even if the database supports case-sensitive uniqueness.
 **Prevention:** Updated `handleEmailChange` in `convex/users.ts` to normalize the new email address to lowercase before validation and processing.
+
+## 2026-03-09 - IDOR on Document Parent Linkage
+**Vulnerability:** Users could nest a document under a parent document they did not have access to (e.g. a private document of another user), or move a document to such a parent. This allowed them to discover the title of the private parent document via the `getBreadcrumbs` query, which did not re-verify access for ancestors.
+**Learning:** Checking that a resource belongs to the same organization is insufficient for hierarchical data. You must explicitly verify that the user has access to the *specific parent resource* they are linking to, especially when that parent can be private.
+**Prevention:** Added `assertDocumentAccess(ctx, parent)` checks in `create` and `moveDocument` mutations in `convex/documents.ts` to enforce access control on the parent document.
