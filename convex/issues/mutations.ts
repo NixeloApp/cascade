@@ -456,6 +456,18 @@ export const addComment = issueViewerMutation({
   },
 });
 
+/**
+ * Bulk update the status of multiple issues.
+ *
+ * - Validates that the new status exists in the project's workflow.
+ * - Updates the status of each issue.
+ * - Logs activity for each issue.
+ * - Skips issues that the user does not have permission to edit.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param newStatus - The ID of the new status (workflow state).
+ * @returns Object containing the number of updated issues.
+ */
 export const bulkUpdateStatus = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -590,6 +602,17 @@ async function performBulkUpdate(
   return { updated: results.reduce((a: number, b) => a + b, 0) };
 }
 
+/**
+ * Bulk update the priority of multiple issues.
+ *
+ * - Updates the priority of each issue.
+ * - Logs activity for each issue.
+ * - Skips issues that the user does not have permission to edit.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param priority - The new priority level.
+ * @returns Object containing the number of updated issues.
+ */
 export const bulkUpdatePriority = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -616,6 +639,17 @@ export const bulkUpdatePriority = authenticatedMutation({
   },
 });
 
+/**
+ * Bulk assign multiple issues to a user.
+ *
+ * - Updates the assignee of each issue.
+ * - Logs activity for each issue.
+ * - Skips issues that the user does not have permission to edit.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param assigneeId - The user ID to assign, or null to unassign.
+ * @returns Object containing the number of updated issues.
+ */
 export const bulkAssign = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -636,6 +670,17 @@ export const bulkAssign = authenticatedMutation({
   },
 });
 
+/**
+ * Bulk add labels to multiple issues.
+ *
+ * - Adds the specified labels to the existing labels of each issue (no duplicates).
+ * - Logs activity for each issue.
+ * - Skips issues that the user does not have permission to edit.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param labels - Array of label names to add.
+ * @returns Object containing the number of updated issues.
+ */
 export const bulkAddLabels = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -657,6 +702,17 @@ export const bulkAddLabels = authenticatedMutation({
   },
 });
 
+/**
+ * Bulk move multiple issues to a sprint.
+ *
+ * - Updates the sprint ID of each issue.
+ * - Logs activity for each issue.
+ * - Skips issues that the user does not have permission to edit.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param sprintId - The sprint ID to move to, or null to remove from sprint.
+ * @returns Object containing the number of updated issues.
+ */
 export const bulkMoveToSprint = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -677,6 +733,16 @@ export const bulkMoveToSprint = authenticatedMutation({
   },
 });
 
+/**
+ * Bulk soft-delete multiple issues.
+ *
+ * - Marks issues as deleted (soft delete).
+ * - Logs activity for each issue.
+ * - Requires project admin permissions for each issue.
+ *
+ * @param issueIds - Array of issue IDs to delete.
+ * @returns Object containing the number of deleted issues.
+ */
 export const bulkDelete = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -786,8 +852,15 @@ export const restore = issueMutation({
 });
 
 /**
- * Bulk archive issues
- * Only issues in "done" category can be archived
+ * Bulk archive multiple issues.
+ *
+ * - Only archives issues that are in the "done" workflow category.
+ * - Skips issues that are already archived or not in "done" state.
+ * - Logs activity for each issue.
+ * - Skips issues that the user does not have permission to edit.
+ *
+ * @param issueIds - Array of issue IDs to archive.
+ * @returns Object containing the number of archived issues.
  */
 export const bulkArchive = authenticatedMutation({
   args: {
@@ -829,7 +902,15 @@ export const bulkArchive = authenticatedMutation({
 });
 
 /**
- * Bulk restore (unarchive) issues
+ * Bulk restore (unarchive) multiple issues.
+ *
+ * - Restores archived issues to their previous state.
+ * - Skips issues that are not archived.
+ * - Logs activity for each issue.
+ * - Skips issues that the user does not have permission to edit.
+ *
+ * @param issueIds - Array of issue IDs to restore.
+ * @returns Object containing the number of restored issues.
  */
 export const bulkRestore = authenticatedMutation({
   args: {
@@ -855,8 +936,15 @@ export const bulkRestore = authenticatedMutation({
 });
 
 /**
- * Bulk update due date for multiple issues
- * Validates date is not before start date if both are set
+ * Bulk update the due date for multiple issues.
+ *
+ * - Validates that the due date is not before the start date.
+ * - Logs activity for each issue.
+ * - Skips issues where the date validation fails or permission is denied.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param dueDate - The new due date timestamp, or null to clear.
+ * @returns Object containing the number of updated issues.
  */
 export const bulkUpdateDueDate = authenticatedMutation({
   args: {
@@ -887,8 +975,15 @@ export const bulkUpdateDueDate = authenticatedMutation({
 });
 
 /**
- * Bulk update start date for multiple issues
- * Validates date is not after due date if both are set
+ * Bulk update the start date for multiple issues.
+ *
+ * - Validates that the start date is not after the due date.
+ * - Logs activity for each issue.
+ * - Skips issues where the date validation fails or permission is denied.
+ *
+ * @param issueIds - Array of issue IDs to update.
+ * @param startDate - The new start date timestamp, or null to clear.
+ * @returns Object containing the number of updated issues.
  */
 export const bulkUpdateStartDate = authenticatedMutation({
   args: {
