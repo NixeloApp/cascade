@@ -179,7 +179,7 @@ export function getIssueAccessibleLabel(issue: {
   const pointsLabel = issue.storyPoints !== undefined ? `, ${issue.storyPoints} points` : "";
   const labelsLabel =
     issue.labels && issue.labels.length > 0
-      ? `, Labels: ${issue.labels.map((l) => l.name).join(", ")}`
+      ? `, labels: ${issue.labels.map((l) => l.name).join(", ")}`
       : "";
 
   return `${typeLabel} ${issue.key}: ${issue.title}, ${priorityLabel}, ${assigneeLabel}${pointsLabel}${labelsLabel}`;

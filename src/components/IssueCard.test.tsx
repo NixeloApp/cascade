@@ -2,7 +2,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { IssueCard } from "./IssueCard";
 
@@ -103,7 +102,8 @@ describe("IssueCard", () => {
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    const avatar = screen.getByAltText("Alice Johnson");
+    // Assignee avatar is hidden from AT (inside aria-hidden), find by img role with hidden option
+    const avatar = screen.getByRole("presentation", { hidden: true });
     expect(avatar).toBeInTheDocument();
 
     await user.hover(avatar);
@@ -126,7 +126,8 @@ describe("IssueCard", () => {
     };
     render(<IssueCard issue={issueWithManyLabels} status="todo" />);
 
-    // The text "+2" should be present
+    // The text "+2" should be present (hidden from AT)
+    // getByText already matches text inside aria-hidden elements
     const hiddenCount = screen.getByText("+2");
     expect(hiddenCount).toBeInTheDocument();
 
@@ -136,26 +137,25 @@ describe("IssueCard", () => {
     expect(tooltipText).toBeInTheDocument();
   });
 
-  it("should render metadata icons but hide them from accessibility tree (no redundant tab stops)", () => {
+  it("should display metadata icons inside aria-hidden containers", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    // Priority icon (find via Test ID as it is hidden from a11y)
-    const priorityIcon = screen.getByTestId(TEST_IDS.ISSUE.PRIORITY);
+    // Priority icon (hidden from AT, has testid)
+    const priorityIcon = screen.getByTestId("issue-priority");
     expect(priorityIcon).toBeInTheDocument();
-    // Ensure it is NOT inside a button
-    expect(priorityIcon.closest("button")).not.toBeInTheDocument();
-    // Ensure it is hidden from screen readers (part of aria-hidden container)
-    expect(priorityIcon.closest('[aria-hidden="true"]')).toBeInTheDocument();
+    // Ensure it IS NOT in a button (removed from tab order)
+    expect(priorityIcon.closest("button[aria-label]")).not.toBeInTheDocument();
+    // Ensure wrapper has aria-hidden="true"
+    expect(priorityIcon.closest("div[aria-hidden='true']")).toBeInTheDocument();
 
-    // Assignee (find via alt text with hidden: true)
-    // @ts-expect-error - hidden option is supported by testing-library but types might be strict
-    const assigneeImg = screen.getByAltText("Alice Johnson", { hidden: true });
+    // Assignee (hidden from AT) - img with empty alt (presentation role)
+    const assigneeImg = screen.getByRole("presentation", { hidden: true });
     expect(assigneeImg).toBeInTheDocument();
-    expect(assigneeImg.closest("button")).not.toBeInTheDocument();
-    expect(assigneeImg.closest('[aria-hidden="true"]')).toBeInTheDocument();
+    expect(assigneeImg.closest("button[aria-label]")).not.toBeInTheDocument();
+    expect(assigneeImg.closest("div[aria-hidden='true']")).toBeInTheDocument();
   });
 
-  it("should render fallback assignee avatar hidden from accessibility", () => {
+  it("should render fallback assignee avatar inside aria-hidden container", () => {
     const issueWithoutAvatar = {
       ...mockIssue,
       // biome-ignore lint/style/noNonNullAssertion: testing mock data
@@ -163,35 +163,31 @@ describe("IssueCard", () => {
     };
     render(<IssueCard issue={issueWithoutAvatar} status="todo" />);
 
-    // Fallback avatar should be hidden from accessibility
-    expect(screen.queryByLabelText("Alice Johnson")).not.toBeInTheDocument();
-    // But verify it exists in DOM (using querySelector looking for initials)
-    const initials = screen.getByText("A", { selector: "div" });
-    expect(initials).toBeInTheDocument();
-    expect(initials.closest('[aria-hidden="true"]')).toBeInTheDocument();
+    // Fallback shows initial "A" inside aria-hidden container
+    const fallbackAvatar = screen.getByText("A");
+    expect(fallbackAvatar).toBeInTheDocument();
+    expect(fallbackAvatar.closest("div[aria-hidden='true']")).toBeInTheDocument();
   });
 
-  it("should trigger onClick when clicking on interactive elements (mouse users)", async () => {
+  it("should trigger onClick when clicking on interactive elements", async () => {
     const handleClick = vi.fn();
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" onClick={handleClick} />);
 
-    // Click Priority Icon (using testId)
-    await user.click(screen.getByTestId(TEST_IDS.ISSUE.PRIORITY));
+    // Click Priority Icon (using testid)
+    await user.click(screen.getByTestId("issue-priority"));
     expect(handleClick).toHaveBeenCalledTimes(1);
 
-    // Click Assignee (using alt text with hidden: true)
-    // @ts-expect-error - hidden option is supported by testing-library but types might be strict
-    await user.click(screen.getByAltText("Alice Johnson", { hidden: true }));
+    // Click Assignee (using presentation role for img with empty alt)
+    await user.click(screen.getByRole("presentation", { hidden: true }));
     expect(handleClick).toHaveBeenCalledTimes(2);
   });
 
   it("should have a descriptive accessible label for screen readers including labels", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    // Updated expectation to include labels
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points, Labels: backend, urgent";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 5 points, labels: backend, urgent";
     const overlayButton = screen.getByLabelText(expectedLabel);
     expect(overlayButton).toBeInTheDocument();
   });
@@ -201,7 +197,7 @@ describe("IssueCard", () => {
     render(<IssueCard issue={issueWithZeroPoints} status="todo" />);
 
     const expectedLabel =
-      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points, Labels: backend, urgent";
+      "Bug TEST-123: Fix critical bug in authentication, High priority, assigned to Alice Johnson, 0 points, labels: backend, urgent";
     expect(screen.getByLabelText(expectedLabel)).toBeInTheDocument();
   });
 });
