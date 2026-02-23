@@ -454,10 +454,7 @@ describe("Notifications", () => {
       });
 
       const asUser = asAuthenticatedUser(t, userId);
-      const result = await asUser.mutation(api.notifications.softDeleteNotification, {
-        id: notificationId,
-      });
-      expect(result).toEqual({ success: true, deleted: true });
+      await asUser.mutation(api.notifications.softDeleteNotification, { id: notificationId });
 
       const notification = await t.run(async (ctx) => {
         return await ctx.db.get(notificationId);

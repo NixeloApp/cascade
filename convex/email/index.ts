@@ -15,7 +15,6 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import {
-  type ActionCtx,
   type DatabaseReader,
   internalAction,
   internalMutation,
@@ -33,11 +32,7 @@ import { SendPulseProvider } from "./sendpulse";
  * Context type for functions that need database access.
  * More permissive than MutationCtx/QueryCtx to support auth provider callbacks.
  */
-export type DbContext =
-  | { db: DatabaseReader }
-  | QueryCtx
-  | MutationCtx
-  | (ActionCtx & { db?: undefined });
+export type DbContext = { db: DatabaseReader } | QueryCtx | MutationCtx;
 
 // =============================================================================
 // Provider Configuration (hardcoded - no DB seed needed)
@@ -214,59 +209,6 @@ async function recordUsage(ctx: MutationCtx, providerName: string, count: number
 // Public API
 // =============================================================================
 
-async function selectProviderWithContext(
-  ctx: DbContext | null,
-): Promise<{ name: string; provider: EmailProvider }> {
-  if (ctx && "db" in ctx) {
-    // Query or Mutation Context - Direct DB Access
-    try {
-      return await selectProvider(ctx as QueryCtx);
-    } catch (e) {
-      // DB error - fallback to first provider
-      logger.error("Failed to select provider, falling back to default", { error: e });
-      return getFirstProvider();
-    }
-  }
-
-  if (ctx && "runQuery" in ctx) {
-    // Action Context - Use Internal Query
-    try {
-      const result = await ctx.runQuery(internal.email.index.selectProviderQuery, {});
-      const config = PROVIDER_CONFIG[result.name];
-      return { name: result.name, provider: config.factory() };
-    } catch (e) {
-      logger.error("Failed to select provider via action, falling back to default", { error: e });
-      return getFirstProvider();
-    }
-  }
-
-  // No context or unknown context - use first provider (no rotation)
-  return getFirstProvider();
-}
-
-async function recordUsageWithContext(ctx: DbContext | null, providerName: string): Promise<void> {
-  if (!ctx) return;
-
-  if ("db" in ctx && "scheduler" in ctx) {
-    // Mutation Context - Direct DB Access
-    try {
-      await recordUsage(ctx as MutationCtx, providerName, 1);
-    } catch (e) {
-      logger.error("Failed to record usage", { error: e });
-    }
-  } else if ("runMutation" in ctx) {
-    // Action Context - Use Internal Mutation
-    try {
-      await ctx.runMutation(internal.email.index.recordUsageMutation, {
-        provider: providerName,
-        count: 1,
-      });
-    } catch (e) {
-      logger.error("Failed to record usage via action", { error: e });
-    }
-  }
-}
-
 /**
  * Send an email using the best available provider
  *
@@ -275,11 +217,13 @@ async function recordUsageWithContext(ctx: DbContext | null, providerName: strin
  *
  * @remarks
  * Full functionality (provider rotation and usage tracking) requires `ctx` to be a
- * `QueryCtx`/`MutationCtx` (DB Access) or `ActionCtx` (via internal calls).
+ * `QueryCtx` (for rotation) or `MutationCtx` (for rotation + tracking).
  *
- * If `ctx` is `null`:
+ * If `ctx` is an `ActionCtx` (e.g. from auth callbacks) or `null`:
  * - Provider rotation is disabled (falls back to Mailtrap/default)
  * - Usage tracking is disabled
+ *
+ * To send emails from an Action with full functionality, use `internal.email.index.sendEmailAction`.
  *
  * @example
  * await sendEmail(ctx, {
@@ -309,14 +253,32 @@ export async function sendEmail(
   }
 
   // Select provider
-  const selected = await selectProviderWithContext(ctx);
+  let selected: { name: string; provider: EmailProvider };
+
+  if (ctx) {
+    try {
+      selected = await selectProvider(ctx as QueryCtx);
+    } catch (e) {
+      // DB error - fallback to first provider
+      logger.error("Failed to select provider, falling back to default", { error: e });
+      selected = getFirstProvider();
+    }
+  } else {
+    // No ctx - use first provider (no rotation)
+    selected = getFirstProvider();
+  }
 
   // Send email
   const result = await selected.provider.send(params);
 
-  // Record usage if successful
-  if (result.success && !process.env.SKIP_USAGE_RECORDING) {
-    await recordUsageWithContext(ctx, selected.name);
+  // Record usage if successful and we have mutation context
+  if (ctx && result.success && "scheduler" in ctx) {
+    try {
+      await recordUsage(ctx as MutationCtx, selected.name, 1);
+    } catch (e) {
+      // Don't fail send because of usage tracking error
+      logger.error("Failed to record usage", { error: e });
+    }
   }
 
   return { ...result, provider: selected.name };

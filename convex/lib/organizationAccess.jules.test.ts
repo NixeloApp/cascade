@@ -2,7 +2,6 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import { createOrganizationAdmin, createTestUser } from "../testUtils";
 import {
   getOrganizationMemberships,
   getOrganizationRole,
@@ -10,7 +9,6 @@ import {
   isOrganizationAdmin,
   isOrganizationMember,
 } from "./organizationAccess";
-import { MAX_PAGE_SIZE } from "./queryLimits";
 
 describe("organizationAccess", () => {
   const createTestUser = async (t: any) => {
