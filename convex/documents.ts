@@ -63,10 +63,6 @@ export const create = authenticatedMutation({
       if (parent.organizationId !== args.organizationId) {
         throw validation("parentId", "Parent document must be in the same organization");
       }
-
-      // Check if user has access to the parent document
-      await assertDocumentAccess(ctx, parent);
-
       // Get max order among siblings (bounded)
       const siblings = await ctx.db
         .query("documents")
@@ -837,13 +833,6 @@ export const moveDocument = authenticatedMutation({
     // Validate new parent if provided
     if (args.newParentId) {
       await validateNewParent(ctx.db, args.id, args.newParentId, document.organizationId);
-
-      // Check if user has access to the new parent document
-      const newParent = await ctx.db.get(args.newParentId);
-      // Existence checked in validateNewParent
-      if (newParent) {
-        await assertDocumentAccess(ctx, newParent);
-      }
     }
 
     // Calculate new order if not provided

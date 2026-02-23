@@ -128,7 +128,20 @@ function hasMinimumOrgRole(role: OrganizationRole | null, requiredRole: Organiza
 
 /**
  * Authenticated Query - requires user to be logged in.
- * Injects `userId` into context.
+ *
+ * Use this for any query that needs the current user's ID but no specific
+ * organization/project context.
+ *
+ * @param ctx - The query context, augmented with:
+ *   - `userId`: The current user's ID.
+ *
+ * @example
+ * export const getMyProfile = authenticatedQuery({
+ *   args: {},
+ *   handler: async (ctx) => {
+ *     return await ctx.db.get(ctx.userId);
+ *   },
+ * });
  */
 export const authenticatedQuery = customQuery(query, {
   args: {},
@@ -140,7 +153,20 @@ export const authenticatedQuery = customQuery(query, {
 
 /**
  * Authenticated Mutation - requires user to be logged in.
- * Injects `userId` into context.
+ *
+ * Use this for any mutation that needs the current user's ID but no specific
+ * organization/project context.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *
+ * @example
+ * export const updateProfile = authenticatedMutation({
+ *   args: { name: v.string() },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.patch(ctx.userId, { name: args.name });
+ *   },
+ * });
  */
 export const authenticatedMutation = customMutation(mutation, {
   args: {},
@@ -156,7 +182,20 @@ export const authenticatedMutation = customMutation(mutation, {
 
 /**
  * Organization Query - requires membership in the organization.
- * Injects: userId, organizationId, organizationRole, organization
+ *
+ * @param ctx - The query context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `organizationId`: The ID of the organization (from args).
+ *   - `organization`: The full organization document.
+ *   - `organizationRole`: The user's role in the organization ('owner', 'admin', 'member').
+ *
+ * @example
+ * export const getOrgDetails = organizationQuery({
+ *   args: { organizationId: v.id("organizations") },
+ *   handler: async (ctx, args) => {
+ *     return ctx.organization;
+ *   },
+ * });
  */
 export const organizationQuery = customQuery(query, {
   args: { organizationId: v.id("organizations") },
@@ -182,6 +221,20 @@ export const organizationQuery = customQuery(query, {
 
 /**
  * Organization Member Mutation - requires membership in the organization.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `organizationId`: The ID of the organization (from args).
+ *   - `organization`: The full organization document.
+ *   - `organizationRole`: The user's role in the organization ('owner', 'admin', 'member').
+ *
+ * @example
+ * export const updateMemberStatus = organizationMemberMutation({
+ *   args: { organizationId: v.id("organizations") },
+ *   handler: async (ctx, args) => {
+ *     // Logic for organization members
+ *   },
+ * });
  */
 export const organizationMemberMutation = customMutation(mutation, {
   args: { organizationId: v.id("organizations") },
@@ -207,6 +260,20 @@ export const organizationMemberMutation = customMutation(mutation, {
 
 /**
  * Organization Admin Mutation - requires admin role in the organization.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `organizationId`: The ID of the organization (from args).
+ *   - `organization`: The full organization document.
+ *   - `organizationRole`: The user's role in the organization ('owner', 'admin', 'member').
+ *
+ * @example
+ * export const updateOrgSettings = organizationAdminMutation({
+ *   args: { organizationId: v.id("organizations"), name: v.string() },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.patch(ctx.organizationId, { name: args.name });
+ *   },
+ * });
  */
 export const organizationAdminMutation = customMutation(mutation, {
   args: { organizationId: v.id("organizations") },
@@ -236,7 +303,20 @@ export const organizationAdminMutation = customMutation(mutation, {
 
 /**
  * Workspace Query - requires membership in the parent organization.
- * Injects: userId, workspaceId, workspace, organizationId
+ *
+ * @param ctx - The query context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `workspaceId`: The ID of the workspace (from args).
+ *   - `workspace`: The full workspace document.
+ *   - `organizationId`: The ID of the parent organization.
+ *
+ * @example
+ * export const getWorkspaceDetails = workspaceQuery({
+ *   args: { workspaceId: v.id("workspaces") },
+ *   handler: async (ctx, args) => {
+ *     return ctx.workspace;
+ *   },
+ * });
  */
 export const workspaceQuery = customQuery(query, {
   args: { workspaceId: v.id("workspaces") },
@@ -275,6 +355,20 @@ export const workspaceQuery = customQuery(query, {
 
 /**
  * Workspace Admin Mutation - requires admin role in the workspace.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `workspaceId`: The ID of the workspace (from args).
+ *   - `workspace`: The full workspace document.
+ *   - `organizationId`: The ID of the parent organization.
+ *
+ * @example
+ * export const deleteWorkspace = workspaceAdminMutation({
+ *   args: { workspaceId: v.id("workspaces") },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.delete(ctx.workspaceId);
+ *   },
+ * });
  */
 export const workspaceAdminMutation = customMutation(mutation, {
   args: { workspaceId: v.id("workspaces") },
@@ -309,6 +403,20 @@ export const workspaceAdminMutation = customMutation(mutation, {
 
 /**
  * Workspace Editor Mutation - requires editor role in the workspace.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `workspaceId`: The ID of the workspace (from args).
+ *   - `workspace`: The full workspace document.
+ *   - `organizationId`: The ID of the parent organization.
+ *
+ * @example
+ * export const updateWorkspace = workspaceEditorMutation({
+ *   args: { workspaceId: v.id("workspaces"), name: v.string() },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.patch(ctx.workspaceId, { name: args.name });
+ *   },
+ * });
  */
 export const workspaceEditorMutation = customMutation(mutation, {
   args: { workspaceId: v.id("workspaces") },
@@ -343,6 +451,20 @@ export const workspaceEditorMutation = customMutation(mutation, {
 
 /**
  * Workspace Member Mutation - requires membership in the workspace.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `workspaceId`: The ID of the workspace (from args).
+ *   - `workspace`: The full workspace document.
+ *   - `organizationId`: The ID of the parent organization.
+ *
+ * @example
+ * export const joinWorkspace = workspaceMemberMutation({
+ *   args: { workspaceId: v.id("workspaces") },
+ *   handler: async (ctx, args) => {
+ *     // Join logic
+ *   },
+ * });
  */
 export const workspaceMemberMutation = customMutation(mutation, {
   args: { workspaceId: v.id("workspaces") },
@@ -381,7 +503,21 @@ export const workspaceMemberMutation = customMutation(mutation, {
 
 /**
  * Team Query - requires team membership or org admin.
- * Injects: userId, teamId, team, teamRole, organizationId
+ *
+ * @param ctx - The query context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `teamId`: The ID of the team (from args).
+ *   - `team`: The full team document.
+ *   - `teamRole`: The user's role in the team ('admin', 'member').
+ *   - `organizationId`: The ID of the parent organization.
+ *
+ * @example
+ * export const getTeamDetails = teamQuery({
+ *   args: { teamId: v.id("teams") },
+ *   handler: async (ctx, args) => {
+ *     return ctx.team;
+ *   },
+ * });
  */
 export const teamQuery = customQuery(query, {
   args: { teamId: v.id("teams") },
@@ -419,6 +555,21 @@ export const teamQuery = customQuery(query, {
 
 /**
  * Team Member Mutation - requires team membership or org admin.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `teamId`: The ID of the team (from args).
+ *   - `team`: The full team document.
+ *   - `teamRole`: The user's role in the team ('admin', 'member').
+ *   - `organizationId`: The ID of the parent organization.
+ *
+ * @example
+ * export const leaveTeam = teamMemberMutation({
+ *   args: { teamId: v.id("teams") },
+ *   handler: async (ctx, args) => {
+ *     // Leave team logic
+ *   },
+ * });
  */
 export const teamMemberMutation = customMutation(mutation, {
   args: { teamId: v.id("teams") },
@@ -456,6 +607,21 @@ export const teamMemberMutation = customMutation(mutation, {
 
 /**
  * Team Lead Mutation - requires team admin role or org admin.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `teamId`: The ID of the team (from args).
+ *   - `team`: The full team document.
+ *   - `teamRole`: The user's role in the team ('admin', 'member').
+ *   - `organizationId`: The ID of the parent organization.
+ *
+ * @example
+ * export const updateTeamSettings = teamLeadMutation({
+ *   args: { teamId: v.id("teams"), name: v.string() },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.patch(ctx.teamId, { name: args.name });
+ *   },
+ * });
  */
 export const teamLeadMutation = customMutation(mutation, {
   args: { teamId: v.id("teams") },
@@ -494,7 +660,20 @@ export const teamLeadMutation = customMutation(mutation, {
 
 /**
  * Project Query - requires project access or public project.
- * Injects: userId, projectId, role, project
+ *
+ * @param ctx - The query context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the project (from args).
+ *   - `project`: The full project document.
+ *   - `role`: The user's role in the project ('admin', 'editor', 'viewer').
+ *
+ * @example
+ * export const getProject = projectQuery({
+ *   args: { projectId: v.id("projects") },
+ *   handler: async (ctx, args) => {
+ *     return ctx.project;
+ *   },
+ * });
  */
 export const projectQuery = customQuery(query, {
   args: { projectId: v.id("projects") },
@@ -520,6 +699,20 @@ export const projectQuery = customQuery(query, {
 
 /**
  * Project Viewer Mutation - requires at least viewer role.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the project (from args).
+ *   - `project`: The full project document.
+ *   - `role`: The user's role in the project ('admin', 'editor', 'viewer').
+ *
+ * @example
+ * export const logView = projectViewerMutation({
+ *   args: { projectId: v.id("projects") },
+ *   handler: async (ctx, args) => {
+ *     // Log view logic
+ *   },
+ * });
  */
 export const projectViewerMutation = customMutation(mutation, {
   args: { projectId: v.id("projects") },
@@ -543,6 +736,20 @@ export const projectViewerMutation = customMutation(mutation, {
 
 /**
  * Project Editor Mutation - requires at least editor role.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the project (from args).
+ *   - `project`: The full project document.
+ *   - `role`: The user's role in the project ('admin', 'editor', 'viewer').
+ *
+ * @example
+ * export const updateProject = projectEditorMutation({
+ *   args: { projectId: v.id("projects"), description: v.string() },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.patch(ctx.projectId, { description: args.description });
+ *   },
+ * });
  */
 export const projectEditorMutation = customMutation(mutation, {
   args: { projectId: v.id("projects") },
@@ -566,6 +773,20 @@ export const projectEditorMutation = customMutation(mutation, {
 
 /**
  * Project Admin Mutation - requires admin role.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the project (from args).
+ *   - `project`: The full project document.
+ *   - `role`: The user's role in the project ('admin', 'editor', 'viewer').
+ *
+ * @example
+ * export const deleteProject = projectAdminMutation({
+ *   args: { projectId: v.id("projects") },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.delete(ctx.projectId);
+ *   },
+ * });
  */
 export const projectAdminMutation = customMutation(mutation, {
   args: { projectId: v.id("projects") },
@@ -593,7 +814,21 @@ export const projectAdminMutation = customMutation(mutation, {
 
 /**
  * Issue Mutation - requires editor role on the parent project.
- * Injects: userId, projectId, role, project, issue
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the parent project.
+ *   - `role`: The user's role in the project.
+ *   - `project`: The full project document.
+ *   - `issue`: The full issue document.
+ *
+ * @example
+ * export const updateIssue = issueMutation({
+ *   args: { issueId: v.id("issues"), title: v.string() },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.patch(ctx.issue._id, { title: args.title });
+ *   },
+ * });
  */
 export const issueMutation = customMutation(mutation, {
   args: { issueId: v.id("issues") },
@@ -622,6 +857,21 @@ export const issueMutation = customMutation(mutation, {
 
 /**
  * Issue Viewer Mutation - requires viewer role (for comments, watches).
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the parent project.
+ *   - `role`: The user's role in the project.
+ *   - `project`: The full project document.
+ *   - `issue`: The full issue document.
+ *
+ * @example
+ * export const watchIssue = issueViewerMutation({
+ *   args: { issueId: v.id("issues") },
+ *   handler: async (ctx, args) => {
+ *     // Add watch logic
+ *   },
+ * });
  */
 export const issueViewerMutation = customMutation(mutation, {
   args: { issueId: v.id("issues") },
@@ -650,6 +900,21 @@ export const issueViewerMutation = customMutation(mutation, {
 
 /**
  * Issue Query - requires project access or public project.
+ *
+ * @param ctx - The query context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the parent project.
+ *   - `role`: The user's role in the project.
+ *   - `project`: The full project document.
+ *   - `issue`: The full issue document.
+ *
+ * @example
+ * export const getIssue = issueQuery({
+ *   args: { issueId: v.id("issues") },
+ *   handler: async (ctx, args) => {
+ *     return ctx.issue;
+ *   },
+ * });
  */
 export const issueQuery = customQuery(query, {
   args: { issueId: v.id("issues") },
@@ -683,7 +948,21 @@ export const issueQuery = customQuery(query, {
 
 /**
  * Sprint Query - requires project access or public project.
- * Injects: userId, projectId, role, project, sprint
+ *
+ * @param ctx - The query context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the parent project.
+ *   - `role`: The user's role in the project.
+ *   - `project`: The full project document.
+ *   - `sprint`: The full sprint document.
+ *
+ * @example
+ * export const getSprint = sprintQuery({
+ *   args: { sprintId: v.id("sprints") },
+ *   handler: async (ctx, args) => {
+ *     return ctx.sprint;
+ *   },
+ * });
  */
 export const sprintQuery = customQuery(query, {
   args: { sprintId: v.id("sprints") },
@@ -712,6 +991,21 @@ export const sprintQuery = customQuery(query, {
 
 /**
  * Sprint Mutation - requires editor role on the parent project.
+ *
+ * @param ctx - The mutation context, augmented with:
+ *   - `userId`: The current user's ID.
+ *   - `projectId`: The ID of the parent project.
+ *   - `role`: The user's role in the project.
+ *   - `project`: The full project document.
+ *   - `sprint`: The full sprint document.
+ *
+ * @example
+ * export const updateSprint = sprintMutation({
+ *   args: { sprintId: v.id("sprints"), name: v.string() },
+ *   handler: async (ctx, args) => {
+ *     await ctx.db.patch(ctx.sprint._id, { name: args.name });
+ *   },
+ * });
  */
 export const sprintMutation = customMutation(mutation, {
   args: { sprintId: v.id("sprints") },

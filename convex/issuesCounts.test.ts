@@ -15,7 +15,7 @@ describe("Issue Counts Performance", () => {
 
     // Create 3 Todo issues
     for (let i = 0; i < 3; i++) {
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: `Todo ${i}`,
         type: "task",
@@ -26,13 +26,13 @@ describe("Issue Counts Performance", () => {
     // Create 2 Done issues
     const doneIssueIds = [];
     for (let i = 0; i < 2; i++) {
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const id = await asUser.mutation(api.issues.create, {
         projectId,
         title: `Done ${i}`,
         type: "task",
         priority: "medium",
       });
-      doneIssueIds.push(issueId);
+      doneIssueIds.push(id);
     }
 
     // Move to done

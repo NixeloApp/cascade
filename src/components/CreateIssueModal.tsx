@@ -101,7 +101,7 @@ export function CreateIssueModal({
   );
 
   // Mutations
-  const createIssue = useMutation(api.issues.createIssue);
+  const createIssue = useMutation(api.issues.create);
   const generateSuggestions = useAction(api.ai.actions.generateIssueSuggestions);
 
   type CreateIssueForm = z.infer<typeof createIssueSchema>;

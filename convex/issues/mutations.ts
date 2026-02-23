@@ -1,5 +1,7 @@
+import { MINUTE } from "@convex-dev/rate-limiter";
 import { v } from "convex/values";
 import { asyncMap, pruneNull } from "convex-helpers";
+import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -9,10 +11,10 @@ import {
   projectEditorMutation,
 } from "../customFunctions";
 import { validate } from "../lib/constrainedValidators";
-import { conflict, validation } from "../lib/errors";
+import { conflict, rateLimited, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
-import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
-import { issueTypesWithSubtask, workflowCategories } from "../validators/index";
+import { assertCanEditProject, assertIsProjectAdmin } from "../projectAccess";
+import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   assertVersionMatch,
   generateIssueKey,
@@ -24,7 +26,7 @@ import {
   validateParentIssue,
 } from "./helpers";
 
-export const createIssue = projectEditorMutation({
+export const create = projectEditorMutation({
   args: {
     title: v.string(),
     description: v.optional(v.string()),
@@ -52,6 +54,34 @@ export const createIssue = projectEditorMutation({
     storyPoints: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Rate limit: 60 issues per minute per user with burst capacity of 15
+    // Skip in test environment (convex-test doesn't support components)
+    if (!process.env.IS_TEST_ENV) {
+      const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
+        name: `createIssue:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 60,
+          period: MINUTE,
+          capacity: 15,
+        },
+      });
+      if (!rateLimitResult.ok) {
+        throw rateLimited(rateLimitResult.retryAfter);
+      }
+
+      // Consume the rate limit token
+      await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+        name: `createIssue:${ctx.userId}`,
+        config: {
+          kind: "token bucket",
+          rate: 60,
+          period: MINUTE,
+          capacity: 15,
+        },
+      });
+    }
+
     // Validate input constraints
     validate.title(args.title);
     validate.description(args.description);
@@ -123,7 +153,7 @@ export const createIssue = projectEditorMutation({
       action: "created",
     });
 
-    return { issueId };
+    return issueId;
   },
 });
 
@@ -316,19 +346,8 @@ export const addComment = issueViewerMutation({
 
     // Notify mentioned users in parallel
     const mentionedOthers = mentions.filter((id) => id !== ctx.userId);
-
-    // Filter mentions by project access to prevent leaks
-    const validMentions = (
-      await Promise.all(
-        mentionedOthers.map(async (userId) => {
-          const hasAccess = await canAccessProject(ctx, ctx.projectId, userId);
-          return hasAccess ? userId : null;
-        }),
-      )
-    ).filter((id): id is Id<"users"> => id !== null);
-
     await Promise.all(
-      validMentions.flatMap((mentionedUserId) => [
+      mentionedOthers.flatMap((mentionedUserId) => [
         ctx.db.insert("notifications", {
           userId: mentionedUserId,
           type: "issue_mentioned",

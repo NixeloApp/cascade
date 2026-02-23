@@ -30,7 +30,7 @@ describe("Analytics", () => {
 
       // Create issues with various attributes
       // 1. Todo, Task, Medium, Unassigned (create defaults to Todo)
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
@@ -38,7 +38,7 @@ describe("Analytics", () => {
       });
 
       // 2. In Progress, Bug, High, Assigned to User 1
-      const { issueId: issue2 } = await asUser.mutation(api.issues.createIssue, {
+      const issue2 = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "bug",
@@ -52,7 +52,7 @@ describe("Analytics", () => {
       });
 
       // 3. Done, Story, Low, Assigned to User 2
-      const { issueId: issue3 } = await asUser.mutation(api.issues.createIssue, {
+      const issue3 = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 3",
         type: "story",
@@ -163,7 +163,7 @@ describe("Analytics", () => {
       });
 
       // Create issues with story points
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 1",
         type: "task",
@@ -171,7 +171,7 @@ describe("Analytics", () => {
         sprintId,
         estimatedHours: 5,
       });
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 2",
         type: "task",
@@ -208,7 +208,7 @@ describe("Analytics", () => {
       const doneState = project?.workflowStates.find((s: { name: string }) => s.name === "Done");
 
       // Create issues
-      const { issueId: issue1 } = await asUser.mutation(api.issues.createIssue, {
+      const issue1 = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 1",
         type: "task",
@@ -216,7 +216,7 @@ describe("Analytics", () => {
         sprintId,
         estimatedHours: 5,
       });
-      await asUser.mutation(api.issues.createIssue, {
+      const _issue2 = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 2",
         type: "task",
@@ -255,7 +255,7 @@ describe("Analytics", () => {
         name: "Sprint 1",
       });
 
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 1",
         type: "task",
@@ -365,7 +365,7 @@ describe("Analytics", () => {
         projectId,
         name: "Sprint 1",
       });
-      const { issueId: issue1 } = await asUser.mutation(api.issues.createIssue, {
+      const issue1 = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 1",
         type: "task",
@@ -387,7 +387,7 @@ describe("Analytics", () => {
         projectId,
         name: "Sprint 2",
       });
-      const { issueId: issue2 } = await asUser.mutation(api.issues.createIssue, {
+      const issue2 = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Task 2",
         type: "task",
@@ -488,7 +488,7 @@ describe("Analytics", () => {
       });
 
       // Create completed issue
-      const { issueId: completedIssue } = await asUser.mutation(api.issues.createIssue, {
+      const completedIssue = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Completed Task",
         type: "task",
@@ -498,7 +498,7 @@ describe("Analytics", () => {
       });
 
       // Create incomplete issue
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Incomplete Task",
         type: "task",
@@ -579,7 +579,7 @@ describe("Analytics", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create issue (generates activity)
-      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+      const issueId = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Test Issue",
         type: "task",
@@ -613,7 +613,7 @@ describe("Analytics", () => {
 
       // Create multiple issues to generate activity
       for (let i = 0; i < 10; i++) {
-        await asUser.mutation(api.issues.createIssue, {
+        await asUser.mutation(api.issues.create, {
           projectId,
           title: `Issue ${i}`,
           type: "task",
@@ -656,6 +656,80 @@ describe("Analytics", () => {
       });
 
       expect(activity).toEqual([]);
+    });
+
+    it("should return activity for comments on older issues", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      // Create 5 issues
+      const issueIds = [];
+      for (let i = 0; i < 5; i++) {
+        issueIds.push(
+          await asUser.mutation(api.issues.create, {
+            projectId,
+            title: `Issue ${i}`,
+            type: "task",
+            priority: "medium",
+          }),
+        );
+      }
+
+      // Update the first 3 issues to make them "newer"
+      for (let i = 0; i < 3; i++) {
+        await asUser.mutation(api.issues.update, {
+          issueId: issueIds[i],
+          title: `Updated Issue ${i}`,
+        });
+      }
+
+      // Comment on the 5th issue (oldest updated)
+      // This should bring it to the top of recent activity
+      await asUser.mutation(api.issues.addComment, {
+        issueId: issueIds[4],
+        content: "New comment on old issue",
+      });
+
+      const activity = await asUser.query(api.analytics.getRecentActivity, {
+        projectId,
+        limit: 5,
+      });
+
+      // The comment activity should be the most recent
+      expect(activity[0].action).toBe("commented");
+      expect(activity[0].issueId).toBe(issueIds[4]);
+    });
+
+    it("should return activity for deleted issues", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const issueId = await asUser.mutation(api.issues.create, {
+        projectId,
+        title: "To be deleted",
+        type: "task",
+        priority: "medium",
+      });
+
+      // Delete the issue
+      await asUser.mutation(api.issues.bulkDelete, {
+        issueIds: [issueId],
+      });
+
+      const activity = await asUser.query(api.analytics.getRecentActivity, {
+        projectId,
+        limit: 5,
+      });
+
+      // The delete activity should be present
+      expect(activity[0].action).toBe("deleted");
+      expect(activity[0].issueId).toBe(issueId);
     });
 
     it("should deny unauthenticated users", async () => {

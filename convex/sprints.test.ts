@@ -192,14 +192,14 @@ describe("Sprints", () => {
       });
 
       // Create issues in the sprint
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 1",
         type: "task",
         priority: "medium",
         sprintId,
       });
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Issue 2",
         type: "task",
@@ -225,7 +225,7 @@ describe("Sprints", () => {
       });
 
       // Create done issues in the sprint
-      const { issueId: doneIssue1 } = await asUser.mutation(api.issues.createIssue, {
+      const doneIssue1 = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Done Issue 1",
         type: "task",
@@ -238,7 +238,7 @@ describe("Sprints", () => {
         newOrder: 0,
       });
 
-      const { issueId: doneIssue2 } = await asUser.mutation(api.issues.createIssue, {
+      const doneIssue2 = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Done Issue 2",
         type: "task",
@@ -252,7 +252,7 @@ describe("Sprints", () => {
       });
 
       // Create todo issue in the sprint
-      await asUser.mutation(api.issues.createIssue, {
+      await asUser.mutation(api.issues.create, {
         projectId,
         title: "Todo Issue 1",
         type: "task",
@@ -261,7 +261,7 @@ describe("Sprints", () => {
       });
 
       // Create done issue NOT in the sprint
-      const { issueId: otherIssue } = await asUser.mutation(api.issues.createIssue, {
+      const otherIssue = await asUser.mutation(api.issues.create, {
         projectId,
         title: "Done Issue Other",
         type: "task",
