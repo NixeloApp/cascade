@@ -4,6 +4,7 @@
  * Sends daily and weekly digest emails to users who have opted in
  */
 
+import type { PaginationResult } from "convex/server";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { internalAction } from "../_generated/server";
@@ -30,13 +31,13 @@ export const sendDailyDigests = internalAction({
 
     while (!isDone) {
       // Get batch of users who have daily digest enabled
-      const result = await ctx.runQuery(internal.users.listWithDigestPreference, {
+      const result = (await ctx.runQuery(internal.users.listWithDigestPreference, {
         frequency: "daily",
         paginationOpts: {
           cursor,
           numItems: 100, // Process 100 users at a time
         },
-      });
+      })) as PaginationResult<{ _id: Id<"users"> }>;
 
       const users = result.page;
       isDone = result.isDone;
@@ -86,13 +87,13 @@ export const sendWeeklyDigests = internalAction({
 
     while (!isDone) {
       // Get batch of users who have weekly digest enabled
-      const result = await ctx.runQuery(internal.users.listWithDigestPreference, {
+      const result = (await ctx.runQuery(internal.users.listWithDigestPreference, {
         frequency: "weekly",
         paginationOpts: {
           cursor,
           numItems: 100, // Process 100 users at a time
         },
-      });
+      })) as PaginationResult<{ _id: Id<"users"> }>;
 
       const users = result.page;
       isDone = result.isDone;
