@@ -142,12 +142,14 @@ export const createProject = authenticatedMutation({
     }
 
     // Validate: sharedWithTeamIds must belong to the organization
-    if (args.sharedWithTeamIds && args.sharedWithTeamIds.length > 0) {
-      const teams = await Promise.all(args.sharedWithTeamIds.map((id) => ctx.db.get(id)));
+    // Deduplicate team IDs and validate each team
+    const uniqueSharedTeamIds = args.sharedWithTeamIds ? [...new Set(args.sharedWithTeamIds)] : [];
+    if (uniqueSharedTeamIds.length > 0) {
+      const teams = await Promise.all(uniqueSharedTeamIds.map((id) => ctx.db.get(id)));
       for (let i = 0; i < teams.length; i++) {
         const team = teams[i];
-        if (!team) {
-          throw notFound("team", args.sharedWithTeamIds[i]);
+        if (!team || team.isDeleted) {
+          throw notFound("team", uniqueSharedTeamIds[i]);
         }
         if (team.organizationId !== args.organizationId) {
           throw validation(
@@ -184,7 +186,7 @@ export const createProject = authenticatedMutation({
       // Optional
       teamId: args.teamId,
       isPublic: args.isPublic ?? false,
-      sharedWithTeamIds: args.sharedWithTeamIds ?? [],
+      sharedWithTeamIds: uniqueSharedTeamIds,
     });
 
     // Add creator as admin in projectMembers table (for individual access control)

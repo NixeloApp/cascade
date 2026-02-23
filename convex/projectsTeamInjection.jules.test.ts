@@ -22,11 +22,7 @@ describe("Projects Team Injection Security", () => {
     const victim = await createTestUser(t, { name: "Victim" });
     await addUserToOrganization(t, organizationId, victim, admin);
 
-    // Victim creates a team
-    const asVictim = asAuthenticatedUser(t, victim);
-    // We need to use internal mutation or helper because api.teams.create might not be exposed or checked here
-    // But let's assume we can use `createProjectInOrganization` helper style or just insert directly
-    // Since we are testing `projects.createProject`, let's just insert the team directly using t.run
+    // Victim creates a team (inserted directly via t.run since we're testing createProject)
     const victimTeamId = await t.run(async (ctx) => {
       const teamId = await ctx.db.insert("teams", {
         organizationId,
@@ -72,7 +68,7 @@ describe("Projects Team Injection Security", () => {
     const asAttacker = asAuthenticatedUser(t, attacker);
 
     // 4. Attacker tries to create project assigned to Victim's Team
-    // This should FAIL, but currently passes
+    // This must fail - attacker is not a team member or org admin
     await expect(async () => {
       await asAttacker.mutation(api.projects.createProject, {
         name: "Malicious Project",
@@ -85,9 +81,6 @@ describe("Projects Team Injection Security", () => {
     }).rejects.toThrow(
       /You must be a team member or organization admin to assign this project to the team/,
     );
-    // Note: I anticipate this error message for the fix.
-    // For now, I expect it to NOT throw (or throw a different error if I was wrong about vulnerability).
-    // To confirm vulnerability, I should assert that it DOES NOT throw, or just let it fail.
   });
 
   it("should prevent sharing project with team from different organization", async () => {
