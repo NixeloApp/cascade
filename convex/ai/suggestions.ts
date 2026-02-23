@@ -7,14 +7,13 @@
 
 import { anthropic } from "@ai-sdk/anthropic";
 import { ActionCache } from "@convex-dev/action-cache";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { generateText } from "ai";
 import { v } from "convex/values";
 import { api, components, internal } from "../_generated/api";
-import { action, internalAction, mutation, query } from "../_generated/server";
+import { internalAction, mutation, query } from "../_generated/server";
+import { authenticatedAction } from "../customFunctions";
 import { extractUsage } from "../lib/aiHelpers";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
-import { unauthenticated } from "../lib/errors";
 import { HOUR } from "../lib/timeUtils";
 import { rateLimit } from "../rateLimits";
 import { issueTypes } from "../validators";
@@ -92,21 +91,16 @@ const labelsCache = new ActionCache(components.actionCache, {
 /**
  * Generate AI suggestion for issue description
  */
-export const suggestIssueDescription = action({
+export const suggestIssueDescription = authenticatedAction({
   args: {
     title: v.string(),
     type: issueTypes,
     projectId: v.id("projects"),
   },
   handler: async (ctx, args): Promise<string> => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
-      key: userId,
+      key: ctx.userId,
       throws: true,
     });
 
@@ -171,7 +165,7 @@ Description:`;
 /**
  * Suggest priority based on issue details
  */
-export const suggestPriority = action({
+export const suggestPriority = authenticatedAction({
   args: {
     title: v.string(),
     description: v.optional(v.string()),
@@ -179,14 +173,9 @@ export const suggestPriority = action({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args): Promise<"highest" | "high" | "medium" | "low" | "lowest"> => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
-      key: userId,
+      key: ctx.userId,
       throws: true,
     });
 
@@ -253,7 +242,7 @@ Priority:`;
 /**
  * Suggest labels for an issue
  */
-export const suggestLabels = action({
+export const suggestLabels = authenticatedAction({
   args: {
     title: v.string(),
     description: v.optional(v.string()),
@@ -261,14 +250,9 @@ export const suggestLabels = action({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args): Promise<string[]> => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw unauthenticated();
-    }
-
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
-      key: userId,
+      key: ctx.userId,
       throws: true,
     });
 
