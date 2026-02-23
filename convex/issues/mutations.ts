@@ -1,7 +1,5 @@
-import { MINUTE } from "@convex-dev/rate-limiter";
 import { type Infer, v } from "convex/values";
 import { asyncMap, pruneNull } from "convex-helpers";
-import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -11,9 +9,10 @@ import {
   projectEditorMutation,
 } from "../customFunctions";
 import { validate } from "../lib/constrainedValidators";
-import { conflict, rateLimited, validation } from "../lib/errors";
+import { conflict, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
+import { enforceRateLimit } from "../rateLimits";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   assertVersionMatch,
@@ -69,31 +68,7 @@ async function createIssueImpl(
   args: CreateIssueArgs,
 ) {
   // Rate limit: 60 issues per minute per user with burst capacity of 15
-  // Skip in test environment (convex-test doesn't support components)
-  if (!process.env.IS_TEST_ENV) {
-    const rateLimitResult = await ctx.runQuery(components.rateLimiter.lib.checkRateLimit, {
-      name: `createIssue:${ctx.userId}`,
-      config: {
-        kind: "token bucket",
-        rate: 60,
-        period: MINUTE,
-        capacity: 15,
-      },
-    });
-    if (!rateLimitResult.ok) {
-      throw rateLimited(rateLimitResult.retryAfter);
-    }
-
-    await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
-      name: `createIssue:${ctx.userId}`,
-      config: {
-        kind: "token bucket",
-        rate: 60,
-        period: MINUTE,
-        capacity: 15,
-      },
-    });
-  }
+  await enforceRateLimit(ctx, "createIssue", ctx.userId);
 
   // Validate input constraints
   validate.title(args.title);
