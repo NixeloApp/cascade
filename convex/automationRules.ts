@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { internalMutation, type MutationCtx } from "./_generated/server";
 import { authenticatedMutation, projectAdminMutation, projectQuery } from "./customFunctions";
 import { notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -120,6 +121,58 @@ export const remove = authenticatedMutation({
   },
 });
 
+async function executeAutomationAction(
+  ctx: MutationCtx,
+  rule: Doc<"automationRules">,
+  issueId: Id<"issues">,
+  issueLabels: string[],
+) {
+  let executed = true;
+
+  switch (rule.actionValue.type) {
+    case "set_assignee":
+      await ctx.db.patch(issueId, {
+        assigneeId: rule.actionValue.assigneeId ?? undefined,
+        updatedAt: Date.now(),
+      });
+      break;
+
+    case "set_priority":
+      await ctx.db.patch(issueId, {
+        priority: rule.actionValue.priority,
+        updatedAt: Date.now(),
+      });
+      break;
+
+    case "add_label": {
+      if (!issueLabels.includes(rule.actionValue.label)) {
+        await ctx.db.patch(issueId, {
+          labels: [...issueLabels, rule.actionValue.label],
+          updatedAt: Date.now(),
+        });
+      }
+      break;
+    }
+
+    case "add_comment":
+      await ctx.db.insert("issueComments", {
+        issueId: issueId,
+        authorId: rule.createdBy,
+        content: rule.actionValue.comment,
+        mentions: [],
+        updatedAt: Date.now(),
+      });
+      break;
+
+    case "send_notification":
+      // TODO: Implement notification sending - skip execution count until implemented
+      executed = false;
+      break;
+  }
+
+  return executed;
+}
+
 /** Executes automation rules for an issue based on trigger events, applying actions like assignee changes or label additions. */
 export const executeRules = internalMutation({
   args: {
@@ -128,7 +181,6 @@ export const executeRules = internalMutation({
     trigger: automationTriggers,
     triggerValue: v.optional(v.string()),
   },
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy code
   handler: async (ctx, args) => {
     // Get active rules for this project and trigger
     const rules = await ctx.db
@@ -140,71 +192,37 @@ export const executeRules = internalMutation({
     const issue = await ctx.db.get(args.issueId);
     if (!issue) return;
 
-    for (const rule of rules) {
+    // Filter matching rules first
+    const matchingRules = rules.filter((rule) => {
       // Check if trigger value matches (if specified)
-      if (rule.triggerValue && rule.triggerValue !== args.triggerValue) {
-        continue;
-      }
+      return !rule.triggerValue || rule.triggerValue === args.triggerValue;
+    });
 
-      // Execute the action - actionValue is now typed!
-      try {
-        let executed = true;
+    // Execute matching rules in parallel
+    await Promise.all(
+      matchingRules.map(async (rule) => {
+        try {
+          const executed = await executeAutomationAction(
+            ctx,
+            rule,
+            args.issueId,
+            issue.labels || [],
+          );
 
-        switch (rule.actionValue.type) {
-          case "set_assignee":
-            await ctx.db.patch(args.issueId, {
-              assigneeId: rule.actionValue.assigneeId ?? undefined,
-              updatedAt: Date.now(),
+          // Only increment execution count if action was actually performed
+          if (executed) {
+            await ctx.db.patch(rule._id, {
+              executionCount: rule.executionCount + 1,
             });
-            break;
-
-          case "set_priority":
-            await ctx.db.patch(args.issueId, {
-              priority: rule.actionValue.priority,
-              updatedAt: Date.now(),
-            });
-            break;
-
-          case "add_label": {
-            const currentLabels = issue.labels || [];
-            if (!currentLabels.includes(rule.actionValue.label)) {
-              await ctx.db.patch(args.issueId, {
-                labels: [...currentLabels, rule.actionValue.label],
-                updatedAt: Date.now(),
-              });
-            }
-            break;
           }
-
-          case "add_comment":
-            await ctx.db.insert("issueComments", {
-              issueId: args.issueId,
-              authorId: rule.createdBy,
-              content: rule.actionValue.comment,
-              mentions: [],
-              updatedAt: Date.now(),
-            });
-            break;
-
-          case "send_notification":
-            // TODO: Implement notification sending - skip execution count until implemented
-            executed = false;
-            break;
+        } catch (error) {
+          // Log error but continue with other rules
+          console.error(
+            `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
+            error,
+          );
         }
-
-        // Only increment execution count if action was actually performed
-        if (executed) {
-          await ctx.db.patch(rule._id, {
-            executionCount: rule.executionCount + 1,
-          });
-        }
-      } catch (error) {
-        // Log error but continue with other rules
-        console.error(
-          `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
-          error,
-        );
-      }
-    }
+      }),
+    );
   },
 });
