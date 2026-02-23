@@ -25,7 +25,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
     });
 
     // Create Todo issues (orders 2, 0, 1) - mixed insertion
-    const { issueId: todo1Id } = await asUser.mutation(api.issues.create, {
+    const { issueId: todo1Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo 1 (Order 2)",
       type: "task",
@@ -38,7 +38,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       await ctx.db.patch(todo1Id, { order: 2 });
     });
 
-    const { issueId: todo2Id } = await asUser.mutation(api.issues.create, {
+    const { issueId: todo2Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo 2 (Order 0)",
       type: "task",
@@ -49,7 +49,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       await ctx.db.patch(todo2Id, { order: 0 });
     });
 
-    const { issueId: todo3Id } = await asUser.mutation(api.issues.create, {
+    const { issueId: todo3Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Todo 3 (Order 1)",
       type: "task",
@@ -62,7 +62,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
 
     // Create Done issues (timestamps T, T+1000, T+2000)
     const now = Date.now();
-    const { issueId: done1Id } = await asUser.mutation(api.issues.create, {
+    const { issueId: done1Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Done 1 (Oldest)",
       type: "task",
@@ -73,7 +73,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       await ctx.db.patch(done1Id, { status: "done", updatedAt: now });
     });
 
-    const { issueId: done2Id } = await asUser.mutation(api.issues.create, {
+    const { issueId: done2Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Done 2 (Middle)",
       type: "task",
@@ -84,7 +84,7 @@ describe("Smart Issue List - Sprint Optimization", () => {
       await ctx.db.patch(done2Id, { status: "done", updatedAt: now + 1000 });
     });
 
-    const { issueId: done3Id } = await asUser.mutation(api.issues.create, {
+    const { issueId: done3Id } = await asUser.mutation(api.issues.createIssue, {
       projectId,
       title: "Done 3 (Newest)",
       type: "task",

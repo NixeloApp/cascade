@@ -13,7 +13,7 @@ describe("Labels", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { labelId } = await asUser.mutation(api.labels.create, {
+      const { labelId } = await asUser.mutation(api.labels.createLabel, {
         projectId,
         name: "Bug",
         color: "#EF4444",
@@ -33,14 +33,14 @@ describe("Labels", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      await asUser.mutation(api.labels.create, {
+      await asUser.mutation(api.labels.createLabel, {
         projectId,
         name: "Feature",
         color: "#3B82F6",
       });
 
       await expect(async () => {
-        await asUser.mutation(api.labels.create, {
+        await asUser.mutation(api.labels.createLabel, {
           projectId,
           name: "Feature",
           color: "#10B981",
@@ -87,7 +87,7 @@ describe("Labels", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { labelId } = await asUser.mutation(api.labels.create, {
+      const { labelId } = await asUser.mutation(api.labels.createLabel, {
         projectId,
         name: "Old Name",
         color: "#EF4444",
@@ -109,7 +109,7 @@ describe("Labels", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { labelId } = await asUser.mutation(api.labels.create, {
+      const { labelId } = await asUser.mutation(api.labels.createLabel, {
         projectId,
         name: "Label",
         color: "#EF4444",
@@ -131,12 +131,12 @@ describe("Labels", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      await asUser.mutation(api.labels.create, {
+      await asUser.mutation(api.labels.createLabel, {
         projectId,
         name: "Label A",
         color: "#EF4444",
       });
-      const { labelId: labelBId } = await asUser.mutation(api.labels.create, {
+      const { labelId: labelBId } = await asUser.mutation(api.labels.createLabel, {
         projectId,
         name: "Label B",
         color: "#3B82F6",
@@ -158,7 +158,7 @@ describe("Labels", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
-      const { labelId } = await asUser.mutation(api.labels.create, {
+      const { labelId } = await asUser.mutation(api.labels.createLabel, {
         projectId,
         name: "To Delete",
         color: "#EF4444",

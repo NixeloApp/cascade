@@ -14,7 +14,7 @@ import {
 } from "../testUtils";
 
 describe("Issue Mutations", () => {
-  describe("create", () => {
+  describe("createIssue", () => {
     it("should create issue with all optional fields", async () => {
       const t = convexTest(schema, modules);
       const { userId, organizationId, asUser } = await createTestContext(t);
@@ -24,7 +24,7 @@ describe("Issue Mutations", () => {
         key: "FULL",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Full Featured Issue",
         description: "A detailed description",
@@ -56,7 +56,7 @@ describe("Issue Mutations", () => {
         key: "EPIC",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Epic Issue",
         type: "epic",
@@ -77,7 +77,7 @@ describe("Issue Mutations", () => {
         key: "BUGP",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Bug Report",
         type: "bug",
@@ -99,7 +99,7 @@ describe("Issue Mutations", () => {
         key: "ACT",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Activity Test",
         type: "task",
@@ -130,7 +130,7 @@ describe("Issue Mutations", () => {
         key: "NOCH",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Status Test",
         type: "task",
@@ -176,7 +176,7 @@ describe("Issue Mutations", () => {
         key: "ORDER",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Order Test",
         type: "task",
@@ -207,7 +207,7 @@ describe("Issue Mutations", () => {
         key: "CAT",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Category Test",
         type: "task",
@@ -235,7 +235,7 @@ describe("Issue Mutations", () => {
         key: "INVAL",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Category Error Test",
         type: "task",
@@ -270,7 +270,7 @@ describe("Issue Mutations", () => {
         key: "MULTI",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Original Title",
         description: "Original description",
@@ -306,7 +306,7 @@ describe("Issue Mutations", () => {
         key: "CLEAR",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Clearable Issue",
         type: "task",
@@ -343,7 +343,7 @@ describe("Issue Mutations", () => {
         key: "LABEL",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Labels Issue",
         type: "task",
@@ -377,7 +377,7 @@ describe("Issue Mutations", () => {
         key: "COMM",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Comment Test",
         type: "task",
@@ -406,7 +406,7 @@ describe("Issue Mutations", () => {
         key: "ACTC",
       });
 
-      const { issueId } = await asUser.mutation(api.issues.create, {
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
         projectId,
         title: "Activity Comment Test",
         type: "task",
@@ -442,7 +442,7 @@ describe("Issue Mutations", () => {
       });
 
       const asAdmin = asAuthenticatedUser(t, adminId);
-      const { issueId } = await asAdmin.mutation(api.issues.create, {
+      const { issueId } = await asAdmin.mutation(api.issues.createIssue, {
         projectId,
         title: "Viewer Comment Test",
         type: "task",
@@ -478,7 +478,7 @@ describe("Issue Mutations", () => {
         });
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-        const { issueId } = await asAdmin.mutation(api.issues.create, {
+        const { issueId } = await asAdmin.mutation(api.issues.createIssue, {
           projectId,
           title: "Bulk Skip Test",
           type: "task",
@@ -626,27 +626,11 @@ describe("Issue Mutations", () => {
         });
 
         // Create issue with initial labels directly
-        const issueId = await t.run(async (ctx) => {
-          const project = await ctx.db.get(projectId);
-          if (!project) throw new Error("Project not found");
-          return await ctx.db.insert("issues", {
-            projectId,
-            organizationId: project.organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: "NODUP-1",
-            title: "Label Test",
-            type: "task",
-            status: "todo",
-            priority: "medium",
-            reporterId: userId,
-            updatedAt: Date.now(),
-            labels: ["existing"],
-            linkedDocuments: [],
-            attachments: [],
-            loggedHours: 0,
-            order: 0,
-          });
+        const issueId = await createTestIssue(t, projectId, userId, {
+          title: "Label Test",
+        });
+        await t.run(async (ctx) => {
+          await ctx.db.patch(issueId, { labels: ["existing"] });
         });
 
         // Bulk add with duplicate
@@ -706,7 +690,7 @@ describe("Issue Mutations", () => {
         await addProjectMember(t, projectId, editorId, "editor", adminId);
 
         const asAdmin = asAuthenticatedUser(t, adminId);
-        const { issueId } = await asAdmin.mutation(api.issues.create, {
+        const { issueId } = await asAdmin.mutation(api.issues.createIssue, {
           projectId,
           title: "Admin Only Delete",
           type: "task",
