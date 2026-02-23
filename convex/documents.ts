@@ -259,12 +259,12 @@ export const restoreDocument = authenticatedMutation({
       throw conflict("Document is not deleted");
     }
 
+    // Ensure user still has access to the document's container
+    await assertDocumentAccess(ctx, document);
+
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to restore this document");
     }
-
-    // Ensure user still has access to the document's container
-    await assertDocumentAccess(ctx, document);
 
     // Restore document
     await ctx.db.patch(args.id, {
