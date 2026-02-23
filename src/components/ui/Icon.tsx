@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon, LucideProps } from "lucide-react";
 import { forwardRef, type SVGProps } from "react";
 import { cn } from "@/lib/utils";
 
@@ -56,16 +56,16 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
     const isDecorative = !ariaLabel && !title;
     const ariaHidden = ariaHiddenProp ?? (isDecorative ? "true" : undefined);
 
-    return (
-      <IconComponent
-        ref={ref}
-        className={cn(iconVariants({ size }), className)}
-        {...props}
-        // @ts-expect-error - Lucide types don't include title but it's valid SVG attribute
-        title={title}
-        aria-hidden={ariaHidden}
-      />
-    );
+    // Cast props to satisfy LucideProps which might be missing strict title typing
+    // but ultimately passes through to SVG
+    const iconProps = {
+      ...props,
+      title,
+      "aria-hidden": ariaHidden,
+      className: cn(iconVariants({ size }), className),
+    } as LucideProps;
+
+    return <IconComponent ref={ref} {...iconProps} />;
   },
 );
 Icon.displayName = "Icon";
