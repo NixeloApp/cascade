@@ -237,12 +237,13 @@ describe("Automation Rules", () => {
         actionValue: { type: "set_priority", priority: "medium" },
       });
 
-      await asUser.mutation(api.automationRules.update, {
+      const result = await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         name: "Updated Name",
         description: "Added description",
         actionValue: { type: "set_priority", priority: "high" },
       });
+      expect(result).toEqual({ success: true });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -269,10 +270,11 @@ describe("Automation Rules", () => {
       });
 
       // Deactivate
-      await asUser.mutation(api.automationRules.update, {
+      const deactivateResult = await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         isActive: false,
       });
+      expect(deactivateResult).toEqual({ success: true });
 
       let rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -280,10 +282,11 @@ describe("Automation Rules", () => {
       expect(rule?.isActive).toBe(false);
 
       // Reactivate
-      await asUser.mutation(api.automationRules.update, {
+      const reactivateResult = await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         isActive: true,
       });
+      expect(reactivateResult).toEqual({ success: true });
 
       rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -308,10 +311,11 @@ describe("Automation Rules", () => {
       });
 
       // Update only name
-      await asUser.mutation(api.automationRules.update, {
+      const result = await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         name: "New Name",
       });
+      expect(result).toEqual({ success: true });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -428,7 +432,8 @@ describe("Automation Rules", () => {
         actionValue: { type: "set_priority", priority: "high" },
       });
 
-      await asUser.mutation(api.automationRules.remove, { id: ruleId });
+      const result = await asUser.mutation(api.automationRules.remove, { id: ruleId });
+      expect(result).toEqual({ success: true });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
