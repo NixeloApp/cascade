@@ -1,5 +1,5 @@
 import { MINUTE } from "@convex-dev/rate-limiter";
-import { v } from "convex/values";
+import { type ObjectType, v } from "convex/values";
 import { asyncMap, pruneNull } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
@@ -25,6 +25,128 @@ import {
   processIssueUpdates,
   validateParentIssue,
 } from "./helpers";
+
+const createIssueArgs = {
+  title: v.string(),
+  description: v.optional(v.string()),
+  type: v.union(
+    v.literal("task"),
+    v.literal("bug"),
+    v.literal("story"),
+    v.literal("epic"),
+    v.literal("subtask"),
+  ),
+  priority: v.union(
+    v.literal("lowest"),
+    v.literal("low"),
+    v.literal("medium"),
+    v.literal("high"),
+    v.literal("highest"),
+  ),
+  assigneeId: v.optional(v.id("users")),
+  sprintId: v.optional(v.id("sprints")),
+  moduleId: v.optional(v.id("modules")),
+  epicId: v.optional(v.id("issues")),
+  parentId: v.optional(v.id("issues")),
+  labels: v.optional(v.array(v.id("labels"))),
+  estimatedHours: v.optional(v.number()),
+  dueDate: v.optional(v.number()),
+  storyPoints: v.optional(v.number()),
+};
+
+async function createIssueImpl(
+  ctx: MutationCtx & { userId: Id<"users">; project: Doc<"projects">; projectId: Id<"projects"> },
+  args: ObjectType<typeof createIssueArgs>,
+) {
+  // Rate limit: 60 issues per minute per user with burst capacity of 15
+  await checkRateLimit(ctx, `createIssue:${ctx.userId}`, {
+    rate: 60,
+    period: MINUTE,
+    capacity: 15,
+  });
+
+  // Validate input constraints
+  validate.title(args.title);
+  validate.description(args.description);
+  if (args.labels) {
+    validate.tags(args.labels, "labels");
+  }
+
+  // Validate parent/epic constraints
+  const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
+
+  // Validate module belongs to the same project
+  if (args.moduleId) {
+    const module = await ctx.db.get(args.moduleId);
+    if (!module || module.projectId !== ctx.projectId) {
+      throw validation("moduleId", "Module does not belong to this project");
+    }
+  }
+
+  // Generate issue key with duplicate detection
+  // In rare concurrent scenarios, we verify the key doesn't exist before using
+  let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
+
+  // Double-check for duplicates (handles race conditions)
+  if (await issueKeyExists(ctx, issueKey)) {
+    // Regenerate with timestamp suffix to guarantee uniqueness
+    const suffix = Date.now() % 10000;
+    issueKey = `${issueKey}-${suffix}`;
+  }
+
+  // Get the first workflow state as default status
+  const defaultStatus = ctx.project.workflowStates[0]?.id || "todo";
+
+  // Get max order for the status column
+  const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
+
+  // Get label names from IDs
+  let labelNames: string[] = [];
+  if (args.labels && args.labels.length > 0) {
+    const labels = await asyncMap(args.labels, (id) => ctx.db.get(id));
+    labelNames = pruneNull(labels).map((l) => l.name);
+  }
+
+  const now = Date.now();
+  const issueId = await ctx.db.insert("issues", {
+    projectId: ctx.projectId,
+    organizationId: ctx.project.organizationId, // Cache from project
+    workspaceId: ctx.project.workspaceId, // Always present since projects require workspaceId
+    teamId: ctx.project.teamId, // Cached from project (can be undefined for workspace-level projects)
+    key: issueKey,
+    title: args.title,
+    description: args.description,
+    type: args.type,
+    status: defaultStatus,
+    priority: args.priority,
+    assigneeId: args.assigneeId,
+    reporterId: ctx.userId,
+    updatedAt: now,
+    labels: labelNames,
+    sprintId: args.sprintId,
+    moduleId: args.moduleId,
+    epicId: inheritedEpicId,
+    parentId: args.parentId,
+    linkedDocuments: [],
+    attachments: [],
+    estimatedHours: args.estimatedHours,
+    dueDate: args.dueDate,
+    storyPoints: args.storyPoints,
+    searchContent: getSearchContent(args.title, args.description),
+    loggedHours: 0,
+    order: maxOrder + 1,
+    version: 1, // Initial version for optimistic locking
+  });
+
+  // Log activity
+  await ctx.db.insert("issueActivity", {
+    issueId,
+    userId: ctx.userId,
+    action: "created",
+  });
+
+  return { issueId, key: issueKey };
+}
 
 /**
  * Create a new issue in the project.
@@ -52,124 +174,26 @@ import {
  *
  * @returns The ID of the created issue.
  * @throws {ConvexError} "Validation" if inputs are invalid.
+ * @deprecated Use `createIssue` instead (returns object with issueId).
  */
 export const create = projectEditorMutation({
-  args: {
-    title: v.string(),
-    description: v.optional(v.string()),
-    type: v.union(
-      v.literal("task"),
-      v.literal("bug"),
-      v.literal("story"),
-      v.literal("epic"),
-      v.literal("subtask"),
-    ),
-    priority: v.union(
-      v.literal("lowest"),
-      v.literal("low"),
-      v.literal("medium"),
-      v.literal("high"),
-      v.literal("highest"),
-    ),
-    assigneeId: v.optional(v.id("users")),
-    sprintId: v.optional(v.id("sprints")),
-    moduleId: v.optional(v.id("modules")),
-    epicId: v.optional(v.id("issues")),
-    parentId: v.optional(v.id("issues")),
-    labels: v.optional(v.array(v.id("labels"))),
-    estimatedHours: v.optional(v.number()),
-    dueDate: v.optional(v.number()),
-    storyPoints: v.optional(v.number()),
-  },
+  args: createIssueArgs,
   handler: async (ctx, args) => {
-    // Rate limit: 60 issues per minute per user with burst capacity of 15
-    await checkRateLimit(ctx, `createIssue:${ctx.userId}`, {
-      rate: 60,
-      period: MINUTE,
-      capacity: 15,
-    });
-
-    // Validate input constraints
-    validate.title(args.title);
-    validate.description(args.description);
-    if (args.labels) {
-      validate.tags(args.labels, "labels");
-    }
-
-    // Validate parent/epic constraints
-    const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
-
-    // Validate module belongs to the same project
-    if (args.moduleId) {
-      const module = await ctx.db.get(args.moduleId);
-      if (!module || module.projectId !== ctx.projectId) {
-        throw validation("moduleId", "Module does not belong to this project");
-      }
-    }
-
-    // Generate issue key with duplicate detection
-    // In rare concurrent scenarios, we verify the key doesn't exist before using
-    let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
-
-    // Double-check for duplicates (handles race conditions)
-    if (await issueKeyExists(ctx, issueKey)) {
-      // Regenerate with timestamp suffix to guarantee uniqueness
-      const suffix = Date.now() % 10000;
-      issueKey = `${issueKey}-${suffix}`;
-    }
-
-    // Get the first workflow state as default status
-    const defaultStatus = ctx.project.workflowStates[0]?.id || "todo";
-
-    // Get max order for the status column
-    const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
-
-    // Get label names from IDs
-    let labelNames: string[] = [];
-    if (args.labels && args.labels.length > 0) {
-      const labels = await asyncMap(args.labels, (id) => ctx.db.get(id));
-      labelNames = pruneNull(labels).map((l) => l.name);
-    }
-
-    const now = Date.now();
-    const issueId = await ctx.db.insert("issues", {
-      projectId: ctx.projectId,
-      organizationId: ctx.project.organizationId, // Cache from project
-      workspaceId: ctx.project.workspaceId, // Always present since projects require workspaceId
-      teamId: ctx.project.teamId, // Cached from project (can be undefined for workspace-level projects)
-      key: issueKey,
-      title: args.title,
-      description: args.description,
-      type: args.type,
-      status: defaultStatus,
-      priority: args.priority,
-      assigneeId: args.assigneeId,
-      reporterId: ctx.userId,
-      updatedAt: now,
-      labels: labelNames,
-      sprintId: args.sprintId,
-      moduleId: args.moduleId,
-      epicId: inheritedEpicId,
-      parentId: args.parentId,
-      linkedDocuments: [],
-      attachments: [],
-      estimatedHours: args.estimatedHours,
-      dueDate: args.dueDate,
-      storyPoints: args.storyPoints,
-      searchContent: getSearchContent(args.title, args.description),
-      loggedHours: 0,
-      order: maxOrder + 1,
-      version: 1, // Initial version for optimistic locking
-    });
-
-    // Log activity
-    await ctx.db.insert("issueActivity", {
-      issueId,
-      userId: ctx.userId,
-      action: "created",
-    });
-
+    const { issueId } = await createIssueImpl(ctx, args);
     return issueId;
+  },
+});
+
+/**
+ * Create a new issue in the project.
+ * Returns an object with the issue ID and key.
+ *
+ * @returns { issueId: Id<"issues">, key: string }
+ */
+export const createIssue = projectEditorMutation({
+  args: createIssueArgs,
+  handler: async (ctx, args) => {
+    return await createIssueImpl(ctx, args);
   },
 });
 
