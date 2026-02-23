@@ -1,9 +1,26 @@
-import type { Id } from "../_generated/dataModel";
+import { asyncMap } from "convex-helpers";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
 import { notDeleted } from "../lib/softDeleteHelpers";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
+
+// Helper: Fetch issues and their related projects for bulk operations
+// Filters out null and deleted issues
+export async function fetchProjectsForIssues(ctx: MutationCtx, issueIds: Id<"issues">[]) {
+  const allIssues = await asyncMap(issueIds, (id) => ctx.db.get(id));
+  const validIssues = allIssues.filter(
+    (i): i is Doc<"issues"> => i !== null && !i.isDeleted && !!i.projectId,
+  );
+
+  const uniqueProjectIds = [...new Set(validIssues.map((i) => i.projectId))];
+  const projectDocs = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
+  const validProjects = projectDocs.filter((p): p is Doc<"projects"> => p !== null);
+  const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
+
+  return { issues: validIssues, projectMap };
+}
 
 // Helper: Combined searchable content for issues
 export function getSearchContent(title: string, description?: string) {

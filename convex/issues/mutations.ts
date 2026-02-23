@@ -17,6 +17,7 @@ import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "..
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   assertVersionMatch,
+  fetchProjectsForIssues,
   generateIssueKey,
   getMaxOrderForStatus,
   getNextVersion,
@@ -462,26 +463,12 @@ export const bulkUpdateStatus = authenticatedMutation({
     newStatus: v.string(),
   },
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+    const { issues, projectMap } = await fetchProjectsForIssues(ctx, args.issueIds);
 
     const now = Date.now();
 
-    // Collect unique project IDs to fetch projects in batch
-    const projectIds = new Set<Id<"projects">>();
-    for (const issue of issues) {
-      if (issue && !issue.isDeleted && issue.projectId) {
-        projectIds.add(issue.projectId);
-      }
-    }
-
-    // Fetch all relevant projects once
-    const projects = await asyncMap([...projectIds], (id) => ctx.db.get(id));
-    const projectMap = new Map(projects.map((p) => [p?._id.toString(), p]));
-
     const results = await Promise.all(
       issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
         const projectId = issue.projectId as Id<"projects">;
         const project = projectMap.get(projectId);
         if (!project) return 0;
@@ -795,12 +782,7 @@ export const bulkArchive = authenticatedMutation({
   },
   handler: async (ctx, args) => {
     // Pre-fetch all issues to build project map (avoids N+1 reads)
-    const allIssues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const validIssues = allIssues.filter((i): i is NonNullable<typeof i> => i !== null);
-    const uniqueProjectIds = [...new Set(validIssues.map((i) => i.projectId))] as Id<"projects">[];
-    const projectDocs = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
-    const validProjects = projectDocs.filter((p): p is NonNullable<typeof p> => p !== null);
-    const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
+    const { projectMap } = await fetchProjectsForIssues(ctx, args.issueIds);
 
     const result = await performBulkUpdate(ctx, args.issueIds, async (issue, now) => {
       // Already archived?
