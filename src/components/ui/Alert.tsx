@@ -59,7 +59,7 @@ function Alert({ className, variant = "default", onDismiss, children, ...props }
       className={cn(alertVariants({ variant }), onDismiss && "pr-10", className)}
       {...props}
     >
-      {Icon && <Icon />}
+      {Icon && <Icon aria-hidden="true" />}
       {children}
       {onDismiss && (
         <button
@@ -75,7 +75,7 @@ function Alert({ className, variant = "default", onDismiss, children, ...props }
           )}
           aria-label="Dismiss"
         >
-          <XIcon className="size-4" />
+          <XIcon className="size-4" aria-hidden="true" />
         </button>
       )}
     </div>

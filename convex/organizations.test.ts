@@ -240,9 +240,11 @@ describe("organizations", () => {
       expect(organizations.some((c) => c.name === "organization A")).toBe(true);
       expect(organizations.some((c) => c.name === "organization B")).toBe(true);
 
-      const orgA = organizations.find((c) => c.name === "organization A");
-      expect(orgA?.memberCount).toBe(1); // Creator
-      expect(orgA?.projectCount).toBe(0);
+      // Verify counts
+      for (const org of organizations) {
+        expect(org.memberCount).toBe(1); // Just the creator
+        expect(org.projectCount).toBe(0); // No projects yet
+      }
     });
   });
 });

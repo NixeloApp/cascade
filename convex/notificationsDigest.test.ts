@@ -59,6 +59,7 @@ describe("Notifications Digest", () => {
 
     // Get actual creation time of n2
     const n2Doc = await t.run(async (ctx) => ctx.db.get(n2));
+    // biome-ignore lint/style/noNonNullAssertion: testing convenience
     const startTime = n2Doc!._creationTime;
 
     // Query with startTime equal to middle notification
@@ -230,6 +231,7 @@ describe("Notifications Digest", () => {
     });
 
     const notification = await t.run(async (ctx) => ctx.db.get(notificationId));
+    // biome-ignore lint/style/noNonNullAssertion: testing convenience
     const startTime = notification!._creationTime;
 
     const result = await t.query(internal.notifications.listForDigest, {

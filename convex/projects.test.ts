@@ -446,7 +446,7 @@ describe("Projects", () => {
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, organizationId, editorId, adminId);
       // Add editor as member
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
@@ -514,7 +514,7 @@ describe("Projects", () => {
 
         // Add new member to organization first (required by security check)
         await addUserToOrganization(t, organizationId, newMemberId, adminId);
-        const result = await asAdmin.mutation(api.projects.addProjectMember, {
+        const result = await asAdmin.mutation(api.projectMembers.add, {
           projectId,
           userEmail: "newmember@test.com",
           role: "editor",
@@ -552,7 +552,7 @@ describe("Projects", () => {
 
         // Add editor to organization first (required by security check)
         await addUserToOrganization(t, organizationId, editorId, adminId);
-        await asAdmin.mutation(api.projects.addProjectMember, {
+        await asAdmin.mutation(api.projectMembers.add, {
           projectId,
           userEmail: "editor@test.com",
           role: "editor",
@@ -563,7 +563,7 @@ describe("Projects", () => {
         await addUserToOrganization(t, organizationId, newId, adminId);
         const asEditor = asAuthenticatedUser(t, editorId);
         await expect(async () => {
-          await asEditor.mutation(api.projects.addProjectMember, {
+          await asEditor.mutation(api.projectMembers.add, {
             projectId,
             userEmail: "new@test.com",
             role: "viewer",
@@ -595,13 +595,13 @@ describe("Projects", () => {
 
         // Add member to organization first (required by security check)
         await addUserToOrganization(t, organizationId, memberId, adminId);
-        await asAdmin.mutation(api.projects.addProjectMember, {
+        await asAdmin.mutation(api.projectMembers.add, {
           projectId,
           userEmail: "member@test.com",
           role: "viewer",
         });
 
-        const result = await asAdmin.mutation(api.projects.updateProjectMemberRole, {
+        const result = await asAdmin.mutation(api.projectMembers.updateRole, {
           projectId,
           memberId: memberId,
           newRole: "editor",
@@ -639,13 +639,13 @@ describe("Projects", () => {
 
         // Add member to organization first (required by security check)
         await addUserToOrganization(t, organizationId, memberId, adminId);
-        await asAdmin.mutation(api.projects.addProjectMember, {
+        await asAdmin.mutation(api.projectMembers.add, {
           projectId,
           userEmail: "member@test.com",
           role: "editor",
         });
 
-        const result = await asAdmin.mutation(api.projects.removeProjectMember, {
+        const result = await asAdmin.mutation(api.projectMembers.remove, {
           projectId,
           memberId: memberId,
         });
@@ -677,7 +677,7 @@ describe("Projects", () => {
 
         // Should fail - cannot remove project owner
         await expect(async () => {
-          await asCreator.mutation(api.projects.removeProjectMember, {
+          await asCreator.mutation(api.projectMembers.remove, {
             projectId,
             memberId: creatorId,
           });
@@ -702,7 +702,7 @@ describe("Projects", () => {
         });
 
         await expect(async () => {
-          await asCreator.mutation(api.projects.updateProjectMemberRole, {
+          await asCreator.mutation(api.projectMembers.updateRole, {
             projectId,
             memberId: creatorId,
             newRole: "viewer",
@@ -861,7 +861,7 @@ describe("Projects", () => {
 
       // Add viewer to organization first (required by security check)
       await addUserToOrganization(t, organizationId, viewerId, adminId);
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "viewer@test.com",
         role: "viewer",
@@ -922,7 +922,7 @@ describe("Projects", () => {
 
       // Add member to organization first (required by security check)
       await addUserToOrganization(t, organizationId, memberId, ownerId);
-      await asOwner.mutation(api.projects.addProjectMember, {
+      await asOwner.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "member@test.com",
         role: "admin",
@@ -1137,7 +1137,7 @@ describe("Projects", () => {
         teamId,
       });
 
-      const role = await asUser.query(api.projects.getProjectUserRole, { projectId });
+      const role = await asUser.query(api.projectMembers.getRole, { projectId });
       expect(role).toBe("admin");
       await t.finishInProgressScheduledFunctions();
     });
@@ -1161,14 +1161,14 @@ describe("Projects", () => {
 
       // Add editor to organization first (required by security check)
       await addUserToOrganization(t, organizationId, editorId, adminId);
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "editor@test.com",
         role: "editor",
       });
 
       const asEditor = asAuthenticatedUser(t, editorId);
-      const role = await asEditor.query(api.projects.getProjectUserRole, { projectId });
+      const role = await asEditor.query(api.projectMembers.getRole, { projectId });
       expect(role).toBe("editor");
       await t.finishInProgressScheduledFunctions();
     });
@@ -1191,7 +1191,7 @@ describe("Projects", () => {
       });
 
       const asOutsider = asAuthenticatedUser(t, outsiderId);
-      const role = await asOutsider.query(api.projects.getProjectUserRole, { projectId });
+      const role = await asOutsider.query(api.projectMembers.getRole, { projectId });
       expect(role).toBeNull();
       await t.finishInProgressScheduledFunctions();
     });
@@ -1217,14 +1217,14 @@ describe("Projects", () => {
 
       // Add member to organization first (required by security check)
       await addUserToOrganization(t, organizationId, dupMemberId, adminId);
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "dup@test.com",
         role: "viewer",
       });
 
       await expect(async () => {
-        await asAdmin.mutation(api.projects.addProjectMember, {
+        await asAdmin.mutation(api.projectMembers.add, {
           projectId,
           userEmail: "dup@test.com",
           role: "editor",
@@ -1250,7 +1250,7 @@ describe("Projects", () => {
       });
 
       await expect(async () => {
-        await asAdmin.mutation(api.projects.addProjectMember, {
+        await asAdmin.mutation(api.projectMembers.add, {
           projectId,
           userEmail: "nonexistent@test.com",
           role: "viewer",

@@ -87,7 +87,7 @@ describe("Sprints", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add member to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, member, owner);
-      await asOwner.mutation(api.projects.addProjectMember, {
+      await asOwner.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "member@test.com",
         role: "editor",
@@ -468,7 +468,7 @@ describe("Sprints", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add member to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, member, owner);
-      await asOwner.mutation(api.projects.addProjectMember, {
+      await asOwner.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "member@test.com",
         role: "editor",
@@ -637,7 +637,7 @@ describe("Sprints", () => {
       const asOwner = asAuthenticatedUser(t, owner);
       // Add member to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, member, owner);
-      await asOwner.mutation(api.projects.addProjectMember, {
+      await asOwner.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "member@test.com",
         role: "editor",

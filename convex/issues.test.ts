@@ -145,7 +145,7 @@ describe("Issues", () => {
       const asAdmin = asAuthenticatedUser(t, adminId);
       // Add viewer to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, viewerId, adminId);
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "viewer@test.com",
         role: "viewer",
@@ -286,7 +286,7 @@ describe("Issues", () => {
 
       // Add viewer to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, viewerId, adminId);
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "viewer@test.com",
         role: "viewer",
@@ -602,7 +602,7 @@ describe("Issues", () => {
 
       // Add viewer to organization first (required by security check)
       await addUserToOrganization(t, project.organizationId, viewerId, adminId);
-      await asAdmin.mutation(api.projects.addProjectMember, {
+      await asAdmin.mutation(api.projectMembers.add, {
         projectId,
         userEmail: "viewer@test.com",
         role: "viewer",
