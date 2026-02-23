@@ -60,14 +60,16 @@ describe("Teams", () => {
       });
 
       // Soft delete
-      await asOwner.mutation(api.teams.softDeleteTeam, { teamId });
+      const deleteResult = await asOwner.mutation(api.teams.softDeleteTeam, { teamId });
+      expect(deleteResult).toEqual({ success: true, deleted: true });
 
       const deletedTeam = await t.run(async (ctx) => ctx.db.get(teamId));
       expect(deletedTeam?.isDeleted).toBe(true);
       expect(deletedTeam?.deletedAt).toBeDefined();
 
       // Restore
-      await asOwner.mutation(api.teams.restoreTeam, { teamId });
+      const restoreResult = await asOwner.mutation(api.teams.restoreTeam, { teamId });
+      expect(restoreResult).toEqual({ success: true, restored: true });
 
       const restoredTeam = await t.run(async (ctx) => ctx.db.get(teamId));
       expect(restoredTeam?.isDeleted).toBeUndefined();
