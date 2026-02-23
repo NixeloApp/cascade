@@ -86,9 +86,7 @@ describe("GitHub OAuth Error Handling", () => {
 
   it("should fail generically BUT log detailed error when GitHub returns 400 (fixed behavior)", async () => {
     // Setup mock to throw (simulating fetchJSON behavior on non-OK)
-    vi.mocked(fetchJSON).mockRejectedValue(
-      new HttpError(400, JSON.stringify(mockErrorResponse)),
-    );
+    vi.mocked(fetchJSON).mockRejectedValue(new HttpError(400, JSON.stringify(mockErrorResponse)));
 
     const request = new Request(
       "https://api.convex.site/github/callback?code=bad_code&state=valid_state",
