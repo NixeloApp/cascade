@@ -297,7 +297,7 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(500);
       const body = await response.json();
       expect(body.success).toBe(false);
-      expect(body.error).toContain("Google Calendar Error: Internal Server Error");
+      expect(body.error).toContain("Failed to fetch Google Calendar events: Internal Server Error");
     });
 
     it("should extract error message from Google JSON response", async () => {
@@ -320,7 +320,7 @@ describe("Google OAuth Flow", () => {
       const body = await response.json();
       expect(body.success).toBe(false);
       // Verify we get the specific message
-      expect(body.error).toBe("Google Calendar Error: Rate Limit Exceeded");
+      expect(body.error).toBe("Failed to fetch Google Calendar events: Rate Limit Exceeded");
     });
   });
 });

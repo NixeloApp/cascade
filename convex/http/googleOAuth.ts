@@ -239,7 +239,10 @@ async function exchangeCodeForTokens(code: string) {
     );
   } catch (e) {
     if (e instanceof HttpError) {
-      throw validation("oauth", `Failed to exchange Google authorization code: ${e.body}`);
+      throw validation(
+        "oauth",
+        `Failed to exchange Google authorization code: ${parseGoogleOAuthError(e)}`,
+      );
     }
     throw e;
   }
@@ -265,7 +268,7 @@ async function exchangeCodeForTokens(code: string) {
     });
   } catch (e) {
     if (e instanceof HttpError) {
-      throw validation("oauth", `Failed to fetch user info from Google: ${e.body}`);
+      throw validation("oauth", `Failed to fetch user info from Google: ${parseGoogleOAuthError(e)}`);
     }
     throw e;
   }
@@ -559,27 +562,30 @@ async function fetchGoogleCalendarEvents(accessToken: string): Promise<GoogleCal
     return data.items || [];
   } catch (e) {
     if (e instanceof HttpError) {
-      throw validation("googleCalendar", parseGoogleCalendarError(e));
+      throw validation(
+        "googleCalendar",
+        `Failed to fetch Google Calendar events: ${parseGoogleOAuthError(e)}`,
+      );
     }
     throw e;
   }
 }
 
-function parseGoogleCalendarError(e: HttpError): string {
-  let message = "Failed to fetch Google Calendar events";
+function parseGoogleOAuthError(e: HttpError): string {
+  let message = e.body.slice(0, 200); // Default to truncated body
   try {
-    // Google Calendar API errors usually come as JSON
+    // Google API errors usually come as JSON
     const errorBody = JSON.parse(e.body);
     if (errorBody.error?.message) {
-      message = `Google Calendar Error: ${errorBody.error.message}`;
+      message = errorBody.error.message;
     } else if (errorBody.error_description) {
-      message = `Google Calendar Error: ${errorBody.error_description}`;
+      message = errorBody.error_description;
+    } else if (errorBody.error) {
+      // Sometimes it's just { error: "invalid_grant" }
+      message = errorBody.error;
     }
   } catch {
-    // If body is not JSON, use truncated body or default message
-    if (e.body && e.body.length < 200) {
-      message = `Google Calendar Error: ${e.body}`;
-    }
+    // Ignore JSON parse error, fallback to default
   }
   return message;
 }

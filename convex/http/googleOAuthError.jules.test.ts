@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionCtx } from "../_generated/server";
 import * as envLib from "../lib/env";
-import { fetchWithTimeout } from "../lib/fetchWithTimeout";
+import { fetchJSON, fetchWithTimeout, HttpError } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler } from "./googleOAuth";
 
 // Mock env library
@@ -16,6 +16,16 @@ vi.mock("../lib/env", () => ({
 // Mock fetchWithTimeout
 vi.mock("../lib/fetchWithTimeout", () => ({
   fetchWithTimeout: vi.fn(),
+  fetchJSON: vi.fn(),
+  HttpError: class extends Error {
+    status: number;
+    body: string;
+    constructor(status: number, body: string) {
+      super(`HTTP ${status}: ${body}`);
+      this.status = status;
+      this.body = body;
+    }
+  },
 }));
 
 // Mock api/internal
@@ -48,10 +58,11 @@ describe("Google OAuth Error Handling", () => {
 
     // Mock token exchange failure
     const errorBody = JSON.stringify({ error: "invalid_grant", error_description: "Bad Request" });
-    vi.mocked(fetchWithTimeout).mockResolvedValueOnce({
-      ok: false,
-      text: async () => errorBody,
-    } as Response);
+
+    // Mock fetchJSON to throw HttpError, simulating upstream failure
+    vi.mocked(fetchJSON).mockRejectedValueOnce(
+      new HttpError(400, errorBody)
+    );
 
     const request = new Request(
       "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
@@ -66,13 +77,10 @@ describe("Google OAuth Error Handling", () => {
     expect(text).toContain("Connection Failed");
 
     // Verify console.error was called with details
-    // Currently this expectation will FAIL because the code swallows the error
-    // After fix, it should pass
     expect(consoleErrorSpy).toHaveBeenCalled();
     const errorArgs = consoleErrorSpy.mock.calls.map((args) => args.join(" ")).join(" ");
 
-    // We expect the error message to contain the upstream error body
-    expect(errorArgs).toContain("invalid_grant");
+    // We expect the error message to contain the upstream error body (parsed description takes precedence)
     expect(errorArgs).toContain("Bad Request");
 
     consoleErrorSpy.mockRestore();
