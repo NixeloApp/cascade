@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalMutation, type MutationCtx } from "./_generated/server";
+import { type MutationCtx, internalMutation } from "./_generated/server";
 import { authenticatedMutation, projectAdminMutation, projectQuery } from "./customFunctions";
 import { notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -192,29 +192,37 @@ export const executeRules = internalMutation({
     const issue = await ctx.db.get(args.issueId);
     if (!issue) return;
 
-    for (const rule of rules) {
+    // Filter matching rules first
+    const matchingRules = rules.filter((rule) => {
       // Check if trigger value matches (if specified)
-      if (rule.triggerValue && rule.triggerValue !== args.triggerValue) {
-        continue;
-      }
+      return !rule.triggerValue || rule.triggerValue === args.triggerValue;
+    });
 
-      // Execute the action - actionValue is now typed!
-      try {
-        const executed = await executeAutomationAction(ctx, rule, args.issueId, issue.labels || []);
+    // Execute matching rules in parallel
+    await Promise.all(
+      matchingRules.map(async (rule) => {
+        try {
+          const executed = await executeAutomationAction(
+            ctx,
+            rule,
+            args.issueId,
+            issue.labels || [],
+          );
 
-        // Only increment execution count if action was actually performed
-        if (executed) {
-          await ctx.db.patch(rule._id, {
-            executionCount: rule.executionCount + 1,
-          });
+          // Only increment execution count if action was actually performed
+          if (executed) {
+            await ctx.db.patch(rule._id, {
+              executionCount: rule.executionCount + 1,
+            });
+          }
+        } catch (error) {
+          // Log error but continue with other rules
+          console.error(
+            `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
+            error,
+          );
         }
-      } catch (error) {
-        // Log error but continue with other rules
-        console.error(
-          `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
-          error,
-        );
-      }
-    }
+      }),
+    );
   },
 });
