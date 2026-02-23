@@ -1,9 +1,4 @@
-import {
-  type FilterBuilder,
-  type FunctionReference,
-  type GenericTableInfo,
-  paginationOptsValidator,
-} from "convex/server";
+import type { FilterBuilder, FunctionReference, GenericTableInfo } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import { internal } from "./_generated/api";
@@ -887,38 +882,33 @@ export const getUserStats = authenticatedQuery({
 export const listWithDigestPreference = internalQuery({
   args: {
     frequency: digestFrequencies,
-    paginationOpts: paginationOptsValidator,
   },
-  returns: v.object({
-    page: v.array(
-      v.object({
-        _id: v.id("users"),
-        name: v.optional(v.string()),
-        email: v.optional(v.string()),
-        image: v.optional(v.string()),
-        createdAt: v.number(),
-      }),
-    ),
-    isDone: v.boolean(),
-    continueCursor: v.string(),
-  }),
+  returns: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.optional(v.string()),
+      email: v.optional(v.string()),
+      image: v.optional(v.string()),
+      createdAt: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     // Optimized query: Use by_digest_frequency index to find matching users directly
     // This avoids scanning irrelevant records and fixes the bug where users beyond the first 1000 were ignored
-    const result = await ctx.db
+    const filtered = await ctx.db
       .query("notificationPreferences")
       .withIndex("by_digest_frequency", (q) =>
         q.eq("emailEnabled", true).eq("emailDigest", args.frequency),
       )
-      .paginate(args.paginationOpts);
+      .take(1000); // Bounded limit to capture users efficiently
 
     // Batch fetch users to avoid N+1 queries
-    const userIds = result.page.map((pref) => pref.userId);
+    const userIds = filtered.map((pref) => pref.userId);
     const userMap = await batchFetchUsers(ctx, userIds);
 
     // Return users that exist (filter out deleted users)
-    const enrichedPage = pruneNull(
-      result.page.map((pref) => {
+    return pruneNull(
+      filtered.map((pref) => {
         const user = userMap.get(pref.userId);
         if (!user) return null;
         return {
@@ -930,10 +920,5 @@ export const listWithDigestPreference = internalQuery({
         };
       }),
     );
-
-    return {
-      ...result,
-      page: enrichedPage,
-    };
   },
 });

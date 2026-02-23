@@ -7,7 +7,6 @@
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import { canAccessProject } from "../projectAccess";
 
 /**
  * Send email notification after creating in-app notification
@@ -69,13 +68,6 @@ export async function sendEmailNotification(
   if (!issue.projectId) {
     return; // Issue not found in a project
   }
-
-  // Check if user has access to the project
-  const hasAccess = await canAccessProject(ctx, issue.projectId, userId);
-  if (!hasAccess) {
-    return;
-  }
-
   const project = await ctx.db.get(issue.projectId);
   if (!project) {
     return; // Project not found
