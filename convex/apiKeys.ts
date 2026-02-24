@@ -92,6 +92,19 @@ async function validateKeyGeneration(
         `You do not have permission to generate keys with scopes: ${invalidScopes.join(", ")}`,
       );
     }
+  } else {
+    // If no projectId is specified (global key), only allow read-only scopes
+    // Write/Delete operations require specific project context to enforce permissions
+    const writeScopes = requestedScopes.filter(
+      (scope) => scope.endsWith(":write") || scope.endsWith(":delete"),
+    );
+
+    if (writeScopes.length > 0) {
+      throw validation(
+        "scopes",
+        `Global API keys cannot have write permissions. Please specify a project for scopes: ${writeScopes.join(", ")}`,
+      );
+    }
   }
 }
 
