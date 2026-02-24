@@ -292,7 +292,7 @@ export const sendVerificationEmailAction = internalAction({
       process.env.NODE_ENV === "development" ||
       process.env.NODE_ENV === "test" ||
       !!process.env.CI ||
-      !!process.env.E2E_API_KEY;
+      !!process.env.E2E_TEST_MODE;
 
     // Store OTPs for test emails ONLY if they are test users
     if (isTestEmail && isSafeEnvironment && isTestUser) {
