@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createTestContext,
+  createTestUser,
+} from "./testUtils";
 
 describe("Project Templates", () => {
   describe("list", () => {
@@ -380,6 +386,34 @@ describe("Project Templates", () => {
           workspaceId,
         }),
       ).rejects.toThrow(/authenticated/i);
+    });
+
+    it("should reject users without workspace access", async () => {
+      const t = convexTest(schema, modules);
+      // Admin creates Organization and Workspace
+      const adminId = await createTestUser(t, { name: "Admin" });
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, adminId);
+
+      // User joins Organization (but NOT Workspace)
+      const userId = await createTestUser(t, { name: "User" });
+      await addUserToOrganization(t, organizationId, userId, adminId, "member");
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      await t.mutation(api.projectTemplates.initializeBuiltInTemplates, {});
+      const templates = await t.query(api.projectTemplates.list, {});
+
+      await expect(
+        asUser.mutation(api.projectTemplates.createFromTemplate, {
+          templateId: templates[0]._id,
+          projectName: "Illegal Project",
+          projectKey: "ILL",
+          organizationId,
+          workspaceId,
+        }),
+      ).rejects.toThrow(
+        "You must be an organization admin or workspace member to create a project here",
+      );
     });
   });
 });
