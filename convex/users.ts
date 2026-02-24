@@ -32,11 +32,11 @@ import { digestFrequencies } from "./validators";
 const MAX_ISSUES_FOR_STATS = 1000;
 const MAX_COMMENTS_FOR_STATS = 1000;
 const MAX_PROJECTS_FOR_STATS = 500;
-// Threshold below which per-project index queries outperform a single filtered scan
-// Reduced from 50 to 10 to prefer batch fetching memberships over running many parallel queries
+// Threshold below which per-project index queries outperform a single filtered scan.
+// 10 chosen for project/comment lookups where per-row cost is low and fan-out is high.
 const MAX_PROJECTS_FOR_FAST_PATH = 10;
-// Higher threshold for issues/assignees because index lookup (O(1)) is much faster than
-// scanning all user issues/assignments (O(N)) and filtering in memory, even with overhead of 50 queries.
+// Higher threshold for issues/assignees: O(1) index lookup per project beats O(N) scan + in-memory
+// filter even at 50 projects — unlike memberships, each issue index is tightly scoped.
 const MAX_PROJECTS_FOR_ISSUE_SCAN = 50;
 
 /**
