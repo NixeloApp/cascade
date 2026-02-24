@@ -301,6 +301,7 @@ export const update = issueMutation({
       const assigneeHasAccess = await canAccessProject(ctx, ctx.issue.projectId, args.assigneeId);
 
       if (assigneeHasAccess) {
+        const actor = await ctx.db.get(ctx.userId);
         // Dynamic import to avoid cycles
         const { sendEmailNotification } = await import("../email/helpers");
         await sendEmailNotification(ctx, {
@@ -308,6 +309,9 @@ export const update = issueMutation({
           type: "assigned",
           issueId: ctx.issue._id,
           actorId: ctx.userId,
+          issue: ctx.issue,
+          project: ctx.project,
+          actorName: actor?.name,
         });
       }
     }
@@ -370,6 +374,8 @@ export const addComment = issueViewerMutation({
     });
 
     const author = await ctx.db.get(ctx.userId);
+    const actorName = author?.name;
+
     // Dynamic import to avoid cycles
     const { sendEmailNotification } = await import("../email/helpers");
 
@@ -403,6 +409,9 @@ export const addComment = issueViewerMutation({
           issueId: ctx.issue._id,
           actorId: ctx.userId,
           commentText: args.content,
+          issue: ctx.issue,
+          project: ctx.project,
+          actorName,
         }),
       ]),
     );
@@ -427,6 +436,9 @@ export const addComment = issueViewerMutation({
           issueId: ctx.issue._id,
           actorId: ctx.userId,
           commentText: args.content,
+          issue: ctx.issue,
+          project: ctx.project,
+          actorName,
         });
       }
     }

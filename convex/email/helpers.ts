@@ -5,7 +5,7 @@
  */
 
 import { internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 
 /**
@@ -24,6 +24,10 @@ export async function sendEmailNotification(
     issueId: Id<"issues">;
     actorId?: Id<"users">;
     commentText?: string;
+    // Optimization: Optional pre-fetched data to avoid DB lookups
+    issue?: Doc<"issues">;
+    project?: Doc<"projects">;
+    actorName?: string;
   },
 ) {
   // Skip in test environment to avoid convex-test scheduler race conditions
@@ -50,8 +54,8 @@ export async function sendEmailNotification(
   }
 
   // Get actor name
-  let actorName = "Someone";
-  if (actorId) {
+  let actorName = params.actorName || "Someone";
+  if (!params.actorName && actorId) {
     const actor = await ctx.db.get(actorId);
     if (actor && "name" in actor) {
       actorName = actor.name || actorName;
@@ -59,18 +63,26 @@ export async function sendEmailNotification(
   }
 
   // Get issue details
-  const issue = await ctx.db.get(issueId);
+  let issue = params.issue;
   if (!issue) {
-    return; // Issue not found
+    const fetchedIssue = await ctx.db.get(issueId);
+    if (!fetchedIssue) {
+      return; // Issue not found
+    }
+    issue = fetchedIssue;
   }
 
   // Get project details
-  if (!issue.projectId) {
-    return; // Issue not found in a project
-  }
-  const project = await ctx.db.get(issue.projectId);
+  let project = params.project;
   if (!project) {
-    return; // Project not found
+    if (!issue.projectId) {
+      return; // Issue not found in a project
+    }
+    const fetchedProject = await ctx.db.get(issue.projectId);
+    if (!fetchedProject) {
+      return; // Project not found
+    }
+    project = fetchedProject;
   }
 
   // Schedule email to be sent (using action)
