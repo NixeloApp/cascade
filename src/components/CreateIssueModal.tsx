@@ -8,16 +8,24 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
-import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
-import { Check, Sparkles } from "@/lib/icons";
+import { FormInput, FormSelectRadix, FormTextarea } from "@/lib/form";
+import { Check, Sparkles, User } from "@/lib/icons";
+import {
+  getPriorityColor,
+  getTypeLabel,
+  ISSUE_TYPE_ICONS,
+  PRIORITY_ICONS,
+} from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Select } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { SelectItem } from "./ui/Select";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -333,25 +341,35 @@ export function CreateIssueModal({
         <Grid cols={1} colsSm={2} gap="lg">
           <form.Field name="type">
             {(field) => (
-              <FormSelect field={field} label="Type">
-                <option value="task">Task</option>
-                <option value="bug">Bug</option>
-                <option value="story">Story</option>
-                <option value="epic">Epic</option>
-                <option value="subtask">Sub-task</option>
-              </FormSelect>
+              <FormSelectRadix field={field} label="Type" placeholder="Select type">
+                {ISSUE_TYPES_WITH_SUBTASK.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    <Flex align="center" gap="sm">
+                      <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
+                      {getTypeLabel(type)}
+                    </Flex>
+                  </SelectItem>
+                ))}
+              </FormSelectRadix>
             )}
           </form.Field>
 
           <form.Field name="priority">
             {(field) => (
-              <FormSelect field={field} label="Priority">
-                <option value="lowest">Lowest</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="highest">Highest</option>
-              </FormSelect>
+              <FormSelectRadix field={field} label="Priority" placeholder="Select priority">
+                {ISSUE_PRIORITIES.map((priority) => (
+                  <SelectItem key={priority} value={priority}>
+                    <Flex align="center" gap="sm">
+                      <Icon
+                        icon={PRIORITY_ICONS[priority]}
+                        size="sm"
+                        className={getPriorityColor(priority)}
+                      />
+                      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                    </Flex>
+                  </SelectItem>
+                ))}
+              </FormSelectRadix>
             )}
           </form.Field>
         </Grid>
@@ -359,14 +377,24 @@ export function CreateIssueModal({
         {/* Assignee */}
         <form.Field name="assigneeId">
           {(field) => (
-            <FormSelect field={field} label="Assignee">
-              <option value="">Unassigned</option>
+            <FormSelectRadix field={field} label="Assignee" placeholder="Select assignee">
+              <SelectItem value="">
+                <Flex align="center" gap="sm">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-ui-bg-tertiary">
+                    <User className="h-3 w-3 text-ui-text-secondary" />
+                  </div>
+                  Unassigned
+                </Flex>
+              </SelectItem>
               {project?.members.map((member) => (
-                <option key={member._id} value={member._id}>
-                  {member.name}
-                </option>
+                <SelectItem key={member._id} value={member._id}>
+                  <Flex align="center" gap="sm">
+                    <Avatar name={member.name} src={member.image} size="xs" className="h-5 w-5" />
+                    {member.name}
+                  </Flex>
+                </SelectItem>
               ))}
-            </FormSelect>
+            </FormSelectRadix>
           )}
         </form.Field>
 

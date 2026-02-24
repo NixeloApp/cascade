@@ -4,6 +4,14 @@ import type { CheckboxProps } from "@/components/ui/form/Checkbox";
 import type { InputProps } from "@/components/ui/form/Input";
 import type { SelectProps } from "@/components/ui/form/Select";
 import type { TextareaProps } from "@/components/ui/form/Textarea";
+import { Label } from "@/components/ui/Label";
+import {
+  SelectContent,
+  Select as SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
+import { cn } from "@/lib/utils";
 
 /**
  * Get the first error message from field state
@@ -158,6 +166,62 @@ export function FormSelect<TName extends string, TValue>({
       helperText={helperText}
       {...props}
     />
+  );
+}
+
+// ============================================================================
+// FormSelectRadix
+// ============================================================================
+
+interface FormSelectRadixProps<TName extends string, TValue extends string> extends BaseFieldProps {
+  field: {
+    name: TName;
+    state: {
+      value: unknown;
+      meta: {
+        errors: ValidationError[];
+      };
+    };
+    handleChange: (updater: Updater<TValue>) => void;
+    handleBlur: () => void;
+  };
+  children: React.ReactNode;
+  placeholder?: string;
+  className?: string;
+}
+
+/**
+ * Rich Select field connected to TanStack Form (using Radix UI)
+ */
+export function FormSelectRadix<TName extends string, TValue extends string>({
+  field,
+  label,
+  helperText,
+  children,
+  placeholder,
+  className,
+}: FormSelectRadixProps<TName, TValue>) {
+  const error = getFieldError(field);
+  const value = (field.state.value as string) ?? "";
+
+  return (
+    <div className={cn("space-y-2", className)}>
+      {label && <Label>{label}</Label>}
+      <SelectRoot
+        value={value}
+        onValueChange={(val) => {
+          field.handleChange(val as TValue);
+          field.handleBlur();
+        }}
+      >
+        <SelectTrigger aria-invalid={!!error}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>{children}</SelectContent>
+      </SelectRoot>
+      {error && <p className="text-sm font-medium text-status-error">{error}</p>}
+      {helperText && !error && <p className="text-sm text-ui-text-tertiary">{helperText}</p>}
+    </div>
   );
 }
 
