@@ -136,6 +136,7 @@ export const update = authenticatedMutation({
     isRequired: v.optional(v.boolean()),
     description: v.optional(v.string()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const field = await ctx.db.get(args.id);
     if (!field) {
@@ -155,6 +156,8 @@ export const update = authenticatedMutation({
     if (args.description !== undefined) updates.description = args.description;
 
     await ctx.db.patch(args.id, updates);
+
+    return { success: true } as const;
   },
 });
 
@@ -163,6 +166,7 @@ export const remove = authenticatedMutation({
   args: {
     id: v.id("customFields"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const field = await ctx.db.get(args.id);
     if (!field) {
@@ -184,6 +188,8 @@ export const remove = authenticatedMutation({
     await Promise.all(values.map((value) => ctx.db.delete(value._id)));
 
     await ctx.db.delete(args.id);
+
+    return { success: true, deleted: true } as const;
   },
 });
 
@@ -229,6 +235,7 @@ export const setValue = authenticatedMutation({
     fieldId: v.id("customFields"),
     value: v.string(),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const issue = await ctx.db.get(args.issueId);
     if (!issue) {
@@ -281,6 +288,8 @@ export const setValue = authenticatedMutation({
       field: `custom_${field.fieldKey}`,
       newValue: args.value,
     });
+
+    return { success: true } as const;
   },
 });
 
@@ -290,6 +299,7 @@ export const removeValue = authenticatedMutation({
     issueId: v.id("issues"),
     fieldId: v.id("customFields"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const issue = await ctx.db.get(args.issueId);
     if (!issue) {
@@ -322,5 +332,7 @@ export const removeValue = authenticatedMutation({
         });
       }
     }
+
+    return { success: true, deleted: true } as const;
   },
 });
