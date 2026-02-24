@@ -25,6 +25,7 @@ import {
   validateAssignee,
   validateParentIssue,
 } from "./helpers";
+import { notifyCommentParticipants } from "./notifications";
 
 const createIssueArgs = {
   title: v.string(),
@@ -372,67 +373,15 @@ export const addComment = issueViewerMutation({
       action: "commented",
     });
 
-    const author = await ctx.db.get(ctx.userId);
-    // Dynamic import to avoid cycles
-    const { sendEmailNotification } = await import("../email/helpers");
-
-    // Notify mentioned users in parallel
-    const mentionedOthers = mentions.filter((id) => id !== ctx.userId);
-
-    // Filter mentions by project access to prevent leaks
-    const validMentions = (
-      await Promise.all(
-        mentionedOthers.map(async (userId) => {
-          const hasAccess = await canAccessProject(ctx, ctx.projectId, userId);
-          return hasAccess ? userId : null;
-        }),
-      )
-    ).filter((id): id is Id<"users"> => id !== null);
-
-    await Promise.all(
-      validMentions.flatMap((mentionedUserId) => [
-        ctx.db.insert("notifications", {
-          userId: mentionedUserId,
-          type: "issue_mentioned",
-          title: "You were mentioned",
-          message: `${author?.name || "Someone"} mentioned you in ${ctx.issue.key}`,
-          issueId: ctx.issue._id,
-          projectId: ctx.projectId,
-          isRead: false,
-        }),
-        sendEmailNotification(ctx, {
-          userId: mentionedUserId,
-          type: "mention",
-          issueId: ctx.issue._id,
-          actorId: ctx.userId,
-          commentText: args.content,
-        }),
-      ]),
-    );
-
-    if (ctx.issue.reporterId !== ctx.userId) {
-      const reporterHasAccess = await canAccessProject(ctx, ctx.projectId, ctx.issue.reporterId);
-
-      if (reporterHasAccess) {
-        await ctx.db.insert("notifications", {
-          userId: ctx.issue.reporterId,
-          type: "issue_comment",
-          title: "New comment",
-          message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
-          issueId: ctx.issue._id,
-          projectId: ctx.projectId,
-          isRead: false,
-        });
-
-        await sendEmailNotification(ctx, {
-          userId: ctx.issue.reporterId,
-          type: "comment",
-          issueId: ctx.issue._id,
-          actorId: ctx.userId,
-          commentText: args.content,
-        });
-      }
-    }
+    await notifyCommentParticipants(ctx, {
+      issueId: ctx.issue._id,
+      projectId: ctx.projectId,
+      issueKey: ctx.issue.key,
+      reporterId: ctx.issue.reporterId,
+      authorId: ctx.userId,
+      content: args.content,
+      mentions,
+    });
 
     return { commentId };
   },
