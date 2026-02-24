@@ -150,3 +150,8 @@
 **Vulnerability:** Publicly exposed AI mutations (`createChat`, `createSuggestion`) and queries (`getProjectSuggestions`) allowed any authenticated user to create or read data associated with any project by guessing its ID, bypassing project membership checks.
 **Learning:** `authenticatedMutation` / `authenticatedQuery` only verifies *authentication* (user is logged in), not *authorization* (user has permission for specific resource). When a mutation takes a resource ID (like `projectId`) as an argument, it must explicitly verify the caller's access to that resource.
 **Prevention:** Added `assertCanAccessProject` and `assertCanEditProject` checks to all AI mutations and queries that accept a `projectId` or operate on project-linked data.
+
+## 2025-05-27 - Privilege Escalation via API Key Rotation
+**Vulnerability:** The `rotate` mutation for API keys only verified that the user still had *access* to the project, not that they still held the *permissions* required for the key's specific scopes. This allowed a user who was downgraded (e.g., Admin -> Viewer) to rotate an existing high-privilege key (e.g., `issues:delete`) and maintain access to restricted operations.
+**Learning:** Credential rotation is effectively a "re-issuance" of the credential. Therefore, it must enforce the same authorization checks as the initial creation. Do not assume that because a credential *exists*, the user is still authorized to hold it.
+**Prevention:** Updated `rotate` in `convex/apiKeys.ts` to use `validateKeyGeneration`, which re-evaluates the user's current role against the key's scopes before issuing the new key.
