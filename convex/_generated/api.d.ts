@@ -133,6 +133,7 @@ import type * as schemaFields from "../schemaFields.js";
 import type * as serviceRotation from "../serviceRotation.js";
 import type * as shared_constants from "../shared/constants.js";
 import type * as shared_routes from "../shared/routes.js";
+import type * as shared_time from "../shared/time.js";
 import type * as shared_types from "../shared/types.js";
 import type * as softDeleteCleanup from "../softDeleteCleanup.js";
 import type * as sprints from "../sprints.js";
@@ -285,6 +286,7 @@ declare const fullApi: ApiFromModules<{
   serviceRotation: typeof serviceRotation;
   "shared/constants": typeof shared_constants;
   "shared/routes": typeof shared_routes;
+  "shared/time": typeof shared_time;
   "shared/types": typeof shared_types;
   softDeleteCleanup: typeof softDeleteCleanup;
   sprints: typeof sprints;

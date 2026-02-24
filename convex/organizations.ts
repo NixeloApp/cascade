@@ -5,6 +5,7 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { logAudit } from "./lib/audit";
 import { batchFetchOrganizations, batchFetchUsers } from "./lib/batchHelpers";
+import { efficientCount } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAccess";
 import { MAX_ORG_MEMBERS } from "./lib/queryLimits";
@@ -526,31 +527,36 @@ export const getUserOrganizations = authenticatedQuery({
     const organizationMap = await batchFetchOrganizations(ctx, organizationIds);
 
     // Batch fetch member and project counts per organization (parallel queries)
-    const [memberCountsArrays, projectCountsArrays] = await Promise.all([
+    const [memberCounts, projectCounts] = await Promise.all([
       Promise.all(
         organizationIds.map((organizationId) =>
-          ctx.db
-            .query("organizationMembers")
-            .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-            .take(1000),
+          efficientCount(
+            ctx.db
+              .query("organizationMembers")
+              .withIndex("by_organization", (q) => q.eq("organizationId", organizationId)),
+            1000,
+          ),
         ),
       ),
       Promise.all(
         organizationIds.map((organizationId) =>
-          ctx.db
-            .query("projects")
-            .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-            .take(1000),
+          efficientCount(
+            ctx.db
+              .query("projects")
+              .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+              .filter(notDeleted),
+            1000,
+          ),
         ),
       ),
     ]);
 
     // Build count maps
     const memberCountMap = new Map(
-      organizationIds.map((id, i) => [id.toString(), memberCountsArrays[i].length]),
+      organizationIds.map((id, i) => [id.toString(), memberCounts[i]]),
     );
     const projectCountMap = new Map(
-      organizationIds.map((id, i) => [id.toString(), projectCountsArrays[i].length]),
+      organizationIds.map((id, i) => [id.toString(), projectCounts[i]]),
     );
 
     // Build role map from memberships
