@@ -756,7 +756,6 @@ export const bulkDelete = authenticatedMutation({
  */
 export const archive = issueMutation({
   args: {},
-  returns: v.object({ success: v.boolean(), archived: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
 
@@ -785,7 +784,7 @@ export const archive = issueMutation({
       action: "archived",
     });
 
-    return { success: true, archived: true };
+    return { success: true };
   },
 });
 
@@ -794,7 +793,6 @@ export const archive = issueMutation({
  */
 export const restore = issueMutation({
   args: {},
-  returns: v.object({ success: v.boolean(), restored: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
 
@@ -817,7 +815,7 @@ export const restore = issueMutation({
       action: "restored",
     });
 
-    return { success: true, restored: true };
+    return { success: true };
   },
 });
 
