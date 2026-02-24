@@ -65,7 +65,10 @@ export interface BoundedCollectResult<T> {
 export interface BoundedCountResult {
   /** The count (capped at limit) */
   count: number;
-  /** True if count is exact (less than limit), false if capped */
+  /**
+   * True if count is exact (less than limit), false if capped.
+   * If false, the actual count is `>= limit`.
+   */
   isExact: boolean;
   /** The limit that was used */
   limit: number;
@@ -150,6 +153,14 @@ export async function boundedCollect<T>(
 /**
  * Bounded count - counts items up to a limit
  *
+ * This function is optimized for UI counters that need a cap (e.g. "99+").
+ * It halts the database scan once the limit is reached, unlike `q.count()` which
+ * scans all matching records. Use this when the exact total is irrelevant for large counts.
+ *
+ * @param query - The query to execute
+ * @param options.limit - The maximum count to return (default: 500)
+ * @returns {BoundedCountResult} Result object containing the capped count
+ *
  * @example
  * const { count, isExact } = await boundedCount(
  *   ctx.db.query("issues").withIndex("by_project", q => q.eq("projectId", projectId)),
@@ -157,6 +168,7 @@ export async function boundedCollect<T>(
  * );
  *
  * // Display: "1,234 issues" or "2,000+ issues"
+ * // Note: isExact is false if count >= limit
  * const display = isExact ? `${count} issues` : `${count}+ issues`;
  */
 export async function boundedCount<T>(
@@ -176,7 +188,14 @@ export async function boundedCount<T>(
 /**
  * Bounded collect with in-memory filter
  *
- * Fetches extra items to account for filtering, ensuring you get enough results.
+ * Fetches extra items (targetLimit * fetchMultiplier) to account for filtering.
+ *
+ * ⚠️ WARNING: This is a "best effort" collection.
+ * It applies the filter AFTER fetching a limited batch of items. Therefore:
+ * 1. It may return fewer than `targetLimit` items even if more matching items exist in the DB.
+ * 2. `hasMore` indicates if the fetch limit was reached, not necessarily that there are more *matching* items.
+ *
+ * Use this only when filtering cannot be done via index or `q.filter()`.
  *
  * @example
  * // Get up to 50 high-priority issues
@@ -282,6 +301,10 @@ export async function collectInBatches<T>(
 /**
  * Efficiently counts items in a query.
  * Uses .count() if available (Convex 1.13+), otherwise falls back to taking a limit.
+ *
+ * NOTE: When .count() is available, this will scan ALL matching records to get the exact count.
+ * For very large datasets where you only need to know if the count exceeds a threshold (e.g. for "99+"),
+ * consider using `boundedCount` instead, as it halts scanning once the limit is reached.
  *
  * This helper is essential for maintaining compatibility with test environments
  * (e.g. convex-test) that may not fully implement the Query interface, while
