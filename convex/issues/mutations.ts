@@ -174,6 +174,7 @@ export const updateStatus = issueMutation({
     newOrder: v.number(),
     expectedVersion: v.optional(v.number()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
@@ -199,7 +200,7 @@ export const updateStatus = issueMutation({
       });
     }
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -209,6 +210,7 @@ export const updateStatusByCategory = issueMutation({
     newOrder: v.number(),
     expectedVersion: v.optional(v.number()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
@@ -246,7 +248,7 @@ export const updateStatusByCategory = issueMutation({
       });
     }
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -273,6 +275,7 @@ export const update = issueMutation({
     // Optimistic locking: pass current version to detect concurrent edits
     expectedVersion: v.optional(v.number()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock - throws conflict error if version mismatch
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
@@ -327,7 +330,7 @@ export const update = issueMutation({
       );
     }
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
