@@ -6,7 +6,7 @@ type IssuesSearchIndex = DataModel["issues"]["searchIndexes"]["search_title"];
 
 // Helper to apply singular filters (type, status, priority)
 function applySingularFilters(
-  q: SearchFilterBuilder<Doc<"issues">, IssuesSearchIndex>,
+  q: SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex>,
   args: {
     type?: string[];
     status?: string[];
@@ -41,7 +41,7 @@ function applySingularFilters(
 
 // Helper to apply user filters (assignee, reporter)
 function applyUserFilters(
-  q: SearchFilterBuilder<Doc<"issues">, IssuesSearchIndex>,
+  q: SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex>,
   args: {
     assigneeId?: Id<"users"> | "unassigned" | "me";
     reporterId?: Id<"users">;
