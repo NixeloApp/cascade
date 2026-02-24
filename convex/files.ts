@@ -3,6 +3,7 @@ import { authenticatedMutation, issueMutation, issueQuery } from "./customFuncti
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { notFound } from "./lib/errors";
 import { validateAttachment } from "./lib/fileValidators";
+import { logger } from "./lib/logger";
 
 // Generate upload URL for files
 export const generateUploadUrl = authenticatedMutation({
@@ -64,15 +65,25 @@ export const removeAttachment = issueMutation({
       throw notFound("attachment", args.storageId);
     }
 
-    // Remove from issue attachments array
+    // Remove from issue attachments array first
+    // We update the DB regardless of storage deletion success to prevent "ghost" attachments
     const updatedAttachments = (issue.attachments || []).filter((id) => id !== args.storageId);
     await ctx.db.patch(issue._id, {
       attachments: updatedAttachments,
       updatedAt: Date.now(),
     });
 
-    // Delete the file from storage
-    await ctx.storage.delete(args.storageId);
+    // Attempt to delete the file from storage
+    // If this fails (e.g. file already deleted), we log it but don't fail the mutation
+    try {
+      await ctx.storage.delete(args.storageId);
+    } catch (error) {
+      logger.error("Failed to delete file from storage during attachment removal", {
+        storageId: args.storageId,
+        issueId: issue._id,
+        error,
+      });
+    }
 
     // Log activity
     await ctx.db.insert("issueActivity", {
