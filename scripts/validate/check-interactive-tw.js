@@ -19,8 +19,6 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 // - Use Button variants (ghost, secondary) for text buttons
 // - Use Card with hoverable prop for cards
 const ALLOWED_FILES = [
-  // Kanban board - complex interactive states
-  "Kanban/",
   // Search/filter components
   "AdvancedSearchModal/",
   "FilterBar.tsx",
@@ -28,19 +26,15 @@ const ALLOWED_FILES = [
   "FuzzySearch/",
   // Issue components
   "IssueCard.tsx",
-  "IssueDetailModal.tsx",
-  "IssueDetailView/",
   "IssueDetail/",
   "IssueDependencies.tsx",
   "IssueComments.tsx",
   // Comment/reaction components
   "CommentReactions.tsx",
-  "CommentItem.tsx",
   "CommentRenderer.tsx",
   "DocumentComments.tsx",
   // Document components
   "DocumentHeader.tsx",
-  "DocumentSidebar.tsx",
   "DocumentTree.tsx",
   "DocumentTemplatesManager.tsx",
   // Editor components
@@ -53,31 +47,25 @@ const ALLOWED_FILES = [
   "NotificationCenter.tsx",
   "NotificationItem.tsx",
   "UserMenu.tsx",
-  "Breadcrumbs.tsx",
   // Modals
   "CreateIssueModal.tsx",
   "CreateProjectFromTemplate.tsx",
   "BulkOperationsBar.tsx",
-  "ImportExportModal.tsx",
   "ImportExport/",
   "VersionHistory.tsx",
   // Forms/fields
   "CustomFieldValues.tsx",
   "FileAttachments.tsx",
   "AttachmentList.tsx",
-  "ExportButton.tsx",
   "LabelsManager.tsx",
-  // Calendar/timeline
-  "IssuesCalendarView.tsx",
+  // Calendar
   "Calendar/",
-  "Timeline/",
   "RoadmapView.tsx",
   // Settings/admin
   "Settings/",
   "Admin/",
   // Dashboard
   "Dashboard/",
-  "AnalyticsDashboard.tsx",
   "Analytics/",
   // AI components
   "AI/",
@@ -85,7 +73,6 @@ const ALLOWED_FILES = [
   "Sprint",
   // Time tracking
   "TimeTracking/",
-  "TimeTracker/",
   // Onboarding
   "Onboarding/",
   // Landing pages
@@ -95,16 +82,7 @@ const ALLOWED_FILES = [
   // Activity/inbox
   "ActivityFeed.tsx",
   "InboxList.tsx",
-  // Webhooks
-  "Webhooks/",
-  // Templates
-  "Templates/",
-  // Projects
-  "ProjectsList.tsx",
-  // Misc
-  "SubtasksList.tsx",
-  "LinkedDocuments.tsx",
-  "WorkflowStateSelect.tsx",
+  // Error handling
   "ErrorBoundary.tsx",
 ];
 
