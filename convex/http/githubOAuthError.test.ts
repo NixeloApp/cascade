@@ -13,8 +13,8 @@ vi.mock("../lib/fetchWithTimeout", () => ({
 vi.mock("../lib/env", () => ({
   getGitHubClientId: vi.fn(),
   getGitHubClientSecret: vi.fn(),
-  getConvexSiteUrl: vi.fn(),
   isGitHubOAuthConfigured: vi.fn(),
+  getConvexSiteUrl: vi.fn(),
 }));
 
 describe("GitHub OAuth Error Handling", () => {
@@ -36,8 +36,8 @@ describe("GitHub OAuth Error Handling", () => {
     // Default config
     vi.mocked(envLib.getGitHubClientId).mockReturnValue("test-client-id");
     vi.mocked(envLib.getGitHubClientSecret).mockReturnValue("test-client-secret");
-    vi.mocked(envLib.getConvexSiteUrl).mockReturnValue("https://test.convex.site");
     vi.mocked(envLib.isGitHubOAuthConfigured).mockReturnValue(true);
+    vi.mocked(envLib.getConvexSiteUrl).mockReturnValue("https://test.convex.site");
 
     // Spy on console.error
     consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
