@@ -45,7 +45,11 @@ describe("sendEmailNotification", () => {
         actorName,
       });
     } finally {
-      process.env.IS_TEST_ENV = originalEnv;
+      if (originalEnv === undefined) {
+        delete process.env.IS_TEST_ENV;
+      } else {
+        process.env.IS_TEST_ENV = originalEnv;
+      }
     }
 
     // Verify user was fetched (mandatory)
