@@ -90,7 +90,9 @@ describe("issue search optimization", () => {
   });
 
   it("should find issues reported by specific user", async () => {
-    await createTestIssue(t, projectId, ctx.userId, {
+    const reporter = await createTestUser(t);
+    const otherUserId = await createTestUser(t);
+    const issue = await createTestIssue(t, projectId, reporter, {
       title: "Reported Issue",
     });
     await createTestIssue(t, projectId, otherUserId, {
@@ -100,10 +102,11 @@ describe("issue search optimization", () => {
     const result = await ctx.asUser.query(api.issues.queries.search, {
       query: "",
       projectId,
-      reporterId: ctx.userId,
+      reporterId: reporter,
     });
 
     expect(result.page).toHaveLength(1);
+    expect(result.page[0]._id).toBe(issue);
     expect(result.page[0].title).toBe("Reported Issue");
   });
 });
