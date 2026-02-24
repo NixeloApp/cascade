@@ -2,6 +2,7 @@ import { type PaginationResult, paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import {
   authenticatedMutation,
   authenticatedQuery,
@@ -35,6 +36,32 @@ function generateSlug(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+async function generateUniqueTeamSlug(
+  ctx: MutationCtx,
+  organizationId: Id<"organizations">,
+  name: string,
+  excludeTeamId?: Id<"teams">,
+): Promise<string> {
+  const baseSlug = generateSlug(name);
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existing = await ctx.db
+      .query("teams")
+      .withIndex("by_organization_slug", (q) =>
+        q.eq("organizationId", organizationId).eq("slug", slug),
+      )
+      .first();
+
+    if (!existing || (excludeTeamId && existing._id === excludeTeamId)) break;
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  return slug;
+}
+
 // ============================================================================
 // Mutations - Teams
 // ============================================================================
@@ -55,23 +82,7 @@ export const createTeam = organizationMemberMutation({
     // organizationMemberMutation handles auth + org membership check
 
     // Generate unique slug
-    const baseSlug = generateSlug(args.name);
-    let slug = baseSlug;
-    let counter = 1;
-
-    while (true) {
-      const existing = await ctx.db
-        .query("teams")
-        .withIndex("by_organization_slug", (q) =>
-          q.eq("organizationId", ctx.organizationId).eq("slug", slug),
-        )
-        .first();
-
-      if (!existing) break;
-
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
+    const slug = await generateUniqueTeamSlug(ctx, ctx.organizationId, args.name);
 
     const now = Date.now();
 
@@ -135,24 +146,7 @@ export const updateTeam = teamLeadMutation({
     if (args.name !== undefined) {
       updates.name = args.name;
       // Regenerate slug
-      const baseSlug = generateSlug(args.name);
-      let slug = baseSlug;
-      let counter = 1;
-
-      while (true) {
-        const existing = await ctx.db
-          .query("teams")
-          .withIndex("by_organization_slug", (q) =>
-            q.eq("organizationId", ctx.organizationId).eq("slug", slug),
-          )
-          .first();
-
-        if (!existing || existing._id === ctx.teamId) break;
-
-        slug = `${baseSlug}-${counter}`;
-        counter++;
-      }
-      updates.slug = slug;
+      updates.slug = await generateUniqueTeamSlug(ctx, ctx.organizationId, args.name, ctx.teamId);
     }
 
     if (args.description !== undefined) updates.description = args.description;
