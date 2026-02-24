@@ -517,10 +517,12 @@ describe("Workspaces", () => {
         organizationId,
       });
 
-      await asUser.mutation(api.workspaces.update, {
+      const result = await asUser.mutation(api.workspaces.update, {
         workspaceId,
         name: "Updated Name",
       });
+
+      expect(result).toEqual({ success: true, workspaceId });
 
       const workspace = await t.run(async (ctx) => ctx.db.get(workspaceId));
       expect(workspace?.name).toBe("Updated Name");
