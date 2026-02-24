@@ -263,12 +263,13 @@ export const remove = authenticatedMutation({
   args: {
     keyId: v.id("apiKeys"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const _key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
 
     await ctx.db.delete(args.keyId);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 

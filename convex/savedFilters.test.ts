@@ -309,7 +309,7 @@ describe("Saved Filters", () => {
 
       const result = await asUser.mutation(api.savedFilters.remove, { id: filterId });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
       expect(filters).toHaveLength(0);

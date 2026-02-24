@@ -430,7 +430,7 @@ describe("Automation Rules", () => {
       });
 
       const result = await asUser.mutation(api.automationRules.remove, { id: ruleId });
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
