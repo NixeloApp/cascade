@@ -23,58 +23,62 @@ describe("SSO Security", () => {
 
     // We can run this in a batch using t.run to speed up
     await t.run(async (ctx) => {
-      for (let i = 0; i < noiseCount; i++) {
-        const orgId = await ctx.db.insert("organizations", {
-          name: `Noise Org ${i}`,
-          slug: `noise-org-${i}`,
-          timezone: "UTC",
-          settings: {
-            defaultMaxHoursPerWeek: 40,
-            defaultMaxHoursPerDay: 8,
-            requiresTimeApproval: false,
-            billingEnabled: false,
-          },
-          createdBy: adminId,
-          updatedAt: Date.now(),
-        });
-
-        // Add admin as owner
-        await ctx.db.insert("organizationMembers", {
-          organizationId: orgId,
-          userId: adminId,
-          role: "owner",
-          addedBy: adminId,
-        });
-
-        // Create SSO connection
-        const connectionId = await ctx.db.insert("ssoConnections", {
-          organizationId: orgId,
-          type: "saml",
-          name: `Noise SSO ${i}`,
-          isEnabled: true,
-          createdBy: adminId,
-          updatedAt: Date.now(),
-          verifiedDomains: [`noise-${i}.com`], // Unique domain for each
-        });
-
-        let domains = [`noise-${i}.com`];
-        // Mark the LAST one as the "victim" with a specific domain
-        if (i === noiseCount - 1) {
-          domains = ["victim.com"];
-          await ctx.db.patch(connectionId, {
-            verifiedDomains: domains,
+      await Promise.all(
+        Array.from({ length: noiseCount }, async (_, i) => {
+          const orgId = await ctx.db.insert("organizations", {
+            name: `Noise Org ${i}`,
+            slug: `noise-org-${i}`,
+            timezone: "UTC",
+            settings: {
+              defaultMaxHoursPerWeek: 40,
+              defaultMaxHoursPerDay: 8,
+              requiresTimeApproval: false,
+              billingEnabled: false,
+            },
+            createdBy: adminId,
+            updatedAt: Date.now(),
           });
-        }
 
-        // Populate ssoDomains (new table)
-        for (const domain of domains) {
-          await ctx.db.insert("ssoDomains", {
-            domain,
-            connectionId,
+          // Add admin as owner
+          await ctx.db.insert("organizationMembers", {
             organizationId: orgId,
+            userId: adminId,
+            role: "owner",
+            addedBy: adminId,
           });
-        }
-      }
+
+          // Create SSO connection
+          const connectionId = await ctx.db.insert("ssoConnections", {
+            organizationId: orgId,
+            type: "saml",
+            name: `Noise SSO ${i}`,
+            isEnabled: true,
+            createdBy: adminId,
+            updatedAt: Date.now(),
+            verifiedDomains: [`noise-${i}.com`], // Unique domain for each
+          });
+
+          let domains = [`noise-${i}.com`];
+          // Mark the LAST one as the "victim" with a specific domain
+          if (i === noiseCount - 1) {
+            domains = ["victim.com"];
+            await ctx.db.patch(connectionId, {
+              verifiedDomains: domains,
+            });
+          }
+
+          // Populate ssoDomains (new table)
+          await Promise.all(
+            domains.map((domain) =>
+              ctx.db.insert("ssoDomains", {
+                domain,
+                connectionId,
+                organizationId: orgId,
+              }),
+            ),
+          );
+        }),
+      );
     });
 
     // Verify we have enough connections

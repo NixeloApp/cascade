@@ -170,7 +170,6 @@ export const listRoadmapIssues = authenticatedQuery({
           .withIndex("by_sprint", (q) =>
             q.eq("sprintId", args.sprintId as Id<"sprints">).lt("isDeleted", true),
           )
-          .order("desc")
           .filter((q) => q.neq(q.field("type"), "subtask")),
         BOUNDED_LIST_LIMIT,
         "roadmap sprint issues",
@@ -188,8 +187,7 @@ export const listRoadmapIssues = authenticatedQuery({
       const allEpicIssues = await safeCollect(
         ctx.db
           .query("issues")
-          .withIndex("by_epic", (q) => q.eq("epicId", args.epicId).lt("isDeleted", true))
-          .order("desc"),
+          .withIndex("by_epic", (q) => q.eq("epicId", args.epicId).lt("isDeleted", true)),
         BOUNDED_LIST_LIMIT,
         "roadmap epic issues",
       );
@@ -243,15 +241,12 @@ export const listRoadmapIssues = authenticatedQuery({
       const outcomes = await Promise.all(
         typesToFetch.map((type) =>
           safeCollect(
-            ctx.db
-              .query("issues")
-              .withIndex("by_project_type", (q) =>
-                q
-                  .eq("projectId", args.projectId)
-                  .eq("type", type as Doc<"issues">["type"])
-                  .lt("isDeleted", true),
-              )
-              .order("desc"),
+            ctx.db.query("issues").withIndex("by_project_type", (q) =>
+              q
+                .eq("projectId", args.projectId)
+                .eq("type", type as Doc<"issues">["type"])
+                .lt("isDeleted", true),
+            ),
             BOUNDED_LIST_LIMIT,
             `roadmap issues type=${type}`,
           ),
