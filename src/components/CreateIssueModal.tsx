@@ -13,8 +13,8 @@ import {
   getPriorityColor,
   getTypeLabel,
   ISSUE_PRIORITIES,
-  ISSUE_TYPES_WITH_SUBTASK,
   ISSUE_TYPE_ICONS,
+  ISSUE_TYPES_WITH_SUBTASK,
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
