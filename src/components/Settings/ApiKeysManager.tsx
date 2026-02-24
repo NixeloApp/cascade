@@ -15,6 +15,7 @@ import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
+import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
@@ -134,7 +135,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
   const revokeKey = useMutation(api.apiKeys.revoke);
   const deleteKey = useMutation(api.apiKeys.remove);
   const [isRevoking, setIsRevoking] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [_isDeleting, setIsDeleting] = useState(false);
 
   const handleRevoke = async () => {
     if (!confirm(`Revoke API key "${apiKey.name}"? This will immediately stop it from working.`)) {
@@ -240,15 +241,14 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
         {/* Actions */}
         <Flex gap="sm" align="center" className="ml-4">
           <Tooltip content="View usage statistics">
-            <Button
+            <IconButton
               onClick={onViewStats}
-              variant="ghost"
+              variant="brand"
               size="sm"
-              className="p-2 min-w-0 text-ui-text-tertiary hover:text-brand"
               aria-label="View usage statistics"
             >
               <TrendingUp className="h-4 w-4" />
-            </Button>
+            </IconButton>
           </Tooltip>
           {apiKey.isActive && (
             <Button
@@ -263,16 +263,9 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
             </Button>
           )}
           <Tooltip content="Delete API key">
-            <Button
-              onClick={handleDelete}
-              variant="ghost"
-              size="sm"
-              isLoading={isDeleting}
-              className="p-2 min-w-0 text-ui-text-tertiary hover:text-status-error"
-              aria-label="Delete key"
-            >
+            <IconButton onClick={handleDelete} variant="danger" size="sm" aria-label="Delete key">
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </IconButton>
           </Tooltip>
         </Flex>
       </Flex>
@@ -375,7 +368,7 @@ function GenerateKeyModal({
                     htmlFor={`scope-${scope.value}`}
                     className="cursor-pointer"
                   >
-                    <Card padding="sm" className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary">
+                    <Card padding="sm" hoverable className="bg-ui-bg-secondary">
                       <Flex align="start" gap="md">
                         <Checkbox
                           id={`scope-${scope.value}`}

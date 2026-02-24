@@ -120,7 +120,7 @@ export const updateOnboardingStatus = authenticatedMutation({
     wizardCompleted: v.optional(v.boolean()),
     checklistDismissed: v.optional(v.boolean()),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("userOnboarding")
@@ -159,6 +159,8 @@ export const updateOnboardingStatus = authenticatedMutation({
         });
       }
     }
+
+    return { success: true };
   },
 });
 
@@ -642,7 +644,7 @@ export const resetOnboarding = authenticatedMutation({
  */
 export const deleteSampleProject = authenticatedMutation({
   args: {},
-  returns: v.null(),
+  returns: v.object({ success: v.boolean(), deleted: v.boolean() }),
   handler: async (ctx) => {
     // Find sample project
     const project = await ctx.db
@@ -676,6 +678,8 @@ export const deleteSampleProject = authenticatedMutation({
         updatedAt: Date.now(),
       });
     }
+
+    return { success: true, deleted: true };
   },
 });
 

@@ -18,6 +18,7 @@ import { Card } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
+import { IconButton } from "./ui/IconButton";
 import { Metadata, MetadataTimestamp } from "./ui/Metadata";
 import { Stack } from "./ui/Stack";
 import { Tooltip } from "./ui/Tooltip";
@@ -238,15 +239,15 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                     </Tooltip>
                   )}
                   <Tooltip content="Delete">
-                    <Button
-                      variant="ghost"
+                    <IconButton
+                      variant="danger"
                       size="sm"
                       onClick={() => setDeleteConfirm(attachment.storageId)}
-                      className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-status-error hover:bg-status-error-bg"
+                      className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                       aria-label={`Delete ${attachment.filename}`}
                     >
                       <Icon icon={Trash2} size="sm" />
-                    </Button>
+                    </IconButton>
                   </Tooltip>
                 </Flex>
               </Flex>

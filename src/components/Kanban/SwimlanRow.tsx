@@ -12,6 +12,7 @@ import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { memo } from "react";
+import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import type { SwimlanConfig } from "@/lib/swimlane-utils";
@@ -75,10 +76,10 @@ const SwimlanRowComponent = function SwimlanRow({
   return (
     <div className="mb-4">
       {/* Swimlane Header */}
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         onClick={handleToggle}
-        className="w-full flex items-center gap-2 px-4 py-2 hover:bg-ui-bg-hover rounded-secondary transition-fast group"
+        className="w-full justify-start gap-2 px-4 py-2 h-auto"
         aria-expanded={!isCollapsed}
         aria-controls={`swimlane-${config.id}`}
       >
@@ -96,7 +97,7 @@ const SwimlanRowComponent = function SwimlanRow({
         <Badge variant="neutral" shape="pill" className="text-xs">
           {totalIssues}
         </Badge>
-      </button>
+      </Button>
 
       {/* Swimlane Content */}
       {!isCollapsed && (

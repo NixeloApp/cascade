@@ -14,6 +14,7 @@
  *  10. E2E quality          — catches broad selectors, networkidle, waitForSelector
  *  11. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
  *  12. Convex patterns       — Envelope Pattern returns, security checks, test destructuring
+ *  13. Interactive Tailwind  — hover:/focus: should be in CVA components, not scattered
  *
  * Exit code 1 if any check fails. No warning levels — everything is an error.
  *
@@ -27,6 +28,7 @@ import { run as runColorAudit } from "./validate/check-colors.js";
 import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
 import { run as runEmojiCheck } from "./validate/check-emoji.js";
+import { run as runInteractiveTwCheck } from "./validate/check-interactive-tw.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
 import { run as runRawTailwindCheck } from "./validate/check-raw-tailwind.js";
 import { run as runStandardsCheck } from "./validate/check-standards.js";
@@ -50,6 +52,7 @@ const checks = [
   { name: "E2E quality", fn: runE2EQualityCheck },
   { name: "UI patterns", fn: runUIPatternsCheck },
   { name: "Convex patterns", fn: runConvexPatternsCheck },
+  { name: "Interactive Tailwind", fn: runInteractiveTwCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

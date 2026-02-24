@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
 import { Button } from "./ui/Button";
 import { Flex } from "./ui/Flex";
+import { IconButton } from "./ui/IconButton";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { Tooltip } from "./ui/Tooltip";
 
@@ -43,7 +44,7 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
               aria-label={`${reaction.emoji} reaction, ${reaction.userIds.length} vote${reaction.userIds.length === 1 ? "" : "s"}`}
               aria-pressed={hasReacted}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-default border h-auto",
+                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border h-auto transition-fast",
                 hasReacted
                   ? "bg-brand-subtle border-brand-border text-brand-subtle-foreground"
                   : "bg-ui-bg-soft border-ui-border text-ui-text-secondary hover:border-ui-border-secondary hover:bg-ui-bg-hover",
@@ -59,14 +60,9 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <Tooltip content="Add reaction">
           <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Add reaction"
-              className="w-6 h-6 rounded-full text-ui-text-tertiary hover:text-ui-text-secondary"
-            >
+            <IconButton size="xs" aria-label="Add reaction">
               <Smile size={16} />
-            </Button>
+            </IconButton>
           </PopoverTrigger>
         </Tooltip>
         <PopoverContent side="top" align="start" className="w-auto p-1.5">

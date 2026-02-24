@@ -26,7 +26,7 @@ interface WebhookCardProps {
  */
 export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
   return (
-    <Card padding="md" variant="flat" className="hover:bg-ui-bg-tertiary transition-colors">
+    <Card padding="md" variant="flat" hoverable>
       <Flex justify="between" align="start">
         <FlexItem flex="1">
           <Stack gap="sm">

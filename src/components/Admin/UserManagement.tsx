@@ -381,9 +381,8 @@ export function UserManagement() {
                                   </Button>
                                   <Button
                                     onClick={() => handleRevokeInvite(invite._id)}
-                                    variant="ghost"
+                                    variant="ghostDanger"
                                     size="sm"
-                                    className="text-status-error hover:bg-status-error-bg"
                                     aria-label="Revoke invitation"
                                   >
                                     Revoke

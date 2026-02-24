@@ -11,6 +11,7 @@ import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
+import { IconButton } from "../ui/IconButton";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
 import { Stack } from "../ui/Stack";
@@ -182,15 +183,14 @@ export function Timesheet() {
                       </Flex>
                       <Flex justify="between" align="center">
                         <Typography variant="label">{formatHours(entry.hours)}h</Typography>
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <IconButton
+                          variant="danger"
+                          size="xs"
                           onClick={() => handleDelete(entry._id)}
-                          className="p-1 min-w-0 text-ui-text-tertiary hover:text-status-error"
                           aria-label="Delete entry"
                         >
                           <Icon icon={Trash2} size="xs" />
-                        </Button>
+                        </IconButton>
                       </Flex>
                       {entry.description && (
                         <Typography

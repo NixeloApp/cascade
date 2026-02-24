@@ -7,6 +7,7 @@ import { authenticatedQuery } from "../customFunctions";
 import { batchFetchUsers, getUserName } from "../lib/batchHelpers";
 import { forbidden, notFound, requireOwned } from "../lib/errors";
 import { MAX_PAGE_SIZE } from "../lib/queryLimits";
+import { assertCanAccessProject, canAccessProject } from "../projectAccess";
 import type { AIProvider } from "./config";
 
 // Reasonable limits for AI-related queries
@@ -74,15 +75,9 @@ export const getProjectContext = authenticatedQuery({
     const project = await ctx.db.get(args.projectId);
     if (!project) throw notFound("project", args.projectId);
 
-    // Check access
-    const member = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project_user", (q) =>
-        q.eq("projectId", args.projectId).eq("userId", ctx.userId),
-      )
-      .first();
-
-    if (!member && project.createdBy !== ctx.userId && !project.isPublic) {
+    // Check access: centralized check or allow public projects
+    const hasAccess = await canAccessProject(ctx, args.projectId, ctx.userId);
+    if (!hasAccess && !project.isPublic) {
       throw forbidden();
     }
 
@@ -188,6 +183,8 @@ export const getProjectSuggestions = authenticatedQuery({
     includeResponded: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+
     const suggestions = await ctx.db
       .query("aiSuggestions")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))

@@ -19,6 +19,7 @@ import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Input, Textarea } from "../ui/form";
+import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Stack } from "../ui/Stack";
@@ -230,14 +231,14 @@ export function IpRestrictionsSettings() {
                         </Typography>
                       </Stack>
                       <Tooltip content="Remove from allowlist">
-                        <Button
-                          variant="ghost"
+                        <IconButton
+                          variant="danger"
                           size="sm"
                           onClick={() => handleRemoveIp(entry._id)}
-                          className="text-status-error hover:bg-status-error/10"
+                          aria-label="Remove from allowlist"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </IconButton>
                       </Tooltip>
                     </Flex>
                   </Card>

@@ -20,6 +20,7 @@ import {
 import { Flex, FlexItem } from "./ui/Flex";
 import { Checkbox, Input } from "./ui/form";
 import { Icon } from "./ui/Icon";
+import { IconButton } from "./ui/IconButton";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -137,12 +138,12 @@ function SavedFiltersDropdown({
             key={filter._id}
             align="center"
             justify="between"
-            className="hover:bg-ui-bg-secondary rounded cursor-pointer"
+            className="rounded px-1 hover:bg-ui-bg-secondary transition-fast"
           >
             <Button
               variant="unstyled"
               onClick={() => onLoadFilter(filter)}
-              className="flex-1 text-left h-auto p-1"
+              className="flex-1 text-left h-auto py-1"
             >
               <Typography variant="small" as="span">
                 {filter.name}
@@ -154,18 +155,17 @@ function SavedFiltersDropdown({
               )}
             </Button>
             {filter.isOwner && (
-              <Button
-                variant="ghost"
-                size="icon"
+              <IconButton
+                variant="danger"
+                size="xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteFilter(filter._id);
                 }}
-                className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
                 aria-label="Delete filter"
               >
                 <X className="w-3 h-3" />
-              </Button>
+              </IconButton>
             )}
           </Flex>
         ))}
@@ -379,12 +379,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
         {/* Clear Filters */}
         {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearFilters}
-            className="text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover transition-default"
-          >
+          <Button variant="ghost" size="sm" onClick={handleClearFilters}>
             <X className="w-4 h-4 mr-1" />
             Clear ({activeFilterCount})
           </Button>
@@ -392,12 +387,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
         {/* Save Filter */}
         {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSaveDialog(true)}
-            className="text-ui-text-secondary hover:text-brand hover:bg-ui-bg-hover transition-default"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
             Save Filter
           </Button>
         )}

@@ -32,7 +32,7 @@ const cardVariants = cva("border transition-default", {
       full: "rounded-2xl",
     },
     hoverable: {
-      true: "hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
+      true: "hover:bg-ui-bg-hover hover:border-ui-border-secondary cursor-pointer",
       false: "",
     },
   },

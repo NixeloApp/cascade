@@ -16,6 +16,7 @@ import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Input, Select } from "./ui/form";
+import { IconButton } from "./ui/IconButton";
 import { Sheet } from "./ui/Sheet";
 import { Typography } from "./ui/Typography";
 
@@ -160,15 +161,14 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
                     )}
                   </Flex>
                   <Tooltip content="Remove dependency">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
+                    <IconButton
+                      variant="danger"
+                      size="xs"
                       onClick={() => setDeleteConfirm(link._id)}
                       aria-label="Remove dependency"
                     >
                       <X className="h-3.5 w-3.5" />
-                    </Button>
+                    </IconButton>
                   </Tooltip>
                 </Flex>
               </Card>
@@ -198,15 +198,14 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
                     )}
                   </Flex>
                   <Tooltip content="Remove dependency">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-ui-text-tertiary hover:text-status-error"
+                    <IconButton
+                      variant="danger"
+                      size="xs"
                       onClick={() => setDeleteConfirm(link._id)}
                       aria-label="Remove dependency"
                     >
                       <X className="h-3.5 w-3.5" />
-                    </Button>
+                    </IconButton>
                   </Tooltip>
                 </Flex>
               </Card>
