@@ -86,10 +86,7 @@ export const listByProject = projectQuery({
             ctx.db
               .query("issues")
               .withIndex("by_project_sprint_status", (q) =>
-                q
-                  .eq("projectId", ctx.projectId)
-                  .eq("sprintId", sprintId)
-                  .eq("status", status),
+                q.eq("projectId", ctx.projectId).eq("sprintId", sprintId).eq("status", status),
               )
               .filter(notDeleted),
             MAX_SPRINT_ISSUES,

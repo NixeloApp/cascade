@@ -157,9 +157,7 @@ async function countIssuesByAssigneeUnrestricted(ctx: QueryCtx, assigneeId: Id<"
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee_status", (q) =>
-          q.eq("assigneeId", assigneeId).eq("status", "done"),
-        )
+        .withIndex("by_assignee_status", (q) => q.eq("assigneeId", assigneeId).eq("status", "done"))
         .filter(notDeleted),
       MAX_ISSUES_FOR_STATS,
     ),
@@ -225,9 +223,7 @@ async function countIssuesByAssigneeFiltered(
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee_status", (q) =>
-          q.eq("assigneeId", assigneeId).eq("status", "done"),
-        )
+        .withIndex("by_assignee_status", (q) => q.eq("assigneeId", assigneeId).eq("status", "done"))
         .filter(notDeleted)
         .filter((q) => isAllowedProject(q, projectIds)),
       MAX_ISSUES_FOR_STATS,

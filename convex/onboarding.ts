@@ -96,9 +96,7 @@ export const hasCompletedIssue = authenticatedQuery({
       checkPairs.map(({ projectId, stateId }) =>
         ctx.db
           .query("issues")
-          .withIndex("by_project_status", (q) =>
-            q.eq("projectId", projectId).eq("status", stateId),
-          )
+          .withIndex("by_project_status", (q) => q.eq("projectId", projectId).eq("status", stateId))
           .filter(notDeleted)
           .first(),
       ),

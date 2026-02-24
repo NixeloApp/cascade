@@ -125,9 +125,7 @@ export const listEpics = authenticatedQuery({
     const epics = await safeCollect(
       ctx.db
         .query("issues")
-        .withIndex("by_project_type", (q) =>
-          q.eq("projectId", args.projectId).eq("type", "epic"),
-        )
+        .withIndex("by_project_type", (q) => q.eq("projectId", args.projectId).eq("type", "epic"))
         .filter(notDeleted),
       200, // Reasonable limit for epics
       "project epics",
@@ -867,9 +865,7 @@ export const listByTeamSmart = authenticatedQuery({
           // Batch query: Promise.all handles parallelism
           return ctx.db
             .query("issues")
-            .withIndex("by_team_status", (q) =>
-              q.eq("teamId", args.teamId).eq("status", state.id),
-            )
+            .withIndex("by_team_status", (q) => q.eq("teamId", args.teamId).eq("status", state.id))
             .filter(notDeleted)
             .order("asc");
         })();
@@ -1205,10 +1201,7 @@ export const listIssuesByDateRange = authenticatedQuery({
       ctx.db
         .query("issues")
         .withIndex("by_project_due_date", (q) =>
-          q
-            .eq("projectId", args.projectId)
-            .gte("dueDate", args.from)
-            .lte("dueDate", args.to),
+          q.eq("projectId", args.projectId).gte("dueDate", args.from).lte("dueDate", args.to),
         )
         .filter(notDeleted),
       // Index handles soft delete filtering
@@ -1310,9 +1303,7 @@ async function fetchProjectIssuesOptimized(
     return await safeCollect(
       ctx.db
         .query("issues")
-        .withIndex("by_project_status", (q) =>
-          q.eq("projectId", projectId).eq("status", status),
-        )
+        .withIndex("by_project_status", (q) => q.eq("projectId", projectId).eq("status", status))
         .filter(notDeleted)
         .order("desc"),
       fetchLimit,
