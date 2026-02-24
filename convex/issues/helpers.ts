@@ -392,6 +392,31 @@ export async function performBulkUpdate(
   ) => Promise<void> = assertCanEditProject,
 ) {
   const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
+  return applyBulkUpdate(ctx, issues, getUpdate, checkPermission);
+}
+
+// Helper: Apply bulk update logic to a list of issues
+export async function applyBulkUpdate(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  issues: (Doc<"issues"> | null)[],
+  getUpdate: (
+    issue: Doc<"issues">,
+    now: number,
+  ) => Promise<{
+    patch: Partial<Doc<"issues">>;
+    activity?: {
+      action: IssueActivityAction;
+      field?: string;
+      oldValue?: string;
+      newValue?: string;
+    };
+  } | null>,
+  checkPermission: (
+    ctx: MutationCtx,
+    projectId: Id<"projects">,
+    userId: Id<"users">,
+  ) => Promise<void> = assertCanEditProject,
+) {
   const now = Date.now();
 
   const results = await Promise.all(
