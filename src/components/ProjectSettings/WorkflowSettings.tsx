@@ -199,12 +199,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                   options={CATEGORY_OPTIONS}
                   className="w-36"
                 />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveState(index)}
-                  className="text-status-error hover:text-status-error hover:bg-status-error/10"
-                >
+                <Button variant="ghostDanger" size="sm" onClick={() => handleRemoveState(index)}>
                   Remove
                 </Button>
               </Flex>

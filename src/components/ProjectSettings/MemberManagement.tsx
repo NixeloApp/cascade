@@ -228,10 +228,9 @@ export function MemberManagement({
                         className="w-28"
                       />
                       <Button
-                        variant="ghost"
+                        variant="ghostDanger"
                         size="sm"
                         onClick={() => setMemberToRemove(member)}
-                        className="text-status-error hover:text-status-error hover:bg-status-error/10"
                       >
                         Remove
                       </Button>
