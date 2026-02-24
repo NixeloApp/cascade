@@ -16,6 +16,7 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
 import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
+import { logger } from "./lib/logger";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { MINUTE } from "./lib/timeUtils";
 import { assertCanAccessProject, assertCanEditProject, canEditProject } from "./projectAccess";
@@ -952,7 +953,7 @@ export const notifyBotService = internalAction({
           ? `Timeout: Bot service request exceeded ${BOT_SERVICE_TIMEOUT_MS}ms`
           : getErrorMessage(error);
 
-      console.error(`Failed to notify bot service for job ${args.jobId}:`, error);
+      logger.error(`Failed to notify bot service for job ${args.jobId}:`, { error });
 
       await ctx.runMutation(internal.meetingBot.markJobFailed, {
         jobId: args.jobId,

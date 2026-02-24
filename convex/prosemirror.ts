@@ -5,6 +5,7 @@ import { components } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, unauthenticated, validation } from "./lib/errors";
+import { logger } from "./lib/logger";
 import { MINUTE } from "./lib/timeUtils";
 import type { ProseMirrorSnapshot } from "./validators";
 
@@ -85,7 +86,7 @@ const syncApi = prosemirrorSync.syncApi<DataModel>({
           ? (JSON.parse(snapshot) as ProseMirrorSnapshot)
           : (snapshot as ProseMirrorSnapshot);
     } catch (e) {
-      console.error(`Failed to parse snapshot for document ${id}:`, e);
+      logger.error(`Failed to parse snapshot for document ${id}:`, { error: e });
       throw validation("content", "Invalid document snapshot");
     }
     // Update the document's updatedAt timestamp when content changes

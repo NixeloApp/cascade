@@ -70,8 +70,9 @@ describe("GitHub OAuth Error Handling", () => {
 
     // Check that we DID log the detailed error
     expect(consoleSpy).toHaveBeenCalledWith(
-      "GitHub OAuth error: Failed to exchange code",
-      expect.stringContaining("The code passed is incorrect or expired."),
+      expect.stringMatching(
+        /GitHub OAuth error: Failed to exchange code.*The code passed is incorrect or expired./,
+      ),
     );
   });
 
@@ -105,8 +106,7 @@ describe("GitHub OAuth Error Handling", () => {
 
     // Check that we DID log the detailed error
     expect(consoleSpy).toHaveBeenCalledWith(
-      "GitHub OAuth error: Failed to get user info",
-      expect.stringContaining("Bad credentials"),
+      expect.stringMatching(/GitHub OAuth error: Failed to get user info.*Bad credentials/),
     );
   });
 });

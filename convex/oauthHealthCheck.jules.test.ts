@@ -185,7 +185,7 @@ describe("OAuth Health Check", () => {
       vi.stubEnv("OAUTH_MONITOR_GOOGLE_CLIENT_ID", "");
 
       // Capture console logs? Or just ensure no mutation happened
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "info").mockImplementation(() => {});
 
       await t.action(internal.oauthHealthCheck.checkGoogleOAuthHealth);
 

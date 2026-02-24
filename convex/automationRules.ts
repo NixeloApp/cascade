@@ -3,6 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import { authenticatedMutation, projectAdminMutation, projectQuery } from "./customFunctions";
 import { notFound, validation } from "./lib/errors";
+import { logger } from "./lib/logger";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { assertIsProjectAdmin } from "./projectAccess";
 import { automationActionTypes, automationActionValue, automationTriggers } from "./validators";
@@ -217,9 +218,9 @@ export const executeRules = internalMutation({
           }
         } catch (error) {
           // Log error but continue with other rules
-          console.error(
+          logger.error(
             `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
-            error,
+            { error },
           );
         }
       }),
