@@ -191,7 +191,7 @@ export const updateWorkspace = workspaceAdminMutation({
       }),
     ),
   },
-  returns: v.object({ workspaceId: v.id("workspaces") }),
+  returns: v.object({ success: v.boolean(), workspaceId: v.id("workspaces") }),
   handler: async (ctx, args) => {
     // workspaceAdminMutation handles auth + org admin check
     await ctx.db.patch(ctx.workspaceId, {
@@ -199,7 +199,7 @@ export const updateWorkspace = workspaceAdminMutation({
       updatedAt: Date.now(),
     });
 
-    return { workspaceId: ctx.workspaceId };
+    return { success: true, workspaceId: ctx.workspaceId };
   },
 });
 
