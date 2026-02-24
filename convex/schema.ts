@@ -530,6 +530,8 @@ const applicationTables = {
     parentId: v.optional(v.id("documentComments")),
     // Soft delete
     isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_document", ["documentId"])
     .index("by_author", ["authorId"])
