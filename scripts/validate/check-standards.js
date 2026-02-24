@@ -28,6 +28,7 @@ export function run() {
     "/CustomFieldValues.tsx", // URL field type
     "/EventDetailsModal.tsx", // External event links (Google Meet, etc.)
     "/onboarding.tsx", // External link to docs
+    "/CommentRenderer.tsx", // User-generated markdown links
     "src/components/Landing/", // Landing page navigation (public-facing)
     "src/components/Auth/", // Auth page legal links
     "src/routes/_auth/_app/$orgSlug/route.tsx", // Skip to content link
@@ -47,6 +48,7 @@ export function run() {
     "/ResetPasswordForm.tsx", // Emphasized email
     "/forgot-password.tsx", // Emphasized email
     "/invite.$token.tsx", // Emphasized names
+    "/CommentRenderer.tsx", // User-generated markdown (bold, italic)
   ];
 
   let errorCount = 0;

@@ -12,17 +12,18 @@ Improve comment editor to match document editor quality.
 
 ### Tasks
 
-- [ ] Add Markdown preview toggle to comment textarea
-- [ ] Improve `CommentRenderer.tsx` Markdown rendering
+- [x] Add Markdown preview toggle to comment textarea ✅ 2026-02-24
+- [x] Improve `CommentRenderer.tsx` Markdown rendering ✅ 2026-02-24
 - [ ] Add emoji picker to comments (can reuse from emoji-overhaul)
 - [ ] Add file attachment support inline with comments
 
 ### Current State
 
-- Mentions with `@[name](id)` syntax work
-- Basic textarea, no preview
-- No emoji picker
-- No inline attachments
+- Mentions with `@[name](id)` syntax work ✅
+- Preview toggle in MentionInput ✅
+- Inline markdown: **bold**, *italic*, `code`, ~~strikethrough~~, [links](url) ✅
+- No emoji picker (pending)
+- No inline attachments (pending)
 
 ---
 

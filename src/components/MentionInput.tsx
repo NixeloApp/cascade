@@ -1,10 +1,14 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import { Eye, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { CommentRenderer } from "./CommentRenderer";
 import { Avatar } from "./ui/Avatar";
+import { Button } from "./ui/Button";
 import { Command, CommandItem, CommandList } from "./ui/Command";
+import { Flex } from "./ui/Flex";
 import { Typography } from "./ui/Typography";
 
 interface MentionInputProps {
@@ -14,6 +18,8 @@ interface MentionInputProps {
   onMentionsChange: (mentions: Id<"users">[]) => void;
   placeholder?: string;
   className?: string;
+  /** Enable markdown preview toggle */
+  enablePreview?: boolean;
 }
 
 export function MentionInput({
@@ -23,11 +29,13 @@ export function MentionInput({
   onMentionsChange,
   placeholder = "Add a comment...",
   className = "",
+  enablePreview = true,
 }: MentionInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const members = useQuery(api.projectMembers.list, { projectId });
@@ -145,21 +153,60 @@ export function MentionInput({
 
   return (
     <div className="relative">
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        className={cn(
-          "w-full px-3 py-2 border border-ui-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-ring bg-ui-bg text-ui-text resize-none overflow-hidden",
-          className,
-        )}
-        rows={3}
-      />
+      {/* Write/Preview Toggle */}
+      {enablePreview && (
+        <Flex gap="xs" className="mb-2">
+          <Button
+            variant={isPreviewMode ? "ghost" : "secondary"}
+            size="sm"
+            onClick={() => setIsPreviewMode(false)}
+          >
+            <Pencil className="w-3.5 h-3.5 mr-1" />
+            Write
+          </Button>
+          <Button
+            variant={isPreviewMode ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setIsPreviewMode(true)}
+            disabled={!value.trim()}
+          >
+            <Eye className="w-3.5 h-3.5 mr-1" />
+            Preview
+          </Button>
+        </Flex>
+      )}
+
+      {/* Preview Mode */}
+      {isPreviewMode ? (
+        <div
+          className={cn(
+            "w-full min-h-20 px-3 py-2 border border-ui-border rounded-lg bg-ui-bg-soft",
+            className,
+          )}
+        >
+          {value.trim() ? (
+            <CommentRenderer content={value} />
+          ) : (
+            <Typography color="tertiary">Nothing to preview</Typography>
+          )}
+        </div>
+      ) : (
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className={cn(
+            "w-full px-3 py-2 border border-ui-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-ring bg-ui-bg text-ui-text resize-none overflow-hidden",
+            className,
+          )}
+          rows={3}
+        />
+      )}
 
       {/* Mention Suggestions Dropdown */}
-      {showSuggestions && filteredMembers.length > 0 && (
+      {showSuggestions && filteredMembers.length > 0 && !isPreviewMode && (
         <Command className="absolute bottom-full left-0 mb-2 w-64 border border-ui-border rounded-lg shadow-lg z-50">
           <CommandList className="max-h-48">
             {filteredMembers.map((member, index) => (
@@ -186,7 +233,9 @@ export function MentionInput({
 
       {/* Helper text */}
       <Typography variant="caption" className="mt-1">
-        Type @ to mention team members
+        {isPreviewMode
+          ? "Supports **bold**, *italic*, `code`, ~~strikethrough~~, and [links](url)"
+          : "Type @ to mention team members. Supports markdown formatting."}
       </Typography>
     </div>
   );
