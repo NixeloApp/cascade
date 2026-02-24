@@ -137,7 +137,10 @@ export function CreateIssueModal({
           description: value.description?.trim() || undefined,
           type: value.type,
           priority: value.priority,
-          assigneeId: (value.assigneeId || undefined) as Id<"users"> | undefined,
+          assigneeId:
+            value.assigneeId && value.assigneeId !== "unassigned"
+              ? (value.assigneeId as Id<"users">)
+              : undefined,
           sprintId,
           labels: selectedLabels.length > 0 ? selectedLabels : undefined,
           storyPoints: value.storyPoints ? Number.parseFloat(value.storyPoints) : undefined,
@@ -378,11 +381,15 @@ export function CreateIssueModal({
         <form.Field name="assigneeId">
           {(field) => (
             <FormSelectRadix field={field} label="Assignee" placeholder="Select assignee">
-              <SelectItem value="">
+              <SelectItem value="unassigned">
                 <Flex align="center" gap="sm">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-ui-bg-tertiary">
+                  <Flex
+                    align="center"
+                    justify="center"
+                    className="h-5 w-5 rounded-full bg-ui-bg-tertiary"
+                  >
                     <User className="h-3 w-3 text-ui-text-secondary" />
-                  </div>
+                  </Flex>
                   Unassigned
                 </Flex>
               </SelectItem>
