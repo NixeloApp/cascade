@@ -33,9 +33,7 @@ export const list = authenticatedQuery({
         }
         return db
           .query("notifications")
-          .withIndex("by_user_deleted", (q) =>
-            q.eq("userId", ctx.userId).lt("isDeleted", true),
-          );
+          .withIndex("by_user_deleted", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true));
       },
     });
 
@@ -217,9 +215,7 @@ export const listForDigest = internalQuery({
     const notifications: Doc<"notifications">[] = [];
     for await (const notification of ctx.db
       .query("notifications")
-      .withIndex("by_user_deleted", (q) =>
-        q.eq("userId", args.userId).lt("isDeleted", true),
-      )
+      .withIndex("by_user_deleted", (q) => q.eq("userId", args.userId).lt("isDeleted", true))
       .order("desc")) {
       if (notification._creationTime < args.startTime) {
         break;
