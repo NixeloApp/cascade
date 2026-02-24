@@ -24,6 +24,7 @@ import { BOUNDED_DELETE_BATCH, BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { encrypt } from "./lib/encryption";
 import { getGoogleClientId, getGoogleClientSecret, isGoogleOAuthConfigured } from "./lib/env";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
+import { logger } from "./lib/logger";
 import { MINUTE, SECOND } from "./lib/timeUtils";
 
 // Token status types
@@ -334,7 +335,7 @@ async function handleAutoRefresh(
     }
   } else {
     stats.refreshFailedCount++;
-    console.warn(
+    logger.warn(
       `[Token Monitor] Failed to refresh token for connection ${connectionId}: ${refreshResult.error}`,
     );
   }
@@ -409,10 +410,7 @@ export const performTokenHealthCheck = internalAction({
       try {
         await processConnectionHealth(ctx, connection._id, stats, autoRefresh);
       } catch (error) {
-        console.error(
-          `[Token Monitor] Error checking connection ${connection._id}:`,
-          error instanceof Error ? error.message : error,
-        );
+        logger.error(`[Token Monitor] Error checking connection ${connection._id}:`, { error });
       }
     }
 
@@ -424,7 +422,7 @@ export const performTokenHealthCheck = internalAction({
       durationMs,
     });
 
-    console.log(
+    logger.info(
       `[Token Monitor] Checked ${stats.totalConnections} connections in ${durationMs}ms: ` +
         `${stats.healthyCount} healthy, ${stats.expiringSoonCount} expiring, ` +
         `${stats.expiredCount} expired, ${stats.refreshedCount} refreshed`,

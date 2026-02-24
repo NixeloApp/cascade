@@ -11,6 +11,7 @@ import {
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { logAudit } from "./lib/audit";
 import { notFound, validation } from "./lib/errors";
+import { logger } from "./lib/logger";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -173,7 +174,7 @@ export const trigger = internalAction({
       try {
         await triggerSingleWebhook(ctx, webhook, args.event, args.payload);
       } catch (error) {
-        console.error(`Webhook delivery failed for ${webhook._id}:`, error);
+        logger.error(`Webhook delivery failed for ${webhook._id}:`, { error });
         // Continue to next webhook
       }
     }
@@ -233,7 +234,7 @@ async function triggerSingleWebhook(
           error: error instanceof Error ? error.message : "Unknown error",
         });
       } catch (updateError) {
-        console.error("Failed to update webhook execution status:", updateError);
+        logger.error("Failed to update webhook execution status:", { error: updateError });
       }
     }
     // Re-throw to let the caller log it
