@@ -4,7 +4,6 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
-  addProjectMember,
   addUserToOrganization,
   asAuthenticatedUser,
   createOrganizationAdmin,

@@ -1042,7 +1042,7 @@ export const deleteComment = authenticatedMutation({
   args: {
     commentId: v.id("documentComments"),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1056,11 +1056,9 @@ export const deleteComment = authenticatedMutation({
       throw forbidden(undefined, "You can only delete your own comments");
     }
 
-    await ctx.db.patch(args.commentId, {
-      isDeleted: true,
-    });
+    await ctx.db.patch(args.commentId, softDeleteFields(ctx.userId));
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
