@@ -278,21 +278,33 @@ export const getCurrentUserProjects = authenticatedQuery({
 
     // Fetch issue counts
     const issueCountsPromises = projectIds.map(async (projectId) => {
-      // batch fetch
-      // Optimization: by_project_deleted index includes undefined/false values for isDeleted (active items).
-      // We can query active issues directly using a range query .lt("isDeleted", true).
-      // This matches both undefined and false (active), excluding true (deleted).
-      const count = await efficientCount(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project", (q) => q.eq("projectId", projectId))
-          .filter(notDeleted),
-        MAX_ISSUE_COUNT,
-      );
+      // Optimization: Count active issues as (Total - Deleted) using index scans.
+      // This avoids scanning all issue documents to check the isDeleted field (which is not in by_project index).
+      // 1. Total issues (active + deleted) via by_project index
+      // 2. Deleted issues via by_project_deleted index
+      // Both are O(1) index scans if count() is supported.
+      const [totalCount, deletedCount] = await Promise.all([
+        efficientCount(
+          ctx.db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
+          MAX_ISSUE_COUNT,
+        ),
+        efficientCount(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_deleted", (q) =>
+              q.eq("projectId", projectId).eq("isDeleted", true),
+            ),
+          MAX_ISSUE_COUNT,
+        ),
+      ]);
+
+      // If counts are exact (using query.count()), this subtraction is accurate.
+      // If falling back to scan (e.g. tests without count()), it's bounded by MAX_ISSUE_COUNT.
+      const activeCount = Math.max(0, totalCount - deletedCount);
 
       return {
         projectId,
-        count,
+        count: activeCount,
       };
     });
     const issueCounts = await Promise.all(issueCountsPromises);
