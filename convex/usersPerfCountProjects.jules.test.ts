@@ -36,29 +36,33 @@ describe("Users Performance Optimization (Project Counts)", () => {
 
     // 1. Create 2 Shared Projects (User A and User B)
     const sharedCount = 2;
-    for (let i = 0; i < sharedCount; i++) {
-      const project = await createProjectInOrganization(t, userA, orgA);
-      // Add User B to Project
-      await t.run(async (ctx) => {
-        await ctx.db.insert("projectMembers", {
-          projectId: project,
-          userId: userB,
-          role: "viewer",
-          addedBy: userA,
+    await Promise.all(
+      Array.from({ length: sharedCount }, async () => {
+        const project = await createProjectInOrganization(t, userA, orgA);
+        // Add User B to Project
+        await t.run(async (ctx) => {
+          await ctx.db.insert("projectMembers", {
+            projectId: project,
+            userId: userB,
+            role: "viewer",
+            addedBy: userA,
+          });
         });
-      });
-    }
+      }),
+    );
 
     // 2. Create 98 Non-Shared Projects (User B only)
     // Note: We create these in the same org but don't add User A to them
     // (createProjectInOrganization adds creator (User A) automatically, so we need to remove User A or create as User B)
     // To be cleaner, let's create them as User B.
     const nonSharedCount = 98;
-    for (let i = 0; i < nonSharedCount; i++) {
-      // Create as User B (so User A is not a member)
-      const project = await createProjectInOrganization(t, userB, orgA);
-      // User B is automatically added as owner/admin
-    }
+    await Promise.all(
+      Array.from({ length: nonSharedCount }, () =>
+        // Create as User B (so User A is not a member)
+        createProjectInOrganization(t, userB, orgA),
+      ),
+    );
+    // User B is automatically added as owner/admin
 
     // Verify User A memberships
     const userAMemberships = await t.run(async (ctx) => {
