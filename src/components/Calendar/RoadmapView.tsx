@@ -88,6 +88,19 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
     setCurrentDate(newDate);
   };
 
+  const getTimeScaleLabel = () => {
+    switch (timeScale) {
+      case "week":
+        return "week";
+      case "month":
+        return "month";
+      case "quarter":
+        return "quarter";
+      default:
+        return "time period";
+    }
+  };
+
   const handleToday = () => {
     setCurrentDate(new Date());
   };
@@ -123,7 +136,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                 size="icon"
                 onClick={handlePrevious}
                 className="h-8 w-8"
-                aria-label="Previous"
+                aria-label={`Previous ${getTimeScaleLabel()}`}
               >
                 <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
@@ -132,7 +145,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                 size="icon"
                 onClick={handleNext}
                 className="h-8 w-8"
-                aria-label="Next"
+                aria-label={`Next ${getTimeScaleLabel()}`}
               >
                 <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
@@ -146,12 +159,17 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
           </Flex>
 
           {/* Time Scale Toggle */}
-          <Flex className="border border-ui-border rounded-md shrink-0">
+          <Flex
+            className="border border-ui-border rounded-md shrink-0"
+            role="group"
+            aria-label="Time scale"
+          >
             <Button
               variant={timeScale === "week" ? "primary" : "ghost"}
               size="sm"
               onClick={() => setTimeScale("week")}
               className="rounded-r-none border-r border-ui-border"
+              aria-pressed={timeScale === "week"}
             >
               <ResponsiveText short="W" long="Week" />
             </Button>
@@ -160,6 +178,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               size="sm"
               onClick={() => setTimeScale("month")}
               className="rounded-none border-r border-ui-border"
+              aria-pressed={timeScale === "month"}
             >
               <ResponsiveText short="M" long="Month" />
             </Button>
@@ -168,6 +187,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               size="sm"
               onClick={() => setTimeScale("quarter")}
               className="rounded-l-none"
+              aria-pressed={timeScale === "quarter"}
             >
               <ResponsiveText short="Q" long="Quarter" />
             </Button>
@@ -210,9 +230,9 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
               No items with dates found. Add due dates to issues or create sprints to see them here.
             </Typography>
           ) : (
-            <div>
+            <ul className="list-none p-0 m-0">
               {sortedItems.map((item) => (
-                <Flex className="border-b border-ui-border" key={`${item.type}-${item.id}`}>
+                <Flex as="li" className="border-b border-ui-border" key={`${item.type}-${item.id}`}>
                   {/* Item Info */}
                   <FlexItem
                     shrink={false}
@@ -253,7 +273,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                   </FlexItem>
                 </Flex>
               ))}
-            </div>
+            </ul>
           )}
         </div>
       </FlexItem>
@@ -295,6 +315,8 @@ function renderDateBar(
           ? "bg-status-warning"
           : "bg-brand-ring";
 
+  const dateRangeLabel = `${itemStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${itemEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+
   return (
     <div
       className={cn(
@@ -306,9 +328,9 @@ function renderDateBar(
         width: `${widthPercent}%`,
         minWidth: "40px",
       }}
+      title={dateRangeLabel}
     >
-      {itemStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} -{" "}
-      {itemEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+      {dateRangeLabel}
     </div>
   );
 }
