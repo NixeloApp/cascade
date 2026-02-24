@@ -35,6 +35,9 @@ const MAX_PROJECTS_FOR_STATS = 500;
 // Threshold below which per-project index queries outperform a single filtered scan
 // Reduced from 50 to 10 to prefer batch fetching memberships over running many parallel queries
 const MAX_PROJECTS_FOR_FAST_PATH = 10;
+// Higher threshold for issues/assignees because index lookup (O(1)) is much faster than
+// scanning all user issues/assignments (O(N)) and filtering in memory, even with overhead of 50 queries.
+const MAX_PROJECTS_FOR_ISSUE_SCAN = 50;
 
 /**
  * Internal query to get user by ID (system use only)
@@ -471,6 +474,7 @@ async function executeCountStrategy<T>(
     fast: (ids: Set<string>) => Promise<T>;
     filtered: (ids: Set<string>) => Promise<T>;
   },
+  threshold: number = MAX_PROJECTS_FOR_FAST_PATH,
 ): Promise<T> {
   if (!allowedProjectIds) {
     return strategies.unrestricted();
@@ -478,7 +482,7 @@ async function executeCountStrategy<T>(
 
   if (allowedProjectIds.size === 0) return emptyResult;
 
-  if (allowedProjectIds.size <= MAX_PROJECTS_FOR_FAST_PATH) {
+  if (allowedProjectIds.size <= threshold) {
     return strategies.fast(allowedProjectIds);
   }
 
@@ -562,11 +566,16 @@ async function countIssuesByReporter(
   reporterId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  return await executeCountStrategy(allowedProjectIds, 0, {
-    unrestricted: () => countIssuesByReporterUnrestricted(ctx, reporterId),
-    fast: (ids) => countIssuesByReporterFast(ctx, reporterId, ids),
-    filtered: (ids) => countIssuesByReporterFiltered(ctx, reporterId, ids),
-  });
+  return await executeCountStrategy(
+    allowedProjectIds,
+    0,
+    {
+      unrestricted: () => countIssuesByReporterUnrestricted(ctx, reporterId),
+      fast: (ids) => countIssuesByReporterFast(ctx, reporterId, ids),
+      filtered: (ids) => countIssuesByReporterFiltered(ctx, reporterId, ids),
+    },
+    MAX_PROJECTS_FOR_ISSUE_SCAN,
+  );
 }
 
 /**
@@ -673,11 +682,16 @@ async function countIssuesByAssignee(
   assigneeId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  return await executeCountStrategy(allowedProjectIds, [0, 0], {
-    unrestricted: () => countIssuesByAssigneeUnrestricted(ctx, assigneeId),
-    fast: (ids) => countIssuesByAssigneeFast(ctx, assigneeId, ids),
-    filtered: (ids) => countIssuesByAssigneeFiltered(ctx, assigneeId, ids),
-  });
+  return await executeCountStrategy(
+    allowedProjectIds,
+    [0, 0],
+    {
+      unrestricted: () => countIssuesByAssigneeUnrestricted(ctx, assigneeId),
+      fast: (ids) => countIssuesByAssigneeFast(ctx, assigneeId, ids),
+      filtered: (ids) => countIssuesByAssigneeFiltered(ctx, assigneeId, ids),
+    },
+    MAX_PROJECTS_FOR_ISSUE_SCAN,
+  );
 }
 
 /**
