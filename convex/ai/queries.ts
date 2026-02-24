@@ -7,6 +7,7 @@ import { authenticatedQuery } from "../customFunctions";
 import { batchFetchUsers, getUserName } from "../lib/batchHelpers";
 import { forbidden, notFound, requireOwned } from "../lib/errors";
 import { MAX_PAGE_SIZE } from "../lib/queryLimits";
+import { assertCanAccessProject } from "../projectAccess";
 import type { AIProvider } from "./config";
 
 // Reasonable limits for AI-related queries
@@ -188,6 +189,8 @@ export const getProjectSuggestions = authenticatedQuery({
     includeResponded: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+
     const suggestions = await ctx.db
       .query("aiSuggestions")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))

@@ -6,6 +6,7 @@ import { v } from "convex/values";
 import { authenticatedMutation } from "../customFunctions";
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { notFound, requireOwned } from "../lib/errors";
+import { assertCanAccessProject, assertCanEditProject } from "../projectAccess";
 import { chatRoles } from "../validators";
 
 /**
@@ -18,6 +19,10 @@ export const createChat = authenticatedMutation({
   },
   returns: v.object({ chatId: v.id("aiChats") }),
   handler: async (ctx, args) => {
+    if (args.projectId) {
+      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+    }
+
     const now = Date.now();
 
     const chatId = await ctx.db.insert("aiChats", {
@@ -144,6 +149,8 @@ export const createSuggestion = authenticatedMutation({
   },
   returns: v.object({ suggestionId: v.id("aiSuggestions") }),
   handler: async (ctx, args) => {
+    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+
     const suggestionId = await ctx.db.insert("aiSuggestions", {
       userId: ctx.userId,
       projectId: args.projectId,
@@ -170,6 +177,8 @@ export const acceptSuggestion = authenticatedMutation({
     const suggestion = await ctx.db.get(args.suggestionId);
     if (!suggestion) throw notFound("suggestion", args.suggestionId);
 
+    await assertCanEditProject(ctx, suggestion.projectId, ctx.userId);
+
     await ctx.db.patch(args.suggestionId, {
       accepted: true,
       dismissed: false,
@@ -188,6 +197,8 @@ export const dismissSuggestion = authenticatedMutation({
   handler: async (ctx, args) => {
     const suggestion = await ctx.db.get(args.suggestionId);
     if (!suggestion) throw notFound("suggestion", args.suggestionId);
+
+    await assertCanEditProject(ctx, suggestion.projectId, ctx.userId);
 
     await ctx.db.patch(args.suggestionId, {
       accepted: false,
@@ -221,6 +232,10 @@ export const trackUsage = authenticatedMutation({
   },
   returns: v.object({ usageId: v.id("aiUsage") }),
   handler: async (ctx, args) => {
+    if (args.projectId) {
+      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+    }
+
     const usageId = await ctx.db.insert("aiUsage", {
       userId: ctx.userId,
       projectId: args.projectId,
