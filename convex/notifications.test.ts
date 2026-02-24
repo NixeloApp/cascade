@@ -216,7 +216,7 @@ describe("Notifications", () => {
       expect(count).toBe(3);
     });
 
-    it("should cap count at MAX_UNREAD_COUNT", async () => {
+    it("should cap count at 100", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
 
