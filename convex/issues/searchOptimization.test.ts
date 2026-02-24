@@ -170,8 +170,14 @@ describe("issue search optimization", () => {
   });
 
   it("should find issues in a specific epic", async () => {
-    const epic1Id = await createTestIssue(t, projectId, ctx.userId, { title: "Epic 1", type: "epic" });
-    const epic2Id = await createTestIssue(t, projectId, ctx.userId, { title: "Epic 2", type: "epic" });
+    const epic1Id = await createTestIssue(t, projectId, ctx.userId, {
+      title: "Epic 1",
+      type: "epic",
+    });
+    const epic2Id = await createTestIssue(t, projectId, ctx.userId, {
+      title: "Epic 2",
+      type: "epic",
+    });
 
     await createTestIssue(t, projectId, ctx.userId, { title: "Issue in Epic 1", epicId: epic1Id });
     await createTestIssue(t, projectId, ctx.userId, { title: "Issue in Epic 2", epicId: epic2Id });
