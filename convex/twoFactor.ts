@@ -1,7 +1,5 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
-import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { conflict, notFound, unauthenticated } from "./lib/errors";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -119,23 +117,18 @@ async function generateTOTP(secret: string, counter: number): Promise<string> {
 /**
  * Verify TOTP code with window tolerance
  */
-async function verifyTOTP(
-  secret: string,
-  code: string,
-  window = TOTP_WINDOW,
-): Promise<{ isValid: boolean; timeStep?: number }> {
+async function verifyTOTP(secret: string, code: string, window = TOTP_WINDOW): Promise<boolean> {
   const currentCounter = Math.floor(Date.now() / SECOND / TOTP_PERIOD);
 
   // Check current and adjacent time steps
   for (let i = -window; i <= window; i++) {
-    const timeStep = currentCounter + i;
-    const expectedCode = await generateTOTP(secret, timeStep);
+    const expectedCode = await generateTOTP(secret, currentCounter + i);
     if (expectedCode === code) {
-      return { isValid: true, timeStep };
+      return true;
     }
   }
 
-  return { isValid: false };
+  return false;
 }
 
 /**
@@ -183,62 +176,6 @@ async function hashBackupCode(code: string): Promise<string> {
   // Convert to hex string
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-async function validateDisableCode(
-  user: Doc<"users">,
-  code: string,
-  isBackupCode?: boolean,
-): Promise<{ isValid: boolean }> {
-  if (isBackupCode) {
-    const backupCodes = user.twoFactorBackupCodes ?? [];
-    const hashedInput = await hashBackupCode(code);
-    return { isValid: backupCodes.includes(hashedInput) };
-  }
-
-  if (!user.twoFactorSecret) return { isValid: false };
-
-  const result = await verifyTOTP(user.twoFactorSecret, code);
-  if (result.isValid && result.timeStep) {
-    if (result.timeStep <= (user.twoFactorLastUsedTime ?? 0)) {
-      return { isValid: false };
-    }
-    return { isValid: true };
-  }
-
-  return { isValid: false };
-}
-
-async function handleFailedAttempt(
-  ctx: MutationCtx,
-  userId: Id<"users">,
-  user: Doc<"users">,
-  errorMsg = "Invalid verification code",
-) {
-  const now = Date.now();
-  const failedAttempts = (user.twoFactorFailedAttempts ?? 0) + 1;
-
-  if (failedAttempts >= MAX_VERIFICATION_ATTEMPTS) {
-    const lockedUntil = now + LOCKOUT_DURATION_MS;
-    await ctx.db.patch(userId, {
-      twoFactorFailedAttempts: failedAttempts,
-      twoFactorLockedUntil: lockedUntil,
-    });
-    return {
-      success: false,
-      error: "Too many failed attempts. Account temporarily locked.",
-      lockedUntil,
-    };
-  }
-
-  await ctx.db.patch(userId, {
-    twoFactorFailedAttempts: failedAttempts,
-  });
-  return { success: false, error: errorMsg };
 }
 
 // =============================================================================
@@ -351,8 +288,8 @@ export const completeSetup = mutation({
     }
 
     // Verify the code
-    const { isValid, timeStep } = await verifyTOTP(user.twoFactorSecret, args.code);
-    if (!isValid || !timeStep) {
+    const isValid = await verifyTOTP(user.twoFactorSecret, args.code);
+    if (!isValid) {
       return { success: false, error: "Invalid verification code" };
     }
 
@@ -364,7 +301,6 @@ export const completeSetup = mutation({
     await ctx.db.patch(userId, {
       twoFactorEnabled: true,
       twoFactorBackupCodes: hashedCodes,
-      twoFactorLastUsedTime: timeStep,
     });
 
     // Mark current session as verified
@@ -425,22 +361,35 @@ export const verifyCode = mutation({
     }
 
     // Verify the code
-    const { isValid, timeStep } = await verifyTOTP(user.twoFactorSecret, args.code);
-    if (!isValid || !timeStep) {
-      return await handleFailedAttempt(ctx, userId, user);
-    }
+    const isValid = await verifyTOTP(user.twoFactorSecret, args.code);
+    if (!isValid) {
+      // Increment failed attempts
+      const failedAttempts = (user.twoFactorFailedAttempts ?? 0) + 1;
 
-    // Check for replay attacks
-    const lastUsed = user.twoFactorLastUsedTime ?? 0;
-    if (timeStep <= lastUsed) {
-      return await handleFailedAttempt(ctx, userId, user);
+      if (failedAttempts >= MAX_VERIFICATION_ATTEMPTS) {
+        // Lock the account
+        const lockedUntil = now + LOCKOUT_DURATION_MS;
+        await ctx.db.patch(userId, {
+          twoFactorFailedAttempts: failedAttempts,
+          twoFactorLockedUntil: lockedUntil,
+        });
+        return {
+          success: false,
+          error: "Too many failed attempts. Account temporarily locked.",
+          lockedUntil,
+        };
+      }
+
+      await ctx.db.patch(userId, {
+        twoFactorFailedAttempts: failedAttempts,
+      });
+      return { success: false, error: "Invalid verification code" };
     }
 
     // Success - reset failed attempts
     await ctx.db.patch(userId, {
       twoFactorFailedAttempts: 0,
       twoFactorLockedUntil: undefined,
-      twoFactorLastUsedTime: timeStep,
     });
 
     // Mark current session as verified
@@ -578,13 +527,8 @@ export const regenerateBackupCodes = mutation({
     }
 
     // Verify TOTP code first
-    const { isValid, timeStep } = await verifyTOTP(user.twoFactorSecret, args.totpCode);
-    if (!isValid || !timeStep) {
-      return { success: false, error: "Invalid verification code" };
-    }
-
-    // Check for replay attacks
-    if (timeStep <= (user.twoFactorLastUsedTime ?? 0)) {
+    const isValid = await verifyTOTP(user.twoFactorSecret, args.totpCode);
+    if (!isValid) {
       return { success: false, error: "Invalid verification code" };
     }
 
@@ -594,7 +538,6 @@ export const regenerateBackupCodes = mutation({
 
     await ctx.db.patch(userId, {
       twoFactorBackupCodes: hashedCodes,
-      twoFactorLastUsedTime: timeStep,
     });
 
     return {
@@ -631,8 +574,19 @@ export const disable = mutation({
       return { success: false, error: "2FA is not enabled" };
     }
 
-    const validationResult = await validateDisableCode(user, args.code, args.isBackupCode);
-    if (!validationResult.isValid) {
+    let isValid = false;
+
+    if (args.isBackupCode) {
+      // Verify backup code
+      const backupCodes = user.twoFactorBackupCodes ?? [];
+      const hashedInput = await hashBackupCode(args.code);
+      isValid = backupCodes.includes(hashedInput);
+    } else {
+      // Verify TOTP code
+      isValid = await verifyTOTP(user.twoFactorSecret, args.code);
+    }
+
+    if (!isValid) {
       return { success: false, error: "Invalid verification code" };
     }
 
@@ -642,7 +596,6 @@ export const disable = mutation({
       twoFactorSecret: undefined,
       twoFactorBackupCodes: undefined,
       twoFactorVerifiedAt: undefined,
-      twoFactorLastUsedTime: undefined,
     });
 
     // Cleanup all sessions for this user (iterative delete)

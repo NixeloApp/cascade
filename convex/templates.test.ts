@@ -482,20 +482,27 @@ describe("Issue Templates", () => {
 
       const issueTypes: Array<"epic" | "story" | "task" | "bug"> = ["epic", "story", "task", "bug"];
 
-      for (const type of issueTypes) {
-        const { templateId } = await asUser.mutation(api.templates.create, {
-          projectId,
-          name: `${type} Template`,
-          type,
-          titleTemplate: `[${type.toUpperCase()}]`,
-          descriptionTemplate: "",
-          defaultPriority: "medium",
-          defaultLabels: [],
-        });
+      const templateIds = await Promise.all(
+        issueTypes.map((type) =>
+          asUser.mutation(api.templates.create, {
+            projectId,
+            name: `${type} Template`,
+            type,
+            titleTemplate: `[${type.toUpperCase()}]`,
+            descriptionTemplate: "",
+            defaultPriority: "medium",
+            defaultLabels: [],
+          }),
+        ),
+      );
 
-        const template = await asUser.query(api.templates.get, { id: templateId });
-        expect(template?.type).toBe(type);
-      }
+      const templates = await Promise.all(
+        templateIds.map(({ templateId }) => asUser.query(api.templates.get, { id: templateId })),
+      );
+
+      templates.forEach((template, i) => {
+        expect(template?.type).toBe(issueTypes[i]);
+      });
     });
   });
 
@@ -512,20 +519,27 @@ describe("Issue Templates", () => {
         "highest",
       ];
 
-      for (const priority of priorities) {
-        const { templateId } = await asUser.mutation(api.templates.create, {
-          projectId,
-          name: `${priority} Priority Template`,
-          type: "task",
-          titleTemplate: "Task",
-          descriptionTemplate: "",
-          defaultPriority: priority,
-          defaultLabels: [],
-        });
+      const templateIds = await Promise.all(
+        priorities.map((priority) =>
+          asUser.mutation(api.templates.create, {
+            projectId,
+            name: `${priority} Priority Template`,
+            type: "task",
+            titleTemplate: "Task",
+            descriptionTemplate: "",
+            defaultPriority: priority,
+            defaultLabels: [],
+          }),
+        ),
+      );
 
-        const template = await asUser.query(api.templates.get, { id: templateId });
-        expect(template?.defaultPriority).toBe(priority);
-      }
+      const templates = await Promise.all(
+        templateIds.map(({ templateId }) => asUser.query(api.templates.get, { id: templateId })),
+      );
+
+      templates.forEach((template, i) => {
+        expect(template?.defaultPriority).toBe(priorities[i]);
+      });
     });
   });
 

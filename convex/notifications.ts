@@ -114,14 +114,14 @@ export const markAllAsRead = authenticatedMutation({
 /** Soft-delete a notification. Only the notification owner can perform this action. */
 export const softDeleteNotification = authenticatedMutation({
   args: { id: v.id("notifications") },
-  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     requireOwned(notification, ctx.userId, "notification");
 
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
 
-    return { success: true, deleted: true } as const;
+    return { success: true } as const;
   },
 });
 

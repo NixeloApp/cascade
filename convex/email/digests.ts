@@ -7,7 +7,6 @@
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { internalAction } from "../_generated/server";
-import { logger } from "../lib/logger";
 
 interface DigestResult {
   success: boolean;
@@ -42,22 +41,15 @@ export const sendDailyDigests = internalAction({
     let skipped = 0;
     let failed = 0;
 
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i];
-      const user = users[i];
-
+    for (const result of results) {
       if (result.status === "rejected") {
-        logger.error(`Failed to send daily digest to user ${user._id}`, { error: result.reason });
         failed++;
       } else {
         const value = result.value as DigestResult;
         if (value.skipped) {
           skipped++;
-        } else if (value.success) {
-          sent++;
         } else {
-          logger.error(`Failed to send daily digest to user ${user._id}`, { error: value.error });
-          failed++;
+          sent++;
         }
       }
     }
@@ -92,22 +84,15 @@ export const sendWeeklyDigests = internalAction({
     let skipped = 0;
     let failed = 0;
 
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i];
-      const user = users[i];
-
+    for (const result of results) {
       if (result.status === "rejected") {
-        logger.error(`Failed to send weekly digest to user ${user._id}`, { error: result.reason });
         failed++;
       } else {
         const value = result.value as DigestResult;
         if (value.skipped) {
           skipped++;
-        } else if (value.success) {
-          sent++;
         } else {
-          logger.error(`Failed to send weekly digest to user ${user._id}`, { error: value.error });
-          failed++;
+          sent++;
         }
       }
     }

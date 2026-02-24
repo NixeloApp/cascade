@@ -54,16 +54,18 @@ describe("MeetingBot List", () => {
 
     // 2. Create 20 private recordings by User B (Newer)
     // These should clutter the "by_project" index if scanned sequentially (descending)
-    for (let i = 0; i < 20; i++) {
-      await asUserB_Accessor.mutation(api.meetingBot.scheduleRecording, {
-        title: `Private Recording ${i}`,
-        meetingUrl: `https://zoom.us/j/priv${i}`,
-        meetingPlatform: "zoom",
-        scheduledStartTime: Date.now() + i * 1000, // Newer
-        projectId,
-        isPublic: false, // Private
-      });
-    }
+    await Promise.all(
+      Array.from({ length: 20 }, (_, i) =>
+        asUserB_Accessor.mutation(api.meetingBot.scheduleRecording, {
+          title: `Private Recording ${i}`,
+          meetingUrl: `https://zoom.us/j/priv${i}`,
+          meetingPlatform: "zoom",
+          scheduledStartTime: Date.now() + i * 1000, // Newer
+          projectId,
+          isPublic: false, // Private
+        }),
+      ),
+    );
 
     // Act: User A lists recordings with limit=10
     // Currently (with the bug), this fetches the latest 20 from DB (which are B's private ones).

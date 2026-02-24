@@ -38,9 +38,7 @@ describe("sprint issue counts", () => {
     await t.run(async (runCtx) => {
       // Clear issues
       const issues = await runCtx.db.query("issues").collect();
-      for (const issue of issues) {
-        await runCtx.db.delete(issue._id);
-      }
+      await Promise.all(issues.map((issue) => runCtx.db.delete(issue._id)));
 
       const project = await runCtx.db.get(projectId);
       if (!project) throw new Error("Project not found");
