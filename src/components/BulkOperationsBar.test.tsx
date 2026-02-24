@@ -11,8 +11,15 @@ vi.mock("./ui/Select", () => ({
   Select: ({ children }: { children: React.ReactNode; onValueChange: (value: string) => void }) => (
     <div data-testid="select-root">{children}</div>
   ),
-  SelectTrigger: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <button type="button" className={className} data-testid="select-trigger">
+  SelectTrigger: ({
+    children,
+    className,
+    ...props
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <button type="button" className={className} data-testid="select-trigger" {...props}>
       {children}
     </button>
   ),
@@ -477,6 +484,50 @@ describe("BulkOperationsBar - Component Behavior", () => {
           issueIds: expect.arrayContaining(["issue1", "issue2"]),
         });
       });
+    });
+  });
+
+  describe("Accessibility", () => {
+    it("should associate labels with inputs and triggers", async () => {
+      const user = userEvent.setup();
+      const selection = new Set(["issue1" as Id<"issues">]);
+
+      render(
+        <BulkOperationsBar
+          projectId={mockProjectId}
+          selectedIssueIds={selection}
+          onClearSelection={mockOnClearSelection}
+          workflowStates={mockWorkflowStates}
+        />,
+      );
+
+      // Open actions
+      await user.click(screen.getByRole("button", { name: "Actions" }));
+
+      // Check Status
+      const statusLabel = screen.getByText("Status");
+      const statusTrigger = screen.getAllByTestId("select-trigger")[0];
+      expect(statusLabel.tagName).toBe("LABEL");
+      expect(statusLabel).toHaveAttribute("for", statusTrigger.id);
+
+      // Check Priority
+      const priorityLabel = screen.getByText("Priority");
+      const priorityTrigger = screen.getAllByTestId("select-trigger")[1];
+      expect(priorityLabel.tagName).toBe("LABEL");
+      expect(priorityLabel).toHaveAttribute("for", priorityTrigger.id);
+
+      // Check Assignee
+      const assigneeLabel = screen.getByText("Assignee");
+      const assigneeTrigger = screen.getAllByTestId("select-trigger")[2];
+      expect(assigneeLabel.tagName).toBe("LABEL");
+      expect(assigneeLabel).toHaveAttribute("for", assigneeTrigger.id);
+
+      // Check Start Date (Input)
+      const startDateLabel = screen.getByText("Start Date");
+      // Find the date input associated with this label
+      const startDateInput = screen.getByLabelText("Start Date");
+      expect(startDateLabel.tagName).toBe("LABEL");
+      expect(startDateLabel).toHaveAttribute("for", startDateInput.id);
     });
   });
 });

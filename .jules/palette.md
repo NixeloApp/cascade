@@ -69,3 +69,7 @@
 ## 2026-03-05 - Robust aria-describedby Merging
 **Learning:** When using `...props` to spread attributes onto an input, explicit props like `aria-describedby` can inadvertently override internal accessibility logic (e.g., error messages).
 **Action:** Destructure `aria-describedby` from props and merge it with internal IDs (e.g., `[errorId, helperId, externalId].filter(Boolean).join(" ")`) to ensure all descriptions are preserved.
+
+## 2026-03-15 - Typography as Label
+**Learning:** `Typography` component did not support `htmlFor`, preventing its use as a semantic `<label>` element despite having a `variant="label"`.
+**Action:** Updated `TypographyProps` to include `htmlFor`. When using `Typography` as a label for a form control, use `as="label"`, provide `htmlFor={id}`, and ensure the target control has the matching `id`.
