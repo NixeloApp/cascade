@@ -62,7 +62,7 @@ const INCONSISTENT_FOCUS_PATTERNS = [
   { pattern: /\bfocus:ring-\d/, msg: "Use focus-visible: instead of focus:" },
   { pattern: /\bfocus-visible:ring-1\b/, msg: "Use ring-2 for focus rings, not ring-1" },
   {
-    pattern: /\bfocus-visible:ring-(?!brand-ring|offset)/,
+    pattern: /\bfocus-visible:ring-(?!brand-ring|offset|\d)/,
     msg: "Use ring-brand-ring for focus color",
   },
   {
