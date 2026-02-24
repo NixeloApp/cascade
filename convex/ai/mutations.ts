@@ -149,7 +149,7 @@ export const createSuggestion = authenticatedMutation({
   },
   returns: v.object({ suggestionId: v.id("aiSuggestions") }),
   handler: async (ctx, args) => {
-    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+    await assertCanEditProject(ctx, args.projectId, ctx.userId);
 
     const suggestionId = await ctx.db.insert("aiSuggestions", {
       userId: ctx.userId,
