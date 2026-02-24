@@ -1222,6 +1222,7 @@ async function fetchProjectIssuesOptimized(
   args: {
     assigneeId?: Id<"users"> | "unassigned" | "me";
     status?: string[];
+    reporterId?: Id<"users">;
   },
   fetchLimit: number,
   userId: Id<"users"> | null,
@@ -1272,6 +1273,24 @@ async function fetchProjectIssuesOptimized(
         .order("desc"),
       fetchLimit,
       "issue search by project assignee",
+    );
+  }
+
+  if (args.reporterId) {
+    // Filter by reporter
+    // Index: by_project_reporter ["projectId", "reporterId", "isDeleted"]
+    return await safeCollect(
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_reporter", (q) =>
+          q
+            .eq("projectId", projectId)
+            .eq("reporterId", args.reporterId as Id<"users">)
+            .lt("isDeleted", true),
+        )
+        .order("desc"),
+      fetchLimit,
+      "issue search by project reporter",
     );
   }
 
