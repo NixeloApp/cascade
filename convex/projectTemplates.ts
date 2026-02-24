@@ -116,7 +116,7 @@ export const createFromTemplate = authenticatedMutation({
 /** Seed the database with built-in project templates (Software, Kanban, Marketing, Design). Idempotent. */
 export const initializeBuiltInTemplates = mutation({
   args: {},
-  returns: v.null(),
+  returns: v.object({ success: v.boolean(), initialized: v.boolean() }),
   handler: async (ctx) => {
     const _now = Date.now();
 
@@ -127,7 +127,7 @@ export const initializeBuiltInTemplates = mutation({
       .first();
 
     if (existing) {
-      return; // Already initialized
+      return { success: true, initialized: false }; // Already initialized
     }
 
     // Software Development Template
@@ -221,5 +221,7 @@ export const initializeBuiltInTemplates = mutation({
       ],
       isBuiltIn: true,
     });
+
+    return { success: true, initialized: true };
   },
 });
