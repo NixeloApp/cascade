@@ -36,7 +36,7 @@ export interface RadioGroupItemProps
 const RadioGroupItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   RadioGroupItemProps
->(({ className, label, description, id, ...props }, ref) => {
+>(({ className, label, description, id, disabled, ...props }, ref) => {
   const generatedId = React.useId();
   const radioId = id || generatedId;
   const descriptionId = `${radioId}-description`;
@@ -55,6 +55,7 @@ const RadioGroupItem = React.forwardRef<
         "peer h-4 w-4 shrink-0 rounded-full border border-ui-border-secondary bg-ui-bg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-brand data-[state=checked]:bg-brand",
         className,
       )}
+      disabled={disabled}
       {...props}
       aria-describedby={ariaDescribedBy || undefined}
     >
@@ -71,11 +72,19 @@ const RadioGroupItem = React.forwardRef<
   return (
     <Flex align="start" gap="md">
       {radioElement}
-      <div className="grid gap-1 leading-none">
+      <div
+        className={cn(
+          "grid gap-1 leading-none",
+          disabled && "cursor-not-allowed opacity-70",
+        )}
+      >
         {label && (
           <label
             htmlFor={radioId}
-            className="text-sm font-medium text-ui-text cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className={cn(
+              "text-sm font-medium text-ui-text cursor-pointer",
+              disabled && "cursor-not-allowed",
+            )}
           >
             {label}
           </label>
