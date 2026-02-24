@@ -1,8 +1,8 @@
 import { paginationOptsValidator } from "convex/server";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
-import type { QueryCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery, projectAdminMutation } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
@@ -45,120 +45,140 @@ import { boardTypes, projectRoles, workflowCategories } from "./validators";
  * @throws {ConvexError} "Validation" if inputs are invalid or IDs don't match hierarchy.
  * @throws {ConvexError} "Forbidden" if user is not an Organization Admin or Workspace Member.
  */
-export const createProject = authenticatedMutation({
-  args: {
-    name: v.string(),
-    key: v.string(),
-    description: v.optional(v.string()),
-    boardType: boardTypes,
-    workflowStates: v.optional(
-      v.array(
-        v.object({
-          id: v.string(),
-          name: v.string(),
-          category: workflowCategories,
-          order: v.number(),
-          wipLimit: v.optional(v.number()),
-        }),
-      ),
+
+const createProjectArgs = {
+  name: v.string(),
+  key: v.string(),
+  description: v.optional(v.string()),
+  boardType: boardTypes,
+  workflowStates: v.optional(
+    v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        category: workflowCategories,
+        order: v.number(),
+        wipLimit: v.optional(v.number()),
+      }),
     ),
-    // Ownership (required)
-    organizationId: v.id("organizations"), // organization this project belongs to
-    workspaceId: v.id("workspaces"), // Workspace this project belongs to
-    // Optional ownership overrides
-    teamId: v.optional(v.id("teams")), // Team owner (optional - null for workspace projects)
-    ownerId: v.optional(v.id("users")), // User owner (defaults to creator)
-    // Sharing settings
-    isPublic: v.optional(v.boolean()), // Visible to all organization members
-    sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Share with specific teams
-  },
+  ),
+  // Ownership (required)
+  organizationId: v.id("organizations"), // organization this project belongs to
+  workspaceId: v.id("workspaces"), // Workspace this project belongs to
+  // Optional ownership overrides
+  teamId: v.optional(v.id("teams")), // Team owner (optional - null for workspace projects)
+  ownerId: v.optional(v.id("users")), // User owner (defaults to creator)
+  // Sharing settings
+  isPublic: v.optional(v.boolean()), // Visible to all organization members
+  sharedWithTeamIds: v.optional(v.array(v.id("teams"))), // Share with specific teams
+};
+
+type CreateProjectArgs = Infer<typeof createProjectArgsObject>;
+const createProjectArgsObject = v.object(createProjectArgs);
+
+/**
+ * Validates inputs and permissions for creating a project.
+ *
+ * @returns Object containing validated and deduplicated shared team IDs.
+ */
+async function validateCreateProject(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  args: CreateProjectArgs,
+) {
+  // Validate input constraints
+  validate.name(args.name, "name");
+  validate.projectKey(args.key);
+  validate.description(args.description);
+  if (args.sharedWithTeamIds) {
+    validate.tags(args.sharedWithTeamIds, "sharedWithTeamIds");
+  }
+  if (args.workflowStates && args.workflowStates.length > ARRAY_LIMITS.WORKFLOW_STATES.max) {
+    throw validation(
+      "workflowStates",
+      `Maximum ${ARRAY_LIMITS.WORKFLOW_STATES.max} workflow states allowed`,
+    );
+  }
+
+  // Check if project key already exists
+  const existingProject = await ctx.db
+    .query("projects")
+    .withIndex("by_key", (q) => q.eq("key", args.key.toUpperCase()))
+    .filter(notDeleted)
+    .first();
+
+  if (existingProject) throw conflict("Project key already exists");
+
+  // Validate ownership hierarchy and permissions
+  const workspace = await ctx.db.get(args.workspaceId);
+  if (!workspace) throw notFound("workspace", args.workspaceId);
+
+  // 1. Integrity check: Workspace must belong to Organization
+  if (workspace.organizationId !== args.organizationId) {
+    throw validation("workspaceId", "Workspace does not belong to the specified organization");
+  }
+
+  // 2. Permission check: User must be Org Admin OR Workspace Member
+  const orgRole = await getOrganizationRole(ctx, args.organizationId, ctx.userId);
+  const isOrgAdmin = orgRole === "owner" || orgRole === "admin";
+  const workspaceRole = await getWorkspaceRole(ctx, args.workspaceId, ctx.userId);
+
+  // Allow if user is Org Admin OR has any role in the workspace
+  if (!(isOrgAdmin || workspaceRole)) {
+    throw forbidden(
+      "member",
+      "You must be an organization admin or workspace member to create a project here",
+    );
+  }
+
+  // Validate: if teamId provided, ensure it belongs to the workspace
+  if (args.teamId) {
+    const team = await ctx.db.get(args.teamId);
+    if (!team) throw notFound("team", args.teamId);
+    if (team.workspaceId !== args.workspaceId) {
+      throw validation("teamId", "Team must belong to the specified workspace");
+    }
+
+    // Security: User must be team member OR Org Admin to assign project to team
+    const teamRole = await getTeamRole(ctx, args.teamId, ctx.userId);
+    if (!(teamRole || isOrgAdmin)) {
+      throw forbidden(
+        "member",
+        "You must be a team member or organization admin to assign this project to the team",
+      );
+    }
+  }
+
+  // Validate: sharedWithTeamIds must belong to the organization
+  // Deduplicate team IDs and validate each team
+  const uniqueSharedTeamIds = args.sharedWithTeamIds ? [...new Set(args.sharedWithTeamIds)] : [];
+  if (uniqueSharedTeamIds.length > 0) {
+    const teams = await Promise.all(uniqueSharedTeamIds.map((id) => ctx.db.get(id)));
+    for (let i = 0; i < teams.length; i++) {
+      const team = teams[i];
+      if (!team || team.isDeleted) {
+        throw notFound("team", uniqueSharedTeamIds[i]);
+      }
+      if (team.organizationId !== args.organizationId) {
+        throw validation(
+          "sharedWithTeamIds",
+          "Shared team must belong to the specified organization",
+        );
+      }
+    }
+  }
+
+  return { uniqueSharedTeamIds };
+}
+
+export const createProject = authenticatedMutation({
+  args: createProjectArgs,
   // Envelope Pattern: Always return objects, not raw IDs
   // See: docs/convex/STANDARDS.md
   returns: v.object({
     projectId: v.id("projects"),
   }),
   handler: async (ctx, args) => {
-    // Validate input constraints
-    validate.name(args.name, "name");
-    validate.projectKey(args.key);
-    validate.description(args.description);
-    if (args.sharedWithTeamIds) {
-      validate.tags(args.sharedWithTeamIds, "sharedWithTeamIds");
-    }
-    if (args.workflowStates && args.workflowStates.length > ARRAY_LIMITS.WORKFLOW_STATES.max) {
-      throw validation(
-        "workflowStates",
-        `Maximum ${ARRAY_LIMITS.WORKFLOW_STATES.max} workflow states allowed`,
-      );
-    }
-
-    // Check if project key already exists
-    const existingProject = await ctx.db
-      .query("projects")
-      .withIndex("by_key", (q) => q.eq("key", args.key.toUpperCase()))
-      .filter(notDeleted)
-      .first();
-
-    if (existingProject) throw conflict("Project key already exists");
-
-    // Validate ownership hierarchy and permissions
-    const workspace = await ctx.db.get(args.workspaceId);
-    if (!workspace) throw notFound("workspace", args.workspaceId);
-
-    // 1. Integrity check: Workspace must belong to Organization
-    if (workspace.organizationId !== args.organizationId) {
-      throw validation("workspaceId", "Workspace does not belong to the specified organization");
-    }
-
-    // 2. Permission check: User must be Org Admin OR Workspace Member
-    const orgRole = await getOrganizationRole(ctx, args.organizationId, ctx.userId);
-    const isOrgAdmin = orgRole === "owner" || orgRole === "admin";
-    const workspaceRole = await getWorkspaceRole(ctx, args.workspaceId, ctx.userId);
-
-    // Allow if user is Org Admin OR has any role in the workspace
-    if (!(isOrgAdmin || workspaceRole)) {
-      throw forbidden(
-        "member",
-        "You must be an organization admin or workspace member to create a project here",
-      );
-    }
-
-    // Validate: if teamId provided, ensure it belongs to the workspace
-    if (args.teamId) {
-      const team = await ctx.db.get(args.teamId);
-      if (!team) throw notFound("team", args.teamId);
-      if (team.workspaceId !== args.workspaceId) {
-        throw validation("teamId", "Team must belong to the specified workspace");
-      }
-
-      // Security: User must be team member OR Org Admin to assign project to team
-      const teamRole = await getTeamRole(ctx, args.teamId, ctx.userId);
-      if (!(teamRole || isOrgAdmin)) {
-        throw forbidden(
-          "member",
-          "You must be a team member or organization admin to assign this project to the team",
-        );
-      }
-    }
-
-    // Validate: sharedWithTeamIds must belong to the organization
-    // Deduplicate team IDs and validate each team
-    const uniqueSharedTeamIds = args.sharedWithTeamIds ? [...new Set(args.sharedWithTeamIds)] : [];
-    if (uniqueSharedTeamIds.length > 0) {
-      const teams = await Promise.all(uniqueSharedTeamIds.map((id) => ctx.db.get(id)));
-      for (let i = 0; i < teams.length; i++) {
-        const team = teams[i];
-        if (!team || team.isDeleted) {
-          throw notFound("team", uniqueSharedTeamIds[i]);
-        }
-        if (team.organizationId !== args.organizationId) {
-          throw validation(
-            "sharedWithTeamIds",
-            "Shared team must belong to the specified organization",
-          );
-        }
-      }
-    }
+    const { uniqueSharedTeamIds } = await validateCreateProject(ctx, args);
 
     const now = Date.now();
     const defaultWorkflowStates = [
@@ -237,7 +257,8 @@ export const getCurrentUserProjects = authenticatedQuery({
       query: (db) =>
         db
           .query("projectMembers")
-          .withIndex("by_user", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true)),
+          .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+          .filter(notDeleted),
     });
 
     if (results.page.length === 0) {
@@ -264,9 +285,8 @@ export const getCurrentUserProjects = authenticatedQuery({
       const count = await efficientCount(
         ctx.db
           .query("issues")
-          .withIndex("by_project_deleted", (q) =>
-            q.eq("projectId", projectId).lt("isDeleted", true),
-          ),
+          .withIndex("by_project", (q) => q.eq("projectId", projectId))
+          .filter(notDeleted),
         MAX_ISSUE_COUNT,
       );
 

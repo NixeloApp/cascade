@@ -73,7 +73,8 @@ export const listByProject = projectQuery({
       const totalPromise = efficientCount(
         ctx.db
           .query("issues")
-          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true)),
+          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
+          .filter(notDeleted),
         MAX_SPRINT_ISSUES,
       );
 
@@ -85,12 +86,9 @@ export const listByProject = projectQuery({
             ctx.db
               .query("issues")
               .withIndex("by_project_sprint_status", (q) =>
-                q
-                  .eq("projectId", ctx.projectId)
-                  .eq("sprintId", sprintId)
-                  .eq("status", status)
-                  .lt("isDeleted", true),
-              ),
+                q.eq("projectId", ctx.projectId).eq("sprintId", sprintId).eq("status", status),
+              )
+              .filter(notDeleted),
             MAX_SPRINT_ISSUES,
           ),
         ),

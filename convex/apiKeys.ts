@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { type ApiAuthContext, hashApiKey } from "./lib/apiAuth";
 import { logAudit } from "./lib/audit";
@@ -7,7 +8,7 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, requireOwned, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, WEEK } from "./lib/timeUtils";
-import { assertCanAccessProject } from "./projectAccess";
+import { assertCanAccessProject, computeProjectAccess } from "./projectAccess";
 
 /**
  * API Key Management
@@ -26,6 +27,72 @@ function generateApiKey(): string {
     .map((val) => chars.charAt(val % chars.length))
     .join("");
   return `${prefix}_${randomPart}`;
+}
+
+// Define valid scopes
+const validScopes = [
+  "issues:read",
+  "issues:write",
+  "issues:delete",
+  "projects:read",
+  "projects:write",
+  "comments:read",
+  "comments:write",
+  "documents:read",
+  "documents:write",
+  "search:read",
+];
+
+function getRoleAllowedScopes(role: "admin" | "editor" | "viewer" | null): string[] {
+  if (role === "admin") {
+    return validScopes; // All scopes
+  }
+  if (role === "editor") {
+    // Editor can read everything and write issues/comments/documents/projects
+    // Editor CANNOT delete issues (issues:delete)
+    return validScopes.filter((s) => s !== "issues:delete");
+  }
+  if (role === "viewer") {
+    // Viewer can only read
+    return ["issues:read", "projects:read", "comments:read", "documents:read", "search:read"];
+  }
+  return [];
+}
+
+async function validateKeyGeneration(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  projectId: Id<"projects"> | undefined,
+  requestedScopes: string[],
+) {
+  // Validate basic scope format
+  for (const scope of requestedScopes) {
+    if (!validScopes.includes(scope)) {
+      throw validation("scopes", `Invalid scope: ${scope}`);
+    }
+  }
+
+  // If projectId is specified, verify user has access AND enforce role-based scope restrictions
+  if (projectId) {
+    const project = await ctx.db.get(projectId);
+    if (!project) throw notFound("project", projectId);
+
+    // Use computeProjectAccess to get the effective role (handles ownership, org admin, team membership, etc.)
+    const access = await computeProjectAccess(ctx, projectId, ctx.userId);
+
+    if (!access.canAccess) {
+      throw forbidden(); // User cannot access the project at all
+    }
+
+    const allowedScopes = getRoleAllowedScopes(access.role);
+
+    // Check if all requested scopes are allowed
+    const invalidScopes = requestedScopes.filter((scope) => !allowedScopes.includes(scope));
+    if (invalidScopes.length > 0) {
+      throw forbidden(
+        `You do not have permission to generate keys with scopes: ${invalidScopes.join(", ")}`,
+      );
+    }
+  }
 }
 
 /** Validates an API key for HTTP actions, returning auth context if valid and active. */
@@ -71,43 +138,8 @@ export const generate = authenticatedMutation({
     const keyHash = await hashApiKey(apiKey);
     const keyPrefix = apiKey.substring(0, 16); // "sk_casc_AbCdEfGh"
 
-    // If projectId is specified, verify user has access
-    if (args.projectId) {
-      const projectId = args.projectId;
-      const project = await ctx.db.get(projectId);
-      if (!project) throw notFound("project", projectId);
-
-      // Check if user is a member
-      const membership = await ctx.db
-        .query("projectMembers")
-        .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", ctx.userId))
-        .filter(notDeleted)
-        .first();
-
-      if (!membership && project.createdBy !== ctx.userId) {
-        throw forbidden();
-      }
-    }
-
-    // Validate scopes
-    const validScopes = [
-      "issues:read",
-      "issues:write",
-      "issues:delete",
-      "projects:read",
-      "projects:write",
-      "comments:read",
-      "comments:write",
-      "documents:read",
-      "documents:write",
-      "search:read",
-    ];
-
-    for (const scope of args.scopes) {
-      if (!validScopes.includes(scope)) {
-        throw validation("scopes", `Invalid scope: ${scope}`);
-      }
-    }
+    // Validate request
+    await validateKeyGeneration(ctx, args.projectId, args.scopes);
 
     // Create API key record
     const keyId = await ctx.db.insert("apiKeys", {
