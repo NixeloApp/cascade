@@ -33,12 +33,12 @@ describe("Sprints Security", () => {
     const asViewer = asAuthenticatedUser(t, viewer);
 
     // Attempt to create sprint
-    await expect(async () => {
-      await asViewer.mutation(api.sprints.create, {
+    await expect(
+      asViewer.mutation(api.sprints.create, {
         projectId,
         name: "Viewer Sprint",
-      });
-    }).rejects.toThrow(/editor|authorized/i);
+      }),
+    ).rejects.toThrow(/editor|authorized/i);
   });
 
   it("should prevent viewers from starting sprints", async () => {
@@ -63,13 +63,13 @@ describe("Sprints Security", () => {
     // Attempt to start sprint as viewer
     const asViewer = asAuthenticatedUser(t, viewer);
     const startDate = Date.now();
-    await expect(async () => {
-      await asViewer.mutation(api.sprints.startSprint, {
+    await expect(
+      asViewer.mutation(api.sprints.startSprint, {
         sprintId,
         startDate,
         endDate: startDate + 2 * WEEK,
-      });
-    }).rejects.toThrow(/editor|authorized/i);
+      }),
+    ).rejects.toThrow(/editor|authorized/i);
   });
 
   it("should prevent viewers from completing sprints", async () => {
@@ -93,11 +93,11 @@ describe("Sprints Security", () => {
 
     // Attempt to complete sprint as viewer
     const asViewer = asAuthenticatedUser(t, viewer);
-    await expect(async () => {
-      await asViewer.mutation(api.sprints.completeSprint, {
+    await expect(
+      asViewer.mutation(api.sprints.completeSprint, {
         sprintId,
-      });
-    }).rejects.toThrow(/editor|authorized/i);
+      }),
+    ).rejects.toThrow(/editor|authorized/i);
   });
 
   it("should allow editors to perform sprint actions", async () => {
