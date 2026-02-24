@@ -346,6 +346,7 @@ export const addComment = issueViewerMutation({
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
   },
+  returns: v.object({ commentId: v.id("issueComments") }),
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
     const now = Date.now();
@@ -461,6 +462,7 @@ export const bulkUpdateStatus = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     newStatus: v.string(),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue) => {
       // Fetch project to validate status
@@ -516,6 +518,7 @@ export const bulkUpdatePriority = authenticatedMutation({
       v.literal("highest"),
     ),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       return {
@@ -547,6 +550,7 @@ export const bulkAssign = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     assigneeId: v.union(v.id("users"), v.null()),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       return {
@@ -578,6 +582,7 @@ export const bulkAddLabels = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     labels: v.array(v.string()),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue) => {
       const updatedLabels = Array.from(new Set([...issue.labels, ...args.labels]));
@@ -610,6 +615,7 @@ export const bulkMoveToSprint = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     sprintId: v.union(v.id("sprints"), v.null()),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue) => {
       return {
@@ -639,6 +645,7 @@ export const bulkDelete = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
+  returns: v.object({ deleted: v.number() }),
   handler: async (ctx, args) => {
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
@@ -760,6 +767,7 @@ export const bulkArchive = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
+  returns: v.object({ archived: v.number() }),
   handler: async (ctx, args) => {
     // Pre-fetch all issues to build project map (avoids N+1 reads)
     const allIssues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
@@ -810,6 +818,7 @@ export const bulkRestore = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
+  returns: v.object({ restored: v.number() }),
   handler: async (ctx, args) => {
     const result = await performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       if (!issue.archivedAt) return null;
@@ -845,6 +854,7 @@ export const bulkUpdateDueDate = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     dueDate: v.union(v.number(), v.null()), // null to clear
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       // Validate: due date should not be before start date
@@ -884,6 +894,7 @@ export const bulkUpdateStartDate = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     startDate: v.union(v.number(), v.null()), // null to clear
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       // Validate: start date should not be after due date
