@@ -3,6 +3,7 @@ import { pruneNull } from "convex-helpers";
 import { authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { MAX_TEAM_MEMBERS } from "./lib/queryLimits";
+import { notDeleted } from "./lib/softDeleteHelpers";
 import { assertCanAccessProject } from "./projectAccess";
 
 // List all members of a project with user details
