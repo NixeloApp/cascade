@@ -602,6 +602,32 @@ describe("Invites", () => {
       }).rejects.toThrow("This invitation is accepted");
     });
 
+    it("should reject unverified user", async () => {
+      const t = convexTest(schema, modules);
+      const { organizationId, asUser: asAdmin } = await createTestContext(t);
+
+      const result = await asAdmin.mutation(api.invites.sendInvite, {
+        email: "unverified@example.com",
+        role: "user",
+        organizationId,
+      });
+      const { token } = expectInviteCreated(result);
+
+      // Create unverified user
+      const unverifiedUserId = await createTestUser(t, {
+        name: "Unverified",
+        email: "unverified@example.com",
+      });
+      await t.run(async (ctx) => {
+        await ctx.db.patch(unverifiedUserId, { emailVerificationTime: undefined });
+      });
+      const asUnverifiedUser = asAuthenticatedUser(t, unverifiedUserId);
+
+      await expect(async () => {
+        await asUnverifiedUser.mutation(api.invites.acceptInvite, { token });
+      }).rejects.toThrow("You must verify your email address");
+    });
+
     it("should reject inviting existing project member", async () => {
       const t = convexTest(schema, modules);
       const adminId = await createTestUser(t);
