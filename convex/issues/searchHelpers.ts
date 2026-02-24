@@ -15,6 +15,9 @@ export function buildIssueSearch(
     type?: string[];
     status?: string[];
     priority?: string[];
+    sprintId?: Id<"sprints"> | "backlog" | "none";
+    epicId?: Id<"issues"> | "none";
+    labels?: string[];
   },
   userId: Id<"users">,
 ): SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex> {
@@ -59,6 +62,24 @@ export function buildIssueSearch(
   // Handle reporter
   if (args.reporterId) {
     searchQ = searchQ.eq("reporterId", args.reporterId);
+  }
+
+  // Handle sprintId (only specific sprint ID, not backlog/none)
+  if (args.sprintId && args.sprintId !== "backlog" && args.sprintId !== "none") {
+    searchQ = searchQ.eq("sprintId", args.sprintId);
+  }
+
+  // Handle epicId (only specific epic ID, not none)
+  if (args.epicId && args.epicId !== "none") {
+    searchQ = searchQ.eq("epicId", args.epicId);
+  }
+
+  // Handle labels (match all labels)
+  if (args.labels && args.labels.length > 0) {
+    for (const label of args.labels) {
+      // Cast to any because eq() expects string[] based on schema, but runtime supports matching a single element
+      searchQ = searchQ.eq("labels", label as any);
+    }
   }
 
   return searchQ;

@@ -487,6 +487,9 @@ const applicationTables = {
         "priority",
         "assigneeId",
         "reporterId",
+        "sprintId",
+        "epicId",
+        "labels",
       ],
     })
     .vectorIndex("by_embedding", {
