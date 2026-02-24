@@ -12,15 +12,17 @@ describe("Notifications Performance", () => {
     const actorId = await createTestUser(t);
 
     // Create some notifications
-    for (let i = 0; i < 5; i++) {
-      await t.mutation(internal.notifications.createNotification, {
-        userId,
-        actorId,
-        type: "mention",
-        title: `Notification ${i}`,
-        message: "Test message",
-      });
-    }
+    await Promise.all(
+      Array.from({ length: 5 }, (_, i) =>
+        t.mutation(internal.notifications.createNotification, {
+          userId,
+          actorId,
+          type: "mention",
+          title: `Notification ${i}`,
+          message: "Test message",
+        }),
+      ),
+    );
 
     // Get actual creation times from the notifications
     const allNotifications = await t.run(async (ctx) => {

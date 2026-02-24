@@ -4,7 +4,12 @@ import { api } from "./_generated/api";
 import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  addProjectMember,
+  asAuthenticatedUser,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Analytics", () => {
   describe("getProjectAnalytics", () => {
@@ -13,6 +18,8 @@ describe("Analytics", () => {
       const userId = await createTestUser(t, { name: "User 1" });
       const otherUserId = await createTestUser(t, { name: "User 2" });
       const projectId = await createTestProject(t, userId);
+
+      await addProjectMember(t, projectId, otherUserId, "viewer", userId);
 
       const asUser = asAuthenticatedUser(t, userId);
 
@@ -612,14 +619,16 @@ describe("Analytics", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create multiple issues to generate activity
-      for (let i = 0; i < 10; i++) {
-        await asUser.mutation(api.issues.createIssue, {
-          projectId,
-          title: `Issue ${i}`,
-          type: "task",
-          priority: "medium",
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 10 }, (_, i) =>
+          asUser.mutation(api.issues.createIssue, {
+            projectId,
+            title: `Issue ${i}`,
+            type: "task",
+            priority: "medium",
+          }),
+        ),
+      );
 
       const activity = await asUser.query(api.analytics.getRecentActivity, {
         projectId,
@@ -666,24 +675,27 @@ describe("Analytics", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       // Create 5 issues
-      const issueIds = [];
-      for (let i = 0; i < 5; i++) {
-        const { issueId } = await asUser.mutation(api.issues.createIssue, {
-          projectId,
-          title: `Issue ${i}`,
-          type: "task",
-          priority: "medium",
-        });
-        issueIds.push(issueId);
-      }
+      const results = await Promise.all(
+        Array.from({ length: 5 }, (_, i) =>
+          asUser.mutation(api.issues.createIssue, {
+            projectId,
+            title: `Issue ${i}`,
+            type: "task",
+            priority: "medium",
+          }),
+        ),
+      );
+      const issueIds = results.map((r) => r.issueId);
 
       // Update the first 3 issues to make them "newer"
-      for (let i = 0; i < 3; i++) {
-        await asUser.mutation(api.issues.update, {
-          issueId: issueIds[i],
-          title: `Updated Issue ${i}`,
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 3 }, (_, i) =>
+          asUser.mutation(api.issues.update, {
+            issueId: issueIds[i],
+            title: `Updated Issue ${i}`,
+          }),
+        ),
+      );
 
       // Comment on the 5th issue (oldest updated)
       // This should bring it to the top of recent activity

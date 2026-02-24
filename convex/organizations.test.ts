@@ -239,6 +239,10 @@ describe("organizations", () => {
       // Note: order is not guaranteed by default unless specified in query, usually creation order
       expect(organizations.some((c) => c.name === "organization A")).toBe(true);
       expect(organizations.some((c) => c.name === "organization B")).toBe(true);
+
+      const orgA = organizations.find((c) => c.name === "organization A");
+      expect(orgA?.memberCount).toBe(1); // Creator
+      expect(orgA?.projectCount).toBe(0);
     });
   });
 });

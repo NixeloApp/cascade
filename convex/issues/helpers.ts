@@ -1,11 +1,31 @@
-import { asyncMap, pruneNull } from "convex-helpers";
-import type { Doc, Id } from "../_generated/dataModel";
+import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
 import { notDeleted } from "../lib/softDeleteHelpers";
-import { assertCanEditProject } from "../projectAccess";
+import { canAccessProject } from "../projectAccess";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
+
+/**
+ * Validates that the assignee has access to the project.
+ *
+ * @param ctx - The mutation context.
+ * @param projectId - The ID of the project.
+ * @param assigneeId - The ID of the assignee to validate.
+ * @throws {ConvexError} If the assignee does not have access to the project.
+ */
+export async function validateAssignee(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+  assigneeId: Id<"users"> | null | undefined,
+): Promise<void> {
+  if (!assigneeId) return;
+
+  const hasAccess = await canAccessProject(ctx, projectId, assigneeId);
+  if (!hasAccess) {
+    throw validation("assigneeId", "Assignee must be a member of the project or organization");
+  }
+}
 
 /**
  * Combines title and description into a single string for search indexing.
@@ -496,103 +516,4 @@ export function matchesSearchFilters(
   if (!matchesDateRange(issue._creationTime, filters.dateFrom, filters.dateTo)) return false;
 
   return true;
-}
-
-// Activity action types for type safety
-export type IssueActivityAction =
-  | "created"
-  | "updated"
-  | "archived"
-  | "restored"
-  | "deleted"
-  | "commented";
-
-/**
- * Performs a bulk update on multiple issues.
- * Handles:
- * 1. Fetching issues.
- * 2. Checking permissions for each issue.
- * 3. Calculating the patch and activity log using the callback.
- * 4. Applying the patch and inserting activity logs.
- *
- * @param ctx - The mutation context (with userId).
- * @param issueIds - List of issue IDs to update.
- * @param getUpdate - Callback that returns the patch and activity for a given issue.
- * @param checkPermission - Optional override for permission checking (defaults to project edit access).
- * @returns Object with count of updated issues.
- */
-export async function performBulkUpdate(
-  ctx: MutationCtx & { userId: Id<"users"> },
-  issueIds: Id<"issues">[],
-  getUpdate: (
-    issue: Doc<"issues">,
-    now: number,
-  ) => Promise<{
-    patch: Partial<Doc<"issues">>;
-    activity?: {
-      action: IssueActivityAction;
-      field?: string;
-      oldValue?: string;
-      newValue?: string;
-    };
-  } | null>,
-  checkPermission: (
-    ctx: MutationCtx,
-    projectId: Id<"projects">,
-    userId: Id<"users">,
-  ) => Promise<void> = assertCanEditProject,
-) {
-  const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
-  const now = Date.now();
-
-  const results = await Promise.all(
-    issues.map(async (issue) => {
-      if (!issue || issue.isDeleted) return 0;
-
-      try {
-        await checkPermission(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        return 0;
-      }
-
-      const update = await getUpdate(issue, now);
-      if (!update) return 0;
-
-      await ctx.db.patch(issue._id, {
-        ...update.patch,
-        updatedAt: now,
-      });
-
-      if (update.activity) {
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
-          ...update.activity,
-        });
-      }
-
-      return 1;
-    }),
-  );
-
-  return { updated: results.reduce((a: number, b) => a + b, 0) };
-}
-
-/**
- * Resolves a list of label IDs to their names.
- * Useful for activity logging or display where IDs are not sufficient.
- *
- * @param ctx - The mutation context.
- * @param labelIds - Array of label IDs.
- * @returns Array of label names.
- */
-export async function resolveLabelNames(
-  ctx: MutationCtx,
-  labelIds: Id<"labels">[] | undefined,
-): Promise<string[]> {
-  if (!labelIds || labelIds.length === 0) {
-    return [];
-  }
-  const labels = await asyncMap(labelIds, (id) => ctx.db.get(id));
-  return pruneNull(labels).map((l) => l.name);
 }
