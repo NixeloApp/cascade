@@ -8,6 +8,9 @@ export const toggleReaction = authenticatedMutation({
     commentId: v.id("issueComments"),
     emoji: v.string(),
   },
+  returns: v.object({
+    action: v.union(v.literal("added"), v.literal("removed")),
+  }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment) throw notFound("comment");
@@ -29,7 +32,7 @@ export const toggleReaction = authenticatedMutation({
 
     if (existing) {
       await ctx.db.delete(existing._id);
-      return { action: "removed" };
+      return { action: "removed" } as const;
     } else {
       await ctx.db.insert("issueCommentReactions", {
         commentId: args.commentId,
@@ -37,7 +40,7 @@ export const toggleReaction = authenticatedMutation({
         emoji: args.emoji,
         createdAt: Date.now(),
       });
-      return { action: "added" };
+      return { action: "added" } as const;
     }
   },
 });
