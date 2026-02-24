@@ -31,3 +31,7 @@
 ## 2024-05-22 - OAuth Data Validation
 **Learning:** OAuth integrations often assume valid JSON and complete user profiles from providers. However, API changes or failures can result in invalid JSON or partial data (e.g. `undefined` user IDs), leading to silent data corruption or runtime crashes when processing the callback.
 **Action:** Always validate the structure and required fields of OAuth user profiles and wrap JSON parsing in try/catch blocks before persisting or using the data.
+
+## 2024-05-22 - Structured Validation Errors
+**Learning:** Generic validation errors (thrown as `Error`) are redacted in production, hiding critical feedback from users.
+**Action:** Use structured `ConvexError` with code `VALIDATION` (via `validation` helper) for all input checks to ensure client receives meaningful, actionable error messages.
