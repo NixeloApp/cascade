@@ -5,6 +5,7 @@ import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } fro
 import { isAppError, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
+import { logger } from "../lib/logger";
 
 /**
  * GitHub OAuth Integration
@@ -130,9 +131,11 @@ async function exchangeCodeForTokens(
     let errorText = "Unknown error";
     try {
       errorText = await tokenResponse.text();
-      console.error("GitHub OAuth error: Failed to exchange code", errorText);
+      logger.error("GitHub OAuth error: Failed to exchange code", { errorText });
     } catch (e) {
-      console.error("GitHub OAuth error: Failed to exchange code (and failed to read body)", e);
+      logger.error("GitHub OAuth error: Failed to exchange code (and failed to read body)", {
+        error: e,
+      });
     }
     throw validation("oauth", `Failed to exchange GitHub authorization code: ${errorText}`);
   }
@@ -168,9 +171,11 @@ async function fetchGitHubUserInfo(accessToken: string) {
     let errorText = "Unknown error";
     try {
       errorText = await userResponse.text();
-      console.error("GitHub OAuth error: Failed to get user info", errorText);
+      logger.error("GitHub OAuth error: Failed to get user info", { errorText });
     } catch (e) {
-      console.error("GitHub OAuth error: Failed to get user info (and failed to read body)", e);
+      logger.error("GitHub OAuth error: Failed to get user info (and failed to read body)", {
+        error: e,
+      });
     }
     throw validation("github", `Failed to get GitHub user info: ${errorText}`);
   }
@@ -186,7 +191,7 @@ async function fetchGitHubUserInfo(accessToken: string) {
   if (!userInfo || !userInfo.id || !userInfo.login) {
     // Only log keys to avoid leaking PII
     const keys = userInfo ? Object.keys(userInfo) : "null";
-    console.error(`GitHub OAuth error: Invalid user info structure. Keys: ${keys}`);
+    logger.error(`GitHub OAuth error: Invalid user info structure. Keys: ${keys}`);
     throw validation("github", "Invalid GitHub user info: missing id or login");
   }
 
@@ -481,7 +486,7 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
           errorMessage = text || errorMessage;
         }
       } catch (e) {
-        console.error("Failed to read error response body:", e);
+        logger.error("Failed to read error response body:", { error: e });
       }
 
       return new Response(JSON.stringify({ error: errorMessage }), {
@@ -525,7 +530,7 @@ export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
 };
 
 const handleListReposError = (error: unknown) => {
-  console.error("GitHub listRepos error:", error);
+  logger.error("GitHub listRepos error:", { error });
   let status = 500;
   let message = "Failed to list repositories";
 

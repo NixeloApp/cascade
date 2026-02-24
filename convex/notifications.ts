@@ -5,7 +5,7 @@ import type { Doc } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
-import { efficientCount } from "./lib/boundedQueries";
+import { boundedCount } from "./lib/boundedQueries";
 import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -64,14 +64,19 @@ export const getUnreadCount = authenticatedQuery({
   handler: async (ctx) => {
     // Cap at 100 - UI typically shows "99+" anyway
     const MAX_UNREAD_COUNT = 100;
-    return await efficientCount(
+
+    // Use boundedCount to stop scanning after 100 items
+    // efficientCount() uses .count() which scans all items (O(N)), which is wasteful here
+    const { count } = await boundedCount(
       ctx.db
         .query("notifications")
         .withIndex("by_user_read", (q) =>
           q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
         ),
-      MAX_UNREAD_COUNT,
+      { limit: MAX_UNREAD_COUNT },
     );
+
+    return count;
   },
 });
 
@@ -114,14 +119,14 @@ export const markAllAsRead = authenticatedMutation({
 /** Soft-delete a notification. Only the notification owner can perform this action. */
 export const softDeleteNotification = authenticatedMutation({
   args: { id: v.id("notifications") },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     requireOwned(notification, ctx.userId, "notification");
 
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
 
-    return { success: true } as const;
+    return { success: true, deleted: true } as const;
   },
 });
 

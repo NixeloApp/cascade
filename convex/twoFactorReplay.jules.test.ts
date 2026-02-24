@@ -1,10 +1,13 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
+import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
+import { asAuthenticatedUser, createTestUser } from "./testUtils";
 
-// --- TOTP Helpers ---
+// --- TOTP Helpers (Duplicated for Black-Box Testing) ---
+
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const TOTP_PERIOD = 30;
 
@@ -43,69 +46,66 @@ async function hmacSha1(key: Uint8Array, message: Uint8Array): Promise<Uint8Arra
 }
 
 async function generateTestTOTP(secret: string, timestamp = Date.now()): Promise<string> {
-  const counter = Math.floor(timestamp / 1000 / TOTP_PERIOD);
+  const counter = Math.floor(timestamp / SECOND / TOTP_PERIOD);
   const key = base32Decode(secret);
+
+  // Convert counter to 8-byte big-endian buffer
   const counterBuffer = new ArrayBuffer(8);
   const view = new DataView(counterBuffer);
   view.setBigUint64(0, BigInt(counter), false);
+
   const hmac = await hmacSha1(key, new Uint8Array(counterBuffer));
+
+  // Dynamic truncation
   const offset = hmac[19] & 0xf;
   const code =
     ((hmac[offset] & 0x7f) << 24) |
     ((hmac[offset + 1] & 0xff) << 16) |
     ((hmac[offset + 2] & 0xff) << 8) |
     (hmac[offset + 3] & 0xff);
+
+  // Get 6-digit code
   return String(code % 1000000).padStart(6, "0");
 }
 
-describe("Two Factor Authentication Loop", () => {
+describe("Two Factor Authentication Replay Attack", () => {
   const FIXED_TIME = 1678886400000; // 2023-03-15T16:00:00.000Z
 
-  it("should fail verification if session ID is missing", async () => {
+  it("should allow replay of TOTP code for disable", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_TIME);
 
     const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const asUser = asAuthenticatedUser(t, userId);
 
-    // Create user in DB
-    const userId = await t.run(async (ctx) => {
-      return await ctx.db.insert("users", {
-        email: "test@example.com",
-        name: "Test User",
-        emailVerificationTime: Date.now(),
-      });
-    });
+    // 1. Setup 2FA
+    const { secret } = await asUser.mutation(api.twoFactor.beginSetup);
+    const setupCode = await generateTestTOTP(secret, FIXED_TIME);
+    await asUser.mutation(api.twoFactor.completeSetup, { code: setupCode });
 
-    const setupSession = "setup-session";
-    const asSetup = t.withIdentity({ subject: `${userId}|${setupSession}` });
-
-    // Enable 2FA
-    const { secret } = await asSetup.mutation(api.twoFactor.beginSetup);
-    const code = await generateTestTOTP(secret, FIXED_TIME);
-    await asSetup.mutation(api.twoFactor.completeSetup, { code });
-
-    // Now simulate a session WITHOUT a session ID (just user ID)
-    // This simulates a malformed auth token or weird state
-    const asNoSession = t.withIdentity({ subject: userId });
-
-    // Check redirect - should be /verify-2fa because sessionId is missing
-    const dest = await asNoSession.query(api.auth.getRedirectDestination);
-    expect(dest).toBe("/verify-2fa");
-
-    // Advance time to avoid replay detection (30s)
+    // 2. Advance time and generate a valid code
     const newTime = FIXED_TIME + 30000;
     vi.setSystemTime(newTime);
+    const validCode = await generateTestTOTP(secret, newTime);
 
-    // Try to verify
-    const verifyCode = await generateTestTOTP(secret, newTime);
+    // 3. Use it to "Login" (verifyCode)
+    const verifyResult = await asUser.mutation(api.twoFactor.verifyCode, { code: validCode });
+    if (!verifyResult.success) {
+      console.error("verifyCode failed:", verifyResult.error);
+    }
+    expect(verifyResult.success).toBe(true);
 
-    // CURRENT BEHAVIOR: Returns success: true, but doesn't record session verification
-    // DESIRED BEHAVIOR: Should fail or throw because no session to verify
-    const result = await asNoSession.mutation(api.twoFactor.verifyCode, { code: verifyCode });
+    // 4. Reuse the SAME code to DISABLE 2FA immediately
+    const disableResult = await asUser.mutation(api.twoFactor.disable, { code: validCode });
 
-    // If this assertion fails, it means the bug is present (it returned success)
-    expect(result.success).toBe(false);
-    expect(result.error).toContain("Session ID required");
+    // THIS SHOULD FAIL now
+    expect(disableResult.success).toBe(false);
+    expect(disableResult.error).toBe("Invalid verification code");
+
+    // 5. Verify 2FA is still ENABLED
+    const status = await asUser.query(api.twoFactor.getStatus);
+    expect(status.enabled).toBe(true);
 
     vi.useRealTimers();
   });

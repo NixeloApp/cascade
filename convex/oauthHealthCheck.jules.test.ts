@@ -54,7 +54,6 @@ describe("OAuth Health Check", () => {
 
       // MAX_HEALTH_CHECK_RECORDS is 100
       // Insert 105 records
-      // Note: Sequential execution needed to maintain ordering with time advancement
       for (let i = 0; i < 105; i++) {
         await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {
           success: true,
@@ -185,7 +184,7 @@ describe("OAuth Health Check", () => {
       vi.stubEnv("OAUTH_MONITOR_GOOGLE_CLIENT_ID", "");
 
       // Capture console logs? Or just ensure no mutation happened
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "info").mockImplementation(() => {});
 
       await t.action(internal.oauthHealthCheck.checkGoogleOAuthHealth);
 

@@ -191,7 +191,7 @@ export const updateWorkspace = workspaceAdminMutation({
       }),
     ),
   },
-  returns: v.object({ workspaceId: v.id("workspaces") }),
+  returns: v.object({ success: v.boolean(), workspaceId: v.id("workspaces") }),
   handler: async (ctx, args) => {
     // workspaceAdminMutation handles auth + org admin check
     await ctx.db.patch(ctx.workspaceId, {
@@ -199,7 +199,7 @@ export const updateWorkspace = workspaceAdminMutation({
       updatedAt: Date.now(),
     });
 
-    return { workspaceId: ctx.workspaceId };
+    return { success: true, workspaceId: ctx.workspaceId };
   },
 });
 
@@ -213,6 +213,7 @@ export const update = updateWorkspace;
  */
 export const deleteWorkspace = authenticatedMutation({
   args: { id: v.id("workspaces") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const workspace = await ctx.db.get(args.id);
     if (!workspace) throw notFound("workspace", args.id);
@@ -249,6 +250,8 @@ export const deleteWorkspace = authenticatedMutation({
     }
 
     await ctx.db.delete(args.id);
+
+    return { success: true, deleted: true } as const;
   },
 });
 
@@ -346,6 +349,7 @@ export const updateWorkspaceMemberRole = workspaceAdminMutation({
     userId: v.id("users"),
     role: workspaceRoles,
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("workspaceMembers")
@@ -362,7 +366,7 @@ export const updateWorkspaceMemberRole = workspaceAdminMutation({
       role: args.role,
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -377,6 +381,7 @@ export const removeWorkspaceMember = workspaceAdminMutation({
   args: {
     userId: v.id("users"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const membership = await ctx.db
       .query("workspaceMembers")
@@ -396,7 +401,7 @@ export const removeWorkspaceMember = workspaceAdminMutation({
       deletedBy: ctx.userId,
     });
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 

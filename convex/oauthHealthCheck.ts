@@ -18,6 +18,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
+import { logger } from "./lib/logger";
 import {
   CONSECUTIVE_FAILURE_WINDOW,
   FETCH_BUFFER_MULTIPLIER,
@@ -42,7 +43,7 @@ export const recordHealthCheck = internalMutation({
       timestamp: Date.now(),
     });
 
-    console.log(
+    logger.info(
       `[OAuth Health] ${args.success ? "✓" : "✗"} ${args.latencyMs}ms ${args.error || ""}`,
     );
 
@@ -141,7 +142,7 @@ export const checkGoogleOAuthHealth = internalAction({
 
     // Skip if not configured (development environments)
     if (!(clientId && clientSecret && refreshToken)) {
-      console.log("[OAuth Health] Skipped: monitoring not configured");
+      logger.info("[OAuth Health] Skipped: monitoring not configured");
       return;
     }
 
@@ -167,7 +168,7 @@ export const checkGoogleOAuthHealth = internalAction({
           throw new Error(`OAuth endpoint check failed: redirect doesn't point to Google OAuth`);
         }
 
-        console.log("[OAuth Health] ✓ Endpoint check passed");
+        logger.info("[OAuth Health] ✓ Endpoint check passed");
       }
 
       // Step 1: Exchange refresh token for access token
@@ -214,7 +215,7 @@ export const checkGoogleOAuthHealth = internalAction({
       const latencyMs = Date.now() - startTime;
 
       // Success!
-      console.log(`[OAuth Health] ✓ Passed (${latencyMs}ms)`);
+      logger.info(`[OAuth Health] ✓ Passed (${latencyMs}ms)`);
 
       await ctx.runMutation(internal.oauthHealthCheck.recordHealthCheck, {
         success: true,
@@ -224,7 +225,7 @@ export const checkGoogleOAuthHealth = internalAction({
       const latencyMs = Date.now() - startTime;
 
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error(`[OAuth Health] ✗ Failed (${latencyMs}ms): ${errorMessage}`);
+      logger.error(`[OAuth Health] ✗ Failed (${latencyMs}ms): ${errorMessage}`);
 
       await ctx.runMutation(internal.oauthHealthCheck.recordHealthCheck, {
         success: false,
@@ -252,7 +253,7 @@ async function sendSlackAlert(errorMessage: string): Promise<void> {
   const slackWebhookUrl = process.env.SLACK_OAUTH_ALERT_WEBHOOK_URL;
 
   if (!slackWebhookUrl) {
-    console.warn("[OAuth Health] Alert skipped: Slack webhook not configured");
+    logger.warn("[OAuth Health] Alert skipped: Slack webhook not configured");
     return;
   }
 
@@ -288,11 +289,11 @@ async function sendSlackAlert(errorMessage: string): Promise<void> {
     });
 
     if (!response.ok) {
-      console.error(`[OAuth Health] Failed to send Slack alert: ${response.status}`);
+      logger.error(`[OAuth Health] Failed to send Slack alert: ${response.status}`);
     } else {
-      console.log("[OAuth Health] Alert sent to Slack");
+      logger.info("[OAuth Health] Alert sent to Slack");
     }
   } catch (slackError) {
-    console.error("[OAuth Health] Failed to send Slack alert:", slackError);
+    logger.error("[OAuth Health] Failed to send Slack alert:", { error: slackError });
   }
 }

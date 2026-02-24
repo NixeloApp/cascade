@@ -19,6 +19,7 @@ import { type ActionCtx, httpAction, internalMutation, internalQuery } from "./_
 import { constantTimeEqual } from "./lib/apiAuth";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
+import { logger } from "./lib/logger";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
 import type { CalendarEventColor } from "./validators";
@@ -892,9 +893,9 @@ export const setupRbacProjectInternal = internalMutation({
     const editorUser = await findLatestUser(args.editorEmail);
     const viewerUser = await findLatestUser(args.viewerEmail);
 
-    console.log(`[RBAC-SETUP] Admin resolved to: ${adminUser?._id} (${args.adminEmail})`);
-    console.log(`[RBAC-SETUP] Editor resolved to: ${editorUser?._id} (${args.editorEmail})`);
-    console.log(`[RBAC-SETUP] Viewer resolved to: ${viewerUser?._id} (${args.viewerEmail})`);
+    logger.info(`[RBAC-SETUP] Admin resolved to: ${adminUser?._id} (${args.adminEmail})`);
+    logger.info(`[RBAC-SETUP] Editor resolved to: ${editorUser?._id} (${args.editorEmail})`);
+    logger.info(`[RBAC-SETUP] Viewer resolved to: ${viewerUser?._id} (${args.viewerEmail})`);
 
     if (!adminUser) {
       return { success: false, error: `Admin user not found: ${args.adminEmail}` };
@@ -918,7 +919,7 @@ export const setupRbacProjectInternal = internalMutation({
 
     // FALLBACK: If admin has no organization, create/link it now
     if (!adminMembership) {
-      console.log(`[RBAC-SETUP] Admin ${adminUser._id} has no organization. Attempting repair...`);
+      logger.info(`[RBAC-SETUP] Admin ${adminUser._id} has no organization. Attempting repair...`);
 
       const workerMatch = args.adminEmail.match(/-w(\d+)@/);
       const workerSuffix = workerMatch ? `w${workerMatch[1]}` : "";
@@ -931,7 +932,7 @@ export const setupRbacProjectInternal = internalMutation({
         .first();
 
       if (!organization) {
-        console.log(`[RBAC-SETUP] creating organization ${slug}`);
+        logger.info(`[RBAC-SETUP] creating organization ${slug}`);
         const orgId = await ctx.db.insert("organizations", {
           name: organizationName,
           slug,
@@ -2356,10 +2357,10 @@ export const listDuplicateTestUsersInternal = internalMutation({
       .filter(([_, ids]) => ids.length > 1)
       .map(([email, ids]) => ({ email, ids }));
 
-    console.log("[STALE] Found ", testUsers.length, " total test users.");
-    console.log("[STALE] Found ", duplicates.length, " duplicate emails.");
+    logger.info(`[STALE] Found ${testUsers.length} total test users.`);
+    logger.info(`[STALE] Found ${duplicates.length} duplicate emails.`);
     for (const d of duplicates) {
-      console.log("[STALE] Email ", d.email, " has IDs: ", d.ids.join(", "));
+      logger.info(`[STALE] Email ${d.email} has IDs: ${d.ids.join(", ")}`);
     }
 
     return { testUsers: testUsers.length, duplicates };

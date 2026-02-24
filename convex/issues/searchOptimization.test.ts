@@ -16,67 +16,37 @@ describe("issue search optimization", () => {
   let t: ReturnType<typeof convexTest>;
   let ctx: TestContext;
   let projectId: Id<"projects">;
+  let otherUserId: Id<"users">;
 
   beforeEach(async () => {
     t = convexTest(schema, modules);
     ctx = await createTestContext(t);
     projectId = await createProjectInOrganization(t, ctx.userId, ctx.organizationId);
+    otherUserId = await createTestUser(t);
   });
 
-  it("should filter by assignee in search index", async () => {
-    const assignee = await createTestUser(t);
-    const issue1 = await createTestIssue(t, projectId, ctx.userId, {
-      title: "Assigned Task",
-      assigneeId: assignee,
-    });
-    const issue2 = await createTestIssue(t, projectId, ctx.userId, {
-      title: "Unassigned Task",
+  it("should find issues assigned to specific user", async () => {
+    await createTestIssue(t, projectId, ctx.userId, { title: "My Issue", assigneeId: ctx.userId });
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "Other Issue",
+      assigneeId: otherUserId,
     });
 
-    // Search with assignee filter
     const result = await ctx.asUser.query(api.issues.queries.search, {
-      query: "Task",
+      query: "",
       projectId,
-      assigneeId: assignee,
-    });
-
-    expect(result.page).toHaveLength(1);
-    expect(result.page[0]._id).toBe(issue1);
-    expect(result.page[0].title).toBe("Assigned Task");
-  });
-
-  it("should filter by reporter in search index", async () => {
-    const reporter2 = await createTestUser(t);
-
-    // Issue reported by ctx.userId (default)
-    const issue1 = await createTestIssue(t, projectId, ctx.userId, {
-      title: "My Report",
-    });
-
-    // Issue reported by reporter2
-    const issue2 = await createTestIssue(t, projectId, reporter2, {
-      title: "Other Report",
-    });
-
-    // Search with reporter filter
-    const result = await ctx.asUser.query(api.issues.queries.search, {
-      query: "Report",
-      projectId,
-      reporterId: reporter2,
-    });
-
-    expect(result.page).toHaveLength(1);
-    expect(result.page[0]._id).toBe(issue2);
-    expect(result.page[0].title).toBe("Other Report");
-  });
-
-  it("should handle 'me' as assignee filter", async () => {
-    const issue1 = await createTestIssue(t, projectId, ctx.userId, {
-      title: "Assigned to Me",
       assigneeId: ctx.userId,
     });
-    const issue2 = await createTestIssue(t, projectId, ctx.userId, {
-      title: "Unassigned",
+
+    expect(result.page).toHaveLength(1);
+    expect(result.page[0].title).toBe("My Issue");
+  });
+
+  it("should find issues assigned to 'me'", async () => {
+    await createTestIssue(t, projectId, ctx.userId, { title: "My Issue", assigneeId: ctx.userId });
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "Other Issue",
+      assigneeId: otherUserId,
     });
 
     const result = await ctx.asUser.query(api.issues.queries.search, {
@@ -86,6 +56,83 @@ describe("issue search optimization", () => {
     });
 
     expect(result.page).toHaveLength(1);
-    expect(result.page[0]._id).toBe(issue1);
+    expect(result.page[0].title).toBe("My Issue");
+  });
+
+  it("should find unassigned issues", async () => {
+    await createTestIssue(t, projectId, ctx.userId, { title: "Unassigned Issue" });
+    await createTestIssue(t, projectId, ctx.userId, { title: "My Issue", assigneeId: ctx.userId });
+
+    const result = await ctx.asUser.query(api.issues.queries.search, {
+      query: "",
+      projectId,
+      assigneeId: "unassigned",
+    });
+
+    expect(result.page).toHaveLength(1);
+    expect(result.page[0].title).toBe("Unassigned Issue");
+  });
+
+  it("should combine assigneeId and status filters", async () => {
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "My Todo",
+      assigneeId: ctx.userId,
+      status: "todo",
+    });
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "My Done",
+      assigneeId: ctx.userId,
+      status: "done",
+    });
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "Other Todo",
+      assigneeId: otherUserId,
+      status: "todo",
+    });
+
+    const result = await ctx.asUser.query(api.issues.queries.search, {
+      query: "",
+      projectId,
+      assigneeId: ctx.userId,
+      status: ["todo"],
+    });
+
+    expect(result.page).toHaveLength(1);
+    expect(result.page[0].title).toBe("My Todo");
+  });
+
+  it("should return correct results when querying with status only", async () => {
+    await createTestIssue(t, projectId, ctx.userId, { status: "todo", title: "Todo 1" });
+    await createTestIssue(t, projectId, ctx.userId, {
+      status: "inprogress",
+      title: "In Progress 1",
+    });
+
+    const result = await ctx.asUser.query(api.issues.queries.search, {
+      query: "",
+      projectId,
+      status: ["todo"],
+    });
+
+    expect(result.page).toHaveLength(1);
+    expect(result.page[0].title).toBe("Todo 1");
+  });
+
+  it("should find issues reported by specific user", async () => {
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "Reported Issue",
+    });
+    await createTestIssue(t, projectId, otherUserId, {
+      title: "Other Issue",
+    });
+
+    const result = await ctx.asUser.query(api.issues.queries.search, {
+      query: "",
+      projectId,
+      reporterId: ctx.userId,
+    });
+
+    expect(result.page).toHaveLength(1);
+    expect(result.page[0].title).toBe("Reported Issue");
   });
 });

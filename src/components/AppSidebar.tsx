@@ -27,6 +27,7 @@ import {
   Server,
   Settings,
   ShieldCheck,
+  X,
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -155,6 +156,10 @@ export function AppSidebar() {
     closeMobile();
   };
 
+  // Determine if we should show the collapsed state
+  // On mobile (when open), we always want to show the expanded state
+  const showCollapsed = isCollapsed && !isMobileOpen;
+
   return (
     <TooltipProvider delayDuration={0}>
       {/* Mobile overlay - clickable to close sidebar */}
@@ -174,25 +179,28 @@ export function AppSidebar() {
           "bg-ui-bg-sidebar",
           "border-r border-ui-border",
           "transition-default",
-          isCollapsed ? "w-16" : "w-64",
+          // Force full width on mobile, respect collapse on desktop
+          isCollapsed ? "lg:w-16 w-64" : "w-64",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
         <Flex direction="column" className="h-full">
           {/* Header with organization name and collapse toggle */}
           <Flex align="center" justify="between" className="p-4 border-b border-ui-border">
-            {!isCollapsed && (
+            {!showCollapsed && (
               <Link to={ROUTES.dashboard.path} params={{ orgSlug }} onClick={handleNavClick}>
                 <Typography variant="large" className="truncate max-w-40">
                   {organizationName}
                 </Typography>
               </Link>
             )}
+
+            {/* Desktop Toggle Button */}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleCollapse}
-              className={cn("h-9 w-9", isCollapsed && "mx-auto")}
+              className={cn("hidden lg:flex h-9 w-9", showCollapsed && "mx-auto")}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
@@ -200,6 +208,17 @@ export function AppSidebar() {
               ) : (
                 <PanelLeftClose className="w-5 h-5" />
               )}
+            </Button>
+
+            {/* Mobile Close Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={closeMobile}
+              className="lg:hidden h-9 w-9 text-ui-text-secondary"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
             </Button>
           </Flex>
 
@@ -217,7 +236,7 @@ export function AppSidebar() {
                 icon={Home}
                 label="Dashboard"
                 isActive={isActive("/dashboard")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onClick={handleNavClick}
                 data-tour="nav-dashboard"
               />
@@ -228,7 +247,7 @@ export function AppSidebar() {
                 icon={ListIcon}
                 label="Issues"
                 isActive={isActive("/issues")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onClick={handleNavClick}
                 data-tour="nav-issues"
               />
@@ -240,14 +259,14 @@ export function AppSidebar() {
                   icon={Calendar}
                   label="General"
                   isActive={isActive("/calendar")}
-                  isCollapsed={isCollapsed}
+                  isCollapsed={showCollapsed}
                   onClick={handleNavClick}
                   data-tour="nav-calendar"
                 />
               )}
 
               {/* Products Section */}
-              {!isCollapsed && (
+              {!showCollapsed && (
                 <li className="list-none">
                   <Typography
                     variant="small"
@@ -265,7 +284,7 @@ export function AppSidebar() {
                 icon={Bot}
                 label="Assistant"
                 isActive={isActive("/assistant")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onClick={handleNavClick}
               />
               <NavItem
@@ -274,7 +293,7 @@ export function AppSidebar() {
                 icon={BarChart3}
                 label="Analytics"
                 isActive={isActive("/analytics")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onClick={handleNavClick}
               />
               <NavItem
@@ -283,7 +302,7 @@ export function AppSidebar() {
                 icon={ShieldCheck}
                 label="Authentication"
                 isActive={isActive("/authentication")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onClick={handleNavClick}
               />
               <NavItem
@@ -292,7 +311,7 @@ export function AppSidebar() {
                 icon={Server}
                 label="MCP Server"
                 isActive={isActive("/mcp-server")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onClick={handleNavClick}
               />
               <NavItem
@@ -301,7 +320,7 @@ export function AppSidebar() {
                 icon={Puzzle}
                 label="Add-ons"
                 isActive={isActive("/add-ons")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onClick={handleNavClick}
               />
               {/* Documents Section */}
@@ -311,7 +330,7 @@ export function AppSidebar() {
                 isExpanded={docsExpanded}
                 onToggle={() => setDocsExpanded(!docsExpanded)}
                 isActive={isActive("/documents")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onAdd={handleCreateDocument}
                 to={ROUTES.documents.list.path}
                 params={{ orgSlug }}
@@ -355,7 +374,7 @@ export function AppSidebar() {
                 isExpanded={workspacesExpanded}
                 onToggle={() => setWorkspacesExpanded(!workspacesExpanded)}
                 isActive={isActive("/workspaces")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onAdd={handleCreateWorkspace}
                 to={ROUTES.workspaces.list.path}
                 params={{ orgSlug }}
@@ -438,7 +457,7 @@ export function AppSidebar() {
                   icon={Clock}
                   label="Time Tracking"
                   isActive={isActive("/time-tracking")}
-                  isCollapsed={isCollapsed}
+                  isCollapsed={showCollapsed}
                   onClick={handleNavClick}
                   data-tour="nav-timesheet"
                 />
@@ -455,7 +474,7 @@ export function AppSidebar() {
                 icon={Settings}
                 label="Settings"
                 isActive={isActive("/settings")}
-                isCollapsed={isCollapsed}
+                isCollapsed={showCollapsed}
                 onClick={handleNavClick}
                 data-tour="nav-settings"
               />

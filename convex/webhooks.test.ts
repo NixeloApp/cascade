@@ -104,14 +104,20 @@ describe("Webhooks", () => {
 
       // Editor tries to create webhook - should be forbidden (requires admin)
       const asEditor = asAuthenticatedUser(t, editor);
-      await expect(async () => {
+
+      let error: any;
+      try {
         await asEditor.mutation(api.webhooks.createWebhook, {
           projectId,
           name: "Webhook",
           url: "https://example.com/hook",
           events: ["issue.created"],
         });
-      }).rejects.toThrow(/FORBIDDEN|admin/i);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/FORBIDDEN|admin/i);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -120,14 +126,19 @@ describe("Webhooks", () => {
       const userId = await createTestUser(t);
       const projectId = await createTestProject(t, userId);
 
-      await expect(async () => {
+      let error: any;
+      try {
         await t.mutation(api.webhooks.createWebhook, {
           projectId,
           name: "Webhook",
           url: "https://example.com/hook",
           events: ["issue.created"],
         });
-      }).rejects.toThrow("Not authenticated");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Not authenticated");
       await t.finishInProgressScheduledFunctions();
     });
   });
@@ -204,9 +215,15 @@ describe("Webhooks", () => {
 
       // Editor tries to list webhooks - should be forbidden (requires admin)
       const asEditor = asAuthenticatedUser(t, editor);
-      await expect(async () => {
+
+      let error: any;
+      try {
         await asEditor.query(api.webhooks.listByProject, { projectId });
-      }).rejects.toThrow(/FORBIDDEN|admin/i);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/FORBIDDEN|admin/i);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -215,9 +232,14 @@ describe("Webhooks", () => {
       const userId = await createTestUser(t);
       const projectId = await createTestProject(t, userId);
 
-      await expect(async () => {
+      let error: any;
+      try {
         await t.query(api.webhooks.listByProject, { projectId });
-      }).rejects.toThrow(/UNAUTHENTICATED|Not authenticated/i);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/UNAUTHENTICATED|Not authenticated/i);
       await t.finishInProgressScheduledFunctions();
     });
   });
@@ -353,12 +375,18 @@ describe("Webhooks", () => {
 
       // Editor tries to update - should be forbidden (requires admin)
       const asEditor = asAuthenticatedUser(t, editor);
-      await expect(async () => {
+
+      let error: any;
+      try {
         await asEditor.mutation(api.webhooks.updateWebhook, {
           id: webhookId,
           name: "Hacked",
         });
-      }).rejects.toThrow(/FORBIDDEN|admin/i);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/FORBIDDEN|admin/i);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -375,12 +403,17 @@ describe("Webhooks", () => {
         events: ["issue.created"],
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await t.mutation(api.webhooks.updateWebhook, {
           id: webhookId,
           name: "Hacked",
         });
-      }).rejects.toThrow("Not authenticated");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Not authenticated");
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -402,61 +435,108 @@ describe("Webhooks", () => {
         await ctx.db.delete(webhookId);
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await asUser.mutation(api.webhooks.updateWebhook, {
           id: webhookId,
           name: "Test",
+          url: "https://example.com/temp",
+          events: ["issue.created"],
         });
-      }).rejects.toThrow("Webhook not found");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Webhook not found");
       await t.finishInProgressScheduledFunctions();
     });
 
-    it("should reject invalid URLs (SSRF protection)", async () => {
+    it("should reject private IP addresses (SSRF protection)", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
 
-      // Private IP
-      await expect(async () => {
+      let error: any;
+      try {
         await asUser.mutation(api.webhooks.createWebhook, {
           projectId,
           name: "Hacker",
           url: "http://127.0.0.1/hack",
           events: ["issue.created"],
         });
-      }).rejects.toThrow("Private IP addresses are not allowed");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Private IP addresses are not allowed");
 
-      // Ambiguous IP (Integer)
-      await expect(async () => {
+      // Ensure transaction is cleaned up
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should reject ambiguous IP addresses (Integer IP)", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      let error: any;
+      try {
         await asUser.mutation(api.webhooks.createWebhook, {
           projectId,
           name: "Hacker 2",
           url: "http://2130706433/hack",
           events: ["issue.created"],
         });
-      }).rejects.toThrow(/Private IP|Ambiguous/);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/Private IP|Ambiguous/);
 
-      // Metadata IP
-      await expect(async () => {
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should reject metadata IP addresses", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      let error: any;
+      try {
         await asUser.mutation(api.webhooks.createWebhook, {
           projectId,
           name: "Hacker 3",
           url: "http://169.254.169.254/latest/meta-data",
           events: ["issue.created"],
         });
-      }).rejects.toThrow("Private IP addresses are not allowed");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Private IP addresses are not allowed");
 
-      // Valid URL should work
-      await expect(async () => {
-        await asUser.mutation(api.webhooks.createWebhook, {
-          projectId,
-          name: "Valid",
-          url: "https://example.com/webhook",
-          events: ["issue.created"],
-        });
-      }).not.toThrow();
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should accept valid public URLs", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+
+      await asUser.mutation(api.webhooks.createWebhook, {
+        projectId,
+        name: "Valid",
+        url: "https://example.com/webhook",
+        events: ["issue.created"],
+      });
 
       await t.finishInProgressScheduledFunctions();
     });
@@ -477,7 +557,8 @@ describe("Webhooks", () => {
         events: ["issue.created"],
       });
 
-      await asUser.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
+      const result = await asUser.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const webhook = await t.run(async (ctx) => {
         return await ctx.db.get(webhookId);
@@ -519,9 +600,15 @@ describe("Webhooks", () => {
 
       // Editor tries to delete - should be forbidden (requires admin)
       const asEditor = asAuthenticatedUser(t, editor);
-      await expect(async () => {
+
+      let error: any;
+      try {
         await asEditor.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
-      }).rejects.toThrow(/FORBIDDEN|admin/i);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/FORBIDDEN|admin/i);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -538,9 +625,14 @@ describe("Webhooks", () => {
         events: ["issue.created"],
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await t.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
-      }).rejects.toThrow("Not authenticated");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Not authenticated");
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -562,9 +654,14 @@ describe("Webhooks", () => {
         await ctx.db.delete(webhookId);
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await asUser.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
-      }).rejects.toThrow("Webhook not found");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Webhook not found");
       await t.finishInProgressScheduledFunctions();
     });
   });
@@ -631,18 +728,16 @@ describe("Webhooks", () => {
 
       // Create multiple execution logs
       await t.run(async (ctx) => {
-        await Promise.all(
-          Array.from({ length: 10 }, (_, i) =>
-            ctx.db.insert("webhookExecutions", {
-              webhookId,
-              event: "issue.created",
-              requestPayload: `{"index": ${i}}`,
-              status: "success",
-              attempts: 1,
-              completedAt: Date.now(),
-            }),
-          ),
-        );
+        for (let i = 0; i < 10; i++) {
+          await ctx.db.insert("webhookExecutions", {
+            webhookId,
+            event: "issue.created",
+            requestPayload: `{"index": ${i}}`,
+            status: "success",
+            attempts: 1,
+            completedAt: Date.now(),
+          });
+        }
       });
 
       const executions = await asUser.query(api.webhooks.listExecutions, {
@@ -686,12 +781,18 @@ describe("Webhooks", () => {
 
       // Editor tries to view executions - should be forbidden (requires admin)
       const asEditor = asAuthenticatedUser(t, editor);
-      await expect(async () => {
+
+      let error: any;
+      try {
         await asEditor.query(api.webhooks.listExecutions, {
           webhookId,
           paginationOpts: { numItems: 20, cursor: null },
         });
-      }).rejects.toThrow(/FORBIDDEN|admin/i);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/FORBIDDEN|admin/i);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -708,12 +809,17 @@ describe("Webhooks", () => {
         events: ["issue.created"],
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await t.query(api.webhooks.listExecutions, {
           webhookId,
           paginationOpts: { numItems: 20, cursor: null },
         });
-      }).rejects.toThrow("Not authenticated");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Not authenticated");
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -735,12 +841,17 @@ describe("Webhooks", () => {
         await ctx.db.delete(webhookId);
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await asUser.query(api.webhooks.listExecutions, {
           webhookId,
           paginationOpts: { numItems: 20, cursor: null },
         });
-      }).rejects.toThrow("Webhook not found");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Webhook not found");
       await t.finishInProgressScheduledFunctions();
     });
   });
@@ -809,9 +920,15 @@ describe("Webhooks", () => {
 
       // Editor tries to test webhook - should be forbidden (requires admin)
       const asEditor = asAuthenticatedUser(t, editor);
-      await expect(async () => {
+
+      let error: any;
+      try {
         await asEditor.mutation(api.webhooks.test, { id: webhookId });
-      }).rejects.toThrow(/FORBIDDEN|admin/i);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/FORBIDDEN|admin/i);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -828,9 +945,14 @@ describe("Webhooks", () => {
         events: ["issue.created"],
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await t.mutation(api.webhooks.test, { id: webhookId });
-      }).rejects.toThrow("Not authenticated");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Not authenticated");
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -852,9 +974,14 @@ describe("Webhooks", () => {
         await ctx.db.delete(webhookId);
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await asUser.mutation(api.webhooks.test, { id: webhookId });
-      }).rejects.toThrow("Webhook not found");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Webhook not found");
       await t.finishInProgressScheduledFunctions();
     });
   });
@@ -947,9 +1074,15 @@ describe("Webhooks", () => {
 
       // Editor tries to retry - should be forbidden (requires admin)
       const asEditor = asAuthenticatedUser(t, editor);
-      await expect(async () => {
+
+      let error: any;
+      try {
         await asEditor.mutation(api.webhooks.retryExecution, { id: executionId });
-      }).rejects.toThrow(/FORBIDDEN|admin/i);
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch(/FORBIDDEN|admin/i);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -976,9 +1109,14 @@ describe("Webhooks", () => {
         });
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await t.mutation(api.webhooks.retryExecution, { id: executionId });
-      }).rejects.toThrow("Not authenticated");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Not authenticated");
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -1010,9 +1148,14 @@ describe("Webhooks", () => {
         await ctx.db.delete(executionId);
       });
 
-      await expect(async () => {
+      let error: any;
+      try {
         await asUser.mutation(api.webhooks.retryExecution, { id: executionId });
-      }).rejects.toThrow("Execution not found");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toMatch("Execution not found");
       await t.finishInProgressScheduledFunctions();
     });
   });

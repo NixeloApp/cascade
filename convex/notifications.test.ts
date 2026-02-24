@@ -40,17 +40,15 @@ describe("Notifications", () => {
 
       // Create multiple notifications
       await t.run(async (ctx) => {
-        await Promise.all(
-          Array.from({ length: 10 }, (_, i) =>
-            ctx.db.insert("notifications", {
-              userId,
-              type: "test",
-              title: `Notification ${i}`,
-              message: "Test notification",
-              isRead: false,
-            }),
-          ),
-        );
+        for (let i = 0; i < 10; i++) {
+          await ctx.db.insert("notifications", {
+            userId,
+            type: "test",
+            title: `Notification ${i}`,
+            message: "Test notification",
+            isRead: false,
+          });
+        }
       });
 
       const asUser = asAuthenticatedUser(t, userId);
@@ -193,8 +191,39 @@ describe("Notifications", () => {
 
       // Create unread notifications
       await t.run(async (ctx) => {
-        await Promise.all([
-          ...Array.from({ length: 3 }, (_, i) =>
+        for (let i = 0; i < 3; i++) {
+          await ctx.db.insert("notifications", {
+            userId,
+            type: "test",
+            title: `Unread ${i}`,
+            message: "Test",
+            isRead: false,
+          });
+        }
+        // Create read notification
+        await ctx.db.insert("notifications", {
+          userId,
+          type: "test",
+          title: "Read",
+          message: "Test",
+          isRead: true,
+        });
+      });
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const count = await asUser.query(api.notifications.getUnreadCount, {});
+
+      expect(count).toBe(3);
+    });
+
+    it("should cap count at MAX_UNREAD_COUNT", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+
+      // Create 105 unread notifications
+      await t.run(async (ctx) => {
+        await Promise.all(
+          Array.from({ length: 105 }).map((_, i) =>
             ctx.db.insert("notifications", {
               userId,
               type: "test",
@@ -203,21 +232,13 @@ describe("Notifications", () => {
               isRead: false,
             }),
           ),
-          // Create read notification
-          ctx.db.insert("notifications", {
-            userId,
-            type: "test",
-            title: "Read",
-            message: "Test",
-            isRead: true,
-          }),
-        ]);
+        );
       });
 
       const asUser = asAuthenticatedUser(t, userId);
       const count = await asUser.query(api.notifications.getUnreadCount, {});
 
-      expect(count).toBe(3);
+      expect(count).toBe(100);
     });
 
     it("should return zero for user with no notifications", async () => {
@@ -340,17 +361,15 @@ describe("Notifications", () => {
 
       // Create multiple unread notifications
       await t.run(async (ctx) => {
-        await Promise.all(
-          Array.from({ length: 3 }, (_, i) =>
-            ctx.db.insert("notifications", {
-              userId,
-              type: "test",
-              title: `Test ${i}`,
-              message: "Test",
-              isRead: false,
-            }),
-          ),
-        );
+        for (let i = 0; i < 3; i++) {
+          await ctx.db.insert("notifications", {
+            userId,
+            type: "test",
+            title: `Test ${i}`,
+            message: "Test",
+            isRead: false,
+          });
+        }
       });
 
       const asUser = asAuthenticatedUser(t, userId);
@@ -454,7 +473,10 @@ describe("Notifications", () => {
       });
 
       const asUser = asAuthenticatedUser(t, userId);
-      await asUser.mutation(api.notifications.softDeleteNotification, { id: notificationId });
+      const result = await asUser.mutation(api.notifications.softDeleteNotification, {
+        id: notificationId,
+      });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const notification = await t.run(async (ctx) => {
         return await ctx.db.get(notificationId);

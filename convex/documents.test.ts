@@ -432,10 +432,31 @@ describe("Documents", () => {
         organizationId,
       });
 
-      await asUser.mutation(api.documents.deleteDocument, { id: docId });
+      const result = await asUser.mutation(api.documents.deleteDocument, { id: docId });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc).toBeNull();
+    });
+
+    it("should allow owner to restore document", async () => {
+      const t = convexTest(schema, modules);
+      const { organizationId, asUser } = await createTestContext(t);
+
+      const { documentId: docId } = await asUser.mutation(api.documents.create, {
+        title: "To Restore",
+        isPublic: false,
+        organizationId,
+      });
+
+      await asUser.mutation(api.documents.deleteDocument, { id: docId });
+
+      const result = await asUser.mutation(api.documents.restoreDocument, { id: docId });
+      expect(result).toEqual({ success: true, restored: true });
+
+      const doc = await asUser.query(api.documents.getDocument, { id: docId });
+      expect(doc?.title).toBe("To Restore");
+      expect(doc?.isDeleted).toBeUndefined();
     });
 
     it("should deny non-owners from deleting", async () => {

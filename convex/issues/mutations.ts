@@ -1,5 +1,5 @@
 import { type Infer, v } from "convex/values";
-import { asyncMap, pruneNull } from "convex-helpers";
+import { asyncMap } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -11,7 +11,7 @@ import {
 import { validate } from "../lib/constrainedValidators";
 import { conflict, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
-import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
+import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { enforceRateLimit } from "../rateLimits";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
@@ -20,9 +20,11 @@ import {
   getMaxOrderForStatus,
   getNextVersion,
   getSearchContent,
+  type IssueActivityAction,
   issueKeyExists,
+  performBulkUpdate,
   processIssueUpdates,
-  validateAssignee,
+  resolveLabelNames,
   validateParentIssue,
 } from "./helpers";
 
@@ -81,9 +83,6 @@ async function createIssueImpl(
   // Validate parent/epic constraints
   const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
 
-  // Validate assignee access
-  await validateAssignee(ctx, ctx.projectId, args.assigneeId);
-
   // Generate issue key with duplicate detection
   let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
 
@@ -95,11 +94,7 @@ async function createIssueImpl(
   const defaultStatus = ctx.project.workflowStates[0]?.id || "todo";
   const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
 
-  let labelNames: string[] = [];
-  if (args.labels && args.labels.length > 0) {
-    const labels = await asyncMap(args.labels, (id) => ctx.db.get(id));
-    labelNames = pruneNull(labels).map((l) => l.name);
-  }
+  const labelNames = await resolveLabelNames(ctx, args.labels);
 
   const now = Date.now();
   const issueId = await ctx.db.insert("issues", {
@@ -281,9 +276,6 @@ export const update = issueMutation({
     // Verify optimistic lock - throws conflict error if version mismatch
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
 
-    // Validate assignee access
-    await validateAssignee(ctx, ctx.issue.projectId, args.assigneeId);
-
     const _now = Date.now();
     const changes: Array<{
       field: string;
@@ -450,72 +442,6 @@ export const addComment = issueViewerMutation({
  * @param newStatus - The ID of the new status (workflow state).
  * @returns Object containing the number of updated issues.
  */
-// Activity action types for type safety
-type IssueActivityAction =
-  | "created"
-  | "updated"
-  | "archived"
-  | "restored"
-  | "deleted"
-  | "commented";
-
-// Helper for bulk updates to reduce code duplication
-async function performBulkUpdate(
-  ctx: MutationCtx & { userId: Id<"users"> },
-  issueIds: Id<"issues">[],
-  getUpdate: (
-    issue: Doc<"issues">,
-    now: number,
-  ) => Promise<{
-    patch: Partial<Doc<"issues">>;
-    activity?: {
-      action: IssueActivityAction;
-      field?: string;
-      oldValue?: string;
-      newValue?: string;
-    };
-  } | null>,
-  checkPermission: (
-    ctx: MutationCtx,
-    projectId: Id<"projects">,
-    userId: Id<"users">,
-  ) => Promise<void> = assertCanEditProject,
-) {
-  const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
-  const now = Date.now();
-
-  const results = await Promise.all(
-    issues.map(async (issue) => {
-      if (!issue || issue.isDeleted) return 0;
-
-      try {
-        await checkPermission(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        return 0;
-      }
-
-      const update = await getUpdate(issue, now);
-      if (!update) return 0;
-
-      await ctx.db.patch(issue._id, {
-        ...update.patch,
-        updatedAt: now,
-      });
-
-      if (update.activity) {
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
-          ...update.activity,
-        });
-      }
-
-      return 1;
-    }),
-  );
-
-  return { updated: results.reduce((a: number, b) => a + b, 0) };
-}
 
 /**
  * Bulk update the status of multiple issues.
@@ -622,9 +548,6 @@ export const bulkAssign = authenticatedMutation({
   },
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
-      // Validate assignee access
-      await validateAssignee(ctx, issue.projectId, args.assigneeId);
-
       return {
         patch: { assigneeId: args.assigneeId ?? undefined },
         activity: {
@@ -756,6 +679,7 @@ export const bulkDelete = authenticatedMutation({
  */
 export const archive = issueMutation({
   args: {},
+  returns: v.object({ success: v.boolean(), archived: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
 
@@ -784,7 +708,7 @@ export const archive = issueMutation({
       action: "archived",
     });
 
-    return { success: true };
+    return { success: true, archived: true };
   },
 });
 
@@ -793,6 +717,7 @@ export const archive = issueMutation({
  */
 export const restore = issueMutation({
   args: {},
+  returns: v.object({ success: v.boolean(), restored: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
 
@@ -815,7 +740,7 @@ export const restore = issueMutation({
       action: "restored",
     });
 
-    return { success: true };
+    return { success: true, restored: true };
   },
 });
 

@@ -530,6 +530,8 @@ const applicationTables = {
     parentId: v.optional(v.id("documentComments")),
     // Soft delete
     isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
   })
     .index("by_document", ["documentId"])
     .index("by_author", ["authorId"])
@@ -1729,6 +1731,7 @@ export default defineSchema({
     twoFactorSecret: v.optional(v.string()),
     twoFactorBackupCodes: v.optional(v.array(v.string())),
     twoFactorVerifiedAt: v.optional(v.number()),
+    twoFactorLastUsedTime: v.optional(v.number()),
     // 2FA rate limiting
     twoFactorFailedAttempts: v.optional(v.number()),
     twoFactorLockedUntil: v.optional(v.number()),

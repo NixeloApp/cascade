@@ -10,6 +10,7 @@ import {
 import { getErrorMessage, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
+import { logger } from "../lib/logger";
 import { HOUR, SECOND } from "../lib/timeUtils";
 
 /** Error thrown when an HTTP request returns a non-OK status */
@@ -75,13 +76,13 @@ function validateE2EApiKey(request: Request): boolean {
     if (isLocalhost()) {
       return true;
     }
-    console.warn("[SECURITY] TEST_* code attempted but E2E_API_KEY not configured");
+    logger.warn("[SECURITY] TEST_* code attempted but E2E_API_KEY not configured");
     return false;
   }
 
   const providedKey = request.headers.get("x-e2e-api-key");
   if (!providedKey || !constantTimeEqual(providedKey, apiKey)) {
-    console.warn("[SECURITY] TEST_* code with invalid/missing E2E API key");
+    logger.warn("[SECURITY] TEST_* code with invalid/missing E2E API key");
     return false;
   }
 
@@ -119,7 +120,7 @@ function handleTestCode(
   // Only create test emails (auto-cleaned by cron)
   const email = `test-oauth-${scenario}-${timestamp}@inbox.mailtrap.io`;
 
-  console.log(`[E2E] Processing TEST_* OAuth code for scenario: ${scenario}, email: ${email}`);
+  logger.info(`[E2E] Processing TEST_* OAuth code for scenario: ${scenario}, email: ${email}`);
 
   return {
     email,
@@ -468,7 +469,7 @@ export const handleCallbackHandler = async (
     try {
       result = await exchangeCodeForTokens(code);
     } catch (error) {
-      console.error(error);
+      logger.error("Failed to exchange code for tokens", { error });
       return new Response(errorPageHtml, {
         status: 500,
         headers: {
