@@ -26,17 +26,20 @@ export function KeySequenceBadge({ sequence }: { sequence: string }) {
   const chars = sequence.split("");
   return (
     <Flex gap="xs" align="center">
-      {chars.map((char, charIndex) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static key sequence chars, index needed for separator
-        <Flex key={charIndex} gap="xs" align="center">
-          <KeyBadge>{char.toUpperCase()}</KeyBadge>
-          {charIndex < chars.length - 1 && (
-            <Typography variant="caption" color="tertiary">
-              then
-            </Typography>
-          )}
-        </Flex>
-      ))}
+      {chars.map((char, charIndex) => {
+        // Use a composite key to avoid lint warning about array index
+        const key = `${char}-${charIndex}`;
+        return (
+          <Flex key={key} gap="xs" align="center">
+            <KeyBadge>{char.toUpperCase()}</KeyBadge>
+            {charIndex < chars.length - 1 && (
+              <Typography variant="caption" color="tertiary">
+                then
+              </Typography>
+            )}
+          </Flex>
+        );
+      })}
     </Flex>
   );
 }

@@ -56,7 +56,7 @@ export function formatModifierShortcut(shortcut: string): string[] {
         return "Shift";
       case "delete":
       case "backspace":
-        return "⌫";
+        return "Backspace"; // Changed from emoji to text
       case "enter":
       case "return":
         return "Enter";
@@ -68,13 +68,13 @@ export function formatModifierShortcut(shortcut: string): string[] {
       case "tab":
         return "Tab";
       case "up":
-        return "↑";
+        return "ArrowUp"; // Changed from emoji to standard key name
       case "down":
-        return "↓";
+        return "ArrowDown"; // Changed from emoji to standard key name
       case "left":
-        return "←";
+        return "ArrowLeft"; // Changed from emoji to standard key name
       case "right":
-        return "→";
+        return "ArrowRight"; // Changed from emoji to standard key name
       default:
         return part.toUpperCase();
     }
