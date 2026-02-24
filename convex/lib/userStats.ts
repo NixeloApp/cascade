@@ -56,7 +56,8 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
   return await efficientCount(
     ctx.db
       .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true)),
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
+      .filter(notDeleted),
     MAX_ISSUES_FOR_STATS,
   );
 }
@@ -91,8 +92,9 @@ async function countIssuesByReporterFast(
       ctx.db
         .query("issues")
         .withIndex("by_project_reporter", (q) =>
-          q.eq("projectId", projectId).eq("reporterId", reporterId).lt("isDeleted", true),
-        ),
+          q.eq("projectId", projectId).eq("reporterId", reporterId),
+        )
+        .filter(notDeleted),
   );
   return Math.min(count, MAX_ISSUES_FOR_STATS);
 }
@@ -109,7 +111,8 @@ async function countIssuesByReporterFiltered(
   return await efficientCount(
     ctx.db
       .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true))
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
+      .filter(notDeleted)
       .filter((q) => isAllowedProject(q, projectIds)),
     MAX_ISSUES_FOR_STATS,
   );
@@ -147,15 +150,17 @@ async function countIssuesByAssigneeUnrestricted(ctx: QueryCtx, assigneeId: Id<"
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true)),
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
+        .filter(notDeleted),
       MAX_ISSUES_FOR_STATS,
     ),
     efficientCount(
       ctx.db
         .query("issues")
         .withIndex("by_assignee_status", (q) =>
-          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
-        ),
+          q.eq("assigneeId", assigneeId).eq("status", "done"),
+        )
+        .filter(notDeleted),
       MAX_ISSUES_FOR_STATS,
     ),
   ]);
@@ -179,8 +184,9 @@ async function countIssuesByAssigneeFast(
       ctx.db
         .query("issues")
         .withIndex("by_project_assignee", (q) =>
-          q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
-        ),
+          q.eq("projectId", projectId).eq("assigneeId", assigneeId),
+        )
+        .filter(notDeleted),
     ),
     // 2. Completed: Parallel efficient counts on by_project_assignee_status index
     // This uses a direct index lookup for done issues in the project, avoiding scanning
@@ -189,12 +195,9 @@ async function countIssuesByAssigneeFast(
       ctx.db
         .query("issues")
         .withIndex("by_project_assignee_status", (q) =>
-          q
-            .eq("projectId", projectId)
-            .eq("assigneeId", assigneeId)
-            .eq("status", "done")
-            .lt("isDeleted", true),
-        ),
+          q.eq("projectId", projectId).eq("assigneeId", assigneeId).eq("status", "done"),
+        )
+        .filter(notDeleted),
     ),
   ]);
 
@@ -214,7 +217,8 @@ async function countIssuesByAssigneeFiltered(
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true))
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
+        .filter(notDeleted)
         .filter((q) => isAllowedProject(q, projectIds)),
       MAX_ISSUES_FOR_STATS,
     ),
@@ -222,8 +226,9 @@ async function countIssuesByAssigneeFiltered(
       ctx.db
         .query("issues")
         .withIndex("by_assignee_status", (q) =>
-          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+          q.eq("assigneeId", assigneeId).eq("status", "done"),
         )
+        .filter(notDeleted)
         .filter((q) => isAllowedProject(q, projectIds)),
       MAX_ISSUES_FOR_STATS,
     ),
@@ -263,7 +268,8 @@ async function countCommentsUnrestricted(ctx: QueryCtx, userId: Id<"users">) {
   return await efficientCount(
     ctx.db
       .query("issueComments")
-      .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true)),
+      .withIndex("by_author", (q) => q.eq("authorId", userId))
+      .filter(notDeleted),
     MAX_COMMENTS_FOR_STATS,
   );
 }
@@ -279,7 +285,8 @@ async function countCommentsFiltered(
 ) {
   const commentsAll = await ctx.db
     .query("issueComments")
-    .withIndex("by_author", (q) => q.eq("authorId", userId).lt("isDeleted", true))
+    .withIndex("by_author", (q) => q.eq("authorId", userId))
+    .filter(notDeleted)
     .order("desc") // Optimization: Count recent comments first
     .take(MAX_COMMENTS_FOR_STATS);
 
@@ -328,7 +335,8 @@ async function countProjectsUnrestricted(ctx: QueryCtx, userId: Id<"users">) {
   return await efficientCount(
     ctx.db
       .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId).lt("isDeleted", true)),
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter(notDeleted),
     MAX_PROJECTS_FOR_STATS, // Optimization: Allow counting up to 500 projects (was 100)
   );
 }
@@ -368,7 +376,8 @@ async function countProjectsFiltered(
 ) {
   const projectMembershipsAll = await ctx.db
     .query("projectMembers")
-    .withIndex("by_user", (q) => q.eq("userId", userId).lt("isDeleted", true))
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter(notDeleted)
     .take(MAX_PROJECTS_FOR_STATS); // Optimization: Allow counting up to 500 projects (was 100)
 
   return projectMembershipsAll.filter((m) => allowedProjectIds.has(m.projectId)).length;
@@ -418,7 +427,8 @@ export async function collectUserStats(
   if (viewerId !== targetUserId) {
     const myMemberships = await ctx.db
       .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", viewerId).lt("isDeleted", true))
+      .withIndex("by_user", (q) => q.eq("userId", viewerId))
+      .filter(notDeleted)
       .take(MAX_PROJECTS_FOR_STATS); // Optimization: Use higher limit for finding shared projects
     allowedProjectIds = new Set(myMemberships.map((m) => m.projectId));
   }

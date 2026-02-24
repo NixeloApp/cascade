@@ -514,7 +514,8 @@ export const getTeams = authenticatedQuery({
     const memberCountsPromises = teamIds.map(async (teamId) => {
       return await ctx.db
         .query("teamMembers")
-        .withIndex("by_team", (q) => q.eq("teamId", teamId).lt("isDeleted", true))
+        .withIndex("by_team", (q) => q.eq("teamId", teamId))
+        .filter(notDeleted)
         .take(MAX_TEAM_MEMBERS)
         .then((m) => m.length);
     });
@@ -598,7 +599,8 @@ export const getOrganizationTeams = organizationQuery({
         teamIds.map((teamId) =>
           ctx.db
             .query("teamMembers")
-            .withIndex("by_team", (q) => q.eq("teamId", teamId).lt("isDeleted", true))
+            .withIndex("by_team", (q) => q.eq("teamId", teamId))
+            .filter(notDeleted)
             .take(MAX_TEAM_MEMBERS),
         ),
       ),
@@ -675,7 +677,8 @@ export const getUserTeams = authenticatedQuery({
         teamIds.map((teamId) =>
           ctx.db
             .query("teamMembers")
-            .withIndex("by_team", (q) => q.eq("teamId", teamId).lt("isDeleted", true))
+            .withIndex("by_team", (q) => q.eq("teamId", teamId))
+            .filter(notDeleted)
             .take(MAX_TEAM_MEMBERS),
         ),
       ),
@@ -732,7 +735,8 @@ export const getTeamMembers = teamQuery({
 
     const memberships = await ctx.db
       .query("teamMembers")
-      .withIndex("by_team", (q) => q.eq("teamId", ctx.teamId).lt("isDeleted", true))
+      .withIndex("by_team", (q) => q.eq("teamId", ctx.teamId))
+      .filter(notDeleted)
       .take(MAX_TEAM_MEMBERS);
 
     // Batch fetch all users (both members and addedBy) (avoid N+1!)

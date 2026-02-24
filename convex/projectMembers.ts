@@ -14,7 +14,8 @@ export const list = authenticatedQuery({
 
     const members = await ctx.db
       .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId).lt("isDeleted", true))
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter(notDeleted)
       .take(MAX_TEAM_MEMBERS);
 
     // Batch fetch all users (avoid N+1)

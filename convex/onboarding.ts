@@ -97,8 +97,9 @@ export const hasCompletedIssue = authenticatedQuery({
         ctx.db
           .query("issues")
           .withIndex("by_project_status", (q) =>
-            q.eq("projectId", projectId).eq("status", stateId).lt("isDeleted", true),
+            q.eq("projectId", projectId).eq("status", stateId),
           )
+          .filter(notDeleted)
           .first(),
       ),
     );

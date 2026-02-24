@@ -7,6 +7,7 @@ import type { Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
+import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY } from "./lib/timeUtils";
 
 // Helper: Build issues by status from workflow states and counts
@@ -54,9 +55,8 @@ export const getProjectAnalytics = projectQuery({
     // Optimization: Use by_project_deleted to skip deleted issues efficiently in the index scan
     const issues = await ctx.db
       .query("issues")
-      .withIndex("by_project_deleted", (q) =>
-        q.eq("projectId", ctx.projectId).lt("isDeleted", true),
-      )
+      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
+      .filter(notDeleted)
       .take(MAX_SPRINT_ISSUES);
 
     // Count by status
@@ -130,7 +130,8 @@ export const getSprintBurndown = sprintQuery({
     // Optimization: Use index range to skip deleted issues
     const sprintIssues = await ctx.db
       .query("issues")
-      .withIndex("by_sprint", (q) => q.eq("sprintId", ctx.sprint._id).lt("isDeleted", true))
+      .withIndex("by_sprint", (q) => q.eq("sprintId", ctx.sprint._id))
+      .filter(notDeleted)
       .take(MAX_SPRINT_ISSUES);
 
     // Calculate total points (using storyPoints, fallback to estimatedHours)
@@ -218,7 +219,8 @@ export const getTeamVelocity = projectQuery({
       sprintIds.map((sprintId) =>
         ctx.db
           .query("issues")
-          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true))
+          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
+          .filter(notDeleted)
           .take(MAX_SPRINT_ISSUES),
       ),
     );
