@@ -44,11 +44,8 @@ export function FocusZone({ task }: FocusZoneProps) {
       <Card
         hoverable
         onClick={handleClick}
-        onKeyDown={(e) => e.key === "Enter" && handleClick()}
-        tabIndex={0}
-        role="button"
         aria-label={`Focus task: ${task.title}`}
-        className="group relative overflow-hidden hover:shadow-card-hover transition-shadow"
+        className="group relative overflow-hidden"
       >
         {/* Brand left border accent */}
         <div className="absolute left-0 top-0 h-full w-1 bg-brand" />

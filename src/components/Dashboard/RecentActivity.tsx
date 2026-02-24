@@ -44,7 +44,7 @@ const _getActionBadgeVariant = (action: string): "success" | "info" | "warning" 
  */
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <Card className="hover:shadow-card-hover transition-shadow">
+    <Card hoverable>
       <CardHeader title="Feed" description="Latest updates across all projects" />
       <CardBody>
         {!activities ? (

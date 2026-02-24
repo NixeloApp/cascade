@@ -4,6 +4,7 @@ import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ANIMATION } from "@/lib/constants";
@@ -153,14 +154,13 @@ const CollapsedColumn = memo(
       }}
     >
       <Tooltip content={`Expand ${state.name}`}>
-        <button
-          type="button"
+        <IconButton
           onClick={onToggleCollapse}
-          className="p-2 text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover rounded-secondary transition-fast mt-2"
+          className="mt-2"
           aria-label={`Expand ${state.name} column`}
         >
           <Maximize2 className="w-4 h-4" />
-        </button>
+        </IconButton>
       </Tooltip>
       <div
         className="flex-1 flex items-center justify-center py-4"
@@ -245,27 +245,20 @@ const ColumnHeader = memo(
         <Flex align="center" gap="xs">
           {onToggleCollapse && (
             <Tooltip content={`Collapse ${state.name}`}>
-              <button
-                type="button"
-                onClick={onToggleCollapse}
-                className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2 shrink-0 rounded-secondary transition-fast"
-                aria-label={`Collapse ${state.name} column`}
-              >
+              <IconButton onClick={onToggleCollapse} aria-label={`Collapse ${state.name} column`}>
                 <Minimize2 className="w-3.5 h-3.5" />
-              </button>
+              </IconButton>
             </Tooltip>
           )}
           {canEdit && onCreateIssue && (
             <Tooltip content="Create issue">
-              <button
-                type="button"
+              <IconButton
                 onClick={onCreateIssue}
-                className="text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover p-2.5 sm:p-3 shrink-0 rounded-secondary transition-fast"
                 aria-label={`Add issue to ${state.name}`}
                 {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
               >
                 <Plus className="w-4 h-4" />
-              </button>
+              </IconButton>
             </Tooltip>
           )}
         </Flex>

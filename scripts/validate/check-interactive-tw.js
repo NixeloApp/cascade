@@ -14,8 +14,10 @@ import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Files allowed to have interactive variants (for gradual migration)
-// Remove files from this list as they get migrated to CVA
-// TODO: Create shared CVA components and migrate these files
+// Remove files from this list as they get migrated to proper CVA components:
+// - Use IconButton for icon-only buttons
+// - Use Button variants (ghost, secondary) for text buttons
+// - Use Card with hoverable prop for cards
 const ALLOWED_FILES = [
   // Kanban board - complex interactive states
   "Kanban/",

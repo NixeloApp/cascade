@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -12,7 +13,6 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Folder } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 
 // Type helper for paginated queries with custom return types
 type PaginatedQuery = FunctionReference<"query", "public">;
@@ -66,13 +66,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
               params={{ orgSlug, key: project.key }}
               className="group"
             >
-              <div
-                className={cn(
-                  "card-subtle p-6 cursor-pointer",
-                  "transform transition-all duration-200",
-                  "hover:scale-[var(--scale-hover-subtle)]",
-                )}
-              >
+              <Card hoverable padding="lg">
                 <Flex direction="column" gap="md">
                   {/* Project header with avatar and key */}
                   <Flex justify="between" align="start" gap="md">
@@ -81,14 +75,11 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
                       <Flex
                         align="center"
                         justify="center"
-                        className="w-10 h-10 rounded-lg bg-brand/10 text-brand font-semibold text-sm shrink-0 ring-1 ring-brand/20 group-hover:ring-brand/40 transition-all"
+                        className="w-10 h-10 rounded-lg bg-brand/10 text-brand font-semibold text-sm shrink-0 ring-1 ring-brand/20 transition-all"
                       >
                         {project.key.substring(0, 2).toUpperCase()}
                       </Flex>
-                      <Typography
-                        variant="h3"
-                        className="tracking-tight group-hover:text-brand transition-colors"
-                      >
+                      <Typography variant="h3" className="tracking-tight">
                         {project.name}
                       </Typography>
                     </Flex>
@@ -112,7 +103,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
                     </MetadataItem>
                   </Metadata>
                 </Flex>
-              </div>
+              </Card>
             </Link>
           ))}
         </Grid>
