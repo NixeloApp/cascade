@@ -137,10 +137,16 @@ export function CreateIssueModal({
           description: value.description?.trim() || undefined,
           type: value.type,
           priority: value.priority,
+<<<<<<< HEAD
           assigneeId:
             value.assigneeId && value.assigneeId !== "unassigned"
               ? (value.assigneeId as Id<"users">)
               : undefined,
+=======
+          assigneeId: (value.assigneeId && value.assigneeId !== "__unassigned__"
+            ? value.assigneeId
+            : undefined) as Id<"users"> | undefined,
+>>>>>>> b1f6d8e3 (fix: use non-empty value for Radix Select Unassigned option)
           sprintId,
           labels: selectedLabels.length > 0 ? selectedLabels : undefined,
           storyPoints: value.storyPoints ? Number.parseFloat(value.storyPoints) : undefined,
