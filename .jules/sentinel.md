@@ -145,3 +145,8 @@
 **Vulnerability:** The `computeProjectAccess` logic granted admin access to a project solely based on the user being the `ownerId` or `createdBy`, bypassing organization membership checks. This allowed a user who was removed from an organization to retain full admin access to projects they had created within that organization.
 **Learning:** Ownership of a child resource (Project) should not supersede membership in the parent container (Organization). Access control logic must verify parent container membership before granting any privileges based on child resource attributes.
 **Prevention:** Updated `computeProjectAccessImpl` in `convex/projectAccess.ts` to explicitly verify organization membership using `getOrganizationRole` before granting admin access to project owners or creators.
+
+## 2026-03-10 - Unauthorized Project Access in AI Features
+**Vulnerability:** Publicly exposed AI mutations (`createChat`, `createSuggestion`) and queries (`getProjectSuggestions`) allowed any authenticated user to create or read data associated with any project by guessing its ID, bypassing project membership checks.
+**Learning:** `authenticatedMutation` / `authenticatedQuery` only verifies *authentication* (user is logged in), not *authorization* (user has permission for specific resource). When a mutation takes a resource ID (like `projectId`) as an argument, it must explicitly verify the caller's access to that resource.
+**Prevention:** Added `assertCanAccessProject` and `assertCanEditProject` checks to all AI mutations and queries that accept a `projectId` or operate on project-linked data.
