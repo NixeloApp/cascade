@@ -134,8 +134,10 @@ describe("Two Factor Authentication", () => {
     const setupCode = await generateTestTOTP(secret, FIXED_TIME);
     await asUser.mutation(api.twoFactor.completeSetup, { code: setupCode });
 
-    // Verify correct code
-    const validCode = await generateTestTOTP(secret, FIXED_TIME);
+    // Verify correct code (advance time to avoid replay)
+    const newTime = FIXED_TIME + 30000; // Next window
+    vi.setSystemTime(newTime);
+    const validCode = await generateTestTOTP(secret, newTime);
     const validResult = await asUser.mutation(api.twoFactor.verifyCode, { code: validCode });
     expect(validResult.success).toBe(true);
 
@@ -180,8 +182,10 @@ describe("Two Factor Authentication", () => {
       code: setupCode,
     });
 
-    // Regenerate
-    const validCode = await generateTestTOTP(secret, FIXED_TIME);
+    // Regenerate (advance time to avoid replay)
+    const newTime = FIXED_TIME + 30000; // Next window
+    vi.setSystemTime(newTime);
+    const validCode = await generateTestTOTP(secret, newTime);
     const result = await asUser.mutation(api.twoFactor.regenerateBackupCodes, {
       totpCode: validCode,
     });
@@ -201,8 +205,10 @@ describe("Two Factor Authentication", () => {
     const setupCode = await generateTestTOTP(secret, FIXED_TIME);
     await asUser.mutation(api.twoFactor.completeSetup, { code: setupCode });
 
-    // Disable
-    const validCode = await generateTestTOTP(secret, FIXED_TIME);
+    // Disable (advance time to avoid replay)
+    const newTime = FIXED_TIME + 30000; // Next window
+    vi.setSystemTime(newTime);
+    const validCode = await generateTestTOTP(secret, newTime);
     const result = await asUser.mutation(api.twoFactor.disable, { code: validCode });
     expect(result.success).toBe(true);
 
