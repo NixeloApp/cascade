@@ -56,7 +56,11 @@ export const removeAttachment = issueMutation({
   args: {
     storageId: v.id("_storage"),
   },
-  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
+  returns: v.object({
+    success: v.literal(true),
+    deleted: v.literal(true),
+    storageDeleted: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const issue = ctx.issue;
 
@@ -75,9 +79,11 @@ export const removeAttachment = issueMutation({
 
     // Attempt to delete the file from storage
     // If this fails (e.g. file already deleted), we log it but don't fail the mutation
+    let storageDeleted = true;
     try {
       await ctx.storage.delete(args.storageId);
     } catch (error) {
+      storageDeleted = false;
       logger.error("Failed to delete file from storage during attachment removal", {
         storageId: args.storageId,
         issueId: issue._id,
@@ -93,7 +99,7 @@ export const removeAttachment = issueMutation({
       field: "attachment",
     });
 
-    return { success: true, deleted: true } as const;
+    return { success: true, deleted: true, storageDeleted } as const;
   },
 });
 
