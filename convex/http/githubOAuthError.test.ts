@@ -14,6 +14,7 @@ vi.mock("../lib/env", () => ({
   getGitHubClientId: vi.fn(),
   getGitHubClientSecret: vi.fn(),
   isGitHubOAuthConfigured: vi.fn(),
+  getConvexSiteUrl: vi.fn(),
 }));
 
 describe("GitHub OAuth Error Handling", () => {
@@ -36,7 +37,7 @@ describe("GitHub OAuth Error Handling", () => {
     vi.mocked(envLib.getGitHubClientId).mockReturnValue("test-client-id");
     vi.mocked(envLib.getGitHubClientSecret).mockReturnValue("test-client-secret");
     vi.mocked(envLib.isGitHubOAuthConfigured).mockReturnValue(true);
-    process.env.CONVEX_SITE_URL = "https://test.convex.site";
+    vi.mocked(envLib.getConvexSiteUrl).mockReturnValue("https://test.convex.site");
 
     // Spy on console.error
     consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});

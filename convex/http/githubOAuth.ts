@@ -1,7 +1,12 @@
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
-import { getGitHubClientId, getGitHubClientSecret, isGitHubOAuthConfigured } from "../lib/env";
+import {
+  getConvexSiteUrl,
+  getGitHubClientId,
+  getGitHubClientSecret,
+  isGitHubOAuthConfigured,
+} from "../lib/env";
 import { isAppError, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
@@ -33,7 +38,7 @@ const getGitHubOAuthConfig = () => {
     clientId,
     clientSecret,
     // Must use CONVEX_SITE_URL - this is a Convex HTTP action, not a frontend route
-    redirectUri: `${process.env.CONVEX_SITE_URL}/github/callback`,
+    redirectUri: `${getConvexSiteUrl()}/github/callback`,
     // Scopes for repository access
     scopes: ["repo", "read:user", "user:email"].join(" "),
   };
