@@ -77,4 +77,22 @@ describe("validateAttachment", () => {
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(mockStorageId);
     expect(mockCtx.storage.delete).toHaveBeenCalledWith(mockStorageId);
   });
+
+  it("should delete file and throw error for empty string mime type", async () => {
+    const mockMetadata = {
+      contentType: "",
+      size: 1024,
+    };
+
+    const mockCtx = {
+      storage: {
+        getMetadata: vi.fn().mockResolvedValue(mockMetadata),
+        delete: vi.fn().mockResolvedValue(undefined),
+      },
+    } as unknown as MutationCtx;
+
+    await expect(validateAttachment(mockCtx, mockStorageId)).rejects.toThrow(/Invalid file type/);
+    expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(mockStorageId);
+    expect(mockCtx.storage.delete).toHaveBeenCalledWith(mockStorageId);
+  });
 });
