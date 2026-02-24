@@ -257,7 +257,8 @@ export const getCurrentUserProjects = authenticatedQuery({
       query: (db) =>
         db
           .query("projectMembers")
-          .withIndex("by_user", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true)),
+          .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+          .filter(notDeleted),
     });
 
     if (results.page.length === 0) {
@@ -284,9 +285,8 @@ export const getCurrentUserProjects = authenticatedQuery({
       const count = await efficientCount(
         ctx.db
           .query("issues")
-          .withIndex("by_project_deleted", (q) =>
-            q.eq("projectId", projectId).lt("isDeleted", true),
-          ),
+          .withIndex("by_project", (q) => q.eq("projectId", projectId))
+          .filter(notDeleted),
         MAX_ISSUE_COUNT,
       );
 

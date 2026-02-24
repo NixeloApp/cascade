@@ -3,6 +3,7 @@ import { pruneNull } from "convex-helpers";
 import { authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { MAX_TEAM_MEMBERS } from "./lib/queryLimits";
+import { notDeleted } from "./lib/softDeleteHelpers";
 import { assertCanAccessProject } from "./projectAccess";
 
 // List all members of a project with user details
@@ -14,7 +15,8 @@ export const list = authenticatedQuery({
 
     const members = await ctx.db
       .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId).lt("isDeleted", true))
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter(notDeleted)
       .take(MAX_TEAM_MEMBERS);
 
     // Batch fetch all users (avoid N+1)
