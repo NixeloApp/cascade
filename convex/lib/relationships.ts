@@ -13,7 +13,7 @@ import type { GenericDatabaseWriter, GenericDataModel } from "convex/server";
 import type { Id, TableNames } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { BOUNDED_DELETE_BATCH } from "./boundedQueries";
-import { conflict } from "./errors";
+import { conflict, internal } from "./errors";
 
 // Loose type for dynamic table access
 type AnyDataModel = GenericDataModel;
@@ -331,7 +331,15 @@ async function handleDeleteRelation(ctx: MutationCtx, rel: Relationship, recordI
   const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
     .query(rel.child)
     .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-    .take(BOUNDED_DELETE_BATCH);
+    .take(BOUNDED_DELETE_BATCH + 1);
+
+  if (children.length > BOUNDED_DELETE_BATCH) {
+    throw internal(
+      `Cannot cascade delete: ${rel.parent} ${recordId} has too many ${rel.child} records (${children.length}+). ` +
+        `This exceeds the batch limit of ${BOUNDED_DELETE_BATCH}. ` +
+        `Please delete the ${rel.child} records in batches or use a background job.`,
+    );
+  }
 
   if (rel.onDelete === "cascade") {
     // Recursively delete children
@@ -432,7 +440,15 @@ async function handleSoftDeleteRelation(
     const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
       .query(rel.child)
       .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-      .take(BOUNDED_DELETE_BATCH);
+      .take(BOUNDED_DELETE_BATCH + 1);
+
+    if (children.length > BOUNDED_DELETE_BATCH) {
+      throw internal(
+        `Cannot cascade soft-delete: ${rel.parent} ${recordId} has too many ${rel.child} records (${children.length}+). ` +
+          `This exceeds the batch limit of ${BOUNDED_DELETE_BATCH}. ` +
+          `Please soft-delete the ${rel.child} records in batches or use a background job.`,
+      );
+    }
 
     for (const child of children) {
       // Recursively soft delete children
@@ -496,7 +512,15 @@ async function handleRestoreRelation(
     const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
       .query(rel.child)
       .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-      .take(BOUNDED_DELETE_BATCH);
+      .take(BOUNDED_DELETE_BATCH + 1);
+
+    if (children.length > BOUNDED_DELETE_BATCH) {
+      throw internal(
+        `Cannot cascade restore: ${rel.parent} ${recordId} has too many ${rel.child} records (${children.length}+). ` +
+          `This exceeds the batch limit of ${BOUNDED_DELETE_BATCH}. ` +
+          `Please restore the ${rel.child} records in batches or use a background job.`,
+      );
+    }
 
     for (const child of children) {
       // Recursively restore children
