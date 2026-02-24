@@ -15,6 +15,7 @@ import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { enforceRateLimit } from "../rateLimits";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
+  applyBulkUpdate,
   assertVersionMatch,
   generateIssueKey,
   getMaxOrderForStatus,
@@ -768,7 +769,7 @@ export const bulkArchive = authenticatedMutation({
     const validProjects = projectDocs.filter((p): p is NonNullable<typeof p> => p !== null);
     const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
 
-    const result = await performBulkUpdate(ctx, args.issueIds, async (issue, now) => {
+    const result = await applyBulkUpdate(ctx, validIssues, async (issue, now) => {
       // Already archived?
       if (issue.archivedAt) return null;
 
