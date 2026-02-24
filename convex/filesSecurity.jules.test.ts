@@ -15,8 +15,9 @@ describe("validateAttachment", () => {
     } as unknown as MutationCtx;
 
     const storageId = "s123" as Id<"_storage">;
-    await validateAttachment(mockCtx, storageId);
+    const result = await validateAttachment(mockCtx, storageId);
 
+    expect(result.valid).toBe(true);
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(storageId);
     expect(mockCtx.storage.delete).not.toHaveBeenCalled();
   });
@@ -33,7 +34,11 @@ describe("validateAttachment", () => {
 
     const storageId = "s123" as Id<"_storage">;
 
-    await expect(validateAttachment(mockCtx, storageId)).rejects.toThrow(/Invalid file type/);
+    const result = await validateAttachment(mockCtx, storageId);
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.error).toMatch(/Invalid file type/);
+    }
 
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(storageId);
     expect(mockCtx.storage.delete).toHaveBeenCalledWith(storageId);
@@ -51,7 +56,11 @@ describe("validateAttachment", () => {
 
     const storageId = "s123" as Id<"_storage">;
 
-    await expect(validateAttachment(mockCtx, storageId)).rejects.toThrow(/Invalid file type/);
+    const result = await validateAttachment(mockCtx, storageId);
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.error).toMatch(/Invalid file type/);
+    }
 
     expect(mockCtx.storage.delete).toHaveBeenCalledWith(storageId);
   });
@@ -66,7 +75,11 @@ describe("validateAttachment", () => {
 
     const storageId = "s123" as Id<"_storage">;
 
-    await expect(validateAttachment(mockCtx, storageId)).rejects.toThrow(/File not found/);
+    const result = await validateAttachment(mockCtx, storageId);
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.error).toBe("File not found in storage");
+    }
 
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(storageId);
     expect(mockCtx.storage.delete).not.toHaveBeenCalled();
