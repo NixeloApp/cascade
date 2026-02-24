@@ -78,9 +78,7 @@ describe("Webhooks Crash Reproduction", () => {
     );
 
     // Verify that the error was logged
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Webhook delivery failed for"),
-    );
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Webhook delivery failed for"));
 
     consoleSpy.mockRestore();
   });
