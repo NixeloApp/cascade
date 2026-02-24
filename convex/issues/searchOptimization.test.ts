@@ -90,6 +90,7 @@ describe("issue search optimization", () => {
   });
 
   it("should find issues reported by specific user", async () => {
+    const otherUserId = await createTestUser(t);
     await createTestIssue(t, projectId, ctx.userId, {
       title: "Reported Issue",
     });
