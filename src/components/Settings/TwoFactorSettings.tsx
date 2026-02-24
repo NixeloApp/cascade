@@ -222,7 +222,8 @@ export function TwoFactorSettings() {
         setDisableDialogOpen(false);
         setDisableCode("");
       } else {
-        showError(new Error(result.error || "Failed to disable 2FA"), "Error");
+        const failure = result as { error?: string };
+        showError(new Error(failure.error || "Failed to disable 2FA"), "Error");
       }
     } catch (error) {
       showError(error, "Failed to disable 2FA");

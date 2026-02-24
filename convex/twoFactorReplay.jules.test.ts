@@ -101,7 +101,8 @@ describe("Two Factor Authentication Replay Attack", () => {
 
     // THIS SHOULD FAIL now
     expect(disableResult.success).toBe(false);
-    expect(disableResult.error).toBe("Invalid verification code");
+    if (disableResult.success) throw new Error("Expected failure");
+    expect((disableResult as any).error).toBe("Invalid verification code");
 
     // 5. Verify 2FA is still ENABLED
     const status = await asUser.query(api.twoFactor.getStatus);

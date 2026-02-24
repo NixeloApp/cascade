@@ -162,12 +162,14 @@ describe("Two Factor Authentication", () => {
     // Verify valid backup code
     const result1 = await asUser.mutation(api.twoFactor.verifyBackupCode, { code: codeToUse });
     expect(result1.success).toBe(true);
-    expect(result1.remainingCodes).toBe(7);
+    if (!result1.success) throw new Error("Expected success");
+    expect((result1 as any).remainingCodes).toBe(7);
 
     // Verify consumed backup code (should fail)
     const result2 = await asUser.mutation(api.twoFactor.verifyBackupCode, { code: codeToUse });
     expect(result2.success).toBe(false);
-    expect(result2.error).toBe("Invalid backup code");
+    if (result2.success) throw new Error("Expected failure");
+    expect((result2 as any).error).toBe("Invalid backup code");
   });
 
   it("should regenerate backup codes", async () => {
@@ -253,7 +255,8 @@ describe("Two Factor Authentication", () => {
     // Try to disable with invalid code
     const result = await asUser.mutation(api.twoFactor.disable, { code: "000000" });
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Invalid verification code");
+    if (result.success) throw new Error("Expected failure");
+    expect((result as any).error).toBe("Invalid verification code");
 
     const status = await asUser.query(api.twoFactor.getStatus);
     expect(status.enabled).toBe(true);
