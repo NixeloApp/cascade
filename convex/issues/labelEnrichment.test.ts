@@ -24,17 +24,17 @@ describe("Label Enrichment", () => {
 
       // Create 250 labels and capture the 240th ID
       const label240Id = await t.run(async (ctx) => {
-        let targetId: Id<"labels"> | undefined;
-        for (let i = 0; i < 250; i++) {
-          const id = await ctx.db.insert("labels", {
-            projectId,
-            name: `label-${i}`,
-            color: "#000000",
-            createdBy: userId,
-          });
-          if (i === 240) targetId = id;
-        }
-        return targetId;
+        const labelIds = await Promise.all(
+          Array.from({ length: 250 }, (_, i) =>
+            ctx.db.insert("labels", {
+              projectId,
+              name: `label-${i}`,
+              color: "#000000",
+              createdBy: userId,
+            }),
+          ),
+        );
+        return labelIds[240];
       });
 
       if (!label240Id) throw new Error("Label 240 not created");
@@ -72,17 +72,17 @@ describe("Label Enrichment", () => {
 
       // Insert 105 labels
       const label104Id = await t.run(async (ctx) => {
-        let lastId: string | undefined;
-        for (let i = 0; i < 105; i++) {
-          const id = await ctx.db.insert("labels", {
-            projectId,
-            name: `Label ${i}`,
-            color: "#123456", // specific color
-            createdBy: userId,
-          });
-          if (i === 104) lastId = id;
-        }
-        return lastId;
+        const labelIds = await Promise.all(
+          Array.from({ length: 105 }, (_, i) =>
+            ctx.db.insert("labels", {
+              projectId,
+              name: `Label ${i}`,
+              color: "#123456", // specific color
+              createdBy: userId,
+            }),
+          ),
+        );
+        return labelIds[104];
       });
 
       if (!label104Id) throw new Error("Label 104 not created");

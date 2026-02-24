@@ -143,9 +143,7 @@ describe("Issue Mutations", () => {
           .query("issueActivity")
           .withIndex("by_issue", (q) => q.eq("issueId", issueId))
           .collect();
-        for (const a of activities) {
-          await ctx.db.delete(a._id);
-        }
+        await Promise.all(activities.map((a) => ctx.db.delete(a._id)));
       });
 
       // Update to same status
@@ -543,6 +541,9 @@ describe("Issue Mutations", () => {
           name: "Bulk Assign Project",
           key: "BULKA",
         });
+
+        // Add assignee to project so they can be assigned issues
+        await addProjectMember(t, projectId, assigneeId, "viewer", userId);
 
         const issue1 = await createTestIssue(t, projectId, userId, { title: "Issue 1" });
         const issue2 = await createTestIssue(t, projectId, userId, { title: "Issue 2" });

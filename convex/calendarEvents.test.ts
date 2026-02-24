@@ -478,15 +478,17 @@ describe("calendarEvents", () => {
       const now = Date.now();
 
       // Create multiple events
-      for (let i = 0; i < 5; i++) {
-        await asUser.mutation(api.calendarEvents.create, {
-          title: `Event ${i + 1}`,
-          startTime: now + (i + 1) * HOUR,
-          endTime: now + (i + 2) * HOUR,
-          allDay: false,
-          eventType: "meeting",
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 5 }, (_, i) =>
+          asUser.mutation(api.calendarEvents.create, {
+            title: `Event ${i + 1}`,
+            startTime: now + (i + 1) * HOUR,
+            endTime: now + (i + 2) * HOUR,
+            allDay: false,
+            eventType: "meeting",
+          }),
+        ),
+      );
 
       const events = await asUser.query(api.calendarEvents.getUpcoming, { limit: 3 });
       expect(events.length).toBe(3);
@@ -564,6 +566,7 @@ describe("calendarEvents", () => {
       const now = Date.now();
       const types = ["meeting", "deadline", "timeblock", "personal"] as const;
 
+      // Note: Sequential execution required - each iteration depends on query result
       for (const eventType of types) {
         const { eventId } = await asUser.mutation(api.calendarEvents.create, {
           title: `${eventType} event`,
