@@ -95,8 +95,9 @@ describe("Issue Watchers", () => {
       });
 
       await asUser.mutation(api.watchers.watch, { issueId });
-      await asUser.mutation(api.watchers.unwatch, { issueId });
+      const result = await asUser.mutation(api.watchers.unwatch, { issueId });
 
+      expect(result).toEqual({ success: true, deleted: true });
       const isWatching = await asUser.query(api.watchers.isWatching, { issueId });
       expect(isWatching).toBe(false);
     });
@@ -115,8 +116,9 @@ describe("Issue Watchers", () => {
       });
 
       // Should not throw
-      await asUser.mutation(api.watchers.unwatch, { issueId });
+      const result = await asUser.mutation(api.watchers.unwatch, { issueId });
 
+      expect(result).toEqual({ success: true, deleted: false });
       const isWatching = await asUser.query(api.watchers.isWatching, { issueId });
       expect(isWatching).toBe(false);
     });
