@@ -239,6 +239,9 @@ export async function createTestIssue(
     status?: string;
     priority?: "lowest" | "low" | "medium" | "high" | "highest";
     assigneeId?: Id<"users">;
+    sprintId?: Id<"sprints">;
+    epicId?: Id<"issues">;
+    labels?: string[];
   },
 ): Promise<Id<"issues">> {
   return await t.run(async (ctx) => {
@@ -273,9 +276,11 @@ export async function createTestIssue(
       status: issueData?.status || "todo",
       priority: issueData?.priority || "medium",
       assigneeId: issueData?.assigneeId,
+      sprintId: issueData?.sprintId,
+      epicId: issueData?.epicId,
       reporterId,
       updatedAt: now,
-      labels: [],
+      labels: issueData?.labels || [],
       linkedDocuments: [],
       attachments: [],
       loggedHours: 0,

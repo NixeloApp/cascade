@@ -157,6 +157,7 @@ export const create = authenticatedMutation({
     isRequired: v.optional(v.boolean()),
     color: v.optional(calendarEventColors),
   },
+  returns: v.object({ eventId: v.id("calendarEvents") }),
   handler: async (ctx, args) => {
     // Validate times
     if (args.endTime <= args.startTime) {
@@ -321,6 +322,7 @@ export const update = authenticatedMutation({
     notes: v.optional(v.string()),
     color: v.optional(calendarEventColors),
   },
+  returns: v.object({ success: v.literal(true), eventId: v.id("calendarEvents") }),
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.id);
     if (!event) throw notFound("calendarEvent", args.id);
@@ -341,13 +343,14 @@ export const update = authenticatedMutation({
     const updates = buildEventUpdateObject(args);
     await ctx.db.patch(args.id, updates);
 
-    return args.id;
+    return { success: true, eventId: args.id } as const;
   },
 });
 
 // Delete an event
 export const remove = authenticatedMutation({
   args: { id: v.id("calendarEvents") },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.id);
     if (!event) throw notFound("calendarEvent", args.id);
@@ -358,6 +361,8 @@ export const remove = authenticatedMutation({
     }
 
     await ctx.db.delete(args.id);
+
+    return { success: true } as const;
   },
 });
 

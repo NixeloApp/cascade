@@ -36,7 +36,7 @@ export const BOUNDED_LIST_LIMIT = 100;
 export const BOUNDED_RELATION_LIMIT = 100;
 
 /** Max items for search results */
-export const BOUNDED_SEARCH_LIMIT = 50;
+export const BOUNDED_SEARCH_LIMIT = 100;
 
 /** Max items for batch delete operations per call */
 export const BOUNDED_DELETE_BATCH = 100;
