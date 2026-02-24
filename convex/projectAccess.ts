@@ -2,7 +2,7 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden } from "./lib/errors";
-import { isOrganizationAdmin } from "./lib/organizationAccess";
+import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAccess";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
 // ============================================================================
@@ -189,7 +189,16 @@ async function computeProjectAccessImpl(
 
   // 1. Check direct ownership (no DB queries needed)
   if (project.ownerId === userId || project.createdBy === userId) {
-    return buildAccessResult(true, true, true, "admin", "owner");
+    if (project.organizationId) {
+      // SECURITY FIX: Even if user owns the project, they must be a member of the organization
+      const orgRole = await getOrganizationRole(ctx, project.organizationId, userId);
+      if (orgRole) {
+        return buildAccessResult(true, true, true, "admin", "owner");
+      }
+      // If not a member, fall through to other checks (likely no access)
+    } else {
+      return buildAccessResult(true, true, true, "admin", "owner");
+    }
   }
 
   // 2. Check organization admin

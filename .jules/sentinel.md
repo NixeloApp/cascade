@@ -140,3 +140,8 @@
 **Vulnerability:** `respondToSuggestion` and `getProjectLabels` were public endpoints, allowing unauthenticated users to modify suggestion status and access project metadata.
 **Learning:** All endpoints that modify or expose project data must be protected by authentication and explicit permission checks (`assertCanAccessProject`, `assertCanEditProject`). Public mutations are dangerous defaults.
 **Prevention:** Converted public functions in `convex/ai/suggestions.ts` to `authenticatedMutation` and `authenticatedQuery` and added explicit permission checks.
+
+## 2025-05-26 - Project Access Bypass for Removed Owners
+**Vulnerability:** The `computeProjectAccess` logic granted admin access to a project solely based on the user being the `ownerId` or `createdBy`, bypassing organization membership checks. This allowed a user who was removed from an organization to retain full admin access to projects they had created within that organization.
+**Learning:** Ownership of a child resource (Project) should not supersede membership in the parent container (Organization). Access control logic must verify parent container membership before granting any privileges based on child resource attributes.
+**Prevention:** Updated `computeProjectAccessImpl` in `convex/projectAccess.ts` to explicitly verify organization membership using `getOrganizationRole` before granting admin access to project owners or creators.
