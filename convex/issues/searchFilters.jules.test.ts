@@ -92,33 +92,9 @@ describe("issue search filters", () => {
         title: "Reported by Me",
       });
 
-      // Create issue reported by other user manually
-      await t.run(async (runCtx) => {
-        const project = await runCtx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
-
-        const title = "Reported by Other";
-        const searchContent = title;
-
-        await runCtx.db.insert("issues", {
-          projectId,
-          organizationId: project.organizationId,
-          workspaceId: project.workspaceId,
-          teamId: project.teamId,
-          key: `${project.key}-999`,
-          title,
-          searchContent,
-          type: "task",
-          status: "todo",
-          priority: "medium",
-          reporterId: otherUserId,
-          updatedAt: Date.now(),
-          labels: [],
-          linkedDocuments: [],
-          attachments: [],
-          loggedHours: 0,
-          order: 0,
-        });
+      // Create issue reported by other user
+      await createTestIssue(t, projectId, otherUserId, {
+        title: "Reported by Other",
       });
 
       const result = await ctx.asUser.query(api.issues.queries.search, {
@@ -158,32 +134,8 @@ describe("issue search filters", () => {
         title: "Feature X",
       });
 
-      await t.run(async (runCtx) => {
-        const project = await runCtx.db.get(projectId);
-        if (!project) throw new Error("Project not found");
-
-        const title = "Feature Y";
-        const searchContent = title;
-
-        await runCtx.db.insert("issues", {
-          projectId,
-          organizationId: project.organizationId,
-          workspaceId: project.workspaceId,
-          teamId: project.teamId,
-          key: `${project.key}-998`,
-          title,
-          searchContent,
-          type: "task",
-          status: "todo",
-          priority: "medium",
-          reporterId: otherUserId,
-          updatedAt: Date.now(),
-          labels: [],
-          linkedDocuments: [],
-          attachments: [],
-          loggedHours: 0,
-          order: 0,
-        });
+      await createTestIssue(t, projectId, otherUserId, {
+        title: "Feature Y",
       });
 
       const result = await ctx.asUser.query(api.issues.queries.search, {
