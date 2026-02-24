@@ -286,7 +286,7 @@ export const sendVerificationEmailAction = internalAction({
       }
     }
 
-    await ctx.runAction(internal.email.index.sendEmailAction, {
+    const result = await ctx.runAction(internal.email.index.sendEmailAction, {
       to: email,
       subject: "Verify your new email address",
       html: `
@@ -298,6 +298,10 @@ export const sendVerificationEmailAction = internalAction({
       `,
       text: `Your verification code is: ${token}\n\nThis code expires in 15 minutes.`,
     });
+
+    if (!result.success) {
+      throw new Error(`Failed to send verification email: ${result.error}`);
+    }
   },
 });
 
