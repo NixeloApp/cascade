@@ -897,14 +897,29 @@ export const getBreadcrumbs = authenticatedQuery({
     // Batch fetch all ancestors
     const ancestors = await Promise.all(ancestorIds.map((id) => ctx.db.get(id)));
 
+    // Check access for all ancestors in parallel
+    // If user doesn't have access, we redact the title
+    const myOrgIds = new Set([document.organizationId]);
+    const accessResults = await Promise.all(
+      ancestors.map(async (ancestor) => {
+        if (!ancestor || ancestor.isDeleted) return false;
+        return canAccessDocument(ctx, ancestor, myOrgIds);
+      }),
+    );
+
     // Build path from root to current document
     const path: Array<{ _id: Id<"documents">; title: string }> = [];
 
     // Add ancestors (in reverse order, from root to parent)
     for (let i = ancestors.length - 1; i >= 0; i--) {
       const ancestor = ancestors[i];
+      const hasAccess = accessResults[i];
+
       if (ancestor && !ancestor.isDeleted) {
-        path.push({ _id: ancestor._id, title: ancestor.title });
+        path.push({
+          _id: ancestor._id,
+          title: hasAccess ? ancestor.title : "Private Document",
+        });
       }
     }
 

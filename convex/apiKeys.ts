@@ -239,7 +239,12 @@ export const update = authenticatedMutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const _key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
+    const key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
+
+    // Verify access if project-scoped
+    if (key.projectId) {
+      await assertCanAccessProject(ctx, key.projectId, ctx.userId);
+    }
 
     const updates: Partial<{
       name: string;

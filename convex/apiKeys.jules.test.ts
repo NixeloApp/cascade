@@ -17,7 +17,7 @@ describe("API Keys Security", () => {
   it("should prevent rotation if user has lost access to the project", async () => {
     const t = convexTest(schema, modules);
 
-    // 1. Setup: Creator creates org and project
+    // 1. Setup
     const creatorId = await createTestUser(t, { name: "Creator" });
     const { organizationId } = await createOrganizationAdmin(t, creatorId);
     const projectId = await createProjectInOrganization(t, creatorId, organizationId);
@@ -31,7 +31,6 @@ describe("API Keys Security", () => {
     // Add member to project directly using helper (avoiding API call issues in tests)
     await addProjectMember(t, projectId, memberId, "viewer", creatorId);
 
-    // 3. Member creates an API key for the project
     const asMember = asAuthenticatedUser(t, memberId);
     const { id: keyId } = await asMember.mutation(api.apiKeys.generate, {
       name: "Member Key",
@@ -39,16 +38,47 @@ describe("API Keys Security", () => {
       projectId,
     });
 
-    // 4. Member is removed from the project
+    // 3. Remove member
     await removeProjectMember(t, projectId, memberId);
 
-    // 5. Member attempts to rotate the key
-    // This SHOULD fail, but currently succeeds (vulnerability)
-    // I expect this to throw "Not authorized" or "Forbidden" once fixed.
-    // Currently, it will pass (fail the expectation).
+    // 4. Attempt rotation (should fail)
     await expect(async () => {
-      await asMember.mutation(api.apiKeys.rotate, {
+      await asMember.mutation(api.apiKeys.rotate, { keyId });
+    }).rejects.toThrow(/forbidden|not authorized/i);
+  });
+
+  it("should prevent update if user has lost access to the project", async () => {
+    const t = convexTest(schema, modules);
+
+    // 1. Setup
+    const creatorId = await createTestUser(t, { name: "Creator" });
+    const { organizationId } = await createOrganizationAdmin(t, creatorId);
+    const projectId = await createProjectInOrganization(t, creatorId, organizationId);
+
+    // 2. Setup: Member joins project
+    const memberEmail = "member@example.com";
+    const memberId = await createTestUser(t, { name: "Member", email: memberEmail });
+
+    // Add member to organization first (required by security check)
+    await addUserToOrganization(t, organizationId, memberId, creatorId);
+    // Add member to project directly using helper (avoiding API call issues in tests)
+    await addProjectMember(t, projectId, memberId, "viewer", creatorId);
+
+    const asMember = asAuthenticatedUser(t, memberId);
+    const { id: keyId } = await asMember.mutation(api.apiKeys.generate, {
+      name: "Member Key",
+      scopes: ["issues:read"],
+      projectId,
+    });
+
+    // 3. Remove member
+    await removeProjectMember(t, projectId, memberId);
+
+    // 4. Attempt update (should fail)
+    await expect(async () => {
+      await asMember.mutation(api.apiKeys.update, {
         keyId,
+        name: "Updated Key Name",
       });
     }).rejects.toThrow(/forbidden|not authorized/i);
   });
