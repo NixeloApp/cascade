@@ -4,6 +4,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import {
   internalAction,
   internalMutation,
+  type MutationCtx,
   mutation,
   type QueryCtx,
   query,
@@ -17,6 +18,7 @@ import { getBotServiceApiKey, getBotServiceUrl } from "./lib/env";
 import { conflict, forbidden, getErrorMessage, notFound, validation } from "./lib/errors";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
+import { isOrganizationMember } from "./lib/organizationAccess";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { MINUTE } from "./lib/timeUtils";
 import { assertCanAccessProject, assertCanEditProject, canEditProject } from "./projectAccess";
@@ -55,6 +57,19 @@ async function getAccessibleRecording(
 
   await assertRecordingAccess(ctx, recording);
   return recording;
+}
+
+async function validateAssigneeMembership(
+  ctx: QueryCtx | MutationCtx,
+  organizationId: Id<"organizations">,
+  assigneeUserId?: Id<"users">,
+) {
+  if (!assigneeUserId) return;
+
+  const isMember = await isOrganizationMember(ctx, organizationId, assigneeUserId);
+  if (!isMember) {
+    throw validation("assigneeUserId", "User must be an organization member to be assigned");
+  }
 }
 
 // ===========================================
@@ -784,6 +799,9 @@ export const createIssueFromActionItem = authenticatedMutation({
         );
       }
     }
+
+    // Security: Ensure assignee is a member of the organization
+    await validateAssigneeMembership(ctx, project.organizationId, actionItem.assigneeUserId);
 
     const status = project.workflowStates[0]?.id ?? "todo";
     const issueKey = await generateIssueKey(ctx, args.projectId, project.key);
