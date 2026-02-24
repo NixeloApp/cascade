@@ -187,7 +187,7 @@ async function computeProjectAccessImpl(
     return buildAccessResult(false, false, false, null, "project_not_found");
   }
 
-  // 1. Check direct ownership (no DB queries needed)
+  // 1. Check direct ownership (no extra DB queries for non-org projects; org projects may query org membership)
   if (project.ownerId === userId || project.createdBy === userId) {
     if (project.organizationId) {
       // SECURITY FIX: Even if user owns the project, they must be a member of the organization
