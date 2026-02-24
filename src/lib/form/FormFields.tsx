@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { cn } from "@/lib/utils";
+import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
 
 /**
  * Get the first error message from field state
@@ -205,7 +206,7 @@ export function FormSelectRadix<TName extends string, TValue extends string>({
   const value = (field.state.value as string) ?? "";
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <Stack gap="sm" className={className}>
       {label && <Label>{label}</Label>}
       <SelectRoot
         value={value}
@@ -219,9 +220,13 @@ export function FormSelectRadix<TName extends string, TValue extends string>({
         </SelectTrigger>
         <SelectContent>{children}</SelectContent>
       </SelectRoot>
-      {error && <p className="text-sm font-medium text-status-error">{error}</p>}
-      {helperText && !error && <p className="text-sm text-ui-text-tertiary">{helperText}</p>}
-    </div>
+      {error && (
+        <Typography variant="small" color="error" className="font-medium">
+          {error}
+        </Typography>
+      )}
+      {helperText && !error && <Typography variant="muted">{helperText}</Typography>}
+    </Stack>
   );
 }
 
