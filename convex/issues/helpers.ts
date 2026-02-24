@@ -7,12 +7,35 @@ import { assertCanEditProject } from "../projectAccess";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
 
-// Helper: Combined searchable content for issues
+/**
+ * Generates a combined string for full-text search.
+ * Concatenates title and description for efficient indexing.
+ *
+ * @param title - The issue title.
+ * @param description - The issue description (optional).
+ * @returns A single string containing both fields.
+ */
 export function getSearchContent(title: string, description?: string) {
   return `${title} ${description || ""}`.trim();
 }
 
-// Helper: Validate parent issue and get inherited epic
+/**
+ * Validates the parent issue and determines the inherited epic ID.
+ *
+ * Enforces hierarchy rules:
+ * - Epics are root-level and cannot be subtasks.
+ * - Subtasks can only be one level deep (cannot be a child of another subtask).
+ * - Issues with a parent MUST be of type 'subtask'.
+ * - Inherits the epic ID from the parent if not explicitly provided.
+ *
+ * @param ctx - Mutation context.
+ * @param parentId - ID of the parent issue (if any).
+ * @param issueType - Type of the issue being created/updated.
+ * @param epicId - Explicitly provided epic ID (optional).
+ * @returns The resolved epic ID to use for the issue.
+ * @throws {ConvexError} "NotFound" if parent issue doesn't exist.
+ * @throws {ConvexError} "Validation" if hierarchy rules are violated.
+ */
 export async function validateParentIssue(
   ctx: MutationCtx,
   parentId: Id<"issues"> | undefined,
@@ -49,7 +72,17 @@ export async function validateParentIssue(
   return epicId || parentIssue.epicId;
 }
 
-// Helper: Generate issue key with race condition protection
+/**
+ * Generates a unique issue key (e.g., "PROJ-123") with race condition protection.
+ *
+ * Finds the highest existing key number in the project and increments it.
+ * Note: This relies on creation time ordering and keys being sequential.
+ *
+ * @param ctx - Mutation context.
+ * @param projectId - The project ID.
+ * @param projectKey - The project key prefix (e.g., "PROJ").
+ * @returns The generated key string.
+ */
 export async function generateIssueKey(
   ctx: MutationCtx,
   projectId: Id<"projects">,
@@ -74,7 +107,13 @@ export async function generateIssueKey(
   return `${projectKey}-${maxNumber + 1}`;
 }
 
-// Helper: Check if an issue key already exists (for duplicate detection)
+/**
+ * Checks if an issue key already exists to prevent duplicates.
+ *
+ * @param ctx - Mutation context.
+ * @param key - The issue key to check (e.g., "PROJ-123").
+ * @returns True if the key exists, false otherwise.
+ */
 export async function issueKeyExists(ctx: MutationCtx, key: string): Promise<boolean> {
   const existing = await ctx.db
     .query("issues")
@@ -83,8 +122,16 @@ export async function issueKeyExists(ctx: MutationCtx, key: string): Promise<boo
   return existing !== null;
 }
 
-// Helper: Verify optimistic lock version matches
-// Throws conflict error if version mismatch (stale update)
+/**
+ * Verifies that the current version matches the expected version for optimistic locking.
+ *
+ * Used to detect concurrent edits. If versions don't match, it means another user
+ * has modified the issue since it was loaded.
+ *
+ * @param currentVersion - The current version number from the database.
+ * @param expectedVersion - The version number expected by the client.
+ * @throws {ConvexError} "Conflict" if versions do not match.
+ */
 export function assertVersionMatch(
   currentVersion: number | undefined,
   expectedVersion: number | undefined,
@@ -100,12 +147,25 @@ export function assertVersionMatch(
   }
 }
 
-// Helper: Get next version number for an issue update
+/**
+ * Calculates the next version number for an issue update.
+ *
+ * @param currentVersion - The current version number.
+ * @returns The next version number.
+ */
 export function getNextVersion(currentVersion: number | undefined): number {
   return (currentVersion ?? 1) + 1;
 }
 
-// Helper: Get max order for status column
+/**
+ * Gets the maximum order value for a specific status column in a project.
+ * Used when appending new issues to the end of a column.
+ *
+ * @param ctx - Mutation context.
+ * @param projectId - The project ID.
+ * @param status - The workflow status ID.
+ * @returns The maximum order value found, or -1 if no issues exist.
+ */
 export async function getMaxOrderForStatus(
   ctx: MutationCtx,
   projectId: Id<"projects">,
@@ -126,7 +186,15 @@ export async function getMaxOrderForStatus(
   return latestIssue?.order ?? -1;
 }
 
-// Helper: Track field change and add to changes array
+/**
+ * Helper to track if a field has changed and record the change for activity logging.
+ *
+ * @param changes - Array to append the change record to.
+ * @param field - Name of the field being updated.
+ * @param oldValue - The original value.
+ * @param newValue - The new value (undefined means no change).
+ * @returns True if the field was updated.
+ */
 export function trackFieldChange<T>(
   changes: Array<{
     field: string;
@@ -148,7 +216,17 @@ export function trackFieldChange<T>(
   return false;
 }
 
-// Helper: Track and update a nullable field
+/**
+ * Helper to track updates to nullable fields.
+ * Handles the distinction between `undefined` (no change) and `null` (clear value).
+ *
+ * @param updates - The updates object to modify.
+ * @param changes - Array to append the change record to.
+ * @param fieldName - Name of the field being updated.
+ * @param oldValue - The original value.
+ * @param newValue - The new value (undefined = no change, null = clear).
+ * @param valueTransform - Optional function to transform values for the activity log.
+ */
 export function trackNullableFieldUpdate<T>(
   updates: Record<string, unknown>,
   changes: Array<{
@@ -175,7 +253,14 @@ export function trackNullableFieldUpdate<T>(
   }
 }
 
-// Helper: Process issue update fields and track changes
+/**
+ * Processes a set of updates for an issue, detecting changes and preparing the patch object.
+ *
+ * @param issue - The current state of the issue.
+ * @param args - The requested updates.
+ * @param changes - Array to collect change records for activity logging.
+ * @returns The patch object containing only the fields that need updating.
+ */
 export function processIssueUpdates(
   issue: {
     title: string;
@@ -248,7 +333,18 @@ export function processIssueUpdates(
   return updates;
 }
 
-// Helper: Check if issue matches assignee filter
+/**
+ * Checks if an issue matches a specific assignee filter.
+ *
+ * Supports special values:
+ * - "unassigned": Matches issues with no assignee.
+ * - "me": Matches issues assigned to the current user.
+ *
+ * @param issue - The issue to check.
+ * @param assigneeFilter - The filter value (ID, "unassigned", "me", or undefined).
+ * @param userId - The current user's ID (for "me" check).
+ * @returns True if the issue matches.
+ */
 export function matchesAssigneeFilter(
   issue: { assigneeId?: Id<"users"> },
   assigneeFilter: Id<"users"> | "unassigned" | "me" | undefined,
@@ -265,7 +361,16 @@ export function matchesAssigneeFilter(
   return issue.assigneeId === assigneeFilter;
 }
 
-// Helper: Check if issue matches sprint filter
+/**
+ * Checks if an issue matches a sprint filter.
+ *
+ * Supports special values:
+ * - "backlog" or "none": Matches issues not assigned to any sprint.
+ *
+ * @param issue - The issue to check.
+ * @param sprintFilter - The filter value (ID, "backlog", "none", or undefined).
+ * @returns True if the issue matches.
+ */
 export function matchesSprintFilter(
   issue: { sprintId?: Id<"sprints"> },
   sprintFilter: Id<"sprints"> | "backlog" | "none" | undefined,
@@ -278,7 +383,16 @@ export function matchesSprintFilter(
   return issue.sprintId === sprintFilter;
 }
 
-// Helper: Check if issue matches epic filter
+/**
+ * Checks if an issue matches an epic filter.
+ *
+ * Supports special values:
+ * - "none": Matches issues that do not belong to an epic.
+ *
+ * @param issue - The issue to check.
+ * @param epicFilter - The filter value (ID, "none", or undefined).
+ * @returns True if the issue matches.
+ */
 export function matchesEpicFilter(
   issue: { epicId?: Id<"issues"> },
   epicFilter: Id<"issues"> | "none" | undefined,
@@ -291,13 +405,27 @@ export function matchesEpicFilter(
   return issue.epicId === epicFilter;
 }
 
-// Helper: Check if value matches array filter
+/**
+ * Checks if a value matches any of the values in a filter array.
+ * If the filter array is empty or undefined, it's considered a match (no filter).
+ *
+ * @param value - The value to check.
+ * @param filterArray - The array of allowed values.
+ * @returns True if matched or no filter applied.
+ */
 export function matchesArrayFilter<T>(value: T, filterArray: T[] | undefined): boolean {
   if (!filterArray || filterArray.length === 0) return true;
   return filterArray.includes(value);
 }
 
-// Helper: Check if issue matches date range
+/**
+ * Checks if an issue's creation time falls within a date range.
+ *
+ * @param creationTime - The issue's creation timestamp.
+ * @param dateFrom - Start of range (inclusive, optional).
+ * @param dateTo - End of range (inclusive, optional).
+ * @returns True if within range.
+ */
 export function matchesDateRange(
   creationTime: number,
   dateFrom?: number,
@@ -308,13 +436,34 @@ export function matchesDateRange(
   return true;
 }
 
-// Helper: Check if issue matches labels filter (all labels must be present)
+/**
+ * Checks if an issue has ALL of the specified labels (AND logic).
+ *
+ * @param issueLabels - The labels on the issue.
+ * @param filterLabels - The labels required by the filter.
+ * @returns True if the issue contains all filter labels.
+ */
 export function matchesLabelsFilter(issueLabels: string[], filterLabels?: string[]): boolean {
   if (!filterLabels || filterLabels.length === 0) return true;
   return filterLabels.every((label) => issueLabels.includes(label));
 }
 
-// Helper: Check if issue matches all search filters
+/**
+ * Checks if an issue matches a complex set of search filters.
+ *
+ * Used for in-memory filtering after fetching candidate issues.
+ * Supports:
+ * - Project and Reporter IDs.
+ * - Assignee (including "me", "unassigned").
+ * - Arrays of types, statuses, priorities, labels.
+ * - Sprint ("backlog", "none") and Epic ("none") special values.
+ * - Date ranges.
+ *
+ * @param issue - The issue to check.
+ * @param filters - The filter criteria.
+ * @param userId - The current user's ID (for "me" checks).
+ * @returns True if the issue matches all active filters.
+ */
 export function matchesSearchFilters(
   issue: {
     projectId: Id<"projects">;
@@ -369,7 +518,15 @@ export type IssueActivityAction =
   | "deleted"
   | "commented";
 
-// Helper for bulk updates to reduce code duplication
+/**
+ * Wrapper for `applyBulkUpdate` that fetches issues by ID first.
+ *
+ * @param ctx - Mutation context.
+ * @param issueIds - Array of issue IDs to update.
+ * @param getUpdate - Callback to generate the update for each issue.
+ * @param checkPermission - Optional permission check function (defaults to assertCanEditProject).
+ * @returns Object with the count of updated issues.
+ */
 export async function performBulkUpdate(
   ctx: MutationCtx & { userId: Id<"users"> },
   issueIds: Id<"issues">[],
@@ -395,7 +552,21 @@ export async function performBulkUpdate(
   return applyBulkUpdate(ctx, issues, getUpdate, checkPermission);
 }
 
-// Helper: Apply bulk update logic to a list of issues
+/**
+ * Applies a bulk update to a list of issues.
+ *
+ * Handles:
+ * - Permission checking per issue.
+ * - Skipping deleted or missing issues.
+ * - Applying the patch.
+ * - Logging activity.
+ *
+ * @param ctx - Mutation context.
+ * @param issues - Array of issue documents (can contain nulls).
+ * @param getUpdate - Callback that returns the patch and activity log for an issue (or null to skip).
+ * @param checkPermission - Permission check function.
+ * @returns Object with the count of updated issues.
+ */
 export async function applyBulkUpdate(
   ctx: MutationCtx & { userId: Id<"users"> },
   issues: (Doc<"issues"> | null)[],
@@ -452,7 +623,14 @@ export async function applyBulkUpdate(
   return { updated: results.reduce((a: number, b) => a + b, 0) };
 }
 
-// Helper: Resolve label names from IDs
+/**
+ * Resolves a list of label IDs into their names.
+ * Used for storing label names directly on issues (denormalization) or logging.
+ *
+ * @param ctx - Mutation context.
+ * @param labelIds - Array of label IDs.
+ * @returns Array of label names.
+ */
 export async function resolveLabelNames(
   ctx: MutationCtx,
   labelIds: Id<"labels">[] | undefined,
