@@ -203,12 +203,7 @@ function TreeNodeItem({
           {/* Actions menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => e.preventDefault()}
-                className="opacity-0 group-hover:opacity-100"
-              >
+              <Button variant="ghost" size="sm" reveal onClick={(e) => e.preventDefault()}>
                 <Icon icon={MoreHorizontal} size="sm" />
               </Button>
             </DropdownMenuTrigger>

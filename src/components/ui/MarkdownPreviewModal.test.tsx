@@ -63,11 +63,11 @@ print("hello")
     render(<MarkdownPreviewModal {...defaultProps} />);
 
     // Click Raw tab
-    const rawTab = screen.getByText("Raw Markdown");
+    const rawTab = screen.getByRole("tab", { name: "Raw Markdown" });
     await user.click(rawTab);
 
-    // Raw tab should now be active (has border color)
-    expect(rawTab).toHaveClass("border-brand-ring");
+    // Raw tab should now be active (Radix tabs use data-state attribute)
+    expect(rawTab).toHaveAttribute("data-state", "active");
   });
 
   it("should display raw markdown in Raw tab", async () => {

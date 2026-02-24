@@ -7,7 +7,6 @@ import { Folder } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -78,27 +77,20 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
         ) : (
           <Flex direction="column" gap="xs" ref={projectNavigation.listRef}>
             {projects.map((project, index) => (
-              <Button
+              <Card
                 key={project._id}
-                variant="unstyled"
                 onClick={() => navigateToWorkspace(project.key)}
+                hoverable
+                padding="md"
                 {...projectNavigation.getItemProps(index)}
                 className={cn(
-                  "w-full text-left p-3 rounded-lg group cursor-pointer h-auto",
-                  "bg-ui-bg-soft border border-transparent",
-                  "hover:border-ui-border-secondary hover:bg-ui-bg-hover",
-                  "transition-all duration-200",
+                  "group bg-ui-bg-soft",
                   projectNavigation.getItemProps(index).className,
                 )}
               >
                 <Flex align="center" gap="sm">
                   {/* Project avatar/icon */}
-                  <Avatar
-                    name={project.name}
-                    size="md"
-                    variant="brand"
-                    className="ring-1 ring-brand/20 group-hover:ring-brand/40 transition-all"
-                  />
+                  <Avatar name={project.name} size="md" variant="brand" hoverRing />
                   <FlexItem flex="1" className="min-w-0">
                     <Flex justify="between" align="center" gap="sm">
                       <Typography
@@ -116,7 +108,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                     </Typography>
                   </FlexItem>
                 </Flex>
-              </Button>
+              </Card>
             ))}
           </Flex>
         )}

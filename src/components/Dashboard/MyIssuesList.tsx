@@ -16,6 +16,7 @@ import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { Metadata, MetadataItem } from "../ui/Metadata";
 import { SkeletonList } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
+import { Tabs, TabsList, TabsTrigger } from "../ui/Tabs";
 
 type IssueFilter = "assigned" | "created" | "all";
 
@@ -88,44 +89,34 @@ export function MyIssuesList({
           </Typography>
         </Stack>
       </Card>
-      <Flex
-        justify="between"
-        align="stretch"
-        className="border-b border-ui-border/50 px-4 bg-ui-bg/20"
+      <Tabs
+        value={issueFilter}
+        onValueChange={(value) => onFilterChange(value as IssueFilter)}
+        className="border-b border-ui-border/50 bg-ui-bg/20"
       >
-        <Button
-          variant="unstyled"
-          onClick={() => onFilterChange("assigned")}
-          className={cn(
-            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider rounded-none",
-            issueFilter === "assigned"
-              ? "border-brand text-brand"
-              : "border-transparent text-ui-text-tertiary hover:text-ui-text",
-          )}
-          aria-label="Filter Assigned"
-        >
-          Assigned
-          <Typography variant="label" as="span" className="ml-1.5 opacity-60">
-            ({myIssues?.length || 0})
-          </Typography>
-        </Button>
-        <Button
-          variant="unstyled"
-          onClick={() => onFilterChange("created")}
-          className={cn(
-            "py-3 px-2 border-b-2 transition-all font-bold text-xs uppercase tracking-wider rounded-none",
-            issueFilter === "created"
-              ? "border-brand text-brand"
-              : "border-transparent text-ui-text-tertiary hover:text-ui-text",
-          )}
-          aria-label="Filter Created"
-        >
-          Created
-          <Typography variant="label" as="span" className="ml-1.5 opacity-60">
-            ({myCreatedIssues?.length || 0})
-          </Typography>
-        </Button>
-      </Flex>
+        <TabsList variant="underline" className="px-4 gap-4">
+          <TabsTrigger
+            value="assigned"
+            variant="underline"
+            className="py-3 px-2 font-bold text-xs uppercase tracking-wider text-ui-text-tertiary"
+          >
+            Assigned
+            <Typography variant="label" as="span" className="ml-1.5 opacity-60">
+              ({myIssues?.length || 0})
+            </Typography>
+          </TabsTrigger>
+          <TabsTrigger
+            value="created"
+            variant="underline"
+            className="py-3 px-2 font-bold text-xs uppercase tracking-wider text-ui-text-tertiary"
+          >
+            Created
+            <Typography variant="label" as="span" className="ml-1.5 opacity-60">
+              ({myCreatedIssues?.length || 0})
+            </Typography>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
       <Card padding="md" radius="none" variant="ghost" className="flex-1 overflow-hidden">
         <Flex direction="column" className="h-full">
           {!displayIssues ? (

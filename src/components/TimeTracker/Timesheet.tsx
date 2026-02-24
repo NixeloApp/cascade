@@ -6,7 +6,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";

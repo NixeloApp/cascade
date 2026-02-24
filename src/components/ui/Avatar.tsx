@@ -63,6 +63,8 @@ export interface AvatarProps extends VariantProps<typeof avatarVariants> {
   className?: string;
   /** Alt text for image (defaults to name) */
   alt?: string;
+  /** Show brand ring that intensifies on parent hover (use inside group containers) */
+  hoverRing?: boolean;
 }
 
 /**
@@ -87,12 +89,19 @@ export function Avatar({
   variant = "soft",
   className,
   alt,
+  hoverRing = false,
 }: AvatarProps) {
   const initials = getInitials(name, email);
   const altText = alt || name || email || "User avatar";
 
   return (
-    <AvatarPrimitive.Root className={cn(avatarVariants({ size }), className)}>
+    <AvatarPrimitive.Root
+      className={cn(
+        avatarVariants({ size }),
+        hoverRing && "ring-1 ring-brand/20 group-hover:ring-brand/40 transition-all",
+        className,
+      )}
+    >
       {src && (
         <AvatarPrimitive.Image
           src={src}

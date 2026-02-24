@@ -130,7 +130,7 @@ export function DocumentHeader({
                 size="sm"
                 onClick={onShowVersionHistory}
                 leftIcon={<History className="w-4 h-4" aria-hidden="true" />}
-                className="px-2 sm:px-3 py-1.5 border border-ui-border text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-default min-h-0"
+                className="px-2 sm:px-3 py-1.5 border border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default min-h-0"
                 aria-label="Version history"
               >
                 <Typography variant="small" as="span" className="hidden sm:inline">
@@ -187,7 +187,7 @@ export function DocumentHeader({
                   "px-2.5 sm:px-3 py-1.5 min-h-0 text-sm border transition-default",
                   document.isPublic
                     ? "border-status-success/30 bg-status-success-bg text-status-success-text hover:bg-status-success-bg/80"
-                    : "border-ui-border text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover hover:border-ui-border-secondary",
+                    : "border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary",
                 )}
               >
                 {document.isPublic ? "Public" : "Private"}

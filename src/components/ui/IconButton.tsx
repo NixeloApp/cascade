@@ -26,6 +26,11 @@ import { cn } from "@/lib/utils";
  * <IconButton variant="ghost"><SettingsIcon /></IconButton>
  * <IconButton variant="subtle"><EditIcon /></IconButton>
  * <IconButton variant="danger"><TrashIcon /></IconButton>
+ *
+ * // Reveal on hover (for action buttons inside cards/list items)
+ * <Card hoverable className="group">
+ *   <IconButton reveal variant="danger"><TrashIcon /></IconButton>
+ * </Card>
  */
 
 const iconButtonVariants = cva(
@@ -53,10 +58,16 @@ const iconButtonVariants = cva(
         md: "h-9 w-9 p-2",
         lg: "h-10 w-10 p-2.5",
       },
+      /** Show only on parent hover (use inside group containers) */
+      reveal: {
+        true: "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "ghost",
       size: "sm",
+      reveal: false,
     },
   },
 );
@@ -69,11 +80,11 @@ export interface IconButtonProps
 }
 
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ className, variant, size, asChild = false, type = "button", ...props }, ref) => {
+  ({ className, variant, size, reveal, asChild = false, type = "button", ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={cn(iconButtonVariants({ variant, size, className }))}
+        className={cn(iconButtonVariants({ variant, size, reveal, className }))}
         ref={ref}
         type={type}
         {...props}

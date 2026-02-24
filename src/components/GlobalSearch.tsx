@@ -6,7 +6,6 @@ import { Icon } from "@/components/ui/Icon";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
 import { Search } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
-import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import {
@@ -19,6 +18,7 @@ import {
   CommandList,
 } from "./ui/Command";
 import { KeyboardShortcut, ShortcutHint } from "./ui/KeyboardShortcut";
+import { Tabs, TabsList, TabsTrigger } from "./ui/Tabs";
 import { Typography } from "./ui/Typography";
 
 type SearchResult =
@@ -83,37 +83,6 @@ function getHasMore(
     return issueHasMore;
   }
   return documentHasMore;
-}
-
-// Tab button component
-function SearchTab({
-  label,
-  isActive,
-  count,
-  showCount,
-  onClick,
-}: {
-  label: string;
-  isActive: boolean;
-  count: number;
-  showCount: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Button
-      variant="unstyled"
-      onClick={onClick}
-      className={cn(
-        "pb-2 px-1 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap rounded-none h-auto",
-        isActive
-          ? "border-brand-ring text-brand"
-          : "border-transparent text-ui-text-secondary hover:text-ui-text",
-      )}
-    >
-      {label}
-      {showCount && ` (${count})`}
-    </Button>
-  );
 }
 
 // Search list content component - renders based on query/loading state
@@ -332,29 +301,31 @@ export function GlobalSearch() {
           />
 
           {/* Tabs with counts */}
-          <Flex gap="sm" className="border-b border-ui-border overflow-x-auto">
-            <SearchTab
-              label="All"
-              isActive={activeTab === "all"}
-              count={issueTotal + documentTotal}
-              showCount={query.length >= 2}
-              onClick={() => setActiveTab("all")}
-            />
-            <SearchTab
-              label="Issues"
-              isActive={activeTab === "issues"}
-              count={issueTotal}
-              showCount={query.length >= 2}
-              onClick={() => setActiveTab("issues")}
-            />
-            <SearchTab
-              label="Documents"
-              isActive={activeTab === "documents"}
-              count={documentTotal}
-              showCount={query.length >= 2}
-              onClick={() => setActiveTab("documents")}
-            />
-          </Flex>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
+            className="border-b border-ui-border overflow-x-auto"
+          >
+            <TabsList variant="underline" className="gap-4">
+              <TabsTrigger value="all" variant="underline" className="pb-2 px-1 text-xs sm:text-sm">
+                All{query.length >= 2 && ` (${issueTotal + documentTotal})`}
+              </TabsTrigger>
+              <TabsTrigger
+                value="issues"
+                variant="underline"
+                className="pb-2 px-1 text-xs sm:text-sm"
+              >
+                Issues{query.length >= 2 && ` (${issueTotal})`}
+              </TabsTrigger>
+              <TabsTrigger
+                value="documents"
+                variant="underline"
+                className="pb-2 px-1 text-xs sm:text-sm"
+              >
+                Documents{query.length >= 2 && ` (${documentTotal})`}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           <CommandList className="max-h-80 sm:max-h-96">
             <SearchListContent

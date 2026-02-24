@@ -6,10 +6,10 @@ import type { FunctionReference } from "convex/server";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { NavItem } from "@/components/ui/NavItem";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
-import { cn } from "@/lib/utils";
 
 type PaginatedQuery = FunctionReference<"query", "public">;
 
@@ -52,20 +52,15 @@ export function SidebarTeamItem({
           {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </Button>
         <Tooltip content={team.name}>
-          <Link
-            to={ROUTES.workspaces.teams.detail.path}
-            params={{ orgSlug, workspaceSlug, teamSlug: team.slug }}
-            onClick={onNavClick}
-            aria-current={isActive ? "page" : undefined}
-            className={cn(
-              "block px-3 py-1.5 rounded-md text-sm truncate transition-default flex-1",
-              isActive
-                ? "bg-ui-bg-hover text-ui-text"
-                : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
-            )}
-          >
-            {team.name}
-          </Link>
+          <NavItem asChild active={isActive} size="sm" className="flex-1">
+            <Link
+              to={ROUTES.workspaces.teams.detail.path}
+              params={{ orgSlug, workspaceSlug, teamSlug: team.slug }}
+              onClick={onNavClick}
+            >
+              {team.name}
+            </Link>
+          </NavItem>
         </Tooltip>
       </Flex>
 
@@ -123,23 +118,18 @@ function SidebarTeamProjects({
         return (
           <li key={project._id} className="list-none">
             <Tooltip content={`${project.key} - ${project.name}`}>
-              <Link
-                to={ROUTES.projects.board.path}
-                params={{
-                  orgSlug,
-                  key: project.key,
-                }}
-                onClick={onNavClick}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "block px-3 py-1.5 rounded-md text-sm truncate transition-default",
-                  isActive
-                    ? "bg-ui-bg-hover text-ui-text font-medium"
-                    : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
-                )}
-              >
-                {project.key} - {project.name}
-              </Link>
+              <NavItem asChild active={isActive} size="sm">
+                <Link
+                  to={ROUTES.projects.board.path}
+                  params={{
+                    orgSlug,
+                    key: project.key,
+                  }}
+                  onClick={onNavClick}
+                >
+                  {project.key} - {project.name}
+                </Link>
+              </NavItem>
             </Tooltip>
           </li>
         );

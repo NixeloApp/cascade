@@ -238,8 +238,8 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                     <IconButton
                       variant="danger"
                       size="sm"
+                      reveal
                       onClick={() => setDeleteConfirm(attachment.storageId)}
-                      className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                       aria-label={`Delete ${attachment.filename}`}
                     >
                       <Icon icon={Trash2} size="sm" />
