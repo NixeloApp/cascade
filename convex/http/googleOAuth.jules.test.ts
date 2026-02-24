@@ -343,7 +343,7 @@ describe("Google OAuth Flow", () => {
       const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(403);
       const body = await response.json();
       expect(body.success).toBe(false);
       // Verify we get the specific message
