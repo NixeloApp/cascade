@@ -28,6 +28,7 @@ export const create = projectAdminMutation({
     actionType: automationActionTypes,
     actionValue: automationActionValue,
   },
+  returns: v.object({ ruleId: v.id("automationRules") }),
   handler: async (ctx, args) => {
     // Enforce actionType matches actionValue.type to prevent divergence
     if (args.actionType !== args.actionValue.type) {
@@ -67,6 +68,7 @@ export const update = authenticatedMutation({
     actionType: v.optional(automationActionTypes),
     actionValue: v.optional(automationActionValue),
   },
+  returns: v.object({ success: v.literal(true), ruleId: v.id("automationRules") }),
   handler: async (ctx, args) => {
     const rule = await ctx.db.get(args.id);
     if (!rule) {
@@ -99,6 +101,8 @@ export const update = authenticatedMutation({
     if (args.actionValue !== undefined) updates.actionValue = args.actionValue;
 
     await ctx.db.patch(args.id, updates);
+
+    return { success: true, ruleId: args.id } as const;
   },
 });
 
@@ -106,6 +110,7 @@ export const remove = authenticatedMutation({
   args: {
     id: v.id("automationRules"),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const rule = await ctx.db.get(args.id);
     if (!rule) {
@@ -119,6 +124,8 @@ export const remove = authenticatedMutation({
     await assertIsProjectAdmin(ctx, rule.projectId, ctx.userId);
 
     await ctx.db.delete(args.id);
+
+    return { success: true } as const;
   },
 });
 

@@ -237,12 +237,13 @@ describe("Automation Rules", () => {
         actionValue: { type: "set_priority", priority: "medium" },
       });
 
-      await asUser.mutation(api.automationRules.update, {
+      const result = await asUser.mutation(api.automationRules.update, {
         id: ruleId,
         name: "Updated Name",
         description: "Added description",
         actionValue: { type: "set_priority", priority: "high" },
       });
+      expect(result).toEqual({ success: true, ruleId });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
@@ -428,7 +429,8 @@ describe("Automation Rules", () => {
         actionValue: { type: "set_priority", priority: "high" },
       });
 
-      await asUser.mutation(api.automationRules.remove, { id: ruleId });
+      const result = await asUser.mutation(api.automationRules.remove, { id: ruleId });
+      expect(result).toEqual({ success: true });
 
       const rule = await t.run(async (ctx) => {
         return await ctx.db.get(ruleId);
