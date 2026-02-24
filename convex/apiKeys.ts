@@ -8,7 +8,7 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, requireOwned, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, WEEK } from "./lib/timeUtils";
-import { assertCanAccessProject, computeProjectAccess } from "./projectAccess";
+import { computeProjectAccess } from "./projectAccess";
 
 /**
  * API Key Management
@@ -332,9 +332,9 @@ export const rotate = authenticatedMutation({
     }
 
     // Verify access if project-scoped
-    if (oldKey.projectId) {
-      await assertCanAccessProject(ctx, oldKey.projectId, ctx.userId);
-    }
+    // Use validateKeyGeneration to re-check scopes against current permissions
+    // This prevents privilege escalation if user role was downgraded
+    await validateKeyGeneration(ctx, oldKey.projectId, oldKey.scopes);
 
     // Generate new API key
     const newApiKey = generateApiKey();
