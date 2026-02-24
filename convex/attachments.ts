@@ -24,9 +24,16 @@ export const attachToIssue = issueMutation({
     contentType: v.string(),
     size: v.number(),
   },
+  returns: v.union(
+    v.object({ success: v.literal(true) }),
+    v.object({ success: v.literal(false), error: v.string() }),
+  ),
   handler: async (ctx, args) => {
     // Validate file type before linking
-    await validateAttachment(ctx, args.storageId);
+    const result = await validateAttachment(ctx, args.storageId);
+    if (!result.valid) {
+      return { success: false as const, error: result.error };
+    }
 
     // Add attachment to issue
     await ctx.db.patch(ctx.issue._id, {
@@ -43,7 +50,7 @@ export const attachToIssue = issueMutation({
       newValue: args.filename,
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 

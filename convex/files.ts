@@ -23,10 +23,16 @@ export const addAttachment = issueMutation({
     contentType: v.string(),
     size: v.number(),
   },
-  returns: v.object({ storageId: v.id("_storage") }),
+  returns: v.union(
+    v.object({ success: v.literal(true), storageId: v.id("_storage") }),
+    v.object({ success: v.literal(false), error: v.string() }),
+  ),
   handler: async (ctx, args) => {
     // Validate file type before linking
-    await validateAttachment(ctx, args.storageId);
+    const result = await validateAttachment(ctx, args.storageId);
+    if (!result.valid) {
+      return { success: false as const, error: result.error };
+    }
 
     const issue = ctx.issue;
 
@@ -47,7 +53,7 @@ export const addAttachment = issueMutation({
       newValue: args.filename,
     });
 
-    return { storageId: args.storageId };
+    return { success: true as const, storageId: args.storageId };
   },
 });
 
