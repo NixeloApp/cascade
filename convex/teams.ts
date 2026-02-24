@@ -54,6 +54,14 @@ export const createTeam = organizationMemberMutation({
   handler: async (ctx, args) => {
     // organizationMemberMutation handles auth + org membership check
 
+    // Validate workspace belongs to the organization
+    const workspace = await ctx.db.get(args.workspaceId);
+    if (!workspace) throw notFound("workspace", args.workspaceId);
+
+    if (workspace.organizationId !== ctx.organizationId) {
+      throw validation("workspaceId", "Workspace does not belong to the specified organization");
+    }
+
     // Generate unique slug
     const baseSlug = generateSlug(args.name);
     let slug = baseSlug;
