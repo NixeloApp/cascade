@@ -12,7 +12,7 @@ function applySingularFilters(
     status?: string[];
     priority?: string[];
   },
-) {
+): SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex> {
   let searchQ = q;
 
   const singleType =
@@ -47,7 +47,7 @@ function applyUserFilters(
     reporterId?: Id<"users">;
   },
   userId: Id<"users">,
-) {
+): SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex> {
   let searchQ = q;
 
   if (args.assigneeId === "me") {
