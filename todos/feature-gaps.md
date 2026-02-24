@@ -33,10 +33,10 @@ Add "user" type to custom fields for Reviewer, QA, Designer fields.
 
 ### Tasks
 
-- [ ] Add `v.literal("user")` to schema `fieldType` union
-- [ ] Update `convex/customFields.ts` validation
-- [ ] Create user picker UI in `CustomFieldValues.tsx`
-- [ ] Update `CustomFieldsManager.tsx` to allow creating user fields
+- [x] Add `v.literal("user")` to schema `fieldType` union ✅ 2026-02-24
+- [x] Update `convex/customFields.ts` validation ✅ 2026-02-24
+- [x] Create user picker UI in `CustomFieldValues.tsx` ✅ 2026-02-24
+- [x] Update `CustomFieldsManager.tsx` to allow creating user fields ✅ 2026-02-24
 
 ### Current Types
 
@@ -48,7 +48,7 @@ v.literal("multiselect"),
 v.literal("date"),
 v.literal("checkbox"),
 v.literal("url"),
-// Missing: v.literal("user")
+v.literal("user"), // ✅ Added
 ```
 
 ---

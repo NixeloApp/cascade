@@ -93,6 +93,7 @@ export const create = projectAdminMutation({
       v.literal("date"),
       v.literal("checkbox"),
       v.literal("url"),
+      v.literal("user"),
     ),
     options: v.optional(v.array(v.string())),
     isRequired: v.boolean(),

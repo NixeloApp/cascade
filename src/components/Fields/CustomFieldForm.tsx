@@ -10,7 +10,15 @@ import { Select } from "../ui/form/Select";
 import { Textarea } from "../ui/form/Textarea";
 import { Stack } from "../ui/Stack";
 
-type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "checkbox" | "url";
+type FieldType =
+  | "text"
+  | "number"
+  | "select"
+  | "multiselect"
+  | "date"
+  | "checkbox"
+  | "url"
+  | "user";
 
 /**
  * Parse options string for select/multiselect fields
@@ -164,6 +172,7 @@ export function CustomFieldForm({ projectId, field, open, onOpenChange }: Custom
           <option value="date">Date</option>
           <option value="checkbox">Checkbox</option>
           <option value="url">URL</option>
+          <option value="user">User (Project Member)</option>
         </Select>
 
         {/* Options (for select types) */}
