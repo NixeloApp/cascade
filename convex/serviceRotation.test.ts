@@ -85,6 +85,7 @@ describe("Service Rotation", () => {
 
       const result = await t.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
+        apiKey: "test-bot-key",
       });
 
       expect(result).not.toBeNull();
@@ -112,6 +113,7 @@ describe("Service Rotation", () => {
 
       const result = await t.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
+        apiKey: "test-bot-key",
       });
 
       // Should pick provider 2 (priority 2)
@@ -162,6 +164,7 @@ describe("Service Rotation", () => {
 
       const result = await t.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
+        apiKey: "test-bot-key",
       });
 
       // Should pick provider 2 because it's cheaper (0.5 vs 1.0 vs 2.0)
@@ -201,6 +204,7 @@ describe("Service Rotation", () => {
 
       const result = await t.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
+        apiKey: "test-bot-key",
       });
 
       // Should pick provider 3 (one-time credits)
@@ -344,6 +348,7 @@ describe("Service Rotation", () => {
       const summary = await t.query(api.serviceRotation.getUsageSummary, {
         serviceType: "transcription",
         month: "2024-01",
+        apiKey: "test-bot-key",
       });
 
       expect(summary.month).toBe("2024-01");
