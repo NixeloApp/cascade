@@ -19,19 +19,80 @@ import { conflict } from "./errors";
 type AnyDataModel = GenericDataModel;
 
 /**
- * Relationship definition between parent and child tables
+ * Relationship definition between parent and child tables.
+ *
+ * Defines how records in the `child` table should behave when a record in the `parent` table is deleted.
  */
 export type Relationship = {
-  parent: TableNames; // Parent table name (e.g., "issues")
-  child: TableNames; // Child table name (e.g., "issueComments")
-  foreignKey: string; // Field in child pointing to parent (e.g., "issueId")
-  index: string; // Index name for fast lookup (e.g., "by_issue")
+  /** The table name of the parent record (e.g., "issues"). */
+  parent: TableNames;
+
+  /** The table name of the child record (e.g., "issueComments"). */
+  child: TableNames;
+
+  /** The field in the child table that stores the parent's ID (e.g., "issueId"). */
+  foreignKey: string;
+
+  /**
+   * The name of the index in `convex/schema.ts` used to efficiently find children.
+   *
+   * ⚠️ CRITICAL REQUIREMENT:
+   * This index MUST be defined on the `child` table, and its FIRST indexed field
+   * MUST be the `foreignKey`.
+   *
+   * Example:
+   * If foreignKey is "issueId", the index definition must look like:
+   * `.index("by_issue", ["issueId"])` or `.index("by_issue_date", ["issueId", "createdAt"])`
+   *
+   * If this requirement is not met, the cascade operation will fail or be extremely slow.
+   */
+  index: string;
+
+  /**
+   * Defines the behavior when the parent record is deleted:
+   *
+   * - `cascade`: Recursively delete (or soft-delete) all child records.
+   *   Use this for strong ownership (e.g., Issue -> Comments).
+   *
+   * - `set_null`: Keep the child records but set the `foreignKey` field to `undefined`.
+   *   Use this for weak references (e.g., Project -> Documents).
+   *
+   * - `restrict`: Throw a `CONFLICT` error if any child records exist.
+   *   Use this to prevent accidental deletion of critical dependencies.
+   */
   onDelete: "cascade" | "set_null" | "restrict";
 };
 
 /**
- * Master registry of all database relationships
- * Add new relationships here when creating related tables
+ * Master registry of all database relationships.
+ *
+ * ============================================================================
+ * 📚 GUIDE: HOW TO ADD A NEW RELATIONSHIP
+ * ============================================================================
+ *
+ * 1. **Define Schema Index**: In `convex/schema.ts`, ensure the child table has an index
+ *    starting with the foreign key field.
+ *    ```typescript
+ *    // In convex/schema.ts
+ *    childTable: defineTable({ parentId: v.id("parentTable"), ... })
+ *      .index("by_parent", ["parentId"]) // <--- REQUIRED
+ *    ```
+ *
+ * 2. **Add Entry Below**: Add a new object to the `RELATIONSHIPS` array.
+ *    ```typescript
+ *    {
+ *      parent: "parentTable",
+ *      child: "childTable",
+ *      foreignKey: "parentId",
+ *      index: "by_parent", // Must match index name from step 1
+ *      onDelete: "cascade", // Choose: cascade, set_null, or restrict
+ *    }
+ *    ```
+ *
+ * 3. **Verify**: Ensure your mutation calls `cascadeDelete` or `cascadeSoftDelete`
+ *    before/after deleting the parent record.
+ *
+ * ============================================================================
  */
 export const RELATIONSHIPS: Relationship[] = [
   // ============================================================================
@@ -312,9 +373,12 @@ async function handleDeleteRelation(ctx: MutationCtx, rel: Relationship, recordI
  * @param table - Parent table name
  * @param recordId - ID of parent record being deleted
  *
- * @warning This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
+ * @warning ⚠️ BATCH LIMIT: This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
  * If a parent has more than 100 children in a relationship (e.g. >100 comments), the remaining
- * children will be orphaned. For large deletions, use `collectInBatches` or handle manually.
+ * children will be ORPHANED (not deleted).
+ *
+ * For large deletions (e.g. deleting a project with thousands of issues), do NOT use this function.
+ * Instead, use a background job with `collectInBatches` to handle the cleanup.
  *
  * @example
  * // Delete children first
@@ -345,9 +409,11 @@ export async function cascadeDelete<T extends TableNames>(
  * @param deletedBy - User ID who performed the deletion
  * @param deletedAt - Timestamp of deletion
  *
- * @warning This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
- * If a parent has more than 100 children in a relationship, the remaining children will not be
- * soft-deleted. For large datasets, handle deletion manually or in batches.
+ * @warning ⚠️ BATCH LIMIT: This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
+ * If a parent has more than 100 children in a relationship, the remaining children will NOT be
+ * soft-deleted (they will remain active).
+ *
+ * For large datasets, handle deletion manually or in batches.
  *
  * @example
  * const now = Date.now();
@@ -461,8 +527,8 @@ async function handleRestoreRelation(
  * @param table - Parent table name
  * @param recordId - ID of parent record being restored
  *
- * @warning This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
- * If a parent has more than 100 children in a relationship, the remaining children will not be
+ * @warning ⚠️ BATCH LIMIT: This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
+ * If a parent has more than 100 children in a relationship, the remaining children will NOT be
  * restored. For large datasets, handle restoration manually or in batches.
  *
  * @example
