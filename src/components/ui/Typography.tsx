@@ -73,6 +73,8 @@ export interface TypographyProps
     VariantProps<typeof typographyVariants> {
   /** Override the default HTML element */
   as?: React.ElementType;
+  /** For label elements */
+  htmlFor?: string;
 }
 
 export const Typography = React.forwardRef<HTMLElement, TypographyProps>(

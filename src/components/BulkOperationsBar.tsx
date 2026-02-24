@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Archive } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
@@ -30,6 +30,14 @@ export function BulkOperationsBar({
   const [showActions, setShowActions] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [archiveConfirm, setArchiveConfirm] = useState(false);
+
+  // Generate IDs for accessible labeling
+  const statusId = useId();
+  const priorityId = useId();
+  const assigneeId = useId();
+  const sprintId = useId();
+  const startDateId = useId();
+  const dueDateId = useId();
 
   const _project = useQuery(api.projects.getProject, { id: projectId });
   const sprints = useQuery(api.sprints.listByProject, { projectId });
@@ -221,11 +229,11 @@ export function BulkOperationsBar({
               <Grid cols={1} colsSm={2} colsMd={3} colsLg={6} gap="md">
                 {/* Status */}
                 <Stack gap="xs">
-                  <Typography variant="label" color="secondary">
+                  <Typography as="label" htmlFor={statusId} variant="label" color="secondary">
                     Status
                   </Typography>
                   <Select onValueChange={handleUpdateStatus}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={statusId} className="w-full">
                       <SelectValue placeholder="Select status..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -240,11 +248,11 @@ export function BulkOperationsBar({
 
                 {/* Priority */}
                 <Stack gap="xs">
-                  <Typography variant="label" color="secondary">
+                  <Typography as="label" htmlFor={priorityId} variant="label" color="secondary">
                     Priority
                   </Typography>
                   <Select onValueChange={handleUpdatePriority}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={priorityId} className="w-full">
                       <SelectValue placeholder="Select priority..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -259,11 +267,11 @@ export function BulkOperationsBar({
 
                 {/* Assignee */}
                 <Stack gap="xs">
-                  <Typography variant="label" color="secondary">
+                  <Typography as="label" htmlFor={assigneeId} variant="label" color="secondary">
                     Assignee
                   </Typography>
                   <Select onValueChange={handleAssign}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={assigneeId} className="w-full">
                       <SelectValue placeholder="Select assignee..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -279,11 +287,11 @@ export function BulkOperationsBar({
 
                 {/* Sprint */}
                 <Stack gap="xs">
-                  <Typography variant="label" color="secondary">
+                  <Typography as="label" htmlFor={sprintId} variant="label" color="secondary">
                     Sprint
                   </Typography>
                   <Select onValueChange={handleMoveToSprint}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={sprintId} className="w-full">
                       <SelectValue placeholder="Select sprint..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -299,11 +307,12 @@ export function BulkOperationsBar({
 
                 {/* Start Date */}
                 <Stack gap="xs">
-                  <Typography variant="label" color="secondary">
+                  <Typography as="label" htmlFor={startDateId} variant="label" color="secondary">
                     Start Date
                   </Typography>
                   <Flex gap="sm">
                     <Input
+                      id={startDateId}
                       type="date"
                       className="flex-1"
                       onChange={(e) => handleUpdateStartDate(e.target.value)}
@@ -321,11 +330,12 @@ export function BulkOperationsBar({
 
                 {/* Due Date */}
                 <Stack gap="xs">
-                  <Typography variant="label" color="secondary">
+                  <Typography as="label" htmlFor={dueDateId} variant="label" color="secondary">
                     Due Date
                   </Typography>
                   <Flex gap="sm">
                     <Input
+                      id={dueDateId}
                       type="date"
                       className="flex-1"
                       onChange={(e) => handleUpdateDueDate(e.target.value)}
