@@ -484,19 +484,6 @@ export const addComment = issueViewerMutation({
  * @param newStatus - The ID of the new status (workflow state).
  * @returns Object containing the number of updated issues.
  */
-
-/**
- * Bulk update the status of multiple issues.
- *
- * - Validates that the new status exists in the project's workflow.
- * - Updates the status of each issue.
- * - Logs activity for each issue.
- * - Skips issues that the user does not have permission to edit.
- *
- * @param issueIds - Array of issue IDs to update.
- * @param newStatus - The ID of the new status (workflow state).
- * @returns Object containing the number of updated issues.
- */
 export const bulkUpdateStatus = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
@@ -722,8 +709,14 @@ export const bulkDelete = authenticatedMutation({
 // =============================================================================
 
 /**
- * Archive a single issue
- * Only issues in "done" category can be archived
+ * Archive a single issue.
+ *
+ * - Marks the issue as archived.
+ * - Logs activity.
+ *
+ * @returns Object with success status.
+ * @throws {ConvexError} "Conflict" if the issue is already archived.
+ * @throws {ConvexError} "Validation" if the issue is not in the "done" workflow category.
  */
 export const archive = issueMutation({
   args: {},
@@ -761,7 +754,13 @@ export const archive = issueMutation({
 });
 
 /**
- * Restore (unarchive) a single issue
+ * Restore (unarchive) a single issue.
+ *
+ * - Removes the archived status.
+ * - Logs activity.
+ *
+ * @returns Object with success status.
+ * @throws {ConvexError} "Conflict" if the issue is not archived.
  */
 export const restore = issueMutation({
   args: {},
