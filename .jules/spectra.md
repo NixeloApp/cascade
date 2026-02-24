@@ -15,3 +15,7 @@
 ## 2025-03-03 - Workspace Access Helpers & Soft Deletion
 **Learning:** The helper functions in `convex/lib/workspaceAccess.ts` (`getWorkspaceRole`, etc.) query `workspaceMembers` by `[workspaceId, userId]` index but do *not* filter out records where `isDeleted: true`.
 **Action:** Be aware that these helpers return roles for soft-deleted members. If access should be denied for deleted members, the query in `workspaceAccess.ts` needs to be updated to filter `q.eq("isDeleted", undefined)` or similar. Tests added in `convex/lib/workspaceAccess.test.ts` document this current behavior.
+
+## 2025-03-08 - Testing Convex HTTP Actions
+**Learning:** Convex HTTP actions (`httpAction`) are best tested by directly importing the handler function and mocking the `ActionCtx` and `Request` object. Standard `convex-test` utilities are optimized for internal functions, not HTTP endpoints.
+**Action:** When testing HTTP actions, import the handler, mock `ActionCtx` (including `runQuery`/`runMutation`), and use `vi.fn()` for `fetch` and environment variables.
