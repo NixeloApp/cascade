@@ -491,9 +491,21 @@ export const bulkUpdateStatus = authenticatedMutation({
   },
   returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
-    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
-      // Fetch project to validate status
-      const project = await ctx.db.get(issue.projectId);
+    // Pre-fetch all issues to build project map (avoids N+1 reads)
+    // Using asyncMap instead of Promise.all to ensure proper parallelism control if needed,
+    // though performBulkUpdate used ctx.db.get inside map which is similar.
+    const allIssues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+    const validIssues = allIssues.filter((i): i is NonNullable<typeof i> => i !== null);
+    const uniqueProjectIds = [...new Set(validIssues.map((i) => i.projectId))] as Id<"projects">[];
+
+    // Fetch all related projects in one batch
+    const projectDocs = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
+    const validProjects = projectDocs.filter((p): p is NonNullable<typeof p> => p !== null);
+    const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
+
+    return applyBulkUpdate(ctx, validIssues, async (issue) => {
+      // Fetch project to validate status from cache
+      const project = projectMap.get(issue.projectId.toString());
       if (!project) return null;
 
       const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
