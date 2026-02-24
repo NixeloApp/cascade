@@ -22,8 +22,13 @@ describe("API Keys Security", () => {
     const { organizationId } = await createOrganizationAdmin(t, creatorId);
     const projectId = await createProjectInOrganization(t, creatorId, organizationId);
 
-    const memberId = await createTestUser(t, { name: "Member", email: "member@example.com" });
+    // 2. Setup: Member joins project
+    const memberEmail = "member@example.com";
+    const memberId = await createTestUser(t, { name: "Member", email: memberEmail });
+
+    // Add member to organization first (required by security check)
     await addUserToOrganization(t, organizationId, memberId, creatorId);
+    // Add member to project directly using helper (avoiding API call issues in tests)
     await addProjectMember(t, projectId, memberId, "viewer", creatorId);
 
     const asMember = asAuthenticatedUser(t, memberId);
@@ -33,10 +38,10 @@ describe("API Keys Security", () => {
       projectId,
     });
 
-    // 2. Remove member
+    // 3. Remove member
     await removeProjectMember(t, projectId, memberId);
 
-    // 3. Attempt rotation (should fail)
+    // 4. Attempt rotation (should fail)
     await expect(async () => {
       await asMember.mutation(api.apiKeys.rotate, { keyId });
     }).rejects.toThrow(/forbidden|not authorized/i);
@@ -50,8 +55,13 @@ describe("API Keys Security", () => {
     const { organizationId } = await createOrganizationAdmin(t, creatorId);
     const projectId = await createProjectInOrganization(t, creatorId, organizationId);
 
-    const memberId = await createTestUser(t, { name: "Member", email: "member@example.com" });
+    // 2. Setup: Member joins project
+    const memberEmail = "member@example.com";
+    const memberId = await createTestUser(t, { name: "Member", email: memberEmail });
+
+    // Add member to organization first (required by security check)
     await addUserToOrganization(t, organizationId, memberId, creatorId);
+    // Add member to project directly using helper (avoiding API call issues in tests)
     await addProjectMember(t, projectId, memberId, "viewer", creatorId);
 
     const asMember = asAuthenticatedUser(t, memberId);
@@ -61,10 +71,10 @@ describe("API Keys Security", () => {
       projectId,
     });
 
-    // 2. Remove member
+    // 3. Remove member
     await removeProjectMember(t, projectId, memberId);
 
-    // 3. Attempt update (should fail)
+    // 4. Attempt update (should fail)
     await expect(async () => {
       await asMember.mutation(api.apiKeys.update, {
         keyId,
