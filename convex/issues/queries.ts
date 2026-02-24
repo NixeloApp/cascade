@@ -726,6 +726,23 @@ export const search = authenticatedQuery({
 // Import the rest of the smart loading queries
 import { DEFAULT_PAGE_SIZE, getDoneColumnThreshold } from "../lib/pagination";
 
+// Helper: Fetch issues for each workflow state in parallel
+async function fetchIssuesByWorkflowState(
+  workflowStates: { id: string; category: string }[],
+  getQuery: (state: { id: string; category: string }) => {
+    take(n: number): Promise<Doc<"issues">[]>;
+  },
+  limit: number,
+) {
+  const issuesByColumn: Record<string, Doc<"issues">[]> = {};
+  await Promise.all(
+    workflowStates.map(async (state) => {
+      issuesByColumn[state.id] = await getQuery(state).take(limit);
+    }),
+  );
+  return issuesByColumn;
+}
+
 export const listByProjectSmart = projectQuery({
   args: {
     sprintId: v.optional(v.id("sprints")),
@@ -736,7 +753,7 @@ export const listByProjectSmart = projectQuery({
     const doneThreshold = getDoneColumnThreshold(Date.now(), args.doneColumnDays);
 
     const workflowStates = ctx.project.workflowStates;
-    const issuesByColumn: Record<string, Doc<"issues">[]> = {};
+    let issuesByColumn: Record<string, Doc<"issues">[]> = {};
 
     if (args.sprintId) {
       // Optimization: Fetch all issues in the sprint (bounded) and distribute them to columns in memory.
@@ -772,34 +789,32 @@ export const listByProjectSmart = projectQuery({
         issuesByColumn[state.id] = issuesForState.slice(0, DEFAULT_PAGE_SIZE);
       }
     } else {
-      await Promise.all(
-        workflowStates.map(async (state: { id: string; category: string }) => {
-          const q = (() => {
-            if (state.category === "done") {
-              // Batch query: Promise.all handles parallelism
-              return ctx.db
-                .query("issues")
-                .withIndex("by_project_status_updated", (q) =>
-                  q
-                    .eq("projectId", ctx.project._id)
-                    .eq("status", state.id)
-                    .gte("updatedAt", doneThreshold),
-                )
-                .filter(notDeleted);
-            }
-
+      issuesByColumn = await fetchIssuesByWorkflowState(
+        workflowStates,
+        (state) => {
+          if (state.category === "done") {
             // Batch query: Promise.all handles parallelism
             return ctx.db
               .query("issues")
-              .withIndex("by_project_status", (q) =>
-                q.eq("projectId", ctx.project._id).eq("status", state.id),
+              .withIndex("by_project_status_updated", (q) =>
+                q
+                  .eq("projectId", ctx.project._id)
+                  .eq("status", state.id)
+                  .gte("updatedAt", doneThreshold),
               )
-              .filter(notDeleted)
-              .order("asc");
-          })();
+              .filter(notDeleted);
+          }
 
-          issuesByColumn[state.id] = await q.take(DEFAULT_PAGE_SIZE);
-        }),
+          // Batch query: Promise.all handles parallelism
+          return ctx.db
+            .query("issues")
+            .withIndex("by_project_status", (q) =>
+              q.eq("projectId", ctx.project._id).eq("status", state.id),
+            )
+            .filter(notDeleted)
+            .order("asc");
+        },
+        DEFAULT_PAGE_SIZE,
       );
     }
 
@@ -842,31 +857,28 @@ export const listByTeamSmart = authenticatedQuery({
     ];
 
     const doneThreshold = getDoneColumnThreshold(Date.now(), args.doneColumnDays);
-    const issuesByColumn: Record<string, Doc<"issues">[]> = {};
 
-    await Promise.all(
-      workflowStates.map(async (state: { id: string; category: string }) => {
-        const q = (() => {
-          if (state.category === "done") {
-            // Batch query: Promise.all handles parallelism
-            return ctx.db
-              .query("issues")
-              .withIndex("by_team_status_updated", (q) =>
-                q.eq("teamId", args.teamId).eq("status", state.id).gte("updatedAt", doneThreshold),
-              )
-              .filter(notDeleted);
-          }
-
+    const issuesByColumn = await fetchIssuesByWorkflowState(
+      workflowStates,
+      (state) => {
+        if (state.category === "done") {
           // Batch query: Promise.all handles parallelism
           return ctx.db
             .query("issues")
-            .withIndex("by_team_status", (q) => q.eq("teamId", args.teamId).eq("status", state.id))
-            .filter(notDeleted)
-            .order("asc");
-        })();
+            .withIndex("by_team_status_updated", (q) =>
+              q.eq("teamId", args.teamId).eq("status", state.id).gte("updatedAt", doneThreshold),
+            )
+            .filter(notDeleted);
+        }
 
-        issuesByColumn[state.id] = await q.take(DEFAULT_PAGE_SIZE);
-      }),
+        // Batch query: Promise.all handles parallelism
+        return ctx.db
+          .query("issues")
+          .withIndex("by_team_status", (q) => q.eq("teamId", args.teamId).eq("status", state.id))
+          .filter(notDeleted)
+          .order("asc");
+      },
+      DEFAULT_PAGE_SIZE,
     );
 
     const enrichedIssuesByStatus = await batchEnrichIssuesByStatus(ctx, issuesByColumn);
