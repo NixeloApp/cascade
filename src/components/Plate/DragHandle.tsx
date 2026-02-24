@@ -104,7 +104,7 @@ export function DragHandle({ className }: DragHandleProps) {
   return (
     <div
       className={cn(
-        "absolute -left-10 top-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity",
+        "absolute -left-10 top-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity",
         isDragging && "opacity-50",
         className,
       )}
