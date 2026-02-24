@@ -431,7 +431,7 @@ export const startRecordingNow = authenticatedMutation({
 /** Cancel a scheduled recording. Only the creator can cancel, and only while status is 'scheduled'. */
 export const cancelRecording = authenticatedMutation({
   args: { recordingId: v.id("meetingRecordings") },
-  returns: v.null(),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
@@ -464,6 +464,8 @@ export const cancelRecording = authenticatedMutation({
         updatedAt: Date.now(),
       });
     }
+
+    return { success: true };
   },
 });
 
@@ -489,7 +491,7 @@ export const updateRecordingStatus = mutation({
     actualEndTime: v.optional(v.number()),
     duration: v.optional(v.number()),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     // Validate bot service API key
     await requireBotApiKey(ctx, args.apiKey);
@@ -507,6 +509,8 @@ export const updateRecordingStatus = mutation({
       duration: args.duration ?? recording.duration,
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -667,7 +671,7 @@ export const saveParticipants = mutation({
       }),
     ),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     // Validate bot service API key
     await requireBotApiKey(ctx, args.apiKey);
@@ -712,6 +716,8 @@ export const saveParticipants = mutation({
         }),
       ),
     );
+
+    return { success: true };
   },
 });
 
@@ -837,11 +843,12 @@ export const createIssueFromActionItem = authenticatedMutation({
  */
 export const triggerBotJob = internalMutation({
   args: { recordingId: v.id("meetingRecordings") },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const recording = await ctx.db.get(args.recordingId);
-    if (!recording) return;
+    if (!recording) return { success: false };
 
-    if (recording.status !== "scheduled") return;
+    if (recording.status !== "scheduled") return { success: false };
 
     const job = await ctx.db
       .query("meetingBotJobs")
@@ -849,7 +856,7 @@ export const triggerBotJob = internalMutation({
       .filter(notDeleted)
       .first();
 
-    if (!job || job.status !== "pending") return;
+    if (!job || job.status !== "pending") return { success: false };
 
     // Update statuses
     await ctx.db.patch(args.recordingId, {
@@ -870,6 +877,8 @@ export const triggerBotJob = internalMutation({
       meetingUrl: recording.meetingUrl ?? "",
       platform: recording.meetingPlatform,
     });
+
+    return { success: true };
   },
 });
 
@@ -970,12 +979,15 @@ export const updateJobBotServiceId = internalMutation({
     jobId: v.id("meetingBotJobs"),
     botServiceJobId: v.string(),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     await ctx.db.patch(args.jobId, {
       botServiceJobId: args.botServiceJobId,
       status: "running",
       updatedAt: Date.now(),
     });
+
+    return { success: true };
   },
 });
 
@@ -986,9 +998,10 @@ export const markJobFailed = internalMutation({
     recordingId: v.id("meetingRecordings"),
     error: v.string(),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const job = await ctx.db.get(args.jobId);
-    if (!job) return;
+    if (!job) return { success: false };
 
     const newAttempts = job.attempts + 1;
 
@@ -1024,5 +1037,7 @@ export const markJobFailed = internalMutation({
         updatedAt: Date.now(),
       });
     }
+
+    return { success: true };
   },
 });
