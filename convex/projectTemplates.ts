@@ -74,14 +74,16 @@ export const createFromTemplate = authenticatedMutation({
     // 2. Permission check: User must be Org Admin OR Workspace Member
     const orgRole = await getOrganizationRole(ctx, args.organizationId, ctx.userId);
     const isOrgAdmin = orgRole === "owner" || orgRole === "admin";
-    const workspaceRole = await getWorkspaceRole(ctx, args.workspaceId, ctx.userId);
 
     // Allow if user is Org Admin OR has any role in the workspace
-    if (!(isOrgAdmin || workspaceRole)) {
-      throw forbidden(
-        "member",
-        "You must be an organization admin or workspace member to create a project here",
-      );
+    if (!isOrgAdmin) {
+      const workspaceRole = await getWorkspaceRole(ctx, args.workspaceId, ctx.userId);
+      if (!workspaceRole) {
+        throw forbidden(
+          "member",
+          "You must be an organization admin or workspace member to create a project here",
+        );
+      }
     }
 
     // Validate: if teamId provided, ensure it belongs to the workspace
