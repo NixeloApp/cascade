@@ -18,6 +18,8 @@ const MAX_PROJECTS_FOR_ISSUE_SCAN = 50;
 
 // Helper to construct allowed project filter
 function isAllowedProject(q: FilterBuilder<GenericTableInfo>, projectIds: Id<"projects">[]) {
+  // Defensive guard: q.or() with zero args would throw at runtime
+  if (projectIds.length === 0) return q.eq(1, 0); // always false
   return q.or(...projectIds.map((id) => q.eq(q.field("projectId"), id)));
 }
 
@@ -55,6 +57,7 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
     ctx.db
       .query("issues")
       .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true)),
+    MAX_ISSUES_FOR_STATS,
   );
 }
 
@@ -145,6 +148,7 @@ async function countIssuesByAssigneeUnrestricted(ctx: QueryCtx, assigneeId: Id<"
       ctx.db
         .query("issues")
         .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true)),
+      MAX_ISSUES_FOR_STATS,
     ),
     efficientCount(
       ctx.db
@@ -152,6 +156,7 @@ async function countIssuesByAssigneeUnrestricted(ctx: QueryCtx, assigneeId: Id<"
         .withIndex("by_assignee_status", (q) =>
           q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
         ),
+      MAX_ISSUES_FOR_STATS,
     ),
   ]);
 }
@@ -166,33 +171,32 @@ async function countIssuesByAssigneeFast(
 ) {
   const projectIds = Array.from(allowedProjectIds) as Id<"projects">[];
 
-  // 1. Total Assigned: Parallel efficient counts on by_project_assignee index
-  // This avoids loading documents into memory
-  const totalAssigned = await countByProjectParallel(
-    projectIds,
-    MAX_ISSUES_FOR_STATS,
-    (projectId) =>
+  // Parallelize both counting operations
+  const [totalAssigned, completed] = await Promise.all([
+    // 1. Total Assigned: Parallel efficient counts on by_project_assignee index
+    // This avoids loading documents into memory
+    countByProjectParallel(projectIds, MAX_ISSUES_FOR_STATS, (projectId) =>
       ctx.db
         .query("issues")
         .withIndex("by_project_assignee", (q) =>
           q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
         ),
-  );
-
-  // 2. Completed: Parallel efficient counts on by_project_assignee_status index
-  // This uses a direct index lookup for done issues in the project, avoiding scanning
-  // all assigned issues (including todo/in-progress) and filtering.
-  const completed = await countByProjectParallel(projectIds, MAX_ISSUES_FOR_STATS, (projectId) =>
-    ctx.db
-      .query("issues")
-      .withIndex("by_project_assignee_status", (q) =>
-        q
-          .eq("projectId", projectId)
-          .eq("assigneeId", assigneeId)
-          .eq("status", "done")
-          .lt("isDeleted", true),
-      ),
-  );
+    ),
+    // 2. Completed: Parallel efficient counts on by_project_assignee_status index
+    // This uses a direct index lookup for done issues in the project, avoiding scanning
+    // all assigned issues (including todo/in-progress) and filtering.
+    countByProjectParallel(projectIds, MAX_ISSUES_FOR_STATS, (projectId) =>
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_assignee_status", (q) =>
+          q
+            .eq("projectId", projectId)
+            .eq("assigneeId", assigneeId)
+            .eq("status", "done")
+            .lt("isDeleted", true),
+        ),
+    ),
+  ]);
 
   return [Math.min(totalAssigned, MAX_ISSUES_FOR_STATS), Math.min(completed, MAX_ISSUES_FOR_STATS)];
 }
@@ -414,8 +418,7 @@ export async function collectUserStats(
   if (viewerId !== targetUserId) {
     const myMemberships = await ctx.db
       .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", viewerId))
-      .filter(notDeleted)
+      .withIndex("by_user", (q) => q.eq("userId", viewerId).lt("isDeleted", true))
       .take(MAX_PROJECTS_FOR_STATS); // Optimization: Use higher limit for finding shared projects
     allowedProjectIds = new Set(myMemberships.map((m) => m.projectId));
   }
