@@ -101,23 +101,23 @@ describe("issue search filters", () => {
         const searchContent = title;
 
         await runCtx.db.insert("issues", {
-            projectId,
-            organizationId: project.organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: `${project.key}-999`,
-            title,
-            searchContent,
-            type: "task",
-            status: "todo",
-            priority: "medium",
-            reporterId: otherUserId,
-            updatedAt: Date.now(),
-            labels: [],
-            linkedDocuments: [],
-            attachments: [],
-            loggedHours: 0,
-            order: 0,
+          projectId,
+          organizationId: project.organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: `${project.key}-999`,
+          title,
+          searchContent,
+          type: "task",
+          status: "todo",
+          priority: "medium",
+          reporterId: otherUserId,
+          updatedAt: Date.now(),
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          loggedHours: 0,
+          order: 0,
         });
       });
 
@@ -134,7 +134,7 @@ describe("issue search filters", () => {
 
   describe("combined text search and filters", () => {
     it("should filter by assignee with text query", async () => {
-       await createTestIssue(t, projectId, ctx.userId, {
+      await createTestIssue(t, projectId, ctx.userId, {
         title: "Bug Fix A",
         assigneeId: ctx.userId,
       });
@@ -154,36 +154,36 @@ describe("issue search filters", () => {
     });
 
     it("should filter by reporter with text query", async () => {
-       await createTestIssue(t, projectId, ctx.userId, {
+      await createTestIssue(t, projectId, ctx.userId, {
         title: "Feature X",
       });
 
-       await t.run(async (runCtx) => {
-         const project = await runCtx.db.get(projectId);
-         if (!project) throw new Error("Project not found");
+      await t.run(async (runCtx) => {
+        const project = await runCtx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
 
-         const title = "Feature Y";
-         const searchContent = title;
+        const title = "Feature Y";
+        const searchContent = title;
 
-         await runCtx.db.insert("issues", {
-            projectId,
-            organizationId: project.organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: `${project.key}-998`,
-            title,
-            searchContent,
-            type: "task",
-            status: "todo",
-            priority: "medium",
-            reporterId: otherUserId,
-            updatedAt: Date.now(),
-            labels: [],
-            linkedDocuments: [],
-            attachments: [],
-            loggedHours: 0,
-            order: 0,
-         });
+        await runCtx.db.insert("issues", {
+          projectId,
+          organizationId: project.organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: `${project.key}-998`,
+          title,
+          searchContent,
+          type: "task",
+          status: "todo",
+          priority: "medium",
+          reporterId: otherUserId,
+          updatedAt: Date.now(),
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          loggedHours: 0,
+          order: 0,
+        });
       });
 
       const result = await ctx.asUser.query(api.issues.queries.search, {
