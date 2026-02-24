@@ -11,11 +11,8 @@ describe("ShortcutBadge", () => {
     };
     render(<ShortcutBadge item={item} />);
 
-    // Depending on platform, it might render "Cmd" or "Ctrl"
-    // Since test environment is likely Linux/Headless, it's not Mac.
-    // So "Ctrl".
-    // But `isMacPlatform` mocks `navigator.platform`.
-    // Let's just check for K for sure.
+    // In headless/CI (Linux), isMacPlatform() → false, so "cmd" maps to "Ctrl"
+    expect(screen.getByText("Ctrl")).toBeInTheDocument();
     expect(screen.getByText("K")).toBeInTheDocument();
   });
 
