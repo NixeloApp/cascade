@@ -68,6 +68,8 @@ export const listByProject = projectQuery({
       project?.workflowStates.filter((s) => s.category === "done").map((s) => s.id) || [];
 
     // Fetch issues per sprint using index (more efficient than loading all issues)
+    // OPTIMIZATION: Reduced from N+1 queries per sprint (1 total + N per done status)
+    // to just 2 queries per sprint (1 total + 1 completed with filter)
     const sprintIds = sprints.map((s) => s._id);
     const issueStatsPromises = sprintIds.map(async (sprintId) => {
       const totalPromise = efficientCount(
@@ -77,24 +79,20 @@ export const listByProject = projectQuery({
         MAX_SPRINT_ISSUES,
       );
 
-      // Count completed issues by summing counts for all "done" category statuses
-      // We use Promise.all to query counts in parallel for each status
-      const completedPromise = Promise.all(
-        doneStatusIds.map((status) =>
-          efficientCount(
-            ctx.db
-              .query("issues")
-              .withIndex("by_project_sprint_status", (q) =>
-                q
-                  .eq("projectId", ctx.projectId)
-                  .eq("sprintId", sprintId)
-                  .eq("status", status)
-                  .lt("isDeleted", true),
-              ),
-            MAX_SPRINT_ISSUES,
-          ),
-        ),
-      ).then((counts) => counts.reduce((a, b) => a + b, 0));
+      // Count completed issues using a single query with filter for all done statuses
+      // This is more efficient than separate queries per status
+      const completedPromise =
+        doneStatusIds.length > 0
+          ? efficientCount(
+              ctx.db
+                .query("issues")
+                .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true))
+                .filter((q) =>
+                  q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status))),
+                ),
+              MAX_SPRINT_ISSUES,
+            )
+          : Promise.resolve(0);
 
       const [count, completedCount] = await Promise.all([totalPromise, completedPromise]);
       return { sprintId, count, completedCount };
