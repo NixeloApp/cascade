@@ -34,6 +34,7 @@
    * - duration-medium (300ms): Transform + shadow combos, emphasis
    * - duration-slow (500ms): Page transitions, complex state changes
    * - duration-enter (700ms): Onboarding animations, splash screens
+   * - duration-enter-slow (1000ms): Extended entry animations, stat reveals
    * ============================================================ */
   --duration-instant: 75ms;
   --duration-fast: 150ms;
@@ -41,6 +42,7 @@
   --duration-medium: 300ms;
   --duration-slow: 500ms;
   --duration-enter: 700ms;
+  --duration-enter-slow: 1000ms;
 
   /* Easing functions (ease-out for most UI, ease-in-out for emphasis) */
   --ease-default: cubic-bezier(0.4, 0, 0.2, 1);

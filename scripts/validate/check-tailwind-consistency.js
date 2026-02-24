@@ -28,6 +28,7 @@ const SEMANTIC_DURATIONS = new Set([
   "duration-medium", // 300ms
   "duration-slow", // 500ms
   "duration-enter", // 700ms
+  "duration-enter-slow", // 1000ms
 ]);
 
 // Allowed semantic transition classes

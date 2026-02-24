@@ -29,7 +29,7 @@ export function AppSplashScreen({ message }: { message?: string }) {
           direction="column"
           align="center"
           gap="xl"
-          className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300 fill-mode-both"
+          className="animate-in fade-in slide-in-from-bottom-4 duration-enter-slow delay-300 fill-mode-both"
         >
           {/* Minimal high-end loader - Always show to indicate activity */}
           <div className="w-32 h-0.5 bg-white/5 rounded-full overflow-hidden">
