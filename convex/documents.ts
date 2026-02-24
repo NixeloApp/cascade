@@ -190,11 +190,9 @@ export const updateTitle = authenticatedMutation({
     id: v.id("documents"),
     title: v.string(),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const document = await ctx.db.get(args.id);
-    if (!document) {
-      throw notFound("document", args.id);
-    }
+    const document = await getAccessibleDocument(ctx, args.id);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to edit this document");
@@ -211,11 +209,15 @@ export const updateTitle = authenticatedMutation({
 
 export const togglePublic = authenticatedMutation({
   args: { id: v.id("documents") },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
       throw notFound("document", args.id);
     }
+
+    // Ensure user still has access to the document's container
+    await assertDocumentAccess(ctx, document);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to edit this document");
@@ -237,11 +239,9 @@ export const togglePublic = authenticatedMutation({
 
 export const deleteDocument = authenticatedMutation({
   args: { id: v.id("documents") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
-    const document = await ctx.db.get(args.id);
-    if (!document) {
-      throw notFound("document", args.id);
-    }
+    const document = await getAccessibleDocument(ctx, args.id);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to delete this document");
@@ -252,12 +252,13 @@ export const deleteDocument = authenticatedMutation({
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
     await cascadeSoftDelete(ctx, "documents", args.id, ctx.userId, deletedAt);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
 export const restoreDocument = authenticatedMutation({
   args: { id: v.id("documents") },
+  returns: v.object({ success: v.literal(true), restored: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -272,6 +273,9 @@ export const restoreDocument = authenticatedMutation({
       throw forbidden(undefined, "Not authorized to restore this document");
     }
 
+    // Ensure user still has access to the document's container
+    await assertDocumentAccess(ctx, document);
+
     // Restore document
     await ctx.db.patch(args.id, {
       isDeleted: undefined,
@@ -279,7 +283,7 @@ export const restoreDocument = authenticatedMutation({
       deletedBy: undefined,
     });
 
-    return { success: true };
+    return { success: true, restored: true } as const;
   },
 });
 
@@ -797,11 +801,9 @@ export const moveDocument = authenticatedMutation({
     newParentId: v.optional(v.id("documents")),
     newOrder: v.optional(v.number()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const document = await ctx.db.get(args.id);
-    if (!document || document.isDeleted) {
-      throw notFound("document", args.id);
-    }
+    const document = await getAccessibleDocument(ctx, args.id);
 
     if (document.createdBy !== ctx.userId) {
       throw forbidden(undefined, "Not authorized to move this document");
@@ -839,6 +841,7 @@ export const reorderDocuments = authenticatedMutation({
     documentIds: v.array(v.id("documents")),
     parentId: v.optional(v.id("documents")),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     // Batch fetch all documents at once to avoid N+1
     const docs = await Promise.all(args.documentIds.map((id) => ctx.db.get(id)));
@@ -849,6 +852,10 @@ export const reorderDocuments = authenticatedMutation({
       if (!doc || doc.isDeleted) {
         throw notFound("document", args.documentIds[i]);
       }
+
+      // Ensure user still has access to the document's container
+      await assertDocumentAccess(ctx, doc);
+
       if (doc.createdBy !== ctx.userId) {
         throw forbidden(undefined, "Not authorized to reorder this document");
       }
@@ -1021,6 +1028,7 @@ export const updateComment = authenticatedMutation({
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1049,6 +1057,7 @@ export const deleteComment = authenticatedMutation({
   args: {
     commentId: v.id("documentComments"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1076,6 +1085,7 @@ export const addCommentReaction = authenticatedMutation({
     commentId: v.id("documentComments"),
     emoji: v.string(),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1113,6 +1123,7 @@ export const removeCommentReaction = authenticatedMutation({
     commentId: v.id("documentComments"),
     emoji: v.string(),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1267,16 +1278,11 @@ async function fetchAndMergeAccessibleDocuments(
   // Buffer size scales with limit to ensure we have enough results
   const fetchBuffer = limit * FETCH_BUFFER_MULTIPLIER;
 
-  // Get user's private documents (their own non-public docs)
-  const privateDocuments = await fetchPrivateDocuments(
-    ctx,
-    ctx.userId,
-    organizationId,
-    fetchBuffer,
-  );
-
-  // Get public documents (must be scoped to organization)
-  const publicDocuments = await fetchPublicDocuments(ctx, ctx.userId, organizationId, fetchBuffer);
+  // Get user's private and public documents in parallel
+  const [privateDocuments, publicDocuments] = await Promise.all([
+    fetchPrivateDocuments(ctx, ctx.userId, organizationId, fetchBuffer),
+    fetchPublicDocuments(ctx, ctx.userId, organizationId, fetchBuffer),
+  ]);
 
   // Combine and deduplicate (user's public docs appear in both queries)
   const seenIds = new Set<string>();

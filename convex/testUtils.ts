@@ -222,30 +222,6 @@ export async function addProjectMember(
 }
 
 /**
- * Remove a member from a project
- *
- * @param t - Convex test helper
- * @param projectId - Project ID
- * @param userId - User ID to remove
- */
-export async function removeProjectMember(
-  t: TestCtx,
-  projectId: Id<"projects">,
-  userId: Id<"users">,
-): Promise<void> {
-  await t.run(async (ctx) => {
-    const membership = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", userId))
-      .first();
-
-    if (membership) {
-      await ctx.db.delete(membership._id);
-    }
-  });
-}
-
-/**
  * Create a test issue
  *
  * @param t - Convex test helper

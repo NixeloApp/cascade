@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { projectEditorMutation, projectQuery, sprintMutation } from "./customFunctions";
-import { efficientCount, safeCollect } from "./lib/boundedQueries";
+import { efficientCount } from "./lib/boundedQueries";
 import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
@@ -67,64 +67,6 @@ export const listByProject = projectQuery({
     const doneStatusIds =
       project?.workflowStates.filter((s) => s.category === "done").map((s) => s.id) || [];
 
-    // OPTIMIZATION: Fetch all issues for the project if the count is manageable.
-    // This avoids N+1 queries (one per sprint, plus one per status per sprint).
-    const BATCH_ISSUE_FETCH_LIMIT = 2000;
-    const totalIssues = await efficientCount(
-      ctx.db
-        .query("issues")
-        .withIndex("by_project_deleted", (q) =>
-          q.eq("projectId", ctx.projectId).lt("isDeleted", true),
-        ),
-      BATCH_ISSUE_FETCH_LIMIT,
-    );
-
-    if (totalIssues <= BATCH_ISSUE_FETCH_LIMIT) {
-      // Small/medium project: fetch all active issues and aggregate in memory
-      const issues = await safeCollect(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_deleted", (q) =>
-            q.eq("projectId", ctx.projectId).lt("isDeleted", true),
-          ),
-        BATCH_ISSUE_FETCH_LIMIT,
-        "listByProject batch issues",
-      );
-
-      const issueStatsBySprint = new Map<string, { count: number; completedCount: number }>();
-
-      const doneStatusSet = new Set(doneStatusIds);
-
-      for (const issue of issues) {
-        if (!issue.sprintId) continue;
-        const sprintId = issue.sprintId;
-        const stats = issueStatsBySprint.get(sprintId) ?? {
-          count: 0,
-          completedCount: 0,
-        };
-
-        stats.count++;
-        if (doneStatusSet.has(issue.status)) {
-          stats.completedCount++;
-        }
-        issueStatsBySprint.set(sprintId, stats);
-      }
-
-      return sprints.map((sprint) => {
-        const stats = issueStatsBySprint.get(sprint._id) ?? {
-          count: 0,
-          completedCount: 0,
-        };
-        return {
-          ...sprint,
-          // Cap at MAX_SPRINT_ISSUES for consistency with fallback path (though exact is better)
-          issueCount: Math.min(stats.count, MAX_SPRINT_ISSUES),
-          completedCount: Math.min(stats.completedCount, MAX_SPRINT_ISSUES),
-        };
-      });
-    }
-
-    // Fallback for large projects: existing N+1 strategy (but uses efficientCount which is fast)
     // Fetch issues per sprint using index (more efficient than loading all issues)
     const sprintIds = sprints.map((s) => s._id);
     const issueStatsPromises = sprintIds.map(async (sprintId) => {

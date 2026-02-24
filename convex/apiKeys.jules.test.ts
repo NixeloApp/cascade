@@ -4,13 +4,11 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
-  addProjectMember,
   addUserToOrganization,
   asAuthenticatedUser,
   createOrganizationAdmin,
   createProjectInOrganization,
   createTestUser,
-  removeProjectMember,
 } from "./testUtils";
 
 describe("API Keys Security", () => {
@@ -21,15 +19,21 @@ describe("API Keys Security", () => {
     const creatorId = await createTestUser(t, { name: "Creator" });
     const { organizationId } = await createOrganizationAdmin(t, creatorId);
     const projectId = await createProjectInOrganization(t, creatorId, organizationId);
+    const asCreator = asAuthenticatedUser(t, creatorId);
 
     // 2. Setup: Member joins project
+    // Need a fixed email to add member by email
     const memberEmail = "member@example.com";
     const memberId = await createTestUser(t, { name: "Member", email: memberEmail });
 
     // Add member to organization first (required by security check)
     await addUserToOrganization(t, organizationId, memberId, creatorId);
-    // Add member to project directly using helper (avoiding API call issues in tests)
-    await addProjectMember(t, projectId, memberId, "viewer", creatorId);
+    // Add member to project
+    await asCreator.mutation(api.projects.addProjectMember, {
+      projectId,
+      userEmail: memberEmail,
+      role: "viewer",
+    });
 
     const asMember = asAuthenticatedUser(t, memberId);
     const { id: keyId } = await asMember.mutation(api.apiKeys.generate, {
@@ -39,7 +43,10 @@ describe("API Keys Security", () => {
     });
 
     // 3. Remove member
-    await removeProjectMember(t, projectId, memberId);
+    await asCreator.mutation(api.projects.removeProjectMember, {
+      projectId,
+      memberId,
+    });
 
     // 4. Attempt rotation (should fail)
     await expect(async () => {
@@ -61,6 +68,7 @@ describe("API Keys Security", () => {
 
     // Add member to organization first (required by security check)
     await addUserToOrganization(t, organizationId, memberId, creatorId);
+    const asCreator = asAuthenticatedUser(t, creatorId);
     // Add member to project directly using helper (avoiding API call issues in tests)
     await addProjectMember(t, projectId, memberId, "viewer", creatorId);
 
@@ -72,7 +80,10 @@ describe("API Keys Security", () => {
     });
 
     // 3. Remove member
-    await removeProjectMember(t, projectId, memberId);
+    await asCreator.mutation(api.projects.removeProjectMember, {
+      projectId,
+      memberId,
+    });
 
     // 4. Attempt update (should fail)
     await expect(async () => {

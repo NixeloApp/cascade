@@ -109,7 +109,7 @@ export function Avatar({
         delayMs={src ? 600 : 0}
         aria-hidden="true"
       >
-        <span aria-hidden="true">{initials}</span>
+        {initials}
       </AvatarPrimitive.Fallback>
     </AvatarPrimitive.Root>
   );
