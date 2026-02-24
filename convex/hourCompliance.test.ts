@@ -40,25 +40,27 @@ describe("Hour Compliance", () => {
 
     // Insert 30 hours of work (5 days * 6 hours)
     await t.run(async (ctx) => {
-      for (let i = 0; i < 5; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(date.getDate() + 1 + i); // Mon-Fri
+      await Promise.all(
+        Array.from({ length: 5 }, (_, i) => {
+          const date = new Date(startOfWeek);
+          date.setDate(date.getDate() + 1 + i); // Mon-Fri
 
-        await ctx.db.insert("timeEntries", {
-          userId: employeeId,
-          startTime: date.getTime(),
-          duration: 6 * 3600, // 6 hours
-          date: date.getTime(),
-          currency: "USD",
-          billable: true,
-          billed: false,
-          isEquityHour: false,
-          isLocked: false,
-          isApproved: false,
-          updatedAt: Date.now(),
-          tags: [],
-        });
-      }
+          return ctx.db.insert("timeEntries", {
+            userId: employeeId,
+            startTime: date.getTime(),
+            duration: 6 * 3600, // 6 hours
+            date: date.getTime(),
+            currency: "USD",
+            billable: true,
+            billed: false,
+            isEquityHour: false,
+            isLocked: false,
+            isApproved: false,
+            updatedAt: Date.now(),
+            tags: [],
+          });
+        }),
+      );
     });
 
     // Run compliance check as admin
@@ -115,25 +117,27 @@ describe("Hour Compliance", () => {
 
     // Insert 40 hours of work (5 days * 8 hours)
     await t.run(async (ctx) => {
-      for (let i = 0; i < 5; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(date.getDate() + 1 + i);
+      await Promise.all(
+        Array.from({ length: 5 }, (_, i) => {
+          const date = new Date(startOfWeek);
+          date.setDate(date.getDate() + 1 + i);
 
-        await ctx.db.insert("timeEntries", {
-          userId: employeeId,
-          startTime: date.getTime(),
-          duration: 8 * 3600, // 8 hours
-          date: date.getTime(),
-          currency: "USD",
-          billable: true,
-          billed: false,
-          isEquityHour: false,
-          isLocked: false,
-          isApproved: false,
-          updatedAt: Date.now(),
-          tags: [],
-        });
-      }
+          return ctx.db.insert("timeEntries", {
+            userId: employeeId,
+            startTime: date.getTime(),
+            duration: 8 * 3600, // 8 hours
+            date: date.getTime(),
+            currency: "USD",
+            billable: true,
+            billed: false,
+            isEquityHour: false,
+            isLocked: false,
+            isApproved: false,
+            updatedAt: Date.now(),
+            tags: [],
+          });
+        }),
+      );
     });
 
     const { recordId } = await adminCtx.asUser.mutation(api.hourCompliance.checkUserCompliance, {
@@ -179,25 +183,27 @@ describe("Hour Compliance", () => {
 
     // Insert 50 hours of work (5 days * 10 hours)
     await t.run(async (ctx) => {
-      for (let i = 0; i < 5; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(date.getDate() + 1 + i);
+      await Promise.all(
+        Array.from({ length: 5 }, (_, i) => {
+          const date = new Date(startOfWeek);
+          date.setDate(date.getDate() + 1 + i);
 
-        await ctx.db.insert("timeEntries", {
-          userId: employeeId,
-          startTime: date.getTime(),
-          duration: 10 * 3600, // 10 hours
-          date: date.getTime(),
-          currency: "USD",
-          billable: true,
-          billed: false,
-          isEquityHour: false,
-          isLocked: false,
-          isApproved: false,
-          updatedAt: Date.now(),
-          tags: [],
-        });
-      }
+          return ctx.db.insert("timeEntries", {
+            userId: employeeId,
+            startTime: date.getTime(),
+            duration: 10 * 3600, // 10 hours
+            date: date.getTime(),
+            currency: "USD",
+            billable: true,
+            billed: false,
+            isEquityHour: false,
+            isLocked: false,
+            isApproved: false,
+            updatedAt: Date.now(),
+            tags: [],
+          });
+        }),
+      );
     });
 
     const { recordId } = await adminCtx.asUser.mutation(api.hourCompliance.checkUserCompliance, {

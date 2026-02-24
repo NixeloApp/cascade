@@ -12,16 +12,18 @@ describe("Notifications Limit", () => {
     const asUser = t.withIdentity({ subject: userId });
 
     await t.run(async (ctx) => {
-      for (let i = 0; i < 105; i++) {
-        await ctx.db.insert("notifications", {
-          userId,
-          type: "info",
-          title: `Unread ${i}`,
-          message: "message",
-          isRead: false,
-          isDeleted: false,
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 105 }, (_, i) =>
+          ctx.db.insert("notifications", {
+            userId,
+            type: "info",
+            title: `Unread ${i}`,
+            message: "message",
+            isRead: false,
+            isDeleted: false,
+          }),
+        ),
+      );
     });
 
     const count = await asUser.query(api.notifications.getUnreadCount);

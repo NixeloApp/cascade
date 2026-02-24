@@ -226,21 +226,9 @@ export function isAmbiguousIP(hostname: string): boolean {
 }
 
 /**
- * Validates a destination URL against SSRF rules without performing DNS resolution.
- *
- * Checks include:
- * - URL scheme (must be http or https).
- * - Hostname validation:
- *   - Blocks private/reserved IPv4 ranges (e.g., 127.0.0.1, 10.x.x.x, 192.168.x.x).
- *   - Blocks private/reserved IPv6 ranges (e.g., ::1, fe80::, fc00::).
- *   - Blocks ambiguous IP formats (e.g., integer IPs, hex IPs, octal IPs) that might bypass filters.
- *   - Blocks restricted domains (localhost, AWS metadata).
- *
- * Note: This function does NOT resolve domains. It only checks the literal hostname string.
- * Use `validateDestinationResolved` for full SSRF protection including DNS resolution.
- *
- * @param url - The URL string to validate.
- * @throws {ConvexError} If the URL is invalid or violates SSRF rules.
+ * Validates a destination URL to prevent SSRF.
+ * Enforces strict IP formats and blocks private ranges.
+ * Blocks ambiguous IP formats.
  */
 export function validateDestination(url: string) {
   let parsed: URL;
@@ -288,19 +276,10 @@ export function validateDestination(url: string) {
 }
 
 /**
- * Validates a destination URL against SSRF rules, including DNS resolution.
- *
- * This is the primary function for SSRF protection. It performs the following steps:
- * 1. syntactic validation using `validateDestination`.
- * 2. DNS resolution of the hostname.
- * 3. Validation of all resolved IP addresses against private/reserved ranges.
- *
- * If validation passes, it returns the first resolved public IP address.
- * This IP should be used for the actual connection to prevent DNS rebinding attacks.
- *
- * @param url - The URL string to validate.
- * @returns The resolved public IP address (as a string).
- * @throws {ConvexError} If the URL is invalid, cannot be resolved, or resolves to a private IP.
+ * Validates a destination URL to prevent SSRF by resolving DNS.
+ * Enforces strict IP formats and blocks private ranges.
+ * Blocks domains that resolve to private IPs.
+ * Returns the resolved IP address to be used for the connection.
  */
 export async function validateDestinationResolved(url: string): Promise<string> {
   // 1. Basic syntax and direct IP check

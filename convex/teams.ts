@@ -187,7 +187,6 @@ export const updateTeam = teamLeadMutation({
  */
 export const softDeleteTeam = teamLeadMutation({
   args: {},
-  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -205,7 +204,7 @@ export const softDeleteTeam = teamLeadMutation({
       metadata: { deletedAt },
     });
 
-    return { success: true, deleted: true } as const;
+    return { success: true };
   },
 });
 
@@ -217,7 +216,6 @@ export const restoreTeam = authenticatedMutation({
   args: {
     teamId: v.id("teams"),
   },
-  returns: v.object({ success: v.literal(true), restored: v.literal(true) }),
   handler: async (ctx, args) => {
     const team = await ctx.db.get(args.teamId);
     if (!team) throw notFound("team", args.teamId);
@@ -254,7 +252,7 @@ export const restoreTeam = authenticatedMutation({
       targetType: "team",
     });
 
-    return { success: true, restored: true } as const;
+    return { success: true };
   },
 });
 
