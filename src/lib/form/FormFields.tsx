@@ -4,6 +4,15 @@ import type { CheckboxProps } from "@/components/ui/form/Checkbox";
 import type { InputProps } from "@/components/ui/form/Input";
 import type { SelectProps } from "@/components/ui/form/Select";
 import type { TextareaProps } from "@/components/ui/form/Textarea";
+import { Label } from "@/components/ui/Label";
+import {
+  SelectContent,
+  Select as SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
+import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
 
 /**
  * Get the first error message from field state
@@ -158,6 +167,66 @@ export function FormSelect<TName extends string, TValue>({
       helperText={helperText}
       {...props}
     />
+  );
+}
+
+// ============================================================================
+// FormSelectRadix
+// ============================================================================
+
+interface FormSelectRadixProps<TName extends string, TValue extends string> extends BaseFieldProps {
+  field: {
+    name: TName;
+    state: {
+      value: unknown;
+      meta: {
+        errors: ValidationError[];
+      };
+    };
+    handleChange: (updater: Updater<TValue>) => void;
+    handleBlur: () => void;
+  };
+  children: React.ReactNode;
+  placeholder?: string;
+  className?: string;
+}
+
+/**
+ * Rich Select field connected to TanStack Form (using Radix UI)
+ */
+export function FormSelectRadix<TName extends string, TValue extends string>({
+  field,
+  label,
+  helperText,
+  children,
+  placeholder,
+  className,
+}: FormSelectRadixProps<TName, TValue>) {
+  const error = getFieldError(field);
+  const value = (field.state.value as string) ?? "";
+
+  return (
+    <Stack gap="sm" className={className}>
+      {label && <Label>{label}</Label>}
+      <SelectRoot
+        value={value}
+        onValueChange={(val) => {
+          field.handleChange(val as TValue);
+          field.handleBlur();
+        }}
+      >
+        <SelectTrigger aria-invalid={!!error}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>{children}</SelectContent>
+      </SelectRoot>
+      {error && (
+        <Typography variant="small" color="error" className="font-medium">
+          {error}
+        </Typography>
+      )}
+      {helperText && !error && <Typography variant="muted">{helperText}</Typography>}
+    </Stack>
   );
 }
 
