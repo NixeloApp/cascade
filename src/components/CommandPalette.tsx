@@ -7,12 +7,10 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
-import { ShortcutBadge } from "@/components/ui/ShortcutBadge";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { FileText, FolderKanban, Home, LayoutGrid, Plus } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
-import { SHORTCUT_CATEGORIES } from "@/lib/shortcuts";
 import { TEST_IDS } from "@/lib/test-ids";
 import {
   Command,
@@ -67,14 +65,6 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
     onClose();
   };
 
-  const getShortcut = (commandId: string) => {
-    for (const category of SHORTCUT_CATEGORIES) {
-      const item = category.items.find((i) => i.id === commandId);
-      if (item) return item;
-    }
-    return null;
-  };
-
   return (
     <CommandDialog
       open={isOpen}
@@ -112,32 +102,24 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
               heading={group}
               className="text-ui-text-secondary [&_[cmdk-group-heading]]:text-ui-text-tertiary"
             >
-              {cmds.map((cmd) => {
-                const shortcut = getShortcut(cmd.id);
-                return (
-                  <CommandItem
-                    key={cmd.id}
-                    value={cmd.id}
-                    onSelect={() => handleSelect(cmd)}
-                    className="cursor-pointer data-[selected=true]:bg-brand-subtle"
-                  >
-                    {cmd.icon && <Icon icon={cmd.icon} size="md" className="mr-2" />}
-                    <FlexItem flex="1">
-                      <Typography variant="label" as="p">
-                        {cmd.label}
-                      </Typography>
-                      {cmd.description && (
-                        <Typography variant="caption">{cmd.description}</Typography>
-                      )}
-                    </FlexItem>
-                    {shortcut && (
-                      <div className="ml-auto pl-2">
-                        <ShortcutBadge item={shortcut} />
-                      </div>
+              {cmds.map((cmd) => (
+                <CommandItem
+                  key={cmd.id}
+                  value={cmd.id}
+                  onSelect={() => handleSelect(cmd)}
+                  className="cursor-pointer data-[selected=true]:bg-brand-subtle"
+                >
+                  {cmd.icon && <Icon icon={cmd.icon} size="md" className="mr-2" />}
+                  <FlexItem flex="1">
+                    <Typography variant="label" as="p">
+                      {cmd.label}
+                    </Typography>
+                    {cmd.description && (
+                      <Typography variant="caption">{cmd.description}</Typography>
                     )}
-                  </CommandItem>
-                );
-              })}
+                  </FlexItem>
+                </CommandItem>
+              ))}
             </CommandGroup>
           ))}
         </CommandList>
