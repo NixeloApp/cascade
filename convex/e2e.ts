@@ -698,8 +698,7 @@ export const cleanupTestUsersEndpoint = httpAction(async (ctx, request) => {
 
 /**
  * Garbage collection - delete old test users
-
-/**
+ *
  * Internal mutation for garbage collection
  */
 export const cleanupTestUsersInternal = internalMutation({
