@@ -63,6 +63,7 @@ import type * as issueLinks from "../issueLinks.js";
 import type * as issues from "../issues.js";
 import type * as issues_helpers from "../issues/helpers.js";
 import type * as issues_mutations from "../issues/mutations.js";
+import type * as issues_notifications from "../issues/notifications.js";
 import type * as issues_queries from "../issues/queries.js";
 import type * as issues_searchHelpers from "../issues/searchHelpers.js";
 import type * as labelGroups from "../labelGroups.js";
@@ -214,6 +215,7 @@ declare const fullApi: ApiFromModules<{
   issues: typeof issues;
   "issues/helpers": typeof issues_helpers;
   "issues/mutations": typeof issues_mutations;
+  "issues/notifications": typeof issues_notifications;
   "issues/queries": typeof issues_queries;
   "issues/searchHelpers": typeof issues_searchHelpers;
   labelGroups: typeof labelGroups;
