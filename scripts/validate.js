@@ -15,6 +15,7 @@
  *  11. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
  *  12. Convex patterns       — Envelope Pattern returns, security checks, test destructuring
  *  13. Interactive Tailwind  — hover:/focus: should be in CVA components, not scattered
+ *  14. Tailwind consistency  — duration tokens, focus rings, disabled states, z-index, group-hover
  *
  * Exit code 1 if any check fails. No warning levels — everything is an error.
  *
@@ -32,6 +33,7 @@ import { run as runInteractiveTwCheck } from "./validate/check-interactive-tw.js
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
 import { run as runRawTailwindCheck } from "./validate/check-raw-tailwind.js";
 import { run as runStandardsCheck } from "./validate/check-standards.js";
+import { run as runTailwindConsistencyCheck } from "./validate/check-tailwind-consistency.js";
 import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
 import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
 import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
@@ -53,6 +55,7 @@ const checks = [
   { name: "UI patterns", fn: runUIPatternsCheck },
   { name: "Convex patterns", fn: runConvexPatternsCheck },
   { name: "Interactive Tailwind", fn: runInteractiveTwCheck },
+  { name: "Tailwind consistency", fn: runTailwindConsistencyCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);
