@@ -86,8 +86,6 @@ describe("safeFetch", () => {
 
   it("extracts URL from Request object", async () => {
     mockValidateDestinationResolved.mockResolvedValue("1.2.3.4");
-    // Note: safeFetch currently does not preserve method/body from Request object, only URL.
-    // This test verifies URL extraction.
     const request = new Request("http://example.com/bar");
 
     await safeFetch(request);
@@ -97,6 +95,42 @@ describe("safeFetch", () => {
     const [url, options] = mockFetchWithTimeout.mock.calls[0];
     expect(url).toBe("http://1.2.3.4/bar");
     expect(options.headers.get("host")).toBe("example.com");
+  });
+
+  it("preserves Request properties (method, body)", async () => {
+    mockValidateDestinationResolved.mockResolvedValue("1.2.3.4");
+    const request = new Request("http://example.com/api", {
+      method: "POST",
+      body: JSON.stringify({ foo: "bar" }),
+    });
+
+    await safeFetch(request);
+
+    const [url, options] = mockFetchWithTimeout.mock.calls[0];
+    expect(url).toBe("http://1.2.3.4/api");
+    expect(options.method).toBe("POST");
+    expect(options.body).toBeDefined();
+    expect(options.redirect).toBe("error");
+  });
+
+  it("merges Request headers with init headers", async () => {
+    mockValidateDestinationResolved.mockResolvedValue("1.2.3.4");
+    const request = new Request("http://example.com", {
+      headers: { "X-Request": "req-val", "X-Common": "req-val" },
+    });
+
+    await safeFetch(request, {
+      headers: { "X-Init": "init-val", "X-Common": "init-val" },
+    });
+
+    const [url, options] = mockFetchWithTimeout.mock.calls[0];
+    const headers = options.headers as Headers;
+
+    expect(headers.get("x-request")).toBe("req-val");
+    expect(headers.get("x-init")).toBe("init-val");
+    expect(headers.get("x-common")).toBe("init-val"); // Init overrides request
+    expect(headers.get("host")).toBe("example.com");
+    expect(options.redirect).toBe("error");
   });
 
   it("passes custom timeout", async () => {
