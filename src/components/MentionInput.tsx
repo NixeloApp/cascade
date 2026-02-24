@@ -198,7 +198,7 @@ export function MentionInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={cn(
-            "w-full px-3 py-2 border border-ui-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-ring bg-ui-bg text-ui-text resize-none overflow-hidden",
+            "w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring bg-ui-bg text-ui-text resize-none overflow-hidden",
             className,
           )}
           rows={3}

@@ -196,7 +196,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
               <SlashMenu />
               <FloatingToolbar />
               <PlateContent
-                className="min-h-96 prose prose-sm max-w-none focus:outline-none text-ui-text leading-relaxed"
+                className="min-h-96 prose prose-sm max-w-none focus-visible:outline-none text-ui-text leading-relaxed"
                 data-testid={TEST_IDS.EDITOR.PLATE}
                 placeholder="Start writing..."
               />

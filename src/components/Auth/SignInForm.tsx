@@ -79,7 +79,7 @@ export function SignInForm() {
       >
         <div
           className={cn(
-            "grid transition-all duration-300 ease-out",
+            "grid transition-all duration-medium ease-out",
             showEmailForm ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
           )}
         >
@@ -113,7 +113,7 @@ export function SignInForm() {
           type="submit"
           variant={showEmailForm ? "primary" : "secondary"}
           size="lg"
-          className={cn("w-full transition-all duration-300", showEmailForm && "shadow-card")}
+          className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
           disabled={submitting || !hydrated}
           data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
         >

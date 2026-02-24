@@ -286,7 +286,7 @@ export function UserRatesManagement() {
                   placeholder="0.00"
                   step="0.01"
                   min="0"
-                  className="w-full pl-8 pr-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+                  className="w-full pl-8 pr-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
                 />
               </FlexItem>
               <Select value={currency} onValueChange={(value) => setCurrency(value)}>

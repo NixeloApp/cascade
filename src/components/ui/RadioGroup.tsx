@@ -52,7 +52,7 @@ const RadioGroupItem = React.forwardRef<
       ref={ref}
       id={radioId}
       className={cn(
-        "peer h-4 w-4 shrink-0 rounded-full border border-ui-border-secondary bg-ui-bg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-brand data-[state=checked]:bg-brand",
+        "peer h-4 w-4 shrink-0 rounded-full border border-ui-border-secondary bg-ui-bg transition-colors duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-brand data-[state=checked]:bg-brand",
         className,
       )}
       {...props}

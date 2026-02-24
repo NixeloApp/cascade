@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const badgeVariants = cva("inline-flex items-center font-medium transition-colors duration-150", {
+const badgeVariants = cva("inline-flex items-center font-medium transition-colors duration-fast", {
   variants: {
     variant: {
       primary: "bg-brand-subtle text-brand-active border border-brand-border",

@@ -111,7 +111,7 @@ export function DocumentHeader({
                 onChange={(e) => setTitleValue(e.target.value)}
                 onBlur={() => void handleTitleSave()}
                 onKeyDown={handleTitleKeyDown}
-                className="text-xl sm:text-2xl font-semibold tracking-tight bg-transparent border-none outline-none focus:ring-2 focus:ring-brand-ring rounded px-2 py-1 -ml-2 text-ui-text"
+                className="text-xl sm:text-2xl font-semibold tracking-tight bg-transparent border-none outline-none focus-visible:ring-2 focus-visible:ring-brand-ring rounded px-2 py-1 -ml-2 text-ui-text"
               />
             ) : document.isOwner ? (
               <Tooltip content="Click to edit title">{titleComponent}</Tooltip>

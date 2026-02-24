@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Typography } from "./Typography";
 
 const inputVariants = cva(
-  "flex w-full rounded-lg border transition-[border-color,box-shadow] duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-ui-text-tertiary focus-visible:outline-none focus-visible:border-ui-border-secondary focus-visible:shadow-soft disabled:cursor-not-allowed disabled:opacity-50",
+  "flex w-full rounded-lg border transition-[border-color,box-shadow] duration-default file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-ui-text-tertiary focus-visible:outline-none focus-visible:border-ui-border-secondary focus-visible:shadow-soft disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {

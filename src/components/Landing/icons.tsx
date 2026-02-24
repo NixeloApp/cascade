@@ -23,7 +23,7 @@ export function NixeloLogo({ size = 28, className }: { size?: number; className?
         strokeWidth={8}
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="transition-all duration-300 ease-in-out"
+        className="transition-all duration-medium ease-in-out"
         style={{
           filter: "drop-shadow(0 0 8px rgba(34, 211, 238, 0.5))",
         }}

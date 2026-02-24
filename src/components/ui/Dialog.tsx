@@ -84,7 +84,7 @@ function Dialog({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           data-testid={TEST_IDS.DIALOG.OVERLAY}
-          className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-150"
+          className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-fast"
         />
         <DialogPrimitive.Content
           data-testid={testId}

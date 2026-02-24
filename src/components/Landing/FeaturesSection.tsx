@@ -89,7 +89,7 @@ function FeatureCard({
         "bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/50",
         "border border-ui-border/40",
         "backdrop-blur-md",
-        "transition-all duration-300",
+        "transition-all duration-medium",
         "hover:shadow-xl hover:-translate-y-1",
         glows[gradient],
       )}

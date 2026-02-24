@@ -39,7 +39,7 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
               key={activity._id}
               gap="md"
               align="start"
-              className="relative rounded-lg transition-colors duration-150 hover:bg-ui-bg-secondary/30"
+              className="relative rounded-lg transition-colors duration-fast hover:bg-ui-bg-secondary/30"
             >
               <Avatar
                 name={activity.userName}

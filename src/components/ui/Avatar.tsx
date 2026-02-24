@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 
 const avatarVariants = cva(
-  "relative flex shrink-0 overflow-hidden rounded-full ring-1 ring-ui-border/50 transition-shadow duration-150",
+  "relative flex shrink-0 overflow-hidden rounded-full ring-1 ring-ui-border/50 transition-shadow duration-fast",
   {
     variants: {
       size: {
@@ -23,7 +23,7 @@ const avatarVariants = cva(
 );
 
 const fallbackVariants = cva(
-  "flex h-full w-full items-center justify-center rounded-full font-medium transition-colors duration-150",
+  "flex h-full w-full items-center justify-center rounded-full font-medium transition-colors duration-fast",
   {
     variants: {
       size: {
