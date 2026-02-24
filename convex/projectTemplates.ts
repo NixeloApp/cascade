@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { authenticatedMutation } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
@@ -52,56 +53,19 @@ export const createFromTemplate = authenticatedMutation({
     }
 
     // Check if project key already exists
-    const existing = await ctx.db
-      .query("projects")
-      .withIndex("by_key", (q) => q.eq("key", args.projectKey))
-      .filter(notDeleted)
-      .first();
-
-    if (existing) {
-      throw conflict("Project key already exists");
-    }
+    await validateProjectKey(ctx, args.projectKey);
 
     // Validate ownership hierarchy and permissions
-    const workspace = await ctx.db.get(args.workspaceId);
-    if (!workspace) throw notFound("workspace", args.workspaceId);
-
-    // 1. Integrity check: Workspace must belong to Organization
-    if (workspace.organizationId !== args.organizationId) {
-      throw validation("workspaceId", "Workspace does not belong to the specified organization");
-    }
-
-    // 2. Permission check: User must be Org Admin OR Workspace Member
-    const orgRole = await getOrganizationRole(ctx, args.organizationId, ctx.userId);
-    const isOrgAdmin = orgRole === "owner" || orgRole === "admin";
-
-    // Allow if user is Org Admin OR has any role in the workspace
-    if (!isOrgAdmin) {
-      const workspaceRole = await getWorkspaceRole(ctx, args.workspaceId, ctx.userId);
-      if (!workspaceRole) {
-        throw forbidden(
-          "member",
-          "You must be an organization admin or workspace member to create a project here",
-        );
-      }
-    }
+    const { isOrgAdmin } = await validateWorkspaceAccess(
+      ctx,
+      args.workspaceId,
+      args.organizationId,
+      ctx.userId,
+    );
 
     // Validate: if teamId provided, ensure it belongs to the workspace
     if (args.teamId) {
-      const team = await ctx.db.get(args.teamId);
-      if (!team) throw notFound("team", args.teamId);
-      if (team.workspaceId !== args.workspaceId) {
-        throw validation("teamId", "Team must belong to the specified workspace");
-      }
-
-      // Security: User must be team member OR Org Admin to assign project to team
-      const teamRole = await getTeamRole(ctx, args.teamId, ctx.userId);
-      if (!(teamRole || isOrgAdmin)) {
-        throw forbidden(
-          "member",
-          "You must be a team member or organization admin to assign this project to the team",
-        );
-      }
+      await validateTeamAccess(ctx, args.teamId, args.workspaceId, ctx.userId, isOrgAdmin);
     }
 
     const now = Date.now();
@@ -258,3 +222,71 @@ export const initializeBuiltInTemplates = mutation({
     return { success: true, initialized: true };
   },
 });
+
+async function validateProjectKey(ctx: MutationCtx, projectKey: string) {
+  const existing = await ctx.db
+    .query("projects")
+    .withIndex("by_key", (q) => q.eq("key", projectKey))
+    .filter(notDeleted)
+    .first();
+
+  if (existing) {
+    throw conflict("Project key already exists");
+  }
+}
+
+async function validateWorkspaceAccess(
+  ctx: MutationCtx,
+  workspaceId: Id<"workspaces">,
+  organizationId: Id<"organizations">,
+  userId: Id<"users"> | null,
+) {
+  const workspace = await ctx.db.get(workspaceId);
+  if (!workspace) throw notFound("workspace", workspaceId);
+
+  // 1. Integrity check: Workspace must belong to Organization
+  if (workspace.organizationId !== organizationId) {
+    throw validation("workspaceId", "Workspace does not belong to the specified organization");
+  }
+
+  // 2. Permission check: User must be Org Admin OR Workspace Member
+  if (!userId) throw forbidden("auth", "Not authenticated");
+  const orgRole = await getOrganizationRole(ctx, organizationId, userId);
+  const isOrgAdmin = orgRole === "owner" || orgRole === "admin";
+
+  // Allow if user is Org Admin OR has any role in the workspace
+  if (!isOrgAdmin) {
+    const workspaceRole = await getWorkspaceRole(ctx, workspaceId, userId);
+    if (!workspaceRole) {
+      throw forbidden(
+        "member",
+        "You must be an organization admin or workspace member to create a project here",
+      );
+    }
+  }
+  return { isOrgAdmin };
+}
+
+async function validateTeamAccess(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+  workspaceId: Id<"workspaces">,
+  userId: Id<"users"> | null,
+  isOrgAdmin: boolean,
+) {
+  const team = await ctx.db.get(teamId);
+  if (!team) throw notFound("team", teamId);
+  if (team.workspaceId !== workspaceId) {
+    throw validation("teamId", "Team must belong to the specified workspace");
+  }
+
+  // Security: User must be team member OR Org Admin to assign project to team
+  if (!userId) throw forbidden("auth", "Not authenticated");
+  const teamRole = await getTeamRole(ctx, teamId, userId);
+  if (!(teamRole || isOrgAdmin)) {
+    throw forbidden(
+      "member",
+      "You must be a team member or organization admin to assign this project to the team",
+    );
+  }
+}
