@@ -207,7 +207,7 @@ function TreeNodeItem({
                 variant="ghost"
                 size="sm"
                 onClick={(e) => e.preventDefault()}
-                className="opacity-0 group-hover:opacity-100"
+                className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
               >
                 <Icon icon={MoreHorizontal} size="sm" />
               </Button>

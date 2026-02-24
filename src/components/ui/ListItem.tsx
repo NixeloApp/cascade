@@ -98,7 +98,7 @@ export function ListItem({
     <ListItemContext.Provider value={{ size, interactive }}>
       <div
         className={cn(
-          "flex items-center gap-3",
+          "group flex items-center gap-3",
           paddingClass,
           interactive && "cursor-pointer hover:bg-ui-bg-hover transition-colors",
           selected && "bg-ui-bg-secondary",
@@ -255,7 +255,8 @@ export function ListItemActions({
     <div
       className={cn(
         "shrink-0 flex items-center gap-1",
-        showOnHover && "opacity-0 group-hover:opacity-100 transition-opacity",
+        showOnHover &&
+          "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity",
         className,
       )}
       {...props}
