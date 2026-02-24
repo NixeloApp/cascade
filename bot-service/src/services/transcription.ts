@@ -47,6 +47,7 @@ export class TranscriptionService {
     try {
       const selected = await this.convex.query(api.serviceRotation.selectProvider, {
         serviceType: "transcription",
+        apiKey: this.apiKey,
       });
       return selected;
     } catch (_error) {
@@ -160,6 +161,7 @@ export class TranscriptionService {
     try {
       return await this.convex.query(api.serviceRotation.getUsageSummary, {
         serviceType: "transcription",
+        apiKey: this.apiKey,
       });
     } catch (_error) {
       return null;
