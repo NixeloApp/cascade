@@ -97,11 +97,11 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
       if (result.success) throw new Error("Expected failure");
 
       if (i < 4) {
-        expect(result.error).toBe("Invalid verification code");
+        expect((result as any).error).toBe("Invalid verification code");
       } else {
         // 5th attempt triggers lockout
-        expect(result.error).toContain("Account temporarily locked");
-        expect(result.lockedUntil).toBeDefined();
+        expect((result as any).error).toContain("Account temporarily locked");
+        expect((result as any).lockedUntil).toBeDefined();
       }
     }
 
@@ -113,7 +113,7 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
     const lockedResult = await asUser.mutation(api.twoFactor.disable, { code: "000000" });
     expect(lockedResult.success).toBe(false);
     if (lockedResult.success) throw new Error("Expected failure");
-    expect(lockedResult.error).toContain("Too many failed attempts");
+    expect((lockedResult as any).error).toContain("Too many failed attempts");
   });
 
   it("SHOULD enforce lockout on verifyBackupCode", async () => {
@@ -134,10 +134,10 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
       if (result.success) throw new Error("Expected failure");
 
       if (i < 4) {
-        expect(result.error).toBe("Invalid backup code");
+        expect((result as any).error).toBe("Invalid backup code");
       } else {
-        expect(result.error).toContain("Account temporarily locked");
-        expect(result.lockedUntil).toBeDefined();
+        expect((result as any).error).toContain("Account temporarily locked");
+        expect((result as any).lockedUntil).toBeDefined();
       }
     }
 
@@ -149,6 +149,6 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
     const lockedResult = await asUser.mutation(api.twoFactor.verifyBackupCode, { code: "INVALID" });
     expect(lockedResult.success).toBe(false);
     if (lockedResult.success) throw new Error("Expected failure");
-    expect(lockedResult.error).toContain("Too many failed attempts");
+    expect((lockedResult as any).error).toContain("Too many failed attempts");
   });
 });
