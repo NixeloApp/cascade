@@ -165,7 +165,7 @@ describe("Labels", () => {
       });
 
       const result = await asUser.mutation(api.labels.remove, { id: labelId });
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const labels = await asUser.query(api.labels.list, { projectId });
       expect(labels).toHaveLength(0);

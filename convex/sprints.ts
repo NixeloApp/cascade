@@ -132,6 +132,7 @@ export const startSprint = sprintMutation({
     startDate: v.number(),
     endDate: v.number(),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // End any currently active sprint (normally only 1, but limit for safety)
     const activeSprints = await ctx.db
@@ -157,7 +158,7 @@ export const startSprint = sprintMutation({
       endDate: args.endDate,
       updatedAt: Date.now(),
     });
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -167,11 +168,12 @@ export const startSprint = sprintMutation({
  */
 export const completeSprint = sprintMutation({
   args: {},
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx) => {
     await ctx.db.patch(ctx.sprint._id, {
       status: "completed",
       updatedAt: Date.now(),
     });
-    return { success: true };
+    return { success: true } as const;
   },
 });
