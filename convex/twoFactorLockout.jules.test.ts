@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { MINUTE, SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
@@ -94,6 +94,8 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
       const result = await asUser.mutation(api.twoFactor.disable, { code: "000000" });
       expect(result.success).toBe(false);
 
+      if (result.success) throw new Error("Expected failure");
+
       if (i < 4) {
         expect(result.error).toBe("Invalid verification code");
       } else {
@@ -104,12 +106,13 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
     }
 
     // Check internal state directly
-    const user = await t.query(api.users.getInternal, { id: userId });
-    expect(user.twoFactorLockedUntil).toBeDefined();
+    const user = await t.query(internal.users.getInternal, { id: userId });
+    expect(user?.twoFactorLockedUntil).toBeDefined();
 
     // Attempt 6th time (should be locked)
     const lockedResult = await asUser.mutation(api.twoFactor.disable, { code: "000000" });
     expect(lockedResult.success).toBe(false);
+    if (lockedResult.success) throw new Error("Expected failure");
     expect(lockedResult.error).toContain("Too many failed attempts");
   });
 
@@ -128,6 +131,8 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
       const result = await asUser.mutation(api.twoFactor.verifyBackupCode, { code: "INVALID" });
       expect(result.success).toBe(false);
 
+      if (result.success) throw new Error("Expected failure");
+
       if (i < 4) {
         expect(result.error).toBe("Invalid backup code");
       } else {
@@ -137,12 +142,13 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
     }
 
     // Check internal state directly
-    const user = await t.query(api.users.getInternal, { id: userId });
-    expect(user.twoFactorLockedUntil).toBeDefined();
+    const user = await t.query(internal.users.getInternal, { id: userId });
+    expect(user?.twoFactorLockedUntil).toBeDefined();
 
     // Attempt 6th time (should be locked)
     const lockedResult = await asUser.mutation(api.twoFactor.verifyBackupCode, { code: "INVALID" });
     expect(lockedResult.success).toBe(false);
+    if (lockedResult.success) throw new Error("Expected failure");
     expect(lockedResult.error).toContain("Too many failed attempts");
   });
 });

@@ -48,7 +48,8 @@ function Verify2FARoute() {
       if (isBackupCode) {
         const result = await verifyBackupCode({ code });
         if (!result.success) {
-          showError(new Error(result.error || "Invalid backup code"), "Verification failed");
+          const failure = result as { error?: string };
+          showError(new Error(failure.error || "Invalid backup code"), "Verification failed");
           setIsLoading(false);
           return;
         }
@@ -57,7 +58,8 @@ function Verify2FARoute() {
       } else {
         const result = await verifyCode({ code });
         if (!result.success) {
-          showError(new Error(result.error || "Invalid code"), "Verification failed");
+          const failure = result as { error?: string };
+          showError(new Error(failure.error || "Invalid code"), "Verification failed");
           setIsLoading(false);
           return;
         }
