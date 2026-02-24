@@ -185,11 +185,7 @@ export function MemberManagement({
 
         <Stack gap="sm">
           {members.map((member) => (
-            <Card
-              padding="sm"
-              key={member._id}
-              className="bg-ui-bg-tertiary transition-default hover:bg-ui-bg-hover"
-            >
+            <Card padding="sm" key={member._id} hoverable className="bg-ui-bg-tertiary">
               <Flex align="center" justify="between">
                 <Flex gap="md" align="center">
                   <Avatar src={member.image} name={member.name} email={member.email} size="sm" />

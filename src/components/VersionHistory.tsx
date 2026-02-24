@@ -136,12 +136,8 @@ export function VersionHistory({
                   <Card
                     key={version._id}
                     padding="md"
-                    className={cn(
-                      "transition-default",
-                      isSelected
-                        ? "border-brand-ring bg-brand-subtle"
-                        : "hover:border-ui-border-secondary hover:bg-ui-bg-hover",
-                    )}
+                    hoverable={!isSelected}
+                    className={cn(isSelected && "border-brand-ring bg-brand-subtle")}
                   >
                     <Flex align="start" justify="between">
                       <FlexItem flex="1">

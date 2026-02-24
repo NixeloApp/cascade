@@ -29,7 +29,7 @@ describe("Card", () => {
       const { container } = render(<Card>Content</Card>);
 
       const card = container.firstChild;
-      expect(card).not.toHaveClass("hover:shadow-card-hover");
+      expect(card).not.toHaveClass("hover:bg-ui-bg-hover");
       expect(card).not.toHaveClass("cursor-pointer");
     });
 
@@ -64,7 +64,7 @@ describe("Card", () => {
       const { container } = render(<Card hoverable>Content</Card>);
 
       const card = container.firstChild;
-      expect(card).toHaveClass("hover:shadow-card-hover");
+      expect(card).toHaveClass("hover:bg-ui-bg-hover");
       expect(card).toHaveClass("cursor-pointer");
     });
 
@@ -72,7 +72,7 @@ describe("Card", () => {
       const { container } = render(<Card hoverable={false}>Content</Card>);
 
       const card = container.firstChild;
-      expect(card).not.toHaveClass("hover:shadow-card-hover");
+      expect(card).not.toHaveClass("hover:bg-ui-bg-hover");
       expect(card).not.toHaveClass("cursor-pointer");
     });
 
@@ -84,7 +84,7 @@ describe("Card", () => {
       );
 
       const card = container.firstChild;
-      expect(card).toHaveClass("hover:shadow-card-hover");
+      expect(card).toHaveClass("hover:bg-ui-bg-hover");
       expect(card).toHaveClass("custom");
     });
   });
@@ -167,7 +167,7 @@ describe("Card", () => {
       );
 
       const card = container.firstChild;
-      expect(card).toHaveClass("hover:shadow-card-hover");
+      expect(card).toHaveClass("hover:bg-ui-bg-hover");
       expect(card).toHaveAttribute("role", "button");
 
       await user.click(screen.getByRole("button"));
@@ -188,7 +188,7 @@ describe("Card", () => {
 
     it("should work with children and hoverable", () => {
       const { container } = render(<Card hoverable>Content</Card>);
-      expect(container.firstChild).toHaveClass("hover:shadow-card-hover");
+      expect(container.firstChild).toHaveClass("hover:bg-ui-bg-hover");
     });
 
     it("should work with children and onClick", () => {
@@ -209,7 +209,7 @@ describe("Card", () => {
 
       const card = container.firstChild;
       expect(card).toHaveClass("custom");
-      expect(card).toHaveClass("hover:shadow-card-hover");
+      expect(card).toHaveClass("hover:bg-ui-bg-hover");
       expect(card).toHaveAttribute("role", "button");
 
       await user.click(screen.getByRole("button"));
