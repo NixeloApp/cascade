@@ -50,7 +50,10 @@ export const createTeam = organizationMemberMutation({
     description: v.optional(v.string()),
     isPrivate: v.boolean(), // Default privacy for team projects
   },
-
+  returns: v.object({
+    teamId: v.id("teams"),
+    slug: v.string(),
+  }),
   handler: async (ctx, args) => {
     // organizationMemberMutation handles auth + org membership check
 
@@ -118,6 +121,7 @@ export const updateTeam = teamLeadMutation({
     description: v.optional(v.string()),
     isPrivate: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -168,7 +172,7 @@ export const updateTeam = teamLeadMutation({
       metadata: updates,
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -263,6 +267,7 @@ export const addTeamMember = teamLeadMutation({
     userId: v.id("users"),
     role: teamRoles,
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -304,7 +309,7 @@ export const addTeamMember = teamLeadMutation({
       metadata: { teamId: ctx.teamId, role: args.role },
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -317,6 +322,7 @@ export const updateTeamMemberRole = teamLeadMutation({
     userId: v.id("users"),
     role: teamRoles,
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -340,7 +346,7 @@ export const updateTeamMemberRole = teamLeadMutation({
       metadata: { teamId: ctx.teamId, role: args.role },
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -352,6 +358,7 @@ export const removeTeamMember = teamLeadMutation({
   args: {
     userId: v.id("users"),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -373,7 +380,7 @@ export const removeTeamMember = teamLeadMutation({
       metadata: { teamId: ctx.teamId },
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
