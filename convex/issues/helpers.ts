@@ -3,57 +3,16 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
 import { notDeleted } from "../lib/softDeleteHelpers";
-import { assertCanEditProject, canAccessProject } from "../projectAccess";
+import { assertCanEditProject } from "../projectAccess";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
 
-/**
- * Validates that the assignee has access to the project.
- *
- * @param ctx - The mutation context.
- * @param projectId - The ID of the project.
- * @param assigneeId - The ID of the assignee to validate.
- * @throws {ConvexError} If the assignee does not have access to the project.
- */
-export async function validateAssignee(
-  ctx: MutationCtx,
-  projectId: Id<"projects">,
-  assigneeId: Id<"users"> | null | undefined,
-): Promise<void> {
-  if (!assigneeId) return;
-
-  const hasAccess = await canAccessProject(ctx, projectId, assigneeId);
-  if (!hasAccess) {
-    throw validation("assigneeId", "Assignee must be a member of the project or organization");
-  }
-}
-
-/**
- * Combines title and description into a single string for search indexing.
- *
- * @param title - The issue title.
- * @param description - The issue description (optional).
- * @returns A string containing both title and description, trimmed.
- */
+// Helper: Combined searchable content for issues
 export function getSearchContent(title: string, description?: string) {
   return `${title} ${description || ""}`.trim();
 }
 
-/**
- * Validates the parent issue and determines the correct epic ID for inheritance.
- * Enforces rules:
- * 1. Epics cannot be subtasks.
- * 2. Subtasks can only be one level deep (cannot nest subtasks).
- * 3. Issues with a parent must be of type 'subtask'.
- *
- * @param ctx - The mutation context.
- * @param parentId - The ID of the parent issue (if any).
- * @param issueType - The type of the issue being created/updated.
- * @param epicId - The explicitly provided epic ID (if any).
- * @returns The resolved epic ID (inherited from parent if not provided).
- * @throws {ConvexError} If the parent issue is not found (NOT_FOUND).
- * @throws {ConvexError} If validation rules are violated (VALIDATION).
- */
+// Helper: Validate parent issue and get inherited epic
 export async function validateParentIssue(
   ctx: MutationCtx,
   parentId: Id<"issues"> | undefined,
@@ -90,15 +49,7 @@ export async function validateParentIssue(
   return epicId || parentIssue.epicId;
 }
 
-/**
- * Generates a sequential issue key (e.g., "PROJ-123") with race condition protection.
- * It finds the latest issue in the project and increments its number.
- *
- * @param ctx - The mutation context.
- * @param projectId - The project ID.
- * @param projectKey - The project key prefix (e.g., "PROJ").
- * @returns A unique issue key string.
- */
+// Helper: Generate issue key with race condition protection
 export async function generateIssueKey(
   ctx: MutationCtx,
   projectId: Id<"projects">,
@@ -123,14 +74,7 @@ export async function generateIssueKey(
   return `${projectKey}-${maxNumber + 1}`;
 }
 
-/**
- * Checks if an issue key already exists in the database.
- * Used for duplicate detection during key generation or migration.
- *
- * @param ctx - The mutation context.
- * @param key - The issue key to check (e.g., "PROJ-123").
- * @returns True if the key exists, false otherwise.
- */
+// Helper: Check if an issue key already exists (for duplicate detection)
 export async function issueKeyExists(ctx: MutationCtx, key: string): Promise<boolean> {
   const existing = await ctx.db
     .query("issues")
@@ -139,14 +83,8 @@ export async function issueKeyExists(ctx: MutationCtx, key: string): Promise<boo
   return existing !== null;
 }
 
-/**
- * Verifies that the current version matches the expected version for optimistic locking.
- * This prevents lost updates when multiple users edit the same issue simultaneously.
- *
- * @param currentVersion - The current version number from the database.
- * @param expectedVersion - The version number the client expects (from its last read).
- * @throws {ConvexError} If versions do not match (CONFLICT).
- */
+// Helper: Verify optimistic lock version matches
+// Throws conflict error if version mismatch (stale update)
 export function assertVersionMatch(
   currentVersion: number | undefined,
   expectedVersion: number | undefined,
@@ -162,25 +100,12 @@ export function assertVersionMatch(
   }
 }
 
-/**
- * Calculates the next version number for an issue update.
- *
- * @param currentVersion - The current version number.
- * @returns The next version number (incremented by 1).
- */
+// Helper: Get next version number for an issue update
 export function getNextVersion(currentVersion: number | undefined): number {
   return (currentVersion ?? 1) + 1;
 }
 
-/**
- * Finds the maximum `order` value for issues in a specific project status.
- * Used when moving an issue to a new column to place it at the end.
- *
- * @param ctx - The mutation context.
- * @param projectId - The project ID.
- * @param status - The status column identifier.
- * @returns The highest order number found, or -1 if no issues exist.
- */
+// Helper: Get max order for status column
 export async function getMaxOrderForStatus(
   ctx: MutationCtx,
   projectId: Id<"projects">,
@@ -201,15 +126,7 @@ export async function getMaxOrderForStatus(
   return latestIssue?.order ?? -1;
 }
 
-/**
- * Tracks a change for a non-nullable field and adds it to the changes array if modified.
- *
- * @param changes - The array to push change records into.
- * @param field - The name of the field being updated.
- * @param oldValue - The current value of the field.
- * @param newValue - The new value of the field.
- * @returns True if the field was changed, false otherwise.
- */
+// Helper: Track field change and add to changes array
 export function trackFieldChange<T>(
   changes: Array<{
     field: string;
@@ -231,17 +148,7 @@ export function trackFieldChange<T>(
   return false;
 }
 
-/**
- * Tracks and updates a nullable field.
- * Handles the distinction between `undefined` (no change) and `null` (clear value).
- *
- * @param updates - The accumulator object for database updates.
- * @param changes - The array to push change records into.
- * @param fieldName - The name of the field.
- * @param oldValue - The current value.
- * @param newValue - The new value (or null to clear, or undefined to skip).
- * @param valueTransform - Optional function to transform values for the change record (e.g. for logging IDs).
- */
+// Helper: Track and update a nullable field
 export function trackNullableFieldUpdate<T>(
   updates: Record<string, unknown>,
   changes: Array<{
@@ -268,21 +175,7 @@ export function trackNullableFieldUpdate<T>(
   }
 }
 
-/**
- * Processes a batch of issue updates, calculating what fields changed.
- * Updates the `changes` array in place and returns the object to be passed to `db.patch`.
- *
- * @param issue - The current issue document.
- * @param args - The updates requested by the client.
- * @param changes - An empty array to populate with change records.
- * @returns An object containing the fields to update in the database.
- *
- * @example
- * const changes = [];
- * const updates = processIssueUpdates(currentIssue, { title: "New Title" }, changes);
- * await ctx.db.patch(issueId, updates);
- * // changes now contains [{ field: "title", oldValue: "Old", newValue: "New Title" }]
- */
+// Helper: Process issue update fields and track changes
 export function processIssueUpdates(
   issue: {
     title: string;
@@ -355,14 +248,7 @@ export function processIssueUpdates(
   return updates;
 }
 
-/**
- * Checks if an issue matches an assignee filter.
- *
- * @param issue - The issue object (must contain assigneeId).
- * @param assigneeFilter - The filter value: a specific userId, "unassigned", "me", or undefined.
- * @param userId - The current user's ID (for "me" filter).
- * @returns True if the issue matches the filter.
- */
+// Helper: Check if issue matches assignee filter
 export function matchesAssigneeFilter(
   issue: { assigneeId?: Id<"users"> },
   assigneeFilter: Id<"users"> | "unassigned" | "me" | undefined,
@@ -379,13 +265,7 @@ export function matchesAssigneeFilter(
   return issue.assigneeId === assigneeFilter;
 }
 
-/**
- * Checks if an issue matches a sprint filter.
- *
- * @param issue - The issue object.
- * @param sprintFilter - The filter value: sprintId, "backlog" (no sprint), "none", or undefined.
- * @returns True if the issue matches the filter.
- */
+// Helper: Check if issue matches sprint filter
 export function matchesSprintFilter(
   issue: { sprintId?: Id<"sprints"> },
   sprintFilter: Id<"sprints"> | "backlog" | "none" | undefined,
@@ -398,13 +278,7 @@ export function matchesSprintFilter(
   return issue.sprintId === sprintFilter;
 }
 
-/**
- * Checks if an issue matches an epic filter.
- *
- * @param issue - The issue object.
- * @param epicFilter - The filter value: epicId, "none" (no epic), or undefined.
- * @returns True if the issue matches the filter.
- */
+// Helper: Check if issue matches epic filter
 export function matchesEpicFilter(
   issue: { epicId?: Id<"issues"> },
   epicFilter: Id<"issues"> | "none" | undefined,
@@ -417,63 +291,30 @@ export function matchesEpicFilter(
   return issue.epicId === epicFilter;
 }
 
-/**
- * Checks if a value is present in an array filter.
- *
- * @param value - The value to check.
- * @param filterArray - The array of allowed values. If empty/undefined, all values match.
- * @returns True if the filter is empty or the value is in the array.
- */
+// Helper: Check if value matches array filter
 export function matchesArrayFilter<T>(value: T, filterArray: T[] | undefined): boolean {
   if (!filterArray || filterArray.length === 0) return true;
   return filterArray.includes(value);
 }
 
-/**
- * Checks if an issue's creation time falls within a date range.
- *
- * @param creationTime - The issue's creation timestamp.
- * @param dateFrom - Start of range (inclusive).
- * @param dateTo - End of range (inclusive).
- * @returns True if the issue is within the range (or boundaries are undefined).
- */
+// Helper: Check if issue matches date range
 export function matchesDateRange(
   creationTime: number,
   dateFrom?: number,
   dateTo?: number,
 ): boolean {
-  if (dateFrom !== undefined && creationTime < dateFrom) return false;
-  if (dateTo !== undefined && creationTime > dateTo) return false;
+  if (dateFrom && creationTime < dateFrom) return false;
+  if (dateTo && creationTime > dateTo) return false;
   return true;
 }
 
-/**
- * Checks if an issue has all of the required labels (AND logic).
- *
- * @param issueLabels - The labels present on the issue.
- * @param filterLabels - The labels required by the filter.
- * @returns True if the issue contains all filterLabels.
- */
+// Helper: Check if issue matches labels filter (all labels must be present)
 export function matchesLabelsFilter(issueLabels: string[], filterLabels?: string[]): boolean {
   if (!filterLabels || filterLabels.length === 0) return true;
   return filterLabels.every((label) => issueLabels.includes(label));
 }
 
-/**
- * Evaluates whether an issue matches a comprehensive set of search filters.
- * Used for in-memory filtering after fetching candidate issues.
- *
- * @param issue - The issue document.
- * @param filters - An object containing all active filters.
- * @param userId - The current user's ID (needed for "me" assignee filter).
- * @returns True if the issue satisfies ALL provided filters.
- *
- * @example
- * const isMatch = matchesSearchFilters(issue, {
- *   status: ["todo", "in_progress"],
- *   assigneeId: "me"
- * }, currentUserId);
- */
+// Helper: Check if issue matches all search filters
 export function matchesSearchFilters(
   issue: {
     projectId: Id<"projects">;

@@ -76,11 +76,9 @@ export async function createTestUser(
 export function asAuthenticatedUser(
   t: TestCtx,
   userId: Id<"users">,
-  sessionId?: string,
 ): ReturnType<typeof t.withIdentity> {
   // Format: userId|sessionId - the getAuthUserId extracts the part before the delimiter
-  const sid = sessionId || `test-session-${Date.now()}`;
-  const subject = `${userId}${TOKEN_SUB_CLAIM_DIVIDER}${sid}`;
+  const subject = `${userId}${TOKEN_SUB_CLAIM_DIVIDER}test-session-${Date.now()}`;
   return t.withIdentity({ subject });
 }
 

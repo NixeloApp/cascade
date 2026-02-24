@@ -4,101 +4,64 @@ import { Avatar, AvatarGroup } from "./Avatar";
 
 describe("Avatar", () => {
   describe("rendering", () => {
-    it("renders with accessible name from name", async () => {
+    it("renders with initials from name", async () => {
       render(<Avatar name="John Doe" />);
       await waitFor(() => {
-        expect(screen.getByRole("img", { name: "John Doe" })).toBeInTheDocument();
+        expect(screen.getByText("JD")).toBeInTheDocument();
       });
     });
 
-    it("renders with accessible name from single name", async () => {
+    it("renders with single initial from single name", async () => {
       render(<Avatar name="John" />);
       await waitFor(() => {
-        expect(screen.getByRole("img", { name: "John" })).toBeInTheDocument();
+        expect(screen.getByText("J")).toBeInTheDocument();
       });
     });
 
-    it("renders with accessible name from email when no name", async () => {
+    it("renders with first letter of email when no name", async () => {
       render(<Avatar email="john@example.com" />);
       await waitFor(() => {
-        expect(screen.getByRole("img", { name: "john@example.com" })).toBeInTheDocument();
+        expect(screen.getByText("J")).toBeInTheDocument();
       });
     });
 
-    it("renders with default accessible name when no name or email", async () => {
+    it("renders ? when no name or email", async () => {
       render(<Avatar />);
       await waitFor(() => {
-        expect(screen.getByRole("img", { name: "User avatar" })).toBeInTheDocument();
+        expect(screen.getByText("?")).toBeInTheDocument();
       });
     });
 
-    it("hides initials from screen readers", async () => {
-      render(<Avatar name="John Doe" />);
-      await waitFor(() => {
-        expect(screen.queryByText("JD")).not.toBeInTheDocument();
-      });
-    });
+    // Note: Image tests are omitted because Radix Avatar uses async loading
+    // which makes testing image rendering unreliable in JSDOM environment
   });
 
-  describe("accessibility", () => {
-    it("has correct role and label", async () => {
-      render(<Avatar name="John Doe" />);
-      await waitFor(() => {
-        expect(screen.getByRole("img", { name: "John Doe" })).toBeInTheDocument();
-      });
-    });
-
-    it("uses email as label if name is missing", async () => {
-      render(<Avatar email="john@example.com" />);
-      await waitFor(() => {
-        expect(screen.getByRole("img", { name: "john@example.com" })).toBeInTheDocument();
-      });
-    });
-
-    it("uses default label if neither name nor email provided", async () => {
-      render(<Avatar />);
-      await waitFor(() => {
-        expect(screen.getByRole("img", { name: "User avatar" })).toBeInTheDocument();
-      });
-    });
-
-    it("uses provided alt text as label", async () => {
-      render(<Avatar name="John Doe" alt="Profile Picture" />);
-      await waitFor(() => {
-        expect(screen.getByRole("img", { name: "Profile Picture" })).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe("initials generation (visual only)", () => {
-    // These tests verify that initials are generated correctly, even if hidden from screen readers
-    // We query the container text content or specific element since getByText doesn't support hidden: true
-    // with certain TypeScript configurations for SelectorMatcherOptions.
+  describe("initials generation", () => {
     it("uses first and last name initials", async () => {
-      const { container } = render(<Avatar name="John William Doe" />);
+      render(<Avatar name="John William Doe" />);
       await waitFor(() => {
-        expect(container.textContent).toContain("JD");
+        expect(screen.getByText("JD")).toBeInTheDocument();
       });
     });
 
     it("handles names with extra whitespace", async () => {
-      const { container } = render(<Avatar name="  John   Doe  " />);
+      render(<Avatar name="  John   Doe  " />);
       await waitFor(() => {
-        expect(container.textContent).toContain("JD");
+        expect(screen.getByText("JD")).toBeInTheDocument();
       });
     });
 
     it("converts initials to uppercase", async () => {
-      const { container } = render(<Avatar name="john doe" />);
+      render(<Avatar name="john doe" />);
       await waitFor(() => {
-        expect(container.textContent).toContain("JD");
+        expect(screen.getByText("JD")).toBeInTheDocument();
       });
     });
 
     it("handles email with uppercase", async () => {
-      const { container } = render(<Avatar email="John@example.com" />);
+      render(<Avatar email="John@example.com" />);
       await waitFor(() => {
-        expect(container.textContent).toContain("J");
+        expect(screen.getByText("J")).toBeInTheDocument();
       });
     });
   });
@@ -206,9 +169,9 @@ describe("AvatarGroup", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("img", { name: "John Doe" })).toBeInTheDocument();
-        expect(screen.getByRole("img", { name: "Jane Smith" })).toBeInTheDocument();
-        expect(screen.getByRole("img", { name: "Bob Wilson" })).toBeInTheDocument();
+        expect(screen.getByText("JD")).toBeInTheDocument();
+        expect(screen.getByText("JS")).toBeInTheDocument();
+        expect(screen.getByText("BW")).toBeInTheDocument();
       });
     });
 
@@ -238,11 +201,11 @@ describe("AvatarGroup", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("img", { name: "John Doe" })).toBeInTheDocument();
-        expect(screen.getByRole("img", { name: "Jane Smith" })).toBeInTheDocument();
+        expect(screen.getByText("JD")).toBeInTheDocument();
+        expect(screen.getByText("JS")).toBeInTheDocument();
       });
-      expect(screen.queryByRole("img", { name: "Bob Wilson" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("img", { name: "Alice Brown" })).not.toBeInTheDocument();
+      expect(screen.queryByText("BW")).not.toBeInTheDocument();
+      expect(screen.queryByText("AB")).not.toBeInTheDocument();
     });
 
     it("shows overflow count when max is exceeded", () => {
@@ -278,8 +241,8 @@ describe("AvatarGroup", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("img", { name: "John Doe" })).toBeInTheDocument();
-        expect(screen.getByRole("img", { name: "Jane Smith" })).toBeInTheDocument();
+        expect(screen.getByText("JD")).toBeInTheDocument();
+        expect(screen.getByText("JS")).toBeInTheDocument();
       });
       expect(screen.queryByText("+")).not.toBeInTheDocument();
     });

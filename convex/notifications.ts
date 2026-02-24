@@ -66,8 +66,7 @@ export const getUnreadCount = authenticatedQuery({
     const MAX_UNREAD_COUNT = 100;
 
     // Use boundedCount to stop scanning after 100 items
-    // efficientCount() uses .count() when available (scanning all items, O(N)) and otherwise falls back
-    // to .take(limit), so using boundedCount here avoids unnecessary scanning beyond our display cap.
+    // efficientCount() uses .count() which scans all items (O(N)), which is wasteful here
     const { count } = await boundedCount(
       ctx.db
         .query("notifications")
