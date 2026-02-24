@@ -482,6 +482,7 @@ export const verifyBackupCode = mutation({
     success: v.boolean(),
     remainingCodes: v.optional(v.number()),
     error: v.optional(v.string()),
+    lockedUntil: v.optional(v.number()),
   }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -498,6 +499,16 @@ export const verifyBackupCode = mutation({
       return { success: false, error: "2FA is not enabled" };
     }
 
+    // Check if account is locked
+    const now = Date.now();
+    if (user.twoFactorLockedUntil && user.twoFactorLockedUntil > now) {
+      return {
+        success: false,
+        error: "Too many failed attempts. Please try again later.",
+        lockedUntil: user.twoFactorLockedUntil,
+      };
+    }
+
     const backupCodes = user.twoFactorBackupCodes ?? [];
     if (backupCodes.length === 0) {
       return { success: false, error: "No backup codes available" };
@@ -508,7 +519,7 @@ export const verifyBackupCode = mutation({
     const codeIndex = backupCodes.indexOf(hashedInput);
 
     if (codeIndex === -1) {
-      return { success: false, error: "Invalid backup code" };
+      return await handleFailedAttempt(ctx, userId, user, "Invalid backup code");
     }
 
     // Remove the used code
@@ -517,6 +528,8 @@ export const verifyBackupCode = mutation({
 
     await ctx.db.patch(userId, {
       twoFactorBackupCodes: newCodes,
+      twoFactorFailedAttempts: 0,
+      twoFactorLockedUntil: undefined,
     });
 
     // Mark current session as verified
@@ -525,7 +538,6 @@ export const verifyBackupCode = mutation({
       return { success: false, error: "Session ID required" };
     }
 
-    const now = Date.now();
     const existingSession = await ctx.db
       .query("twoFactorSessions")
       .withIndex("by_user_session", (q) => q.eq("userId", userId).eq("sessionId", sessionId))
@@ -615,6 +627,7 @@ export const disable = mutation({
   returns: v.object({
     success: v.boolean(),
     error: v.optional(v.string()),
+    lockedUntil: v.optional(v.number()),
   }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -631,9 +644,19 @@ export const disable = mutation({
       return { success: false, error: "2FA is not enabled" };
     }
 
+    // Check if account is locked
+    const now = Date.now();
+    if (user.twoFactorLockedUntil && user.twoFactorLockedUntil > now) {
+      return {
+        success: false,
+        error: "Too many failed attempts. Please try again later.",
+        lockedUntil: user.twoFactorLockedUntil,
+      };
+    }
+
     const validationResult = await validateDisableCode(user, args.code, args.isBackupCode);
     if (!validationResult.isValid) {
-      return { success: false, error: "Invalid verification code" };
+      return await handleFailedAttempt(ctx, userId, user, "Invalid verification code");
     }
 
     // Disable 2FA
@@ -643,6 +666,8 @@ export const disable = mutation({
       twoFactorBackupCodes: undefined,
       twoFactorVerifiedAt: undefined,
       twoFactorLastUsedTime: undefined,
+      twoFactorFailedAttempts: 0,
+      twoFactorLockedUntil: undefined,
     });
 
     // Cleanup all sessions for this user (iterative delete)
