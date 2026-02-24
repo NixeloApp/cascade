@@ -164,16 +164,22 @@ export const listRoadmapIssues = authenticatedQuery({
       // Bounded: sprint issues are typically limited (<500 per sprint)
       // Optimization: use index with isDeleted to skip deleted items efficiently
       // Optimization: filter out subtasks in DB to fill buffer with root types
-      const allSprintIssues = await safeCollect(
-        ctx.db
-          .query("issues")
-          .withIndex("by_sprint", (q) => q.eq("sprintId", args.sprintId as Id<"sprints">))
-          .filter(notDeleted)
-          .order("desc")
-          .filter((q) => q.neq(q.field("type"), "subtask")),
-        BOUNDED_LIST_LIMIT,
-        "roadmap sprint issues",
-      );
+      let q = ctx.db
+        .query("issues")
+        .withIndex("by_sprint", (q) => q.eq("sprintId", args.sprintId as Id<"sprints">))
+        .filter(notDeleted)
+        .order("desc")
+        .filter((q) => q.neq(q.field("type"), "subtask"));
+
+      // Optimization: push down filters to avoid fetching discarded items
+      if (args.excludeEpics) {
+        q = q.filter((q) => q.neq(q.field("type"), "epic"));
+      }
+      if (args.hasDueDate) {
+        q = q.filter((q) => q.gt(q.field("dueDate"), 0));
+      }
+
+      const allSprintIssues = await safeCollect(q, BOUNDED_LIST_LIMIT, "roadmap sprint issues");
 
       // Verify projectId matches (security check) and filter root types
       issues = allSprintIssues.filter(
@@ -184,15 +190,21 @@ export const listRoadmapIssues = authenticatedQuery({
     } else if (args.epicId) {
       // Optimization: Fetch by epic directly if filtering by specific epic
       // This is much faster (O(K)) than scanning the whole project (O(N))
-      const allEpicIssues = await safeCollect(
-        ctx.db
-          .query("issues")
-          .withIndex("by_epic", (q) => q.eq("epicId", args.epicId))
-          .filter(notDeleted)
-          .order("desc"),
-        BOUNDED_LIST_LIMIT,
-        "roadmap epic issues",
-      );
+      let q = ctx.db
+        .query("issues")
+        .withIndex("by_epic", (q) => q.eq("epicId", args.epicId))
+        .filter(notDeleted)
+        .order("desc");
+
+      // Optimization: push down filters to avoid fetching discarded items
+      if (args.excludeEpics) {
+        q = q.filter((q) => q.neq(q.field("type"), "epic"));
+      }
+      if (args.hasDueDate) {
+        q = q.filter((q) => q.gt(q.field("dueDate"), 0));
+      }
+
+      const allEpicIssues = await safeCollect(q, BOUNDED_LIST_LIMIT, "roadmap epic issues");
 
       // Filter by project (security) and ensure root types only (no subtasks)
       // Note: Epics themselves don't have an epicId, so this excludes epics naturally
@@ -499,21 +511,24 @@ export const getIssue = query({
       return null;
     }
 
-    const project = await ctx.db.get(issue.projectId as Id<"projects">);
-    if (!project) {
-      return null;
-    }
-
     if (!userId) {
       throw forbidden();
+    }
+
+    // Optimization: Fetch project and enrich issue in parallel to reduce latency
+    const [project, enriched] = await Promise.all([
+      ctx.db.get(issue.projectId as Id<"projects">),
+      enrichIssue(ctx, issue),
+    ]);
+
+    if (!project) {
+      return null;
     }
 
     const hasAccess = await canAccessProject(ctx, issue.projectId as Id<"projects">, userId);
     if (!hasAccess) {
       throw forbidden();
     }
-
-    const enriched = await enrichIssue(ctx, issue);
 
     // Optimization: Comments and activity are fetched separately by the frontend components
     // (IssueComments and IssueActivity) to allow for pagination and better performance.
