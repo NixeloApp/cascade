@@ -748,6 +748,36 @@ export const cleanupTestUsersInternal = internalMutation({
         await ctx.db.delete(account._id);
       }
 
+      // Delete user's organization memberships and any organizations they created
+      const memberships = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+      for (const membership of memberships) {
+        // Check if user is the organization creator - if so, delete the organization
+        const organization = await ctx.db.get(membership.organizationId);
+        if (organization?.createdBy === user._id) {
+          // Delete all members of this organization first
+          const organizationMembers = await ctx.db
+            .query("organizationMembers")
+            .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+            .collect();
+          for (const member of organizationMembers) {
+            // Check if this organization is the user's default
+            const memberUser = await ctx.db.get(member.userId);
+            if (memberUser?.defaultOrganizationId === organization._id) {
+              await ctx.db.patch(member.userId, { defaultOrganizationId: undefined });
+            }
+            await ctx.db.delete(member._id);
+          }
+          // Delete the organization
+          await ctx.db.delete(organization._id);
+        } else {
+          // Just delete the membership
+          await ctx.db.delete(membership._id);
+        }
+      }
+
       // Delete user
       await ctx.db.delete(user._id);
       deletedCount++;
