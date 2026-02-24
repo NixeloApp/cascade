@@ -135,4 +135,54 @@ describe("issue search optimization", () => {
     expect(result.page).toHaveLength(1);
     expect(result.page[0].title).toBe("Reported Issue");
   });
+
+  it("should find issues in a specific sprint", async () => {
+    const sprint1Id = await ctx.asUser.mutation(api.sprints.create, {
+      name: "Sprint 1",
+      startDate: 0,
+      endDate: 0,
+      projectId,
+    });
+    const sprint2Id = await ctx.asUser.mutation(api.sprints.create, {
+      name: "Sprint 2",
+      startDate: 0,
+      endDate: 0,
+      projectId,
+    });
+
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "Issue in Sprint 1",
+      sprintId: sprint1Id.sprintId,
+    });
+    await createTestIssue(t, projectId, ctx.userId, {
+      title: "Issue in Sprint 2",
+      sprintId: sprint2Id.sprintId,
+    });
+
+    const result = await ctx.asUser.query(api.issues.queries.search, {
+      query: "",
+      projectId,
+      sprintId: sprint1Id.sprintId,
+    });
+
+    expect(result.page).toHaveLength(1);
+    expect(result.page[0].title).toBe("Issue in Sprint 1");
+  });
+
+  it("should find issues in a specific epic", async () => {
+    const epic1Id = await createTestIssue(t, projectId, ctx.userId, { title: "Epic 1", type: "epic" });
+    const epic2Id = await createTestIssue(t, projectId, ctx.userId, { title: "Epic 2", type: "epic" });
+
+    await createTestIssue(t, projectId, ctx.userId, { title: "Issue in Epic 1", epicId: epic1Id });
+    await createTestIssue(t, projectId, ctx.userId, { title: "Issue in Epic 2", epicId: epic2Id });
+
+    const result = await ctx.asUser.query(api.issues.queries.search, {
+      query: "",
+      projectId,
+      epicId: epic1Id,
+    });
+
+    expect(result.page).toHaveLength(1);
+    expect(result.page[0].title).toBe("Issue in Epic 1");
+  });
 });

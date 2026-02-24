@@ -1246,12 +1246,46 @@ async function fetchProjectIssuesOptimized(
     assigneeId?: Id<"users"> | "unassigned" | "me";
     status?: string[];
     reporterId?: Id<"users">;
+    sprintId?: Id<"sprints"> | "backlog" | "none";
+    epicId?: Id<"issues"> | "none";
   },
   fetchLimit: number,
   userId: Id<"users"> | null,
 ) {
   // Determine efficient query strategy based on filters
   // We prioritize specific indexes to avoid scanning the entire project
+
+  // Optimization: Filter by sprintId (specific)
+  // Sprints are typically small (< 200 items), making this index much more efficient
+  // than scanning the entire project or filtering by status.
+  if (args.sprintId && args.sprintId !== "backlog" && args.sprintId !== "none") {
+    // Index: by_sprint ["sprintId"]
+    return await safeCollect(
+      ctx.db
+        .query("issues")
+        .withIndex("by_sprint", (q) => q.eq("sprintId", args.sprintId as Id<"sprints">))
+        .filter(notDeleted)
+        .order("desc"),
+      fetchLimit,
+      "issue search by sprint",
+    );
+  }
+
+  // Optimization: Filter by epicId (specific)
+  // Epics typically have few children (< 50 items), making this highly efficient.
+  if (args.epicId && args.epicId !== "none") {
+    // Index: by_epic ["epicId"]
+    return await safeCollect(
+      ctx.db
+        .query("issues")
+        .withIndex("by_epic", (q) => q.eq("epicId", args.epicId as Id<"issues">))
+        .filter(notDeleted)
+        .order("desc"),
+      fetchLimit,
+      "issue search by epic",
+    );
+  }
+
   const targetAssigneeId =
     args.assigneeId === "me"
       ? userId
