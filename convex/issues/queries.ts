@@ -9,7 +9,7 @@ import {
   BOUNDED_LIST_LIMIT,
   BOUNDED_SEARCH_LIMIT,
   BOUNDED_SELECT_LIMIT,
-  efficientCount,
+  boundedCount,
   safeCollect,
 } from "../lib/boundedQueries";
 import { forbidden, notFound } from "../lib/errors";
@@ -929,23 +929,27 @@ export const getTeamIssueCounts = authenticatedQuery({
 
           // Fetch total count efficiently
           // Batch query: Promise.all handles parallelism
-          totalCount = await efficientCount(
+          const { count } = await boundedCount(
             ctx.db
               .query("issues")
               .withIndex("by_team_status", (q) =>
                 q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
               ),
+            { limit: 1000 },
           );
+          totalCount = count;
         } else {
           // Non-done columns
           // Batch query: Promise.all handles parallelism
-          totalCount = await efficientCount(
+          const { count } = await boundedCount(
             ctx.db
               .query("issues")
               .withIndex("by_team_status", (q) =>
                 q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
               ),
+            { limit: 1000 },
           );
+          totalCount = count;
 
           visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
         }
@@ -1018,22 +1022,26 @@ export const getIssueCounts = authenticatedQuery({
 
             // Fetch total count efficiently
             // Batch query: Promise.all handles parallelism
-            totalCount = await efficientCount(
+            const { count } = await boundedCount(
               ctx.db
                 .query("issues")
                 .withIndex("by_project_status", (q) =>
                   q.eq("projectId", args.projectId).eq("status", state.id).lt("isDeleted", true),
                 ),
+              { limit: 1000 },
             );
+            totalCount = count;
           } else {
             // Batch query: Promise.all handles parallelism
-            totalCount = await efficientCount(
+            const { count } = await boundedCount(
               ctx.db
                 .query("issues")
                 .withIndex("by_project_status", (q) =>
                   q.eq("projectId", args.projectId).eq("status", state.id).lt("isDeleted", true),
                 ),
+              { limit: 1000 },
             );
+            totalCount = count;
 
             visibleCount = Math.min(totalCount, DEFAULT_PAGE_SIZE);
           }
