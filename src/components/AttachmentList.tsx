@@ -20,6 +20,7 @@ import {
 import { showError, showSuccess } from "@/lib/toast";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
+import { IconButton } from "./ui/IconButton";
 import { Stack } from "./ui/Stack";
 
 interface AttachmentListProps {
@@ -97,10 +98,7 @@ function AttachmentItem({
   const fileIcon = getFileIcon(filename);
 
   return (
-    <Card
-      padding="sm"
-      className="bg-ui-bg-soft hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default group"
-    >
+    <Card padding="sm" hoverable className="bg-ui-bg-soft group">
       <Flex align="center" gap="sm">
         <Icon icon={fileIcon} size="lg" />
         <FlexItem flex="1" className="min-w-0">
@@ -126,15 +124,14 @@ function AttachmentItem({
           </Tooltip>
           {canEdit && (
             <Tooltip content="Remove attachment">
-              <Button
-                variant="ghost"
+              <IconButton
+                variant="danger"
                 size="sm"
                 onClick={onRemove}
                 aria-label="Remove attachment"
-                className="hover:text-status-error hover:bg-status-error-bg"
               >
                 <Icon icon={Trash2} size="sm" />
-              </Button>
+              </IconButton>
             </Tooltip>
           )}
         </Flex>

@@ -13,6 +13,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex, FlexItem } from "../ui/Flex";
+import { IconButton } from "../ui/IconButton";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
 
@@ -206,15 +207,14 @@ export function TimeEntriesList({
                 {/* Actions */}
                 {!(entry.isLocked || entry.billed) && (
                   <FlexItem shrink={false}>
-                    <Button
+                    <IconButton
                       onClick={() => handleDelete(entry._id)}
-                      variant="ghost"
+                      variant="danger"
                       size="sm"
-                      className="p-1 min-w-0 text-ui-text-tertiary hover:text-status-error"
                       aria-label="Delete entry"
                     >
                       <Trash className="w-4 h-4" />
-                    </Button>
+                    </IconButton>
                   </FlexItem>
                 )}
               </Flex>

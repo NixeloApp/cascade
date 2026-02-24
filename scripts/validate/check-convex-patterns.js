@@ -33,7 +33,6 @@ export function run() {
 
   // Known exceptions (with justification)
   const ENVELOPE_EXCEPTIONS = [
-    // Internal mutations called only by other mutations
     "convex/lib/", // Helper functions, not public API
     "convex/internal/", // Internal actions
   ];
@@ -45,11 +44,6 @@ export function run() {
     const rel = relPath(filePath);
     errors.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - ${message}`);
     errorCount++;
-  }
-
-  function reportWarning(filePath, line, message) {
-    const rel = relPath(filePath);
-    errors.push(`  ${c.yellow}WARN${c.reset} ${rel}:${line} - ${message}`);
   }
 
   /**
@@ -90,19 +84,11 @@ export function run() {
         }
 
         if (insideMutation) {
-          if (CONFIG.envelopePatternLevel === "error") {
-            reportError(
-              filePath,
-              i + 1,
-              `Raw ID return 'return ${varName};'. Use Envelope Pattern: 'return { ${varName} };'`,
-            );
-          } else {
-            reportWarning(
-              filePath,
-              i + 1,
-              `Raw ID return 'return ${varName};'. Use Envelope Pattern: 'return { ${varName} };'`,
-            );
-          }
+          reportError(
+            filePath,
+            i + 1,
+            `Raw ID return 'return ${varName};'. Use Envelope Pattern: 'return { ${varName} };'`,
+          );
         }
       }
     }
@@ -129,20 +115,11 @@ export function run() {
 
       if (match) {
         const varName = match[1];
-
-        if (CONFIG.testDestructuringLevel === "error") {
-          reportError(
-            filePath,
-            i + 1,
-            `Raw assignment 'const ${varName} = await ...'. Use destructuring: 'const { ${varName} } = await ...'`,
-          );
-        } else {
-          reportWarning(
-            filePath,
-            i + 1,
-            `Raw assignment 'const ${varName} = await ...'. Use destructuring: 'const { ${varName} } = await ...'`,
-          );
-        }
+        reportError(
+          filePath,
+          i + 1,
+          `Raw assignment 'const ${varName} = await ...'. Use destructuring: 'const { ${varName} } = await ...'`,
+        );
       }
     }
   }

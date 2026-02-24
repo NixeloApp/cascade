@@ -425,13 +425,7 @@ function InboxIssueRow({
   const isOpen = item.status === "pending" || item.status === "snoozed";
 
   return (
-    <Card
-      padding="sm"
-      className={cn(
-        "hover:bg-ui-bg-hover transition-colors",
-        item.status === "snoozed" && "opacity-75",
-      )}
-    >
+    <Card padding="sm" hoverable className={cn(item.status === "snoozed" && "opacity-75")}>
       <Flex align="center" gap="md">
         {/* Selection Checkbox (only for triageable items) */}
         {isOpen && (

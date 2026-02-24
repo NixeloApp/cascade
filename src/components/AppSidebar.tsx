@@ -33,6 +33,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import { Flex, FlexItem } from "./ui/Flex";
+import { NavItem as NavItemBase } from "./ui/NavItem";
 import { Tooltip, TooltipProvider } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
@@ -516,27 +517,20 @@ function NavItem({
   ...props
 }: NavItemProps) {
   const content = (
-    <Link
-      to={to}
-      params={params}
-      search={search}
-      onClick={onClick}
-      {...props}
-      data-tour={dataTour}
-      aria-current={isActive ? "page" : undefined}
-      aria-label={isCollapsed ? label : undefined}
-      className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-md transition-default",
-        "text-sm font-medium",
-        isActive
-          ? "bg-ui-bg-hover text-ui-text border-l-2 border-brand"
-          : "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
-        isCollapsed && "justify-center px-2 border-l-0",
-      )}
-    >
-      <Icon className="w-5 h-5 shrink-0" />
-      {!isCollapsed && label}
-    </Link>
+    <NavItemBase asChild active={isActive} collapsed={isCollapsed} variant="bordered">
+      <Link
+        to={to}
+        params={params}
+        search={search}
+        onClick={onClick}
+        {...props}
+        data-tour={dataTour}
+        aria-label={isCollapsed ? label : undefined}
+      >
+        <Icon className="w-5 h-5 shrink-0" />
+        {!isCollapsed && label}
+      </Link>
+    </NavItemBase>
   );
 
   if (isCollapsed) {

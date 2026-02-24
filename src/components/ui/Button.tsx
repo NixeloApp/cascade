@@ -17,6 +17,7 @@ const buttonVariants = cva(
           "bg-status-success text-brand-foreground hover:bg-status-success/90 focus-visible:ring-status-success",
         danger:
           "bg-status-error text-brand-foreground hover:bg-status-error/90 focus-visible:ring-status-error",
+        ghostDanger: "text-status-error hover:bg-status-error-bg focus-visible:ring-status-error",
         ghost: "text-ui-text-secondary hover:bg-ui-bg-hover focus-visible:ring-brand-ring",
         link: "text-brand underline-offset-4 hover:underline active:scale-100",
         outline:

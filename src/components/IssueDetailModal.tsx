@@ -77,7 +77,6 @@ export function IssueDetailModal({
                 size="sm"
                 onClick={detail.handleCopyKey}
                 aria-label="Copy issue key"
-                className="transition-colors duration-default hover:bg-ui-bg-hover"
               >
                 {detail.hasCopied ? (
                   <Check className="w-3.5 h-3.5 text-status-success" />
@@ -92,12 +91,7 @@ export function IssueDetailModal({
           </Flex>
         </Flex>
         {canEdit && !detail.isEditing && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={detail.handleEdit}
-            className="transition-colors duration-default hover:bg-ui-bg-hover"
-          >
+          <Button variant="ghost" size="sm" onClick={detail.handleEdit}>
             Edit
           </Button>
         )}

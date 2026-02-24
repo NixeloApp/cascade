@@ -31,7 +31,7 @@ interface TemplateCardProps {
  */
 export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
   return (
-    <Card padding="md" className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary transition-colors">
+    <Card padding="md" hoverable className="bg-ui-bg-secondary">
       <Flex justify="between" align="start">
         <FlexItem flex="1">
           <Flex gap="sm" align="center" className="mb-2">

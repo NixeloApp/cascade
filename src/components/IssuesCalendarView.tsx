@@ -150,12 +150,17 @@ export function IssuesCalendarView({
           {(dayIssues ?? []).slice(0, 3).map((issue: Doc<"issues">) => (
             <Tooltip key={issue._id} content={issue.title}>
               <Button
-                variant="unstyled"
+                variant="ghost"
                 onClick={() => setSelectedIssue(issue._id)}
-                className="w-full text-left p-1.5 rounded hover:bg-ui-bg-secondary transition-colors h-auto"
+                className="w-full justify-start text-left p-1.5 h-auto"
               >
-                <Flex align="center" gap="xs">
-                  <div className={cn("w-2 h-2 rounded-full", getPriorityColor(issue.priority))} />
+                <Flex align="center" gap="xs" className="w-full">
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full shrink-0",
+                      getPriorityColor(issue.priority),
+                    )}
+                  />
                   <FlexItem flex="1" className="min-w-0">
                     <Flex align="center" gap="xs">
                       <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />

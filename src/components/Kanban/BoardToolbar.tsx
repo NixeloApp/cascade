@@ -1,7 +1,8 @@
+import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
-import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 import { SwimlanSelector } from "./SwimlanSelector";
 
@@ -46,11 +47,9 @@ export function BoardToolbar({
           {/* Undo/Redo buttons */}
           <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
             <Tooltip content="Undo (Ctrl+Z)">
-              <button
-                type="button"
+              <IconButton
                 onClick={onUndo}
                 disabled={historyStack.length === 0}
-                className="p-2 rounded-secondary text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover disabled:opacity-30 disabled:cursor-not-allowed transition-fast"
                 aria-label="Undo (Ctrl+Z)"
               >
                 <svg
@@ -67,14 +66,12 @@ export function BoardToolbar({
                     d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
                   />
                 </svg>
-              </button>
+              </IconButton>
             </Tooltip>
             <Tooltip content="Redo (Ctrl+Shift+Z)">
-              <button
-                type="button"
+              <IconButton
                 onClick={onRedo}
                 disabled={redoStack.length === 0}
-                className="p-2 rounded-secondary text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover disabled:opacity-30 disabled:cursor-not-allowed transition-fast"
                 aria-label="Redo (Ctrl+Shift+Z)"
               >
                 <svg
@@ -91,7 +88,7 @@ export function BoardToolbar({
                     d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6"
                   />
                 </svg>
-              </button>
+              </IconButton>
             </Tooltip>
           </Flex>
 
@@ -101,22 +98,17 @@ export function BoardToolbar({
           )}
 
           {/* Selection mode toggle */}
-          <button
-            type="button"
+          <Button
+            variant={selectionMode ? "primary" : "outline"}
+            size="sm"
             onClick={onToggleSelectionMode}
-            className={cn(
-              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-secondary transition-fast font-medium",
-              selectionMode
-                ? "bg-brand text-brand-foreground"
-                : "text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover border border-ui-border",
-            )}
             aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
           >
             <span className="hidden sm:inline">
               {selectionMode ? "Exit Selection" : "Select Multiple"}
             </span>
             <span className="sm:hidden">{selectionMode ? "Exit" : "Select"}</span>
-          </button>
+          </Button>
         </Flex>
       )}
     </Flex>

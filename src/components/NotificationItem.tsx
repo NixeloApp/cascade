@@ -14,8 +14,8 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -147,10 +147,9 @@ export function NotificationItem({
       >
         {!notification.isRead && (
           <Tooltip content="Mark as read">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-brand hover:bg-brand-subtle/20"
+            <IconButton
+              variant="brand"
+              size="xs"
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkAsRead(notification._id);
@@ -158,14 +157,13 @@ export function NotificationItem({
               aria-label="Mark as read"
             >
               <Check className="h-3.5 w-3.5" />
-            </Button>
+            </IconButton>
           </Tooltip>
         )}
         <Tooltip content="Delete">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-ui-text-tertiary hover:text-status-error hover:bg-status-error/10"
+          <IconButton
+            variant="danger"
+            size="xs"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(notification._id);
@@ -173,7 +171,7 @@ export function NotificationItem({
             aria-label="Delete notification"
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          </IconButton>
         </Tooltip>
       </Flex>
 

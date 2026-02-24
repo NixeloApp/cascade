@@ -90,11 +90,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
         ) : (
           <>
             {comments?.map((comment) => (
-              <Card
-                padding="md"
-                key={comment._id}
-                className="bg-ui-bg-soft transition-colors duration-default hover:border-ui-border-secondary"
-              >
+              <Card padding="md" key={comment._id} hoverable className="bg-ui-bg-soft">
                 <Flex gap="md">
                   {/* Avatar */}
                   <FlexItem shrink={false}>
