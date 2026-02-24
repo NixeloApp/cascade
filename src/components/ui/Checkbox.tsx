@@ -71,12 +71,7 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
     return (
       <Flex align="start" gap="md">
         {checkboxElement}
-        <div
-          className={cn(
-            "grid gap-1 leading-none",
-            disabled && "cursor-not-allowed opacity-70",
-          )}
-        >
+        <div className={cn("grid gap-1 leading-none", disabled && "cursor-not-allowed opacity-70")}>
           {label && (
             <label
               htmlFor={checkboxId}

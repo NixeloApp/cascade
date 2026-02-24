@@ -72,12 +72,7 @@ const RadioGroupItem = React.forwardRef<
   return (
     <Flex align="start" gap="md">
       {radioElement}
-      <div
-        className={cn(
-          "grid gap-1 leading-none",
-          disabled && "cursor-not-allowed opacity-70",
-        )}
-      >
+      <div className={cn("grid gap-1 leading-none", disabled && "cursor-not-allowed opacity-70")}>
         {label && (
           <label
             htmlFor={radioId}
