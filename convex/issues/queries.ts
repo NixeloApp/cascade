@@ -170,7 +170,12 @@ export const listRoadmapIssues = authenticatedQuery({
           .withIndex("by_sprint", (q) => q.eq("sprintId", args.sprintId as Id<"sprints">))
           .filter(notDeleted)
           .order("desc")
-          .filter((q) => q.neq(q.field("type"), "subtask")),
+          .filter((q) => {
+            const filters = [q.neq(q.field("type"), "subtask")];
+            if (args.excludeEpics) filters.push(q.neq(q.field("type"), "epic"));
+            if (args.hasDueDate) filters.push(q.gt(q.field("dueDate"), 0));
+            return q.and(...filters);
+          }),
         BOUNDED_LIST_LIMIT,
         "roadmap sprint issues",
       );
@@ -189,7 +194,13 @@ export const listRoadmapIssues = authenticatedQuery({
           .query("issues")
           .withIndex("by_epic", (q) => q.eq("epicId", args.epicId))
           .filter(notDeleted)
-          .order("desc"),
+          .order("desc")
+          .filter((q) => {
+            const filters = [];
+            if (args.excludeEpics) filters.push(q.neq(q.field("type"), "epic"));
+            if (args.hasDueDate) filters.push(q.gt(q.field("dueDate"), 0));
+            return filters.length > 0 ? q.and(...filters) : true;
+          }),
         BOUNDED_LIST_LIMIT,
         "roadmap epic issues",
       );
@@ -499,21 +510,24 @@ export const getIssue = query({
       return null;
     }
 
-    const project = await ctx.db.get(issue.projectId as Id<"projects">);
-    if (!project) {
-      return null;
-    }
-
     if (!userId) {
       throw forbidden();
+    }
+
+    // Optimization: Fetch project and enrich issue in parallel to reduce latency
+    const [project, enriched] = await Promise.all([
+      ctx.db.get(issue.projectId as Id<"projects">),
+      enrichIssue(ctx, issue),
+    ]);
+
+    if (!project) {
+      return null;
     }
 
     const hasAccess = await canAccessProject(ctx, issue.projectId as Id<"projects">, userId);
     if (!hasAccess) {
       throw forbidden();
     }
-
-    const enriched = await enrichIssue(ctx, issue);
 
     // Optimization: Comments and activity are fetched separately by the frontend components
     // (IssueComments and IssueActivity) to allow for pagination and better performance.
