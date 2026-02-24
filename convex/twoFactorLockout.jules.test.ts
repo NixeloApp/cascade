@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "./_generated/api";
-import { MINUTE, SECOND } from "./lib/timeUtils";
+import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createTestUser } from "./testUtils";

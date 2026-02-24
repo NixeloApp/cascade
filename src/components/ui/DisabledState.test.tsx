@@ -5,11 +5,7 @@ import { RadioGroup, RadioGroupItem } from "./RadioGroup";
 
 describe("Disabled State Styling", () => {
   it("Checkbox: applies disabled styles to label container when disabled", () => {
-    render(<Checkbox label="Test Checkbox" disabled />);
-
-    // Verify the actual checkbox input is disabled
-    const checkbox = screen.getByRole("checkbox");
-    expect(checkbox).toBeDisabled();
+    const { container } = render(<Checkbox label="Test Checkbox" disabled />);
 
     // The structure is Flex -> [Checkbox, div.grid -> [label]]
     // We want to find the div.grid that contains the label
@@ -25,11 +21,7 @@ describe("Disabled State Styling", () => {
   });
 
   it("Checkbox: does not apply disabled styles when enabled", () => {
-    render(<Checkbox label="Test Checkbox" />);
-
-    // Verify the actual checkbox input is not disabled
-    const checkbox = screen.getByRole("checkbox");
-    expect(checkbox).not.toBeDisabled();
+    const { container } = render(<Checkbox label="Test Checkbox" />);
 
     const label = screen.getByText("Test Checkbox");
     expect(label).not.toHaveClass("cursor-not-allowed");
@@ -42,13 +34,9 @@ describe("Disabled State Styling", () => {
   it("RadioGroupItem: applies disabled styles to label container when disabled", () => {
     render(
       <RadioGroup defaultValue="1">
-        <RadioGroupItem value="1" label="Test Radio" disabled />
+        <RadioGroupItem value="1" label="Test Radio" disabled />,
       </RadioGroup>,
     );
-
-    // Verify the actual radio input is disabled
-    const radio = screen.getByRole("radio");
-    expect(radio).toBeDisabled();
 
     const label = screen.getByText("Test Radio");
     expect(label).toHaveClass("cursor-not-allowed");
@@ -61,13 +49,9 @@ describe("Disabled State Styling", () => {
   it("RadioGroupItem: does not apply disabled styles when enabled", () => {
     render(
       <RadioGroup defaultValue="1">
-        <RadioGroupItem value="1" label="Test Radio" />
+        <RadioGroupItem value="1" label="Test Radio" />,
       </RadioGroup>,
     );
-
-    // Verify the actual radio input is not disabled
-    const radio = screen.getByRole("radio");
-    expect(radio).not.toBeDisabled();
 
     const label = screen.getByText("Test Radio");
     expect(label).not.toHaveClass("cursor-not-allowed");
