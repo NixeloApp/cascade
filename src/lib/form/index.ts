@@ -44,5 +44,11 @@
  * ```
  */
 
-export { FormCheckbox, FormInput, FormSelect, FormTextarea } from "./FormFields";
+export {
+  FormCheckbox,
+  FormInput,
+  FormSelect,
+  FormSelectRadix,
+  FormTextarea,
+} from "./FormFields";
 export type { AppFieldApi, AppFormApi, FormFieldProps } from "./types";

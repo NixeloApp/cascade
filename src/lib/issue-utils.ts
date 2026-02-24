@@ -19,6 +19,8 @@ import {
 export type IssueType = IssueTypeWithSubtask;
 export type { IssuePriority };
 
+export { ISSUE_PRIORITIES, ISSUE_TYPES_WITH_SUBTASK } from "@convex/validators";
+
 /** Icon mapping for issue types - use with <Icon icon={ISSUE_TYPE_ICONS[type]} /> */
 export const ISSUE_TYPE_ICONS: Record<IssueType, typeof Bug> = {
   bug: Bug,
