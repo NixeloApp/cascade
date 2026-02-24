@@ -4,12 +4,12 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addProjectMember,
   addUserToOrganization,
   asAuthenticatedUser,
   createOrganizationAdmin,
   createProjectInOrganization,
   createTestUser,
-  addProjectMember,
 } from "./testUtils";
 
 describe("API Keys Security", () => {
@@ -86,13 +86,13 @@ describe("API Keys Security", () => {
 
     // 5. Downgrade Member to EDITOR
     await t.run(async (ctx) => {
-        const memberRecord = await ctx.db
-            .query("projectMembers")
-            .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", memberId))
-            .first();
-        if (memberRecord) {
-            await ctx.db.patch(memberRecord._id, { role: "editor" });
-        }
+      const memberRecord = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", memberId))
+        .first();
+      if (memberRecord) {
+        await ctx.db.patch(memberRecord._id, { role: "editor" });
+      }
     });
 
     // 6. Member attempts to rotate the key
