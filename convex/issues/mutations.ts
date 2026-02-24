@@ -61,9 +61,11 @@ type CreateIssueArgs = Infer<typeof createIssueArgsObject>;
 const createIssueArgsObject = v.object(createIssueArgs);
 
 /**
- * Shared implementation for creating an issue.
+ * Prepares data for creating an issue by validating inputs and resolving defaults.
+ *
+ * Separates business logic (validation, key generation) from persistence.
  */
-async function createIssueImpl(
+async function prepareCreateIssue(
   ctx: MutationCtx & {
     userId: Id<"users">;
     projectId: Id<"projects">;
@@ -71,9 +73,6 @@ async function createIssueImpl(
   },
   args: CreateIssueArgs,
 ) {
-  // Rate limit: 60 issues per minute per user with burst capacity of 15
-  await enforceRateLimit(ctx, "createIssue", ctx.userId);
-
   // Validate input constraints
   validate.title(args.title);
   validate.description(args.description);
@@ -96,6 +95,32 @@ async function createIssueImpl(
   const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
 
   const labelNames = await resolveLabelNames(ctx, args.labels);
+
+  return {
+    issueKey,
+    inheritedEpicId,
+    defaultStatus,
+    maxOrder,
+    labelNames,
+  };
+}
+
+/**
+ * Shared implementation for creating an issue.
+ */
+async function createIssueImpl(
+  ctx: MutationCtx & {
+    userId: Id<"users">;
+    projectId: Id<"projects">;
+    project: Doc<"projects">;
+  },
+  args: CreateIssueArgs,
+) {
+  // Rate limit: 60 issues per minute per user with burst capacity of 15
+  await enforceRateLimit(ctx, "createIssue", ctx.userId);
+
+  const { issueKey, inheritedEpicId, defaultStatus, maxOrder, labelNames } =
+    await prepareCreateIssue(ctx, args);
 
   const now = Date.now();
   const issueId = await ctx.db.insert("issues", {
