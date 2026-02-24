@@ -35,19 +35,17 @@ describe("MeetingBot Pending Jobs", () => {
       });
 
       // Insert 110 future jobs
-      await Promise.all(
-        Array.from({ length: 110 }, () =>
-          ctx.db.insert("meetingBotJobs", {
-            recordingId,
-            meetingUrl: "https://zoom.us/future",
-            scheduledTime: futureTime,
-            status: "pending",
-            attempts: 0,
-            maxAttempts: 3,
-            updatedAt: Date.now(),
-          }),
-        ),
-      );
+      for (let i = 0; i < 110; i++) {
+        await ctx.db.insert("meetingBotJobs", {
+          recordingId,
+          meetingUrl: "https://zoom.us/future",
+          scheduledTime: futureTime,
+          status: "pending",
+          attempts: 0,
+          maxAttempts: 3,
+          updatedAt: Date.now(),
+        });
+      }
     });
 
     // Create 1 "urgent" pending job (scheduled for now)

@@ -5,13 +5,16 @@
  * at function start time, ensuring deterministic behavior.
  */
 
-import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "../shared/time";
-
 // =============================================================================
 // Time Constants (milliseconds)
 // =============================================================================
 
-export { SECOND, MINUTE, HOUR, DAY, WEEK, MONTH };
+export const SECOND = 1000;
+export const MINUTE = 60 * SECOND;
+export const HOUR = 60 * MINUTE;
+export const DAY = 24 * HOUR;
+export const WEEK = 7 * DAY;
+export const MONTH = 30 * DAY; // Approximate
 
 // =============================================================================
 // Rounding Utilities

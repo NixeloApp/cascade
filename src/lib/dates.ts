@@ -1,5 +1,3 @@
-import { DAY, HOUR, MINUTE } from "@convex/shared/time";
-
 /**
  * Date and time formatting utilities
  */
@@ -12,9 +10,9 @@ export function formatRelativeTime(timestamp: number): string {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / MINUTE);
-  const diffHours = Math.floor(diffMs / HOUR);
-  const diffDays = Math.floor(diffMs / DAY);
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins}m ago`;
@@ -65,7 +63,7 @@ export function formatDateCustom(timestamp: number, options: Intl.DateTimeFormat
  */
 export function daysBetween(startDate: number, endDate: number): number {
   const diffMs = Math.abs(endDate - startDate);
-  return Math.floor(diffMs / DAY);
+  return Math.floor(diffMs / 86400000);
 }
 
 /**

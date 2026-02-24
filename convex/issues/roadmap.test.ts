@@ -14,59 +14,57 @@ describe("listRoadmapIssues optimization", () => {
     const projectId = await createProjectInOrganization(t, userId, organizationId);
 
     // Create 10 issues without due dates
-    await t.run(async (ctx) => {
-      const project = await ctx.db.get(projectId);
-      if (!project) throw new Error("Project not found");
-      await Promise.all(
-        Array.from({ length: 10 }, (_, i) =>
-          ctx.db.insert("issues", {
-            projectId,
-            organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: `PROJ-${i + 1}`,
-            title: `Issue ${i}`,
-            type: "task",
-            status: "todo",
-            priority: "medium",
-            reporterId: userId,
-            updatedAt: Date.now(),
-            labels: [],
-            linkedDocuments: [],
-            attachments: [],
-            order: i,
-          }),
-        ),
-      );
-    });
+    for (let i = 0; i < 10; i++) {
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: `PROJ-${i + 1}`,
+          title: `Issue ${i}`,
+          type: "task",
+          status: "todo",
+          priority: "medium",
+          reporterId: userId,
+          updatedAt: Date.now(),
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          order: i,
+        });
+      });
+    }
 
     // Create 5 issues with due dates
-    const datedIssueIds: Id<"issues">[] = await t.run(async (ctx) => {
-      const project = await ctx.db.get(projectId);
-      if (!project) throw new Error("Project not found");
-      return await Promise.all(
-        Array.from({ length: 5 }, (_, i) =>
-          ctx.db.insert("issues", {
-            projectId,
-            organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: `PROJ-D-${i + 1}`,
-            title: `Dated Issue ${i}`,
-            type: "task",
-            status: "todo",
-            priority: "medium",
-            reporterId: userId,
-            dueDate: Date.now() + 100000,
-            updatedAt: Date.now(),
-            labels: [],
-            linkedDocuments: [],
-            attachments: [],
-            order: 10 + i,
-          }),
-        ),
-      );
-    });
+    const datedIssueIds: Id<"issues">[] = [];
+    for (let i = 0; i < 5; i++) {
+      const id = await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        return await ctx.db.insert("issues", {
+          projectId,
+          organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: `PROJ-D-${i + 1}`,
+          title: `Dated Issue ${i}`,
+          type: "task",
+          status: "todo",
+          priority: "medium",
+          reporterId: userId,
+          dueDate: Date.now() + 100000,
+          updatedAt: Date.now(),
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          order: 10 + i,
+        });
+      });
+      datedIssueIds.push(id);
+    }
 
     // Create a subtask with due date (should be excluded)
     await t.run(async (ctx) => {
@@ -114,31 +112,29 @@ describe("listRoadmapIssues optimization", () => {
     const projectId = await createProjectInOrganization(t, userId, organizationId);
 
     // Create 10 issues without due dates
-    await t.run(async (ctx) => {
-      const project = await ctx.db.get(projectId);
-      if (!project) throw new Error("Project not found");
-      await Promise.all(
-        Array.from({ length: 10 }, (_, i) =>
-          ctx.db.insert("issues", {
-            projectId,
-            organizationId,
-            workspaceId: project.workspaceId,
-            teamId: project.teamId,
-            key: `PROJ-${i + 1}`,
-            title: `Issue ${i}`,
-            type: "task",
-            status: "todo",
-            priority: "medium",
-            reporterId: userId,
-            updatedAt: Date.now(),
-            labels: [],
-            linkedDocuments: [],
-            attachments: [],
-            order: i,
-          }),
-        ),
-      );
-    });
+    for (let i = 0; i < 10; i++) {
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        if (!project) throw new Error("Project not found");
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId,
+          workspaceId: project.workspaceId,
+          teamId: project.teamId,
+          key: `PROJ-${i + 1}`,
+          title: `Issue ${i}`,
+          type: "task",
+          status: "todo",
+          priority: "medium",
+          reporterId: userId,
+          updatedAt: Date.now(),
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          order: i,
+        });
+      });
+    }
 
     // Query with hasDueDate undefined
     const issues = await asUser.query(api.issues.queries.listRoadmapIssues, {

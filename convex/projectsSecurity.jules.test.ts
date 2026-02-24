@@ -37,14 +37,14 @@ test("Ghost Membership Prevention: User cannot be added to project without being
 
   // 5. Admin attempts to add Outsider to project
   // Should fail because outsider is not in the organization
-  // Ensure we use the exact email created in step 3
+  // Note: Error message is now "User not found" to prevent email enumeration
   await expect(async () => {
     await admin.mutation(api.projects.addProjectMember, {
       projectId,
       userEmail: "outsider@example.com",
       role: "viewer",
     });
-  }).rejects.toThrow(/User must be a member of the organization/);
+  }).rejects.toThrow(/User not found/);
 
   // 6. Verify Outsider still cannot access project
   await expect(async () => {

@@ -557,7 +557,8 @@ describe("Webhooks", () => {
         events: ["issue.created"],
       });
 
-      await asUser.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
+      const result = await asUser.mutation(api.webhooks.softDeleteWebhook, { id: webhookId });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const webhook = await t.run(async (ctx) => {
         return await ctx.db.get(webhookId);
@@ -727,18 +728,16 @@ describe("Webhooks", () => {
 
       // Create multiple execution logs
       await t.run(async (ctx) => {
-        await Promise.all(
-          Array.from({ length: 10 }, (_, i) =>
-            ctx.db.insert("webhookExecutions", {
-              webhookId,
-              event: "issue.created",
-              requestPayload: `{"index": ${i}}`,
-              status: "success",
-              attempts: 1,
-              completedAt: Date.now(),
-            }),
-          ),
-        );
+        for (let i = 0; i < 10; i++) {
+          await ctx.db.insert("webhookExecutions", {
+            webhookId,
+            event: "issue.created",
+            requestPayload: `{"index": ${i}}`,
+            status: "success",
+            attempts: 1,
+            completedAt: Date.now(),
+          });
+        }
       });
 
       const executions = await asUser.query(api.webhooks.listExecutions, {

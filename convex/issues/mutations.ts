@@ -1,5 +1,5 @@
 import { type Infer, v } from "convex/values";
-import { asyncMap, pruneNull } from "convex-helpers";
+import { asyncMap } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -11,7 +11,7 @@ import {
 import { validate } from "../lib/constrainedValidators";
 import { conflict, validation } from "../lib/errors";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
-import { assertCanEditProject, assertIsProjectAdmin, canAccessProject } from "../projectAccess";
+import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { enforceRateLimit } from "../rateLimits";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
@@ -20,12 +20,13 @@ import {
   getMaxOrderForStatus,
   getNextVersion,
   getSearchContent,
+  type IssueActivityAction,
   issueKeyExists,
+  performBulkUpdate,
   processIssueUpdates,
-  validateAssignee,
+  resolveLabelNames,
   validateParentIssue,
 } from "./helpers";
-import { notifyCommentParticipants } from "./notifications";
 
 const createIssueArgs = {
   title: v.string(),
@@ -82,9 +83,6 @@ async function createIssueImpl(
   // Validate parent/epic constraints
   const inheritedEpicId = await validateParentIssue(ctx, args.parentId, args.type, args.epicId);
 
-  // Validate assignee access
-  await validateAssignee(ctx, ctx.projectId, args.assigneeId);
-
   // Generate issue key with duplicate detection
   let issueKey = await generateIssueKey(ctx, ctx.projectId, ctx.project.key);
 
@@ -96,11 +94,7 @@ async function createIssueImpl(
   const defaultStatus = ctx.project.workflowStates[0]?.id || "todo";
   const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
 
-  let labelNames: string[] = [];
-  if (args.labels && args.labels.length > 0) {
-    const labels = await asyncMap(args.labels, (id) => ctx.db.get(id));
-    labelNames = pruneNull(labels).map((l) => l.name);
-  }
+  const labelNames = await resolveLabelNames(ctx, args.labels);
 
   const now = Date.now();
   const issueId = await ctx.db.insert("issues", {
@@ -179,7 +173,6 @@ export const updateStatus = issueMutation({
     newOrder: v.number(),
     expectedVersion: v.optional(v.number()),
   },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
@@ -205,7 +198,7 @@ export const updateStatus = issueMutation({
       });
     }
 
-    return { success: true } as const;
+    return { success: true };
   },
 });
 
@@ -215,7 +208,6 @@ export const updateStatusByCategory = issueMutation({
     newOrder: v.number(),
     expectedVersion: v.optional(v.number()),
   },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
@@ -253,7 +245,7 @@ export const updateStatusByCategory = issueMutation({
       });
     }
 
-    return { success: true } as const;
+    return { success: true };
   },
 });
 
@@ -280,13 +272,9 @@ export const update = issueMutation({
     // Optimistic locking: pass current version to detect concurrent edits
     expectedVersion: v.optional(v.number()),
   },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock - throws conflict error if version mismatch
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
-
-    // Validate assignee access
-    await validateAssignee(ctx, ctx.issue.projectId, args.assigneeId);
 
     const _now = Date.now();
     const changes: Array<{
@@ -338,7 +326,7 @@ export const update = issueMutation({
       );
     }
 
-    return { success: true } as const;
+    return { success: true };
   },
 });
 
@@ -357,7 +345,6 @@ export const addComment = issueViewerMutation({
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
   },
-  returns: v.object({ commentId: v.id("issueComments") }),
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
     const now = Date.now();
@@ -377,15 +364,67 @@ export const addComment = issueViewerMutation({
       action: "commented",
     });
 
-    await notifyCommentParticipants(ctx, {
-      issueId: ctx.issue._id,
-      projectId: ctx.projectId,
-      issueKey: ctx.issue.key,
-      reporterId: ctx.issue.reporterId,
-      authorId: ctx.userId,
-      content: args.content,
-      mentions,
-    });
+    const author = await ctx.db.get(ctx.userId);
+    // Dynamic import to avoid cycles
+    const { sendEmailNotification } = await import("../email/helpers");
+
+    // Notify mentioned users in parallel
+    const mentionedOthers = mentions.filter((id) => id !== ctx.userId);
+
+    // Filter mentions by project access to prevent leaks
+    const validMentions = (
+      await Promise.all(
+        mentionedOthers.map(async (userId) => {
+          const hasAccess = await canAccessProject(ctx, ctx.projectId, userId);
+          return hasAccess ? userId : null;
+        }),
+      )
+    ).filter((id): id is Id<"users"> => id !== null);
+
+    await Promise.all(
+      validMentions.flatMap((mentionedUserId) => [
+        ctx.db.insert("notifications", {
+          userId: mentionedUserId,
+          type: "issue_mentioned",
+          title: "You were mentioned",
+          message: `${author?.name || "Someone"} mentioned you in ${ctx.issue.key}`,
+          issueId: ctx.issue._id,
+          projectId: ctx.projectId,
+          isRead: false,
+        }),
+        sendEmailNotification(ctx, {
+          userId: mentionedUserId,
+          type: "mention",
+          issueId: ctx.issue._id,
+          actorId: ctx.userId,
+          commentText: args.content,
+        }),
+      ]),
+    );
+
+    if (ctx.issue.reporterId !== ctx.userId) {
+      const reporterHasAccess = await canAccessProject(ctx, ctx.projectId, ctx.issue.reporterId);
+
+      if (reporterHasAccess) {
+        await ctx.db.insert("notifications", {
+          userId: ctx.issue.reporterId,
+          type: "issue_comment",
+          title: "New comment",
+          message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
+          issueId: ctx.issue._id,
+          projectId: ctx.projectId,
+          isRead: false,
+        });
+
+        await sendEmailNotification(ctx, {
+          userId: ctx.issue.reporterId,
+          type: "comment",
+          issueId: ctx.issue._id,
+          actorId: ctx.userId,
+          commentText: args.content,
+        });
+      }
+    }
 
     return { commentId };
   },
@@ -403,72 +442,6 @@ export const addComment = issueViewerMutation({
  * @param newStatus - The ID of the new status (workflow state).
  * @returns Object containing the number of updated issues.
  */
-// Activity action types for type safety
-type IssueActivityAction =
-  | "created"
-  | "updated"
-  | "archived"
-  | "restored"
-  | "deleted"
-  | "commented";
-
-// Helper for bulk updates to reduce code duplication
-async function performBulkUpdate(
-  ctx: MutationCtx & { userId: Id<"users"> },
-  issueIds: Id<"issues">[],
-  getUpdate: (
-    issue: Doc<"issues">,
-    now: number,
-  ) => Promise<{
-    patch: Partial<Doc<"issues">>;
-    activity?: {
-      action: IssueActivityAction;
-      field?: string;
-      oldValue?: string;
-      newValue?: string;
-    };
-  } | null>,
-  checkPermission: (
-    ctx: MutationCtx,
-    projectId: Id<"projects">,
-    userId: Id<"users">,
-  ) => Promise<void> = assertCanEditProject,
-) {
-  const issues = await asyncMap(issueIds, (id) => ctx.db.get(id));
-  const now = Date.now();
-
-  const results = await Promise.all(
-    issues.map(async (issue) => {
-      if (!issue || issue.isDeleted) return 0;
-
-      try {
-        await checkPermission(ctx, issue.projectId as Id<"projects">, ctx.userId);
-      } catch {
-        return 0;
-      }
-
-      const update = await getUpdate(issue, now);
-      if (!update) return 0;
-
-      await ctx.db.patch(issue._id, {
-        ...update.patch,
-        updatedAt: now,
-      });
-
-      if (update.activity) {
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
-          ...update.activity,
-        });
-      }
-
-      return 1;
-    }),
-  );
-
-  return { updated: results.reduce((a: number, b) => a + b, 0) };
-}
 
 /**
  * Bulk update the status of multiple issues.
@@ -487,7 +460,6 @@ export const bulkUpdateStatus = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     newStatus: v.string(),
   },
-  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue) => {
       // Fetch project to validate status
@@ -543,7 +515,6 @@ export const bulkUpdatePriority = authenticatedMutation({
       v.literal("highest"),
     ),
   },
-  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       return {
@@ -575,12 +546,8 @@ export const bulkAssign = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     assigneeId: v.union(v.id("users"), v.null()),
   },
-  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
-      // Validate assignee access
-      await validateAssignee(ctx, issue.projectId, args.assigneeId);
-
       return {
         patch: { assigneeId: args.assigneeId ?? undefined },
         activity: {
@@ -610,7 +577,6 @@ export const bulkAddLabels = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     labels: v.array(v.string()),
   },
-  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue) => {
       const updatedLabels = Array.from(new Set([...issue.labels, ...args.labels]));
@@ -643,7 +609,6 @@ export const bulkMoveToSprint = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     sprintId: v.union(v.id("sprints"), v.null()),
   },
-  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue) => {
       return {
@@ -673,7 +638,6 @@ export const bulkDelete = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
-  returns: v.object({ deleted: v.number() }),
   handler: async (ctx, args) => {
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
@@ -715,6 +679,7 @@ export const bulkDelete = authenticatedMutation({
  */
 export const archive = issueMutation({
   args: {},
+  returns: v.object({ success: v.boolean(), archived: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
 
@@ -743,7 +708,7 @@ export const archive = issueMutation({
       action: "archived",
     });
 
-    return { success: true };
+    return { success: true, archived: true };
   },
 });
 
@@ -752,6 +717,7 @@ export const archive = issueMutation({
  */
 export const restore = issueMutation({
   args: {},
+  returns: v.object({ success: v.boolean(), restored: v.boolean() }),
   handler: async (ctx) => {
     const issue = ctx.issue;
 
@@ -774,7 +740,7 @@ export const restore = issueMutation({
       action: "restored",
     });
 
-    return { success: true };
+    return { success: true, restored: true };
   },
 });
 
@@ -793,7 +759,6 @@ export const bulkArchive = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
-  returns: v.object({ archived: v.number() }),
   handler: async (ctx, args) => {
     // Pre-fetch all issues to build project map (avoids N+1 reads)
     const allIssues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
@@ -844,7 +809,6 @@ export const bulkRestore = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
-  returns: v.object({ restored: v.number() }),
   handler: async (ctx, args) => {
     const result = await performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       if (!issue.archivedAt) return null;
@@ -880,7 +844,6 @@ export const bulkUpdateDueDate = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     dueDate: v.union(v.number(), v.null()), // null to clear
   },
-  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       // Validate: due date should not be before start date
@@ -920,7 +883,6 @@ export const bulkUpdateStartDate = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     startDate: v.union(v.number(), v.null()), // null to clear
   },
-  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       // Validate: start date should not be after due date

@@ -76,11 +76,9 @@ export async function createTestUser(
 export function asAuthenticatedUser(
   t: TestCtx,
   userId: Id<"users">,
-  sessionId?: string,
 ): ReturnType<typeof t.withIdentity> {
   // Format: userId|sessionId - the getAuthUserId extracts the part before the delimiter
-  const sid = sessionId || `test-session-${Date.now()}`;
-  const subject = `${userId}${TOKEN_SUB_CLAIM_DIVIDER}${sid}`;
+  const subject = `${userId}${TOKEN_SUB_CLAIM_DIVIDER}test-session-${Date.now()}`;
   return t.withIdentity({ subject });
 }
 
@@ -218,30 +216,6 @@ export async function addProjectMember(
       role,
       addedBy,
     });
-  });
-}
-
-/**
- * Remove a member from a project
- *
- * @param t - Convex test helper
- * @param projectId - Project ID
- * @param userId - User ID to remove
- */
-export async function removeProjectMember(
-  t: TestCtx,
-  projectId: Id<"projects">,
-  userId: Id<"users">,
-): Promise<void> {
-  await t.run(async (ctx) => {
-    const membership = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", userId))
-      .first();
-
-    if (membership) {
-      await ctx.db.delete(membership._id);
-    }
   });
 }
 

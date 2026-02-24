@@ -108,7 +108,6 @@ export const update = authenticatedMutation({
     color: v.optional(v.string()),
     groupId: v.optional(v.union(v.id("labelGroups"), v.null())),
   },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const label = await ctx.db.get(args.id);
     if (!label) throw notFound("label", args.id);
@@ -148,7 +147,7 @@ export const update = authenticatedMutation({
 
     await ctx.db.patch(args.id, updates);
 
-    return { success: true } as const;
+    return { success: true };
   },
 });
 
@@ -158,7 +157,6 @@ export const update = authenticatedMutation({
  */
 export const remove = authenticatedMutation({
   args: { id: v.id("labels") },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const label = await ctx.db.get(args.id);
     if (!label) throw notFound("label", args.id);
@@ -189,6 +187,6 @@ export const remove = authenticatedMutation({
 
     await ctx.db.delete(args.id);
 
-    return { success: true } as const;
+    return { success: true };
   },
 });

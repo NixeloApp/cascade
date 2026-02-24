@@ -130,7 +130,7 @@ export const updateWebhook = authenticatedMutation({
 /** Soft-delete a webhook by setting deletion metadata. Requires project admin role. */
 export const softDeleteWebhook = authenticatedMutation({
   args: { id: v.id("webhooks") },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const webhook = await ctx.db.get(args.id);
     if (!webhook || webhook.isDeleted) throw notFound("webhook", args.id);
@@ -150,7 +150,7 @@ export const softDeleteWebhook = authenticatedMutation({
       targetType: "webhooks",
     });
 
-    return { success: true } as const;
+    return { success: true, deleted: true } as const;
   },
 });
 

@@ -470,10 +470,6 @@ export const updateProject = projectAdminMutation({
     description: v.optional(v.string()),
     isPublic: v.optional(v.boolean()), // organization-visible
   },
-  returns: v.object({
-    success: v.literal(true),
-    projectId: v.id("projects"),
-  }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check + provides ctx.projectId, ctx.project
 
@@ -501,7 +497,7 @@ export const updateProject = projectAdminMutation({
       metadata: updates as Record<string, string | number | boolean>,
     });
 
-    return { success: true, projectId: ctx.projectId } as const;
+    return { success: true, projectId: ctx.projectId };
   },
 });
 
@@ -521,10 +517,6 @@ export const softDeleteProject = authenticatedMutation({
   args: {
     projectId: v.id("projects"),
   },
-  returns: v.object({
-    success: v.literal(true),
-    deleted: v.literal(true),
-  }),
   handler: async (ctx, args) => {
     const project = await ctx.db.get(args.projectId);
     if (!project) throw notFound("project", args.projectId);
@@ -547,7 +539,7 @@ export const softDeleteProject = authenticatedMutation({
       metadata: { deletedAt },
     });
 
-    return { success: true, deleted: true } as const;
+    return { success: true, deleted: true };
   },
 });
 
@@ -566,10 +558,6 @@ export const restoreProject = authenticatedMutation({
   args: {
     projectId: v.id("projects"),
   },
-  returns: v.object({
-    success: v.literal(true),
-    restored: v.literal(true),
-  }),
   handler: async (ctx, args) => {
     const project = await ctx.db.get(args.projectId);
     if (!project) throw notFound("project", args.projectId);
@@ -599,7 +587,7 @@ export const restoreProject = authenticatedMutation({
       targetType: "projects",
     });
 
-    return { success: true, restored: true } as const;
+    return { success: true, restored: true };
   },
 });
 
@@ -624,7 +612,6 @@ export const updateWorkflow = projectAdminMutation({
       }),
     ),
   },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check + provides ctx.projectId
 
@@ -641,7 +628,7 @@ export const updateWorkflow = projectAdminMutation({
       metadata: { workflowStates: JSON.stringify(args.workflowStates) },
     });
 
-    return { success: true } as const;
+    return { success: true };
   },
 });
 
@@ -662,7 +649,6 @@ export const addProjectMember = projectAdminMutation({
     userEmail: v.string(),
     role: projectRoles,
   },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check + provides ctx.projectId
 
@@ -672,15 +658,15 @@ export const addProjectMember = projectAdminMutation({
       .withIndex("email", (q) => q.eq("email", args.userEmail))
       .first();
 
-    if (!user) throw notFound("user");
+    // Security: User must be an organization member to be added to a project.
+    // We check both existence and membership, and throw the SAME error if either fails.
+    // This prevents attackers from enumerating valid emails in the system (global user enumeration).
+    const isMember = user
+      ? await isOrganizationMember(ctx, ctx.project.organizationId, user._id)
+      : false;
 
-    // Security: User must be an organization member before being added to a project
-    const isMember = await isOrganizationMember(ctx, ctx.project.organizationId, user._id);
-    if (!isMember) {
-      throw validation(
-        "userEmail",
-        "User must be a member of the organization to be added to this project",
-      );
+    if (!user || !isMember) {
+      throw notFound("user");
     }
 
     // Check if already a member
@@ -712,7 +698,7 @@ export const addProjectMember = projectAdminMutation({
       },
     });
 
-    return { success: true } as const;
+    return { success: true };
   },
 });
 
@@ -733,7 +719,6 @@ export const updateProjectMemberRole = projectAdminMutation({
     memberId: v.id("users"),
     newRole: projectRoles,
   },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check + provides ctx.projectId, ctx.project
 
@@ -767,7 +752,7 @@ export const updateProjectMemberRole = projectAdminMutation({
       },
     });
 
-    return { success: true } as const;
+    return { success: true };
   },
 });
 
@@ -785,7 +770,6 @@ export const removeProjectMember = projectAdminMutation({
   args: {
     memberId: v.id("users"),
   },
-  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check + provides ctx.projectId, ctx.project
 
@@ -816,7 +800,7 @@ export const removeProjectMember = projectAdminMutation({
       });
     }
 
-    return { success: true } as const;
+    return { success: true };
   },
 });
 
