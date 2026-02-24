@@ -173,21 +173,18 @@ export async function computeProjectAccess(
 }
 
 /**
- * Implementation of project access computation
+ * Check direct ownership of a project
  */
-async function computeProjectAccessImpl(
+async function checkDirectOwnership(
   ctx: QueryCtx | MutationCtx,
-  projectId: Id<"projects">,
+  project: {
+    ownerId?: Id<"users">;
+    createdBy?: Id<"users">;
+    organizationId: Id<"organizations">;
+  },
   userId: Id<"users">,
-): Promise<ProjectAccessResult> {
-  const noAccess = buildAccessResult(false, false, false, null, "no_access");
-
-  const project = await ctx.db.get(projectId);
-  if (!project) {
-    return buildAccessResult(false, false, false, null, "project_not_found");
-  }
-
-  // 1. Check direct ownership (no extra DB queries for non-org projects; org projects may query org membership)
+): Promise<ProjectAccessResult | null> {
+  // 1. Check direct ownership
   if (project.ownerId === userId || project.createdBy === userId) {
     if (project.organizationId) {
       // SECURITY FIX: Even if user owns the project, they must be a member of the organization
@@ -195,20 +192,40 @@ async function computeProjectAccessImpl(
       if (orgRole) {
         return buildAccessResult(true, true, true, "admin", "owner");
       }
-      // If not a member, fall through to other checks (likely no access)
+      // If not a member, likely no access unless other checks pass (unlikely for owner but safe to fall through)
     } else {
       return buildAccessResult(true, true, true, "admin", "owner");
     }
   }
+  return null;
+}
 
+/**
+ * Check organization admin access
+ */
+async function checkOrgAdminAccess(
+  ctx: QueryCtx | MutationCtx,
+  organizationId: Id<"organizations">,
+  userId: Id<"users">,
+): Promise<ProjectAccessResult | null> {
   // 2. Check organization admin
-  if (project.organizationId) {
-    const isOrgAdmin = await isOrganizationAdmin(ctx, project.organizationId, userId);
+  if (organizationId) {
+    const isOrgAdmin = await isOrganizationAdmin(ctx, organizationId, userId);
     if (isOrgAdmin) {
       return buildAccessResult(true, true, true, "admin", "organization_admin");
     }
   }
+  return null;
+}
 
+/**
+ * Check direct project membership
+ */
+async function checkProjectMembership(
+  ctx: QueryCtx | MutationCtx,
+  projectId: Id<"projects">,
+  userId: Id<"users">,
+): Promise<ProjectAccessResult | null> {
   // 3. Check direct project membership
   const projectMembership = await ctx.db
     .query("projectMembers")
@@ -226,6 +243,35 @@ async function computeProjectAccessImpl(
       "project_member",
     );
   }
+  return null;
+}
+
+/**
+ * Implementation of project access computation
+ */
+async function computeProjectAccessImpl(
+  ctx: QueryCtx | MutationCtx,
+  projectId: Id<"projects">,
+  userId: Id<"users">,
+): Promise<ProjectAccessResult> {
+  const noAccess = buildAccessResult(false, false, false, null, "no_access");
+
+  const project = await ctx.db.get(projectId);
+  if (!project) {
+    return buildAccessResult(false, false, false, null, "project_not_found");
+  }
+
+  // 1. Check direct ownership
+  const directOwnership = await checkDirectOwnership(ctx, project, userId);
+  if (directOwnership) return directOwnership;
+
+  // 2. Check organization admin
+  const orgAdminAccess = await checkOrgAdminAccess(ctx, project.organizationId, userId);
+  if (orgAdminAccess) return orgAdminAccess;
+
+  // 3. Check direct project membership
+  const membershipAccess = await checkProjectMembership(ctx, projectId, userId);
+  if (membershipAccess) return membershipAccess;
 
   // 4. Check team access (batched)
   const teamAccess = await checkTeamBasedAccess(

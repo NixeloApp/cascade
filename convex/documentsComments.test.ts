@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createTestContext,
-} from "./testUtils";
+import { createTestContext } from "./testUtils";
 
 describe("Document Comments", () => {
   it("should soft delete comment and return envelope", async () => {
