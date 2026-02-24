@@ -114,11 +114,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
           <Stack gap="sm">
             {executions.map((execution) => (
-              <Card
-                key={execution._id}
-                padding="md"
-                className="hover:border-ui-border-secondary transition-colors"
-              >
+              <Card key={execution._id} padding="md" hoverable>
                 {/* Header */}
                 <Flex justify="between" align="center" className="mb-3">
                   <Metadata gap="md">

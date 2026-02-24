@@ -1,8 +1,8 @@
 import type { IssueTypeWithSubtask } from "@convex/validators";
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { Check, Copy } from "@/lib/icons";
@@ -42,19 +42,18 @@ export function IssueDetailHeader({
               {issueKey}
             </Typography>
             <Tooltip content={hasCopied ? "Copied!" : "Copy issue key"}>
-              <Button
+              <IconButton
                 variant="ghost"
-                size="sm"
+                size="xs"
                 onClick={onCopyKey}
                 aria-label={hasCopied ? "Copied" : "Copy issue key"}
-                className="h-6 w-6 p-0 transition-colors duration-default hover:bg-ui-bg-hover"
               >
                 {hasCopied ? (
                   <Check className="w-3 h-3 text-status-success" />
                 ) : (
                   <Copy className="w-3 h-3" />
                 )}
-              </Button>
+              </IconButton>
             </Tooltip>
           </Flex>
         </Flex>

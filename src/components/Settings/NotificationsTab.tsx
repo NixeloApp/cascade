@@ -104,7 +104,7 @@ function DigestOption({
 }) {
   return (
     <label className="cursor-pointer">
-      <Card padding="sm" className="hover:bg-ui-bg-secondary transition-colors">
+      <Card padding="sm" hoverable>
         <Flex align="center" gap="md">
           <input
             type="radio"
