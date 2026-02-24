@@ -66,13 +66,17 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
         const { storageId } = await result.json();
 
         // Add to issue
-        await addAttachment({
+        const attachResult = await addAttachment({
           issueId,
           storageId,
           filename: file.name,
           contentType: file.type,
           size: file.size,
         });
+
+        if (!attachResult.success) {
+          throw new Error(attachResult.error);
+        }
 
         showSuccess(`Uploaded ${file.name}`);
       }

@@ -3,7 +3,6 @@ import { authenticatedMutation, issueMutation, issueQuery } from "./customFuncti
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { notFound } from "./lib/errors";
 import { validateAttachment } from "./lib/fileValidators";
-import { logger } from "./lib/logger";
 
 // Generate upload URL for files
 export const generateUploadUrl = authenticatedMutation({
@@ -23,10 +22,16 @@ export const addAttachment = issueMutation({
     contentType: v.string(),
     size: v.number(),
   },
-  returns: v.object({ storageId: v.id("_storage") }),
+  returns: v.union(
+    v.object({ success: v.literal(true), storageId: v.id("_storage") }),
+    v.object({ success: v.literal(false), error: v.string() }),
+  ),
   handler: async (ctx, args) => {
     // Validate file type before linking
-    await validateAttachment(ctx, args.storageId);
+    const result = await validateAttachment(ctx, args.storageId);
+    if (!result.valid) {
+      return { success: false as const, error: result.error };
+    }
 
     const issue = ctx.issue;
 
@@ -47,7 +52,7 @@ export const addAttachment = issueMutation({
       newValue: args.filename,
     });
 
-    return { storageId: args.storageId };
+    return { success: true as const, storageId: args.storageId };
   },
 });
 
@@ -77,19 +82,11 @@ export const removeAttachment = issueMutation({
       updatedAt: Date.now(),
     });
 
-    // Attempt to delete the file from storage
-    // If this fails (e.g. file already deleted), we log it but don't fail the mutation
-    let storageDeleted = true;
-    try {
-      await ctx.storage.delete(args.storageId);
-    } catch (error) {
-      storageDeleted = false;
-      logger.error("Failed to delete file from storage during attachment removal", {
-        storageId: args.storageId,
-        issueId: issue._id,
-        error,
-      });
-    }
+    // Security: Do NOT delete the file from storage.
+    // Files might be referenced by other issues (via Copy/Paste ID or legitimate sharing).
+    // Deleting the file here would cause data loss for other references (Cross-Project Reference Hijacking).
+    // Orphaned files should be cleaned up by a separate garbage collection process if needed.
+    const storageDeleted = false;
 
     // Log activity
     await ctx.db.insert("issueActivity", {
