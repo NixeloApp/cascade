@@ -300,8 +300,8 @@ function matchesCreatorFilter(
 
 // Helper: Check if document matches date range filter
 function matchesDateRange(creationTime: number, dateFrom?: number, dateTo?: number): boolean {
-  if (dateFrom && creationTime < dateFrom) return false;
-  if (dateTo && creationTime > dateTo) return false;
+  if (dateFrom !== undefined && creationTime < dateFrom) return false;
+  if (dateTo !== undefined && creationTime > dateTo) return false;
   return true;
 }
 

@@ -421,8 +421,8 @@ export function matchesDateRange(
   dateFrom?: number,
   dateTo?: number,
 ): boolean {
-  if (dateFrom && creationTime < dateFrom) return false;
-  if (dateTo && creationTime > dateTo) return false;
+  if (dateFrom !== undefined && creationTime < dateFrom) return false;
+  if (dateTo !== undefined && creationTime > dateTo) return false;
   return true;
 }
 
