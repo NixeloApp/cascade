@@ -15,6 +15,7 @@ export const create = projectEditorMutation({
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   },
+  returns: v.object({ sprintId: v.id("sprints") }),
   handler: async (ctx, args) => {
     const now = Date.now();
     const sprintId = await ctx.db.insert("sprints", {

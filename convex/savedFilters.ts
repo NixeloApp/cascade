@@ -25,6 +25,7 @@ export const create = projectViewerMutation({
     filters: filtersValidator,
     isPublic: v.boolean(),
   },
+  returns: v.object({ filterId: v.id("savedFilters") }),
   handler: async (ctx, args) => {
     const now = Date.now();
     const filterId = await ctx.db.insert("savedFilters", {
@@ -87,6 +88,7 @@ export const update = authenticatedMutation({
     filters: v.optional(filtersValidator),
     isPublic: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const filter = await ctx.db.get(args.id);
     if (!filter) {
@@ -104,7 +106,7 @@ export const update = authenticatedMutation({
 
     await ctx.db.patch(args.id, updates);
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -116,6 +118,7 @@ export const remove = authenticatedMutation({
   args: {
     id: v.id("savedFilters"),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const filter = await ctx.db.get(args.id);
     if (!filter) {
@@ -128,6 +131,6 @@ export const remove = authenticatedMutation({
 
     await ctx.db.delete(args.id);
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
