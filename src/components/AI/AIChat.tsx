@@ -246,7 +246,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything about your project..."
             disabled={isSending}
-            className="flex-1 resize-none rounded-lg border border-ui-border bg-ui-bg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-ui-text placeholder-ui-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-ring disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden transition-all"
+            className="flex-1 resize-none rounded-lg border border-ui-border bg-ui-bg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-ui-text placeholder-ui-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-ring disabled:opacity-50 disabled:pointer-events-none overflow-hidden transition-all"
             rows={1}
             style={{
               minHeight: `${AI_CONFIG.textarea.minHeight}px`,
