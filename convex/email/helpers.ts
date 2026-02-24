@@ -8,6 +8,46 @@ import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 
+// Helper to resolve actor name
+async function getActorName(
+  ctx: MutationCtx,
+  actorId: Id<"users"> | undefined,
+  providedName?: string,
+) {
+  if (providedName) return providedName;
+  if (!actorId) return "Someone";
+  const actor = await ctx.db.get(actorId);
+  if (actor && "name" in actor) {
+    return actor.name || "Someone";
+  }
+  return "Someone";
+}
+
+// Helper to resolve issue and project
+async function getIssueAndProject(
+  ctx: MutationCtx,
+  issueId: Id<"issues">,
+  providedIssue?: Doc<"issues">,
+  providedProject?: Doc<"projects">,
+) {
+  let issue = providedIssue;
+  if (!issue) {
+    const fetchedIssue = await ctx.db.get(issueId);
+    if (!fetchedIssue) return null;
+    issue = fetchedIssue;
+  }
+
+  let project = providedProject;
+  if (!project) {
+    if (!issue.projectId) return null;
+    const fetchedProject = await ctx.db.get(issue.projectId);
+    if (!fetchedProject) return null;
+    project = fetchedProject;
+  }
+
+  return { issue, project };
+}
+
 /**
  * Send email notification after creating in-app notification
  *
@@ -53,37 +93,11 @@ export async function sendEmailNotification(
     return; // User has no email address
   }
 
-  // Get actor name
-  let actorName = params.actorName || "Someone";
-  if (!params.actorName && actorId) {
-    const actor = await ctx.db.get(actorId);
-    if (actor && "name" in actor) {
-      actorName = actor.name || actorName;
-    }
-  }
+  const data = await getIssueAndProject(ctx, issueId, params.issue, params.project);
+  if (!data) return;
+  const { issue, project } = data;
 
-  // Get issue details
-  let issue = params.issue;
-  if (!issue) {
-    const fetchedIssue = await ctx.db.get(issueId);
-    if (!fetchedIssue) {
-      return; // Issue not found
-    }
-    issue = fetchedIssue;
-  }
-
-  // Get project details
-  let project = params.project;
-  if (!project) {
-    if (!issue.projectId) {
-      return; // Issue not found in a project
-    }
-    const fetchedProject = await ctx.db.get(issue.projectId);
-    if (!fetchedProject) {
-      return; // Project not found
-    }
-    project = fetchedProject;
-  }
+  const actorName = await getActorName(ctx, actorId, params.actorName);
 
   // Schedule email to be sent (using action)
   if (type === "mention" || type === "assigned" || type === "comment") {
