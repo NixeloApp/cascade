@@ -98,6 +98,7 @@ import type * as lib_softDeleteHelpers from "../lib/softDeleteHelpers.js";
 import type * as lib_ssrf from "../lib/ssrf.js";
 import type * as lib_teamAccess from "../lib/teamAccess.js";
 import type * as lib_timeUtils from "../lib/timeUtils.js";
+import type * as lib_userStats from "../lib/userStats.js";
 import type * as lib_userUtils from "../lib/userUtils.js";
 import type * as lib_vectorSearchHelpers from "../lib/vectorSearchHelpers.js";
 import type * as lib_webhookHelpers from "../lib/webhookHelpers.js";
@@ -249,6 +250,7 @@ declare const fullApi: ApiFromModules<{
   "lib/ssrf": typeof lib_ssrf;
   "lib/teamAccess": typeof lib_teamAccess;
   "lib/timeUtils": typeof lib_timeUtils;
+  "lib/userStats": typeof lib_userStats;
   "lib/userUtils": typeof lib_userUtils;
   "lib/vectorSearchHelpers": typeof lib_vectorSearchHelpers;
   "lib/webhookHelpers": typeof lib_webhookHelpers;

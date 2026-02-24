@@ -158,6 +158,7 @@ export const createNotification = internalMutation({
       documentId: args.documentId,
       actorId: args.actorId,
       isRead: false,
+      isDeleted: false,
     });
   },
 });
@@ -192,6 +193,7 @@ export const createBulk = internalMutation({
           documentId: args.documentId,
           actorId: args.actorId,
           isRead: false,
+          isDeleted: false,
         });
       }),
     );
