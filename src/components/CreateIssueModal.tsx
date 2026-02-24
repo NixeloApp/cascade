@@ -1,7 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
-import { ISSUE_PRIORITIES, ISSUE_TYPES_WITH_SUBTASK } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
@@ -13,6 +12,8 @@ import { Check, Sparkles, User } from "@/lib/icons";
 import {
   getPriorityColor,
   getTypeLabel,
+  ISSUE_PRIORITIES,
+  ISSUE_TYPES_WITH_SUBTASK,
   ISSUE_TYPE_ICONS,
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
@@ -137,16 +138,10 @@ export function CreateIssueModal({
           description: value.description?.trim() || undefined,
           type: value.type,
           priority: value.priority,
-<<<<<<< HEAD
           assigneeId:
             value.assigneeId && value.assigneeId !== "unassigned"
               ? (value.assigneeId as Id<"users">)
               : undefined,
-=======
-          assigneeId: (value.assigneeId && value.assigneeId !== "__unassigned__"
-            ? value.assigneeId
-            : undefined) as Id<"users"> | undefined,
->>>>>>> b1f6d8e3 (fix: use non-empty value for Radix Select Unassigned option)
           sprintId,
           labels: selectedLabels.length > 0 ? selectedLabels : undefined,
           storyPoints: value.storyPoints ? Number.parseFloat(value.storyPoints) : undefined,
