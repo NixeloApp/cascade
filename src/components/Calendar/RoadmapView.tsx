@@ -318,10 +318,12 @@ function renderDateBar(
   const dateRangeLabel = `${itemStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${itemEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 
   return (
-    <div
+    <Flex
+      align="center"
+      justify="center"
       className={cn(
         color,
-        "rounded-full h-6 flex items-center justify-center text-brand-foreground text-xs font-medium overflow-hidden whitespace-nowrap px-2",
+        "rounded-full h-6 text-brand-foreground text-xs font-medium overflow-hidden whitespace-nowrap px-2",
       )}
       style={{
         marginLeft: `${leftPercent}%`,
@@ -331,7 +333,7 @@ function renderDateBar(
       title={dateRangeLabel}
     >
       {dateRangeLabel}
-    </div>
+    </Flex>
   );
 }
 

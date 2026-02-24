@@ -50,14 +50,18 @@ vi.mock("convex/react", () => ({
 }));
 
 // Helper to match queries robustly
-function isQuery(queryArg: any, name: string) {
+function isQuery(queryArg: unknown, name: string): boolean {
   // Check internal function name property if available
-  if (
-    queryArg?._functionName &&
-    typeof queryArg._functionName === "string" &&
-    queryArg._functionName.includes(name)
-  )
-    return true;
+  if (typeof queryArg === "object" && queryArg !== null) {
+    const obj = queryArg as Record<string, unknown>;
+    if (
+      "_functionName" in obj &&
+      typeof obj._functionName === "string" &&
+      obj._functionName.includes(name)
+    ) {
+      return true;
+    }
+  }
   // Check if it's strictly equal to the imported function (if stable)
   if (name === "listRoadmapIssues" && queryArg === api.issues.listRoadmapIssues) return true;
   if (name === "listByProject" && queryArg === api.sprints.listByProject) return true;
