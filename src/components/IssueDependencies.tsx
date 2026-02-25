@@ -5,7 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -38,9 +38,9 @@ function IssueDisplay({
   const typeLabel = getTypeLabel(type);
   return (
     <Flex as="span" align="center" gap="sm" className="min-w-0">
-      <FlexItem as="span" shrink={false} title={typeLabel}>
+      <Flex as="span" className="shrink-0" title={typeLabel}>
         <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" aria-label={typeLabel} />
-      </FlexItem>
+      </Flex>
       <Typography variant="mono" as="code" className="shrink-0 text-ui-text-secondary">
         {issueKey}
       </Typography>

@@ -166,7 +166,7 @@ export const updateOrganization = authenticatedMutation({
       }),
     ),
   },
-  returns: v.object({ success: v.boolean(), organizationId: v.id("organizations") }),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     await assertOrganizationAdmin(ctx, args.organizationId, ctx.userId);
 
@@ -185,7 +185,7 @@ export const updateOrganization = authenticatedMutation({
 
     await ctx.db.patch(args.organizationId, updates);
 
-    return { success: true, organizationId: args.organizationId };
+    return { success: true };
   },
 });
 
@@ -295,7 +295,7 @@ export const updateMemberRole = authenticatedMutation({
     userId: v.id("users"),
     role: organizationRoles,
   },
-  returns: v.object({ success: v.boolean(), userId: v.id("users") }),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     await assertOrganizationOwner(ctx, args.organizationId, ctx.userId);
 
@@ -332,7 +332,7 @@ export const updateMemberRole = authenticatedMutation({
       },
     });
 
-    return { success: true, userId: args.userId };
+    return { success: true };
   },
 });
 
