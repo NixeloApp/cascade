@@ -89,12 +89,11 @@ describe("Users Access Control", () => {
       return u;
     });
 
-    // User 1 fetches User 2 (Different Org) - Should NOT see email
+    // User 1 fetches User 2 (Different Org) - Should return NULL (Security Fix)
     const user2SeenByUser1 = await t
       .withIdentity({ subject: user1 })
       .query(api.users.getUser, { id: user2 });
-    expect(user2SeenByUser1?.name).toBe("User 2");
-    expect(user2SeenByUser1?.email).toBeUndefined();
+    expect(user2SeenByUser1).toBeNull();
 
     // User 1 fetches User 3 (Same Org) - Should see email
     const user3SeenByUser1 = await t

@@ -14,11 +14,7 @@ import { logger } from "./lib/logger";
 import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
 import { MINUTE } from "./lib/timeUtils";
 import { collectUserStats } from "./lib/userStats";
-import {
-  sanitizeUserForAuth,
-  sanitizeUserForCurrent,
-  sanitizeUserForPublic,
-} from "./lib/userUtils";
+import { sanitizeUserForAuth, sanitizeUserForCurrent } from "./lib/userUtils";
 import { rateLimit } from "./rateLimits";
 import { digestFrequencies } from "./validators";
 
@@ -47,8 +43,8 @@ export const getInternalByEmail = internalQuery({
 
 /**
  * Get a user by ID (sanitized for authenticated users)
- * Note: Does not check if requester should see this user.
- * For team contexts, ensure proper access checks.
+ * Enforces organization-level access control via hasSharedOrganization.
+ * Returns null if the requester does not share an organization with the target user.
  */
 export const getUser = authenticatedQuery({
   args: { id: v.id("users") },
@@ -77,8 +73,8 @@ export const getUser = authenticatedQuery({
       return sanitizeUserForAuth(user);
     }
 
-    // If no shared context, return public profile (no email)
-    return sanitizeUserForPublic(user);
+    // If no shared context, do not reveal user existence or profile
+    return null;
   },
 });
 
@@ -470,6 +466,11 @@ export const getUserStats = authenticatedQuery({
     projects: v.number(),
   }),
   handler: async (ctx, args) => {
+    // Note: Unlike getUser, we don't add an org-level guard here because
+    // collectUserStats already filters to shared projects. This allows
+    // cross-org users who share a project to see each other's stats in
+    // that shared context. The filtering in collectUserStats ensures no
+    // information about private projects is leaked.
     return await collectUserStats(ctx, ctx.userId, args.userId);
   },
 });

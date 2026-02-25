@@ -4,9 +4,37 @@ import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestUser } from "./testUtils";
+import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "./testUtils";
 
 describe("Users Security", () => {
+  describe("getUser", () => {
+    it("should prevent accessing profiles of users in different organizations", async () => {
+      const t = convexTest(schema, modules);
+      register(t);
+
+      // 1. Create User A in Org A
+      const userAId = await createTestUser(t, {
+        name: "User A",
+        email: "userA@example.com",
+      });
+      await createOrganizationAdmin(t, userAId, { name: "Org A" });
+      const asUserA = asAuthenticatedUser(t, userAId);
+
+      // 2. Create User B in Org B
+      const userBId = await createTestUser(t, {
+        name: "User B",
+        email: "userB@example.com",
+      });
+      await createOrganizationAdmin(t, userBId, { name: "Org B" });
+
+      // 3. User A tries to get User B's profile
+      // Cross-org access should return null
+      const profile = await asUserA.query(api.users.getUser, { id: userBId });
+
+      expect(profile).toBeNull();
+    });
+  });
+
   describe("updateProfile", () => {
     it("should require verification when email is changed", async () => {
       const t = convexTest(schema, modules);
