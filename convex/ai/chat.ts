@@ -13,6 +13,7 @@ import type { Id } from "../_generated/dataModel";
 import { action, internalAction } from "../_generated/server";
 import { extractUsage } from "../lib/aiHelpers";
 import { notFound, unauthenticated } from "../lib/errors";
+import { logger } from "../lib/logger";
 import { rateLimit } from "../rateLimits";
 
 // Claude model (using alias - auto-points to latest snapshot)
@@ -131,43 +132,75 @@ Be concise, helpful, and professional.`;
 
     // Track response time
     const startTime = Date.now();
-    const response = await generateText({
-      model: anthropic(CLAUDE_OPUS),
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: args.message },
-      ],
-    });
-    const responseTime = Date.now() - startTime;
 
-    // Extract usage information type-safely
-    const usage = extractUsage(response.usage);
+    try {
+      const response = await generateText({
+        model: anthropic(CLAUDE_OPUS),
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: args.message },
+        ],
+      });
+      const responseTime = Date.now() - startTime;
 
-    // Store AI response
-    await ctx.runMutation(api.ai.mutations.addMessage, {
-      chatId,
-      role: "assistant",
-      content: response.text,
-      modelUsed: CLAUDE_OPUS,
-      tokensUsed: usage.totalTokens,
-    });
+      // Extract usage information type-safely
+      const usage = extractUsage(response.usage);
 
-    // Track usage
-    await ctx.runMutation(api.ai.mutations.trackUsage, {
-      projectId: args.projectId,
-      provider: "anthropic",
-      model: CLAUDE_OPUS,
-      operation: "chat",
-      promptTokens: usage.promptTokens,
-      completionTokens: usage.completionTokens,
-      totalTokens: usage.totalTokens,
-      responseTime,
-      success: true,
-    });
+      // Store AI response
+      await ctx.runMutation(api.ai.mutations.addMessage, {
+        chatId,
+        role: "assistant",
+        content: response.text,
+        modelUsed: CLAUDE_OPUS,
+        tokensUsed: usage.totalTokens,
+      });
 
-    return {
-      chatId,
-      message: response.text,
-    };
+      // Track usage
+      await ctx.runMutation(api.ai.mutations.trackUsage, {
+        projectId: args.projectId,
+        provider: "anthropic",
+        model: CLAUDE_OPUS,
+        operation: "chat",
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        totalTokens: usage.totalTokens,
+        responseTime,
+        success: true,
+      });
+
+      return {
+        chatId,
+        message: response.text,
+      };
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      logger.error("AI Chat generation failed", { error });
+
+      // Store error as system message so user sees it in chat history
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred during AI generation";
+
+      await ctx.runMutation(api.ai.mutations.addMessage, {
+        chatId,
+        role: "system",
+        content: `AI generation failed: ${errorMessage}`,
+      });
+
+      // Track failed usage
+      await ctx.runMutation(api.ai.mutations.trackUsage, {
+        projectId: args.projectId,
+        provider: "anthropic",
+        model: CLAUDE_OPUS,
+        operation: "chat",
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        responseTime,
+        success: false,
+        errorMessage,
+      });
+
+      throw error;
+    }
   },
 });
