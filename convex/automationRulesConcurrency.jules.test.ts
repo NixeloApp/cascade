@@ -6,6 +6,9 @@ import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
 
 describe("Automation Rules Concurrency", () => {
+  // This test ensures that when multiple automation rules trigger simultaneously
+  // (e.g., both adding labels), they don't overwrite each other's changes due to
+  // race conditions. The fix involves sequential execution and state accumulation.
   it("should correctly apply multiple label additions from different rules", async () => {
     const t = convexTest(schema, modules);
     const userId = await createTestUser(t);
