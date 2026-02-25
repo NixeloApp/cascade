@@ -22,12 +22,18 @@ describe("Time Tracking Billing Security", () => {
       billable: true,
     });
 
-    // 2. Mark it as billed (simulating invoicing process)
+    // 2. Verify update works while unbilled (control path)
+    await asUser.mutation(api.timeTracking.updateTimeEntry, {
+      entryId,
+      description: "Unbilled edit - should succeed",
+    });
+
+    // 3. Mark it as billed (simulating invoicing process)
     await t.run(async (ctx) => {
       await ctx.db.patch(entryId, { billed: true });
     });
 
-    // 3. Attempt to update it - should fail
+    // 4. Attempt to update it - should fail now that it's billed
     await expect(
       asUser.mutation(api.timeTracking.updateTimeEntry, {
         entryId,
