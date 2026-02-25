@@ -52,14 +52,14 @@ describe("Booking Return Types", () => {
       id: pageId,
       title: "Updated Title",
     });
-    expect(updateResult).toEqual({ success: true });
+    expect(updateResult).toEqual({ success: true, pageId });
 
     // Test toggleActive
     const toggleResult = await asUser.mutation(api.bookingPages.toggleActive, {
       id: pageId,
       isActive: false,
     });
-    expect(toggleResult).toEqual({ success: true });
+    expect(toggleResult).toEqual({ success: true, pageId });
 
     // Test remove
     const removeResult = await asUser.mutation(api.bookingPages.remove, {

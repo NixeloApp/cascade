@@ -606,7 +606,7 @@ describe("Projects", () => {
           memberId: memberId,
           newRole: "editor",
         });
-        expect(result).toEqual({ success: true });
+        expect(result).toEqual({ success: true, memberId });
 
         // Verify role was updated
         const asMember = asAuthenticatedUser(t, memberId);
