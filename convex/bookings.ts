@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { components } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchBookingPages } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
@@ -13,6 +14,70 @@ import { bookerAnswers } from "./validators";
  * Bookings - Handle meeting bookings via booking pages
  * Supports confirmation workflow and calendar integration
  */
+
+// Helper to check availability
+async function validateAvailability(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  startTime: number,
+  durationMinutes: number,
+) {
+  const slots = await ctx.db
+    .query("availabilitySlots")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter((q) => q.eq(q.field("isActive"), true))
+    .collect();
+
+  const bookingEnd = startTime + durationMinutes * MINUTE;
+
+  const isCovered = slots.some((slot) => {
+    try {
+      // Get booking start/end in slot's timezone
+      // Using Intl.DateTimeFormat for reliable extraction
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: slot.timezone,
+        weekday: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+
+      const startParts = formatter.formatToParts(new Date(startTime));
+      const endParts = formatter.formatToParts(new Date(bookingEnd));
+
+      const getPart = (parts: Intl.DateTimeFormatPart[], type: string) =>
+        parts.find((p) => p.type === type)?.value;
+
+      const startDay = getPart(startParts, "weekday")?.toLowerCase();
+      const startHour = getPart(startParts, "hour");
+      const startMinute = getPart(startParts, "minute");
+
+      if (startDay !== slot.dayOfWeek) return false;
+
+      // Handle time comparison string "HH:MM"
+      // Note: startHour will be "09", "17", etc.
+      const bookingStartTime = `${startHour}:${startMinute}`;
+
+      if (bookingStartTime < slot.startTime) return false;
+
+      const endDay = getPart(endParts, "weekday")?.toLowerCase();
+      if (endDay !== slot.dayOfWeek) return false; // Spans days
+
+      const bookingEndTime = `${getPart(endParts, "hour")}:${getPart(endParts, "minute")}`;
+
+      if (bookingEndTime > slot.endTime) return false;
+
+      return true;
+    } catch (_e) {
+      // Invalid timezone or other error
+      return false;
+    }
+  });
+
+  if (!isCovered) {
+    throw validation("startTime", "Selected time is outside available hours");
+  }
+}
 
 /** Creates a new booking for a booking page with rate limiting, conflict detection, and optional auto-confirmation. */
 export const createBooking = mutation({
@@ -61,6 +126,9 @@ export const createBooking = mutation({
     if (!page?.isActive) {
       throw notFound("bookingPage");
     }
+
+    // Security: Validate that the requested time falls within host's availability
+    await validateAvailability(ctx, page.userId, args.startTime, page.duration);
 
     // Calculate end time
     const endTime = args.startTime + page.duration * MINUTE;
