@@ -134,8 +134,9 @@ async function executeAutomationAction(
   rule: Doc<"automationRules">,
   issueId: Id<"issues">,
   issueLabels: string[],
-) {
+): Promise<{ executed: boolean; updatedLabels: string[] }> {
   let executed = true;
+  let updatedLabels = issueLabels;
 
   switch (rule.actionValue.type) {
     case "set_assignee":
@@ -154,8 +155,9 @@ async function executeAutomationAction(
 
     case "add_label": {
       if (!issueLabels.includes(rule.actionValue.label)) {
+        updatedLabels = [...issueLabels, rule.actionValue.label];
         await ctx.db.patch(issueId, {
-          labels: [...issueLabels, rule.actionValue.label],
+          labels: updatedLabels,
           updatedAt: Date.now(),
         });
       }
@@ -178,7 +180,7 @@ async function executeAutomationAction(
       break;
   }
 
-  return executed;
+  return { executed, updatedLabels };
 }
 
 /** Executes automation rules for an issue based on trigger events, applying actions like assignee changes or label additions. */
@@ -206,31 +208,34 @@ export const executeRules = internalMutation({
       return !rule.triggerValue || rule.triggerValue === args.triggerValue;
     });
 
-    // Execute matching rules in parallel
-    await Promise.all(
-      matchingRules.map(async (rule) => {
-        try {
-          const executed = await executeAutomationAction(
-            ctx,
-            rule,
-            args.issueId,
-            issue.labels || [],
-          );
+    // Execute matching rules sequentially to avoid race conditions with label updates
+    let currentLabels = issue.labels || [];
 
-          // Only increment execution count if action was actually performed
-          if (executed) {
-            await ctx.db.patch(rule._id, {
-              executionCount: rule.executionCount + 1,
-            });
-          }
-        } catch (error) {
-          // Log error but continue with other rules
-          logger.error(
-            `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
-            { error },
-          );
+    for (const rule of matchingRules) {
+      try {
+        const { executed, updatedLabels } = await executeAutomationAction(
+          ctx,
+          rule,
+          args.issueId,
+          currentLabels,
+        );
+
+        // Update current labels for next rule
+        currentLabels = updatedLabels;
+
+        // Only increment execution count if action was actually performed
+        if (executed) {
+          await ctx.db.patch(rule._id, {
+            executionCount: rule.executionCount + 1,
+          });
         }
-      }),
-    );
+      } catch (error) {
+        // Log error but continue with other rules
+        logger.error(
+          `[automationRules] Rule "${rule.name}" (${rule._id}) failed for issue ${args.issueId}:`,
+          { error },
+        );
+      }
+    }
   },
 });
