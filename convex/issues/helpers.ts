@@ -187,15 +187,16 @@ export async function getMaxOrderForStatus(
 }
 
 /**
- * Helper to track if a field has changed and record the change for activity logging.
+ * Helper to track if a field has changed, update the record, and record the change for activity logging.
  *
+ * @param updates - The updates object to modify.
  * @param changes - Array to append the change record to.
  * @param field - Name of the field being updated.
  * @param oldValue - The original value.
  * @param newValue - The new value (undefined means no change).
- * @returns True if the field was updated.
  */
 export function trackFieldChange<T>(
+  updates: Record<string, unknown>,
   changes: Array<{
     field: string;
     oldValue: string | number | null | undefined;
@@ -204,16 +205,15 @@ export function trackFieldChange<T>(
   field: string,
   oldValue: T,
   newValue: T | undefined,
-): boolean {
+): void {
   if (newValue !== undefined && newValue !== oldValue) {
+    updates[field] = newValue;
     changes.push({
       field,
       oldValue: oldValue as string | number | null | undefined,
       newValue: newValue as string | number | null | undefined,
     });
-    return true;
   }
-  return false;
 }
 
 /**
@@ -291,15 +291,9 @@ export function processIssueUpdates(
   const updates: Record<string, unknown> = { updatedAt: Date.now() };
 
   // Track simple field changes
-  if (trackFieldChange(changes, "title", issue.title, args.title)) {
-    updates.title = args.title;
-  }
-  if (trackFieldChange(changes, "description", issue.description, args.description)) {
-    updates.description = args.description;
-  }
-  if (trackFieldChange(changes, "priority", issue.priority, args.priority)) {
-    updates.priority = args.priority;
-  }
+  trackFieldChange(updates, changes, "title", issue.title, args.title);
+  trackFieldChange(updates, changes, "description", issue.description, args.description);
+  trackFieldChange(updates, changes, "priority", issue.priority, args.priority);
 
   // Update search content if title or description changed
   if (args.title !== undefined || args.description !== undefined) {
