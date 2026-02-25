@@ -118,7 +118,7 @@ export const remove = authenticatedMutation({
   args: {
     id: v.id("savedFilters"),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const filter = await ctx.db.get(args.id);
     if (!filter) {
@@ -131,6 +131,6 @@ export const remove = authenticatedMutation({
 
     await ctx.db.delete(args.id);
 
-    return { success: true } as const;
+    return { success: true, deleted: true } as const;
   },
 });

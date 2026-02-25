@@ -166,7 +166,7 @@ describe("Issue Links", () => {
       });
 
       const result = await asUser.mutation(api.issueLinks.remove, { linkId });
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, deleted: true });
 
       // Verify link is gone
       const link = await t.run(async (ctx) => {
