@@ -747,3 +747,49 @@ export async function notifyCommentParticipants(
     }
   }
 }
+
+/**
+ * Helper to perform a simple bulk update on a single field.
+ * Handles value normalization (null -> undefined for patch) and activity logging.
+ *
+ * @param ctx - Mutation context.
+ * @param issueIds - Array of issue IDs to update.
+ * @param field - The field to update.
+ * @param newValue - The new value (null to unset/clear).
+ * @param fieldNameInActivity - Optional custom field name for activity log (e.g. "sprint" instead of "sprintId").
+ */
+export async function performSimpleBulkUpdate<K extends keyof Doc<"issues">>(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  issueIds: Id<"issues">[],
+  field: K,
+  newValue: Doc<"issues">[K] | null,
+  fieldNameInActivity?: string,
+) {
+  const activityField = fieldNameInActivity ?? String(field);
+
+  return performBulkUpdate(ctx, issueIds, async (issue) => {
+    const currentValue = issue[field];
+
+    // Determine patch value: null means "unset" (undefined in DB)
+    // We cast to undefined because optional fields in Doc<T> include undefined
+    const patchValue = (newValue === null ? undefined : newValue) as Doc<"issues">[K] | undefined;
+
+    // Check if value actually changed
+    // We treat undefined and null as equivalent for "unset"
+    const isCurrentUnset = currentValue === undefined || currentValue === null;
+    const isNewUnset = patchValue === undefined;
+
+    if (isCurrentUnset && isNewUnset) return null;
+    if (!isCurrentUnset && !isNewUnset && currentValue === patchValue) return null;
+
+    return {
+      patch: { [field]: patchValue },
+      activity: {
+        action: "updated",
+        field: activityField,
+        oldValue: currentValue !== undefined && currentValue !== null ? String(currentValue) : "",
+        newValue: patchValue !== undefined ? String(patchValue) : "",
+      },
+    };
+  });
+}
