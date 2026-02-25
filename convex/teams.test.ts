@@ -203,10 +203,12 @@ describe("Teams", () => {
         isPrivate: false,
       });
 
-      await asOwner.mutation(api.teams.updateTeam, {
+      const result = await asOwner.mutation(api.teams.updateTeam, {
         teamId,
         name: "Updated Name",
       });
+
+      expect(result).toEqual({ success: true, teamId });
 
       const team = await t.run(async (ctx) => ctx.db.get(teamId));
       expect(team?.name).toBe("Updated Name");
