@@ -1,4 +1,4 @@
-import { convexTest } from "convex-test";
+import { convexTest, type TestConvex } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
@@ -9,7 +9,7 @@ import { createTestContext } from "./testUtils";
 
 describe("Event Reminders - listUpcoming", () => {
   async function createCalendarEvent(
-    t: ReturnType<typeof convexTest<typeof schema>>,
+    t: TestConvex<typeof schema>,
     organizerId: Id<"users">,
     options: {
       title?: string;
