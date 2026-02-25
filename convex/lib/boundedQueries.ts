@@ -159,7 +159,8 @@ export async function boundedCollect<T>(
  *
  * @param query - The query to execute
  * @param options.limit - The maximum count to return (default: 500)
- * @returns {BoundedCountResult} Result object containing the capped count
+ * @returns {BoundedCountResult} Result object containing the capped count.
+ *          If `isExact` is false, it means the actual count is `>= count`.
  *
  * @example
  * const { count, isExact } = await boundedCount(
@@ -168,7 +169,7 @@ export async function boundedCollect<T>(
  * );
  *
  * // Display: "1,234 issues" or "2,000+ issues"
- * // Note: isExact is false if count >= limit
+ * // Note: isExact is false if count === limit (meaning there are likely more)
  * const display = isExact ? `${count} issues` : `${count}+ issues`;
  */
 export async function boundedCount<T>(
@@ -262,7 +263,7 @@ export async function safeCollect<T>(
  * const allComments = await collectInBatches(
  *   (cursor) => ctx.db.query("issueComments")
  *     .withIndex("by_issue", q => q.eq("issueId", issueId))
- *     .paginate({ numItems: 100, cursor }),
+ *     .paginate({ numItems: 100, cursor }), // Batch size controlled here
  *   { maxBatches: 10 } // Safety limit: max 1000 items
  * );
  */
@@ -272,7 +273,11 @@ export async function collectInBatches<T>(
     continueCursor: string;
     isDone: boolean;
   }>,
-  options: { maxBatches?: number; batchSize?: number } = {},
+  options: {
+    maxBatches?: number;
+    /** @deprecated Unused. Batch size is controlled by the paginatedQuery callback. */
+    batchSize?: number;
+  } = {},
 ): Promise<T[]> {
   const { maxBatches = 10 } = options;
   const allItems: T[] = [];
@@ -302,16 +307,18 @@ export async function collectInBatches<T>(
  * Efficiently counts items in a query.
  * Uses .count() if available (Convex 1.13+), otherwise falls back to taking a limit.
  *
- * NOTE: When .count() is available, this will scan ALL matching records to get the exact count.
+ * ⚠️ WARNING: When .count() is available (Production), the `limit` parameter is IGNORED
+ * and the query will scan ALL matching records to get the exact count.
+ *
  * For very large datasets where you only need to know if the count exceeds a threshold (e.g. for "99+"),
- * consider using `boundedCount` instead, as it halts scanning once the limit is reached.
+ * use `boundedCount` instead, as it halts scanning once the limit is reached.
  *
  * This helper is essential for maintaining compatibility with test environments
  * (e.g. convex-test) that may not fully implement the Query interface, while
  * leveraging the performance of .count() in production.
  *
  * @param query - The Convex query to count items for
- * @param limit - Fallback limit if .count() is not available (default: 2000)
+ * @param limit - Fallback limit if .count() is not available (e.g. in tests) (default: 2000)
  * @returns A promise that resolves to the count of items
  */
 export async function efficientCount<T>(query: CountableQuery<T>, limit = 2000): Promise<number> {
