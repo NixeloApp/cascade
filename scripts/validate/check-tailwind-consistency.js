@@ -146,7 +146,6 @@ const SKIP_FILES_ANIMATION = new Set([
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
   const errors = [];
-  const _errorCount = 0;
   let warningCount = 0;
 
   // Counters for each check type

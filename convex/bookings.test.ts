@@ -1,6 +1,8 @@
+import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
@@ -8,8 +10,12 @@ import { createTestUser, expectThrowsAsync } from "./testUtils";
 
 describe("Bookings", () => {
   // Helper to create a booking page
-  async function createBookingPage(t: any, userId: any, slug: string) {
-    return await t.run(async (ctx: any) => {
+  async function createBookingPage(
+    t: TestConvex<typeof schema>,
+    userId: Id<"users">,
+    slug: string,
+  ) {
+    return await t.run(async (ctx) => {
       const pageId = await ctx.db.insert("bookingPages", {
         userId,
         slug,
@@ -29,9 +35,17 @@ describe("Bookings", () => {
   }
 
   // Helper to set up full availability for a user
-  async function setupFullAvailability(t: any, userId: any) {
-    await t.run(async (ctx: any) => {
-      const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  async function setupFullAvailability(t: TestConvex<typeof schema>, userId: Id<"users">) {
+    await t.run(async (ctx) => {
+      const days = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+      ] as const;
       for (const day of days) {
         await ctx.db.insert("availabilitySlots", {
           userId,

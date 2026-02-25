@@ -56,6 +56,7 @@ export function CommentRenderer({ content, mentions: _mentions = [] }: CommentRe
 // Patterns definition extracted to module scope
 const MARKDOWN_PATTERNS: Array<{
   regex: RegExp;
+  hasSecondCapture?: boolean;
   render: (match: string, extra?: string) => React.ReactNode;
 }> = [
   { regex: /\*\*(.+?)\*\*/g, render: (match) => <strong>{match}</strong> },
@@ -69,6 +70,7 @@ const MARKDOWN_PATTERNS: Array<{
   { regex: /~~(.+?)~~/g, render: (match) => <s>{match}</s> },
   {
     regex: /\[([^\]]+)\]\(([^)]+)\)/g,
+    hasSecondCapture: true,
     render: (text, url) => (
       <a
         href={url}
@@ -89,7 +91,7 @@ function renderInlineMarkdown(text: string, baseKey: number): React.ReactNode {
   let result: React.ReactNode[] = [text];
   let keyCounter = baseKey;
 
-  for (const { regex, render } of MARKDOWN_PATTERNS) {
+  for (const { regex, hasSecondCapture, render } of MARKDOWN_PATTERNS) {
     const newResult: React.ReactNode[] = [];
 
     for (const part of result) {
@@ -98,7 +100,7 @@ function renderInlineMarkdown(text: string, baseKey: number): React.ReactNode {
         continue;
       }
 
-      processMarkdownMatches(part, regex, render, newResult, keyCounter);
+      processMarkdownMatches(part, regex, hasSecondCapture ?? false, render, newResult, keyCounter);
       // Rough increment to avoid key collisions
       keyCounter += 100;
     }
@@ -113,6 +115,7 @@ function renderInlineMarkdown(text: string, baseKey: number): React.ReactNode {
 function processMarkdownMatches(
   text: string,
   regex: RegExp,
+  hasSecondCapture: boolean,
   render: (match: string, extra?: string) => React.ReactNode,
   accumulator: React.ReactNode[],
   baseKey: number,
@@ -130,7 +133,7 @@ function processMarkdownMatches(
     }
 
     // Add rendered element
-    if (match.length === 3) {
+    if (hasSecondCapture) {
       // Link pattern: [text](url)
       accumulator.push(<span key={`md-${localKey++}`}>{render(match[1], match[2])}</span>);
     } else {
