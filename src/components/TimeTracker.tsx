@@ -56,7 +56,7 @@ function TimeProgress({
         <div className="w-full bg-ui-bg-tertiary rounded-full h-2">
           <div
             className={cn(
-              "h-2 rounded-full transition-all duration-300",
+              "h-2 rounded-full transition-all duration-medium",
               isOverEstimate ? "bg-status-error" : "bg-brand",
             )}
             style={{

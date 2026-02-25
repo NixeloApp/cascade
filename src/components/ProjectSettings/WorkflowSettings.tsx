@@ -161,48 +161,45 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
         <Stack gap="md">
           <Stack gap="sm">
             {states.map((state, index) => (
-              <Flex
-                align="center"
-                gap="md"
-                className="p-3 bg-ui-bg-tertiary rounded-lg border border-ui-border transition-default hover:border-ui-border-secondary"
-                key={state.id}
-              >
-                <Flex gap="xs" direction="column">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleMoveState(index, "up")}
-                    disabled={index === 0}
-                    className="p-1 h-6 hover:bg-ui-bg-hover"
-                  >
-                    <Icon icon={ChevronUp} size="sm" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleMoveState(index, "down")}
-                    disabled={index === states.length - 1}
-                    className="p-1 h-6 hover:bg-ui-bg-hover"
-                  >
-                    <Icon icon={ChevronDown} size="sm" />
+              <Card key={state.id} padding="md" hoverable className="bg-ui-bg-tertiary">
+                <Flex align="center" gap="md">
+                  <Flex gap="xs" direction="column">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleMoveState(index, "up")}
+                      disabled={index === 0}
+                      className="p-1 h-6"
+                    >
+                      <Icon icon={ChevronUp} size="sm" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleMoveState(index, "down")}
+                      disabled={index === states.length - 1}
+                      className="p-1 h-6"
+                    >
+                      <Icon icon={ChevronDown} size="sm" />
+                    </Button>
+                  </Flex>
+                  <Input
+                    value={state.name}
+                    onChange={(e) => handleStateChange(index, "name", e.target.value)}
+                    className="flex-1"
+                    placeholder="State name"
+                  />
+                  <Select
+                    value={state.category}
+                    onChange={(e) => handleStateChange(index, "category", e.target.value)}
+                    options={CATEGORY_OPTIONS}
+                    className="w-36"
+                  />
+                  <Button variant="ghostDanger" size="sm" onClick={() => handleRemoveState(index)}>
+                    Remove
                   </Button>
                 </Flex>
-                <Input
-                  value={state.name}
-                  onChange={(e) => handleStateChange(index, "name", e.target.value)}
-                  className="flex-1"
-                  placeholder="State name"
-                />
-                <Select
-                  value={state.category}
-                  onChange={(e) => handleStateChange(index, "category", e.target.value)}
-                  options={CATEGORY_OPTIONS}
-                  className="w-36"
-                />
-                <Button variant="ghostDanger" size="sm" onClick={() => handleRemoveState(index)}>
-                  Remove
-                </Button>
-              </Flex>
+              </Card>
             ))}
           </Stack>
 

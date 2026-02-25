@@ -9,6 +9,7 @@ import {
   LinkIcon,
   ListChecks,
   Type,
+  User,
 } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -19,7 +20,15 @@ import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
-type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "checkbox" | "url";
+type FieldType =
+  | "text"
+  | "number"
+  | "select"
+  | "multiselect"
+  | "date"
+  | "checkbox"
+  | "url"
+  | "user";
 
 interface CustomFieldCardProps {
   field: {
@@ -56,6 +65,8 @@ export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProp
         return Check;
       case "url":
         return LinkIcon;
+      case "user":
+        return User;
       default:
         return FileText;
     }

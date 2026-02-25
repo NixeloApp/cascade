@@ -7,6 +7,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Check, X } from "@/lib/icons";
+import { Avatar } from "./ui/Avatar";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Checkbox } from "./ui/form/Checkbox";
@@ -26,8 +27,15 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
 
   const customFields = useQuery(api.customFields.list, { projectId });
   const fieldValues = useQuery(api.customFields.getValuesForIssue, { issueId });
+  const projectMembers = useQuery(api.projectMembers.list, { projectId });
   const setValue = useMutation(api.customFields.setValue);
   const removeValue = useMutation(api.customFields.removeValue);
+
+  // Helper to get user name from project members
+  const getUserName = (userId: string) => {
+    const member = projectMembers?.find((m) => m.userId === userId);
+    return member?.userName || "Unknown User";
+  };
 
   if (!customFields || customFields.length === 0) {
     return null;
@@ -148,6 +156,18 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
           </Stack>
         );
 
+      case "user":
+        return (
+          <Select value={editValue} onChange={(e) => setEditValue(e.target.value)}>
+            <option value="">Select a user...</option>
+            {projectMembers?.map((member) => (
+              <option key={member._id} value={member.userId}>
+                {member.userName || "Unknown User"}
+              </option>
+            ))}
+          </Select>
+        );
+
       default:
         return (
           <Input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} />
@@ -201,6 +221,16 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
             ))}
           </Flex>
         );
+
+      case "user": {
+        const userName = getUserName(value);
+        return (
+          <Flex align="center" gap="sm">
+            <Avatar name={userName} size="sm" />
+            <Typography variant="small">{userName}</Typography>
+          </Flex>
+        );
+      }
 
       default:
         return <Typography variant="small">{value}</Typography>;

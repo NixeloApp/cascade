@@ -124,37 +124,34 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
       {subtasks && subtasks.length > 0 ? (
         <Stack gap="xs">
           {subtasks.map((subtask) => (
-            <Flex
-              key={subtask._id}
-              gap="sm"
-              align="start"
-              className="rounded hover:bg-ui-bg-secondary group"
-            >
-              <Checkbox
-                checked={subtask.status === "done" || subtask.status === "completed"}
-                onChange={() => {
-                  // Toggle sub-task completion
-                  // You can implement this later with a mutation
-                }}
-                className="mt-1"
-                aria-label={`Mark ${subtask.title} as ${
-                  subtask.status === "done" || subtask.status === "completed"
-                    ? "incomplete"
-                    : "complete"
-                }`}
-              />
-              <FlexItem flex="1">
-                <Metadata separator="-">
-                  <MetadataItem className="font-mono">{subtask.key}</MetadataItem>
-                  <MetadataItem>{subtask.title}</MetadataItem>
-                </Metadata>
-                {subtask.assignee && (
-                  <Typography variant="meta">
-                    Assigned to {subtask.assignee.name || subtask.assignee.email || "Unknown"}
-                  </Typography>
-                )}
-              </FlexItem>
-            </Flex>
+            <Card key={subtask._id} padding="sm" hoverable className="group">
+              <Flex gap="sm" align="start">
+                <Checkbox
+                  checked={subtask.status === "done" || subtask.status === "completed"}
+                  onChange={() => {
+                    // Toggle sub-task completion
+                    // You can implement this later with a mutation
+                  }}
+                  className="mt-1"
+                  aria-label={`Mark ${subtask.title} as ${
+                    subtask.status === "done" || subtask.status === "completed"
+                      ? "incomplete"
+                      : "complete"
+                  }`}
+                />
+                <FlexItem flex="1">
+                  <Metadata separator="-">
+                    <MetadataItem className="font-mono">{subtask.key}</MetadataItem>
+                    <MetadataItem>{subtask.title}</MetadataItem>
+                  </Metadata>
+                  {subtask.assignee && (
+                    <Typography variant="meta">
+                      Assigned to {subtask.assignee.name || subtask.assignee.email || "Unknown"}
+                    </Typography>
+                  )}
+                </FlexItem>
+              </Flex>
+            </Card>
           ))}
         </Stack>
       ) : (

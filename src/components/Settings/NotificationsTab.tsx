@@ -113,7 +113,7 @@ function DigestOption({
             checked={checked}
             onChange={onChange}
             disabled={disabled}
-            className="w-4 h-4 text-brand focus:ring-brand-ring focus:ring-2"
+            className="w-4 h-4 text-brand focus-visible:ring-brand-ring focus-visible:ring-2"
           />
           <Stack gap="none">
             <Typography variant="label">{label}</Typography>

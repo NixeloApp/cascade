@@ -152,7 +152,7 @@ function OnboardingPage() {
 
           {/* Role Selection */}
           {step === "role-select" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-enter">
               <div className="text-center">
                 <Typography
                   variant="h2"
@@ -176,7 +176,7 @@ function OnboardingPage() {
 
           {/* Team Lead Flow */}
           {step === "lead-flow" && (
-            <div className="animate-in fade-in slide-in-from-right-8 duration-700">
+            <div className="animate-in fade-in slide-in-from-right-8 duration-enter">
               <LeadOnboarding
                 onComplete={handleComplete}
                 onCreateProject={handleProjectCreated}
@@ -188,7 +188,7 @@ function OnboardingPage() {
 
           {/* Team Member Flow */}
           {step === "member-flow" && (
-            <div className="animate-in fade-in slide-in-from-right-8 duration-700">
+            <div className="animate-in fade-in slide-in-from-right-8 duration-enter">
               <MemberOnboarding
                 onComplete={handleComplete}
                 onBack={() => setStep("role-select")}

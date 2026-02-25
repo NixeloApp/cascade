@@ -172,7 +172,7 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
           key={`${activity._id}-${index}`}
           gap="lg"
           className={cn(
-            "relative transition-colors duration-150",
+            "relative transition-colors duration-fast",
             compact
               ? "py-2 hover:bg-ui-bg-secondary/50 rounded-md px-2"
               : "p-4 hover:bg-ui-bg-secondary/30 rounded-lg",

@@ -58,7 +58,7 @@ const BreadcrumbLink = React.forwardRef<
     <a
       ref={ref}
       className={cn(
-        "text-ui-text-secondary transition-colors duration-200 hover:text-ui-text",
+        "text-ui-text-secondary transition-colors duration-default hover:text-ui-text",
         "max-w-40 truncate",
         className,
       )}

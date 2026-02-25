@@ -2,11 +2,11 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AlertTriangle, FileText } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 import { Dialog } from "./Dialog";
 import { Flex } from "./Flex";
 import { Icon } from "./Icon";
+import { Tabs, TabsList, TabsTrigger } from "./Tabs";
 import { Typography } from "./Typography";
 
 interface MarkdownPreviewModalProps {
@@ -84,32 +84,20 @@ export function MarkdownPreviewModal({
       </div>
 
       {/* Tab Selector */}
-      <Flex className="border-b border-ui-border mb-4">
-        <button
-          type="button"
-          onClick={() => setActiveTab("preview")}
-          className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
-            activeTab === "preview"
-              ? "border-brand-ring text-brand"
-              : "border-transparent text-ui-text-tertiary hover:text-ui-text-secondary",
-          )}
-        >
-          Preview
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("raw")}
-          className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
-            activeTab === "raw"
-              ? "border-brand-ring text-brand"
-              : "border-transparent text-ui-text-tertiary hover:text-ui-text-secondary",
-          )}
-        >
-          Raw Markdown
-        </button>
-      </Flex>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "raw" | "preview")}
+        className="border-b border-ui-border mb-4"
+      >
+        <TabsList variant="underline">
+          <TabsTrigger value="preview" variant="underline" className="py-2">
+            Preview
+          </TabsTrigger>
+          <TabsTrigger value="raw" variant="underline" className="py-2">
+            Raw Markdown
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Content */}
       <div className="max-h-96 overflow-y-auto border border-ui-border rounded-lg">

@@ -93,7 +93,7 @@ function TagsInput({
             }
           }}
           placeholder="Add tag..."
-          className="flex-1 px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+          className="flex-1 px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
         />
         <Button type="button" onClick={onAddTag} variant="secondary" size="sm">
           Add
@@ -158,7 +158,7 @@ function DurationModeFields({
           value={date}
           onChange={(e) => onDateChange(e.target.value)}
           max={formatDateForInput(Date.now())}
-          className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+          className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
           required
         />
       </Stack>
@@ -172,7 +172,7 @@ function DurationModeFields({
             onChange={(e) => onDurationChange(e.target.value)}
             placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
             className={cn(
-              "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-ring bg-ui-bg text-ui-text",
+              "w-full px-3 py-2 border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring bg-ui-bg text-ui-text",
               isDurationInputValid ? "border-ui-border" : "border-status-error",
             )}
           />
@@ -234,7 +234,7 @@ function TimeRangeModeFields({
           value={date}
           onChange={(e) => onDateChange(e.target.value)}
           max={formatDateForInput(Date.now())}
-          className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+          className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
           required
         />
       </Stack>
@@ -246,7 +246,7 @@ function TimeRangeModeFields({
             type="time"
             value={startTime}
             onChange={(e) => onStartTimeChange(e.target.value)}
-            className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+            className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
             required
           />
         </Stack>
@@ -257,7 +257,7 @@ function TimeRangeModeFields({
             type="time"
             value={endTime}
             onChange={(e) => onEndTimeChange(e.target.value)}
-            className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+            className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
             required
           />
         </Stack>
@@ -513,7 +513,7 @@ export function TimeEntryModal({
                 type="checkbox"
                 checked={state.billable}
                 onChange={(e) => actions.setBillable(e.target.checked)}
-                className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
+                className="w-4 h-4 text-brand rounded focus-visible:ring-2 focus-visible:ring-brand-ring"
               />
               <Typography variant="label">Billable time</Typography>
             </Flex>

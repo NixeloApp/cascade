@@ -146,7 +146,7 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
           type="file"
           accept={importFormat === "csv" ? ".csv" : ".json"}
           onChange={handleFileChange}
-          className="block w-full text-sm text-ui-text border border-ui-border rounded-lg cursor-pointer bg-ui-bg-secondary focus:outline-none"
+          className="block w-full text-sm text-ui-text border border-ui-border rounded-lg cursor-pointer bg-ui-bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
         />
         {importFile && (
           <Typography variant="muted" className="mt-2">

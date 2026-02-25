@@ -418,11 +418,12 @@ export function AppSidebar() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          reveal
                           onClick={(e) => {
                             e.stopPropagation();
                             setCreateTeamWorkspace({ id: workspace._id, slug: workspace.slug });
                           }}
-                          className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
+                          className="h-6 w-6 p-1"
                           aria-label="Create new team"
                         >
                           <Plus className="w-4 h-4 text-ui-text-tertiary" />
@@ -586,31 +587,27 @@ function CollapsibleSection({
       <li>
         <Tooltip content={label} side="right">
           {isLink ? (
-            <Link
-              {...props}
-              to={props.to}
-              params={props.params}
-              search={props.search}
-              data-tour={dataTour}
-              aria-current={isActive ? "page" : undefined}
+            <NavItemBase
+              asChild
+              active={isActive}
+              size="sm"
+              className="justify-center"
               aria-label={label}
-              className={cn(
-                "flex items-center justify-center px-2 py-2 rounded-md transition-default",
-                isActive
-                  ? "bg-ui-bg-hover text-ui-text"
-                  : "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
-              )}
             >
-              <Icon className="w-5 h-5" />
-            </Link>
+              <Link
+                {...props}
+                to={props.to}
+                params={props.params}
+                search={props.search}
+                data-tour={dataTour}
+              >
+                <Icon className="w-5 h-5" />
+              </Link>
+            </NavItemBase>
           ) : (
-            <Flex
-              align="center"
-              justify="center"
-              className="px-2 py-2 rounded-md text-ui-text-secondary transition-default hover:bg-ui-bg-hover"
-            >
+            <NavItemBase size="sm" className="justify-center">
               <Icon className="w-5 h-5" />
-            </Flex>
+            </NavItemBase>
           )}
         </Tooltip>
       </li>
@@ -620,14 +617,7 @@ function CollapsibleSection({
   return (
     <li>
       {/* Section header */}
-      <Flex
-        align="center"
-        gap="sm"
-        className={cn(
-          "px-3 py-2 rounded-md transition-default group",
-          isActive ? "bg-ui-bg-hover border-l-2 border-brand" : "hover:bg-ui-bg-hover",
-        )}
-      >
+      <NavItemBase active={isActive} variant="bordered" className="group">
         <Button
           variant="ghost"
           size="icon"
@@ -668,16 +658,17 @@ function CollapsibleSection({
         <Button
           variant="ghost"
           size="icon"
+          reveal
           onClick={(e) => {
             e.stopPropagation();
             onAdd();
           }}
-          className="h-6 w-6 p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
+          className="h-6 w-6 p-1"
           aria-label={`Add new ${label.toLowerCase().slice(0, -1)}`}
         >
           <Plus className="w-4 h-4 text-ui-text-tertiary" />
         </Button>
-      </Flex>
+      </NavItemBase>
 
       {/* Section children */}
       {isExpanded && <ul className="ml-4 mt-1 space-y-1 list-none">{children}</ul>}
@@ -705,21 +696,12 @@ function NavSubItem({
 }: NavSubItemProps) {
   return (
     <Tooltip content={label}>
-      <Link
-        to={to}
-        params={params}
-        {...props}
-        aria-current={isActive ? "page" : undefined}
-        className={cn(
-          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm truncate transition-default",
-          isActive
-            ? "bg-ui-bg-hover text-ui-text"
-            : "text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text-secondary",
-        )}
-      >
-        {Icon && <Icon className="w-4 h-4 shrink-0" />}
-        <span className="truncate">{label}</span>
-      </Link>
+      <NavItemBase asChild active={isActive} size="sm">
+        <Link to={to} params={params} {...props}>
+          {Icon && <Icon className="w-4 h-4 shrink-0" />}
+          <span className="truncate">{label}</span>
+        </Link>
+      </NavItemBase>
     </Tooltip>
   );
 }

@@ -18,6 +18,7 @@ import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
+import { Tabs, TabsList, TabsTrigger } from "../ui/Tabs";
 import { Typography } from "../ui/Typography";
 
 /**
@@ -162,34 +163,20 @@ export function UserManagement() {
       </Flex>
 
       {/* Tabs */}
-      <div className="border-b border-ui-border">
-        <Flex as="nav" gap="xl" className="-mb-px" aria-label="User management tabs">
-          <Button
-            variant="unstyled"
-            onClick={() => setActiveTab("invites")}
-            className={cn(
-              "py-4 px-1 border-b-2 font-medium text-sm transition-colors rounded-none",
-              activeTab === "invites"
-                ? "border-brand-ring text-brand"
-                : "border-transparent text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary",
-            )}
-          >
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "invites" | "users")}
+        className="border-b border-ui-border"
+      >
+        <TabsList variant="underline" className="gap-8">
+          <TabsTrigger value="invites" variant="underline" className="py-4 px-1">
             Invitations
-          </Button>
-          <Button
-            variant="unstyled"
-            onClick={() => setActiveTab("users")}
-            className={cn(
-              "py-4 px-1 border-b-2 font-medium text-sm transition-colors rounded-none",
-              activeTab === "users"
-                ? "border-brand-ring text-brand"
-                : "border-transparent text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary",
-            )}
-          >
+          </TabsTrigger>
+          <TabsTrigger value="users" variant="underline" className="py-4 px-1">
             Users
-          </Button>
-        </Flex>
-      </div>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Invite Form Modal */}
       {showInviteForm && (

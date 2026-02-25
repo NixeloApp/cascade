@@ -268,7 +268,7 @@ export function ManualTimeEntryModal({
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
                 max={formatDateForInput(Date.now())}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+                className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
                 required
               />
             </Stack>
@@ -289,7 +289,7 @@ export function ManualTimeEntryModal({
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
                     className={cn(
-                      "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-ring",
+                      "w-full px-3 py-2 border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring",
                       isDurationInputValid ? "border-ui-border" : "border-status-error",
                     )}
                   />
@@ -369,7 +369,7 @@ export function ManualTimeEntryModal({
                       type="time"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+                      className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
                       required
                     />
                   </Stack>
@@ -384,7 +384,7 @@ export function ManualTimeEntryModal({
                       type="time"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+                      className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
                       required
                     />
                   </Stack>
@@ -505,7 +505,7 @@ export function ManualTimeEntryModal({
                 }
               }}
               placeholder="Add tag..."
-              className="flex-1 px-3 py-2 border border-ui-border rounded-lg focus:ring-2 focus:ring-brand-ring"
+              className="flex-1 px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
             />
             <Button onClick={handleAddTag} variant="secondary" size="sm" type="button">
               Add
@@ -549,7 +549,7 @@ export function ManualTimeEntryModal({
                     type="checkbox"
                     checked={field.state.value}
                     onChange={(e) => field.handleChange(e.target.checked)}
-                    className="w-4 h-4 text-brand rounded focus:ring-2 focus:ring-brand-ring"
+                    className="w-4 h-4 text-brand rounded focus-visible:ring-2 focus-visible:ring-brand-ring"
                   />
                   <Typography variant="label">Billable time</Typography>
                 </Flex>

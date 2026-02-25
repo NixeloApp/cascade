@@ -99,7 +99,7 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
         <Button
           type="submit"
           size="lg"
-          className="w-full shadow-card transition-all duration-300"
+          className="w-full shadow-card transition-all duration-medium"
           disabled={submitting}
         >
           {submitting ? (
