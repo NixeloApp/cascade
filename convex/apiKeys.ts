@@ -295,7 +295,11 @@ export const update = authenticatedMutation({
     }> = {};
 
     if (args.name !== undefined) updates.name = args.name;
-    if (args.scopes !== undefined) updates.scopes = args.scopes;
+    if (args.scopes !== undefined) {
+      // Validate new scopes against user permissions
+      await validateKeyGeneration(ctx, _key.projectId, args.scopes);
+      updates.scopes = args.scopes;
+    }
     if (args.rateLimit !== undefined) updates.rateLimit = args.rateLimit;
     if (args.expiresAt !== undefined) updates.expiresAt = args.expiresAt;
 

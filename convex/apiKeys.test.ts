@@ -224,12 +224,12 @@ describe("API Keys", () => {
       await asUser.mutation(api.apiKeys.update, {
         keyId: id,
         name: "New Name",
-        scopes: ["issues:write"],
+        scopes: ["projects:read"],
       });
 
       const keys = await asUser.query(api.apiKeys.list, {});
       expect(keys[0].name).toBe("New Name");
-      expect(keys[0].scopes).toEqual(["issues:write"]);
+      expect(keys[0].scopes).toEqual(["projects:read"]);
     });
 
     it("should remove a key", async () => {
