@@ -15,6 +15,7 @@ import { enforceRateLimit } from "../rateLimits";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   applyBulkUpdate,
+  applyStatusUpdate,
   assertVersionMatch,
   fetchIssuesWithProjects,
   generateIssueKey,
@@ -206,26 +207,7 @@ export const updateStatus = issueMutation({
     // Verify optimistic lock
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
 
-    const oldStatus = ctx.issue.status;
-    const now = Date.now();
-
-    await ctx.db.patch(ctx.issue._id, {
-      status: args.newStatus,
-      order: args.newOrder,
-      updatedAt: now,
-      version: getNextVersion(ctx.issue.version),
-    });
-
-    if (oldStatus !== args.newStatus) {
-      await ctx.db.insert("issueActivity", {
-        issueId: ctx.issue._id,
-        userId: ctx.userId,
-        action: "updated",
-        field: "status",
-        oldValue: oldStatus,
-        newValue: args.newStatus,
-      });
-    }
+    await applyStatusUpdate(ctx, ctx.issue, args.newStatus, args.newOrder);
 
     return { success: true } as const;
   },
@@ -254,26 +236,7 @@ export const updateStatusByCategory = issueMutation({
       );
     }
 
-    const oldStatus = ctx.issue.status;
-    const now = Date.now();
-
-    await ctx.db.patch(ctx.issue._id, {
-      status: targetState.id,
-      order: args.newOrder,
-      updatedAt: now,
-      version: getNextVersion(ctx.issue.version),
-    });
-
-    if (oldStatus !== targetState.id) {
-      await ctx.db.insert("issueActivity", {
-        issueId: ctx.issue._id,
-        userId: ctx.userId,
-        action: "updated",
-        field: "status",
-        oldValue: oldStatus,
-        newValue: targetState.id,
-      });
-    }
+    await applyStatusUpdate(ctx, ctx.issue, targetState.id, args.newOrder);
 
     return { success: true } as const;
   },
