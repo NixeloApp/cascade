@@ -5,9 +5,9 @@
 import { v } from "convex/values";
 import { authenticatedQuery } from "../customFunctions";
 import { batchFetchUsers, getUserName } from "../lib/batchHelpers";
-import { forbidden, notFound, requireOwned } from "../lib/errors";
+import { notFound, requireOwned } from "../lib/errors";
 import { MAX_PAGE_SIZE } from "../lib/queryLimits";
-import { assertCanAccessProject, canAccessProject } from "../projectAccess";
+import { assertCanAccessProject } from "../projectAccess";
 import type { AIProvider } from "./config";
 
 // Reasonable limits for AI-related queries
@@ -75,11 +75,8 @@ export const getProjectContext = authenticatedQuery({
     const project = await ctx.db.get(args.projectId);
     if (!project) throw notFound("project", args.projectId);
 
-    // Check access: centralized check or allow public projects
-    const hasAccess = await canAccessProject(ctx, args.projectId, ctx.userId);
-    if (!hasAccess && !project.isPublic) {
-      throw forbidden();
-    }
+    // Check access: centralized check
+    await assertCanAccessProject(ctx, args.projectId, ctx.userId);
 
     // Get active sprint
     const activeSprint = await ctx.db
