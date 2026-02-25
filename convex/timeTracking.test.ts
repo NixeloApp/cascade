@@ -33,9 +33,10 @@ describe("Time Tracking", () => {
         rateType: "billable",
       });
 
-      const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {
+      const { entryId, success } = await asUser.mutation(api.timeTracking.startTimer, {
         description: "Working",
       });
+      expect(success).toBe(true);
 
       const running = await asUser.query(api.timeTracking.getRunningTimer, {});
       expect(running?._id).toBe(entryId);
@@ -45,7 +46,10 @@ describe("Time Tracking", () => {
       // We can't easily mock Date.now() inside the convex function without more setup.
       // But we can verify stopTimer updates the record.
 
-      await asUser.mutation(api.timeTracking.stopTimer, { entryId });
+      const stopResult = await asUser.mutation(api.timeTracking.stopTimer, { entryId });
+      expect(stopResult.success).toBe(true);
+      expect(stopResult.duration).toBeGreaterThanOrEqual(0);
+      expect(stopResult.totalCost).toBeGreaterThanOrEqual(0);
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
       expect(entry?.endTime).toBeDefined();
@@ -74,11 +78,12 @@ describe("Time Tracking", () => {
       const startTime = Date.now() - 2 * HOUR; // 2 hours ago
       const endTime = Date.now();
 
-      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId, success } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime,
         endTime,
         billable: true,
       });
+      expect(success).toBe(true);
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
       expect(entry?.duration).toBeGreaterThanOrEqual(7200); // roughly 2 hours
@@ -226,12 +231,13 @@ describe("Time Tracking", () => {
         activity: "Development",
       });
 
-      await asUser.mutation(api.timeTracking.updateTimeEntry, {
+      const updateResult = await asUser.mutation(api.timeTracking.updateTimeEntry, {
         entryId,
         description: "Updated description",
         activity: "Testing",
         tags: ["tag1", "tag2"],
       });
+      expect(updateResult.success).toBe(true);
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
       expect(entry?.description).toBe("Updated description");
@@ -331,7 +337,9 @@ describe("Time Tracking", () => {
         endTime: now,
       });
 
-      await asUser.mutation(api.timeTracking.deleteTimeEntry, { entryId });
+      const deleteResult = await asUser.mutation(api.timeTracking.deleteTimeEntry, { entryId });
+      expect(deleteResult.success).toBe(true);
+      expect(deleteResult.deleted).toBe(true);
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
       expect(entry).toBeNull();
@@ -404,11 +412,12 @@ describe("Time Tracking", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
-      const { entryId } = await asUser.mutation(api.timeTracking.createTimeEntry, {
+      const { entryId, success } = await asUser.mutation(api.timeTracking.createTimeEntry, {
         startTime: now - HOUR,
         endTime: now,
         isEquityHour: true,
       });
+      expect(success).toBe(true);
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
       expect(entry?.isEquityHour).toBe(true);
@@ -444,11 +453,12 @@ describe("Time Tracking", () => {
       });
       const issueId = await createTestIssue(t, projectId, userId, { title: "Timer Issue" });
 
-      const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {
+      const { entryId, success } = await asUser.mutation(api.timeTracking.startTimer, {
         projectId,
         issueId,
         description: "Working on issue",
       });
+      expect(success).toBe(true);
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
       expect(entry?.projectId).toBe(projectId);
@@ -465,7 +475,10 @@ describe("Time Tracking", () => {
       const asUser = asAuthenticatedUser(t, userId);
 
       const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {});
-      await asUser.mutation(api.timeTracking.stopTimer, { entryId });
+      const stopResult = await asUser.mutation(api.timeTracking.stopTimer, { entryId });
+      expect(stopResult.success).toBe(true);
+      expect(stopResult.duration).toBeGreaterThanOrEqual(0);
+      expect(stopResult.totalCost).toBeGreaterThanOrEqual(0);
 
       await expect(asUser.mutation(api.timeTracking.stopTimer, { entryId })).rejects.toThrow(
         /already stopped/i,
@@ -545,12 +558,14 @@ describe("Time Tracking", () => {
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
 
-      await asUser.mutation(api.timeTracking.setUserRate, {
+      const { success, rateId } = await asUser.mutation(api.timeTracking.setUserRate, {
         userId,
         hourlyRate: 75,
         currency: "EUR",
         rateType: "billable",
       });
+      expect(success).toBe(true);
+      expect(rateId).toBeDefined();
 
       // Verify rate was set by checking time entries use it
       const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {});

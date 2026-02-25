@@ -69,6 +69,7 @@ export const startTimer = authenticatedMutation({
     billable: v.optional(v.boolean()),
     tags: v.optional(v.array(v.string())),
   },
+  returns: v.object({ success: v.literal(true), entryId: v.id("timeEntries") }),
   handler: async (ctx, args) => {
     // Check if user has any running timers - just need to know if one exists
     const runningTimer = await ctx.db
@@ -117,7 +118,7 @@ export const startTimer = authenticatedMutation({
       approvedAt: undefined,
       updatedAt: now,
     });
-    return { entryId };
+    return { success: true, entryId } as const;
   },
 });
 
@@ -125,6 +126,11 @@ export const stopTimer = authenticatedMutation({
   args: {
     entryId: v.id("timeEntries"),
   },
+  returns: v.object({
+    success: v.literal(true),
+    duration: v.number(),
+    totalCost: v.number(),
+  }),
   handler: async (ctx, args) => {
     const entry = await ctx.db.get(args.entryId);
     if (!entry) {
@@ -151,7 +157,7 @@ export const stopTimer = authenticatedMutation({
       updatedAt: now,
     });
 
-    return { duration, totalCost };
+    return { success: true, duration, totalCost } as const;
   },
 });
 
@@ -167,6 +173,7 @@ export const createTimeEntry = authenticatedMutation({
     billable: v.optional(v.boolean()),
     isEquityHour: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.literal(true), entryId: v.id("timeEntries") }),
   handler: async (ctx, args) => {
     // Check project permissions if specified
     if (args.projectId) {
@@ -213,7 +220,7 @@ export const createTimeEntry = authenticatedMutation({
       approvedAt: undefined,
       updatedAt: now,
     });
-    return { entryId };
+    return { success: true, entryId } as const;
   },
 });
 
@@ -228,6 +235,7 @@ export const updateTimeEntry = authenticatedMutation({
     billable: v.optional(v.boolean()),
     isEquityHour: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const entry = await ctx.db.get(args.entryId);
     if (!entry) {
@@ -256,6 +264,7 @@ export const updateTimeEntry = authenticatedMutation({
     }
 
     await ctx.db.patch(args.entryId, updates);
+    return { success: true } as const;
   },
 });
 
@@ -263,6 +272,7 @@ export const deleteTimeEntry = authenticatedMutation({
   args: {
     entryId: v.id("timeEntries"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const entry = await ctx.db.get(args.entryId);
     if (!entry) {
@@ -282,6 +292,7 @@ export const deleteTimeEntry = authenticatedMutation({
     }
 
     await ctx.db.delete(args.entryId);
+    return { success: true, deleted: true } as const;
   },
 });
 
@@ -683,6 +694,7 @@ export const setUserRate = authenticatedMutation({
     rateType: rateTypes,
     notes: v.optional(v.string()),
   },
+  returns: v.object({ success: v.literal(true), rateId: v.id("userRates") }),
   handler: async (ctx, args) => {
     // Check permissions - must be admin of project or setting own rate
     if (args.projectId) {
@@ -708,7 +720,7 @@ export const setUserRate = authenticatedMutation({
     await Promise.all(ratesToClose.map((rate) => ctx.db.patch(rate._id, { effectiveTo: now })));
 
     // Create new rate
-    return await ctx.db.insert("userRates", {
+    const rateId = await ctx.db.insert("userRates", {
       userId: args.userId,
       projectId: args.projectId,
       hourlyRate: args.hourlyRate,
@@ -720,6 +732,7 @@ export const setUserRate = authenticatedMutation({
       notes: args.notes,
       updatedAt: now,
     });
+    return { success: true, rateId } as const;
   },
 });
 
