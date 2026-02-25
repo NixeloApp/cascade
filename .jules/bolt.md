@@ -47,3 +47,7 @@ Modified `convex/projectAccess.ts` to wrap the `computeProjectAccess` logic with
 ## 2025-05-25 - Optimization of Project Membership Checks
 **Learning:** `countProjects` was fetching all project memberships for a user and filtering in memory against shared projects. This is inefficient (O(N) DB read) when the user is in many projects but we only share a few (O(K) check).
 **Action:** Implemented a "fast path" using `Promise.all` and indexed `by_project_user` lookups when the set of shared projects to check is small (<= 50). This reduces DB reads from O(N) to O(K) index lookups.
+
+## 2025-05-26 - Optimization of Active Issue Lists
+**Learning:** Queries like `listSelectableIssues` and `listRoadmapIssues` were fetching issues by type and then filtering out soft-deleted items in memory (`.filter(notDeleted)`). While effective for small datasets, this forces a scan of deleted issues, which can be significant in long-running projects.
+**Action:** Added `by_project_type_deleted` index (`["projectId", "type", "isDeleted"]`) to `issues` table. Updated queries to use `.lt("isDeleted", true)` in the index range scan. This allows the database to skip deleted items entirely during the scan, improving latency for issue pickers and roadmap views.

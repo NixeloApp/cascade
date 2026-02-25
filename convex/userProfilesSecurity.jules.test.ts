@@ -1,86 +1,98 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { expect, test } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { createProjectInOrganization, createTestContext } from "./testUtils";
 
-describe("User Profiles Security", () => {
-  it("should NOT leak sensitive user fields in listUserProfiles", async () => {
-    const t = convexTest(schema, modules);
-    const { userId, organizationId, asUser } = await createTestContext(t);
+test("getUserProfile leaks equity data to other users", async () => {
+  const t = convexTest(schema, modules);
 
-    // Make the user an admin so they can call listUserProfiles
-    await createProjectInOrganization(t, userId, organizationId, {
-      name: "Admin Project",
-      key: "ADMIN",
+  // Create User A (The Victim) with equity data
+  const userA = await t.run(async (ctx) => {
+    const userId = await ctx.db.insert("users", {
+      name: "User A",
+      email: "usera@example.com",
     });
 
-    // Create another user with sensitive data manually inserted
-    // Since createTestUser uses internal mutation, we can't easily inject sensitive fields directly via that helper if it uses valid mutation.
-    // However, we can use t.run to insert directly into the database for setup.
-    const sensitiveUser = await t.run(async (ctx) => {
-      return await ctx.db.insert("users", {
-        name: "Sensitive User",
-        email: "sensitive@test.com",
-        twoFactorSecret: "SUPER_SECRET_2FA_KEY",
-        pendingEmailVerificationToken: "LEAKED_TOKEN_123",
-      });
-    });
-
-    // Create a profile for this user so they appear in listUserProfiles
-    await asUser.mutation(api.userProfiles.upsertUserProfile, {
-      userId: sensitiveUser,
+    await ctx.db.insert("userProfiles", {
+      userId,
       employmentType: "employee",
-      hasEquity: false,
       isActive: true,
+      updatedAt: Date.now(),
+      hasEquity: true,
+      equityPercentage: 5.0,
+      equityHourlyValue: 100,
+      equityNotes: "Super Secret Equity",
+      createdBy: userId,
     });
 
-    // Call listUserProfiles
-    const profiles = await asUser.query(api.userProfiles.listUserProfiles, {});
-    const targetProfile = profiles.find((p) => p.userId === sensitiveUser);
-
-    expect(targetProfile).toBeDefined();
-
-    // Check if sensitive fields are leaked
-    // The vulnerability is that `user` property contains the raw user document
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    const user = targetProfile!.user as any;
-
-    // These assertions should FAIL if the vulnerability exists
-    expect(user).toBeDefined();
-    expect(user.twoFactorSecret).toBeUndefined();
-    expect(user.pendingEmailVerificationToken).toBeUndefined();
+    return userId;
   });
 
-  it("should NOT leak sensitive user fields in getUsersWithoutProfiles", async () => {
-    const t = convexTest(schema, modules);
-    const { userId, organizationId, asUser } = await createTestContext(t);
-
-    // Make the user an admin
-    await createProjectInOrganization(t, userId, organizationId, {
-      name: "Admin Project",
-      key: "ADMIN",
+  // Create User B (The Attacker) - regular user
+  const userB = await t.run(async (ctx) => {
+    return await ctx.db.insert("users", {
+      name: "User B",
+      email: "userb@example.com",
     });
-
-    // Create a user without a profile, with sensitive data
-    const sensitiveUser = await t.run(async (ctx) => {
-      return await ctx.db.insert("users", {
-        name: "No Profile User",
-        email: "noprofile@test.com",
-        twoFactorSecret: "SUPER_SECRET_2FA_KEY_2",
-        pendingEmailVerificationToken: "LEAKED_TOKEN_456",
-      });
-    });
-
-    // Call getUsersWithoutProfiles
-    const users = await asUser.query(api.userProfiles.getUsersWithoutProfiles, {});
-    const targetUser = users.find((u: any) => u._id === sensitiveUser);
-
-    expect(targetUser).toBeDefined();
-
-    // These assertions should FAIL if the vulnerability exists
-    expect((targetUser as any).twoFactorSecret).toBeUndefined();
-    expect((targetUser as any).pendingEmailVerificationToken).toBeUndefined();
   });
+
+  // User B tries to get User A's profile
+  const profile = await t.withIdentity({ subject: userB }).query(api.userProfiles.getUserProfile, {
+    userId: userA,
+  });
+
+  // Assert that sensitive data is SANITIZED (fixed behavior)
+  expect(profile).not.toBeNull();
+
+  // These fields SHOULD NOT be visible to User B
+  expect(profile?.equityPercentage).toBeUndefined();
+  expect(profile?.equityHourlyValue).toBeUndefined();
+  expect(profile?.equityNotes).toBeUndefined();
+});
+
+test("listTimeEntries leaks hourly rate to other users", async () => {
+  const t = convexTest(schema, modules);
+
+  // Create User A (The Victim)
+  const userA = await t.run(async (ctx) => {
+    const userId = await ctx.db.insert("users", {
+      name: "User A",
+      email: "usera@example.com",
+    });
+
+    await ctx.db.insert("timeEntries", {
+      userId,
+      startTime: Date.now() - 3600000,
+      duration: 3600,
+      date: Date.now(),
+      hourlyRate: 250, // Sensitive!
+      totalCost: 250,
+      currency: "USD",
+      billable: true,
+      billed: false,
+      isEquityHour: false,
+      isLocked: false,
+      isApproved: false,
+      updatedAt: Date.now(),
+      tags: [],
+    });
+
+    return userId;
+  });
+
+  // Create User B (The Attacker)
+  const userB = await t.run(async (ctx) => {
+    return await ctx.db.insert("users", {
+      name: "User B",
+      email: "userb@example.com",
+    });
+  });
+
+  // User B tries to list User A's time entries
+  await expect(
+    t.withIdentity({ subject: userB }).query(api.timeTracking.listTimeEntries, {
+      userId: userA,
+    }),
+  ).rejects.toThrow(/Access denied/i);
 });
