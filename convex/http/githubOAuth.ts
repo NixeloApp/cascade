@@ -447,7 +447,7 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
   try {
     // Authenticate the user from the Bearer token
     const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.replace("Bearer ", "");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
 
     if (!token) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {

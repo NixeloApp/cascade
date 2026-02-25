@@ -71,6 +71,7 @@ export const loggedInUser = query({
  */
 export const verifySession = internalQuery({
   args: { sessionId: v.string() },
+  returns: v.union(v.id("users"), v.null()),
   handler: async (ctx, args) => {
     // Basic session validation
     // In convex-auth, the sessionId is the ID of "authSessions" doc.

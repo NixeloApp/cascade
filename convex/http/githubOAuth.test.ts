@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api, internal } from "../_generated/api";
+import { internal } from "../_generated/api";
 import type { ActionCtx } from "../_generated/server";
 import { handleCallbackHandler, initiateAuthHandler, listReposHandler } from "./githubOAuth";
 
