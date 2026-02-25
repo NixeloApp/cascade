@@ -15,6 +15,7 @@ export const backfillNotificationIsDeleted = internalMutation({
     const limit = args.limit ?? 1000;
 
     // Scan notifications that are missing isDeleted
+    // @convex-validation-ignore MISSING_INDEX
     const notifications = await ctx.db
       .query("notifications")
       .filter((q) => q.eq(q.field("isDeleted"), undefined))

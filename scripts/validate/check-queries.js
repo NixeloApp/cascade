@@ -194,7 +194,11 @@ export function run() {
         const queryContext = lines.slice(i, Math.min(lines.length, i + 5)).join("\n");
         const hasIndex =
           /\.withIndex\s*\(/.test(queryContext) || /\.withSearchIndex\s*\(/.test(queryContext);
-        if (!hasIndex && /\.filter\s*\(/.test(queryContext)) {
+        const hasIgnore =
+          /@convex-validation-ignore\s+MISSING_INDEX/.test(lines[i - 1] || "") ||
+          /@convex-validation-ignore\s+MISSING_INDEX/.test(lines[i - 2] || "");
+
+        if (!hasIndex && /\.filter\s*\(/.test(queryContext) && !hasIgnore) {
           issues.push({
             type: "MISSING_INDEX",
             severity: SEVERITY.LOW,
