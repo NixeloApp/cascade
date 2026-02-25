@@ -91,8 +91,7 @@ export const startTimer = authenticatedMutation({
     // Check if user has any running timers - just need to know if one exists
     const runningTimer = await ctx.db
       .query("timeEntries")
-      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .filter((q) => q.eq(q.field("endTime"), undefined))
+      .withIndex("by_user_end_time", (q) => q.eq("userId", ctx.userId).eq("endTime", undefined))
       .first();
 
     if (runningTimer) {
@@ -324,8 +323,7 @@ export const getRunningTimer = authenticatedQuery({
   handler: async (ctx) => {
     const runningTimer = await ctx.db
       .query("timeEntries")
-      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .filter((q) => q.eq(q.field("endTime"), undefined))
+      .withIndex("by_user_end_time", (q) => q.eq("userId", ctx.userId).eq("endTime", undefined))
       .first();
 
     if (!runningTimer) {
