@@ -21,7 +21,7 @@ import { Sheet } from "./ui/Sheet";
 import { Typography } from "./ui/Typography";
 
 type IssueLinkWithDetails = FunctionReturnType<
-  typeof api.issueLinks.getForIssue
+  typeof api.issueLinks.getIssueLinks
 >["outgoing"][number];
 type Issue = FunctionReturnType<typeof api.issues.search>["page"][number];
 
@@ -65,14 +65,14 @@ export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDep
   const [deleteConfirm, setDeleteConfirm] = useState<Id<"issueLinks"> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const links = useQuery(api.issueLinks.getForIssue, { issueId });
+  const links = useQuery(api.issueLinks.getIssueLinks, { issueId });
   // Backend excludes current issue - no client-side filtering needed
   const searchResults = useQuery(
     api.issues.search,
     searchQuery.length >= 2 ? { query: searchQuery, limit: 20, excludeIssueId: issueId } : "skip",
   );
-  const createLink = useMutation(api.issueLinks.create);
-  const removeLink = useMutation(api.issueLinks.remove);
+  const createLink = useMutation(api.issueLinks.createIssueLink);
+  const removeLink = useMutation(api.issueLinks.deleteIssueLink);
 
   const handleAddLink = async () => {
     if (!selectedIssue) {

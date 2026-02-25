@@ -21,24 +21,40 @@ type TableInfoFor = GenericTableInfo;
 /**
  * Executes a paginated query with a mandatory soft-delete filter.
  *
- * This helper is designed to wrap any arbitrary query builder chain with a standard
- * `isDeleted != true` filter before executing pagination. It uses explicit type casting
- * to work around Convex's strict query builder types, allowing it to function generically
- * across different tables.
+ * This helper wraps any arbitrary query builder chain (e.g., `.withIndex()`) and applies
+ * a standard `isDeleted != true` filter before executing pagination. This ensures that
+ * soft-deleted items are consistently excluded from all paginated lists.
  *
- * @param ctx - The query context.
- * @param opts - Options object.
- * @param opts.paginationOpts - Standard Convex pagination options (cursor, numItems).
- * @param opts.query - A callback that receives the database reader and returns a query builder.
- *                     The query builder should be "paginate-ready" (i.e., `.collect()` or `.paginate()` could be called on it).
+ * ### Why Type Casting?
+ * Convex's `Query` and `FilterBuilder` types are strictly typed to specific tables (e.g., `Query<"issues">`).
+ * To create a reusable helper that works for ANY table, we must cast the query builder to `unknown`
+ * and then to a generic interface. This bypasses TypeScript's strict table checks while still
+ * enforcing that the result items match the generic type `T`.
  *
- * @returns A promise resolving to the paginated result.
+ * ### Soft Delete Logic
+ * The filter uses `q.neq(q.field("isDeleted"), true)` which handles two cases:
+ * 1. `isDeleted` is explicitly `false` (active)
+ * 2. `isDeleted` is `undefined` (legacy active items)
+ *
+ * @param ctx - The query context containing the database reader.
+ * @param opts - Configuration options.
+ * @param opts.paginationOpts - Convex pagination options (`numItems`, `cursor`).
+ * @param opts.query - A callback function that receives `db` and must return a query builder chain.
+ *                     The chain should be ready for `.paginate()` (i.e., indexes applied).
+ *
+ * @returns A promise resolving to the standard `PaginationResult<T>`.
  *
  * @example
- * const result = await fetchPaginatedQuery(ctx, {
- *   paginationOpts: { numItems: 10, cursor: args.cursor },
- *   query: (db) => db.query("issues").withIndex("by_project", q => q.eq("projectId", args.projectId))
+ * ```typescript
+ * // Fetch paginated issues for a project, excluding soft-deleted ones
+ * const result = await fetchPaginatedQuery<Doc<"issues">>(ctx, {
+ *   paginationOpts: args.paginationOpts,
+ *   query: (db) => db
+ *     .query("issues")
+ *     .withIndex("by_project", q => q.eq("projectId", args.projectId))
+ *     .order("desc")
  * });
+ * ```
  */
 export async function fetchPaginatedQuery<T extends GenericDocument>(
   ctx: QueryCtx,
