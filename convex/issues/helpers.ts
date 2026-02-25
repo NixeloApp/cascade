@@ -635,3 +635,22 @@ export async function resolveLabelNames(
   const labels = await asyncMap(labelIds, (id) => ctx.db.get(id));
   return pruneNull(labels).map((l) => l.name);
 }
+
+/**
+ * Helper to fetch issues and their associated projects in an optimized way.
+ * Used for bulk operations that need to validate against project configuration.
+ *
+ * @param ctx - Mutation context.
+ * @param issueIds - Array of issue IDs to fetch.
+ * @returns Object containing the filtered issues and a map of projects.
+ */
+export async function fetchIssuesWithProjects(ctx: MutationCtx, issueIds: Id<"issues">[]) {
+  const allIssues = await asyncMap(issueIds, (id) => ctx.db.get(id));
+  const issues = allIssues.filter((i): i is NonNullable<typeof i> => i !== null);
+  const uniqueProjectIds = [...new Set(issues.map((i) => i.projectId))] as Id<"projects">[];
+  const projectDocs = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
+  const validProjects = projectDocs.filter((p): p is NonNullable<typeof p> => p !== null);
+  const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
+
+  return { issues, projectMap };
+}
