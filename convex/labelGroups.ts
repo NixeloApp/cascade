@@ -177,6 +177,7 @@ export const update = authenticatedMutation({
  */
 export const remove = authenticatedMutation({
   args: { id: v.id("labelGroups") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const group = await ctx.db.get(args.id);
     if (!group) throw notFound("labelGroup", args.id);
@@ -196,7 +197,7 @@ export const remove = authenticatedMutation({
 
     await ctx.db.delete(args.id);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
