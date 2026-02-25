@@ -112,6 +112,12 @@ export const suggestIssueDescription = action({
       throws: true,
     });
 
+    // Ensure user has edit access to the project
+    await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
+      projectId: args.projectId,
+      userId,
+    });
+
     // Get project context
     const project = await ctx.runQuery(api.ai.queries.getProjectContext, {
       projectId: args.projectId,
@@ -190,6 +196,12 @@ export const suggestPriority = action({
     await rateLimit(ctx, "aiSuggestion", {
       key: userId,
       throws: true,
+    });
+
+    // Ensure user has edit access to the project
+    await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
+      projectId: args.projectId,
+      userId,
     });
 
     const prompt = `Analyze this issue and suggest a priority (highest, high, medium, low, lowest):
@@ -272,6 +284,12 @@ export const suggestLabels = action({
     await rateLimit(ctx, "aiSuggestion", {
       key: userId,
       throws: true,
+    });
+
+    // Ensure user has edit access to the project
+    await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
+      projectId: args.projectId,
+      userId,
     });
 
     // Get existing project labels
