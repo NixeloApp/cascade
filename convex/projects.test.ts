@@ -416,7 +416,7 @@ describe("Projects", () => {
         projectId,
         workflowStates: customWorkflow,
       });
-      expect(result).toEqual({ success: true, projectId });
+      expect(result).toEqual({ success: true });
 
       const project = await asAdmin.query(api.projects.getProject, { id: projectId });
       expect(project?.workflowStates).toHaveLength(3);

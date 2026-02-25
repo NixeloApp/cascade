@@ -53,44 +53,43 @@ export function CommentRenderer({ content, mentions: _mentions = [] }: CommentRe
   );
 }
 
+// Patterns definition extracted to module scope
+const MARKDOWN_PATTERNS: Array<{
+  regex: RegExp;
+  render: (match: string, extra?: string) => React.ReactNode;
+}> = [
+  { regex: /\*\*(.+?)\*\*/g, render: (match) => <strong>{match}</strong> },
+  { regex: /\*(.+?)\*/g, render: (match) => <em>{match}</em> },
+  {
+    regex: /`([^`]+)`/g,
+    render: (match) => (
+      <code className="bg-ui-bg-tertiary px-1 py-0.5 rounded text-brand text-sm">{match}</code>
+    ),
+  },
+  { regex: /~~(.+?)~~/g, render: (match) => <s>{match}</s> },
+  {
+    regex: /\[([^\]]+)\]\(([^)]+)\)/g,
+    render: (text, url) => (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-brand hover:text-brand-hover underline"
+      >
+        {text}
+      </a>
+    ),
+  },
+];
+
 /**
  * Render inline markdown: **bold**, *italic*, `code`, ~~strike~~, [link](url)
  */
 function renderInlineMarkdown(text: string, baseKey: number): React.ReactNode {
-  // Pattern to match markdown inline elements
-  // Order matters: bold (**) before italic (*) to avoid conflicts
-  const patterns: Array<{
-    regex: RegExp;
-    render: (match: string, extra?: string) => React.ReactNode;
-  }> = [
-    { regex: /\*\*(.+?)\*\*/g, render: (match) => <strong>{match}</strong> },
-    { regex: /\*(.+?)\*/g, render: (match) => <em>{match}</em> },
-    {
-      regex: /`([^`]+)`/g,
-      render: (match) => (
-        <code className="bg-ui-bg-tertiary px-1 py-0.5 rounded text-brand text-sm">{match}</code>
-      ),
-    },
-    { regex: /~~(.+?)~~/g, render: (match) => <s>{match}</s> },
-    {
-      regex: /\[([^\]]+)\]\(([^)]+)\)/g,
-      render: (text, url) => (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-brand hover:text-brand-hover underline"
-        >
-          {text}
-        </a>
-      ),
-    },
-  ];
-
   let result: React.ReactNode[] = [text];
   let keyCounter = baseKey;
 
-  for (const { regex, render } of patterns) {
+  for (const { regex, render } of MARKDOWN_PATTERNS) {
     const newResult: React.ReactNode[] = [];
 
     for (const part of result) {
@@ -99,43 +98,57 @@ function renderInlineMarkdown(text: string, baseKey: number): React.ReactNode {
         continue;
       }
 
-      let lastIndex = 0;
-      let match: RegExpExecArray | null;
-      regex.lastIndex = 0; // Reset regex state
-
-      match = regex.exec(part);
-      while (match !== null) {
-        // Add text before match
-        if (match.index > lastIndex) {
-          newResult.push(part.substring(lastIndex, match.index));
-        }
-
-        // Add rendered element
-        if (match.length === 3) {
-          // Link pattern: [text](url)
-          newResult.push(<span key={`md-${keyCounter++}`}>{render(match[1], match[2])}</span>);
-        } else {
-          // Other patterns: just the captured group
-          newResult.push(<span key={`md-${keyCounter++}`}>{render(match[1])}</span>);
-        }
-
-        lastIndex = match.index + match[0].length;
-        match = regex.exec(part);
-      }
-
-      // Add remaining text
-      if (lastIndex < part.length) {
-        newResult.push(part.substring(lastIndex));
-      } else if (lastIndex === 0) {
-        // No matches found, keep original
-        newResult.push(part);
-      }
+      processMarkdownMatches(part, regex, render, newResult, keyCounter);
+      // Rough increment to avoid key collisions
+      keyCounter += 100;
     }
 
     result = newResult;
   }
 
   return <>{result}</>;
+}
+
+// Extracted helper function to reduce complexity
+function processMarkdownMatches(
+  text: string,
+  regex: RegExp,
+  render: (match: string, extra?: string) => React.ReactNode,
+  accumulator: React.ReactNode[],
+  baseKey: number,
+) {
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  regex.lastIndex = 0; // Reset regex state
+  let localKey = baseKey;
+
+  match = regex.exec(text);
+  while (match !== null) {
+    // Add text before match
+    if (match.index > lastIndex) {
+      accumulator.push(text.substring(lastIndex, match.index));
+    }
+
+    // Add rendered element
+    if (match.length === 3) {
+      // Link pattern: [text](url)
+      accumulator.push(<span key={`md-${localKey++}`}>{render(match[1], match[2])}</span>);
+    } else {
+      // Other patterns: just the captured group
+      accumulator.push(<span key={`md-${localKey++}`}>{render(match[1])}</span>);
+    }
+
+    lastIndex = match.index + match[0].length;
+    match = regex.exec(text);
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    accumulator.push(text.substring(lastIndex));
+  } else if (lastIndex === 0) {
+    // No matches found, keep original
+    accumulator.push(text);
+  }
 }
 
 interface MentionBadgeProps {

@@ -154,7 +154,7 @@ describe("Issue Mutations", () => {
         newStatus: "todo", // Same as default
         newOrder: 0,
       });
-      expect(result).toEqual({ success: true, issueId });
+      expect(result).toEqual({ success: true });
 
       const activities = await t.run(async (ctx) => {
         return await ctx.db
@@ -188,7 +188,7 @@ describe("Issue Mutations", () => {
         newStatus: "inprogress",
         newOrder: 5,
       });
-      expect(result).toEqual({ success: true, issueId });
+      expect(result).toEqual({ success: true });
 
       const issue = await t.run(async (ctx) => ctx.db.get(issueId));
       expect(issue?.order).toBe(5);
@@ -219,7 +219,7 @@ describe("Issue Mutations", () => {
         category: "done",
         newOrder: 0,
       });
-      expect(result).toEqual({ success: true, issueId });
+      expect(result).toEqual({ success: true });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.status).toBe("done");
@@ -286,7 +286,7 @@ describe("Issue Mutations", () => {
         estimatedHours: 4,
         storyPoints: 3,
       });
-      expect(result).toEqual({ success: true, issueId });
+      expect(result).toEqual({ success: true });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.title).toBe("Updated Title");
@@ -324,7 +324,7 @@ describe("Issue Mutations", () => {
         storyPoints: null,
         dueDate: null,
       });
-      expect(result).toEqual({ success: true, issueId });
+      expect(result).toEqual({ success: true });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
       expect(issue?.assigneeId).toBeUndefined();
@@ -354,7 +354,7 @@ describe("Issue Mutations", () => {
         issueId,
         labels: ["bug", "urgent", "frontend"],
       });
-      expect(result).toEqual({ success: true, issueId });
+      expect(result).toEqual({ success: true });
 
       // Labels are enriched with color info when fetched via issues.get
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });

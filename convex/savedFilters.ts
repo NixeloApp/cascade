@@ -88,7 +88,7 @@ export const update = authenticatedMutation({
     filters: v.optional(filtersValidator),
     isPublic: v.optional(v.boolean()),
   },
-  returns: v.object({ success: v.literal(true), filterId: v.id("savedFilters") }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const filter = await ctx.db.get(args.id);
     if (!filter) {
@@ -106,7 +106,7 @@ export const update = authenticatedMutation({
 
     await ctx.db.patch(args.id, updates);
 
-    return { success: true, filterId: args.id } as const;
+    return { success: true } as const;
   },
 });
 
