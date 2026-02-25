@@ -277,6 +277,7 @@ export const processDueReminders = internalMutation({
           title: `Upcoming: ${event.title}`,
           message: `Starting in ${reminder.minutesBefore} minutes`,
           isRead: false,
+          isDeleted: false,
         });
       }
       // Push notifications would be handled separately via web push API
