@@ -4,6 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import type { AutomationActionValue } from "./validators";
 
 describe("Automation Rules Validation", () => {
   it("should throw validation error when creating rule with mismatched actionType and actionValue", async () => {
@@ -20,10 +21,10 @@ describe("Automation Rules Validation", () => {
         trigger: "issue_created",
         // Mismatched: type is set_priority, value is for add_label
         actionType: "set_priority",
-        actionValue: { type: "add_label", label: "oops" } as any,
+        actionValue: { type: "add_label", label: "oops" } as unknown as AutomationActionValue,
       });
     }).rejects.toThrow(
-      /actionType \\"set_priority\\" does not match actionValue.type \\"add_label\\"/,
+      /actionType \\"set_priority\\" does not match actionValue\.type \\"add_label\\"/,
     );
   });
 
@@ -50,7 +51,7 @@ describe("Automation Rules Validation", () => {
         actionType: "add_label",
       });
     }).rejects.toThrow(
-      /actionType \\"add_label\\" does not match actionValue.type \\"set_priority\\"/,
+      /actionType \\"add_label\\" does not match actionValue\.type \\"set_priority\\"/,
     );
   });
 
@@ -74,10 +75,10 @@ describe("Automation Rules Validation", () => {
     await expect(async () => {
       await asUser.mutation(api.automationRules.update, {
         id: ruleId,
-        actionValue: { type: "add_label", label: "oops" } as any,
+        actionValue: { type: "add_label", label: "oops" } as unknown as AutomationActionValue,
       });
     }).rejects.toThrow(
-      /actionType \\"set_priority\\" does not match actionValue.type \\"add_label\\"/,
+      /actionType \\"set_priority\\" does not match actionValue\.type \\"add_label\\"/,
     );
   });
 });
