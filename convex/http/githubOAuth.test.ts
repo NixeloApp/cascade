@@ -179,9 +179,9 @@ describe("GitHub OAuth HTTP Handlers", () => {
 
       const response = await handleCallbackHandler(ctx, request);
 
-      expect(response.status).toBe(400); // Validation error maps to 400
+      expect(response.status).toBe(502); // Upstream error maps to 502
       const html = await response.text();
-      expect(html).toContain("Failed to exchange GitHub authorization code");
+      expect(html).toContain("Failed to exchange authorization code");
     });
   });
 
