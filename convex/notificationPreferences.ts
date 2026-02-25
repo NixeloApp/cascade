@@ -5,6 +5,7 @@
  */
 
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { emailDigests } from "./validators";
@@ -94,7 +95,7 @@ export const update = authenticatedMutation({
       updatedAt: Date.now(),
     };
 
-    let preferenceId;
+    let preferenceId: Id<"notificationPreferences">;
 
     if (existing) {
       // Update existing preferences
