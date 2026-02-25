@@ -47,13 +47,15 @@ export const getMyIssues = authenticatedQuery({
   handler: async (ctx, args) => {
     const paginationOpts = args.paginationOpts || { numItems: 20, cursor: null };
 
-    // Paginate using the by_assignee index
+    // Paginate using the by_assignee_deleted index
     const results = await fetchPaginatedQuery<Doc<"issues">>(ctx, {
       paginationOpts,
       query: (db) =>
         db
           .query("issues")
-          .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId))
+          .withIndex("by_assignee_deleted", (q) =>
+            q.eq("assigneeId", ctx.userId).lt("isDeleted", true),
+          )
           .order("desc"), // Sort by creation time (descending)
     });
 
@@ -112,8 +114,7 @@ export const getMyCreatedIssues = authenticatedQuery({
   handler: async (ctx) => {
     const issues = await ctx.db
       .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", ctx.userId))
-      .filter(notDeleted)
+      .withIndex("by_reporter_deleted", (q) => q.eq("reporterId", ctx.userId).lt("isDeleted", true))
       .take(MAX_USER_ASSIGNED_ISSUES);
 
     // Batch fetch all related data to avoid N+1 queries
@@ -181,8 +182,7 @@ export const getMyProjects = authenticatedQuery({
     // This is scalable because per-user assignment count is usually small (<1000)
     const myIssues = await ctx.db
       .query("issues")
-      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId))
-      .filter(notDeleted)
+      .withIndex("by_assignee_deleted", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
       .take(MAX_USER_ASSIGNED_ISSUES);
 
     const myIssuesByProject = new Map<string, number>();
@@ -305,8 +305,7 @@ export const getMyStats = authenticatedQuery({
     // Issues assigned to me
     const assignedIssues = await ctx.db
       .query("issues")
-      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId))
-      .filter(notDeleted)
+      .withIndex("by_assignee_deleted", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
       .take(MAX_USER_ASSIGNED_ISSUES);
 
     // Filter for different stats
@@ -338,8 +337,7 @@ export const getMyStats = authenticatedQuery({
     // Created by me - using index instead of filter (avoids full table scan)
     const createdByMe = await ctx.db
       .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", ctx.userId))
-      .filter(notDeleted)
+      .withIndex("by_reporter_deleted", (q) => q.eq("reporterId", ctx.userId).lt("isDeleted", true))
       .take(MAX_USER_ASSIGNED_ISSUES);
 
     return {
@@ -377,8 +375,7 @@ export const getFocusTask = authenticatedQuery({
     // Fetch tasks assigned to me (with reasonable limit)
     const issues = await ctx.db
       .query("issues")
-      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId))
-      .filter(notDeleted)
+      .withIndex("by_assignee_deleted", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
       .take(MAX_USER_ASSIGNED_ISSUES);
 
     if (issues.length === 0) return null;
