@@ -40,15 +40,16 @@ describe("issue helpers", () => {
 
   describe("trackFieldChange", () => {
     it("should track when value changes", () => {
+      const updates: Record<string, unknown> = {};
       const changes: Array<{
         field: string;
         oldValue: string | number | null | undefined;
         newValue: string | number | null | undefined;
       }> = [];
 
-      const changed = trackFieldChange(changes, "title", "Old Title", "New Title");
+      trackFieldChange(updates, changes, "title", "Old Title", "New Title");
 
-      expect(changed).toBe(true);
+      expect(updates.title).toBe("New Title");
       expect(changes).toHaveLength(1);
       expect(changes[0]).toEqual({
         field: "title",
@@ -58,28 +59,30 @@ describe("issue helpers", () => {
     });
 
     it("should not track when value is same", () => {
+      const updates: Record<string, unknown> = {};
       const changes: Array<{
         field: string;
         oldValue: string | number | null | undefined;
         newValue: string | number | null | undefined;
       }> = [];
 
-      const changed = trackFieldChange(changes, "title", "Same", "Same");
+      trackFieldChange(updates, changes, "title", "Same", "Same");
 
-      expect(changed).toBe(false);
+      expect(updates.title).toBeUndefined();
       expect(changes).toHaveLength(0);
     });
 
     it("should not track when newValue is undefined", () => {
+      const updates: Record<string, unknown> = {};
       const changes: Array<{
         field: string;
         oldValue: string | number | null | undefined;
         newValue: string | number | null | undefined;
       }> = [];
 
-      const changed = trackFieldChange(changes, "title", "Old", undefined);
+      trackFieldChange(updates, changes, "title", "Old", undefined);
 
-      expect(changed).toBe(false);
+      expect(updates.title).toBeUndefined();
       expect(changes).toHaveLength(0);
     });
   });
