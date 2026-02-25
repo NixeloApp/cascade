@@ -9,7 +9,7 @@ import { createTestContext } from "./testUtils";
 
 describe("Event Reminders - listUpcoming", () => {
   async function createCalendarEvent(
-    t: ReturnType<typeof convexTest>,
+    t: ReturnType<typeof convexTest<typeof schema>>,
     organizerId: Id<"users">,
     options: {
       title?: string;
