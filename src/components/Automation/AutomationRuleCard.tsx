@@ -126,7 +126,9 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
             onClick={handleToggle}
             className="h-8 w-8"
             title={rule.isActive ? "Disable rule" : "Enable rule"}
-            aria-label={rule.isActive ? "Disable rule" : "Enable rule"}
+            aria-label={
+              rule.isActive ? `Disable rule: ${rule.name}` : `Enable rule: ${rule.name}`
+            }
           >
             <Icon icon={rule.isActive ? Pause : Play} size="sm" />
           </Button>
@@ -136,7 +138,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
             onClick={onEdit}
             className="h-8 w-8"
             title="Edit rule"
-            aria-label="Edit rule"
+            aria-label={`Edit rule: ${rule.name}`}
           >
             <Icon icon={Pencil} size="sm" />
           </Button>
@@ -146,7 +148,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
             onClick={onDelete}
             className="h-8 w-8"
             title="Delete rule"
-            aria-label="Delete rule"
+            aria-label={`Delete rule: ${rule.name}`}
           >
             <Icon icon={Trash2} size="sm" />
           </Button>
