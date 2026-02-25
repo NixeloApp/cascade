@@ -1,12 +1,9 @@
 import { convexTest } from "convex-test";
-import { expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import {
-  asAuthenticatedUser,
-  createTestUser,
-} from "./testUtils";
+import { asAuthenticatedUser, createTestUser } from "./testUtils";
 
 // Mock safeFetch
 const mockSafeFetch = vi.fn();
