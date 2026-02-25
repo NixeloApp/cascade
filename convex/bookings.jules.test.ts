@@ -1,10 +1,29 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
+import type { MutationCtx } from "./_generated/server";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { DAY } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
+
+// Helper to set up full availability for a user
+async function setupFullAvailability(t: ReturnType<typeof convexTest>, userId: Id<"users">) {
+  await t.run(async (ctx: MutationCtx) => {
+    const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    for (const day of days) {
+      await ctx.db.insert("availabilitySlots", {
+        userId,
+        dayOfWeek: day,
+        startTime: "00:00",
+        endTime: "23:59",
+        timezone: "UTC",
+        isActive: true,
+      });
+    }
+  });
+}
 
 describe("Booking Return Types", () => {
   it("should return success object for booking pages mutations", async () => {
@@ -45,6 +64,9 @@ describe("Booking Return Types", () => {
     const t = convexTest(schema, modules);
     const hostId = await createTestUser(t);
     const asHost = asAuthenticatedUser(t, hostId);
+
+    // Set up availability for the host (required for booking validation)
+    await setupFullAvailability(t, hostId);
 
     // Create a booking page
     const { pageId } = await asHost.mutation(api.bookingPages.create, {
