@@ -28,6 +28,7 @@ export type ErrorCode =
   | "VALIDATION" // Invalid input
   | "CONFLICT" // Resource state conflict (e.g., duplicate)
   | "RATE_LIMITED" // Too many requests
+  | "UPSTREAM" // External service failure (e.g., GitHub, Stripe)
   | "INTERNAL"; // Unexpected server error
 
 /**
@@ -147,6 +148,24 @@ export function rateLimited(retryAfter?: number): ConvexError<ErrorData> {
     message: retryAfter
       ? `Rate limit exceeded. Retry after ${retryAfter} seconds.`
       : "Rate limit exceeded.",
+  });
+}
+
+/**
+ * Upstream service failure.
+ * Use when an external API (GitHub, Stripe, etc.) fails or returns an error.
+ *
+ * @param service - Name of the external service
+ * @param message - Description of the failure (safe for client)
+ *
+ * @example
+ * throw upstream("GitHub", "Failed to fetch user repositories");
+ */
+export function upstream(service: string, message: string): ConvexError<ErrorData> {
+  return new ConvexError({
+    code: "UPSTREAM",
+    service,
+    message,
   });
 }
 
@@ -297,6 +316,8 @@ function getDefaultMessage(code: ErrorCode): string {
       return "This action conflicts with existing data";
     case "RATE_LIMITED":
       return "Too many requests. Please try again later.";
+    case "UPSTREAM":
+      return "An external service is temporarily unavailable.";
     case "INTERNAL":
       return "Something went wrong. Please try again.";
   }
