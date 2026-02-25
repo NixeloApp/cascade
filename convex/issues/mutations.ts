@@ -25,6 +25,7 @@ import {
   issueKeyExists,
   notifyCommentParticipants,
   performBulkUpdate,
+  performSimpleBulkUpdate,
   processIssueUpdates,
   resolveLabelNames,
   validateParentIssue,
@@ -493,17 +494,7 @@ export const bulkUpdatePriority = authenticatedMutation({
   },
   returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
-    return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
-      return {
-        patch: { priority: args.priority },
-        activity: {
-          action: "updated",
-          field: "priority",
-          oldValue: issue.priority,
-          newValue: args.priority,
-        },
-      };
-    });
+    return performSimpleBulkUpdate(ctx, args.issueIds, "priority", args.priority);
   },
 });
 
@@ -525,17 +516,7 @@ export const bulkAssign = authenticatedMutation({
   },
   returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
-    return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
-      return {
-        patch: { assigneeId: args.assigneeId ?? undefined },
-        activity: {
-          action: "updated",
-          field: "assignee",
-          oldValue: issue.assigneeId ? String(issue.assigneeId) : "",
-          newValue: args.assigneeId ? String(args.assigneeId) : "",
-        },
-      };
-    });
+    return performSimpleBulkUpdate(ctx, args.issueIds, "assigneeId", args.assigneeId, "assignee");
   },
 });
 
@@ -590,17 +571,7 @@ export const bulkMoveToSprint = authenticatedMutation({
   },
   returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
-    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
-      return {
-        patch: { sprintId: args.sprintId ?? undefined },
-        activity: {
-          action: "updated",
-          field: "sprint",
-          oldValue: issue.sprintId ? String(issue.sprintId) : "",
-          newValue: args.sprintId ? String(args.sprintId) : "",
-        },
-      };
-    });
+    return performSimpleBulkUpdate(ctx, args.issueIds, "sprintId", args.sprintId, "sprint");
   },
 });
 

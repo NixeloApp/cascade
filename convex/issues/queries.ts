@@ -75,8 +75,7 @@ export const getUserIssueCount = authenticatedQuery({
   handler: async (ctx) => {
     const issues = await ctx.db
       .query("issues")
-      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId))
-      .filter(notDeleted)
+      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
       .take(1); // Just need to know if there's at least one
 
     return issues.length;
@@ -91,8 +90,7 @@ export const listByUser = authenticatedQuery({
     // Paginate assigned issues
     const assignedResult = await ctx.db
       .query("issues")
-      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId))
-      .filter(notDeleted)
+      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
       .paginate(args.paginationOpts);
 
     const mappedIssues = assignedResult.page.map((issue) => ({
@@ -1420,9 +1418,9 @@ async function fetchByUserIndex(
           q
             .eq("projectId", projectId)
             .eq("assigneeId", targetAssigneeId as Id<"users">)
-            .eq("status", status),
+            .eq("status", status)
+            .lt("isDeleted", true),
         )
-        .filter(notDeleted)
         .order("desc"),
       fetchLimit,
       "issue search by project assignee status",
@@ -1434,9 +1432,8 @@ async function fetchByUserIndex(
       ctx.db
         .query("issues")
         .withIndex("by_project_assignee", (q) =>
-          q.eq("projectId", projectId).eq("assigneeId", targetAssigneeId),
+          q.eq("projectId", projectId).eq("assigneeId", targetAssigneeId).lt("isDeleted", true),
         )
-        .filter(notDeleted)
         .order("desc"),
       fetchLimit,
       "issue search by project assignee",
@@ -1448,9 +1445,11 @@ async function fetchByUserIndex(
       ctx.db
         .query("issues")
         .withIndex("by_project_reporter", (q) =>
-          q.eq("projectId", projectId).eq("reporterId", args.reporterId as Id<"users">),
+          q
+            .eq("projectId", projectId)
+            .eq("reporterId", args.reporterId as Id<"users">)
+            .lt("isDeleted", true),
         )
-        .filter(notDeleted)
         .order("desc"),
       fetchLimit,
       "issue search by project reporter",

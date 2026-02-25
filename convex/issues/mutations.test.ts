@@ -711,5 +711,77 @@ describe("Issue Mutations", () => {
         await t.finishInProgressScheduledFunctions();
       });
     });
+
+    describe("bulkMoveToSprint", () => {
+      it("should move issues to a sprint", async () => {
+        const t = convexTest(schema, modules);
+        const { userId, organizationId, asUser } = await createTestContext(t);
+
+        const projectId = await createProjectInOrganization(t, userId, organizationId, {
+          name: "Bulk Sprint Project",
+          key: "BULKS",
+        });
+
+        const sprintId = await t.run(async (ctx) => {
+          return await ctx.db.insert("sprints", {
+            projectId,
+            name: "Sprint 1",
+            status: "active",
+            createdBy: userId,
+            updatedAt: Date.now(),
+          });
+        });
+
+        const issue1 = await createTestIssue(t, projectId, userId, { title: "Issue 1" });
+        const issue2 = await createTestIssue(t, projectId, userId, { title: "Issue 2" });
+
+        const result = await asUser.mutation(api.issues.bulkMoveToSprint, {
+          issueIds: [issue1, issue2],
+          sprintId,
+        });
+
+        expect(result.updated).toBe(2);
+
+        const updated1 = await asUser.query(api.issues.getIssue, { id: issue1 });
+        const updated2 = await asUser.query(api.issues.getIssue, { id: issue2 });
+        expect(updated1?.sprintId).toBe(sprintId);
+        expect(updated2?.sprintId).toBe(sprintId);
+        await t.finishInProgressScheduledFunctions();
+      });
+
+      it("should remove issues from sprint when sprintId is null", async () => {
+        const t = convexTest(schema, modules);
+        const { userId, organizationId, asUser } = await createTestContext(t);
+
+        const projectId = await createProjectInOrganization(t, userId, organizationId, {
+          name: "Bulk Unsprint Project",
+          key: "BULKU",
+        });
+
+        const sprintId = await t.run(async (ctx) => {
+          return await ctx.db.insert("sprints", {
+            projectId,
+            name: "Sprint 1",
+            status: "active",
+            createdBy: userId,
+            updatedAt: Date.now(),
+          });
+        });
+
+        const issue = await createTestIssue(t, projectId, userId, {
+          title: "Sprinted Issue",
+          sprintId,
+        });
+
+        await asUser.mutation(api.issues.bulkMoveToSprint, {
+          issueIds: [issue],
+          sprintId: null,
+        });
+
+        const updated = await asUser.query(api.issues.getIssue, { id: issue });
+        expect(updated?.sprintId).toBeUndefined();
+        await t.finishInProgressScheduledFunctions();
+      });
+    });
   });
 });
