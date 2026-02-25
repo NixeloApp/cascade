@@ -8,7 +8,7 @@ import { Button, Heading, Hr, Link, Section, Text } from "@react-email/component
 import { EmailLayout } from "./_components/Layout";
 
 interface DigestItem {
-  type: "mention" | "assigned" | "comment";
+  type: "mention" | "assignment" | "comment";
   issueKey: string;
   issueTitle: string;
   issueUrl: string;
@@ -43,7 +43,7 @@ export function DigestEmail({
     switch (type) {
       case "mention":
         return "@";
-      case "assigned":
+      case "assignment":
         return "👤";
       case "comment":
         return "💬";
