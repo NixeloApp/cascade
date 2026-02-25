@@ -17,6 +17,7 @@ import { issueTypesWithSubtask, workflowCategories } from "../validators";
 import {
   applyBulkUpdate,
   assertVersionMatch,
+  fetchIssuesWithProjects,
   generateIssueKey,
   getMaxOrderForStatus,
   getNextVersion,
@@ -494,16 +495,7 @@ export const bulkUpdateStatus = authenticatedMutation({
   returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     // Pre-fetch all issues to build project map (avoids N+1 reads)
-    // Using asyncMap instead of Promise.all to ensure proper parallelism control if needed,
-    // though performBulkUpdate used ctx.db.get inside map which is similar.
-    const allIssues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const validIssues = allIssues.filter((i): i is NonNullable<typeof i> => i !== null);
-    const uniqueProjectIds = [...new Set(validIssues.map((i) => i.projectId))] as Id<"projects">[];
-
-    // Fetch all related projects in one batch
-    const projectDocs = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
-    const validProjects = projectDocs.filter((p): p is NonNullable<typeof p> => p !== null);
-    const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
+    const { issues: validIssues, projectMap } = await fetchIssuesWithProjects(ctx, args.issueIds);
 
     return applyBulkUpdate(ctx, validIssues, async (issue) => {
       // Fetch project to validate status from cache
@@ -823,12 +815,7 @@ export const bulkArchive = authenticatedMutation({
   returns: v.object({ archived: v.number() }),
   handler: async (ctx, args) => {
     // Pre-fetch all issues to build project map (avoids N+1 reads)
-    const allIssues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-    const validIssues = allIssues.filter((i): i is NonNullable<typeof i> => i !== null);
-    const uniqueProjectIds = [...new Set(validIssues.map((i) => i.projectId))] as Id<"projects">[];
-    const projectDocs = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
-    const validProjects = projectDocs.filter((p): p is NonNullable<typeof p> => p !== null);
-    const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
+    const { issues: validIssues, projectMap } = await fetchIssuesWithProjects(ctx, args.issueIds);
 
     const result = await applyBulkUpdate(ctx, validIssues, async (issue, now) => {
       // Already archived?
