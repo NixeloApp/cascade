@@ -288,7 +288,7 @@ describe("Label Groups", () => {
       const labelId = await createLabel(t, projectId, userId, "In Group", "#ff0000", groupId);
 
       const result = await asUser.mutation(api.labelGroups.remove, { id: groupId });
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
 
