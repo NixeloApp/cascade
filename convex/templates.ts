@@ -160,6 +160,7 @@ export const update = authenticatedMutation({
     defaultStoryPoints: v.optional(v.union(v.number(), v.null())),
     isDefault: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
     if (!template) throw notFound("template", args.id);
@@ -183,12 +184,15 @@ export const update = authenticatedMutation({
     }
 
     await ctx.db.patch(args.id, buildTemplateUpdates(args));
+
+    return { success: true } as const;
   },
 });
 
 // Delete a template
 export const remove = authenticatedMutation({
   args: { id: v.id("issueTemplates") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
     if (!template) throw notFound("template", args.id);
@@ -201,5 +205,7 @@ export const remove = authenticatedMutation({
     }
 
     await ctx.db.delete(args.id);
+
+    return { success: true, deleted: true } as const;
   },
 });

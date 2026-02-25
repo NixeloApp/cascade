@@ -140,6 +140,7 @@ export const update = authenticatedMutation({
     name: v.optional(v.string()),
     description: v.optional(v.union(v.string(), v.null())),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const group = await ctx.db.get(args.id);
     if (!group) throw notFound("labelGroup", args.id);
@@ -166,7 +167,7 @@ export const update = authenticatedMutation({
 
     await ctx.db.patch(args.id, updates);
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -177,6 +178,7 @@ export const update = authenticatedMutation({
  */
 export const remove = authenticatedMutation({
   args: { id: v.id("labelGroups") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const group = await ctx.db.get(args.id);
     if (!group) throw notFound("labelGroup", args.id);
@@ -196,7 +198,7 @@ export const remove = authenticatedMutation({
 
     await ctx.db.delete(args.id);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
@@ -208,6 +210,7 @@ export const reorder = projectEditorMutation({
   args: {
     groupIds: v.array(v.id("labelGroups")),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify all groups belong to this project
     const groups = await Promise.all(args.groupIds.map((id) => ctx.db.get(id)));
@@ -226,7 +229,7 @@ export const reorder = projectEditorMutation({
       args.groupIds.map((id, index) => ctx.db.patch(id, { displayOrder: index + 1 })),
     );
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -239,6 +242,7 @@ export const moveLabel = projectEditorMutation({
     labelId: v.id("labels"),
     groupId: v.union(v.id("labelGroups"), v.null()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const label = await ctx.db.get(args.labelId);
     if (!label) throw notFound("label", args.labelId);
@@ -270,7 +274,7 @@ export const moveLabel = projectEditorMutation({
       displayOrder: maxOrder + 1,
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -283,6 +287,7 @@ export const reorderLabels = projectEditorMutation({
     groupId: v.union(v.id("labelGroups"), v.null()),
     labelIds: v.array(v.id("labels")),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify all labels belong to this project and the specified group
     const labels = await Promise.all(args.labelIds.map((id) => ctx.db.get(id)));
@@ -305,6 +310,6 @@ export const reorderLabels = projectEditorMutation({
       args.labelIds.map((id, index) => ctx.db.patch(id, { displayOrder: index + 1 })),
     );
 
-    return { success: true };
+    return { success: true } as const;
   },
 });

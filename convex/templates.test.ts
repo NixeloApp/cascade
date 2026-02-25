@@ -308,13 +308,14 @@ describe("Issue Templates", () => {
         defaultLabels: [],
       });
 
-      await asUser.mutation(api.templates.update, {
+      const result = await asUser.mutation(api.templates.update, {
         id: templateId,
         name: "Updated Name",
         titleTemplate: "Updated Title",
         defaultPriority: "high",
         defaultLabels: ["updated"],
       });
+      expect(result).toEqual({ success: true });
 
       const template = await asUser.query(api.templates.get, { id: templateId });
       expect(template?.name).toBe("Updated Name");
@@ -350,10 +351,11 @@ describe("Issue Templates", () => {
       });
 
       // Update template 2 to be default
-      await asUser.mutation(api.templates.update, {
+      const result = await asUser.mutation(api.templates.update, {
         id: template2Id,
         isDefault: true,
       });
+      expect(result).toEqual({ success: true });
 
       const template1 = await asUser.query(api.templates.get, { id: template1Id });
       const template2 = await asUser.query(api.templates.get, { id: template2Id });
@@ -426,7 +428,8 @@ describe("Issue Templates", () => {
         defaultLabels: [],
       });
 
-      await asUser.mutation(api.templates.remove, { id: templateId });
+      const result = await asUser.mutation(api.templates.remove, { id: templateId });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const template = await asUser.query(api.templates.get, { id: templateId });
       expect(template).toBeNull();
