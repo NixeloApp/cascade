@@ -756,7 +756,7 @@ export const updateProjectMemberRole = projectAdminMutation({
     memberId: v.id("users"),
     newRole: projectRoles,
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), memberId: v.id("users") }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check + provides ctx.projectId, ctx.project
 
@@ -790,7 +790,7 @@ export const updateProjectMemberRole = projectAdminMutation({
       },
     });
 
-    return { success: true } as const;
+    return { success: true, memberId: args.memberId } as const;
   },
 });
 
