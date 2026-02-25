@@ -45,7 +45,7 @@ describe("Notifications Digest Repro", () => {
     expect(resultIds).toContain(assignedId);
 
     // Assert that assigned notification has correct structure
-    const assigned = result.find(n => n._id === assignedId);
+    const assigned = result.find((n) => n._id === assignedId);
     expect(assigned).toBeDefined();
     // type should be "assigned" (which is now supported by DigestEmail)
     expect(assigned?.type).toBe("assigned");
