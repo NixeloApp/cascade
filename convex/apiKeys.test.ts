@@ -103,6 +103,20 @@ describe("API Keys", () => {
 
       expect(result.apiKey).toBeDefined();
     });
+
+    it("should BLOCK creating a GLOBAL key with write permissions", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      await expect(async () => {
+        await asUser.mutation(api.apiKeys.generate, {
+          name: "Global Write Key",
+          scopes: ["issues:write", "issues:delete"],
+          // No projectId provided
+        });
+      }).rejects.toThrow("Global API keys cannot have write permissions");
+    });
   });
 
   function hashApiKey(key: string): string {

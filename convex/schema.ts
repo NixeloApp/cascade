@@ -271,7 +271,7 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_team", ["teamId", "isDeleted"])
+    .index("by_team", ["teamId"])
     .index("by_user", ["userId"])
     .index("by_team_user", ["teamId", "userId"])
     .index("by_role", ["role"])
@@ -405,8 +405,8 @@ const applicationTables = {
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
-    .index("by_project", ["projectId", "isDeleted"])
-    .index("by_user", ["userId", "isDeleted"])
+    .index("by_project", ["projectId"])
+    .index("by_user", ["userId"])
     .index("by_project_user", ["projectId", "userId"])
     .index("by_role", ["role"])
     .index("by_deleted", ["isDeleted"]),
@@ -452,29 +452,29 @@ const applicationTables = {
     .index("by_team", ["teamId"])
     .index("by_team_deleted", ["teamId", "isDeleted"])
     .index("by_key", ["key"])
-    .index("by_assignee", ["assigneeId", "isDeleted"])
-    .index("by_assignee_status", ["assigneeId", "status", "isDeleted"])
-    .index("by_reporter", ["reporterId", "isDeleted"])
+    .index("by_assignee", ["assigneeId"])
+    .index("by_assignee_status", ["assigneeId", "status"])
+    .index("by_reporter", ["reporterId"])
     .index("by_status", ["status"])
-    .index("by_sprint", ["sprintId", "isDeleted"])
-    .index("by_epic", ["epicId", "isDeleted"])
-    .index("by_parent", ["parentId", "isDeleted"])
-    .index("by_project_status", ["projectId", "status", "isDeleted", "order"])
+    .index("by_sprint", ["sprintId"])
+    .index("by_epic", ["epicId"])
+    .index("by_parent", ["parentId"])
+    .index("by_project_status", ["projectId", "status", "order"])
     .index("by_project_status_updated", ["projectId", "status", "updatedAt"])
-    .index("by_project_sprint_status", ["projectId", "sprintId", "status", "isDeleted", "order"])
+    .index("by_project_sprint_status", ["projectId", "sprintId", "status", "order"])
     .index("by_project_sprint_status_updated", ["projectId", "sprintId", "status", "updatedAt"])
     .index("by_project_updated", ["projectId", "updatedAt"])
-    .index("by_project_due_date", ["projectId", "isDeleted", "dueDate"])
-    .index("by_project_type_due_date", ["projectId", "type", "isDeleted", "dueDate"])
-    .index("by_organization_status", ["organizationId", "status", "isDeleted"])
-    .index("by_workspace_status", ["workspaceId", "status", "isDeleted"])
-    .index("by_team_status", ["teamId", "status", "isDeleted", "order"])
+    .index("by_project_due_date", ["projectId", "dueDate"])
+    .index("by_project_type_due_date", ["projectId", "type", "dueDate"])
+    .index("by_organization_status", ["organizationId", "status"])
+    .index("by_workspace_status", ["workspaceId", "status"])
+    .index("by_team_status", ["teamId", "status", "order"])
     .index("by_team_status_updated", ["teamId", "status", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_project_deleted", ["projectId", "isDeleted"])
-    .index("by_project_assignee", ["projectId", "assigneeId", "isDeleted"])
-    .index("by_project_assignee_status", ["projectId", "assigneeId", "status", "isDeleted"])
-    .index("by_project_reporter", ["projectId", "reporterId", "isDeleted"])
+    .index("by_project_assignee", ["projectId", "assigneeId"])
+    .index("by_project_assignee_status", ["projectId", "assigneeId", "status"])
+    .index("by_project_reporter", ["projectId", "reporterId"])
     .searchIndex("search_title", {
       searchField: "searchContent",
       filterFields: [
@@ -487,6 +487,9 @@ const applicationTables = {
         "priority",
         "assigneeId",
         "reporterId",
+        "sprintId",
+        "epicId",
+        "labels",
       ],
     })
     .vectorIndex("by_embedding", {
@@ -494,7 +497,7 @@ const applicationTables = {
       dimensions: 512,
       filterFields: ["projectId", "workspaceId", "teamId"],
     })
-    .index("by_project_type", ["projectId", "type", "isDeleted"]),
+    .index("by_project_type", ["projectId", "type"]),
 
   issueComments: defineTable({
     issueId: v.id("issues"),
@@ -507,7 +510,7 @@ const applicationTables = {
     deletedBy: v.optional(v.id("users")),
   })
     .index("by_issue", ["issueId"])
-    .index("by_author", ["authorId", "isDeleted"])
+    .index("by_author", ["authorId"])
     .index("by_deleted", ["isDeleted"]),
 
   issueCommentReactions: defineTable({

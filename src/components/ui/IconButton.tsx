@@ -2,6 +2,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { Tooltip, type TooltipProps } from "./Tooltip";
 
 /**
  * IconButton - A compact button designed for icons.
@@ -13,10 +14,8 @@ import { cn } from "@/lib/utils";
  * // Basic icon button
  * <IconButton><XIcon /></IconButton>
  *
- * // With tooltip (wrap in Tooltip)
- * <Tooltip content="Close">
- *   <IconButton><XIcon /></IconButton>
- * </Tooltip>
+ * // With tooltip (automatically handles aria-label)
+ * <IconButton tooltip="Close"><XIcon /></IconButton>
  *
  * // Different sizes
  * <IconButton size="sm"><PlusIcon /></IconButton>
@@ -77,19 +76,57 @@ export interface IconButtonProps
     VariantProps<typeof iconButtonVariants> {
   /** Render as child element (for wrapping links, etc.) */
   asChild?: boolean;
+  /**
+   * Optional tooltip text.
+   * If provided, wraps the button in a Tooltip and sets the aria-label (if not explicitly provided).
+   */
+  tooltip?: string;
+  /** Side to display the tooltip */
+  tooltipSide?: TooltipProps["side"];
+  /** Additional class for tooltip content */
+  tooltipClassName?: string;
 }
 
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ className, variant, size, reveal, asChild = false, type = "button", ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      reveal,
+      asChild = false,
+      type = "button",
+      tooltip,
+      tooltipSide,
+      tooltipClassName,
+      ...props
+    },
+    ref,
+  ) => {
+    // Determine effective aria-label
+    // Prefer explicit aria-label from props, fallback to tooltip string
+    const ariaLabel = props["aria-label"] || tooltip;
     const Comp = asChild ? Slot : "button";
-    return (
+
+    const button = (
       <Comp
         className={cn(iconButtonVariants({ variant, size, reveal, className }))}
         ref={ref}
         type={type}
+        aria-label={ariaLabel}
         {...props}
       />
     );
+
+    if (tooltip) {
+      return (
+        <Tooltip content={tooltip} side={tooltipSide} className={tooltipClassName}>
+          {button}
+        </Tooltip>
+      );
+    }
+
+    return button;
   },
 );
 IconButton.displayName = "IconButton";

@@ -66,7 +66,7 @@ function MessageItem({
               variant="ghost"
               size="icon"
               onClick={() => onCopy(message.content, messageId)}
-              className="absolute -right-2 -top-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:shadow-md border border-ui-border bg-ui-bg"
+              className="absolute -right-2 -top-2 h-8 w-8 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shadow-sm hover:shadow-md border border-ui-border bg-ui-bg"
               aria-label="Copy message"
             >
               {isCopied ? (

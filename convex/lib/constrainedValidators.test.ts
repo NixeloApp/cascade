@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import {
   ARRAY_LIMITS,
@@ -10,6 +11,23 @@ import {
   validateStringLength,
   validateUrl,
 } from "./constrainedValidators";
+
+function expectValidationError(fn: () => void, messagePart?: string) {
+  try {
+    fn();
+  } catch (e) {
+    if (e instanceof ConvexError) {
+      const data = e.data as any;
+      expect(data.code).toBe("VALIDATION");
+      if (messagePart) {
+        expect(data.message).toContain(messagePart);
+      }
+      return;
+    }
+    throw e;
+  }
+  throw new Error("Expected validation error");
+}
 
 describe("constrained validators", () => {
   describe("STRING_LIMITS", () => {
@@ -74,13 +92,15 @@ describe("constrained validators", () => {
     });
 
     it("should throw for string below minimum length", () => {
-      expect(() => validateStringLength("", "title", 1, 10)).toThrow(
+      expectValidationError(
+        () => validateStringLength("", "title", 1, 10),
         "title must be at least 1 characters (got 0)",
       );
     });
 
     it("should throw for string above maximum length", () => {
-      expect(() => validateStringLength("this is too long", "name", 1, 5)).toThrow(
+      expectValidationError(
+        () => validateStringLength("this is too long", "name", 1, 5),
         "name must be at most 5 characters (got 16)",
       );
     });
@@ -105,14 +125,16 @@ describe("constrained validators", () => {
     });
 
     it("should throw for array below minimum length", () => {
-      expect(() => validateArrayLength([], "ids", 1, 10)).toThrow(
+      expectValidationError(
+        () => validateArrayLength([], "ids", 1, 10),
         "ids must have at least 1 items (got 0)",
       );
     });
 
     it("should throw for array above maximum length", () => {
       const arr = Array(15).fill(1);
-      expect(() => validateArrayLength(arr, "tags", 0, 10)).toThrow(
+      expectValidationError(
+        () => validateArrayLength(arr, "tags", 0, 10),
         "tags must have at most 10 items (got 15)",
       );
     });
@@ -141,28 +163,32 @@ describe("constrained validators", () => {
     });
 
     it("should reject single character", () => {
-      expect(() => validateProjectKey("A")).toThrow(
-        "Project key must be 2-10 uppercase alphanumeric characters, starting with a letter",
+      expectValidationError(
+        () => validateProjectKey("A"),
+        "projectKey must be 2-10 uppercase alphanumeric characters, starting with a letter",
       );
     });
 
     it("should reject keys starting with number", () => {
-      expect(() => validateProjectKey("1ABC")).toThrow(
-        "Project key must be 2-10 uppercase alphanumeric characters",
+      expectValidationError(
+        () => validateProjectKey("1ABC"),
+        "projectKey must be 2-10 uppercase alphanumeric characters",
       );
     });
 
     it("should reject keys with special characters", () => {
-      expect(() => validateProjectKey("AB-C")).toThrow(
-        "Project key must be 2-10 uppercase alphanumeric characters",
+      expectValidationError(
+        () => validateProjectKey("AB-C"),
+        "projectKey must be 2-10 uppercase alphanumeric characters",
       );
-      expect(() => validateProjectKey("AB_C")).toThrow();
-      expect(() => validateProjectKey("AB C")).toThrow();
+      expectValidationError(() => validateProjectKey("AB_C"));
+      expectValidationError(() => validateProjectKey("AB C"));
     });
 
     it("should reject keys longer than 10 characters", () => {
-      expect(() => validateProjectKey("ABCDEFGHIJK")).toThrow(
-        "Project key must be 2-10 uppercase alphanumeric characters",
+      expectValidationError(
+        () => validateProjectKey("ABCDEFGHIJK"),
+        "projectKey must be 2-10 uppercase alphanumeric characters",
       );
     });
   });
@@ -177,32 +203,40 @@ describe("constrained validators", () => {
     });
 
     it("should reject slugs starting with hyphen", () => {
-      expect(() => validateSlug("-abc")).toThrow("must be lowercase letters, numbers, and hyphens");
+      expectValidationError(
+        () => validateSlug("-abc"),
+        "must be lowercase letters, numbers, and hyphens",
+      );
     });
 
     it("should reject slugs ending with hyphen", () => {
-      expect(() => validateSlug("abc-")).toThrow("must be lowercase letters, numbers, and hyphens");
+      expectValidationError(
+        () => validateSlug("abc-"),
+        "must be lowercase letters, numbers, and hyphens",
+      );
     });
 
     it("should reject uppercase characters", () => {
-      expect(() => validateSlug("MyProject")).toThrow(
+      expectValidationError(
+        () => validateSlug("MyProject"),
         "must be lowercase letters, numbers, and hyphens",
       );
     });
 
     it("should reject special characters", () => {
-      expect(() => validateSlug("my_project")).toThrow();
-      expect(() => validateSlug("my.project")).toThrow();
-      expect(() => validateSlug("my project")).toThrow();
+      expectValidationError(() => validateSlug("my_project"));
+      expectValidationError(() => validateSlug("my.project"));
+      expectValidationError(() => validateSlug("my project"));
     });
 
     it("should reject slugs longer than 50 characters", () => {
       const longSlug = "a".repeat(51);
-      expect(() => validateSlug(longSlug)).toThrow("must be at most 50 characters");
+      expectValidationError(() => validateSlug(longSlug), "must be at most 50 characters");
     });
 
     it("should use custom field name in error", () => {
-      expect(() => validateSlug("-abc", "workspaceSlug")).toThrow(
+      expectValidationError(
+        () => validateSlug("-abc", "workspaceSlug"),
         "workspaceSlug must be lowercase",
       );
     });
@@ -216,20 +250,20 @@ describe("constrained validators", () => {
     });
 
     it("should reject email without @", () => {
-      expect(() => validateEmail("userexample.com")).toThrow("Invalid email format");
+      expectValidationError(() => validateEmail("userexample.com"), "Invalid email format");
     });
 
     it("should reject email without .", () => {
-      expect(() => validateEmail("user@examplecom")).toThrow("Invalid email format");
+      expectValidationError(() => validateEmail("user@examplecom"), "Invalid email format");
     });
 
     it("should reject email too short", () => {
-      expect(() => validateEmail("a@")).toThrow("email must be at least 3 characters");
+      expectValidationError(() => validateEmail("a@"), "email must be at least 3 characters");
     });
 
     it("should reject email too long", () => {
       const longEmail = `${"a".repeat(251)}@b.c`; // 255 chars, exceeds 254 limit
-      expect(() => validateEmail(longEmail)).toThrow("email must be at most 254 characters");
+      expectValidationError(() => validateEmail(longEmail), "email must be at most 254 characters");
     });
   });
 
@@ -241,21 +275,21 @@ describe("constrained validators", () => {
     });
 
     it("should reject invalid URLs", () => {
-      expect(() => validateUrl("not-a-url")).toThrow("must be a valid URL");
-      expect(() => validateUrl("example.com")).toThrow("must be a valid URL");
+      expectValidationError(() => validateUrl("not-a-url"), "must be a valid URL");
+      expectValidationError(() => validateUrl("example.com"), "must be a valid URL");
     });
 
     it("should reject empty URL", () => {
-      expect(() => validateUrl("")).toThrow("must be at least 1 characters");
+      expectValidationError(() => validateUrl(""), "must be at least 1 characters");
     });
 
     it("should reject URL too long", () => {
       const longUrl = `https://example.com/${"a".repeat(2030)}`;
-      expect(() => validateUrl(longUrl)).toThrow("must be at most 2048 characters");
+      expectValidationError(() => validateUrl(longUrl), "must be at most 2048 characters");
     });
 
     it("should use custom field name in error", () => {
-      expect(() => validateUrl("bad", "website")).toThrow("website must be a valid URL");
+      expectValidationError(() => validateUrl("bad", "website"), "website must be a valid URL");
     });
   });
 
@@ -263,7 +297,7 @@ describe("constrained validators", () => {
     describe("validate.projectKey", () => {
       it("should validate project keys", () => {
         expect(() => validate.projectKey("PROJ")).not.toThrow();
-        expect(() => validate.projectKey("A")).toThrow();
+        expectValidationError(() => validate.projectKey("A"));
       });
     });
 
@@ -273,15 +307,19 @@ describe("constrained validators", () => {
       });
 
       it("should reject empty name", () => {
-        expect(() => validate.name("")).toThrow("name must be at least 1 characters");
+        expectValidationError(() => validate.name(""), "name must be at least 1 characters");
       });
 
       it("should reject name over 100 chars", () => {
-        expect(() => validate.name("a".repeat(101))).toThrow("name must be at most 100 characters");
+        expectValidationError(
+          () => validate.name("a".repeat(101)),
+          "name must be at most 100 characters",
+        );
       });
 
       it("should use custom field name", () => {
-        expect(() => validate.name("", "teamName")).toThrow(
+        expectValidationError(
+          () => validate.name("", "teamName"),
           "teamName must be at least 1 characters",
         );
       });
@@ -293,11 +331,12 @@ describe("constrained validators", () => {
       });
 
       it("should reject empty title", () => {
-        expect(() => validate.title("")).toThrow("title must be at least 1 characters");
+        expectValidationError(() => validate.title(""), "title must be at least 1 characters");
       });
 
       it("should reject title over 200 chars", () => {
-        expect(() => validate.title("a".repeat(201))).toThrow(
+        expectValidationError(
+          () => validate.title("a".repeat(201)),
           "title must be at most 200 characters",
         );
       });
@@ -317,7 +356,8 @@ describe("constrained validators", () => {
       });
 
       it("should reject description over 10000 chars", () => {
-        expect(() => validate.description("a".repeat(10001))).toThrow(
+        expectValidationError(
+          () => validate.description("a".repeat(10001)),
           "description must be at most 10000 characters",
         );
       });
@@ -334,7 +374,7 @@ describe("constrained validators", () => {
 
       it("should reject more than 50 tags", () => {
         const manyTags = Array(51).fill("tag");
-        expect(() => validate.tags(manyTags)).toThrow("tags must have at most 50 items");
+        expectValidationError(() => validate.tags(manyTags), "tags must have at most 50 items");
       });
     });
 
@@ -344,12 +384,12 @@ describe("constrained validators", () => {
       });
 
       it("should reject empty bulk IDs", () => {
-        expect(() => validate.bulkIds([])).toThrow("ids must have at least 1 items");
+        expectValidationError(() => validate.bulkIds([]), "ids must have at least 1 items");
       });
 
       it("should reject more than 100 bulk IDs", () => {
         const manyIds = Array(101).fill("id");
-        expect(() => validate.bulkIds(manyIds)).toThrow("ids must have at most 100 items");
+        expectValidationError(() => validate.bulkIds(manyIds), "ids must have at most 100 items");
       });
     });
 
@@ -363,7 +403,7 @@ describe("constrained validators", () => {
       });
 
       it("should reject invalid URL", () => {
-        expect(() => validate.url("not-valid")).toThrow("must be a valid URL");
+        expectValidationError(() => validate.url("not-valid"), "must be a valid URL");
       });
     });
 
@@ -373,7 +413,7 @@ describe("constrained validators", () => {
       });
 
       it("should reject invalid email", () => {
-        expect(() => validate.email("invalid")).toThrow("Invalid email format");
+        expectValidationError(() => validate.email("invalid"), "Invalid email format");
       });
     });
 
@@ -383,11 +423,11 @@ describe("constrained validators", () => {
       });
 
       it("should reject invalid slug", () => {
-        expect(() => validate.slug("My Slug")).toThrow("must be lowercase");
+        expectValidationError(() => validate.slug("My Slug"), "must be lowercase");
       });
 
       it("should use custom field name", () => {
-        expect(() => validate.slug("-bad", "orgSlug")).toThrow("orgSlug must be lowercase");
+        expectValidationError(() => validate.slug("-bad", "orgSlug"), "orgSlug must be lowercase");
       });
     });
   });

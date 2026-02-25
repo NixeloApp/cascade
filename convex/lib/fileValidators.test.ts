@@ -22,12 +22,12 @@ describe("validateAttachment", () => {
 
     const result = await validateAttachment(mockCtx, mockStorageId);
 
-    expect(result).toBe(mockMetadata);
+    expect(result).toEqual({ valid: true, metadata: mockMetadata });
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(mockStorageId);
     expect(mockCtx.storage.delete).not.toHaveBeenCalled();
   });
 
-  it("should throw error if file not found in storage", async () => {
+  it("should return error if file not found in storage", async () => {
     const mockCtx = {
       storage: {
         getMetadata: vi.fn().mockResolvedValue(null),
@@ -35,14 +35,14 @@ describe("validateAttachment", () => {
       },
     } as unknown as MutationCtx;
 
-    await expect(validateAttachment(mockCtx, mockStorageId)).rejects.toThrow(
-      "File not found in storage",
-    );
+    const result = await validateAttachment(mockCtx, mockStorageId);
+
+    expect(result).toEqual({ valid: false, error: "File not found in storage" });
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(mockStorageId);
     expect(mockCtx.storage.delete).not.toHaveBeenCalled();
   });
 
-  it("should delete file and throw error for invalid mime type", async () => {
+  it("should delete file and return error for invalid mime type", async () => {
     const mockMetadata = {
       contentType: "application/x-msdownload", // .exe
       size: 1024,
@@ -55,12 +55,17 @@ describe("validateAttachment", () => {
       },
     } as unknown as MutationCtx;
 
-    await expect(validateAttachment(mockCtx, mockStorageId)).rejects.toThrow(/Invalid file type/);
+    const result = await validateAttachment(mockCtx, mockStorageId);
+
+    expect(result).toEqual({
+      valid: false,
+      error: expect.stringMatching(/Invalid file type/),
+    });
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(mockStorageId);
     expect(mockCtx.storage.delete).toHaveBeenCalledWith(mockStorageId);
   });
 
-  it("should delete file and throw error for missing mime type", async () => {
+  it("should delete file and return error for missing mime type", async () => {
     const mockMetadata = {
       contentType: undefined,
       size: 1024,
@@ -73,12 +78,17 @@ describe("validateAttachment", () => {
       },
     } as unknown as MutationCtx;
 
-    await expect(validateAttachment(mockCtx, mockStorageId)).rejects.toThrow(/Invalid file type/);
+    const result = await validateAttachment(mockCtx, mockStorageId);
+
+    expect(result).toEqual({
+      valid: false,
+      error: expect.stringMatching(/Invalid file type/),
+    });
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(mockStorageId);
     expect(mockCtx.storage.delete).toHaveBeenCalledWith(mockStorageId);
   });
 
-  it("should delete file and throw error for empty string mime type", async () => {
+  it("should delete file and return error for empty string mime type", async () => {
     const mockMetadata = {
       contentType: "",
       size: 1024,
@@ -91,7 +101,12 @@ describe("validateAttachment", () => {
       },
     } as unknown as MutationCtx;
 
-    await expect(validateAttachment(mockCtx, mockStorageId)).rejects.toThrow(/Invalid file type/);
+    const result = await validateAttachment(mockCtx, mockStorageId);
+
+    expect(result).toEqual({
+      valid: false,
+      error: expect.stringMatching(/Invalid file type/),
+    });
     expect(mockCtx.storage.getMetadata).toHaveBeenCalledWith(mockStorageId);
     expect(mockCtx.storage.delete).toHaveBeenCalledWith(mockStorageId);
   });

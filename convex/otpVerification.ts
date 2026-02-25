@@ -30,6 +30,7 @@ async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string
     process.env.NODE_ENV === "development" ||
     process.env.NODE_ENV === "test" ||
     !!process.env.CI ||
+    !!process.env.E2E_TEST_MODE ||
     !!process.env.E2E_API_KEY;
 
   // Store OTPs for test emails ONLY if environment permits it.

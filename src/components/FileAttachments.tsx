@@ -66,13 +66,17 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
         const { storageId } = await result.json();
 
         // Add to issue
-        await addAttachment({
+        const attachResult = await addAttachment({
           issueId,
           storageId,
           filename: file.name,
           contentType: file.type,
           size: file.size,
         });
+
+        if (!attachResult.success) {
+          throw new Error(attachResult.error);
+        }
 
         showSuccess(`Uploaded ${file.name}`);
       }
@@ -215,15 +219,14 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                     </FlexItem>
                   </Flex>
                 </FlexItem>
-                <Flex align="center" gap="xs" className="shrink-0">
+                <Flex
+                  align="center"
+                  gap="xs"
+                  className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                >
                   {attachment.url && (
                     <Tooltip content="Download">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        asChild
-                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-                      >
+                      <Button variant="ghost" size="sm" asChild>
                         <a
                           href={attachment.url}
                           download={attachment.filename}

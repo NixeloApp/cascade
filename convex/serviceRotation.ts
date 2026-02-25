@@ -5,11 +5,12 @@
  * Supports: transcription, email, sms, ai
  */
 
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { requireBotApiKey } from "./lib/botAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
-import { notFound } from "./lib/errors";
+import { notFound, unauthenticated } from "./lib/errors";
 import { freeUnitTypes, serviceTypes } from "./validators";
 
 // Get current month string
@@ -27,6 +28,7 @@ export const selectProvider = query({
   args: {
     serviceType: serviceTypes,
     unitsNeeded: v.optional(v.number()), // Estimate of units needed (optional)
+    apiKey: v.optional(v.string()), // Optional bot API key
   },
   returns: v.union(
     v.object({
@@ -40,6 +42,18 @@ export const selectProvider = query({
     v.null(),
   ),
   handler: async (ctx, args) => {
+    // Dual Authentication: API Key (Bot) OR User Session (Dashboard)
+    if (args.apiKey) {
+      await requireBotApiKey(ctx, args.apiKey);
+    } else {
+      const userId = await getAuthUserId(ctx);
+      if (!userId) {
+        throw unauthenticated();
+      }
+      // Note: Ideally check for admin role here, but enforcing basic auth is a huge improvement
+      // over public access. We assume any authenticated user can view service status for now.
+    }
+
     const month = getCurrentMonth();
 
     // Get all enabled providers for this service type, ordered by priority
@@ -113,6 +127,7 @@ export const getUsageSummary = query({
   args: {
     serviceType: serviceTypes,
     month: v.optional(v.string()),
+    apiKey: v.optional(v.string()), // Optional bot API key
   },
   returns: v.object({
     month: v.string(),
@@ -140,6 +155,16 @@ export const getUsageSummary = query({
     }),
   }),
   handler: async (ctx, args) => {
+    // Dual Authentication: API Key (Bot) OR User Session (Dashboard)
+    if (args.apiKey) {
+      await requireBotApiKey(ctx, args.apiKey);
+    } else {
+      const userId = await getAuthUserId(ctx);
+      if (!userId) {
+        throw unauthenticated();
+      }
+    }
+
     const month = args.month ?? getCurrentMonth();
 
     const providers = await ctx.db

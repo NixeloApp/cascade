@@ -43,6 +43,7 @@ async function storeTestResetOtp(ctx: ConvexAuthContext, email: string, token: s
     process.env.NODE_ENV === "development" ||
     process.env.NODE_ENV === "test" ||
     !!process.env.CI ||
+    !!process.env.E2E_TEST_MODE ||
     !!process.env.E2E_API_KEY;
 
   if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {

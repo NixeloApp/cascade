@@ -72,6 +72,7 @@ export const remove = authenticatedMutation({
   args: {
     linkId: v.id("issueLinks"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const link = await ctx.db.get(args.linkId);
     if (!link) {
@@ -100,6 +101,8 @@ export const remove = authenticatedMutation({
       field: link.linkType,
       oldValue: toIssue?.key || link.toIssueId,
     });
+
+    return { success: true, deleted: true } as const;
   },
 });
 

@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
@@ -7,7 +8,7 @@ import {
   isGoogleOAuthConfigured,
   isLocalhost,
 } from "../lib/env";
-import { getErrorMessage, validation } from "../lib/errors";
+import { getErrorMessage, isAppError, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 import { logger } from "../lib/logger";
@@ -563,13 +564,35 @@ export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
       },
     );
   } catch (error) {
+    let status = 500;
+
+    if (isAppError(error)) {
+      switch (error.data.code) {
+        case "UNAUTHENTICATED":
+          status = 401;
+          break;
+        case "FORBIDDEN":
+          status = 403;
+          break;
+        case "NOT_FOUND":
+          status = 404;
+          break;
+        case "RATE_LIMITED":
+          status = 429;
+          break;
+        case "VALIDATION":
+          status = 400;
+          break;
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: false,
         error: getErrorMessage(error),
       }),
       {
-        status: 500,
+        status,
         headers: { "Content-Type": "application/json" },
       },
     );
@@ -592,14 +615,41 @@ async function fetchGoogleCalendarEvents(accessToken: string): Promise<GoogleCal
     );
     return data.items || [];
   } catch (e) {
-    if (e instanceof HttpError) {
-      throw validation(
-        "googleCalendar",
-        `Failed to fetch Google Calendar events: ${parseGoogleOAuthError(e)}`,
-      );
-    }
-    throw e;
+    handleGoogleFetchError(e);
   }
+}
+
+function handleGoogleFetchError(e: unknown): never {
+  if (e instanceof HttpError) {
+    const message = `Failed to fetch Google Calendar events: ${parseGoogleOAuthError(e)}`;
+
+    if (e.status === 401) {
+      throw new ConvexError({ code: "UNAUTHENTICATED", message });
+    }
+    if (e.status === 403) {
+      throw new ConvexError({ code: "FORBIDDEN", message });
+    }
+    if (e.status === 429) {
+      throw new ConvexError({ code: "RATE_LIMITED", message });
+    }
+    if (e.status === 404) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        resource: "Google Calendar",
+        message,
+      });
+    }
+
+    if (e.status >= 500) {
+      throw new ConvexError({
+        code: "INTERNAL",
+        message,
+      });
+    }
+
+    throw validation("googleCalendar", message);
+  }
+  throw e;
 }
 
 function parseGoogleOAuthError(e: HttpError): string {

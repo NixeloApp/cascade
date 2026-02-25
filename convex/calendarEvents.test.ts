@@ -164,11 +164,12 @@ describe("calendarEvents", () => {
         eventType: "meeting",
       });
 
-      await asUser.mutation(api.calendarEvents.update, {
+      const result = await asUser.mutation(api.calendarEvents.update, {
         id: eventId,
         title: "Updated Title",
         location: "New Location",
       });
+      expect(result).toEqual({ success: true, eventId });
 
       const event = await asUser.query(api.calendarEvents.get, { id: eventId });
       expect(event?.title).toBe("Updated Title");
@@ -239,7 +240,8 @@ describe("calendarEvents", () => {
         eventType: "personal",
       });
 
-      await asUser.mutation(api.calendarEvents.remove, { id: eventId });
+      const result = await asUser.mutation(api.calendarEvents.remove, { id: eventId });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const event = await asUser.query(api.calendarEvents.get, { id: eventId });
       expect(event).toBeNull();

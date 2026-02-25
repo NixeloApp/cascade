@@ -61,9 +61,11 @@ type CreateIssueArgs = Infer<typeof createIssueArgsObject>;
 const createIssueArgsObject = v.object(createIssueArgs);
 
 /**
- * Shared implementation for creating an issue.
+ * Prepares data for creating an issue by validating inputs and resolving defaults.
+ *
+ * Separates business logic (validation, key generation) from persistence.
  */
-async function createIssueImpl(
+async function prepareCreateIssue(
   ctx: MutationCtx & {
     userId: Id<"users">;
     projectId: Id<"projects">;
@@ -71,9 +73,6 @@ async function createIssueImpl(
   },
   args: CreateIssueArgs,
 ) {
-  // Rate limit: 60 issues per minute per user with burst capacity of 15
-  await enforceRateLimit(ctx, "createIssue", ctx.userId);
-
   // Validate input constraints
   validate.title(args.title);
   validate.description(args.description);
@@ -96,6 +95,32 @@ async function createIssueImpl(
   const maxOrder = await getMaxOrderForStatus(ctx, ctx.projectId, defaultStatus);
 
   const labelNames = await resolveLabelNames(ctx, args.labels);
+
+  return {
+    issueKey,
+    inheritedEpicId,
+    defaultStatus,
+    maxOrder,
+    labelNames,
+  };
+}
+
+/**
+ * Shared implementation for creating an issue.
+ */
+async function createIssueImpl(
+  ctx: MutationCtx & {
+    userId: Id<"users">;
+    projectId: Id<"projects">;
+    project: Doc<"projects">;
+  },
+  args: CreateIssueArgs,
+) {
+  // Rate limit: 60 issues per minute per user with burst capacity of 15
+  await enforceRateLimit(ctx, "createIssue", ctx.userId);
+
+  const { issueKey, inheritedEpicId, defaultStatus, maxOrder, labelNames } =
+    await prepareCreateIssue(ctx, args);
 
   const now = Date.now();
   const issueId = await ctx.db.insert("issues", {
@@ -174,6 +199,7 @@ export const updateStatus = issueMutation({
     newOrder: v.number(),
     expectedVersion: v.optional(v.number()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
@@ -199,7 +225,7 @@ export const updateStatus = issueMutation({
       });
     }
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -209,6 +235,7 @@ export const updateStatusByCategory = issueMutation({
     newOrder: v.number(),
     expectedVersion: v.optional(v.number()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
@@ -246,7 +273,7 @@ export const updateStatusByCategory = issueMutation({
       });
     }
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -273,6 +300,7 @@ export const update = issueMutation({
     // Optimistic locking: pass current version to detect concurrent edits
     expectedVersion: v.optional(v.number()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Verify optimistic lock - throws conflict error if version mismatch
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
@@ -298,6 +326,7 @@ export const update = issueMutation({
       const assigneeHasAccess = await canAccessProject(ctx, ctx.issue.projectId, args.assigneeId);
 
       if (assigneeHasAccess) {
+        const actor = await ctx.db.get(ctx.userId);
         // Dynamic import to avoid cycles
         const { sendEmailNotification } = await import("../email/helpers");
         await sendEmailNotification(ctx, {
@@ -305,6 +334,9 @@ export const update = issueMutation({
           type: "assigned",
           issueId: ctx.issue._id,
           actorId: ctx.userId,
+          issue: ctx.issue,
+          project: ctx.project,
+          actorName: actor?.name,
         });
       }
     }
@@ -327,7 +359,7 @@ export const update = issueMutation({
       );
     }
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -346,6 +378,7 @@ export const addComment = issueViewerMutation({
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
   },
+  returns: v.object({ commentId: v.id("issueComments") }),
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
     const now = Date.now();
@@ -366,6 +399,8 @@ export const addComment = issueViewerMutation({
     });
 
     const author = await ctx.db.get(ctx.userId);
+    const actorName = author?.name;
+
     // Dynamic import to avoid cycles
     const { sendEmailNotification } = await import("../email/helpers");
 
@@ -399,6 +434,9 @@ export const addComment = issueViewerMutation({
           issueId: ctx.issue._id,
           actorId: ctx.userId,
           commentText: args.content,
+          issue: ctx.issue,
+          project: ctx.project,
+          actorName,
         }),
       ]),
     );
@@ -423,6 +461,9 @@ export const addComment = issueViewerMutation({
           issueId: ctx.issue._id,
           actorId: ctx.userId,
           commentText: args.content,
+          issue: ctx.issue,
+          project: ctx.project,
+          actorName,
         });
       }
     }
@@ -443,28 +484,28 @@ export const addComment = issueViewerMutation({
  * @param newStatus - The ID of the new status (workflow state).
  * @returns Object containing the number of updated issues.
  */
-
-/**
- * Bulk update the status of multiple issues.
- *
- * - Validates that the new status exists in the project's workflow.
- * - Updates the status of each issue.
- * - Logs activity for each issue.
- * - Skips issues that the user does not have permission to edit.
- *
- * @param issueIds - Array of issue IDs to update.
- * @param newStatus - The ID of the new status (workflow state).
- * @returns Object containing the number of updated issues.
- */
 export const bulkUpdateStatus = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
     newStatus: v.string(),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
-    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
-      // Fetch project to validate status
-      const project = await ctx.db.get(issue.projectId);
+    // Pre-fetch all issues to build project map (avoids N+1 reads)
+    // Using asyncMap instead of Promise.all to ensure proper parallelism control if needed,
+    // though performBulkUpdate used ctx.db.get inside map which is similar.
+    const allIssues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
+    const validIssues = allIssues.filter((i): i is NonNullable<typeof i> => i !== null);
+    const uniqueProjectIds = [...new Set(validIssues.map((i) => i.projectId))] as Id<"projects">[];
+
+    // Fetch all related projects in one batch
+    const projectDocs = await asyncMap(uniqueProjectIds, (id) => ctx.db.get(id));
+    const validProjects = projectDocs.filter((p): p is NonNullable<typeof p> => p !== null);
+    const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
+
+    return applyBulkUpdate(ctx, validIssues, async (issue) => {
+      // Fetch project to validate status from cache
+      const project = projectMap.get(issue.projectId.toString());
       if (!project) return null;
 
       const isValidStatus = project.workflowStates.some((s) => s.id === args.newStatus);
@@ -516,6 +557,7 @@ export const bulkUpdatePriority = authenticatedMutation({
       v.literal("highest"),
     ),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       return {
@@ -547,6 +589,7 @@ export const bulkAssign = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     assigneeId: v.union(v.id("users"), v.null()),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       return {
@@ -578,6 +621,7 @@ export const bulkAddLabels = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     labels: v.array(v.string()),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue) => {
       const updatedLabels = Array.from(new Set([...issue.labels, ...args.labels]));
@@ -610,6 +654,7 @@ export const bulkMoveToSprint = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     sprintId: v.union(v.id("sprints"), v.null()),
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue) => {
       return {
@@ -639,6 +684,7 @@ export const bulkDelete = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
+  returns: v.object({ deleted: v.number() }),
   handler: async (ctx, args) => {
     const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
 
@@ -675,8 +721,14 @@ export const bulkDelete = authenticatedMutation({
 // =============================================================================
 
 /**
- * Archive a single issue
- * Only issues in "done" category can be archived
+ * Archive a single issue.
+ *
+ * - Marks the issue as archived.
+ * - Logs activity.
+ *
+ * @returns Object with success status.
+ * @throws {ConvexError} "Conflict" if the issue is already archived.
+ * @throws {ConvexError} "Validation" if the issue is not in the "done" workflow category.
  */
 export const archive = issueMutation({
   args: {},
@@ -714,7 +766,13 @@ export const archive = issueMutation({
 });
 
 /**
- * Restore (unarchive) a single issue
+ * Restore (unarchive) a single issue.
+ *
+ * - Removes the archived status.
+ * - Logs activity.
+ *
+ * @returns Object with success status.
+ * @throws {ConvexError} "Conflict" if the issue is not archived.
  */
 export const restore = issueMutation({
   args: {},
@@ -760,6 +818,7 @@ export const bulkArchive = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
+  returns: v.object({ archived: v.number() }),
   handler: async (ctx, args) => {
     // Pre-fetch all issues to build project map (avoids N+1 reads)
     const allIssues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
@@ -810,6 +869,7 @@ export const bulkRestore = authenticatedMutation({
   args: {
     issueIds: v.array(v.id("issues")),
   },
+  returns: v.object({ restored: v.number() }),
   handler: async (ctx, args) => {
     const result = await performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       if (!issue.archivedAt) return null;
@@ -845,6 +905,7 @@ export const bulkUpdateDueDate = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     dueDate: v.union(v.number(), v.null()), // null to clear
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       // Validate: due date should not be before start date
@@ -884,6 +945,7 @@ export const bulkUpdateStartDate = authenticatedMutation({
     issueIds: v.array(v.id("issues")),
     startDate: v.union(v.number(), v.null()), // null to clear
   },
+  returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
     return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
       // Validate: start date should not be after due date

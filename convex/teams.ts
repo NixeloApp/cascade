@@ -2,6 +2,7 @@ import { type PaginationResult, paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import {
   authenticatedMutation,
   authenticatedQuery,
@@ -35,6 +36,32 @@ function generateSlug(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+async function generateUniqueTeamSlug(
+  ctx: MutationCtx,
+  organizationId: Id<"organizations">,
+  name: string,
+  excludeTeamId?: Id<"teams">,
+): Promise<string> {
+  const baseSlug = generateSlug(name);
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existing = await ctx.db
+      .query("teams")
+      .withIndex("by_organization_slug", (q) =>
+        q.eq("organizationId", organizationId).eq("slug", slug),
+      )
+      .first();
+
+    if (!existing || (excludeTeamId && existing._id === excludeTeamId)) break;
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  return slug;
+}
+
 // ============================================================================
 // Mutations - Teams
 // ============================================================================
@@ -50,28 +77,12 @@ export const createTeam = organizationMemberMutation({
     description: v.optional(v.string()),
     isPrivate: v.boolean(), // Default privacy for team projects
   },
-
+  returns: v.object({ teamId: v.id("teams"), slug: v.string() }),
   handler: async (ctx, args) => {
     // organizationMemberMutation handles auth + org membership check
 
     // Generate unique slug
-    const baseSlug = generateSlug(args.name);
-    let slug = baseSlug;
-    let counter = 1;
-
-    while (true) {
-      const existing = await ctx.db
-        .query("teams")
-        .withIndex("by_organization_slug", (q) =>
-          q.eq("organizationId", ctx.organizationId).eq("slug", slug),
-        )
-        .first();
-
-      if (!existing) break;
-
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
+    const slug = await generateUniqueTeamSlug(ctx, ctx.organizationId, args.name);
 
     const now = Date.now();
 
@@ -118,6 +129,7 @@ export const updateTeam = teamLeadMutation({
     description: v.optional(v.string()),
     isPrivate: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -134,24 +146,7 @@ export const updateTeam = teamLeadMutation({
     if (args.name !== undefined) {
       updates.name = args.name;
       // Regenerate slug
-      const baseSlug = generateSlug(args.name);
-      let slug = baseSlug;
-      let counter = 1;
-
-      while (true) {
-        const existing = await ctx.db
-          .query("teams")
-          .withIndex("by_organization_slug", (q) =>
-            q.eq("organizationId", ctx.organizationId).eq("slug", slug),
-          )
-          .first();
-
-        if (!existing || existing._id === ctx.teamId) break;
-
-        slug = `${baseSlug}-${counter}`;
-        counter++;
-      }
-      updates.slug = slug;
+      updates.slug = await generateUniqueTeamSlug(ctx, ctx.organizationId, args.name, ctx.teamId);
     }
 
     if (args.description !== undefined) updates.description = args.description;
@@ -168,7 +163,7 @@ export const updateTeam = teamLeadMutation({
       metadata: updates,
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -263,6 +258,7 @@ export const addTeamMember = teamLeadMutation({
     userId: v.id("users"),
     role: teamRoles,
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -304,7 +300,7 @@ export const addTeamMember = teamLeadMutation({
       metadata: { teamId: ctx.teamId, role: args.role },
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -317,6 +313,7 @@ export const updateTeamMemberRole = teamLeadMutation({
     userId: v.id("users"),
     role: teamRoles,
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -340,7 +337,7 @@ export const updateTeamMemberRole = teamLeadMutation({
       metadata: { teamId: ctx.teamId, role: args.role },
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -352,6 +349,7 @@ export const removeTeamMember = teamLeadMutation({
   args: {
     userId: v.id("users"),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -373,7 +371,7 @@ export const removeTeamMember = teamLeadMutation({
       metadata: { teamId: ctx.teamId },
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -510,7 +508,8 @@ export const getTeams = authenticatedQuery({
     const memberCountsPromises = teamIds.map(async (teamId) => {
       return await ctx.db
         .query("teamMembers")
-        .withIndex("by_team", (q) => q.eq("teamId", teamId).lt("isDeleted", true))
+        .withIndex("by_team", (q) => q.eq("teamId", teamId))
+        .filter(notDeleted)
         .take(MAX_TEAM_MEMBERS)
         .then((m) => m.length);
     });
@@ -594,7 +593,8 @@ export const getOrganizationTeams = organizationQuery({
         teamIds.map((teamId) =>
           ctx.db
             .query("teamMembers")
-            .withIndex("by_team", (q) => q.eq("teamId", teamId).lt("isDeleted", true))
+            .withIndex("by_team", (q) => q.eq("teamId", teamId))
+            .filter(notDeleted)
             .take(MAX_TEAM_MEMBERS),
         ),
       ),
@@ -671,7 +671,8 @@ export const getUserTeams = authenticatedQuery({
         teamIds.map((teamId) =>
           ctx.db
             .query("teamMembers")
-            .withIndex("by_team", (q) => q.eq("teamId", teamId).lt("isDeleted", true))
+            .withIndex("by_team", (q) => q.eq("teamId", teamId))
+            .filter(notDeleted)
             .take(MAX_TEAM_MEMBERS),
         ),
       ),
@@ -728,7 +729,8 @@ export const getTeamMembers = teamQuery({
 
     const memberships = await ctx.db
       .query("teamMembers")
-      .withIndex("by_team", (q) => q.eq("teamId", ctx.teamId).lt("isDeleted", true))
+      .withIndex("by_team", (q) => q.eq("teamId", ctx.teamId))
+      .filter(notDeleted)
       .take(MAX_TEAM_MEMBERS);
 
     // Batch fetch all users (both members and addedBy) (avoid N+1!)

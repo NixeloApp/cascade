@@ -49,6 +49,7 @@ export const unwatch = authenticatedMutation({
   args: {
     issueId: v.id("issues"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.boolean() }),
   handler: async (ctx, args) => {
     // Find watcher record
     const watcher = await ctx.db
@@ -57,7 +58,7 @@ export const unwatch = authenticatedMutation({
       .first();
 
     if (!watcher) {
-      return;
+      return { success: true, deleted: false } as const;
     }
 
     // Remove watcher
@@ -69,6 +70,8 @@ export const unwatch = authenticatedMutation({
       userId: ctx.userId,
       action: "stopped_watching",
     });
+
+    return { success: true, deleted: true } as const;
   },
 });
 

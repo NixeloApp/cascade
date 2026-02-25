@@ -14,6 +14,8 @@
  *   }
  */
 
+import { validation } from "./errors";
+
 // =============================================================================
 // String Constraints
 // =============================================================================
@@ -75,10 +77,16 @@ export function validateStringLength(
   maxLength: number,
 ): void {
   if (value.length < minLength) {
-    throw new Error(`${fieldName} must be at least ${minLength} characters (got ${value.length})`);
+    throw validation(
+      fieldName,
+      `${fieldName} must be at least ${minLength} characters (got ${value.length})`,
+    );
   }
   if (value.length > maxLength) {
-    throw new Error(`${fieldName} must be at most ${maxLength} characters (got ${value.length})`);
+    throw validation(
+      fieldName,
+      `${fieldName} must be at most ${maxLength} characters (got ${value.length})`,
+    );
   }
 }
 
@@ -93,10 +101,16 @@ export function validateArrayLength<T>(
   maxLength: number,
 ): void {
   if (value.length < minLength) {
-    throw new Error(`${fieldName} must have at least ${minLength} items (got ${value.length})`);
+    throw validation(
+      fieldName,
+      `${fieldName} must have at least ${minLength} items (got ${value.length})`,
+    );
   }
   if (value.length > maxLength) {
-    throw new Error(`${fieldName} must have at most ${maxLength} items (got ${value.length})`);
+    throw validation(
+      fieldName,
+      `${fieldName} must have at most ${maxLength} items (got ${value.length})`,
+    );
   }
 }
 
@@ -104,11 +118,12 @@ export function validateArrayLength<T>(
  * Validate a project key format.
  * Must be 2-10 uppercase alphanumeric characters, starting with a letter.
  */
-export function validateProjectKey(key: string): void {
+export function validateProjectKey(key: string, fieldName = "projectKey"): void {
   const trimmed = key.trim().toUpperCase();
   if (!/^[A-Z][A-Z0-9]{1,9}$/.test(trimmed)) {
-    throw new Error(
-      "Project key must be 2-10 uppercase alphanumeric characters, starting with a letter (e.g., PROJ, P1)",
+    throw validation(
+      fieldName,
+      `${fieldName} must be 2-10 uppercase alphanumeric characters, starting with a letter (e.g., PROJ, P1)`,
     );
   }
 }
@@ -119,7 +134,8 @@ export function validateProjectKey(key: string): void {
  */
 export function validateSlug(slug: string, fieldName = "slug"): void {
   if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/.test(slug)) {
-    throw new Error(
+    throw validation(
+      fieldName,
       `${fieldName} must be lowercase letters, numbers, and hyphens (e.g., my-project)`,
     );
   }
@@ -129,10 +145,10 @@ export function validateSlug(slug: string, fieldName = "slug"): void {
 /**
  * Validate email format (basic check).
  */
-export function validateEmail(email: string): void {
-  validateStringLength(email, "email", STRING_LIMITS.EMAIL.min, STRING_LIMITS.EMAIL.max);
+export function validateEmail(email: string, fieldName = "email"): void {
+  validateStringLength(email, fieldName, STRING_LIMITS.EMAIL.min, STRING_LIMITS.EMAIL.max);
   if (!(email.includes("@") && email.includes("."))) {
-    throw new Error("Invalid email format");
+    throw validation(fieldName, "Invalid email format");
   }
 }
 
@@ -145,21 +161,21 @@ export function validateUrl(url: string, fieldName = "url"): void {
   try {
     parsed = new URL(url);
   } catch {
-    throw new Error(`${fieldName} must be a valid URL`);
+    throw validation(fieldName, `${fieldName} must be a valid URL`);
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new Error(`${fieldName} must use http or https protocol`);
+    throw validation(fieldName, `${fieldName} must use http or https protocol`);
   }
 }
 
 /**
  * Validate an IANA timezone string.
  */
-export function validateTimezone(timezone: string): void {
+export function validateTimezone(timezone: string, fieldName = "timezone"): void {
   try {
     Intl.DateTimeFormat(undefined, { timeZone: timezone });
   } catch {
-    throw new Error("Invalid IANA timezone (e.g., America/New_York)");
+    throw validation(fieldName, "Invalid IANA timezone (e.g., America/New_York)");
   }
 }
 
@@ -173,7 +189,7 @@ export function validateTimezone(timezone: string): void {
  */
 export const validate = {
   /** Validate a project key (2-10 uppercase letters) */
-  projectKey: (key: string) => validateProjectKey(key),
+  projectKey: (key: string, fieldName = "projectKey") => validateProjectKey(key, fieldName),
 
   /** Validate a name field (1-100 chars) */
   name: (value: string, fieldName = "name") =>
@@ -223,11 +239,11 @@ export const validate = {
   },
 
   /** Validate email */
-  email: (value: string) => validateEmail(value),
+  email: (value: string, fieldName = "email") => validateEmail(value, fieldName),
 
   /** Validate slug */
   slug: (value: string, fieldName = "slug") => validateSlug(value, fieldName),
 
   /** Validate IANA timezone */
-  timezone: (value: string) => validateTimezone(value),
+  timezone: (value: string, fieldName = "timezone") => validateTimezone(value, fieldName),
 };

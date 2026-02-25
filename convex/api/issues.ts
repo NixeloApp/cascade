@@ -17,8 +17,30 @@ import { getClientIp } from "../lib/ssrf";
 
 /**
  * REST API for Issues
+ *
+ * Provides external access to issue data via HTTP endpoints.
+ * All endpoints require authentication via API Key.
  */
 
+/**
+ * Main handler for the Issues API.
+ * Routes requests based on HTTP method and path.
+ *
+ * Supported Endpoints:
+ * - GET /api/issues: List issues for a project
+ *
+ * Authentication:
+ * - Requires `Authorization: Bearer <api_key>` header.
+ * - API Key must have `issues:read` scope.
+ *
+ * Rate Limiting:
+ * - Enforces rate limits based on the API key's tier.
+ * - Returns 429 if limit exceeded.
+ *
+ * @param ctx - The Convex action context.
+ * @param request - The incoming HTTP request.
+ * @returns A Promise resolving to the HTTP Response.
+ */
 export const issuesApiHandler = async (ctx: ActionCtx, request: Request) => {
   const startTime = Date.now();
   const url = new URL(request.url);
@@ -66,13 +88,22 @@ export const issuesApiHandler = async (ctx: ActionCtx, request: Request) => {
   return response;
 };
 
+/**
+ * Exposed HTTP action for the Issues API.
+ * Mounted at /api/issues in `convex/http.ts`.
+ */
 export const handler = httpAction(issuesApiHandler);
 
 /**
  * Convert a thrown value into an HTTP error response and a normalized error message.
  *
- * @param e - The thrown value or Error to normalize
- * @returns An object with `response` set to appropriate status code response; `error` is the extracted error message
+ * Handles:
+ * 1. Convex App Errors (structured errors with codes like NOT_FOUND, FORBIDDEN).
+ * 2. System Errors (e.g. Validator failed).
+ * 3. Unexpected internal errors.
+ *
+ * @param e - The thrown value or Error to normalize.
+ * @returns An object with `response` set to appropriate status code response; `error` is the extracted error message.
  */
 function handleError(e: unknown): { response: Response; error: string } {
   // Use structured error message if available
@@ -104,6 +135,12 @@ function handleError(e: unknown): { response: Response; error: string } {
   return { response: createErrorResponse(500, "Internal server error"), error };
 }
 
+/**
+ * Maps internal application error codes to HTTP status codes.
+ *
+ * @param code - The application error code.
+ * @returns The corresponding HTTP status code.
+ */
 function mapErrorCodeToStatus(code: ErrorCode): number {
   switch (code) {
     case "VALIDATION":
@@ -128,9 +165,8 @@ function mapErrorCodeToStatus(code: ErrorCode): number {
  *
  * Extracts client metadata (user agent, IP, response time) and persists a usage record keyed to the API key; failures to record are logged and do not affect the request flow.
  *
- * @param auth - Authentication context containing `keyId` used to attribute the usage record
- * @param startTime - Millisecond timestamp (from Date.now()) when request processing began; used to compute response time
- * @param error - Optional error message to associate with the recorded usage
+ * @param ctx - The action context.
+ * @param params - Usage data including auth context, request details, and response status.
  */
 async function recordApiUsage(
   ctx: ActionCtx,
@@ -168,6 +204,18 @@ async function recordApiUsage(
   }
 }
 
+/**
+ * Authenticates the request and enforces rate limits.
+ *
+ * 1. Extracts API key from `Authorization` header.
+ * 2. Validates the key against the database (internal query).
+ * 3. Checks if the key is active and not expired.
+ * 4. Enforces rate limits using the token bucket algorithm.
+ *
+ * @param ctx - The action context.
+ * @param request - The incoming HTTP request.
+ * @returns An object containing either the authenticated context (`auth`) or an error response (`response`, `error`).
+ */
 async function authenticateAndRateLimit(
   ctx: ActionCtx,
   request: Request,
@@ -231,6 +279,22 @@ async function authenticateAndRateLimit(
   return { auth };
 }
 
+/**
+ * Handles the GET /api/issues endpoint.
+ * Lists issues for a specific project.
+ *
+ * Requirements:
+ * - `projectId` query parameter is required.
+ * - API Key must have `issues:read` scope.
+ * - IP address must be allowed (if restrictions enabled).
+ * - API Key must have access to the project (if scoped).
+ * - User must have access to the project (RBAC).
+ *
+ * @param ctx - The action context.
+ * @param request - The incoming HTTP request.
+ * @param auth - The authenticated user context.
+ * @returns A JSON Response containing the list of issues.
+ */
 async function handleList(ctx: ActionCtx, request: Request, auth: ApiAuthContext) {
   if (!hasScope(auth, "issues:read")) {
     return createErrorResponse(403, "Missing scope: issues:read");

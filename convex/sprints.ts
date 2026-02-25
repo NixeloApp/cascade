@@ -15,6 +15,7 @@ export const create = projectEditorMutation({
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   },
+  returns: v.object({ sprintId: v.id("sprints") }),
   handler: async (ctx, args) => {
     const now = Date.now();
     const sprintId = await ctx.db.insert("sprints", {
@@ -75,7 +76,8 @@ export const listByProject = projectQuery({
       const totalPromise = efficientCount(
         ctx.db
           .query("issues")
-          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true)),
+          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
+          .filter(notDeleted),
         MAX_SPRINT_ISSUES,
       );
 
@@ -86,9 +88,12 @@ export const listByProject = projectQuery({
           ? efficientCount(
               ctx.db
                 .query("issues")
-                .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId).lt("isDeleted", true))
+                .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
                 .filter((q) =>
-                  q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status))),
+                  q.and(
+                    notDeleted(q),
+                    q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status))),
+                  ),
                 ),
               MAX_SPRINT_ISSUES,
             )
@@ -130,6 +135,7 @@ export const startSprint = sprintMutation({
     startDate: v.number(),
     endDate: v.number(),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // End any currently active sprint (normally only 1, but limit for safety)
     const activeSprints = await ctx.db
@@ -155,7 +161,7 @@ export const startSprint = sprintMutation({
       endDate: args.endDate,
       updatedAt: Date.now(),
     });
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -165,11 +171,12 @@ export const startSprint = sprintMutation({
  */
 export const completeSprint = sprintMutation({
   args: {},
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx) => {
     await ctx.db.patch(ctx.sprint._id, {
       status: "completed",
       updatedAt: Date.now(),
     });
-    return { success: true };
+    return { success: true } as const;
   },
 });
