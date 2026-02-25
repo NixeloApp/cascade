@@ -69,11 +69,11 @@ export function TimerWidget() {
             </output>
 
             {/* Timer display */}
-            <div role="timer" aria-live="off" className="flex items-center">
+            <Flex align="center" role="timer" aria-live="off">
               <Typography variant="label" className="text-brand-indigo-text">
                 {formatDuration(currentDuration)}
               </Typography>
-            </div>
+            </Flex>
 
             {/* Description or Issue */}
             {(runningTimer.description || runningTimer.issue) && (
@@ -83,7 +83,7 @@ export function TimerWidget() {
                 <Typography
                   as="span"
                   variant="caption"
-                  className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate cursor-help focus:outline-none focus:underline"
+                  className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate cursor-help focus-visible:outline-2 focus-visible:outline-brand-indigo-text focus-visible:outline-offset-1 focus:outline-none focus:underline"
                   tabIndex={0}
                 >
                   {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
