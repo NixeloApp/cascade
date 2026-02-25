@@ -81,22 +81,27 @@ export const listByProject = projectQuery({
         MAX_SPRINT_ISSUES,
       );
 
-      // Count completed issues using a single query with filter for all done statuses
-      // This is more efficient than separate queries per status
+      // Count completed issues using the index to avoid scanning all sprint issues
+      // This issues parallel queries for each done status, which is much faster for active sprints
+      // where most issues are not done (avoiding scan of non-done issues).
       const completedPromise =
         doneStatusIds.length > 0
-          ? efficientCount(
-              ctx.db
-                .query("issues")
-                .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
-                .filter((q) =>
-                  q.and(
-                    notDeleted(q),
-                    q.or(...doneStatusIds.map((status) => q.eq(q.field("status"), status))),
-                  ),
+          ? Promise.all(
+              doneStatusIds.map((status) =>
+                efficientCount(
+                  ctx.db
+                    .query("issues")
+                    .withIndex("by_project_sprint_status", (q) =>
+                      q
+                        .eq("projectId", ctx.projectId)
+                        .eq("sprintId", sprintId)
+                        .eq("status", status),
+                    )
+                    .filter(notDeleted),
+                  MAX_SPRINT_ISSUES,
                 ),
-              MAX_SPRINT_ISSUES,
-            )
+              ),
+            ).then((counts) => counts.reduce((a, b) => a + b, 0))
           : Promise.resolve(0);
 
       const [count, completedCount] = await Promise.all([totalPromise, completedPromise]);
