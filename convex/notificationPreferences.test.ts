@@ -51,7 +51,7 @@ describe("Notification Preferences", () => {
       const t = convexTest(schema, modules);
       const { asUser, userId } = await createTestContext(t);
 
-      const prefId = await asUser.mutation(api.notificationPreferences.update, {
+      const { preferenceId } = await asUser.mutation(api.notificationPreferences.update, {
         emailEnabled: true,
         emailMentions: false,
         emailAssignments: true,
@@ -60,7 +60,7 @@ describe("Notification Preferences", () => {
         emailDigest: "daily",
       });
 
-      expect(prefId).toBeDefined();
+      expect(preferenceId).toBeDefined();
 
       const prefs = await asUser.query(api.notificationPreferences.get, {});
       expect(prefs.userId).toBe(userId);

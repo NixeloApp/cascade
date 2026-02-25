@@ -79,6 +79,10 @@ export const update = authenticatedMutation({
     digestDay: v.optional(v.string()),
     digestTime: v.optional(v.string()),
   },
+  returns: v.object({
+    success: v.boolean(),
+    preferenceId: v.id("notificationPreferences"),
+  }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("notificationPreferences")
@@ -90,13 +94,15 @@ export const update = authenticatedMutation({
       updatedAt: Date.now(),
     };
 
+    let preferenceId;
+
     if (existing) {
       // Update existing preferences
       await ctx.db.patch(existing._id, updates);
-      return existing._id;
+      preferenceId = existing._id;
     } else {
       // Create new preferences
-      return await ctx.db.insert("notificationPreferences", {
+      preferenceId = await ctx.db.insert("notificationPreferences", {
         userId: ctx.userId,
         emailEnabled: args.emailEnabled ?? DEFAULT_PREFERENCES.emailEnabled,
         emailMentions: args.emailMentions ?? DEFAULT_PREFERENCES.emailMentions,
@@ -109,6 +115,8 @@ export const update = authenticatedMutation({
         updatedAt: Date.now(),
       });
     }
+
+    return { success: true, preferenceId };
   },
 });
 
