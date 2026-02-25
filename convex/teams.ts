@@ -20,6 +20,7 @@ import { MAX_PROJECTS_PER_TEAM, MAX_TEAM_MEMBERS, MAX_TEAMS_PER_ORG } from "./li
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getTeamRole } from "./lib/teamAccess";
+import { isWorkspaceMember } from "./lib/workspaceAccess";
 import { teamRoles } from "./validators";
 
 // ============================================================================
@@ -80,6 +81,28 @@ export const createTeam = organizationMemberMutation({
   returns: v.object({ teamId: v.id("teams"), slug: v.string() }),
   handler: async (ctx, args) => {
     // organizationMemberMutation handles auth + org membership check
+
+    // Validate workspace belongs to the organization
+    const workspace = await ctx.db.get(args.workspaceId);
+    if (!workspace) {
+      throw notFound("workspace", args.workspaceId);
+    }
+
+    if (workspace.organizationId !== ctx.organizationId) {
+      throw validation("workspaceId", "Workspace does not belong to this organization");
+    }
+
+    // Verify user has access to the workspace
+    // Must be organization admin OR workspace member
+    const isOrgAdmin = ctx.organizationRole === "admin" || ctx.organizationRole === "owner";
+    const isMember = await isWorkspaceMember(ctx, args.workspaceId, ctx.userId);
+
+    if (!isOrgAdmin && !isMember) {
+      throw forbidden(
+        "member",
+        "You must be a workspace member to create a team in this workspace",
+      );
+    }
 
     // Generate unique slug
     const slug = await generateUniqueTeamSlug(ctx, ctx.organizationId, args.name);
