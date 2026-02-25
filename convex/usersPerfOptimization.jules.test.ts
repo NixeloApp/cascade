@@ -11,7 +11,7 @@ import {
 } from "./testUtils";
 
 describe("Users Performance Optimization (Membership Check Strategy)", () => {
-  it("should correctly count shared projects when viewer has > 10 projects", async () => {
+  it("should correctly count shared projects when viewer has between 11 and 50 projects", async () => {
     const t = convexTest(schema, modules);
 
     // User A (Viewer) - will have 15 projects
@@ -57,13 +57,13 @@ describe("Users Performance Optimization (Membership Check Strategy)", () => {
       await createProjectInOrganization(t, userB, organizationId);
     }
 
-    // Verify counts manually
+    // Verify counts manually (use bounded read)
     const userBTotalProjects = await t.run(async (ctx) => {
       return (
         await ctx.db
           .query("projectMembers")
           .withIndex("by_user", (q) => q.eq("userId", userB))
-          .collect()
+          .take(200)
       ).length;
     });
     expect(userBTotalProjects).toBe(sharedCount + onlyBCount); // 100
