@@ -1392,7 +1392,9 @@ const applicationTables = {
     .index("by_billed", ["billed"])
     .index("by_user_project", ["userId", "projectId"])
     .index("by_equity", ["isEquityHour"])
-    .index("by_deleted", ["isDeleted"]),
+    .index("by_deleted", ["isDeleted"])
+    // Active timer lookup (endTime: undefined)
+    .index("by_user_end_time", ["userId", "endTime"]),
 
   userRates: defineTable({
     userId: v.id("users"),
