@@ -123,8 +123,9 @@ export const listEpics = authenticatedQuery({
     const epics = await safeCollect(
       ctx.db
         .query("issues")
-        .withIndex("by_project_type", (q) => q.eq("projectId", args.projectId).eq("type", "epic"))
-        .filter(notDeleted),
+        .withIndex("by_project_type_deleted", (q) =>
+          q.eq("projectId", args.projectId).eq("type", "epic").lt("isDeleted", true),
+        ),
       200, // Reasonable limit for epics
       "project epics",
     );
@@ -243,10 +244,12 @@ async function fetchRoadmapIssuesByType(
       safeCollect(
         ctx.db
           .query("issues")
-          .withIndex("by_project_type", (q) =>
-            q.eq("projectId", projectId).eq("type", type as Doc<"issues">["type"]),
+          .withIndex("by_project_type_deleted", (q) =>
+            q
+              .eq("projectId", projectId)
+              .eq("type", type as Doc<"issues">["type"])
+              .lt("isDeleted", true),
           )
-          .filter(notDeleted)
           .order("desc"),
         BOUNDED_LIST_LIMIT,
         `roadmap issues type=${type}`,
@@ -356,10 +359,9 @@ export const listRoadmapIssuesPaginated = authenticatedQuery({
 
     const result = await ctx.db
       .query("issues")
-      .withIndex("by_project_type", (q) =>
-        q.eq("projectId", args.projectId).eq("type", ROOT_ISSUE_TYPES[0]),
+      .withIndex("by_project_type_deleted", (q) =>
+        q.eq("projectId", args.projectId).eq("type", ROOT_ISSUE_TYPES[0]).lt("isDeleted", true),
       )
-      .filter(notDeleted)
       .paginate(args.paginationOpts);
 
     return {
@@ -389,10 +391,12 @@ export const listSelectableIssues = authenticatedQuery({
       ROOT_ISSUE_TYPES.map((type) =>
         ctx.db
           .query("issues")
-          .withIndex("by_project_type", (q) =>
-            q.eq("projectId", args.projectId).eq("type", type as Doc<"issues">["type"]),
+          .withIndex("by_project_type_deleted", (q) =>
+            q
+              .eq("projectId", args.projectId)
+              .eq("type", type as Doc<"issues">["type"])
+              .lt("isDeleted", true),
           )
-          .filter(notDeleted)
           .order("desc")
           .take(BOUNDED_SELECT_LIMIT),
       ),
