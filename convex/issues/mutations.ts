@@ -24,6 +24,7 @@ import {
   getSearchContent,
   type IssueActivityAction,
   issueKeyExists,
+  notifyCommentParticipants,
   performBulkUpdate,
   processIssueUpdates,
   resolveLabelNames,
@@ -399,77 +400,17 @@ export const addComment = issueViewerMutation({
       action: "commented",
     });
 
-    const author = await ctx.db.get(ctx.userId);
-    const actorName = author?.name;
-
-    // Dynamic import to avoid cycles
-    const { sendEmailNotification } = await import("../email/helpers");
-
-    // Notify mentioned users in parallel
-    const mentionedOthers = mentions.filter((id) => id !== ctx.userId);
-
-    // Filter mentions by project access to prevent leaks
-    const validMentions = (
-      await Promise.all(
-        mentionedOthers.map(async (userId) => {
-          const hasAccess = await canAccessProject(ctx, ctx.projectId, userId);
-          return hasAccess ? userId : null;
-        }),
-      )
-    ).filter((id): id is Id<"users"> => id !== null);
-
-    await Promise.all(
-      validMentions.flatMap((mentionedUserId) => [
-        ctx.db.insert("notifications", {
-          userId: mentionedUserId,
-          type: "issue_mentioned",
-          title: "You were mentioned",
-          message: `${author?.name || "Someone"} mentioned you in ${ctx.issue.key}`,
-          issueId: ctx.issue._id,
-          projectId: ctx.projectId,
-          isRead: false,
-          isDeleted: false,
-        }),
-        sendEmailNotification(ctx, {
-          userId: mentionedUserId,
-          type: "mention",
-          issueId: ctx.issue._id,
-          actorId: ctx.userId,
-          commentText: args.content,
-          issue: ctx.issue,
-          project: ctx.project,
-          actorName,
-        }),
-      ]),
-    );
-
-    if (ctx.issue.reporterId !== ctx.userId) {
-      const reporterHasAccess = await canAccessProject(ctx, ctx.projectId, ctx.issue.reporterId);
-
-      if (reporterHasAccess) {
-        await ctx.db.insert("notifications", {
-          userId: ctx.issue.reporterId,
-          type: "issue_comment",
-          title: "New comment",
-          message: `${author?.name || "Someone"} commented on ${ctx.issue.key}`,
-          issueId: ctx.issue._id,
-          projectId: ctx.projectId,
-          isRead: false,
-          isDeleted: false,
-        });
-
-        await sendEmailNotification(ctx, {
-          userId: ctx.issue.reporterId,
-          type: "comment",
-          issueId: ctx.issue._id,
-          actorId: ctx.userId,
-          commentText: args.content,
-          issue: ctx.issue,
-          project: ctx.project,
-          actorName,
-        });
-      }
-    }
+    await notifyCommentParticipants(ctx, {
+      issueId: ctx.issue._id,
+      issueKey: ctx.issue.key,
+      projectId: ctx.projectId,
+      content: args.content,
+      mentions,
+      actorId: ctx.userId,
+      reporterId: ctx.issue.reporterId,
+      issue: ctx.issue,
+      project: ctx.project,
+    });
 
     return { commentId };
   },

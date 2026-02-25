@@ -3,7 +3,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
 import { notDeleted } from "../lib/softDeleteHelpers";
-import { assertCanEditProject } from "../projectAccess";
+import { assertCanEditProject, canAccessProject } from "../projectAccess";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
 
@@ -653,4 +653,97 @@ export async function fetchIssuesWithProjects(ctx: MutationCtx, issueIds: Id<"is
   const projectMap = new Map(validProjects.map((p) => [p._id.toString(), p]));
 
   return { issues, projectMap };
+}
+
+/**
+ * Handles notifications for issue comments (mentions and reporter notifications).
+ *
+ * @param ctx - Mutation context.
+ * @param args - Arguments including issue, project, content, mentions, etc.
+ */
+export async function notifyCommentParticipants(
+  ctx: MutationCtx,
+  args: {
+    issueId: Id<"issues">;
+    issueKey: string;
+    projectId: Id<"projects">;
+    content: string;
+    mentions: Id<"users">[];
+    actorId: Id<"users">;
+    reporterId: Id<"users">;
+    issue: Doc<"issues">;
+    project: Doc<"projects">;
+  },
+) {
+  const author = await ctx.db.get(args.actorId);
+  const actorName = author?.name;
+
+  // Dynamic import to avoid cycles
+  const { sendEmailNotification } = await import("../email/helpers");
+
+  // Notify mentioned users in parallel
+  const mentionedOthers = args.mentions.filter((id) => id !== args.actorId);
+
+  // Filter mentions by project access to prevent leaks
+  const validMentions = (
+    await Promise.all(
+      mentionedOthers.map(async (userId) => {
+        const hasAccess = await canAccessProject(ctx, args.projectId, userId);
+        return hasAccess ? userId : null;
+      }),
+    )
+  ).filter((id): id is Id<"users"> => id !== null);
+
+  await Promise.all(
+    validMentions.flatMap((mentionedUserId) => [
+      ctx.db.insert("notifications", {
+        userId: mentionedUserId,
+        type: "issue_mentioned",
+        title: "You were mentioned",
+        message: `${author?.name || "Someone"} mentioned you in ${args.issueKey}`,
+        issueId: args.issueId,
+        projectId: args.projectId,
+        isRead: false,
+        isDeleted: false,
+      }),
+      sendEmailNotification(ctx, {
+        userId: mentionedUserId,
+        type: "mention",
+        issueId: args.issueId,
+        actorId: args.actorId,
+        commentText: args.content,
+        issue: args.issue,
+        project: args.project,
+        actorName,
+      }),
+    ]),
+  );
+
+  if (args.reporterId !== args.actorId) {
+    const reporterHasAccess = await canAccessProject(ctx, args.projectId, args.reporterId);
+
+    if (reporterHasAccess) {
+      await ctx.db.insert("notifications", {
+        userId: args.reporterId,
+        type: "issue_comment",
+        title: "New comment",
+        message: `${author?.name || "Someone"} commented on ${args.issueKey}`,
+        issueId: args.issueId,
+        projectId: args.projectId,
+        isRead: false,
+        isDeleted: false,
+      });
+
+      await sendEmailNotification(ctx, {
+        userId: args.reporterId,
+        type: "comment",
+        issueId: args.issueId,
+        actorId: args.actorId,
+        commentText: args.content,
+        issue: args.issue,
+        project: args.project,
+        actorName,
+      });
+    }
+  }
 }

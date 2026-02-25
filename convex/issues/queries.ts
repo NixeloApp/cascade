@@ -86,7 +86,8 @@ export const listByUser = authenticatedQuery({
     // Paginate assigned issues
     const assignedResult = await ctx.db
       .query("issues")
-      .withIndex("by_assignee_deleted", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
+      .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId))
+      .filter(notDeleted)
       .paginate(args.paginationOpts);
 
     const mappedIssues = assignedResult.page.map((issue) => ({
@@ -452,9 +453,7 @@ export const listProjectIssues = authenticatedQuery({
         }
         return db
           .query("issues")
-          .withIndex("by_project_deleted", (q) =>
-            q.eq("projectId", args.projectId).lt("isDeleted", true),
-          )
+          .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
           .order("desc");
       },
     });
