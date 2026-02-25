@@ -1,5 +1,4 @@
 import { type Infer, v } from "convex/values";
-import { asyncMap } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -621,33 +620,21 @@ export const bulkDelete = authenticatedMutation({
   },
   returns: v.object({ deleted: v.number() }),
   handler: async (ctx, args) => {
-    const issues = await asyncMap(args.issueIds, (id) => ctx.db.get(id));
-
-    const results = await Promise.all(
-      issues.map(async (issue) => {
-        if (!issue || issue.isDeleted) return 0;
-
-        try {
-          await assertIsProjectAdmin(ctx, issue.projectId as Id<"projects">, ctx.userId);
-        } catch {
-          return 0;
-        }
-
-        // Soft delete issue
-        await ctx.db.patch(issue._id, softDeleteFields(ctx.userId));
-
-        // Log activity
-        await ctx.db.insert("issueActivity", {
-          issueId: issue._id,
-          userId: ctx.userId,
-          action: "deleted",
-        });
-
-        return 1;
-      }),
+    const result = await performBulkUpdate(
+      ctx,
+      args.issueIds,
+      async () => {
+        return {
+          patch: softDeleteFields(ctx.userId),
+          activity: {
+            action: "deleted",
+          },
+        };
+      },
+      assertIsProjectAdmin,
     );
 
-    return { deleted: results.reduce((a: number, b) => a + b, 0) };
+    return { deleted: result.updated };
   },
 });
 
