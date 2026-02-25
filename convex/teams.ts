@@ -258,7 +258,7 @@ export const addTeamMember = teamLeadMutation({
     userId: v.id("users"),
     role: teamRoles,
   },
-  returns: v.object({ success: v.literal(true), userId: v.id("users") }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -300,7 +300,7 @@ export const addTeamMember = teamLeadMutation({
       metadata: { teamId: ctx.teamId, role: args.role },
     });
 
-    return { success: true, userId: args.userId } as const;
+    return { success: true } as const;
   },
 });
 

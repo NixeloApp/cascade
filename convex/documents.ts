@@ -190,7 +190,7 @@ export const updateTitle = authenticatedMutation({
     id: v.id("documents"),
     title: v.string(),
   },
-  returns: v.object({ success: v.boolean(), documentId: v.id("documents") }),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const document = await getAccessibleDocument(ctx, args.id);
 
@@ -203,13 +203,13 @@ export const updateTitle = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true, documentId: args.id };
+    return { success: true };
   },
 });
 
 export const togglePublic = authenticatedMutation({
   args: { id: v.id("documents") },
-  returns: v.object({ success: v.boolean(), documentId: v.id("documents") }),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -233,7 +233,7 @@ export const togglePublic = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true, documentId: args.id };
+    return { success: true };
   },
 });
 
@@ -1013,7 +1013,7 @@ export const updateComment = authenticatedMutation({
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
   },
-  returns: v.object({ success: v.boolean(), commentId: v.id("documentComments") }),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1033,7 +1033,7 @@ export const updateComment = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true, commentId: args.commentId };
+    return { success: true };
   },
 });
 
