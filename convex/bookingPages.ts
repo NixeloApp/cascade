@@ -195,7 +195,7 @@ export const update = authenticatedMutation({
     requiresConfirmation: v.optional(v.boolean()),
     color: v.optional(v.string()),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), pageId: v.id("bookingPages") }),
   handler: async (ctx, args) => {
     const page = await ctx.db.get(args.id);
     requireOwned(page, ctx.userId, "bookingPage");
@@ -204,7 +204,7 @@ export const update = authenticatedMutation({
     const updates = buildBookingPageUpdates(args);
     await ctx.db.patch(args.id, updates);
 
-    return { success: true } as const;
+    return { success: true, pageId: args.id } as const;
   },
 });
 
@@ -239,7 +239,7 @@ export const toggleActive = authenticatedMutation({
     id: v.id("bookingPages"),
     isActive: v.boolean(),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), pageId: v.id("bookingPages") }),
   handler: async (ctx, args) => {
     const page = await ctx.db.get(args.id);
     requireOwned(page, ctx.userId, "bookingPage");
@@ -249,6 +249,6 @@ export const toggleActive = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true } as const;
+    return { success: true, pageId: args.id } as const;
   },
 });
