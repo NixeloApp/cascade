@@ -209,6 +209,7 @@ export const executeRules = internalMutation({
     });
 
     // Execute matching rules sequentially to avoid race conditions with label updates
+    // (autoRetry pattern ensures sequential execution)
     let currentLabels = issue.labels || [];
 
     for (const rule of matchingRules) {
