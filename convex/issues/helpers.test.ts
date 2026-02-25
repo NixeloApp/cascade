@@ -6,6 +6,7 @@ import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createTestIssue, createTestProject, createTestUser } from "../testUtils";
 import {
+  fetchIssuesWithProjects,
   generateIssueKey,
   getMaxOrderForStatus,
   getSearchContent,
@@ -565,6 +566,43 @@ describe("issue helpers", () => {
       });
 
       expect(maxOrder).toBe(1);
+    });
+  });
+
+  describe("fetchIssuesWithProjects (integration)", () => {
+    it("should fetch issues and projects", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+      const issueId = await createTestIssue(t, projectId, userId);
+
+      const result = await t.run(async (ctx) => {
+        const { issues, projectMap } = await fetchIssuesWithProjects(ctx, [issueId]);
+        // Convert Map to object for Convex serialization
+        return { issues, projects: Object.fromEntries(projectMap) };
+      });
+
+      expect(result.issues).toHaveLength(1);
+      expect(result.issues[0]._id).toBe(issueId);
+      expect(result.projects[projectId.toString()]).toBeDefined();
+    });
+
+    it("should handle missing issues", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+      const issueId = await createTestIssue(t, projectId, userId);
+      const fakeIssueId = "jh71bgkqr4n1pfdx9e1pge7e717mah8k" as Id<"issues">;
+
+      const result = await t.run(async (ctx) => {
+        const { issues, projectMap } = await fetchIssuesWithProjects(ctx, [issueId, fakeIssueId]);
+        // Convert Map to object for Convex serialization
+        return { issues, projects: Object.fromEntries(projectMap) };
+      });
+
+      expect(result.issues).toHaveLength(1);
+      expect(result.issues[0]._id).toBe(issueId);
+      expect(result.projects[projectId.toString()]).toBeDefined();
     });
   });
 });
