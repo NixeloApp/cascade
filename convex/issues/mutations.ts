@@ -623,7 +623,7 @@ export const bulkDelete = authenticatedMutation({
     const result = await performBulkUpdate(
       ctx,
       args.issueIds,
-      async (_issue, _now) => {
+      async () => {
         return {
           patch: softDeleteFields(ctx.userId),
           activity: {
