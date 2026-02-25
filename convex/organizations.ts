@@ -345,7 +345,7 @@ export const removeMember = authenticatedMutation({
     organizationId: v.id("organizations"),
     userId: v.id("users"),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     await assertOrganizationAdmin(ctx, args.organizationId, ctx.userId);
 
@@ -385,7 +385,7 @@ export const removeMember = authenticatedMutation({
       },
     });
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 

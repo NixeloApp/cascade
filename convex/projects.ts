@@ -808,7 +808,7 @@ export const removeProjectMember = projectAdminMutation({
   args: {
     memberId: v.id("users"),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check + provides ctx.projectId, ctx.project
 
@@ -839,7 +839,7 @@ export const removeProjectMember = projectAdminMutation({
       });
     }
 
-    return { success: true } as const;
+    return { success: true, deleted: true } as const;
   },
 });
 
