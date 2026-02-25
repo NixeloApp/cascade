@@ -452,9 +452,9 @@ const applicationTables = {
     .index("by_team", ["teamId"])
     .index("by_team_deleted", ["teamId", "isDeleted"])
     .index("by_key", ["key"])
-    .index("by_assignee", ["assigneeId"])
-    .index("by_assignee_status", ["assigneeId", "status"])
-    .index("by_reporter", ["reporterId"])
+    .index("by_assignee", ["assigneeId", "isDeleted"])
+    .index("by_assignee_status", ["assigneeId", "status", "isDeleted"])
+    .index("by_reporter", ["reporterId", "isDeleted"])
     .index("by_status", ["status"])
     .index("by_sprint", ["sprintId"])
     .index("by_epic", ["epicId"])
@@ -472,9 +472,9 @@ const applicationTables = {
     .index("by_team_status_updated", ["teamId", "status", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
     .index("by_project_deleted", ["projectId", "isDeleted"])
-    .index("by_project_assignee", ["projectId", "assigneeId"])
-    .index("by_project_assignee_status", ["projectId", "assigneeId", "status"])
-    .index("by_project_reporter", ["projectId", "reporterId"])
+    .index("by_project_assignee", ["projectId", "assigneeId", "isDeleted"])
+    .index("by_project_assignee_status", ["projectId", "assigneeId", "status", "isDeleted"])
+    .index("by_project_reporter", ["projectId", "reporterId", "isDeleted"])
     .searchIndex("search_title", {
       searchField: "searchContent",
       filterFields: [

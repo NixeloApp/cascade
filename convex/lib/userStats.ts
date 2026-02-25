@@ -59,8 +59,7 @@ async function countIssuesByReporterUnrestricted(ctx: QueryCtx, reporterId: Id<"
   return await efficientCount(
     ctx.db
       .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
-      .filter(notDeleted),
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true)),
     MAX_ISSUES_FOR_STATS,
   );
 }
@@ -95,9 +94,8 @@ async function countIssuesByReporterFast(
       ctx.db
         .query("issues")
         .withIndex("by_project_reporter", (q) =>
-          q.eq("projectId", projectId).eq("reporterId", reporterId),
-        )
-        .filter(notDeleted),
+          q.eq("projectId", projectId).eq("reporterId", reporterId).lt("isDeleted", true),
+        ),
   );
   return Math.min(count, MAX_ISSUES_FOR_STATS);
 }
@@ -114,8 +112,7 @@ async function countIssuesByReporterFiltered(
   return await efficientCount(
     ctx.db
       .query("issues")
-      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId))
-      .filter(notDeleted)
+      .withIndex("by_reporter", (q) => q.eq("reporterId", reporterId).lt("isDeleted", true))
       .filter((q) => isAllowedProject(q, projectIds)),
     MAX_ISSUES_FOR_STATS,
   );
@@ -153,15 +150,15 @@ async function countIssuesByAssigneeUnrestricted(ctx: QueryCtx, assigneeId: Id<"
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
-        .filter(notDeleted),
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true)),
       MAX_ISSUES_FOR_STATS,
     ),
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee_status", (q) => q.eq("assigneeId", assigneeId).eq("status", "done"))
-        .filter(notDeleted),
+        .withIndex("by_assignee_status", (q) =>
+          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+        ),
       MAX_ISSUES_FOR_STATS,
     ),
   ]);
@@ -185,9 +182,8 @@ async function countIssuesByAssigneeFast(
       ctx.db
         .query("issues")
         .withIndex("by_project_assignee", (q) =>
-          q.eq("projectId", projectId).eq("assigneeId", assigneeId),
-        )
-        .filter(notDeleted),
+          q.eq("projectId", projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+        ),
     ),
     // 2. Completed: Parallel efficient counts on by_project_assignee_status index
     // This uses a direct index lookup for done issues in the project, avoiding scanning
@@ -196,9 +192,12 @@ async function countIssuesByAssigneeFast(
       ctx.db
         .query("issues")
         .withIndex("by_project_assignee_status", (q) =>
-          q.eq("projectId", projectId).eq("assigneeId", assigneeId).eq("status", "done"),
-        )
-        .filter(notDeleted),
+          q
+            .eq("projectId", projectId)
+            .eq("assigneeId", assigneeId)
+            .eq("status", "done")
+            .lt("isDeleted", true),
+        ),
     ),
   ]);
 
@@ -218,16 +217,16 @@ async function countIssuesByAssigneeFiltered(
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId))
-        .filter(notDeleted)
+        .withIndex("by_assignee", (q) => q.eq("assigneeId", assigneeId).lt("isDeleted", true))
         .filter((q) => isAllowedProject(q, projectIds)),
       MAX_ISSUES_FOR_STATS,
     ),
     efficientCount(
       ctx.db
         .query("issues")
-        .withIndex("by_assignee_status", (q) => q.eq("assigneeId", assigneeId).eq("status", "done"))
-        .filter(notDeleted)
+        .withIndex("by_assignee_status", (q) =>
+          q.eq("assigneeId", assigneeId).eq("status", "done").lt("isDeleted", true),
+        )
         .filter((q) => isAllowedProject(q, projectIds)),
       MAX_ISSUES_FOR_STATS,
     ),
