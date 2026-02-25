@@ -11,7 +11,7 @@ import { getVoyageApiKey } from "../lib/env";
 import { notFound, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { MINUTE } from "../lib/timeUtils";
-import { assertCanAccessProject, assertCanEditProject } from "../projectAccess";
+import { assertCanAccessProject } from "../projectAccess";
 import { chatRoles } from "../validators";
 
 /**
@@ -143,19 +143,6 @@ export const addMessage = internalMutation({
     await ctx.db.patch(args.chatId, {
       updatedAt: Date.now(),
     });
-  },
-});
-
-/**
- * Check if user can edit a project (for actions)
- */
-export const checkProjectEditAccess = internalQuery({
-  args: {
-    projectId: v.id("projects"),
-    userId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    await assertCanEditProject(ctx, args.projectId, args.userId);
   },
 });
 
