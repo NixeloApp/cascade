@@ -136,6 +136,22 @@ describe("AppSidebar Accessibility", () => {
     expect(documentsLink).toHaveAttribute("aria-current", "page");
   });
 
+  it("renders organization name with a tooltip", async () => {
+    const user = userEvent.setup();
+    render(<AppSidebar />);
+
+    const orgLink = screen.getByRole("link", { name: "Demo Org" });
+    expect(orgLink).toBeInTheDocument();
+
+    await user.hover(orgLink);
+
+    await waitFor(() => {
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toBeInTheDocument();
+      expect(tooltip).toHaveTextContent("Demo Org");
+    });
+  });
+
   it("adds aria-current='page' to active Document sub-item and NOT the parent section", async () => {
     // Setup documents query to return a doc
     (useQuery as any).mockImplementation((query: any) => {
