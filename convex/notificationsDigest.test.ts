@@ -22,7 +22,7 @@ describe("Notifications Digest", () => {
       return await ctx.db.insert("notifications", {
         userId,
         actorId,
-        type: "test",
+        type: "comment",
         title: "Notification 1",
         message: "Oldest",
         isRead: false,
@@ -39,7 +39,7 @@ describe("Notifications Digest", () => {
       return await ctx.db.insert("notifications", {
         userId,
         actorId,
-        type: "test",
+        type: "comment",
         title: "Notification 2",
         message: "Middle",
         isRead: false,
@@ -50,7 +50,7 @@ describe("Notifications Digest", () => {
       return await ctx.db.insert("notifications", {
         userId,
         actorId,
-        type: "test",
+        type: "comment",
         title: "Notification 3",
         message: "Newest",
         isRead: false,
@@ -85,7 +85,7 @@ describe("Notifications Digest", () => {
     const activeId = await t.run(async (ctx) => {
       return await ctx.db.insert("notifications", {
         userId,
-        type: "test",
+        type: "comment",
         title: "Active",
         message: "Active",
         isRead: false,
@@ -96,7 +96,7 @@ describe("Notifications Digest", () => {
     const deletedId = await t.run(async (ctx) => {
       return await ctx.db.insert("notifications", {
         userId,
-        type: "test",
+        type: "comment",
         title: "Deleted",
         message: "Deleted",
         isRead: false,
@@ -141,7 +141,7 @@ describe("Notifications Digest", () => {
         userId,
         actorId,
         issueId,
-        type: "issue_assigned",
+        type: "assigned",
         title: "Assigned",
         message: "You have been assigned",
         isRead: false,
@@ -168,7 +168,7 @@ describe("Notifications Digest", () => {
       for (let i = 0; i < 105; i++) {
         await ctx.db.insert("notifications", {
           userId,
-          type: "test",
+          type: "comment",
           title: `Notification ${i}`,
           message: "Test",
           isRead: false,
@@ -194,7 +194,7 @@ describe("Notifications Digest", () => {
       const id = await t.run(async (ctx) => {
         return await ctx.db.insert("notifications", {
           userId,
-          type: "test",
+          type: "comment",
           title: `Notification ${i}`,
           message: "Test",
           isRead: false,
@@ -222,7 +222,7 @@ describe("Notifications Digest", () => {
     const notificationId = await t.run(async (ctx) => {
       return await ctx.db.insert("notifications", {
         userId,
-        type: "test",
+        type: "comment",
         title: "Exact Time",
         message: "Test",
         isRead: false,
