@@ -129,7 +129,7 @@ export const updateTeam = teamLeadMutation({
     description: v.optional(v.string()),
     isPrivate: v.optional(v.boolean()),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), teamId: v.id("teams") }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -163,7 +163,7 @@ export const updateTeam = teamLeadMutation({
       metadata: updates,
     });
 
-    return { success: true } as const;
+    return { success: true, teamId: ctx.teamId } as const;
   },
 });
 
