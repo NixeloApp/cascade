@@ -3,7 +3,12 @@ import { describe, it } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import { addProjectMember, createTestProject, createTestUser, expectThrowsAsync } from "../testUtils";
+import {
+  addProjectMember,
+  createTestProject,
+  createTestUser,
+  expectThrowsAsync,
+} from "../testUtils";
 
 describe("AI Suggestions Security", () => {
   it("should prevent viewers (read-only) from triggering suggestions", async () => {

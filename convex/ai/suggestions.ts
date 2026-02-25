@@ -106,16 +106,16 @@ export const suggestIssueDescription = action({
       throw unauthenticated();
     }
 
-    // Rate limit: 20 suggestions per hour per user
-    await rateLimit(ctx, "aiSuggestion", {
-      key: userId,
-      throws: true,
-    });
-
     // Ensure user has edit access to the project
     await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
       projectId: args.projectId,
       userId,
+    });
+
+    // Rate limit: 20 suggestions per hour per user
+    await rateLimit(ctx, "aiSuggestion", {
+      key: userId,
+      throws: true,
     });
 
     // Get project context
@@ -192,16 +192,16 @@ export const suggestPriority = action({
       throw unauthenticated();
     }
 
-    // Rate limit: 20 suggestions per hour per user
-    await rateLimit(ctx, "aiSuggestion", {
-      key: userId,
-      throws: true,
-    });
-
     // Ensure user has edit access to the project
     await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
       projectId: args.projectId,
       userId,
+    });
+
+    // Rate limit: 20 suggestions per hour per user
+    await rateLimit(ctx, "aiSuggestion", {
+      key: userId,
+      throws: true,
     });
 
     const prompt = `Analyze this issue and suggest a priority (highest, high, medium, low, lowest):
@@ -280,16 +280,16 @@ export const suggestLabels = action({
       throw unauthenticated();
     }
 
-    // Rate limit: 20 suggestions per hour per user
-    await rateLimit(ctx, "aiSuggestion", {
-      key: userId,
-      throws: true,
-    });
-
     // Ensure user has edit access to the project
     await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
       projectId: args.projectId,
       userId,
+    });
+
+    // Rate limit: 20 suggestions per hour per user
+    await rateLimit(ctx, "aiSuggestion", {
+      key: userId,
+      throws: true,
     });
 
     // Get existing project labels
