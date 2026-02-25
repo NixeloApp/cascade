@@ -215,6 +215,9 @@ export const listForDigest = internalQuery({
     // We can stop scanning as soon as we see an item older than startTime.
     // This avoids scanning the entire notification history for the user when there are no recent notifications.
     const notifications: Doc<"notifications">[] = [];
+    // Supported types for digest emails
+    const supportedTypes = ["mention", "assigned", "comment"];
+
     for await (const notification of ctx.db
       .query("notifications")
       .withIndex("by_user_active", (q) => q.eq("userId", args.userId).lt("isDeleted", true))
@@ -222,6 +225,11 @@ export const listForDigest = internalQuery({
       if (notification._creationTime < args.startTime) {
         break;
       }
+      // Skip unsupported types (e.g. calendar reminders) which break digest email rendering
+      if (!supportedTypes.includes(notification.type)) {
+        continue;
+      }
+
       notifications.push(notification);
       if (notifications.length >= MAX_DIGEST_NOTIFICATIONS) {
         break;
