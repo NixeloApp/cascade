@@ -15,6 +15,62 @@ import { bookerAnswers } from "./validators";
  * Supports confirmation workflow and calendar integration
  */
 
+/** Parse "HH:MM" to minutes since midnight, or null if invalid. */
+function parseTimeToMinutes(time: string): number | null {
+  const parts = time.split(":");
+  if (parts.length !== 2) return null;
+  const hours = Number.parseInt(parts[0], 10);
+  const minutes = Number.parseInt(parts[1], 10);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return hours * 60 + minutes;
+}
+
+/** Extract day and minutes from DateTimeFormat parts, or null if invalid. */
+function extractDayAndMinutes(
+  parts: Intl.DateTimeFormatPart[],
+): { day: string; minutes: number } | null {
+  const getPart = (type: string) => parts.find((p) => p.type === type)?.value;
+  const day = getPart("weekday")?.toLowerCase();
+  const hourStr = getPart("hour");
+  const minuteStr = getPart("minute");
+  if (!day || !hourStr || !minuteStr) return null;
+  const hour = Number.parseInt(hourStr, 10);
+  const minute = Number.parseInt(minuteStr, 10);
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
+  return { day, minutes: hour * 60 + minute };
+}
+
+/** Check if a booking interval fits within a single slot. */
+function bookingFitsSlot(
+  slot: { dayOfWeek: string; startTime: string; endTime: string; timezone: string },
+  startTime: number,
+  bookingEnd: number,
+): boolean {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: slot.timezone,
+      weekday: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+    const startInfo = extractDayAndMinutes(formatter.formatToParts(new Date(startTime)));
+    const endInfo = extractDayAndMinutes(formatter.formatToParts(new Date(bookingEnd)));
+    if (!startInfo || !endInfo) return false;
+
+    if (startInfo.day !== slot.dayOfWeek || endInfo.day !== slot.dayOfWeek) return false;
+
+    const slotStartMinutes = parseTimeToMinutes(slot.startTime);
+    const slotEndMinutes = parseTimeToMinutes(slot.endTime);
+    if (slotStartMinutes === null || slotEndMinutes === null) return false;
+
+    return startInfo.minutes >= slotStartMinutes && endInfo.minutes <= slotEndMinutes;
+  } catch {
+    return false;
+  }
+}
+
 // Helper to check availability
 async function validateAvailability(
   ctx: MutationCtx,
@@ -29,50 +85,7 @@ async function validateAvailability(
     .take(BOUNDED_LIST_LIMIT);
 
   const bookingEnd = startTime + durationMinutes * MINUTE;
-
-  const isCovered = slots.some((slot) => {
-    try {
-      // Get booking start/end in slot's timezone
-      // Using Intl.DateTimeFormat for reliable extraction
-      const formatter = new Intl.DateTimeFormat("en-US", {
-        timeZone: slot.timezone,
-        weekday: "long",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-
-      const startParts = formatter.formatToParts(new Date(startTime));
-      const endParts = formatter.formatToParts(new Date(bookingEnd));
-
-      const getPart = (parts: Intl.DateTimeFormatPart[], type: string) =>
-        parts.find((p) => p.type === type)?.value;
-
-      const startDay = getPart(startParts, "weekday")?.toLowerCase();
-      const startHour = getPart(startParts, "hour");
-      const startMinute = getPart(startParts, "minute");
-
-      if (startDay !== slot.dayOfWeek) return false;
-
-      // Handle time comparison string "HH:MM"
-      // Note: startHour will be "09", "17", etc.
-      const bookingStartTime = `${startHour}:${startMinute}`;
-
-      if (bookingStartTime < slot.startTime) return false;
-
-      const endDay = getPart(endParts, "weekday")?.toLowerCase();
-      if (endDay !== slot.dayOfWeek) return false; // Spans days
-
-      const bookingEndTime = `${getPart(endParts, "hour")}:${getPart(endParts, "minute")}`;
-
-      if (bookingEndTime > slot.endTime) return false;
-
-      return true;
-    } catch (_e) {
-      // Invalid timezone or other error
-      return false;
-    }
-  });
+  const isCovered = slots.some((slot) => bookingFitsSlot(slot, startTime, bookingEnd));
 
   if (!isCovered) {
     throw validation("startTime", "Selected time is outside available hours");
