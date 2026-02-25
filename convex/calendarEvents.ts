@@ -350,7 +350,7 @@ export const update = authenticatedMutation({
 // Delete an event
 export const remove = authenticatedMutation({
   args: { id: v.id("calendarEvents") },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.id);
     if (!event) throw notFound("calendarEvent", args.id);
@@ -362,7 +362,7 @@ export const remove = authenticatedMutation({
 
     await ctx.db.delete(args.id);
 
-    return { success: true } as const;
+    return { success: true, deleted: true } as const;
   },
 });
 

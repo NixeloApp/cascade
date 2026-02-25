@@ -241,7 +241,7 @@ describe("calendarEvents", () => {
       });
 
       const result = await asUser.mutation(api.calendarEvents.remove, { id: eventId });
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, deleted: true });
 
       const event = await asUser.query(api.calendarEvents.get, { id: eventId });
       expect(event).toBeNull();
