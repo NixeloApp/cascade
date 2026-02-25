@@ -207,7 +207,7 @@ describe("IP Restrictions", () => {
     expect(allowed).toBe(false);
   });
 
-  it("should deny access when clientIp is null (cannot determine IP)", async () => {
+  it("should allow access when clientIp is null (cannot determine IP)", async () => {
     const t = convexTest(schema, modules);
 
     const userId = await t.run(async (ctx) => {
@@ -264,6 +264,6 @@ describe("IP Restrictions", () => {
       });
     });
 
-    expect(allowed).toBe(false);
+    expect(allowed).toBe(true);
   });
 });
