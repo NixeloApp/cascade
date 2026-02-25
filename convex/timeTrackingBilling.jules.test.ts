@@ -1,10 +1,10 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
-import { HOUR } from "./lib/timeUtils";
 
 describe("Time Tracking Billing Security", () => {
   it("should prevent updating billed time entries", async () => {
