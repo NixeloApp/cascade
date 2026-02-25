@@ -5,7 +5,6 @@ import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import {
-  asAuthenticatedUser,
   createProjectInOrganization,
   createTestContext,
   createTestIssue,
@@ -186,7 +185,7 @@ describe("issue search filters", () => {
     expect(result.page.some((i) => i.assigneeId !== undefined)).toBe(false);
 
     // Check specifically that Issue 5 and 6 are NOT in the result
-    const titles = result.page.map(i => i.title);
+    const titles = result.page.map((i) => i.title);
     expect(titles).not.toContain("Searchable Issue 5");
     expect(titles).not.toContain("Searchable Issue 6");
   });
