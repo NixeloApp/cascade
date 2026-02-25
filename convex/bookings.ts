@@ -285,6 +285,7 @@ export const listMyBookings = authenticatedQuery({
 // Confirm a pending booking
 export const confirmBooking = authenticatedMutation({
   args: { id: v.id("bookings") },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const booking = await ctx.db.get(args.id);
     if (!booking) throw notFound("booking", args.id);
@@ -322,6 +323,8 @@ export const confirmBooking = authenticatedMutation({
       calendarEventId: eventId,
       updatedAt: now,
     });
+
+    return { success: true } as const;
   },
 });
 
@@ -331,6 +334,7 @@ export const cancelBooking = authenticatedMutation({
     id: v.id("bookings"),
     reason: v.optional(v.string()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const booking = await ctx.db.get(args.id);
     if (!booking) throw notFound("booking", args.id);
@@ -354,5 +358,7 @@ export const cancelBooking = authenticatedMutation({
       cancellationReason: args.reason,
       updatedAt: Date.now(),
     });
+
+    return { success: true } as const;
   },
 });
