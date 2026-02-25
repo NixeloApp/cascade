@@ -1,10 +1,10 @@
+import { register } from "@convex-dev/rate-limiter/test";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "../testUtils";
-import { register } from "@convex-dev/rate-limiter/test";
 
 // Mock the 'ai' module
 vi.mock("ai", () => ({
@@ -36,10 +36,12 @@ describe("AI Chat Error Handling", () => {
     vi.mocked(generateText).mockRejectedValue(error);
 
     // Expect the action to throw
-    await expect(asUser.action(api.ai.chat.chat, {
-      projectId,
-      message: "Hello AI",
-    })).rejects.toThrow("API Limit Exceeded");
+    await expect(
+      asUser.action(api.ai.chat.chat, {
+        projectId,
+        message: "Hello AI",
+      }),
+    ).rejects.toThrow("API Limit Exceeded");
 
     // Verify side effects
     // 1. Chat should be created
