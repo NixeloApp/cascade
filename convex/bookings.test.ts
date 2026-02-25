@@ -1,6 +1,6 @@
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
@@ -9,6 +9,18 @@ import { modules } from "./testSetup.test-helper";
 import { createTestUser, expectThrowsAsync } from "./testUtils";
 
 describe("Bookings", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    // Set to a known safe time: Monday noon UTC
+    // This avoids "midnight" boundary issues where bookings might span across days
+    // which is not supported by the simple "bookingFitsSlot" logic
+    vi.setSystemTime(new Date("2024-01-01T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   // Helper to create a booking page
   async function createBookingPage(
     t: TestConvex<typeof schema>,
@@ -65,11 +77,8 @@ describe("Bookings", () => {
     await setupFullAvailability(t, hostId);
     await createBookingPage(t, hostId, "test-page");
 
-    // Booking time: Noon UTC tomorrow (safe from midnight crossing)
-    const now = new Date();
-    const startTime = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0),
-    ).getTime();
+    // Booking time: 24 hours from now
+    const startTime = Date.now() + DAY;
 
     const { bookingId } = await t.mutation(api.bookings.createBooking, {
       bookingPageSlug: "test-page",
@@ -100,12 +109,8 @@ describe("Bookings", () => {
     await setupFullAvailability(t, hostId);
     await createBookingPage(t, hostId, "overlap-page");
 
-    // Base booking: T to T+30 (Noon UTC tomorrow)
-    // Ensures we don't cross midnight which would trigger "outside available hours"
-    const now = new Date();
-    const baseTime = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0),
-    ).getTime();
+    // Base booking: T to T+30
+    const baseTime = Date.now() + DAY;
 
     // Create first booking
     await t.mutation(api.bookings.createBooking, {
