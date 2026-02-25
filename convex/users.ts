@@ -14,11 +14,7 @@ import { logger } from "./lib/logger";
 import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
 import { MINUTE } from "./lib/timeUtils";
 import { collectUserStats } from "./lib/userStats";
-import {
-  sanitizeUserForAuth,
-  sanitizeUserForCurrent,
-  sanitizeUserForPublic,
-} from "./lib/userUtils";
+import { sanitizeUserForAuth, sanitizeUserForCurrent } from "./lib/userUtils";
 import { rateLimit } from "./rateLimits";
 import { digestFrequencies } from "./validators";
 
@@ -77,8 +73,8 @@ export const getUser = authenticatedQuery({
       return sanitizeUserForAuth(user);
     }
 
-    // If no shared context, return public profile (no email)
-    return sanitizeUserForPublic(user);
+    // If no shared context, do not reveal user existence or profile
+    return null;
   },
 });
 
