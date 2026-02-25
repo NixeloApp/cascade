@@ -59,10 +59,12 @@ describe("Users Performance Optimization (Membership Check Strategy)", () => {
 
     // Verify counts manually
     const userBTotalProjects = await t.run(async (ctx) => {
-      return (await ctx.db
-        .query("projectMembers")
-        .withIndex("by_user", (q) => q.eq("userId", userB))
-        .collect()).length;
+      return (
+        await ctx.db
+          .query("projectMembers")
+          .withIndex("by_user", (q) => q.eq("userId", userB))
+          .collect()
+      ).length;
     });
     expect(userBTotalProjects).toBe(sharedCount + onlyBCount); // 100
 
