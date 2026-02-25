@@ -36,14 +36,32 @@ describe("AI Suggestions Security", () => {
     // Act as viewer
     const tViewer = t.withIdentity({ subject: viewerId });
 
-    // Attempt to trigger suggestion
+    // Attempt to trigger suggestIssueDescription
     await expectThrowsAsync(async () => {
       await tViewer.action(api.ai.suggestions.suggestIssueDescription, {
         projectId,
         title: "Test Issue",
         type: "task",
       });
-    }, '"requiredRole":"editor"');
+    }, "editor");
+
+    // Attempt to trigger suggestPriority
+    await expectThrowsAsync(async () => {
+      await tViewer.action(api.ai.suggestions.suggestPriority, {
+        projectId,
+        title: "Test Issue",
+        type: "task",
+      });
+    }, "editor");
+
+    // Attempt to trigger suggestLabels
+    await expectThrowsAsync(async () => {
+      await tViewer.action(api.ai.suggestions.suggestLabels, {
+        projectId,
+        title: "Test Issue",
+        type: "task",
+      });
+    }, "editor");
   });
 
   it("should prevent unauthenticated users from responding to suggestions", async () => {
