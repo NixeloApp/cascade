@@ -29,8 +29,14 @@ describe("issue performance queries", () => {
       await createTestIssue(t, projectId, ctx.userId, { title: "Active 2", type: "bug" });
 
       // Create deleted issues
-      const deletedId1 = await createTestIssue(t, projectId, ctx.userId, { title: "Deleted 1", type: "task" });
-      const deletedId2 = await createTestIssue(t, projectId, ctx.userId, { title: "Deleted 2", type: "bug" });
+      const deletedId1 = await createTestIssue(t, projectId, ctx.userId, {
+        title: "Deleted 1",
+        type: "task",
+      });
+      const deletedId2 = await createTestIssue(t, projectId, ctx.userId, {
+        title: "Deleted 2",
+        type: "bug",
+      });
 
       await t.run(async (runCtx) => {
         await runCtx.db.patch(deletedId1, { isDeleted: true });
@@ -41,40 +47,46 @@ describe("issue performance queries", () => {
 
       // Should only return active issues
       expect(result).toHaveLength(2);
-      expect(result.map(i => i.title).sort()).toEqual(["Active 1", "Active 2"]);
+      expect(result.map((i) => i.title).sort()).toEqual(["Active 1", "Active 2"]);
     });
   });
 
   describe("fetchRoadmapIssuesByType (via listRoadmapIssues)", () => {
     it("should filter out deleted issues", async () => {
-        // Create active issues
-        await createTestIssue(t, projectId, ctx.userId, { title: "Roadmap 1", type: "story" });
+      // Create active issues
+      await createTestIssue(t, projectId, ctx.userId, { title: "Roadmap 1", type: "story" });
 
-        // Create deleted issue
-        const deletedId = await createTestIssue(t, projectId, ctx.userId, { title: "Deleted Roadmap", type: "story" });
-        await t.run(async (runCtx) => {
-            await runCtx.db.patch(deletedId, { isDeleted: true });
-        });
+      // Create deleted issue
+      const deletedId = await createTestIssue(t, projectId, ctx.userId, {
+        title: "Deleted Roadmap",
+        type: "story",
+      });
+      await t.run(async (runCtx) => {
+        await runCtx.db.patch(deletedId, { isDeleted: true });
+      });
 
-        const result = await ctx.asUser.query(api.issues.queries.listRoadmapIssues, { projectId });
+      const result = await ctx.asUser.query(api.issues.queries.listRoadmapIssues, { projectId });
 
-        expect(result).toHaveLength(1);
-        expect(result[0].title).toBe("Roadmap 1");
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe("Roadmap 1");
     });
   });
 
   describe("listEpics", () => {
-      it("should filter out deleted epics", async () => {
-          await createTestIssue(t, projectId, ctx.userId, { title: "Epic 1", type: "epic" });
-          const deletedEpic = await createTestIssue(t, projectId, ctx.userId, { title: "Deleted Epic", type: "epic" });
-
-          await t.run(async (runCtx) => {
-              await runCtx.db.patch(deletedEpic, { isDeleted: true });
-          });
-
-          const result = await ctx.asUser.query(api.issues.queries.listEpics, { projectId });
-          expect(result).toHaveLength(1);
-          expect(result[0].title).toBe("Epic 1");
+    it("should filter out deleted epics", async () => {
+      await createTestIssue(t, projectId, ctx.userId, { title: "Epic 1", type: "epic" });
+      const deletedEpic = await createTestIssue(t, projectId, ctx.userId, {
+        title: "Deleted Epic",
+        type: "epic",
       });
+
+      await t.run(async (runCtx) => {
+        await runCtx.db.patch(deletedEpic, { isDeleted: true });
+      });
+
+      const result = await ctx.asUser.query(api.issues.queries.listEpics, { projectId });
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe("Epic 1");
+    });
   });
 });
