@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import { authenticatedMutation, authenticatedQuery, issueMutation } from "./customFunctions";
+import { forbidden, notFound } from "./lib/errors";
 import { validateAttachment } from "./lib/fileValidators";
+import { canAccessProject } from "./projectAccess";
 
 /**
  * Generate upload URL for file attachment
@@ -37,7 +39,7 @@ export const attachToIssue = issueMutation({
 
     // Add attachment to issue
     await ctx.db.patch(ctx.issue._id, {
-      attachments: [...ctx.issue.attachments, args.storageId],
+      attachments: [...(ctx.issue.attachments || []), args.storageId],
       updatedAt: Date.now(),
     });
 
@@ -65,7 +67,7 @@ export const removeAttachment = issueMutation({
   handler: async (ctx, args) => {
     // Remove attachment from issue
     await ctx.db.patch(ctx.issue._id, {
-      attachments: ctx.issue.attachments.filter((id) => id !== args.storageId),
+      attachments: (ctx.issue.attachments || []).filter((id) => id !== args.storageId),
       updatedAt: Date.now(),
     });
 
@@ -86,12 +88,35 @@ export const removeAttachment = issueMutation({
 
 /**
  * Get attachment URL
- * Requires authentication
+ * Requires authentication and access to the associated issue
  */
 export const getAttachment = authenticatedQuery({
-  args: { storageId: v.id("_storage") },
+  args: {
+    storageId: v.id("_storage"),
+    issueId: v.optional(v.id("issues")),
+  },
   handler: async (ctx, args) => {
-    const url = await ctx.storage.getUrl(args.storageId);
-    return url;
+    // Require issue context to enforce permissions
+    if (!args.issueId) {
+      throw forbidden("Access denied: issueId required for verification");
+    }
+
+    const issue = await ctx.db.get(args.issueId);
+    if (!issue) {
+      throw notFound("issue");
+    }
+
+    // Verify user has access to the project/issue
+    const hasAccess = await canAccessProject(ctx, issue.projectId, ctx.userId);
+    if (!hasAccess) {
+      throw forbidden("Access denied");
+    }
+
+    // Verify the attachment actually belongs to this issue
+    if (!issue.attachments?.includes(args.storageId)) {
+      throw forbidden("Attachment does not belong to this issue");
+    }
+
+    return await ctx.storage.getUrl(args.storageId);
   },
 });
