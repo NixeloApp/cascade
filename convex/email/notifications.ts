@@ -318,7 +318,7 @@ export const sendDigestEmail = internalAction({
     };
 
     const items = notifications.map((n: DigestNotification) => ({
-      type: n.type as "mention" | "assignment" | "comment",
+      type: n.type as "mention" | "assigned" | "comment",
       issueKey: n.issueKey || "Unknown",
       issueTitle: n.title,
       issueUrl: `${appUrl}/issues/${n.issueId}`,

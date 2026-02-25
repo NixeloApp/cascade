@@ -17,9 +17,9 @@ vi.mock("convex/react", () => ({
 vi.mock("@convex/_generated/api", () => ({
   api: {
     issueLinks: {
-      getForIssue: "issueLinks.getForIssue",
-      create: "issueLinks.create",
-      remove: "issueLinks.remove",
+      getIssueLinks: "issueLinks.getIssueLinks",
+      createIssueLink: "issueLinks.createIssueLink",
+      deleteIssueLink: "issueLinks.deleteIssueLink",
     },
     issues: {
       search: "issues.search",
@@ -42,7 +42,7 @@ describe("IssueDependencies", () => {
   it("renders dependencies and remove buttons with tooltips", async () => {
     const user = userEvent.setup();
     mockUseQuery.mockImplementation((query) => {
-      if (query === "issueLinks.getForIssue") {
+      if (query === "issueLinks.getIssueLinks") {
         return {
           outgoing: [
             {
