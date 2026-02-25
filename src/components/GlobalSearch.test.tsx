@@ -125,7 +125,7 @@ describe("GlobalSearch", () => {
     await user.type(searchInput, "test");
 
     // Click Issues tab - note: tab text includes count when query is entered
-    const issuesTab = screen.getByRole("button", { name: /Issues/i });
+    const issuesTab = screen.getByRole("tab", { name: /Issues/i });
     await user.click(issuesTab);
 
     await waitFor(() => {
@@ -134,7 +134,7 @@ describe("GlobalSearch", () => {
     });
 
     // Click Documents tab
-    const documentsTab = screen.getByRole("button", { name: /Documents/i });
+    const documentsTab = screen.getByRole("tab", { name: /Documents/i });
     await user.click(documentsTab);
 
     await waitFor(() => {

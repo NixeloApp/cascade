@@ -4,13 +4,12 @@ import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { cn } from "@/lib/utils";
-import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
+import { Tabs, TabsList, TabsTrigger } from "../ui/Tabs";
 import { Typography } from "../ui/Typography";
 import { BurnRateDashboard } from "./BurnRateDashboard";
 import { TimeEntriesList } from "./TimeEntriesList";
@@ -63,50 +62,39 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   return (
     <Flex direction="column" gap="xl">
       {/* Tabs */}
-      <div className="border-b border-ui-border">
-        <Flex as="nav" gap="lg" className="-mb-px">
-          <Button
-            variant="unstyled"
-            onClick={() => setActiveTab("entries")}
-            className={cn(
-              "pb-3 px-1 text-sm font-medium border-b-2 transition-colors rounded-none",
-              activeTab === "entries"
-                ? "border-brand-indigo-border text-brand-indigo-text"
-                : "border-transparent text-ui-text-secondary hover:text-ui-text",
-            )}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "entries" | "burn-rate" | "rates")}
+        className="border-b border-ui-border"
+      >
+        <TabsList variant="underline" className="gap-6">
+          <TabsTrigger
+            value="entries"
+            variant="underline"
+            className="pb-3 px-1 data-[state=active]:border-brand-indigo-border data-[state=active]:text-brand-indigo-text"
           >
             Time Entries
-          </Button>
+          </TabsTrigger>
           {canSeeSensitiveTabs && (
             <>
-              <Button
-                variant="unstyled"
-                onClick={() => setActiveTab("burn-rate")}
-                className={cn(
-                  "pb-3 px-1 text-sm font-medium border-b-2 transition-colors rounded-none",
-                  activeTab === "burn-rate"
-                    ? "border-brand-indigo-border text-brand-indigo-text"
-                    : "border-transparent text-ui-text-secondary hover:text-ui-text",
-                )}
+              <TabsTrigger
+                value="burn-rate"
+                variant="underline"
+                className="pb-3 px-1 data-[state=active]:border-brand-indigo-border data-[state=active]:text-brand-indigo-text"
               >
                 Burn Rate & Costs
-              </Button>
-              <Button
-                variant="unstyled"
-                onClick={() => setActiveTab("rates")}
-                className={cn(
-                  "pb-3 px-1 text-sm font-medium border-b-2 transition-colors rounded-none",
-                  activeTab === "rates"
-                    ? "border-brand-indigo-border text-brand-indigo-text"
-                    : "border-transparent text-ui-text-secondary hover:text-ui-text",
-                )}
+              </TabsTrigger>
+              <TabsTrigger
+                value="rates"
+                variant="underline"
+                className="pb-3 px-1 data-[state=active]:border-brand-indigo-border data-[state=active]:text-brand-indigo-text"
               >
                 Hourly Rates
-              </Button>
+              </TabsTrigger>
             </>
           )}
-        </Flex>
-      </div>
+        </TabsList>
+      </Tabs>
 
       {/* Filters */}
       <Flex align="center" gap="lg" className="flex-wrap">

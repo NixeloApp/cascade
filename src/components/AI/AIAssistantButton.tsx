@@ -67,7 +67,7 @@ export function AIAssistantButton({
         "fixed",
         positionClasses,
         SIZE_CLASSES[size],
-        "bg-linear-to-r from-brand to-accent text-brand-foreground rounded-full shadow-lg hover:shadow-xl hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 transition-all duration-200 flex items-center justify-center z-30 group",
+        "bg-linear-to-r from-brand to-accent text-brand-foreground rounded-full shadow-lg hover:shadow-xl hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 transition-all duration-default flex items-center justify-center z-30 group",
         className,
       )}
       title={tooltipText}

@@ -73,11 +73,7 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
           />
         ) : (
           comments.map((comment) => (
-            <Card
-              key={comment._id}
-              padding="md"
-              className="bg-ui-bg-soft transition-colors duration-default hover:border-ui-border-secondary"
-            >
+            <Card key={comment._id} padding="md" hoverable className="bg-ui-bg-soft">
               <Flex gap="md">
                 {/* Avatar */}
                 <FlexItem shrink={false}>

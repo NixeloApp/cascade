@@ -156,7 +156,7 @@ function AssistantConfig() {
           {/* Configuration Form */}
           <Card
             className={cn(
-              "card-subtle transition-opacity duration-300",
+              "card-subtle transition-opacity duration-medium",
               !enabled && "opacity-60 pointer-events-none",
             )}
           >

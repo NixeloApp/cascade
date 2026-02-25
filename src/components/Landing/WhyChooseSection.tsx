@@ -105,7 +105,7 @@ function StatItem({
         <div className={cn("absolute inset-0 w-full h-full", styles.track)} />
         <div
           className={cn(
-            "absolute inset-y-0 left-0 h-full rounded-full transition-all duration-1000 ease-out",
+            "absolute inset-y-0 left-0 h-full rounded-full transition-all duration-enter-slow ease-out",
             styles.bar,
           )}
           style={{ width: `${progress}%` }}

@@ -26,7 +26,7 @@ export function BarChart({
             <div
               className={cn(
                 color,
-                "h-6 rounded-full transition-all duration-500 flex items-center justify-end pr-2",
+                "h-6 rounded-full transition-all duration-slow flex items-center justify-end pr-2",
               )}
               style={{
                 width: `${(item.value / maxValue) * 100}%`,

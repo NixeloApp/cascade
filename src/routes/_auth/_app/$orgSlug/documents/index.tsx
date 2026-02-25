@@ -67,7 +67,7 @@ function DocumentsListPage() {
               <div
                 className={cn(
                   "card-subtle p-5 cursor-pointer",
-                  "transform transition-all duration-200",
+                  "transform transition-all duration-default",
                   "hover:scale-[var(--scale-hover-subtle)]",
                 )}
               >

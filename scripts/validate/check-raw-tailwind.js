@@ -47,6 +47,7 @@ export function run() {
     "/BulkOperationsBar.tsx", // Responsive layout patterns
     "/CommandPalette.tsx", // Keyboard shortcut styling
     "/CommentReactions.tsx", // Popover overrides
+    "/CommentRenderer.tsx", // Inline markdown code element styling
     "/CreateProjectFromTemplate.tsx", // Responsive button layout
     "/DocumentHeader.tsx", // Header with breadcrumbs
     "/DocumentTemplatesManager.tsx", // Template cards with gradients

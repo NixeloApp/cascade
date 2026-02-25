@@ -25,12 +25,17 @@ describe("CustomFieldValues - Component Behavior", () => {
   const mockRemoveValue = vi.fn();
 
   // Helper to setup useQuery mocks that persist across re-renders
-  const setupQueries = (customFieldsData: unknown, fieldValuesData: unknown) => {
+  const setupQueries = (
+    customFieldsData: unknown,
+    fieldValuesData: unknown,
+    projectMembersData: unknown = [],
+  ) => {
     let callCount = 0;
     (useQuery as any).mockImplementation(() => {
-      // First call is customFields, second is fieldValues
+      // Queries in order: customFields, fieldValues, projectMembers
       // Pattern repeats for re-renders
-      return callCount++ % 2 === 0 ? customFieldsData : fieldValuesData;
+      const queries = [customFieldsData, fieldValuesData, projectMembersData];
+      return queries[callCount++ % 3];
     });
   };
 

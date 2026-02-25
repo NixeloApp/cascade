@@ -12,17 +12,18 @@ Improve comment editor to match document editor quality.
 
 ### Tasks
 
-- [ ] Add Markdown preview toggle to comment textarea
-- [ ] Improve `CommentRenderer.tsx` Markdown rendering
+- [x] Add Markdown preview toggle to comment textarea ✅ 2026-02-24
+- [x] Improve `CommentRenderer.tsx` Markdown rendering ✅ 2026-02-24
 - [ ] Add emoji picker to comments (can reuse from emoji-overhaul)
 - [ ] Add file attachment support inline with comments
 
 ### Current State
 
-- Mentions with `@[name](id)` syntax work
-- Basic textarea, no preview
-- No emoji picker
-- No inline attachments
+- Mentions with `@[name](id)` syntax work ✅
+- Preview toggle in MentionInput ✅
+- Inline markdown: **bold**, *italic*, `code`, ~~strikethrough~~, [links](url) ✅
+- No emoji picker (pending)
+- No inline attachments (pending)
 
 ---
 
@@ -32,10 +33,10 @@ Add "user" type to custom fields for Reviewer, QA, Designer fields.
 
 ### Tasks
 
-- [ ] Add `v.literal("user")` to schema `fieldType` union
-- [ ] Update `convex/customFields.ts` validation
-- [ ] Create user picker UI in `CustomFieldValues.tsx`
-- [ ] Update `CustomFieldsManager.tsx` to allow creating user fields
+- [x] Add `v.literal("user")` to schema `fieldType` union ✅ 2026-02-24
+- [x] Update `convex/customFields.ts` validation ✅ 2026-02-24
+- [x] Create user picker UI in `CustomFieldValues.tsx` ✅ 2026-02-24
+- [x] Update `CustomFieldsManager.tsx` to allow creating user fields ✅ 2026-02-24
 
 ### Current Types
 
@@ -47,7 +48,7 @@ v.literal("multiselect"),
 v.literal("date"),
 v.literal("checkbox"),
 v.literal("url"),
-// Missing: v.literal("user")
+v.literal("user"), // ✅ Added
 ```
 
 ---
