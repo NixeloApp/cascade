@@ -766,7 +766,17 @@ export const search = authenticatedQuery({
 // Import the rest of the smart loading queries
 import { DEFAULT_PAGE_SIZE, getDoneColumnThreshold } from "../lib/pagination";
 
-// Helper: Fetch issues for each workflow state in parallel
+/**
+ * Helper to fetch issues for each workflow state in parallel.
+ *
+ * Executes the provided query builder for each state concurrently using Promise.all.
+ * This significantly reduces latency compared to sequential fetching.
+ *
+ * @param workflowStates - Array of workflow states to fetch issues for.
+ * @param getQuery - Callback that returns a query builder for a given state.
+ * @param limit - Maximum number of issues to fetch per state.
+ * @returns Object mapping state IDs to arrays of issues.
+ */
 async function fetchIssuesByWorkflowState(
   workflowStates: { id: string; category: string }[],
   getQuery: (state: { id: string; category: string }) => {
@@ -783,6 +793,22 @@ async function fetchIssuesByWorkflowState(
   return issuesByColumn;
 }
 
+/**
+ * List issues for a project using the "Smart Board" loading strategy.
+ *
+ * Strategy:
+ * 1. "Active" columns (Todo, In Progress): Load all issues (up to a reasonable limit).
+ *    - Uses `by_project_status` index for efficient filtering.
+ *    - Sorts by manual order.
+ * 2. "Done" columns: Load only recent issues (e.g., last 14 days).
+ *    - Uses `by_project_status_updated` index to filter by `updatedAt`.
+ *    - Prevents loading thousands of old completed issues.
+ *
+ * Optimization:
+ * - If `sprintId` is provided: Fetches all sprint issues in one query and groups in memory.
+ * - If no sprint: Fetches each column in parallel using `fetchIssuesByWorkflowState`.
+ * - Uses `batchEnrichIssuesByStatus` to resolve relations (users, labels) efficiently.
+ */
 export const listByProjectSmart = projectQuery({
   args: {
     sprintId: v.optional(v.id("sprints")),
@@ -867,6 +893,15 @@ export const listByProjectSmart = projectQuery({
   },
 });
 
+/**
+ * List issues for a team using the "Smart Board" loading strategy.
+ *
+ * Similar to `listByProjectSmart`, but scoped to a team.
+ * Uses `by_team_status` and `by_team_status_updated` indexes.
+ *
+ * @param teamId - The team to load issues for.
+ * @param doneColumnDays - Number of days of completed issues to load (default: 14).
+ */
 export const listByTeamSmart = authenticatedQuery({
   args: {
     teamId: v.id("teams"),
@@ -930,6 +965,16 @@ export const listByTeamSmart = authenticatedQuery({
   },
 });
 
+/**
+ * Get issue counts for a team, broken down by workflow state.
+ *
+ * Optimizations:
+ * - Uses `efficientCount` to get total counts without loading all documents.
+ * - For "Done" columns, separates "visible" (recent) from "hidden" (older) counts.
+ * - Executes counting queries for all states in parallel using `Promise.all`.
+ *
+ * @returns Object mapping state ID to { total, visible, hidden } counts.
+ */
 export const getTeamIssueCounts = authenticatedQuery({
   args: {
     teamId: v.id("teams"),
@@ -1007,6 +1052,18 @@ export const getTeamIssueCounts = authenticatedQuery({
   },
 });
 
+/**
+ * Get issue counts for a project, broken down by workflow state.
+ *
+ * Used by the board view to display accurate column headers (e.g., "Done: 15 / 150").
+ *
+ * Optimizations:
+ * - If `sprintId` is provided: Fetches all sprint issues once and aggregates in memory (sprints are small).
+ * - If no sprint: Uses `efficientCount` on `by_project_status` index for each state in parallel.
+ * - Handles "Done" column visibility logic (recent vs. hidden).
+ *
+ * @returns Object mapping state ID to { total, visible, hidden } counts.
+ */
 export const getIssueCounts = authenticatedQuery({
   args: {
     projectId: v.id("projects"),
@@ -1102,6 +1159,15 @@ export const getIssueCounts = authenticatedQuery({
   },
 });
 
+/**
+ * Load older completed issues ("Load More" functionality).
+ *
+ * Fetches the next batch of issues for "Done" columns using cursor-based pagination.
+ * Sorts by `updatedAt` descending to show the next most recent completed items.
+ *
+ * @param beforeTimestamp - Cursor: fetch items updated before this time.
+ * @param limit - Number of items to fetch (default: 50).
+ */
 export const loadMoreDoneIssues = authenticatedQuery({
   args: {
     projectId: v.id("projects"),
@@ -1263,7 +1329,15 @@ export const listIssuesByDateRange = authenticatedQuery({
   },
 });
 
-// Helper to fetch issues using sprint or epic index if possible
+/**
+ * Optimization helper: Fetch issues by "Container" index (Sprint or Epic).
+ *
+ * Checks if the search query includes a specific Sprint ID or Epic ID.
+ * If so, uses the optimized `by_sprint` or `by_epic` indexes to fetch a small subset
+ * of issues instead of scanning the entire project.
+ *
+ * @returns Array of issues if a container filter is active, null otherwise.
+ */
 async function fetchByContainerIndex(
   ctx: QueryCtx,
   args: {
@@ -1299,7 +1373,14 @@ async function fetchByContainerIndex(
   return null;
 }
 
-// Helper to fetch issues by assignee or reporter
+/**
+ * Optimization helper: Fetch issues by User index (Assignee or Reporter).
+ *
+ * Checks if the search query filters by a specific Assignee or Reporter.
+ * Uses `by_project_assignee` (optionally + status) or `by_project_reporter` indexes.
+ *
+ * @returns Array of issues if a user filter is active, null otherwise.
+ */
 async function fetchByUserIndex(
   ctx: QueryCtx,
   projectId: Id<"projects">,
@@ -1372,7 +1453,19 @@ async function fetchByUserIndex(
   return null;
 }
 
-// Helper: Optimized project issue fetching strategy
+/**
+ * Master strategy for optimized issue fetching within a project.
+ *
+ * Attempts to find the most specific index to satisfy the search query,
+ * following a specificity hierarchy:
+ *
+ * 1. Container (Sprint/Epic): Most specific, smallest subset.
+ * 2. User (Assignee/Reporter): High cardinality, good selectivity.
+ * 3. Status: Useful if only filtering by a single status.
+ * 4. Fallback: Scan all project issues (limited by `fetchLimit`).
+ *
+ * @returns Array of matching issues (up to `fetchLimit`).
+ */
 async function fetchProjectIssuesOptimized(
   ctx: QueryCtx,
   projectId: Id<"projects">,
