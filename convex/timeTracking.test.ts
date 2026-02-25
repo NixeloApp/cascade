@@ -48,6 +48,8 @@ describe("Time Tracking", () => {
 
       const stopResult = await asUser.mutation(api.timeTracking.stopTimer, { entryId });
       expect(stopResult.success).toBe(true);
+      expect(stopResult.duration).toBeGreaterThanOrEqual(0);
+      expect(stopResult.totalCost).toBeGreaterThanOrEqual(0);
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
       expect(entry?.endTime).toBeDefined();
@@ -475,6 +477,8 @@ describe("Time Tracking", () => {
       const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {});
       const stopResult = await asUser.mutation(api.timeTracking.stopTimer, { entryId });
       expect(stopResult.success).toBe(true);
+      expect(stopResult.duration).toBeGreaterThanOrEqual(0);
+      expect(stopResult.totalCost).toBeGreaterThanOrEqual(0);
 
       await expect(asUser.mutation(api.timeTracking.stopTimer, { entryId })).rejects.toThrow(
         /already stopped/i,
