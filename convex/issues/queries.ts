@@ -43,10 +43,12 @@ export const listIssuesInternal = internalQuery({
     }
 
     // 2. Fetch issues
+    // Optimization: Use by_project_deleted to skip deleted issues efficiently in the index scan
     const issues = await ctx.db
       .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter(notDeleted)
+      .withIndex("by_project_deleted", (q) =>
+        q.eq("projectId", args.projectId).lt("isDeleted", true),
+      )
       .order("desc")
       .take(100); // Limit for API
 
@@ -453,7 +455,9 @@ export const listProjectIssues = authenticatedQuery({
         }
         return db
           .query("issues")
-          .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+          .withIndex("by_project_deleted", (q) =>
+            q.eq("projectId", args.projectId).lt("isDeleted", true),
+          )
           .order("desc");
       },
     });
