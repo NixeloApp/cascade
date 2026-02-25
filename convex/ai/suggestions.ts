@@ -106,12 +106,6 @@ export const suggestIssueDescription = action({
       throw unauthenticated();
     }
 
-    // Ensure user has edit access to the project
-    await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
-      projectId: args.projectId,
-      userId,
-    });
-
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
       key: userId,
@@ -191,12 +185,6 @@ export const suggestPriority = action({
     if (!userId) {
       throw unauthenticated();
     }
-
-    // Ensure user has edit access to the project
-    await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
-      projectId: args.projectId,
-      userId,
-    });
 
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
@@ -279,12 +267,6 @@ export const suggestLabels = action({
     if (!userId) {
       throw unauthenticated();
     }
-
-    // Ensure user has edit access to the project
-    await ctx.runQuery(internal.internal.ai.checkProjectEditAccess, {
-      projectId: args.projectId,
-      userId,
-    });
 
     // Rate limit: 20 suggestions per hour per user
     await rateLimit(ctx, "aiSuggestion", {
