@@ -10,7 +10,7 @@ import { linkTypes } from "./validators";
  * Create a link between two issues
  * Requires editor role on the source issue's project
  */
-export const create = authenticatedMutation({
+export const createIssueLink = authenticatedMutation({
   args: {
     fromIssueId: v.id("issues"),
     toIssueId: v.id("issues"),
@@ -68,7 +68,7 @@ export const create = authenticatedMutation({
  * Remove a link between issues
  * Requires editor role on the source issue's project
  */
-export const remove = authenticatedMutation({
+export const deleteIssueLink = authenticatedMutation({
   args: {
     linkId: v.id("issueLinks"),
   },
@@ -109,7 +109,7 @@ export const remove = authenticatedMutation({
 /**
  * Get all links for an issue (both outgoing and incoming)
  */
-export const getForIssue = authenticatedQuery({
+export const getIssueLinks = authenticatedQuery({
   args: {
     issueId: v.id("issues"),
   },
