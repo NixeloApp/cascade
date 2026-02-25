@@ -1242,9 +1242,11 @@ async function getAccessibleDocuments(
   await Promise.all(
     documents.map(async (doc) => {
       if (!doc || doc.isDeleted) return;
-      // This throws forbidden() if user doesn't have access
-      await assertDocumentAccess(ctx, doc);
-      accessibleDocIds.add(doc._id);
+      // Check access without throwing to support batch filtering
+      const hasAccess = await canAccessDocument(ctx, doc);
+      if (hasAccess) {
+        accessibleDocIds.add(doc._id);
+      }
     }),
   );
 

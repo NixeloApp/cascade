@@ -36,10 +36,11 @@ test("getCommentReactions leaks reactions for inaccessible documents", async () 
   const asAttacker = asAuthenticatedUser(t, attackerId);
 
   // 5. Attacker tries to get reactions for the comment
-  // This should now FAIL with "Not authorized to access this document"
-  await expect(async () => {
-    await asAttacker.query(api.documents.getCommentReactions, {
-      commentIds: [commentId],
-    });
-  }).rejects.toThrow("Not authorized");
+  // This should now succeed but return EMPTY result (silent filtering)
+  // This prevents confirming existence of the document via error message (Oracle)
+  const result = await asAttacker.query(api.documents.getCommentReactions, {
+    commentIds: [commentId],
+  });
+
+  expect(result).toEqual({});
 });
