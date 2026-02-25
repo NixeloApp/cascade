@@ -228,10 +228,12 @@ describe("Teams", () => {
         isPrivate: false,
       });
 
-      await asOwner.mutation(api.teams.updateTeam, {
+      const result = await asOwner.mutation(api.teams.updateTeam, {
         teamId,
         description: "A great team",
       });
+
+      expect(result).toEqual({ success: true, teamId });
 
       const team = await t.run(async (ctx) => ctx.db.get(teamId));
       expect(team?.description).toBe("A great team");
@@ -250,10 +252,12 @@ describe("Teams", () => {
         isPrivate: false,
       });
 
-      await asOwner.mutation(api.teams.updateTeam, {
+      const result = await asOwner.mutation(api.teams.updateTeam, {
         teamId,
         isPrivate: true,
       });
+
+      expect(result).toEqual({ success: true, teamId });
 
       const team = await t.run(async (ctx) => ctx.db.get(teamId));
       expect(team?.isPrivate).toBe(true);
