@@ -217,11 +217,18 @@ export const listForDigest = internalQuery({
     const notifications: Doc<"notifications">[] = [];
     for await (const notification of ctx.db
       .query("notifications")
-      .withIndex("by_user_active", (q) => q.eq("userId", args.userId).lt("isDeleted", true))
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")) {
       if (notification._creationTime < args.startTime) {
         break;
       }
+      if (notification.isDeleted) {
+        continue;
+      }
+      if (!["mention", "assigned", "comment"].includes(notification.type)) {
+        continue;
+      }
+
       notifications.push(notification);
       if (notifications.length >= MAX_DIGEST_NOTIFICATIONS) {
         break;
