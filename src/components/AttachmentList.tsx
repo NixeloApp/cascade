@@ -55,6 +55,7 @@ export function AttachmentList({ attachmentIds, issueId, canEdit = false }: Atta
           <AttachmentItem
             key={storageId}
             storageId={storageId}
+            issueId={issueId}
             canEdit={canEdit}
             onRemove={() => handleRemove(storageId)}
           />
@@ -66,14 +67,16 @@ export function AttachmentList({ attachmentIds, issueId, canEdit = false }: Atta
 
 function AttachmentItem({
   storageId,
+  issueId,
   canEdit,
   onRemove,
 }: {
   storageId: Id<"_storage">;
+  issueId: Id<"issues">;
   canEdit: boolean;
   onRemove: () => void;
 }) {
-  const url = useQuery(api.attachments.getAttachment, { storageId });
+  const url = useQuery(api.attachments.getAttachment, { storageId, issueId });
 
   // Show skeleton while loading (undefined), but handle null (deleted/expired) gracefully
   if (url === undefined) {
