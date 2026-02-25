@@ -221,7 +221,7 @@ describe("Saved Filters", () => {
         isPublic: true,
       });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, filterId });
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
       const updated = filters.find((f) => f._id === filterId);
@@ -280,7 +280,7 @@ describe("Saved Filters", () => {
         name: "New Name",
       });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, filterId });
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
       const updated = filters.find((f) => f._id === filterId);
