@@ -11,10 +11,10 @@ import { Bot, Lightbulb, MessageSquare } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Sheet } from "../ui/Sheet";
+import { Tabs, TabsList, TabsTrigger } from "../ui/Tabs";
 import { AIChat } from "./AIChat";
 import { AIErrorFallback } from "./AIErrorFallback";
 import { AISuggestionsPanel } from "./AISuggestionsPanel";
@@ -83,42 +83,38 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
           </div>
 
           {/* Tabs */}
-          <Flex className="border-b border-ui-border bg-ui-bg-secondary">
-            <Button
-              variant="unstyled"
-              onClick={() => handleTabChange("chat")}
-              className={cn(
-                "flex-1 px-4 py-3 font-medium text-sm transition-colors rounded-none",
-                activeTab === "chat"
-                  ? "text-brand border-b-2 border-brand bg-ui-bg"
-                  : "text-ui-text-tertiary hover:text-ui-text",
-              )}
-            >
-              <Icon icon={MessageSquare} size="sm" className="inline mr-1" /> Chat
-              {chats && chats.length > 0 && (
-                <Badge variant="secondary" size="sm" className="ml-2">
-                  {chats.length}
-                </Badge>
-              )}
-            </Button>
-            <Button
-              variant="unstyled"
-              onClick={() => handleTabChange("suggestions")}
-              className={cn(
-                "flex-1 px-4 py-3 font-medium text-sm transition-colors relative rounded-none",
-                activeTab === "suggestions"
-                  ? "text-brand border-b-2 border-brand bg-ui-bg"
-                  : "text-ui-text-tertiary hover:text-ui-text",
-              )}
-            >
-              <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Suggestions
-              {unreadSuggestions > 0 && (
-                <Badge variant="error" size="sm" className="ml-2">
-                  {unreadSuggestions}
-                </Badge>
-              )}
-            </Button>
-          </Flex>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => handleTabChange(value as "chat" | "suggestions")}
+            className="border-b border-ui-border bg-ui-bg-secondary"
+          >
+            <TabsList variant="underline" className="w-full">
+              <TabsTrigger
+                value="chat"
+                variant="underline"
+                className="flex-1 data-[state=active]:bg-ui-bg"
+              >
+                <Icon icon={MessageSquare} size="sm" className="inline mr-1" /> Chat
+                {chats && chats.length > 0 && (
+                  <Badge variant="secondary" size="sm" className="ml-2">
+                    {chats.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger
+                value="suggestions"
+                variant="underline"
+                className="flex-1 data-[state=active]:bg-ui-bg"
+              >
+                <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Suggestions
+                {unreadSuggestions > 0 && (
+                  <Badge variant="error" size="sm" className="ml-2">
+                    {unreadSuggestions}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </>
       }
     >

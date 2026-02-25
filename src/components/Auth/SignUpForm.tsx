@@ -73,7 +73,7 @@ export function SignUpForm() {
             <div
               key={step}
               className={cn(
-                "h-1.5 rounded-pill transition-all duration-300",
+                "h-1.5 rounded-pill transition-all duration-medium",
                 step <= currentStep ? "w-8 bg-brand" : "w-4 bg-ui-border",
               )}
             />
@@ -104,7 +104,7 @@ export function SignUpForm() {
             <div
               key={step}
               className={cn(
-                "h-1.5 rounded-pill transition-all duration-300",
+                "h-1.5 rounded-pill transition-all duration-medium",
                 step <= currentStep ? "w-8 bg-brand" : "w-4 bg-ui-border",
               )}
             />
@@ -130,7 +130,7 @@ export function SignUpForm() {
       >
         <div
           className={cn(
-            "grid transition-all duration-300 ease-out",
+            "grid transition-all duration-medium ease-out",
             showEmailForm ? "grid-rows-[1fr] opacity-100 mb-3" : "grid-rows-[0fr] opacity-0",
           )}
         >
@@ -162,7 +162,7 @@ export function SignUpForm() {
           type="submit"
           variant={showEmailForm ? "primary" : "secondary"}
           size="lg"
-          className={cn("w-full transition-all duration-300", showEmailForm && "shadow-card")}
+          className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
           disabled={submitting || !hydrated}
           data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
         >

@@ -710,6 +710,7 @@ const applicationTables = {
       v.literal("date"),
       v.literal("checkbox"),
       v.literal("url"),
+      v.literal("user"),
     ),
     options: v.optional(v.array(v.string())), // For select/multiselect
     isRequired: v.boolean(),

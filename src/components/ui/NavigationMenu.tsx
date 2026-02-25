@@ -48,7 +48,7 @@ const NavigationMenuTrigger = React.forwardRef<
   >
     {children}
     <ChevronDown
-      className="relative top-px ml-1 h-3 w-3 text-ui-text-secondary transition-transform duration-200 group-data-[state=open]:rotate-180"
+      className="relative top-px ml-1 h-3 w-3 text-ui-text-secondary transition-transform duration-default group-data-[state=open]:rotate-180"
       aria-hidden="true"
     />
   </NavigationMenuPrimitive.Trigger>
@@ -102,7 +102,7 @@ const NavigationMenuIndicator = React.forwardRef<
   <NavigationMenuPrimitive.Indicator
     ref={ref}
     className={cn(
-      "top-full z-[1] flex h-1.5 items-end justify-center overflow-hidden",
+      "top-full z-10 flex h-1.5 items-end justify-center overflow-hidden",
       "data-[state=visible]:animate-fade-in data-[state=hidden]:animate-fade-out",
       className,
     )}

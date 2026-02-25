@@ -261,7 +261,7 @@ export const IssueCard = memo(function IssueCard({
       <Button
         variant="unstyled"
         onClick={handleClick}
-        className="absolute inset-0 w-full h-full z-0 opacity-0 cursor-pointer focus:outline-none"
+        className="absolute inset-0 w-full h-full z-0 opacity-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
         aria-label={getIssueAccessibleLabel(issue)}
       />
 

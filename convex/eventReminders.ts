@@ -11,6 +11,7 @@ import { internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
+import { logger } from "./lib/logger";
 import { MINUTE, WEEK } from "./lib/timeUtils";
 
 const reminderTypes = v.union(v.literal("email"), v.literal("push"), v.literal("in_app"));
@@ -235,59 +236,65 @@ export const processDueReminders = internalMutation({
 
     let processed = 0;
     let skipped = 0;
+    let failed = 0;
 
     for (const reminder of dueReminders) {
-      // Get the event
-      const event = await ctx.db.get(reminder.eventId);
-      if (!event) {
-        // Event was deleted, remove reminder
-        await ctx.db.delete(reminder._id);
-        skipped++;
-        continue;
-      }
+      try {
+        // Get the event
+        const event = await ctx.db.get(reminder.eventId);
+        if (!event) {
+          // Event was deleted, remove reminder
+          await ctx.db.delete(reminder._id);
+          skipped++;
+          continue;
+        }
 
-      // Skip if event has already started or is cancelled
-      if (event.startTime < now || event.status === "cancelled") {
+        // Skip if event has already started or is cancelled
+        if (event.startTime < now || event.status === "cancelled") {
+          await ctx.db.patch(reminder._id, { sent: true, sentAt: now });
+          skipped++;
+          continue;
+        }
+
+        // Get user
+        const user = await ctx.db.get(reminder.userId);
+        if (!user) {
+          await ctx.db.delete(reminder._id);
+          skipped++;
+          continue;
+        }
+
+        // Send based on reminder type
+        if (reminder.reminderType === "email" && user.email) {
+          // Schedule email notification
+          await ctx.scheduler.runAfter(0, internal.email.notifications.sendEventReminder, {
+            userId: reminder.userId,
+            eventId: reminder.eventId,
+            minutesBefore: reminder.minutesBefore,
+          });
+        } else if (reminder.reminderType === "in_app") {
+          // Create in-app notification
+          await ctx.db.insert("notifications", {
+            userId: reminder.userId,
+            type: "calendar_reminder",
+            title: `Upcoming: ${event.title}`,
+            message: `Starting in ${reminder.minutesBefore} minutes`,
+            isRead: false,
+            isDeleted: false,
+          });
+        }
+        // Push notifications would be handled separately via web push API
+
+        // Mark as sent
         await ctx.db.patch(reminder._id, { sent: true, sentAt: now });
-        skipped++;
-        continue;
+        processed++;
+      } catch (error) {
+        logger.error("Failed to process event reminder", { reminderId: reminder._id, error });
+        failed++;
       }
-
-      // Get user
-      const user = await ctx.db.get(reminder.userId);
-      if (!user) {
-        await ctx.db.delete(reminder._id);
-        skipped++;
-        continue;
-      }
-
-      // Send based on reminder type
-      if (reminder.reminderType === "email" && user.email) {
-        // Schedule email notification
-        await ctx.scheduler.runAfter(0, internal.email.notifications.sendEventReminder, {
-          userId: reminder.userId,
-          eventId: reminder.eventId,
-          minutesBefore: reminder.minutesBefore,
-        });
-      } else if (reminder.reminderType === "in_app") {
-        // Create in-app notification
-        await ctx.db.insert("notifications", {
-          userId: reminder.userId,
-          type: "calendar_reminder",
-          title: `Upcoming: ${event.title}`,
-          message: `Starting in ${reminder.minutesBefore} minutes`,
-          isRead: false,
-          isDeleted: false,
-        });
-      }
-      // Push notifications would be handled separately via web push API
-
-      // Mark as sent
-      await ctx.db.patch(reminder._id, { sent: true, sentAt: now });
-      processed++;
     }
 
-    return { processed, skipped };
+    return { processed, skipped, failed };
   },
 });
 

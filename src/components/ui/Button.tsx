@@ -30,10 +30,16 @@ const buttonVariants = cva(
         lg: "h-11 px-6 text-base",
         icon: "h-10 w-10",
       },
+      /** Show only on parent hover/focus-within (use inside group containers) */
+      reveal: {
+        true: "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "primary",
       size: "md",
+      reveal: false,
     },
   },
 );
@@ -69,6 +75,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       variant,
       size,
+      reveal,
       asChild = false,
       isLoading = false,
       leftIcon,
@@ -83,7 +90,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, reveal, className }))}
         ref={ref}
         disabled={disabled || isLoading}
         aria-busy={isLoading}

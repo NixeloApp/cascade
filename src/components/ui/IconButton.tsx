@@ -25,6 +25,11 @@ import { Tooltip, type TooltipProps } from "./Tooltip";
  * <IconButton variant="ghost"><SettingsIcon /></IconButton>
  * <IconButton variant="subtle"><EditIcon /></IconButton>
  * <IconButton variant="danger"><TrashIcon /></IconButton>
+ *
+ * // Reveal on hover (for action buttons inside cards/list items)
+ * <Card hoverable className="group">
+ *   <IconButton reveal variant="danger"><TrashIcon /></IconButton>
+ * </Card>
  */
 
 const iconButtonVariants = cva(
@@ -52,10 +57,16 @@ const iconButtonVariants = cva(
         md: "h-9 w-9 p-2",
         lg: "h-10 w-10 p-2.5",
       },
+      /** Show only on parent hover (use inside group containers) */
+      reveal: {
+        true: "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "ghost",
       size: "sm",
+      reveal: false,
     },
   },
 );
@@ -82,6 +93,7 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
       className,
       variant,
       size,
+      reveal,
       asChild = false,
       type = "button",
       tooltip,
@@ -94,12 +106,11 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
     // Determine effective aria-label
     // Prefer explicit aria-label from props, fallback to tooltip string
     const ariaLabel = props["aria-label"] || tooltip;
-
     const Comp = asChild ? Slot : "button";
 
     const button = (
       <Comp
-        className={cn(iconButtonVariants({ variant, size, className }))}
+        className={cn(iconButtonVariants({ variant, size, reveal, className }))}
         ref={ref}
         type={type}
         aria-label={ariaLabel}

@@ -74,7 +74,7 @@ function AllIssuesPage() {
             placeholder="Search issues..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-ui-bg-secondary border border-ui-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-ring"
+            className="w-full pl-10 pr-4 py-2 bg-ui-bg-secondary border border-ui-border rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
           />
         </FlexItem>
         <Flex gap="sm" align="center">
@@ -82,7 +82,7 @@ function AllIssuesPage() {
           <select
             value={statusFilter || ""}
             onChange={(e) => setStatusFilter(e.target.value || undefined)}
-            className="bg-ui-bg-secondary border border-ui-border rounded-md px-3 py-2 text-sm focus:outline-none"
+            className="bg-ui-bg-secondary border border-ui-border rounded-md px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
           >
             <option value="">All Statuses</option>
             <option value="todo">To Do</option>

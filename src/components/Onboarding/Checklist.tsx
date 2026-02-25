@@ -118,7 +118,7 @@ export function OnboardingChecklist() {
         <Flex align="center" gap="md">
           <Progress
             value={progress}
-            indicatorClassName="bg-brand duration-500"
+            indicatorClassName="bg-brand duration-slow"
             className="flex-1"
           />
           <Typography className="text-xs font-medium text-ui-text-secondary tabular-nums">

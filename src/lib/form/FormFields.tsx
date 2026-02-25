@@ -1,4 +1,5 @@
 import type { Updater, ValidationError } from "@tanstack/react-form";
+import { useId } from "react";
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import type { CheckboxProps } from "@/components/ui/form/Checkbox";
 import type { InputProps } from "@/components/ui/form/Input";
@@ -204,10 +205,14 @@ export function FormSelectRadix<TName extends string, TValue extends string>({
 }: FormSelectRadixProps<TName, TValue>) {
   const error = getFieldError(field);
   const value = (field.state.value as string) ?? "";
+  const id = useId();
+  const errorId = `${id}-error`;
+  const helperId = `${id}-helper`;
+  const describedBy = error ? errorId : helperText ? helperId : undefined;
 
   return (
     <Stack gap="sm" className={className}>
-      {label && <Label>{label}</Label>}
+      {label && <Label htmlFor={id}>{label}</Label>}
       <SelectRoot
         value={value}
         onValueChange={(val) => {
@@ -215,17 +220,21 @@ export function FormSelectRadix<TName extends string, TValue extends string>({
           field.handleBlur();
         }}
       >
-        <SelectTrigger aria-invalid={!!error}>
+        <SelectTrigger id={id} aria-invalid={!!error} aria-describedby={describedBy}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>{children}</SelectContent>
       </SelectRoot>
       {error && (
-        <Typography variant="small" color="error" className="font-medium">
+        <Typography id={errorId} variant="small" color="error" className="font-medium">
           {error}
         </Typography>
       )}
-      {helperText && !error && <Typography variant="muted">{helperText}</Typography>}
+      {helperText && !error && (
+        <Typography id={helperId} variant="muted">
+          {helperText}
+        </Typography>
+      )}
     </Stack>
   );
 }

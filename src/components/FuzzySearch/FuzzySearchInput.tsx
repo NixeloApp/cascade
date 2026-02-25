@@ -194,7 +194,7 @@ export function FuzzySearchInput<T>({
             "bg-ui-bg-soft",
             "text-ui-text",
             "placeholder-ui-text-tertiary",
-            "focus:outline-none focus:ring-2 focus:ring-ui-border-focus focus:border-ui-border-focus",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:border-ui-border-focus",
             "hover:border-ui-border-secondary",
             "border-ui-border",
             className,

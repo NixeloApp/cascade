@@ -35,7 +35,7 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="unstyled"
-          className="rounded-full p-0.5 hover:ring-2 hover:ring-ui-border focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 transition-all duration-default"
+          className="rounded-full p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 transition-default hover:opacity-80"
           aria-label="User menu"
         >
           <Avatar name={user.name} email={user.email} src={user.image} size="md" variant="brand" />

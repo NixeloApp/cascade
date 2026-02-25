@@ -121,29 +121,29 @@ describe("MyIssuesList", () => {
   it("should render assigned issues tab with correct count", () => {
     render(<MyIssuesList {...defaultProps} />);
 
-    const button = screen.getByRole("button", { name: /Assigned/i });
-    expect(button).toHaveTextContent(`Assigned(${mockIssues.length})`);
+    const tab = screen.getByRole("tab", { name: /Assigned/i });
+    expect(tab).toHaveTextContent(`Assigned(${mockIssues.length})`);
   });
 
   it("should render created issues tab with correct count", () => {
     render(<MyIssuesList {...defaultProps} />);
 
-    const button = screen.getByRole("button", { name: /Created/i });
-    expect(button).toHaveTextContent(`Created(${mockCreatedIssues.length})`);
+    const tab = screen.getByRole("tab", { name: /Created/i });
+    expect(tab).toHaveTextContent(`Created(${mockCreatedIssues.length})`);
   });
 
   it("should highlight active tab (assigned)", () => {
     render(<MyIssuesList {...defaultProps} issueFilter="assigned" />);
 
-    const assignedTab = screen.getByLabelText("Filter Assigned");
-    expect(assignedTab).toHaveClass("border-brand");
+    const assignedTab = screen.getByRole("tab", { name: /Assigned/i });
+    expect(assignedTab).toHaveAttribute("data-state", "active");
   });
 
   it("should highlight active tab (created)", () => {
     render(<MyIssuesList {...defaultProps} issueFilter="created" />);
 
-    const createdTab = screen.getByLabelText("Filter Created");
-    expect(createdTab).toHaveClass("border-brand");
+    const createdTab = screen.getByRole("tab", { name: /Created/i });
+    expect(createdTab).toHaveAttribute("data-state", "active");
   });
 
   it("should call onFilterChange when switching to assigned tab", async () => {
@@ -154,7 +154,7 @@ describe("MyIssuesList", () => {
       <MyIssuesList {...defaultProps} onFilterChange={onFilterChange} issueFilter="created" />,
     );
 
-    const assignedTab = screen.getByLabelText("Filter Assigned");
+    const assignedTab = screen.getByRole("tab", { name: /Assigned/i });
     await user.click(assignedTab);
 
     expect(onFilterChange).toHaveBeenCalledWith("assigned");
@@ -166,7 +166,7 @@ describe("MyIssuesList", () => {
 
     render(<MyIssuesList {...defaultProps} onFilterChange={onFilterChange} />);
 
-    const createdTab = screen.getByLabelText("Filter Created");
+    const createdTab = screen.getByRole("tab", { name: /Created/i });
     await user.click(createdTab);
 
     expect(onFilterChange).toHaveBeenCalledWith("created");
@@ -238,8 +238,9 @@ describe("MyIssuesList", () => {
   it("should have correct accessibility attributes", () => {
     render(<MyIssuesList {...defaultProps} />);
 
-    const assignedTab = screen.getByLabelText("Filter Assigned");
-    const createdTab = screen.getByLabelText("Filter Created");
+    // Radix tabs have role="tab" and proper accessibility attributes
+    const assignedTab = screen.getByRole("tab", { name: /Assigned/i });
+    const createdTab = screen.getByRole("tab", { name: /Created/i });
 
     expect(assignedTab).toHaveAttribute("type", "button");
     expect(createdTab).toHaveAttribute("type", "button");
@@ -250,9 +251,9 @@ describe("MyIssuesList", () => {
       <MyIssuesList {...defaultProps} myIssues={[]} myCreatedIssues={[]} displayIssues={[]} />,
     );
 
-    const assignedBtn = screen.getByRole("button", { name: /Assigned/i });
-    expect(assignedBtn).toHaveTextContent("Assigned(0)");
-    const createdBtn = screen.getByRole("button", { name: /Created/i });
-    expect(createdBtn).toHaveTextContent("Created(0)");
+    const assignedTab = screen.getByRole("tab", { name: /Assigned/i });
+    expect(assignedTab).toHaveTextContent("Assigned(0)");
+    const createdTab = screen.getByRole("tab", { name: /Created/i });
+    expect(createdTab).toHaveTextContent("Created(0)");
   });
 });

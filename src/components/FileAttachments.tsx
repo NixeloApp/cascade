@@ -192,11 +192,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
         <Stack gap="sm">
           <Typography variant="label">Attachments ({attachments.length})</Typography>
           {attachments.map((attachment: Attachment) => (
-            <Card
-              key={attachment.storageId}
-              padding="sm"
-              className="bg-ui-bg-soft hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default group"
-            >
+            <Card key={attachment.storageId} padding="sm" hoverable className="bg-ui-bg-soft group">
               <Flex align="center" justify="between">
                 <FlexItem flex="1" className="min-w-0">
                   <Flex align="center" gap="md">
@@ -245,6 +241,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                     <IconButton
                       variant="danger"
                       size="sm"
+                      reveal
                       onClick={() => setDeleteConfirm(attachment.storageId)}
                       aria-label={`Delete ${attachment.filename}`}
                     >

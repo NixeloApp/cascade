@@ -114,7 +114,7 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
       cols={1}
       colsSm={2}
       gap="xl"
-      className="animate-in fade-in slide-in-from-bottom-8 duration-1000"
+      className="animate-in fade-in slide-in-from-bottom-8 duration-enter-slow"
     >
       <RoleCard
         icon={<Users className="w-10 h-10" />}
