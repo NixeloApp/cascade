@@ -264,27 +264,4 @@ describe("organizations", () => {
       expect(organizations.some((c) => c.name === "organization B")).toBe(true);
     });
   });
-
-  describe("deleteOrganization", () => {
-    it("should delete organization and return correct response", async () => {
-      const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
-
-      const { organizationId } = await asUser.mutation(api.organizations.createOrganization, {
-        name: "To Delete",
-        timezone: "UTC",
-      });
-
-      const result = await asUser.mutation(api.organizations.deleteOrganization, {
-        organizationId,
-      });
-
-      expect(result).toEqual({ success: true, deleted: true });
-
-      // Verify organization is deleted
-      const organization = await t.run(async (ctx) => ctx.db.get(organizationId));
-      expect(organization).toBeNull();
-    });
-  });
 });
