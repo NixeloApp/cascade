@@ -8,6 +8,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
 
@@ -58,25 +59,36 @@ export function TimerWidget() {
       <Card padding="sm" className="bg-brand-indigo-track border-brand-indigo-border">
         <Flex align="center" gap="sm">
           <Flex align="center" gap="sm">
-            {/* Pulsing dot */}
-            <div className="relative">
-              <div className="w-2 h-2 bg-brand rounded-full" />
-              <div className="absolute inset-0 w-2 h-2 bg-brand rounded-full animate-ping" />
-            </div>
+            {/* Pulsing dot - using output for semantics, spans for phrasing content */}
+            <output className="relative block" aria-label="Timer is running">
+              <span className="block w-2 h-2 bg-brand rounded-full" aria-hidden="true" />
+              <span
+                className="absolute inset-0 block w-2 h-2 bg-brand rounded-full animate-ping"
+                aria-hidden="true"
+              />
+            </output>
 
             {/* Timer display */}
-            <Typography variant="label" className="text-brand-indigo-text">
-              {formatDuration(currentDuration)}
-            </Typography>
+            <div role="timer" aria-live="off" className="flex items-center">
+              <Typography variant="label" className="text-brand-indigo-text">
+                {formatDuration(currentDuration)}
+              </Typography>
+            </div>
 
             {/* Description or Issue */}
             {(runningTimer.description || runningTimer.issue) && (
-              <Typography
-                variant="caption"
-                className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate"
+              <Tooltip
+                content={runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
               >
-                {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
-              </Typography>
+                <Typography
+                  as="span"
+                  variant="caption"
+                  className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate cursor-help focus:outline-none focus:underline"
+                  tabIndex={0}
+                >
+                  {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
+                </Typography>
+              </Tooltip>
             )}
           </Flex>
 
