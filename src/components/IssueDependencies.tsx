@@ -9,7 +9,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
+import { getTypeLabel, ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -35,9 +35,12 @@ function IssueDisplay({
   issueKey: string;
   title: string;
 }) {
+  const typeLabel = getTypeLabel(type);
   return (
     <Flex as="span" align="center" gap="sm" className="min-w-0">
-      <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" className="shrink-0" />
+      <span title={typeLabel} className="flex shrink-0">
+        <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" aria-label={typeLabel} />
+      </span>
       <Typography variant="mono" as="code" className="shrink-0 text-ui-text-secondary">
         {issueKey}
       </Typography>
