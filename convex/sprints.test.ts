@@ -396,7 +396,7 @@ describe("Sprints", () => {
         endDate,
       });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, sprintId });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -488,7 +488,7 @@ describe("Sprints", () => {
         endDate: startDate + 2 * WEEK,
       });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, sprintId });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -588,7 +588,7 @@ describe("Sprints", () => {
       // Complete the sprint
       const result = await asUser.mutation(api.sprints.completeSprint, { sprintId });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, sprintId });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -611,7 +611,7 @@ describe("Sprints", () => {
       // Complete without starting
       const result = await asUser.mutation(api.sprints.completeSprint, { sprintId });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, sprintId });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -652,7 +652,7 @@ describe("Sprints", () => {
       const asMember = asAuthenticatedUser(t, member);
       const result = await asMember.mutation(api.sprints.completeSprint, { sprintId });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, sprintId });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
