@@ -43,6 +43,9 @@ const validScopes = [
   "search:read",
 ];
 
+/** Maximum requests per minute allowed for an API key */
+const MAX_API_RATE_LIMIT = 1000;
+
 function getRoleAllowedScopes(role: "admin" | "editor" | "viewer" | null): string[] {
   if (role === "admin") {
     return validScopes; // All scopes
@@ -153,6 +156,18 @@ export const generate = authenticatedMutation({
 
     // Validate request
     await validateKeyGeneration(ctx, args.projectId, args.scopes);
+
+    if (args.rateLimit !== undefined) {
+      if (args.rateLimit < 1) {
+        throw validation("rateLimit", "Rate limit must be at least 1 request per minute");
+      }
+      if (args.rateLimit > MAX_API_RATE_LIMIT) {
+        throw validation(
+          "rateLimit",
+          `Rate limit cannot exceed ${MAX_API_RATE_LIMIT} requests per minute`,
+        );
+      }
+    }
 
     // Create API key record
     const keyId = await ctx.db.insert("apiKeys", {
@@ -302,7 +317,18 @@ export const update = authenticatedMutation({
       await validateKeyGeneration(ctx, _key.projectId, args.scopes);
       updates.scopes = args.scopes;
     }
-    if (args.rateLimit !== undefined) updates.rateLimit = args.rateLimit;
+    if (args.rateLimit !== undefined) {
+      if (args.rateLimit < 1) {
+        throw validation("rateLimit", "Rate limit must be at least 1 request per minute");
+      }
+      if (args.rateLimit > MAX_API_RATE_LIMIT) {
+        throw validation(
+          "rateLimit",
+          `Rate limit cannot exceed ${MAX_API_RATE_LIMIT} requests per minute`,
+        );
+      }
+      updates.rateLimit = args.rateLimit;
+    }
     if (args.expiresAt !== undefined) updates.expiresAt = args.expiresAt;
 
     await ctx.db.patch(args.keyId, updates);
