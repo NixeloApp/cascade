@@ -14,3 +14,7 @@ This journal tracks critical learnings and major refactoring decisions.
 ## 2026-02-20 - Projects Enrichment Refactor
 - Refactored `convex/projects.ts` to extract `enrichProject` helper for `getProject` and `getByKey`.
 - Learned: When extracting enrichment logic, separate it from access control if the access control failure behavior differs (e.g., throw vs return null). The enrichment helper should operate on an already-accessible document.
+
+## 2026-02-21 - Issues Bulk Delete Refactor
+- Refactored `bulkDelete` in `convex/issues/mutations.ts` to use `performBulkUpdate`.
+- Learned: When standardizing bulk operations, ensure that specific permission checks (like `assertIsProjectAdmin`) are preserved by passing them as arguments to the generic helper.
