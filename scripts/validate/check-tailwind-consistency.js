@@ -21,7 +21,7 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 // ============================================================
 
 // Allowed semantic duration classes
-const SEMANTIC_DURATIONS = new Set([
+const _SEMANTIC_DURATIONS = new Set([
   "duration-instant", // 75ms
   "duration-fast", // 150ms
   "duration-default", // 200ms
@@ -32,7 +32,7 @@ const SEMANTIC_DURATIONS = new Set([
 ]);
 
 // Allowed semantic transition classes
-const SEMANTIC_TRANSITIONS = new Set([
+const _SEMANTIC_TRANSITIONS = new Set([
   "transition-default",
   "transition-fast",
   "transition-slow",
@@ -124,7 +124,7 @@ const GROUP_VARIANT_PATTERN = /\b(group-hover|group-focus|group-active|peer-hove
 
 // Mobile-first violations: larger breakpoint without smaller ones
 // e.g., lg:flex without sm: or md: context
-const BREAKPOINT_ORDER = ["sm", "md", "lg", "xl", "2xl"];
+const _BREAKPOINT_ORDER = ["sm", "md", "lg", "xl", "2xl"];
 
 // ============================================================
 // 7. TRANSITION COMPLETENESS
@@ -146,7 +146,6 @@ const SKIP_FILES_ANIMATION = new Set([
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
   const errors = [];
-  const errorCount = 0;
   let warningCount = 0;
 
   // Counters for each check type
@@ -247,7 +246,7 @@ export function run() {
       const highZ = line.matchAll(HIGH_Z_PATTERN);
       for (const match of highZ) {
         const zClass = `z-${match[1]}`;
-        if (!ALLOWED_Z_INDEX.has(zClass) && parseInt(match[1]) > 50) {
+        if (!ALLOWED_Z_INDEX.has(zClass) && parseInt(match[1], 10) > 50) {
           counts.zIndex++;
           errors.push(
             `  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - High z-index ${zClass}. Consider using a semantic token.`,

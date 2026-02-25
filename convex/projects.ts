@@ -647,7 +647,7 @@ export const updateWorkflow = projectAdminMutation({
       }),
     ),
   },
-  returns: v.object({ success: v.literal(true), projectId: v.id("projects") }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // adminMutation handles auth + admin check + provides ctx.projectId
 
@@ -664,7 +664,7 @@ export const updateWorkflow = projectAdminMutation({
       metadata: { workflowStates: JSON.stringify(args.workflowStates) },
     });
 
-    return { success: true, projectId: ctx.projectId } as const;
+    return { success: true } as const;
   },
 });
 

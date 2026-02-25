@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { components } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchBookingPages } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
@@ -13,6 +14,83 @@ import { bookerAnswers } from "./validators";
  * Bookings - Handle meeting bookings via booking pages
  * Supports confirmation workflow and calendar integration
  */
+
+/** Parse "HH:MM" to minutes since midnight, or null if invalid. */
+function parseTimeToMinutes(time: string): number | null {
+  const parts = time.split(":");
+  if (parts.length !== 2) return null;
+  const hours = Number.parseInt(parts[0], 10);
+  const minutes = Number.parseInt(parts[1], 10);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return hours * 60 + minutes;
+}
+
+/** Extract day and minutes from DateTimeFormat parts, or null if invalid. */
+function extractDayAndMinutes(
+  parts: Intl.DateTimeFormatPart[],
+): { day: string; minutes: number } | null {
+  const getPart = (type: string) => parts.find((p) => p.type === type)?.value;
+  const day = getPart("weekday")?.toLowerCase();
+  const hourStr = getPart("hour");
+  const minuteStr = getPart("minute");
+  if (!day || !hourStr || !minuteStr) return null;
+  const hour = Number.parseInt(hourStr, 10);
+  const minute = Number.parseInt(minuteStr, 10);
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
+  return { day, minutes: hour * 60 + minute };
+}
+
+/** Check if a booking interval fits within a single slot. */
+function bookingFitsSlot(
+  slot: { dayOfWeek: string; startTime: string; endTime: string; timezone: string },
+  startTime: number,
+  bookingEnd: number,
+): boolean {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: slot.timezone,
+      weekday: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+    const startInfo = extractDayAndMinutes(formatter.formatToParts(new Date(startTime)));
+    const endInfo = extractDayAndMinutes(formatter.formatToParts(new Date(bookingEnd)));
+    if (!startInfo || !endInfo) return false;
+
+    if (startInfo.day !== slot.dayOfWeek || endInfo.day !== slot.dayOfWeek) return false;
+
+    const slotStartMinutes = parseTimeToMinutes(slot.startTime);
+    const slotEndMinutes = parseTimeToMinutes(slot.endTime);
+    if (slotStartMinutes === null || slotEndMinutes === null) return false;
+
+    return startInfo.minutes >= slotStartMinutes && endInfo.minutes <= slotEndMinutes;
+  } catch {
+    return false;
+  }
+}
+
+// Helper to check availability
+async function validateAvailability(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  startTime: number,
+  durationMinutes: number,
+) {
+  const slots = await ctx.db
+    .query("availabilitySlots")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter((q) => q.eq(q.field("isActive"), true))
+    .take(BOUNDED_LIST_LIMIT);
+
+  const bookingEnd = startTime + durationMinutes * MINUTE;
+  const isCovered = slots.some((slot) => bookingFitsSlot(slot, startTime, bookingEnd));
+
+  if (!isCovered) {
+    throw validation("startTime", "Selected time is outside available hours");
+  }
+}
 
 /** Creates a new booking for a booking page with rate limiting, conflict detection, and optional auto-confirmation. */
 export const createBooking = mutation({
@@ -61,6 +139,9 @@ export const createBooking = mutation({
     if (!page?.isActive) {
       throw notFound("bookingPage");
     }
+
+    // Security: Validate that the requested time falls within host's availability
+    await validateAvailability(ctx, page.userId, args.startTime, page.duration);
 
     // Calculate end time
     const endTime = args.startTime + page.duration * MINUTE;

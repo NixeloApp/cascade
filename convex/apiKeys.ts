@@ -285,7 +285,7 @@ export const update = authenticatedMutation({
     rateLimit: v.optional(v.number()),
     expiresAt: v.optional(v.number()),
   },
-  returns: v.object({ success: v.literal(true), keyId: v.id("apiKeys") }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const _key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
 
@@ -307,7 +307,7 @@ export const update = authenticatedMutation({
 
     await ctx.db.patch(args.keyId, updates);
 
-    return { success: true, keyId: args.keyId } as const;
+    return { success: true } as const;
   },
 });
 

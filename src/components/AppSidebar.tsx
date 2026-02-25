@@ -566,7 +566,6 @@ type CollapsibleSectionProps = {
   | { to?: never; params?: never; search?: never }
 );
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy code
 function CollapsibleSection({
   icon: Icon,
   label,
