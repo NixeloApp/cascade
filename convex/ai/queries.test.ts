@@ -98,7 +98,7 @@ describe("AI Queries", () => {
       });
     });
 
-    it("should allow access to public project for non-member", async () => {
+    it("should throw for non-org-member on public project", async () => {
       const t = convexTest(schema, modules);
       // Create owner
       const ownerId = await createTestUser(t);
@@ -108,8 +108,36 @@ describe("AI Queries", () => {
         isPublic: true,
       });
 
-      // Create another user
+      // Create another user (NOT in organization)
       const otherUserId = await createTestUser(t);
+      const asOtherUser = asAuthenticatedUser(t, otherUserId);
+
+      // Attempt to access context - Should FAIL (Public means public to ORG, not world)
+      await expectThrowsAsync(async () => {
+        await asOtherUser.query(api.ai.queries.getProjectContext, { projectId });
+      });
+    });
+
+    it("should allow access to public project for organization member", async () => {
+      const t = convexTest(schema, modules);
+      // Create owner
+      const ownerId = await createTestUser(t);
+      const { organizationId } = await createOrganizationAdmin(t, ownerId);
+      // Create PUBLIC project
+      const projectId = await createProjectInOrganization(t, ownerId, organizationId, {
+        isPublic: true,
+      });
+
+      // Create another user and add to organization
+      const otherUserId = await createTestUser(t);
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: otherUserId,
+          role: "member",
+          addedBy: ownerId,
+        });
+      });
       const asOtherUser = asAuthenticatedUser(t, otherUserId);
 
       // Attempt to access context
