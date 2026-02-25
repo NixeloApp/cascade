@@ -364,7 +364,7 @@ export const sendDigestEmail = internalAction({
       };
 
       const items = notifications.map((n: DigestNotification) => ({
-        type: n.type as "mention" | "assignment" | "comment",
+        type: n.type as "mention" | "assigned" | "comment",
         issueKey: n.issueKey || "Unknown",
         issueTitle: n.title,
         issueUrl: `${appUrl}/issues/${n.issueId}`,
@@ -457,10 +457,10 @@ export const sendEventReminder = internalAction({
       if (minutesBefore < 60) {
         reminderText = `${minutesBefore} minute${minutesBefore !== 1 ? "s" : ""}`;
       } else if (minutesBefore < 1440) {
-        const hours = Math.round(minutesBefore / 60);
+        const hours = Math.floor(minutesBefore / 60);
         reminderText = `${hours} hour${hours !== 1 ? "s" : ""}`;
       } else {
-        const days = Math.round(minutesBefore / 1440);
+        const days = Math.floor(minutesBefore / 1440);
         reminderText = `${days} day${days !== 1 ? "s" : ""}`;
       }
 
