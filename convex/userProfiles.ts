@@ -263,7 +263,24 @@ export const getUserProfile = authenticatedQuery({
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
-    return profile;
+    if (!profile) return null;
+
+    // Security check: Only return sensitive data to self or admin
+    const isSelf = ctx.userId === args.userId;
+    if (isSelf || (await isAdmin(ctx, ctx.userId))) {
+      return profile;
+    }
+
+    // Sanitize profile for others
+    return {
+      ...profile,
+      equityPercentage: undefined,
+      equityHourlyValue: undefined,
+      equityNotes: undefined,
+      requiredEquityHoursPerWeek: undefined,
+      requiredEquityHoursPerMonth: undefined,
+      maxEquityHoursPerWeek: undefined,
+    };
   },
 });
 

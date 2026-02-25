@@ -58,6 +58,23 @@ function calculateTimeEntryCost(
   return { duration, totalCost };
 }
 
+async function validateViewPermissions(
+  ctx: QueryCtx,
+  currentUserId: Id<"users">,
+  requestedUserId: Id<"users"> | undefined,
+  projectId: Id<"projects"> | undefined,
+) {
+  if (requestedUserId && requestedUserId !== currentUserId) {
+    if (projectId) {
+      await assertIsProjectAdmin(ctx, projectId, currentUserId);
+    } else {
+      throw forbidden(
+        "Access denied: You can only view other users' time entries within a specific project context where you are an admin.",
+      );
+    }
+  }
+}
+
 // ===== Time Entry Management =====
 
 export const startTimer = authenticatedMutation({
@@ -357,6 +374,9 @@ export const listTimeEntries = authenticatedQuery({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Permission check for viewing other users' time
+    await validateViewPermissions(ctx, ctx.userId, args.userId, args.projectId);
+
     const userId = args.userId || ctx.userId;
 
     let entries: Doc<"timeEntries">[];
