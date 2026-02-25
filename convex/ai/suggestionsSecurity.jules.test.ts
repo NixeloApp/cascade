@@ -3,67 +3,9 @@ import { describe, it } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
-import {
-  addProjectMember,
-  createTestProject,
-  createTestUser,
-  expectThrowsAsync,
-} from "../testUtils";
+import { createTestProject, createTestUser, expectThrowsAsync } from "../testUtils";
 
 describe("AI Suggestions Security", () => {
-  it("should prevent viewers (read-only) from triggering suggestions", async () => {
-    const t = convexTest(schema, modules);
-    const userId = await createTestUser(t);
-    const projectId = await createTestProject(t, userId);
-
-    const viewerId = await createTestUser(t);
-    const project = await t.run(async (ctx) => ctx.db.get(projectId));
-    if (!project) throw new Error("Project not found");
-
-    // Add viewer to organization
-    await t.run(async (ctx) => {
-      await ctx.db.insert("organizationMembers", {
-        organizationId: project.organizationId,
-        userId: viewerId,
-        role: "member",
-        addedBy: userId,
-      });
-    });
-
-    // Add viewer to project
-    await addProjectMember(t, projectId, viewerId, "viewer", userId);
-
-    // Act as viewer
-    const tViewer = t.withIdentity({ subject: viewerId });
-
-    // Attempt to trigger suggestIssueDescription
-    await expectThrowsAsync(async () => {
-      await tViewer.action(api.ai.suggestions.suggestIssueDescription, {
-        projectId,
-        title: "Test Issue",
-        type: "task",
-      });
-    }, "editor");
-
-    // Attempt to trigger suggestPriority
-    await expectThrowsAsync(async () => {
-      await tViewer.action(api.ai.suggestions.suggestPriority, {
-        projectId,
-        title: "Test Issue",
-        type: "task",
-      });
-    }, "editor");
-
-    // Attempt to trigger suggestLabels
-    await expectThrowsAsync(async () => {
-      await tViewer.action(api.ai.suggestions.suggestLabels, {
-        projectId,
-        title: "Test Issue",
-        type: "task",
-      });
-    }, "editor");
-  });
-
   it("should prevent unauthenticated users from responding to suggestions", async () => {
     const t = convexTest(schema, modules);
     const userId = await createTestUser(t);

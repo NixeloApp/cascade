@@ -188,11 +188,13 @@ export function AppSidebar() {
           {/* Header with organization name and collapse toggle */}
           <Flex align="center" justify="between" className="p-4 border-b border-ui-border">
             {!showCollapsed && (
-              <Link to={ROUTES.dashboard.path} params={{ orgSlug }} onClick={handleNavClick}>
-                <Typography variant="large" className="truncate max-w-40">
-                  {organizationName}
-                </Typography>
-              </Link>
+              <Tooltip content={organizationName}>
+                <Link to={ROUTES.dashboard.path} params={{ orgSlug }} onClick={handleNavClick}>
+                  <Typography variant="large" className="truncate max-w-40">
+                    {organizationName}
+                  </Typography>
+                </Link>
+              </Tooltip>
             )}
 
             {/* Desktop Toggle Button */}

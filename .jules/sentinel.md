@@ -155,3 +155,8 @@
 **Vulnerability:** The `rotate` mutation for API keys only verified that the user still had *access* to the project, not that they still held the *permissions* required for the key's specific scopes. This allowed a user who was downgraded (e.g., Admin -> Viewer) to rotate an existing high-privilege key (e.g., `issues:delete`) and maintain access to restricted operations.
 **Learning:** Credential rotation is effectively a "re-issuance" of the credential. Therefore, it must enforce the same authorization checks as the initial creation. Do not assume that because a credential *exists*, the user is still authorized to hold it.
 **Prevention:** Updated `rotate` in `convex/apiKeys.ts` to use `validateKeyGeneration`, which re-evaluates the user's current role against the key's scopes before issuing the new key.
+
+## 2026-03-11 - Cross-Organization Team Injection
+**Vulnerability:** The `createTeam` mutation allowed an organization member to create a team linked to a workspace in a *different* organization, effectively "injecting" a team into another tenant's workspace view. This occurred because `organizationMemberMutation` validated the user's membership in the provided `organizationId` but failed to validate that the provided `workspaceId` belonged to that same organization.
+**Learning:** When a mutation links two parent resources (like Organization and Workspace), explicitly verify their relationship in the database. Do not trust that the client-provided IDs form a valid hierarchy, even if the user has access to one of them.
+**Prevention:** Added a check in `createTeam` to verify `workspace.organizationId === ctx.organizationId`. Also added a secondary check to ensure the user is an Organization Admin or a Workspace Member of the target workspace.

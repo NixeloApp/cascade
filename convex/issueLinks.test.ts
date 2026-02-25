@@ -11,7 +11,7 @@ import {
 } from "./testUtils";
 
 describe("Issue Links", () => {
-  describe("createIssueLink", () => {
+  describe("create", () => {
     it("should create a link between two issues", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
@@ -31,7 +31,7 @@ describe("Issue Links", () => {
         priority: "medium",
       });
 
-      const { linkId } = await asUser.mutation(api.issueLinks.createIssueLink, {
+      const { linkId } = await asUser.mutation(api.issueLinks.create, {
         fromIssueId: issue1Id,
         toIssueId: issue2Id,
         linkType: "blocks",
@@ -78,7 +78,7 @@ describe("Issue Links", () => {
         priority: "medium",
       });
 
-      await asUser.mutation(api.issueLinks.createIssueLink, {
+      await asUser.mutation(api.issueLinks.create, {
         fromIssueId: issue1Id,
         toIssueId: issue2Id,
         linkType: "blocks",
@@ -86,7 +86,7 @@ describe("Issue Links", () => {
 
       // Try to create same link again
       await expect(async () => {
-        await asUser.mutation(api.issueLinks.createIssueLink, {
+        await asUser.mutation(api.issueLinks.create, {
           fromIssueId: issue1Id,
           toIssueId: issue2Id,
           linkType: "blocks",
@@ -129,7 +129,7 @@ describe("Issue Links", () => {
 
       const asViewer = asAuthenticatedUser(t, viewerId);
       await expect(async () => {
-        await asViewer.mutation(api.issueLinks.createIssueLink, {
+        await asViewer.mutation(api.issueLinks.create, {
           fromIssueId: issue1Id,
           toIssueId: issue2Id,
           linkType: "blocks",
@@ -139,7 +139,7 @@ describe("Issue Links", () => {
     });
   });
 
-  describe("deleteIssueLink", () => {
+  describe("remove", () => {
     it("should remove an existing link", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
@@ -159,13 +159,13 @@ describe("Issue Links", () => {
         priority: "medium",
       });
 
-      const { linkId } = await asUser.mutation(api.issueLinks.createIssueLink, {
+      const { linkId } = await asUser.mutation(api.issueLinks.create, {
         fromIssueId: issue1Id,
         toIssueId: issue2Id,
         linkType: "relates",
       });
 
-      const result = await asUser.mutation(api.issueLinks.deleteIssueLink, { linkId });
+      const result = await asUser.mutation(api.issueLinks.remove, { linkId });
       expect(result).toEqual({ success: true, deleted: true });
 
       // Verify link is gone
@@ -210,7 +210,7 @@ describe("Issue Links", () => {
         priority: "medium",
       });
 
-      const { linkId } = await asAdmin.mutation(api.issueLinks.createIssueLink, {
+      const { linkId } = await asAdmin.mutation(api.issueLinks.create, {
         fromIssueId: issue1Id,
         toIssueId: issue2Id,
         linkType: "relates",
@@ -226,13 +226,13 @@ describe("Issue Links", () => {
 
       const asViewer = asAuthenticatedUser(t, viewerId);
       await expect(async () => {
-        await asViewer.mutation(api.issueLinks.deleteIssueLink, { linkId });
+        await asViewer.mutation(api.issueLinks.remove, { linkId });
       }).rejects.toThrow(/FORBIDDEN|editor/i);
       await t.finishInProgressScheduledFunctions();
     });
   });
 
-  describe("getIssueLinks", () => {
+  describe("getForIssue", () => {
     it("should return incoming and outgoing links", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
@@ -259,20 +259,20 @@ describe("Issue Links", () => {
       });
 
       // A -> B (outgoing from A)
-      await asUser.mutation(api.issueLinks.createIssueLink, {
+      await asUser.mutation(api.issueLinks.create, {
         fromIssueId: issueAId,
         toIssueId: issueBId,
         linkType: "blocks",
       });
 
       // C -> A (incoming to A)
-      await asUser.mutation(api.issueLinks.createIssueLink, {
+      await asUser.mutation(api.issueLinks.create, {
         fromIssueId: issueCId,
         toIssueId: issueAId,
         linkType: "relates",
       });
 
-      const { outgoing, incoming } = await asUser.query(api.issueLinks.getIssueLinks, {
+      const { outgoing, incoming } = await asUser.query(api.issueLinks.getForIssue, {
         issueId: issueAId,
       });
 

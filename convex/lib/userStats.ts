@@ -16,6 +16,9 @@ const MAX_PROJECTS_FOR_FAST_PATH = 10;
 // filter even at 50 projects — unlike memberships, each issue index is tightly scoped.
 const MAX_PROJECTS_FOR_ISSUE_SCAN = 50;
 
+// Threshold for project membership checks: O(1) index lookup per project is efficient up to 50 projects.
+const MAX_PROJECTS_FOR_MEMBERSHIP_CHECK = 50;
+
 // Helper to construct allowed project filter
 function isAllowedProject(q: FilterBuilder<GenericTableInfo>, projectIds: Id<"projects">[]) {
   // Defensive guard: q.or() with zero args would throw at runtime
@@ -391,11 +394,16 @@ async function countProjects(
   userId: Id<"users">,
   allowedProjectIds: Set<string> | null,
 ) {
-  return await executeCountStrategy(allowedProjectIds, 0, {
-    unrestricted: () => countProjectsUnrestricted(ctx, userId),
-    fast: (ids) => countProjectsFast(ctx, userId, ids),
-    filtered: (ids) => countProjectsFiltered(ctx, userId, ids),
-  });
+  return await executeCountStrategy(
+    allowedProjectIds,
+    0,
+    {
+      unrestricted: () => countProjectsUnrestricted(ctx, userId),
+      fast: (ids) => countProjectsFast(ctx, userId, ids),
+      filtered: (ids) => countProjectsFiltered(ctx, userId, ids),
+    },
+    MAX_PROJECTS_FOR_MEMBERSHIP_CHECK,
+  );
 }
 
 /**
