@@ -77,3 +77,7 @@
 ## 2026-02-25 - IconButton Reveal Visibility
 **Learning:** The `reveal` variant on `IconButton` used `opacity-0 group-hover:opacity-100`, making actions invisible to keyboard users until they blindly tabbed onto the button itself.
 **Action:** Aligned `IconButton` behavior with `Button` by adding `group-focus-within:opacity-100` and `focus:opacity-100`. This ensures contextual actions become visible as soon as any element within the parent group (e.g., a list row) receives focus.
+
+## 2026-05-25 - Semantic Timer & Status
+**Learning:** `div` elements with `role="status"` trigger linter warnings in favor of semantic `<output>` elements. However, `<output>` is phrasing content and cannot contain block-level elements like `div`s (used for visual indicators), leading to invalid HTML if not handled carefully.
+**Action:** When converting a status indicator to `<output>`, ensure inner visual elements are `<span>` (phrasing content) with `display: block` or similar CSS to maintain visual layout while satisfying semantic requirements. Also, always wrap live timer values in a container with `role="timer"` and `aria-live="off"` to prevent disruptive screen reader announcements.
