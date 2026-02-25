@@ -60,12 +60,13 @@ function calculateTimeEntryCost(
 
 async function validateViewPermissions(
   ctx: QueryCtx,
+  currentUserId: Id<"users">,
   requestedUserId: Id<"users"> | undefined,
   projectId: Id<"projects"> | undefined,
 ) {
-  if (requestedUserId && requestedUserId !== ctx.userId) {
+  if (requestedUserId && requestedUserId !== currentUserId) {
     if (projectId) {
-      await assertIsProjectAdmin(ctx, projectId, ctx.userId);
+      await assertIsProjectAdmin(ctx, projectId, currentUserId);
     } else {
       throw forbidden(
         "Access denied: You can only view other users' time entries within a specific project context where you are an admin.",
@@ -374,7 +375,7 @@ export const listTimeEntries = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     // Permission check for viewing other users' time
-    await validateViewPermissions(ctx, args.userId, args.projectId);
+    await validateViewPermissions(ctx, ctx.userId, args.userId, args.projectId);
 
     const userId = args.userId || ctx.userId;
 
