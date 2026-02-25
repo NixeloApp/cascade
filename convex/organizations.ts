@@ -197,7 +197,7 @@ export const deleteOrganization = authenticatedMutation({
   args: {
     organizationId: v.id("organizations"),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.boolean(), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     await assertOrganizationOwner(ctx, args.organizationId, ctx.userId);
 
@@ -224,7 +224,7 @@ export const deleteOrganization = authenticatedMutation({
     // Delete organization
     await ctx.db.delete(args.organizationId);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
