@@ -128,15 +128,15 @@ export async function isIpAllowed(
   organizationId: Id<"organizations">,
   clientIp: string | null,
 ): Promise<boolean> {
-  // If no IP provided, allow (can't validate)
-  if (!clientIp) return true;
-
   // Get organization
   const org = await ctx.db.get(organizationId);
   if (!org) return false;
 
   // If IP restrictions are disabled, allow
   if (!org.ipRestrictionsEnabled) return true;
+
+  // If restrictions are ENABLED but no IP is provided, DENY (Fail Closed)
+  if (!clientIp) return false;
 
   // Get allowlist (bounded - orgs typically have <100 IP entries)
   const allowlist = await ctx.db
