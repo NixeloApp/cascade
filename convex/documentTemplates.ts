@@ -108,6 +108,7 @@ export const update = authenticatedMutation({
     content: v.optional(blockNoteContent),
     isPublic: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
     if (!template) throw notFound("template", args.id);
@@ -131,12 +132,15 @@ export const update = authenticatedMutation({
     if (args.isPublic !== undefined) updates.isPublic = args.isPublic;
 
     await ctx.db.patch(args.id, updates);
+
+    return { success: true } as const;
   },
 });
 
 // Delete a template
 export const remove = authenticatedMutation({
   args: { id: v.id("documentTemplates") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
     if (!template) throw notFound("template", args.id);
@@ -150,6 +154,8 @@ export const remove = authenticatedMutation({
     }
 
     await ctx.db.delete(args.id);
+
+    return { success: true, deleted: true } as const;
   },
 });
 

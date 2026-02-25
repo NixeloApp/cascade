@@ -23,6 +23,7 @@ export const update = authenticatedMutation({
     desktopNotifications: v.optional(v.boolean()),
     timezone: v.optional(v.string()), // IANA timezone
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const existinghelper = await ctx.db
       .query("userSettings")
@@ -41,5 +42,7 @@ export const update = authenticatedMutation({
         updatedAt: Date.now(),
       });
     }
+
+    return { success: true } as const;
   },
 });

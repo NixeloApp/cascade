@@ -232,6 +232,7 @@ export const revoke = authenticatedMutation({
   args: {
     keyId: v.id("apiKeys"),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
 
@@ -252,7 +253,7 @@ export const revoke = authenticatedMutation({
       },
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -284,6 +285,7 @@ export const update = authenticatedMutation({
     rateLimit: v.optional(v.number()),
     expiresAt: v.optional(v.number()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const _key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
 
@@ -301,7 +303,7 @@ export const update = authenticatedMutation({
 
     await ctx.db.patch(args.keyId, updates);
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -465,9 +467,10 @@ export const recordUsage = internalMutation({
     ipAddress: v.optional(v.string()),
     error: v.optional(v.string()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const key = await ctx.db.get(args.keyId);
-    if (!key) return;
+    if (!key) return { success: true } as const;
 
     // Update key usage stats
     await ctx.db.patch(args.keyId, {
@@ -487,6 +490,8 @@ export const recordUsage = internalMutation({
       ipAddress: args.ipAddress,
       error: args.error,
     });
+
+    return { success: true } as const;
   },
 });
 
