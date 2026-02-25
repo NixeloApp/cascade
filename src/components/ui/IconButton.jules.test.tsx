@@ -38,4 +38,13 @@ describe("IconButton", () => {
     const button = screen.getByRole("button", { name: "Hover me" });
     expect(button).toHaveAttribute("data-state", "closed");
   });
+
+  it("applies reveal classes correctly", () => {
+    render(<IconButton reveal>Icon</IconButton>);
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("opacity-0");
+    expect(button).toHaveClass("group-hover:opacity-100");
+    expect(button).toHaveClass("group-focus-within:opacity-100");
+    expect(button).toHaveClass("focus:opacity-100");
+  });
 });
