@@ -51,7 +51,7 @@ export const listIssuesInternal = internalQuery({
           q.eq("projectId", args.projectId).lt("isDeleted", true),
         )
         .order("desc"),
-      100,
+      BOUNDED_LIST_LIMIT,
       "listIssuesInternal project issues",
     );
 
