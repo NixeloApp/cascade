@@ -108,9 +108,9 @@ export const create = authenticatedMutation({
       title: args.title,
       description: args.description,
       duration: args.duration,
-      bufferTimeBefore: args.bufferTimeBefore || 0,
-      bufferTimeAfter: args.bufferTimeAfter || 0,
-      minimumNotice: args.minimumNotice || 24, // Default 24 hours
+      bufferTimeBefore: args.bufferTimeBefore ?? 0,
+      bufferTimeAfter: args.bufferTimeAfter ?? 0,
+      minimumNotice: args.minimumNotice ?? 24, // Default 24 hours
       maxBookingsPerDay: args.maxBookingsPerDay,
       location: args.location,
       locationDetails: args.locationDetails,
@@ -195,6 +195,7 @@ export const update = authenticatedMutation({
     requiresConfirmation: v.optional(v.boolean()),
     color: v.optional(v.string()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const page = await ctx.db.get(args.id);
     requireOwned(page, ctx.userId, "bookingPage");
@@ -202,12 +203,15 @@ export const update = authenticatedMutation({
     // Build update object using helper
     const updates = buildBookingPageUpdates(args);
     await ctx.db.patch(args.id, updates);
+
+    return { success: true } as const;
   },
 });
 
 // Delete booking page
 export const remove = authenticatedMutation({
   args: { id: v.id("bookingPages") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const page = await ctx.db.get(args.id);
     requireOwned(page, ctx.userId, "bookingPage");
@@ -224,6 +228,8 @@ export const remove = authenticatedMutation({
     }
 
     await ctx.db.delete(args.id);
+
+    return { success: true, deleted: true } as const;
   },
 });
 
@@ -233,6 +239,7 @@ export const toggleActive = authenticatedMutation({
     id: v.id("bookingPages"),
     isActive: v.boolean(),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const page = await ctx.db.get(args.id);
     requireOwned(page, ctx.userId, "bookingPage");
@@ -241,5 +248,7 @@ export const toggleActive = authenticatedMutation({
       isActive: args.isActive,
       updatedAt: Date.now(),
     });
+
+    return { success: true } as const;
   },
 });
