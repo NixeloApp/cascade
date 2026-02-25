@@ -28,9 +28,27 @@ describe("Bookings", () => {
     });
   }
 
+  // Helper to set up full availability for a user
+  async function setupFullAvailability(t: any, userId: any) {
+    await t.run(async (ctx: any) => {
+      const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+      for (const day of days) {
+        await ctx.db.insert("availabilitySlots", {
+          userId,
+          dayOfWeek: day,
+          startTime: "00:00",
+          endTime: "23:59",
+          timezone: "UTC",
+          isActive: true,
+        });
+      }
+    });
+  }
+
   it("should create a booking successfully", async () => {
     const t = convexTest(schema, modules);
     const hostId = await createTestUser(t, { name: "Host" });
+    await setupFullAvailability(t, hostId);
     await createBookingPage(t, hostId, "test-page");
 
     // Booking time: 24 hours from now
@@ -62,6 +80,7 @@ describe("Bookings", () => {
   it("should prevent overlapping bookings", async () => {
     const t = convexTest(schema, modules);
     const hostId = await createTestUser(t, { name: "Host" });
+    await setupFullAvailability(t, hostId);
     await createBookingPage(t, hostId, "overlap-page");
 
     // Base booking: T to T+30
@@ -153,6 +172,7 @@ describe("Bookings", () => {
   it("should validate minimum notice", async () => {
     const t = convexTest(schema, modules);
     const hostId = await createTestUser(t, { name: "Host" });
+    await setupFullAvailability(t, hostId);
 
     await t.run(async (ctx) => {
       await ctx.db.insert("bookingPages", {
@@ -187,6 +207,7 @@ describe("Bookings", () => {
   it("should validate inactive page", async () => {
     const t = convexTest(schema, modules);
     const hostId = await createTestUser(t, { name: "Host" });
+    await setupFullAvailability(t, hostId);
 
     await t.run(async (ctx) => {
       await ctx.db.insert("bookingPages", {

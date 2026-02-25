@@ -26,7 +26,7 @@ async function validateAvailability(
     .query("availabilitySlots")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .filter((q) => q.eq(q.field("isActive"), true))
-    .collect();
+    .take(BOUNDED_LIST_LIMIT);
 
   const bookingEnd = startTime + durationMinutes * MINUTE;
 
