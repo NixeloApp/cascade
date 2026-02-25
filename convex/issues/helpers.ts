@@ -793,3 +793,40 @@ export async function performSimpleBulkUpdate<K extends keyof Doc<"issues">>(
     };
   });
 }
+
+/**
+ * Applies a status update to an issue, handling versioning, ordering, and activity logging.
+ *
+ * @param ctx - Mutation context.
+ * @param issue - The issue document to update.
+ * @param newStatus - The new status ID.
+ * @param newOrder - The new order for the issue.
+ * @param now - Optional timestamp (defaults to Date.now()).
+ */
+export async function applyStatusUpdate(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  issue: Doc<"issues">,
+  newStatus: string,
+  newOrder: number,
+  now: number = Date.now(),
+) {
+  const oldStatus = issue.status;
+
+  await ctx.db.patch(issue._id, {
+    status: newStatus,
+    order: newOrder,
+    updatedAt: now,
+    version: getNextVersion(issue.version),
+  });
+
+  if (oldStatus !== newStatus) {
+    await ctx.db.insert("issueActivity", {
+      issueId: issue._id,
+      userId: ctx.userId,
+      action: "updated",
+      field: "status",
+      oldValue: oldStatus,
+      newValue: newStatus,
+    });
+  }
+}
