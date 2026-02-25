@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api, internal } from "../_generated/api";
+import { internal } from "../_generated/api";
 import type { ActionCtx } from "../_generated/server";
 import { handleCallbackHandler, initiateAuthHandler, listReposHandler } from "./githubOAuth";
 
@@ -186,15 +186,46 @@ describe("GitHub OAuth HTTP Handlers", () => {
   });
 
   describe("listReposHandler", () => {
+    it("should return 401 if Authorization header is missing", async () => {
+      const ctx = { runQuery: vi.fn() } as unknown as ActionCtx;
+      const request = new Request("https://api.convex.dev/github/repos");
+
+      const response = await listReposHandler(ctx, request);
+
+      expect(response.status).toBe(401);
+      const body = await response.json();
+      expect(body.error).toBe("Unauthorized");
+    });
+
+    it("should return 401 if session is invalid", async () => {
+      const ctx = { runQuery: vi.fn() } as unknown as ActionCtx;
+      const request = new Request("https://api.convex.dev/github/repos", {
+        headers: { Authorization: "Bearer invalid-token" },
+      });
+
+      vi.mocked(ctx.runQuery).mockResolvedValue(null);
+
+      const response = await listReposHandler(ctx, request);
+
+      expect(response.status).toBe(401);
+      const body = await response.json();
+      expect(body.error).toBe("Unauthorized");
+      expect(ctx.runQuery).toHaveBeenCalledWith(internal.auth.verifySession, {
+        sessionId: "invalid-token",
+      });
+    });
+
     it("should return list of repositories if connected", async () => {
       const ctx = {
         runQuery: vi.fn(),
         runMutation: vi.fn(),
       } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos");
+      const request = new Request("https://api.convex.dev/github/repos", {
+        headers: { Authorization: "Bearer valid-token" },
+      });
 
-      // Mock connection check
-      vi.mocked(ctx.runQuery).mockResolvedValue({ userId: "user-123" });
+      // Mock session verification
+      vi.mocked(ctx.runQuery).mockResolvedValue("user-123");
 
       // Mock token retrieval
       vi.mocked(ctx.runMutation).mockResolvedValue({ accessToken: "mock-access-token" });
@@ -236,7 +267,9 @@ describe("GitHub OAuth HTTP Handlers", () => {
         description: "A repo",
       });
 
-      expect(ctx.runQuery).toHaveBeenCalledWith(api.github.getConnection);
+      expect(ctx.runQuery).toHaveBeenCalledWith(internal.auth.verifySession, {
+        sessionId: "valid-token",
+      });
       expect(ctx.runMutation).toHaveBeenCalledWith(internal.github.getDecryptedGitHubTokens, {
         userId: "user-123",
       });
@@ -245,11 +278,16 @@ describe("GitHub OAuth HTTP Handlers", () => {
     it("should return 400 if not connected", async () => {
       const ctx = {
         runQuery: vi.fn(),
+        runMutation: vi.fn(),
       } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos");
+      const request = new Request("https://api.convex.dev/github/repos", {
+        headers: { Authorization: "Bearer valid-token" },
+      });
 
-      // Mock no connection
-      vi.mocked(ctx.runQuery).mockResolvedValue(null);
+      // Mock session
+      vi.mocked(ctx.runQuery).mockResolvedValue("user-123");
+      // Mock no connection (tokens null)
+      vi.mocked(ctx.runMutation).mockResolvedValue(null);
 
       const response = await listReposHandler(ctx, request);
 
@@ -258,31 +296,16 @@ describe("GitHub OAuth HTTP Handlers", () => {
       expect(body.error).toBe("Not connected to GitHub");
     });
 
-    it("should return 500 if token retrieval fails", async () => {
-      const ctx = {
-        runQuery: vi.fn(),
-        runMutation: vi.fn(),
-      } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos");
-
-      vi.mocked(ctx.runQuery).mockResolvedValue({ userId: "user-123" });
-      vi.mocked(ctx.runMutation).mockResolvedValue(null); // No tokens returned
-
-      const response = await listReposHandler(ctx, request);
-
-      expect(response.status).toBe(500);
-      const body = await response.json();
-      expect(body.error).toBe("Failed to get GitHub tokens");
-    });
-
     it("should return error if GitHub API fails", async () => {
       const ctx = {
         runQuery: vi.fn(),
         runMutation: vi.fn(),
       } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos");
+      const request = new Request("https://api.convex.dev/github/repos", {
+        headers: { Authorization: "Bearer valid-token" },
+      });
 
-      vi.mocked(ctx.runQuery).mockResolvedValue({ userId: "user-123" });
+      vi.mocked(ctx.runQuery).mockResolvedValue("user-123");
       vi.mocked(ctx.runMutation).mockResolvedValue({ accessToken: "token" });
 
       mockFetch.mockResolvedValueOnce({

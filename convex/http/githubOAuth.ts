@@ -1,4 +1,4 @@
-import { api, internal } from "../_generated/api";
+import { internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import {
@@ -443,26 +443,37 @@ export const handleCallback = httpAction(handleCallbackHandler);
  * @param _request - The incoming HTTP request (unused)
  * @returns A JSON Response containing the list of repositories or an error message.
  */
-export const listReposHandler = async (ctx: ActionCtx, _request: Request) => {
+export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
   try {
-    // Get user's GitHub connection (metadata only, no tokens)
-    const connection = await ctx.runQuery(api.github.getConnection);
+    // Authenticate the user from the Bearer token
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
 
-    if (!connection) {
-      return new Response(JSON.stringify({ error: "Not connected to GitHub" }), {
-        status: 400,
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Get decrypted tokens for API call
+    // Verify session and get user ID
+    const userId = await ctx.runQuery(internal.auth.verifySession, { sessionId: token });
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Get decrypted tokens for API call (internal mutation uses userId)
     const tokens = await ctx.runMutation(internal.github.getDecryptedGitHubTokens, {
-      userId: connection.userId,
+      userId,
     });
 
     if (!tokens) {
-      return new Response(JSON.stringify({ error: "Failed to get GitHub tokens" }), {
-        status: 500,
+      return new Response(JSON.stringify({ error: "Not connected to GitHub" }), {
+        status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
