@@ -245,10 +245,12 @@ async function fetchRoadmapIssuesByType(
       safeCollect(
         ctx.db
           .query("issues")
-          .withIndex("by_project_type", (q) =>
-            q.eq("projectId", projectId).eq("type", type as Doc<"issues">["type"]),
+          .withIndex("by_project_type_active", (q) =>
+            q
+              .eq("projectId", projectId)
+              .eq("type", type as Doc<"issues">["type"])
+              .lt("isDeleted", true),
           )
-          .filter(notDeleted)
           .order("desc"),
         BOUNDED_LIST_LIMIT,
         `roadmap issues type=${type}`,
@@ -383,7 +385,7 @@ export const listSelectableIssues = authenticatedQuery({
     }
 
     // Optimization: Use parallel queries for each root issue type (task, bug, story, epic).
-    // This allows us to use the `by_project_type` index to efficiently skip subtasks and deleted items.
+    // This allows us to use the `by_project_type_active` index to efficiently skip subtasks and deleted items.
     // Scanning the `by_project` index would force us to scan through potentially thousands of subtasks
     // or deleted items to find the most recent selectable issues.
     // Since we only need the top 50 (BOUNDED_SELECT_LIMIT), fetching 50 of each type and merging is very fast.
@@ -391,10 +393,12 @@ export const listSelectableIssues = authenticatedQuery({
       ROOT_ISSUE_TYPES.map((type) =>
         ctx.db
           .query("issues")
-          .withIndex("by_project_type", (q) =>
-            q.eq("projectId", args.projectId).eq("type", type as Doc<"issues">["type"]),
+          .withIndex("by_project_type_active", (q) =>
+            q
+              .eq("projectId", args.projectId)
+              .eq("type", type as Doc<"issues">["type"])
+              .lt("isDeleted", true),
           )
-          .filter(notDeleted)
           .order("desc")
           .take(BOUNDED_SELECT_LIMIT),
       ),
