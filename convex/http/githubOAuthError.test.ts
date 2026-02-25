@@ -63,16 +63,19 @@ describe("GitHub OAuth Error Handling", () => {
 
     const response = await handleCallbackHandler(mockCtx, request);
 
-    // It should catch the validation error and return an error page
-    expect(response.status).toBe(400); // handleOAuthError returns 400 for VALIDATION
+    // It should catch the UPSTREAM error and return a 502
+    expect(response.status).toBe(502);
 
     const html = await response.text();
-    expect(html).toContain("Failed to exchange GitHub authorization code");
+    // User sees generic message
+    expect(html).toContain("Failed to exchange authorization code");
+    // User does NOT see details
+    expect(html).not.toContain("bad_verification_code");
 
     // Check that we DID log the detailed error
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringMatching(
-        /GitHub OAuth error: Failed to exchange code.*The code passed is incorrect or expired./,
+        /\[ERROR\] GitHub OAuth error: Failed to exchange code.*bad_verification_code/,
       ),
     );
   });
@@ -99,15 +102,20 @@ describe("GitHub OAuth Error Handling", () => {
 
     const response = await handleCallbackHandler(mockCtx, request);
 
-    // It should catch the validation error and return an error page
-    expect(response.status).toBe(400); // handleOAuthError returns 400 for VALIDATION
+    // It should catch the UPSTREAM error and return a 502
+    expect(response.status).toBe(502);
 
     const html = await response.text();
-    expect(html).toContain("Failed to get GitHub user info");
+    // User sees generic message
+    expect(html).toContain("Failed to retrieve user info");
+    // User does NOT see details
+    expect(html).not.toContain("Bad credentials");
 
     // Check that we DID log the detailed error
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/GitHub OAuth error: Failed to get user info.*Bad credentials/),
+      expect.stringMatching(
+        /\[ERROR\] GitHub OAuth error: Failed to get user info.*Bad credentials/,
+      ),
     );
   });
 });

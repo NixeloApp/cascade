@@ -250,6 +250,10 @@ export const updateTimeEntry = authenticatedMutation({
       throw forbidden(undefined, "Cannot edit locked time entry");
     }
 
+    if (entry.billed) {
+      throw forbidden(undefined, "Cannot edit billed time entry");
+    }
+
     // Build basic field updates
     const updates = buildTimeEntryUpdates(args);
 

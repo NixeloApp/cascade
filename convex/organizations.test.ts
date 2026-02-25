@@ -180,6 +180,28 @@ describe("organizations", () => {
     });
   });
 
+  describe("deleteOrganization", () => {
+    it("should delete organization and return correct response", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const { organizationId } = await asUser.mutation(api.organizations.createOrganization, {
+        name: "To be deleted",
+        timezone: "UTC",
+      });
+
+      const result = await asUser.mutation(api.organizations.deleteOrganization, {
+        organizationId,
+      });
+
+      expect(result).toEqual({ success: true, deleted: true });
+
+      const organization = await t.run(async (ctx) => ctx.db.get(organizationId));
+      expect(organization).toBeNull();
+    });
+  });
+
   describe("queries", () => {
     it("should get organization if member", async () => {
       const t = convexTest(schema, modules);

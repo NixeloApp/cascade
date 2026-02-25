@@ -7,7 +7,7 @@ import {
   getGitHubClientSecret,
   isGitHubOAuthConfigured,
 } from "../lib/env";
-import { isAppError, validation } from "../lib/errors";
+import { isAppError, upstream, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 import { logger } from "../lib/logger";
@@ -136,27 +136,24 @@ async function exchangeCodeForTokens(
     let errorText = "Unknown error";
     try {
       errorText = await tokenResponse.text();
-      logger.error("GitHub OAuth error: Failed to exchange code", { errorText });
-    } catch (e) {
-      logger.error("GitHub OAuth error: Failed to exchange code (and failed to read body)", {
-        error: e,
-      });
+    } catch (_e) {
+      // Ignore text reading errors
     }
-    throw validation("oauth", `Failed to exchange GitHub authorization code: ${errorText}`);
+    logger.error("GitHub OAuth error: Failed to exchange code", { errorText });
+    throw upstream("GitHub", "Failed to exchange authorization code");
   }
 
   let tokens: Record<string, unknown>;
   try {
     tokens = (await tokenResponse.json()) as Record<string, unknown>;
   } catch (_e) {
-    throw validation("oauth", "Invalid JSON response from GitHub token endpoint");
+    logger.error("GitHub OAuth error: Invalid JSON response");
+    throw upstream("GitHub", "Invalid response from GitHub");
   }
 
   if (tokens.error) {
-    throw validation(
-      "oauth",
-      (tokens.error_description as string) || (tokens.error as string) || "Unknown OAuth error",
-    );
+    logger.error("GitHub OAuth error: Token error response", { error: tokens });
+    throw upstream("GitHub", "Failed to exchange authorization code");
   }
 
   return tokens.access_token as string;
@@ -176,20 +173,19 @@ async function fetchGitHubUserInfo(accessToken: string) {
     let errorText = "Unknown error";
     try {
       errorText = await userResponse.text();
-      logger.error("GitHub OAuth error: Failed to get user info", { errorText });
-    } catch (e) {
-      logger.error("GitHub OAuth error: Failed to get user info (and failed to read body)", {
-        error: e,
-      });
+    } catch (_e) {
+      // Ignore text reading errors
     }
-    throw validation("github", `Failed to get GitHub user info: ${errorText}`);
+    logger.error("GitHub OAuth error: Failed to get user info", { errorText });
+    throw upstream("GitHub", "Failed to retrieve user info");
   }
 
   let userInfo: Record<string, unknown>;
   try {
     userInfo = (await userResponse.json()) as Record<string, unknown>;
   } catch (_e) {
-    throw validation("github", "Invalid JSON response from GitHub user endpoint");
+    logger.error("GitHub OAuth error: Invalid user info JSON");
+    throw upstream("GitHub", "Invalid response from GitHub");
   }
 
   // Validate required fields
@@ -197,7 +193,7 @@ async function fetchGitHubUserInfo(accessToken: string) {
     // Only log keys to avoid leaking PII
     const keys = userInfo ? Object.keys(userInfo) : "null";
     logger.error(`GitHub OAuth error: Invalid user info structure. Keys: ${keys}`);
-    throw validation("github", "Invalid GitHub user info: missing id or login");
+    throw upstream("GitHub", "Invalid user info from GitHub");
   }
 
   return {
@@ -378,6 +374,9 @@ const handleOAuthError = (error: unknown) => {
         break;
       case "RATE_LIMITED":
         status = 429;
+        break;
+      case "UPSTREAM":
+        status = 502;
         break;
     }
   } else if (error instanceof Error) {
