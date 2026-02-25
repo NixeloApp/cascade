@@ -324,6 +324,7 @@ async function sendComplianceNotifications(
         title,
         message,
         isRead: false,
+        isDeleted: false,
       }),
     ),
   );

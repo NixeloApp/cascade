@@ -293,6 +293,7 @@ export const accept = projectEditorMutation({
         projectId: ctx.projectId,
         actorId: ctx.userId,
         isRead: false,
+        isDeleted: false,
       });
     }
 
@@ -339,6 +340,7 @@ export const decline = projectEditorMutation({
         projectId: ctx.projectId,
         actorId: ctx.userId,
         isRead: false,
+        isDeleted: false,
       });
     }
 
@@ -460,6 +462,7 @@ export const markDuplicate = projectEditorMutation({
         projectId: ctx.projectId,
         actorId: ctx.userId,
         isRead: false,
+        isDeleted: false,
       });
     }
 
@@ -563,6 +566,7 @@ export const bulkAccept = projectEditorMutation({
           projectId: ctx.projectId,
           actorId: ctx.userId,
           isRead: false,
+          isDeleted: false,
         });
       }
 
@@ -609,6 +613,7 @@ export const bulkDecline = projectEditorMutation({
           projectId: ctx.projectId,
           actorId: ctx.userId,
           isRead: false,
+          isDeleted: false,
         });
       }
 

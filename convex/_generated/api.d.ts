@@ -104,6 +104,7 @@ import type * as lib_vectorSearchHelpers from "../lib/vectorSearchHelpers.js";
 import type * as lib_webhookHelpers from "../lib/webhookHelpers.js";
 import type * as lib_workspaceAccess from "../lib/workspaceAccess.js";
 import type * as meetingBot from "../meetingBot.js";
+import type * as migrations from "../migrations.js";
 import type * as mocks_testConfig from "../mocks/testConfig.js";
 import type * as notificationPreferences from "../notificationPreferences.js";
 import type * as notifications from "../notifications.js";
@@ -256,6 +257,7 @@ declare const fullApi: ApiFromModules<{
   "lib/webhookHelpers": typeof lib_webhookHelpers;
   "lib/workspaceAccess": typeof lib_workspaceAccess;
   meetingBot: typeof meetingBot;
+  migrations: typeof migrations;
   "mocks/testConfig": typeof mocks_testConfig;
   notificationPreferences: typeof notificationPreferences;
   notifications: typeof notifications;

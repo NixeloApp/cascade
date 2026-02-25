@@ -427,6 +427,7 @@ export const addComment = issueViewerMutation({
           issueId: ctx.issue._id,
           projectId: ctx.projectId,
           isRead: false,
+          isDeleted: false,
         }),
         sendEmailNotification(ctx, {
           userId: mentionedUserId,
@@ -453,6 +454,7 @@ export const addComment = issueViewerMutation({
           issueId: ctx.issue._id,
           projectId: ctx.projectId,
           isRead: false,
+          isDeleted: false,
         });
 
         await sendEmailNotification(ctx, {

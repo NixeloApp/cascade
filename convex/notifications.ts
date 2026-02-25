@@ -8,7 +8,7 @@ import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { boundedCount } from "./lib/boundedQueries";
 import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
-import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { softDeleteFields } from "./lib/softDeleteHelpers";
 
 /** Get paginated notifications for the current user, optionally filtered to unread only. */
 export const list = authenticatedQuery({
@@ -33,8 +33,7 @@ export const list = authenticatedQuery({
         }
         return db
           .query("notifications")
-          .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-          .filter(notDeleted);
+          .withIndex("by_user_active", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true));
       },
     });
 
@@ -218,14 +217,10 @@ export const listForDigest = internalQuery({
     const notifications: Doc<"notifications">[] = [];
     for await (const notification of ctx.db
       .query("notifications")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user_active", (q) => q.eq("userId", args.userId).lt("isDeleted", true))
       .order("desc")) {
       if (notification._creationTime < args.startTime) {
         break;
-      }
-      // Skip soft-deleted notifications
-      if (notification.isDeleted) {
-        continue;
       }
       notifications.push(notification);
       if (notifications.length >= MAX_DIGEST_NOTIFICATIONS) {
