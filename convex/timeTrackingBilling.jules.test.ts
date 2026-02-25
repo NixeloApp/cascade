@@ -28,6 +28,12 @@ describe("Time Tracking Billing Security", () => {
       description: "Unbilled edit - should succeed",
     });
 
+    // 2b. Verify the update was actually applied
+    const updatedEntry = await t.run(async (ctx) => {
+      return await ctx.db.get(entryId);
+    });
+    expect(updatedEntry?.description).toBe("Unbilled edit - should succeed");
+
     // 3. Mark it as billed (simulating invoicing process)
     await t.run(async (ctx) => {
       await ctx.db.patch(entryId, { billed: true });
