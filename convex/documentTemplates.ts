@@ -108,7 +108,7 @@ export const update = authenticatedMutation({
     content: v.optional(blockNoteContent),
     isPublic: v.optional(v.boolean()),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), templateId: v.id("documentTemplates") }),
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
     if (!template) throw notFound("template", args.id);
@@ -133,7 +133,7 @@ export const update = authenticatedMutation({
 
     await ctx.db.patch(args.id, updates);
 
-    return { success: true } as const;
+    return { success: true, templateId: args.id } as const;
   },
 });
 

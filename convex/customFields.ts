@@ -137,7 +137,7 @@ export const update = authenticatedMutation({
     isRequired: v.optional(v.boolean()),
     description: v.optional(v.string()),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), fieldId: v.id("customFields") }),
   handler: async (ctx, args) => {
     const field = await ctx.db.get(args.id);
     if (!field) {
@@ -158,7 +158,7 @@ export const update = authenticatedMutation({
 
     await ctx.db.patch(args.id, updates);
 
-    return { success: true } as const;
+    return { success: true, fieldId: args.id } as const;
   },
 });
 
