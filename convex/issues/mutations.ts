@@ -24,11 +24,11 @@ import {
   getSearchContent,
   type IssueActivityAction,
   issueKeyExists,
+  notifyCommentParticipants,
   performBulkUpdate,
   processIssueUpdates,
   resolveLabelNames,
   validateParentIssue,
-  notifyCommentParticipants,
 } from "./helpers";
 
 const createIssueArgs = {
