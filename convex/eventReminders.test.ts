@@ -273,6 +273,7 @@ describe("Event Reminders", () => {
 
       expect(result.processed).toBe(1);
       expect(result.skipped).toBe(0);
+      expect(result.failed).toBe(0);
 
       // Check notification was created
       const notifications = await t.run(async (ctx) => {
@@ -312,6 +313,7 @@ describe("Event Reminders", () => {
 
       expect(result.processed).toBe(0);
       expect(result.skipped).toBe(1);
+      expect(result.failed).toBe(0);
     });
 
     it("should delete reminders for deleted events", async () => {
@@ -343,6 +345,7 @@ describe("Event Reminders", () => {
       const result = await t.mutation(internal.eventReminders.processDueReminders, {});
 
       expect(result.skipped).toBe(1);
+      expect(result.failed).toBe(0);
 
       // Reminder should be deleted
       const reminder = await t.run(async (ctx) => ctx.db.get(reminderId));
