@@ -137,10 +137,11 @@ describe("organizations", () => {
       expect(members).toHaveLength(2);
 
       // Remove member
-      await asOwner.mutation(api.organizations.removeMember, {
+      const result = await asOwner.mutation(api.organizations.removeMember, {
         organizationId,
         userId: memberId,
       });
+      expect(result).toEqual({ success: true, deleted: true });
 
       // Verify member removed
       const membersAfter = await asOwner.query(api.organizations.getOrganizationMembers, {

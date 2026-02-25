@@ -349,7 +349,7 @@ export const removeTeamMember = teamLeadMutation({
   args: {
     userId: v.id("users"),
   },
-  returns: v.object({ success: v.literal(true) }),
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     // teamLeadMutation handles auth + team admin/org admin check
 
@@ -371,7 +371,7 @@ export const removeTeamMember = teamLeadMutation({
       metadata: { teamId: ctx.teamId },
     });
 
-    return { success: true } as const;
+    return { success: true, deleted: true } as const;
   },
 });
 

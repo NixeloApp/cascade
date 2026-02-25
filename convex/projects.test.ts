@@ -649,7 +649,7 @@ describe("Projects", () => {
           projectId,
           memberId: memberId,
         });
-        expect(result).toEqual({ success: true });
+        expect(result).toEqual({ success: true, deleted: true });
 
         // Verify member was removed
         const asMember = asAuthenticatedUser(t, memberId);
