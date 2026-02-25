@@ -126,9 +126,7 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
             onClick={handleToggle}
             className="h-8 w-8"
             title={rule.isActive ? "Disable rule" : "Enable rule"}
-            aria-label={
-              rule.isActive ? `Disable rule: ${rule.name}` : `Enable rule: ${rule.name}`
-            }
+            aria-label={rule.isActive ? `Disable rule: ${rule.name}` : `Enable rule: ${rule.name}`}
           >
             <Icon icon={rule.isActive ? Pause : Play} size="sm" />
           </Button>
