@@ -72,8 +72,7 @@ describe("IP Restrictions Security", () => {
       });
     });
 
-    // We expect this to fail initially (current behavior is true)
-    // After fix, it should be false
+    // With fail-closed security, access is denied when IP is unavailable
     expect(allowed).toBe(false);
   });
 });
