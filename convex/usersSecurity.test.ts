@@ -28,11 +28,9 @@ describe("Users Security", () => {
       await createOrganizationAdmin(t, userBId, { name: "Org B" });
 
       // 3. User A tries to get User B's profile
-      // CURRENTLY (VULNERABLE): Returns { _id, name: "User B", image: undefined }
-      // DESIRED (FIXED): Returns null
+      // Cross-org access should return null
       const profile = await asUserA.query(api.users.getUser, { id: userBId });
 
-      // This assertion confirms the fix (should be null)
       expect(profile).toBeNull();
     });
   });

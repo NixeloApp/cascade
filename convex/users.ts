@@ -43,8 +43,8 @@ export const getInternalByEmail = internalQuery({
 
 /**
  * Get a user by ID (sanitized for authenticated users)
- * Note: Does not check if requester should see this user.
- * For team contexts, ensure proper access checks.
+ * Enforces organization-level access control via hasSharedOrganization.
+ * Returns null if the requester does not share an organization with the target user.
  */
 export const getUser = authenticatedQuery({
   args: { id: v.id("users") },
@@ -466,6 +466,11 @@ export const getUserStats = authenticatedQuery({
     projects: v.number(),
   }),
   handler: async (ctx, args) => {
+    // Note: Unlike getUser, we don't add an org-level guard here because
+    // collectUserStats already filters to shared projects. This allows
+    // cross-org users who share a project to see each other's stats in
+    // that shared context. The filtering in collectUserStats ensures no
+    // information about private projects is leaked.
     return await collectUserStats(ctx, ctx.userId, args.userId);
   },
 });
