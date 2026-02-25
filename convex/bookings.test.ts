@@ -65,11 +65,9 @@ describe("Bookings", () => {
     await setupFullAvailability(t, hostId);
     await createBookingPage(t, hostId, "test-page");
 
-    // Booking time: Noon UTC tomorrow (safe from midnight crossing)
-    const now = new Date();
-    const startTime = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0),
-    ).getTime();
+    // Booking time: Fixed future date (Jan 1, 2030 12:00 UTC) to ensure stability
+    // 2030-01-01 is a Tuesday
+    const startTime = 1893499200000;
 
     const { bookingId } = await t.mutation(api.bookings.createBooking, {
       bookingPageSlug: "test-page",
@@ -100,12 +98,9 @@ describe("Bookings", () => {
     await setupFullAvailability(t, hostId);
     await createBookingPage(t, hostId, "overlap-page");
 
-    // Base booking: T to T+30 (Noon UTC tomorrow)
-    // Ensures we don't cross midnight which would trigger "outside available hours"
-    const now = new Date();
-    const baseTime = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0),
-    ).getTime();
+    // Base booking: Fixed future date (Jan 1, 2030 12:00 UTC) to ensure stability
+    // 2030-01-01 is a Tuesday
+    const baseTime = 1893499200000;
 
     // Create first booking
     await t.mutation(api.bookings.createBooking, {
