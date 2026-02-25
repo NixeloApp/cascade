@@ -103,4 +103,24 @@ describe("API Keys Security", () => {
       });
     }).rejects.toThrow(/permission|forbidden/i);
   });
+
+  it("should prevent privilege escalation via update", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const asUser = asAuthenticatedUser(t, userId);
+
+    // 1. Create a global key with read-only scopes (allowed)
+    const { id: keyId } = await asUser.mutation(api.apiKeys.generate, {
+      name: "Global Read Key",
+      scopes: ["issues:read"],
+    });
+
+    // 2. Attempt to update the key to include write scopes (should be FORBIDDEN for global keys)
+    await expect(async () => {
+      await asUser.mutation(api.apiKeys.update, {
+        keyId,
+        scopes: ["issues:read", "issues:write"],
+      });
+    }).rejects.toThrow(/Global API keys cannot have write permissions/);
+  });
 });
