@@ -4,17 +4,7 @@ import type { DataModel, Doc, Id } from "../_generated/dataModel";
 // Get the search index config type for issues table
 type IssuesSearchIndex = DataModel["issues"]["searchIndexes"]["search_title"];
 
-/**
- * Helper to apply singular filters (type, status, priority) to the search query.
- *
- * OPTIMIZATION NOTE:
- * Convex search indexes only support simple equality checks. They do not support "IN" clauses
- * or complex OR logic for fields other than the search text itself.
- *
- * Therefore, this helper ONLY applies filters if a single value is provided.
- * If multiple values are provided (e.g. status=["todo", "inprogress"]), the filter
- * is skipped here and must be applied in-memory by the caller.
- */
+// Helper to apply singular filters (type, status, priority)
 function applySingularFilters(
   q: SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex>,
   args: {
@@ -49,14 +39,7 @@ function applySingularFilters(
   return searchQ;
 }
 
-/**
- * Helper to apply user filters (assignee, reporter) to the search query.
- *
- * Handles special values:
- * - "me": Resolves to the current user's ID.
- * - "unassigned": Ignored here (search indexes don't support "is null" well with other filters).
- *   This case must be handled in-memory by the caller.
- */
+// Helper to apply user filters (assignee, reporter)
 function applyUserFilters(
   q: SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex>,
   args: {
@@ -80,26 +63,6 @@ function applyUserFilters(
   return searchQ;
 }
 
-/**
- * Constructs a Convex search query for issues using the `search_title` index.
- *
- * This function optimizes the search by pushing supported filters down to the
- * search engine. It attempts to filter by `projectId`, `organizationId`,
- * `assigneeId`, `reporterId`, `sprintId`, `epicId`, and `labels` directly in the index.
- *
- * LIMITATIONS & GOTCHAS:
- * 1. Single-Value Only: For `type`, `status`, and `priority`, filters are ONLY applied
- *    if a single value is provided. Multi-value filters (e.g. status IN [...]) are
- *    ignored here and MUST be handled in-memory by the caller.
- * 2. Label Semantics: Label filters are applied with AND semantics. If multiple labels
- *    are provided, the issue must contain ALL of them.
- * 3. Special Values: `assigneeId="unassigned"` is ignored and must be filtered in-memory.
- *
- * @param q - The initial search filter builder.
- * @param args - Search arguments and filters.
- * @param userId - The current user's ID (for resolving "me").
- * @returns The final search filter builder.
- */
 export function buildIssueSearch(
   q: SearchFilterBuilder<Doc<"issues">, IssuesSearchIndex>,
   args: {

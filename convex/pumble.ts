@@ -29,6 +29,7 @@ export const addWebhook = authenticatedMutation({
     sendAssignments: v.optional(v.boolean()),
     sendStatusChanges: v.optional(v.boolean()),
   },
+  returns: v.object({ webhookId: v.id("pumbleWebhooks") }),
   handler: async (ctx, args) => {
     // Validate webhook URL
     try {
@@ -119,6 +120,7 @@ export const updateWebhook = authenticatedMutation({
     sendAssignments: v.optional(v.boolean()),
     sendStatusChanges: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const webhook = await ctx.db.get(args.webhookId);
     if (!webhook) throw notFound("webhook", args.webhookId);
@@ -157,6 +159,8 @@ export const updateWebhook = authenticatedMutation({
     if (args.sendStatusChanges !== undefined) updates.sendStatusChanges = args.sendStatusChanges;
 
     await ctx.db.patch(args.webhookId, updates);
+
+    return { success: true } as const;
   },
 });
 
@@ -165,12 +169,15 @@ export const updateWebhook = authenticatedMutation({
  */
 export const deleteWebhook = authenticatedMutation({
   args: { webhookId: v.id("pumbleWebhooks") },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const webhook = await ctx.db.get(args.webhookId);
     if (!webhook) throw notFound("webhook", args.webhookId);
     if (webhook.userId !== ctx.userId) throw forbidden();
 
     await ctx.db.delete(args.webhookId);
+
+    return { success: true, deleted: true } as const;
   },
 });
 
@@ -193,6 +200,7 @@ export const sendMessage = action({
       ),
     ),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Get webhook
     const webhook = await ctx.runQuery(api.pumble.getWebhook, {
@@ -228,7 +236,7 @@ export const sendMessage = action({
       // Success
       await updateStats(ctx, args.webhookId, true);
 
-      return { success: true };
+      return { success: true } as const;
     } catch (error) {
       // Failure
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -248,9 +256,10 @@ export const updateWebhookStats = internalMutation({
     success: v.boolean(),
     error: v.optional(v.string()),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const webhook = await ctx.db.get(args.webhookId);
-    if (!webhook) return;
+    if (!webhook) return { success: true } as const;
 
     await ctx.db.patch(args.webhookId, {
       messagesSent: webhook.messagesSent + (args.success ? 1 : 0),
@@ -258,6 +267,8 @@ export const updateWebhookStats = internalMutation({
       lastError: args.error,
       updatedAt: Date.now(),
     });
+
+    return { success: true } as const;
   },
 });
 
@@ -266,8 +277,9 @@ export const updateWebhookStats = internalMutation({
  */
 export const testWebhook = action({
   args: { webhookId: v.id("pumbleWebhooks") },
-  handler: async (ctx, args): Promise<unknown> => {
-    return await ctx.runAction(api.pumble.sendMessage, {
+  returns: v.object({ success: v.literal(true) }),
+  handler: async (ctx, args) => {
+    await ctx.runAction(api.pumble.sendMessage, {
       webhookId: args.webhookId,
       text: "🎉 Nixelo integration is working!",
       title: "Test Message",
@@ -285,6 +297,7 @@ export const testWebhook = action({
         },
       ],
     });
+    return { success: true } as const;
   },
 });
 
