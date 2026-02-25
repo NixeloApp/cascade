@@ -2,7 +2,8 @@ import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+
+import { internalQuery, query } from "./_generated/server";
 import { DAY } from "./lib/timeUtils";
 import { sanitizeUserForCurrent } from "./lib/userUtils";
 import { otpPasswordReset } from "./otpPasswordReset";
@@ -61,6 +62,31 @@ export const loggedInUser = query({
       return null;
     }
     return sanitizeUserForCurrent(user);
+  },
+});
+
+/**
+ * Verify a session token (Bearer token) and return the associated userId.
+ * Used by HTTP actions to authenticate requests manually.
+ */
+export const verifySession = internalQuery({
+  args: { sessionId: v.string() },
+  returns: v.union(v.id("users"), v.null()),
+  handler: async (ctx, args) => {
+    // Basic session validation
+    // In convex-auth, the sessionId is the ID of "authSessions" doc.
+    const sessionId = ctx.db.normalizeId("authSessions", args.sessionId);
+    if (!sessionId) return null;
+
+    const session = await ctx.db.get(sessionId);
+    if (!session) return null;
+
+    // Check expiration (if applicable - convex-auth handles this, but let's be safe)
+    if (session.expirationTime && session.expirationTime < Date.now()) {
+      return null;
+    }
+
+    return session.userId;
   },
 });
 

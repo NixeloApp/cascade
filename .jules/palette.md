@@ -73,3 +73,7 @@
 ## 2026-03-15 - Typography as Label
 **Learning:** `Typography` component did not support `htmlFor`, preventing its use as a semantic `<label>` element despite having a `variant="label"`.
 **Action:** Updated `TypographyProps` to include `htmlFor`. When using `Typography` as a label for a form control, use `as="label"`, provide `htmlFor={id}`, and ensure the target control has the matching `id`.
+
+## 2026-02-25 - IconButton Reveal Visibility
+**Learning:** The `reveal` variant on `IconButton` used `opacity-0 group-hover:opacity-100`, making actions invisible to keyboard users until they blindly tabbed onto the button itself.
+**Action:** Aligned `IconButton` behavior with `Button` by adding `group-focus-within:opacity-100` and `focus:opacity-100`. This ensures contextual actions become visible as soon as any element within the parent group (e.g., a list row) receives focus.

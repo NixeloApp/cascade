@@ -57,9 +57,9 @@ const iconButtonVariants = cva(
         md: "h-9 w-9 p-2",
         lg: "h-10 w-10 p-2.5",
       },
-      /** Show only on parent hover (use inside group containers) */
+      /** Show only on parent hover/focus-within (use inside group containers) */
       reveal: {
-        true: "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+        true: "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100",
         false: "",
       },
     },
