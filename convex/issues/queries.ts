@@ -213,15 +213,13 @@ async function fetchRoadmapDueIssues(
   const issuesByType = await Promise.all(
     typesToFetch.map((type) =>
       safeCollect(
-        ctx.db
-          .query("issues")
-          .withIndex("by_project_type_due_date", (q) =>
-            q
-              .eq("projectId", projectId)
-              .eq("type", type as Doc<"issues">["type"])
-              .eq("isDeleted", undefined)
-              .gt("dueDate", 0),
-          ),
+        ctx.db.query("issues").withIndex("by_project_type_due_date", (q) =>
+          q
+            .eq("projectId", projectId)
+            .eq("type", type as Doc<"issues">["type"])
+            .eq("isDeleted", undefined)
+            .gt("dueDate", 0),
+        ),
         BOUNDED_LIST_LIMIT * 4,
         `roadmap dated issues type=${type}`,
       ),
