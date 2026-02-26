@@ -42,9 +42,7 @@ describe("customFields security", () => {
       const asEditor = asAuthenticatedUser(t, editorId);
 
       // Attempt to remove as Editor (should fail)
-      await expect(
-        asEditor.mutation(api.customFields.remove, { id: fieldId })
-      ).rejects.toThrow();
+      await expect(asEditor.mutation(api.customFields.remove, { id: fieldId })).rejects.toThrow();
 
       // Verify field still exists
       const fields = await asUser.query(api.customFields.list, { projectId });
@@ -81,7 +79,7 @@ describe("customFields security", () => {
 
       // Attempt to remove value as Viewer (should fail)
       await expect(
-        asViewer.mutation(api.customFields.removeValue, { issueId, fieldId })
+        asViewer.mutation(api.customFields.removeValue, { issueId, fieldId }),
       ).rejects.toThrow();
 
       // Verify value still exists
