@@ -81,7 +81,13 @@ export async function decrypt(ciphertext: string): Promise<string> {
   const key = await getEncryptionKey();
 
   // Decode base64
-  const combined = Uint8Array.from(atob(ciphertext), (c) => c.charCodeAt(0));
+  let decoded: string;
+  try {
+    decoded = atob(ciphertext);
+  } catch {
+    throw new Error("Invalid ciphertext: must be a valid base64 string");
+  }
+  const combined = Uint8Array.from(decoded, (c) => c.charCodeAt(0));
 
   // Extract IV and ciphertext
   const iv = combined.slice(0, IV_LENGTH);
