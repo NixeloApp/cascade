@@ -76,9 +76,16 @@ export const getUserIssueCount = authenticatedQuery({
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
-      .take(1); // Just need to know if there's at least one
+      .order("desc")
+      .take(20); // Check a batch to find at least one valid issue
 
-    return issues.length;
+    for (const issue of issues) {
+      if (await canAccessProject(ctx, issue.projectId as Id<"projects">, ctx.userId)) {
+        return 1;
+      }
+    }
+
+    return 0;
   },
 });
 
@@ -93,7 +100,19 @@ export const listByUser = authenticatedQuery({
       .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
       .paginate(args.paginationOpts);
 
-    const mappedIssues = assignedResult.page.map((issue) => ({
+    // Filter by project access
+    const projectIds = [...new Set(assignedResult.page.map((i) => i.projectId))];
+    const accessibleProjects = new Set<string>();
+
+    for (const projectId of projectIds) {
+      if (await canAccessProject(ctx, projectId as Id<"projects">, ctx.userId)) {
+        accessibleProjects.add(projectId);
+      }
+    }
+
+    const filteredIssues = assignedResult.page.filter((i) => accessibleProjects.has(i.projectId));
+
+    const mappedIssues = filteredIssues.map((issue) => ({
       _id: issue._id,
       key: issue.key,
       title: issue.title,
