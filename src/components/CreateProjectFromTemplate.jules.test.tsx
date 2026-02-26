@@ -32,7 +32,7 @@ describe("CreateProjectFromTemplate (Jules accessibility)", () => {
   it("renders template list as an unordered list (ul) with list items (li)", () => {
     // Mock useQuery implementation
     const useQueryMock = vi.mocked(useQuery);
-    useQueryMock.mockImplementation((query: any) => {
+    useQueryMock.mockImplementation((query: any, ..._args: any[]) => {
       // Check if the query is for projectTemplates.list
       // In the component: useQuery(api.projectTemplates.list)
       // Since we mocked api.projectTemplates.list as "list", we check for that string
