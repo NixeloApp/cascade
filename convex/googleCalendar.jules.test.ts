@@ -15,7 +15,7 @@ describe("Google Calendar Integration", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // 1. Connect Google Calendar
-    const connectionId = await asUser.mutation(api.googleCalendar.connectGoogle, {
+    const { connectionId } = await asUser.mutation(api.googleCalendar.connectGoogle, {
       providerAccountId: "google-user-123",
       accessToken: "access-token-123",
       refreshToken: "refresh-token-123",
@@ -108,7 +108,7 @@ describe("Google Calendar Integration", () => {
     const asUser = asAuthenticatedUser(t, userId);
 
     // Connect with export-only sync
-    const connectionId = await asUser.mutation(api.googleCalendar.connectGoogle, {
+    const { connectionId } = await asUser.mutation(api.googleCalendar.connectGoogle, {
       providerAccountId: "google-user-456",
       accessToken: "token",
       syncDirection: "export",

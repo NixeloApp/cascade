@@ -251,24 +251,6 @@ function getLabelInfos(
   }));
 }
 
-function getProjectLabelsNeeded(issues: Doc<"issues">[]) {
-  const projectLabelsNeeded = new Map<Id<"projects">, Set<string>>();
-  for (const issue of issues) {
-    if (issue.projectId && issue.labels && issue.labels.length > 0) {
-      if (!projectLabelsNeeded.has(issue.projectId)) {
-        projectLabelsNeeded.set(issue.projectId, new Set());
-      }
-      const set = projectLabelsNeeded.get(issue.projectId);
-      if (set) {
-        for (const l of issue.labels) {
-          set.add(l);
-        }
-      }
-    }
-  }
-  return projectLabelsNeeded;
-}
-
 /**
  * Enrich multiple issues with assignee, reporter, epic, and label info
  * Uses batching to avoid N+1 queries
@@ -283,12 +265,23 @@ export async function enrichIssues(
   const userIds = new Set<Id<"users">>();
   const epicIds = new Set<Id<"issues">>();
   // We only track projects that actually need label fetching to optimize queries
-  const projectLabelsNeeded = getProjectLabelsNeeded(issues);
+  const projectLabelsNeeded = new Map<Id<"projects">, Set<string>>();
 
   for (const issue of issues) {
     if (issue.assigneeId) userIds.add(issue.assigneeId);
     userIds.add(issue.reporterId);
     if (issue.epicId) epicIds.add(issue.epicId);
+
+    if (issue.projectId && issue.labels && issue.labels.length > 0) {
+      let set = projectLabelsNeeded.get(issue.projectId);
+      if (!set) {
+        set = new Set();
+        projectLabelsNeeded.set(issue.projectId, set);
+      }
+      for (const l of issue.labels) {
+        set.add(l);
+      }
+    }
   }
 
   // Batch fetch all data

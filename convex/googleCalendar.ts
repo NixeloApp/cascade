@@ -16,6 +16,7 @@ export const connectGoogleInternal = internalMutation({
     expiresAt: v.optional(v.number()),
     syncDirection: v.optional(syncDirections),
   },
+  returns: v.object({ success: v.literal(true), connectionId: v.id("calendarConnections") }),
   handler: async (ctx, args) => {
     const { userId, ...connectionArgs } = args;
 
@@ -43,11 +44,11 @@ export const connectGoogleInternal = internalMutation({
         syncDirection: connectionArgs.syncDirection || "bidirectional",
         updatedAt: now,
       });
-      return existing._id;
+      return { success: true, connectionId: existing._id } as const;
     }
 
     // Create new connection
-    return await ctx.db.insert("calendarConnections", {
+    const connectionId = await ctx.db.insert("calendarConnections", {
       userId,
       provider: "google",
       providerAccountId: connectionArgs.providerAccountId,
@@ -59,6 +60,7 @@ export const connectGoogleInternal = internalMutation({
       lastSyncAt: undefined,
       updatedAt: now,
     });
+    return { success: true, connectionId } as const;
   },
 });
 
@@ -71,6 +73,7 @@ export const connectGoogle = authenticatedMutation({
     expiresAt: v.optional(v.number()),
     syncDirection: v.optional(syncDirections),
   },
+  returns: v.object({ success: v.literal(true), connectionId: v.id("calendarConnections") }),
   handler: async (ctx, args) => {
     // Encrypt tokens before storage
     const encryptedAccessToken = await encrypt(args.accessToken);
@@ -93,11 +96,11 @@ export const connectGoogle = authenticatedMutation({
         expiresAt: args.expiresAt,
         updatedAt: now,
       });
-      return existing._id;
+      return { success: true, connectionId: existing._id } as const;
     }
 
     // Create new connection
-    return await ctx.db.insert("calendarConnections", {
+    const connectionId = await ctx.db.insert("calendarConnections", {
       userId: ctx.userId,
       provider: "google",
       providerAccountId: args.providerAccountId,
@@ -109,6 +112,7 @@ export const connectGoogle = authenticatedMutation({
       lastSyncAt: undefined,
       updatedAt: now,
     });
+    return { success: true, connectionId } as const;
   },
 });
 
@@ -162,6 +166,7 @@ export const getDecryptedTokens = internalMutation({
 /** Disconnect and delete the current user's Google Calendar connection. */
 export const disconnectGoogle = authenticatedMutation({
   args: {},
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx) => {
     const connection = await ctx.db
       .query("calendarConnections")
@@ -171,6 +176,7 @@ export const disconnectGoogle = authenticatedMutation({
     if (connection) {
       await ctx.db.delete(connection._id);
     }
+    return { success: true } as const;
   },
 });
 
@@ -180,6 +186,7 @@ export const updateSyncSettings = authenticatedMutation({
     syncEnabled: v.optional(v.boolean()),
     syncDirection: v.optional(syncDirections),
   },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const connection = await ctx.db
       .query("calendarConnections")
@@ -195,6 +202,7 @@ export const updateSyncSettings = authenticatedMutation({
     if (args.syncDirection !== undefined) updates.syncDirection = args.syncDirection;
 
     await ctx.db.patch(connection._id, updates);
+    return { success: true } as const;
   },
 });
 
