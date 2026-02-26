@@ -4,6 +4,7 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { BOUNDED_LIST_LIMIT, BOUNDED_SELECT_LIMIT } from "./lib/boundedQueries";
+import { forbidden, notFound, unauthenticated } from "./lib/errors";
 
 // =============================================================================
 // Types
@@ -490,24 +491,24 @@ export const remove = mutation({
     connectionId: v.id("ssoConnections"),
   },
   returns: v.object({
-    success: v.boolean(),
-    error: v.optional(v.string()),
+    success: v.literal(true),
+    deleted: v.literal(true),
   }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated");
+      throw unauthenticated();
     }
 
     const connection = await ctx.db.get(args.connectionId);
     if (!connection) {
-      return { success: false, error: "Connection not found" };
+      throw notFound("SSO connection", args.connectionId);
     }
 
     // Check admin access
     const isAdmin = await checkOrgAdmin(ctx, userId, connection.organizationId);
     if (!isAdmin) {
-      return { success: false, error: "Admin access required" };
+      throw forbidden("admin", "Admin access required");
     }
 
     // Delete associated domains
@@ -520,7 +521,7 @@ export const remove = mutation({
 
     await ctx.db.delete(args.connectionId);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 

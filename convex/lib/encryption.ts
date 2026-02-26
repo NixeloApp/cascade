@@ -28,7 +28,14 @@ async function getEncryptionKey(): Promise<CryptoKey> {
   }
 
   // Decode base64 key
-  const keyBytes = Uint8Array.from(atob(keyBase64), (c) => c.charCodeAt(0));
+  let decodedKey: string;
+  try {
+    decodedKey = atob(keyBase64);
+  } catch {
+    throw new Error("Invalid ENCRYPTION_KEY: must be a valid base64 string");
+  }
+
+  const keyBytes = Uint8Array.from(decodedKey, (c) => c.charCodeAt(0));
   if (keyBytes.length !== 32) {
     throw new Error("ENCRYPTION_KEY must be 32 bytes (256 bits) base64-encoded");
   }

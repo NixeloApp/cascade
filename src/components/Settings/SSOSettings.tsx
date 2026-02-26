@@ -69,12 +69,8 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
 
     setIsLoading(true);
     try {
-      const result = await removeConnection({ connectionId });
-      if (result.success) {
-        showSuccess("SSO connection deleted");
-      } else {
-        showError(new Error(result.error || "Failed to delete"), "Error");
-      }
+      await removeConnection({ connectionId });
+      showSuccess("SSO connection deleted");
     } catch (error) {
       showError(error, "Failed to delete connection");
     } finally {

@@ -202,7 +202,8 @@ describe("SSO Functionality", () => {
     expect(domainsBefore.length).toBe(1);
 
     // Remove connection
-    await asAdmin.mutation(api.sso.remove, { connectionId });
+    const result = await asAdmin.mutation(api.sso.remove, { connectionId });
+    expect(result).toEqual({ success: true, deleted: true });
 
     // Verify connection is gone
     const connection = await asAdmin.query(api.sso.get, { connectionId });
