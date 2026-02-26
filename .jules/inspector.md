@@ -35,3 +35,7 @@
 ## 2024-05-22 - Structured Validation Errors
 **Learning:** Generic validation errors (thrown as `Error`) are redacted in production, hiding critical feedback from users.
 **Action:** Use structured `ConvexError` with code `VALIDATION` (via `validation` helper) for all input checks to ensure client receives meaningful, actionable error messages.
+
+## 2024-05-23 - Base64 Decoding Robustness
+**Learning:** The `atob` function throws a DOMException (`InvalidCharacterError`) when decoding invalid base64 strings (e.g., from environment variables like `ENCRYPTION_KEY`). This can crash the application hard on startup or key access with a cryptic error message.
+**Action:** Always wrap `atob` calls in a `try/catch` block, especially when processing configuration or external input, and re-throw a descriptive `Error` that identifies the invalid source.
