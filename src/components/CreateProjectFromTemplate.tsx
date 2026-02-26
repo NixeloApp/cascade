@@ -185,36 +185,41 @@ export function CreateProjectFromTemplate({
                 </Flex>
               </Card>
             ) : (
-              <Grid cols={1} colsMd={2} gap="lg">
+              <Grid as="ul" cols={1} colsMd={2} gap="lg">
                 {templates.map((template: Doc<"projectTemplates">) => (
-                  <Button
-                    variant="unstyled"
-                    key={template._id}
-                    onClick={() => handleSelectTemplate(template._id)}
-                    className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring h-auto"
-                  >
-                    <Flex align="start" gap="lg">
-                      <FlexItem shrink={false}>
-                        <Typography variant="h2">{template.icon}</Typography>
-                      </FlexItem>
-                      <FlexItem flex="1" className="min-w-0">
-                        <Stack gap="sm">
-                          <Typography variant="h3">{template.name}</Typography>
-                          <Typography variant="small" color="secondary">
-                            {template.description}
+                  <li key={template._id} className="list-none">
+                    <Button
+                      variant="unstyled"
+                      onClick={() => handleSelectTemplate(template._id)}
+                      className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring h-auto w-full"
+                    >
+                      <Flex align="start" gap="lg">
+                        <FlexItem shrink={false}>
+                          <Typography variant="h2" as="span">
+                            {template.icon}
                           </Typography>
-                          <Flex align="center" gap="sm">
-                            <Badge size="sm" className={cn(getCategoryColor(template.category))}>
-                              {template.category}
-                            </Badge>
-                            <Badge size="sm" variant="neutral" className="capitalize">
-                              {template.boardType}
-                            </Badge>
-                          </Flex>
-                        </Stack>
-                      </FlexItem>
-                    </Flex>
-                  </Button>
+                        </FlexItem>
+                        <FlexItem flex="1" className="min-w-0">
+                          <Stack gap="sm">
+                            <Typography variant="h3" as="span">
+                              {template.name}
+                            </Typography>
+                            <Typography variant="small" color="secondary" as="span">
+                              {template.description}
+                            </Typography>
+                            <Flex align="center" gap="sm">
+                              <Badge size="sm" className={cn(getCategoryColor(template.category))}>
+                                {template.category}
+                              </Badge>
+                              <Badge size="sm" variant="neutral" className="capitalize">
+                                {template.boardType}
+                              </Badge>
+                            </Flex>
+                          </Stack>
+                        </FlexItem>
+                      </Flex>
+                    </Button>
+                  </li>
                 ))}
               </Grid>
             )}
