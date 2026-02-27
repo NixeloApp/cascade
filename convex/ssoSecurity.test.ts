@@ -124,22 +124,14 @@ describe("SSO Security", () => {
     });
 
     // Try to claim "victim.com"
-    // This expects to throw if fixed, but currently it might succeed.
-    // We assert that it *should* fail.
-    // If it succeeds, the test fails (indicating the vulnerability is present if we wrote it as a regression test).
-    // But since I am demonstrating the vulnerability, I'll expect it to SUCCEED (fail open) for now,
-    // and then after fix, expect it to FAIL (secure).
-
-    // For now, let's see if it fails (secure) or succeeds (vulnerable).
-    // If it succeeds, we have reproduced the issue.
-
-    const result = await asAdmin.mutation(api.sso.updateDomains, {
-      connectionId: attackerConnectionId,
-      domains: ["victim.com"],
-    });
-
-    // Check that the request was rejected
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Domain "victim.com" is already configured');
+    // This expects to throw if fixed.
+    // convex-test throws a ConvexError where the message is the stringified data.
+    // We check for the error code and part of the message to be robust against quoting.
+    await expect(
+      asAdmin.mutation(api.sso.updateDomains, {
+        connectionId: attackerConnectionId,
+        domains: ["victim.com"],
+      }),
+    ).rejects.toThrow(/CONFLICT.*victim.com.*already configured/);
   });
 });
