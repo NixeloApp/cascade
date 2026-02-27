@@ -41,8 +41,9 @@ async function fetchJSON<T>(url: string, init?: RequestInit, timeoutMs = 10000):
   }
 }
 
-/** Generic error page HTML - no internal details exposed */
-const errorPageHtml = `
+/** Generic error page HTML generator */
+function getErrorPageHtml(message = "An error occurred while connecting to Google Calendar.") {
+  return `
 <!DOCTYPE html>
 <html>
   <head>
@@ -50,18 +51,21 @@ const errorPageHtml = `
     <style>
       body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
       .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
+      button { background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+      button:hover { background: #4b5563; }
     </style>
   </head>
   <body>
     <div class="error">
       <h1>Connection Failed</h1>
-      <p>An error occurred while connecting to Google Calendar.</p>
+      <p>${escapeHtml(message)}</p>
       <p>Please try again or contact support if the problem persists.</p>
       <button onclick="window.close()">Close Window</button>
     </div>
   </body>
 </html>
 `;
+}
 
 /**
  * Validate E2E API key for TEST_* codes
@@ -331,7 +335,7 @@ function validateCallbackParams(
   if (error) {
     return {
       success: false,
-      response: new Response(errorPageHtml, {
+      response: new Response(getErrorPageHtml(error), {
         status: 400,
         headers: {
           "Content-Type": "text/html",
@@ -351,9 +355,10 @@ function validateCallbackParams(
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
     return {
       success: false,
-      response: new Response("Invalid state or missing authorization code", {
+      response: new Response(getErrorPageHtml("Invalid state or missing authorization code"), {
         status: 400,
         headers: {
+          "Content-Type": "text/html",
           "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
         },
       }),
@@ -456,13 +461,16 @@ export const handleCallbackHandler = async (
     const testResult = handleTestCode(code, request);
     if (!testResult) {
       // Auth failed - show generic error (details logged server-side)
-      return new Response(errorPageHtml, {
-        status: 403,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      return new Response(
+        getErrorPageHtml("Test authentication failed. Please check server logs."),
+        {
+          status: 403,
+          headers: {
+            "Content-Type": "text/html",
+            "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+          },
         },
-      });
+      );
     }
     result = testResult;
   } else {
@@ -471,7 +479,7 @@ export const handleCallbackHandler = async (
       result = await exchangeCodeForTokens(code);
     } catch (error) {
       logger.error("Failed to exchange code for tokens", { error });
-      return new Response(errorPageHtml, {
+      return new Response(getErrorPageHtml(), {
         status: 500,
         headers: {
           "Content-Type": "text/html",
