@@ -1149,10 +1149,7 @@ export const getIssueCounts = authenticatedQuery({
               ctx.db
                 .query("issues")
                 .withIndex("by_project_status_deleted", (q) =>
-                  q
-                    .eq("projectId", args.projectId)
-                    .eq("status", state.id)
-                    .lt("isDeleted", true),
+                  q.eq("projectId", args.projectId).eq("status", state.id).lt("isDeleted", true),
                 ),
               1000,
             );
