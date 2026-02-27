@@ -81,12 +81,9 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
   const handleToggle = async (connectionId: Id<"ssoConnections">, currentState: boolean) => {
     setIsLoading(true);
     try {
-      const result = await setEnabled({ connectionId, isEnabled: !currentState });
-      if (result.success) {
-        showSuccess(currentState ? "SSO connection disabled" : "SSO connection enabled");
-      } else {
-        showError(new Error(result.error || "Failed to update"), "Error");
-      }
+      // Mutations now throw errors instead of returning { success: boolean, error?: string }
+      await setEnabled({ connectionId, isEnabled: !currentState });
+      showSuccess(currentState ? "SSO connection disabled" : "SSO connection enabled");
     } catch (error) {
       showError(error, "Failed to update connection");
     } finally {
@@ -346,20 +343,15 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
 
     setIsLoading(true);
     try {
-      // Update type-specific configuration
-      const configResult =
-        connection.type === "saml" ? await saveSamlConfig() : await saveOidcConfig();
-      if (!configResult.success) {
-        showError(new Error(configResult.error || "Failed to update"), "Error");
-        return;
+      // Update type-specific configuration (mutations throw on error)
+      if (connection.type === "saml") {
+        await saveSamlConfig();
+      } else {
+        await saveOidcConfig();
       }
 
-      // Update domains
-      const domainsResult = await updateDomains({ connectionId, domains: parseDomains() });
-      if (!domainsResult.success) {
-        showError(new Error(domainsResult.error || "Failed to update domains"), "Error");
-        return;
-      }
+      // Update domains (mutation throws on error)
+      await updateDomains({ connectionId, domains: parseDomains() });
 
       showSuccess("Configuration saved");
       onOpenChange(false);

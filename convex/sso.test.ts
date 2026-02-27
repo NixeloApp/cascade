@@ -64,12 +64,12 @@ describe("SSO Functionality", () => {
     });
 
     // Attempt to enable without configuration should fail
-    const result = await asAdmin.mutation(api.sso.setEnabled, {
-      connectionId,
-      isEnabled: true,
-    });
-    expect(result.success).toBe(false);
-    expect(result.error).toContain("configuration is incomplete");
+    await expect(
+      asAdmin.mutation(api.sso.setEnabled, {
+        connectionId,
+        isEnabled: true,
+      }),
+    ).rejects.toThrow("configuration is incomplete");
 
     // Configure and try again
     await asAdmin.mutation(api.sso.updateSamlConfig, {
@@ -123,12 +123,12 @@ describe("SSO Functionality", () => {
       name: "Another SAML Connection",
     });
 
-    const conflictResult = await asAdmin2.mutation(api.sso.updateDomains, {
-      connectionId: connection2Id,
-      domains: ["example.com"],
-    });
-    expect(conflictResult.success).toBe(false);
-    expect(conflictResult.error).toContain("already configured");
+    await expect(
+      asAdmin2.mutation(api.sso.updateDomains, {
+        connectionId: connection2Id,
+        domains: ["example.com"],
+      }),
+    ).rejects.toThrow("already configured");
   });
 
   it("should resolve SSO connection by domain", async () => {
