@@ -20,6 +20,7 @@ import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { isOrganizationMember } from "./lib/organizationAccess";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { validateDestination } from "./lib/ssrf";
 import { MINUTE } from "./lib/timeUtils";
 import { assertCanAccessProject, assertCanEditProject, canEditProject } from "./projectAccess";
 import { meetingPlatforms, meetingStatuses, simplePriorities } from "./validators";
@@ -354,6 +355,8 @@ export const scheduleRecording = authenticatedMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
+    validateDestination(args.meetingUrl);
+
     if (args.projectId) {
       await assertCanEditProject(ctx, args.projectId, ctx.userId);
     }
@@ -406,6 +409,8 @@ export const startRecordingNow = authenticatedMutation({
   returns: v.object({ recordingId: v.id("meetingRecordings") }),
   handler: async (ctx, args) => {
     const now = Date.now();
+
+    validateDestination(args.meetingUrl);
 
     if (args.projectId) {
       await assertCanEditProject(ctx, args.projectId, ctx.userId);
