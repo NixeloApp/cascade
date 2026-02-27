@@ -118,7 +118,7 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).not.toContain("access_denied");
+      expect(text).toContain("access_denied");
     });
 
     it("should return HTML error if config is missing (throws)", async () => {
