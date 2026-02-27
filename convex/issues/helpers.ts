@@ -217,6 +217,49 @@ export function trackFieldChange<T>(
 }
 
 /**
+ * Helper to perform bulk updates on date fields (startDate, dueDate).
+ *
+ * - Handles validation (e.g., ensuring startDate < dueDate).
+ * - Formats dates as ISO strings for activity logging.
+ * - Manages version incrementing.
+ * - Skips invalid updates (returns null patch).
+ *
+ * @param ctx - Mutation context.
+ * @param issueIds - Array of issue IDs to update.
+ * @param field - The date field to update ('startDate' or 'dueDate').
+ * @param newValue - The new timestamp, or null to clear.
+ * @param validate - Function to validate the new date against the issue's state.
+ * @returns Object containing the number of updated issues.
+ */
+export async function performBulkDateUpdate(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  issueIds: Id<"issues">[],
+  field: "startDate" | "dueDate",
+  newValue: number | null,
+  validate: (issue: Doc<"issues">, newValue: number | null) => boolean,
+) {
+  return performBulkUpdate(ctx, issueIds, async (issue, _now) => {
+    // Run custom validation (e.g., check start < due)
+    if (!validate(issue, newValue)) {
+      return null;
+    }
+
+    return {
+      patch: {
+        [field]: newValue ?? undefined,
+        version: (issue.version ?? 1) + 1,
+      },
+      activity: {
+        action: "updated",
+        field,
+        oldValue: issue[field] ? new Date(issue[field]).toISOString() : undefined,
+        newValue: newValue ? new Date(newValue).toISOString() : undefined,
+      },
+    };
+  });
+}
+
+/**
  * Helper to track updates to nullable fields.
  * Handles the distinction between `undefined` (no change) and `null` (clear value).
  *

@@ -25,6 +25,7 @@ import {
   type IssueActivityAction,
   issueKeyExists,
   notifyCommentParticipants,
+  performBulkDateUpdate,
   performBulkUpdate,
   performSimpleBulkUpdate,
   processIssueUpdates,
@@ -758,24 +759,12 @@ export const bulkUpdateDueDate = authenticatedMutation({
   },
   returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
-    return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
+    return performBulkDateUpdate(ctx, args.issueIds, "dueDate", args.dueDate, (issue, newValue) => {
       // Validate: due date should not be before start date
-      if (args.dueDate !== null && issue.startDate && args.dueDate < issue.startDate) {
-        return null; // Skip issues where due date would be before start date
+      if (newValue !== null && issue.startDate && newValue < issue.startDate) {
+        return false;
       }
-
-      return {
-        patch: {
-          dueDate: args.dueDate ?? undefined,
-          version: (issue.version ?? 1) + 1,
-        },
-        activity: {
-          action: "updated",
-          field: "dueDate",
-          oldValue: issue.dueDate ? new Date(issue.dueDate).toISOString() : undefined,
-          newValue: args.dueDate ? new Date(args.dueDate).toISOString() : undefined,
-        },
-      };
+      return true;
     });
   },
 });
@@ -798,24 +787,18 @@ export const bulkUpdateStartDate = authenticatedMutation({
   },
   returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
-    return performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
-      // Validate: start date should not be after due date
-      if (args.startDate !== null && issue.dueDate && args.startDate > issue.dueDate) {
-        return null; // Skip issues where start date would be after due date
-      }
-
-      return {
-        patch: {
-          startDate: args.startDate ?? undefined,
-          version: (issue.version ?? 1) + 1,
-        },
-        activity: {
-          action: "updated",
-          field: "startDate",
-          oldValue: issue.startDate ? new Date(issue.startDate).toISOString() : undefined,
-          newValue: args.startDate ? new Date(args.startDate).toISOString() : undefined,
-        },
-      };
-    });
+    return performBulkDateUpdate(
+      ctx,
+      args.issueIds,
+      "startDate",
+      args.startDate,
+      (issue, newValue) => {
+        // Validate: start date should not be after due date
+        if (newValue !== null && issue.dueDate && newValue > issue.dueDate) {
+          return false;
+        }
+        return true;
+      },
+    );
   },
 });
