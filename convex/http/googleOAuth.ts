@@ -41,8 +41,19 @@ async function fetchJSON<T>(url: string, init?: RequestInit, timeoutMs = 10000):
   }
 }
 
+/** Map Google OAuth error codes to user-friendly messages */
+const googleOAuthErrorMessages: Record<string, string> = {
+  access_denied: "You declined the Google Calendar permission request.",
+  invalid_scope: "Required permissions were not granted.",
+  invalid_grant: "Authorization has expired or been revoked. Please try again.",
+  server_error: "Google encountered an error. Please try again later.",
+  temporarily_unavailable: "Google is temporarily unavailable. Please try again later.",
+};
+
 /** Generic error page HTML generator */
-function getErrorPageHtml(message = "An error occurred while connecting to Google Calendar.") {
+function getErrorPageHtml(
+  message = "An error occurred while connecting to Google Calendar.",
+): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -333,9 +344,10 @@ function validateCallbackParams(
   const error = url.searchParams.get("error");
 
   if (error) {
+    const userMessage = googleOAuthErrorMessages[error] ?? `Google returned an error: ${error}`;
     return {
       success: false,
-      response: new Response(getErrorPageHtml(error), {
+      response: new Response(getErrorPageHtml(userMessage), {
         status: 400,
         headers: {
           "Content-Type": "text/html",

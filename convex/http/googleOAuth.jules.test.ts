@@ -118,7 +118,8 @@ describe("Google OAuth Flow", () => {
       expect(response.status).toBe(400);
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("access_denied");
+      // Error codes are mapped to user-friendly messages
+      expect(text).toContain("You declined the Google Calendar permission request.");
     });
 
     it("should return HTML error if config is missing (throws)", async () => {
