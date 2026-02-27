@@ -160,24 +160,22 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
         id="file-upload"
         tabIndex={-1}
       />
-      <button
-        type="button"
+      <Button
+        variant="unstyled"
         aria-label="File upload area. Drag and drop files here, or click to browse."
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
-          "w-full border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-default cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
+          "w-full h-auto border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 transition-colors duration-default cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
           dragOver
             ? "border-brand bg-ui-bg-hover"
             : "border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-hover",
         )}
       >
-        <Icon icon={Paperclip} size="xl" className="mx-auto mb-2 text-ui-text-tertiary" />
-        <Typography variant="muted" className="mb-2">
-          Drag and drop files here, or click to browse
-        </Typography>
+        <Icon icon={Paperclip} size="xl" className="mx-auto text-ui-text-tertiary" />
+        <Typography variant="muted">Drag and drop files here, or click to browse</Typography>
         <div
           className={cn(
             buttonVariants({ variant: "secondary", size: "sm" }),
@@ -193,7 +191,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
             "Choose Files"
           )}
         </div>
-      </button>
+      </Button>
 
       {/* Attachments List */}
       {attachments && attachments.length > 0 && (
