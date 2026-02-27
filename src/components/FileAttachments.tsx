@@ -160,23 +160,15 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
         id="file-upload"
         tabIndex={-1}
       />
-      {/* biome-ignore lint/a11y/useSemanticElements: Complex drop zone pattern that requires div for layout/drag handling while behaving like a button */}
-      <div
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         aria-label="File upload area. Drag and drop files here, or click to browse."
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => fileInputRef.current?.click()}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            fileInputRef.current?.click();
-          }
-        }}
         className={cn(
-          "border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-default cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
+          "w-full border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-default cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
           dragOver
             ? "border-brand bg-ui-bg-hover"
             : "border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-hover",
@@ -201,7 +193,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
             "Choose Files"
           )}
         </div>
-      </div>
+      </button>
 
       {/* Attachments List */}
       {attachments && attachments.length > 0 && (
