@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import { Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 import {
   Archive,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/Button";
+import { Button, buttonVariants } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex, FlexItem } from "./ui/Flex";
@@ -150,42 +151,47 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
   return (
     <Stack gap="md">
       {/* Upload Area */}
-      <section
-        aria-label="File upload area"
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={(e) => handleFileSelect(e.target.files)}
+        className="hidden"
+        id="file-upload"
+        tabIndex={-1}
+      />
+      <Button
+        variant="unstyled"
+        aria-label="File upload area. Drag and drop files here, or click to browse."
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        onClick={() => fileInputRef.current?.click()}
         className={cn(
-          "border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-default",
+          "w-full h-auto border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 transition-colors duration-default cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
           dragOver
             ? "border-brand bg-ui-bg-hover"
             : "border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-hover",
         )}
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={(e) => handleFileSelect(e.target.files)}
-          className="hidden"
-          id="file-upload"
-        />
-        <label htmlFor="file-upload" className="cursor-pointer">
-          <Icon icon={Paperclip} size="xl" className="mx-auto mb-2 text-ui-text-tertiary" />
-          <Typography variant="muted" className="mb-2">
-            Drag and drop files here, or click to browse
-          </Typography>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            isLoading={uploading}
-          >
-            {uploading ? "Uploading..." : "Choose Files"}
-          </Button>
-        </label>
-      </section>
+        <Icon icon={Paperclip} size="xl" className="mx-auto text-ui-text-tertiary" />
+        <Typography variant="muted">Drag and drop files here, or click to browse</Typography>
+        <div
+          className={cn(
+            buttonVariants({ variant: "secondary", size: "sm" }),
+            "pointer-events-none",
+          )}
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
+              Uploading...
+            </>
+          ) : (
+            "Choose Files"
+          )}
+        </div>
+      </Button>
 
       {/* Attachments List */}
       {attachments && attachments.length > 0 && (
