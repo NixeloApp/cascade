@@ -16,7 +16,12 @@ import { batchFetchTeams, batchFetchUsers, getUserName } from "./lib/batchHelper
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
-import { MAX_PROJECTS_PER_TEAM, MAX_TEAM_MEMBERS, MAX_TEAMS_PER_ORG } from "./lib/queryLimits";
+import {
+  MAX_PAGE_SIZE,
+  MAX_PROJECTS_PER_TEAM,
+  MAX_TEAM_MEMBERS,
+  MAX_TEAMS_PER_ORG,
+} from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getTeamRole } from "./lib/teamAccess";
@@ -609,26 +614,30 @@ export const getOrganizationTeams = organizationQuery({
     const isAdmin = ctx.organizationRole === "admin" || ctx.organizationRole === "owner";
 
     // Fetch team members and projects per team using indexes with limits
+    // Optimization: Use smaller limits for counting — we only need counts + current user's role
     const teamIds = teams.map((t) => t._id);
 
-    const [teamMembersArrays, workspacesArrays] = await Promise.all([
+    const MEMBER_COUNT_LIMIT = 100; // Sufficient for counting; saves bandwidth vs MAX_TEAM_MEMBERS (500)
+
+    const [teamMembersArrays, projectCountsArray] = await Promise.all([
       Promise.all(
         teamIds.map((teamId) =>
           ctx.db
             .query("teamMembers")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter(notDeleted)
-            .take(MAX_TEAM_MEMBERS),
+            .take(MEMBER_COUNT_LIMIT),
         ),
       ),
       Promise.all(
-        teamIds.map((teamId) =>
-          ctx.db
+        teamIds.map(async (teamId) => {
+          const projects = await ctx.db
             .query("projects")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter(notDeleted)
-            .take(MAX_PROJECTS_PER_TEAM),
-        ),
+            .take(MAX_PAGE_SIZE);
+          return projects.length;
+        }),
       ),
     ]);
 
@@ -650,8 +659,7 @@ export const getOrganizationTeams = organizationQuery({
 
     const projectCountByTeam = new Map<string, number>();
     teamIds.forEach((teamId, index) => {
-      const projects = workspacesArrays[index];
-      projectCountByTeam.set(teamId.toString(), projects.length);
+      projectCountByTeam.set(teamId.toString(), projectCountsArray[index]);
     });
 
     // Enrich teams with pre-computed data (no N+1)

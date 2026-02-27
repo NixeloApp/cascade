@@ -203,9 +203,10 @@ export const createTestUserInternal = internalMutation({
     }
 
     // Check if user already exists
+    // Optimization: Use email index instead of filter-based table scan
     const existingUser = await ctx.db
       .query("users")
-      .filter((q) => q.eq(q.field("email"), args.email))
+      .withIndex("email", (q) => q.eq("email", args.email))
       .first();
 
     if (existingUser) {
@@ -463,9 +464,13 @@ export const deleteTestUserInternal = internalMutation({
 
     // First, delete any authAccounts by email (providerAccountId) - this catches orphaned accounts
     // For password provider, providerAccountId is the email address
+    // Optimization: Use providerAndAccountId index instead of filter-based table scan
+    // For password provider, providerAccountId is the email address
     const accountsByEmail = await ctx.db
       .query("authAccounts")
-      .filter((q) => q.eq(q.field("providerAccountId"), args.email))
+      .withIndex("providerAndAccountId", (q) =>
+        q.eq("provider", "password").eq("providerAccountId", args.email),
+      )
       .collect();
     for (const account of accountsByEmail) {
       await ctx.db.delete(account._id);
@@ -711,12 +716,15 @@ export const cleanupTestUsersInternal = internalMutation({
     const cutoffTime = Date.now() - TEST_USER_EXPIRATION_MS;
 
     // Find test users older than cutoff
-    const oldTestUsers = await ctx.db
+    // Optimization: Use isTestUser index instead of filter-based table scan,
+    // then filter by cutoff time in memory (much cheaper than scanning ALL users)
+    const allTestUsers = await ctx.db
       .query("users")
-      .filter((q) =>
-        q.and(q.eq(q.field("isTestUser"), true), q.lt(q.field("testUserCreatedAt"), cutoffTime)),
-      )
+      .withIndex("isTestUser", (q) => q.eq("isTestUser", true))
       .collect();
+    const oldTestUsers = allTestUsers.filter(
+      (u) => u.testUserCreatedAt && u.testUserCreatedAt < cutoffTime,
+    );
 
     let deletedCount = 0;
     for (const user of oldTestUsers) {
@@ -2436,8 +2444,11 @@ export const nukeAllTestUsersInternal = internalMutation({
   args: {},
   returns: v.object({ success: v.boolean(), deleted: v.number() }),
   handler: async (ctx) => {
-    const allUsers = await ctx.db.query("users").collect();
-    const testUsers = allUsers.filter((u) => u.email?.includes("@inbox.mailtrap.io"));
+    // Optimization: Use isTestUser index instead of full users table scan
+    const testUsers = await ctx.db
+      .query("users")
+      .withIndex("isTestUser", (q) => q.eq("isTestUser", true))
+      .collect();
 
     let deletedCount = 0;
     for (const user of testUsers) {
