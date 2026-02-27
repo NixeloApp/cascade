@@ -151,6 +151,16 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
   return (
     <Stack gap="md">
       {/* Upload Area */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={(e) => handleFileSelect(e.target.files)}
+        className="hidden"
+        id="file-upload"
+        tabIndex={-1}
+      />
+      {/* biome-ignore lint/a11y/useSemanticElements: Complex drop zone pattern that requires div for layout/drag handling while behaving like a button */}
       <div
         role="button"
         tabIndex={0}
@@ -172,21 +182,15 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
             : "border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-hover",
         )}
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={(e) => handleFileSelect(e.target.files)}
-          className="hidden"
-          id="file-upload"
-          tabIndex={-1}
-        />
         <Icon icon={Paperclip} size="xl" className="mx-auto mb-2 text-ui-text-tertiary" />
         <Typography variant="muted" className="mb-2">
           Drag and drop files here, or click to browse
         </Typography>
         <div
-          className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "pointer-events-none")}
+          className={cn(
+            buttonVariants({ variant: "secondary", size: "sm" }),
+            "pointer-events-none",
+          )}
         >
           {uploading ? (
             <>
