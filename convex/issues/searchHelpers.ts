@@ -4,7 +4,14 @@ import type { DataModel, Doc, Id } from "../_generated/dataModel";
 // Get the search index config type for issues table
 type IssuesSearchIndex = DataModel["issues"]["searchIndexes"]["search_title"];
 
-// Helper to apply singular filters (type, status, priority)
+/**
+ * Applies singular filters (type, status, priority) to the search query.
+ *
+ * NOTE: Convex search indexes do not support "IN" queries or OR logic for filter fields.
+ * Therefore, we can only apply these filters at the database level if a SINGLE value is provided.
+ * If multiple values are provided (e.g., status=["todo", "inprogress"]), we skip the filter here
+ * and rely on in-memory filtering later.
+ */
 function applySingularFilters(
   q: SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex>,
   args: {
@@ -39,7 +46,12 @@ function applySingularFilters(
   return searchQ;
 }
 
-// Helper to apply user filters (assignee, reporter)
+/**
+ * Applies user filters (assignee, reporter) to the search query.
+ *
+ * NOTE: Handles "me" alias for current user. Skips "unassigned" as it requires a specific
+ * check (eq null) which might not be supported or is handled better in memory for search queries.
+ */
 function applyUserFilters(
   q: SearchFilterFinalizer<Doc<"issues">, IssuesSearchIndex>,
   args: {
@@ -63,6 +75,25 @@ function applyUserFilters(
   return searchQ;
 }
 
+/**
+ * Constructs a Convex search query for issues.
+ *
+ * This helper translates high-level search arguments into a Convex `search_title` index query.
+ * It optimizes for search relevance by pushing down as many filters as possible to the database level.
+ *
+ * IMPORTANT LIMITATIONS:
+ * 1. **Multi-value filters**: Convex search indexes do not support "IN" clauses. Filters for `type`,
+ *    `status`, and `priority` are ONLY applied if a single value is provided. If multiple values
+ *    are requested, filtering is deferred to the in-memory step.
+ * 2. **Special values**: Values like "unassigned" (assignee), "backlog" (sprint), and "none" (epic)
+ *    are skipped here and must be handled in-memory.
+ * 3. **Labels**: Multiple labels are treated with AND logic (must have all).
+ *
+ * @param q - The search query builder.
+ * @param args - Search arguments including query text and filters.
+ * @param userId - The ID of the current user (for "me" filters).
+ * @returns The final search query with applied filters.
+ */
 export function buildIssueSearch(
   q: SearchFilterBuilder<Doc<"issues">, IssuesSearchIndex>,
   args: {
