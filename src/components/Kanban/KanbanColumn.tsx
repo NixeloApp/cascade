@@ -7,6 +7,7 @@ import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
+import type { CardDisplayOptions } from "@/lib/card-display-utils";
 import { ANIMATION } from "@/lib/constants";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { getWorkflowCategoryColor } from "@/lib/issue-utils";
@@ -66,6 +67,8 @@ export interface KanbanColumnProps {
   isCollapsed?: boolean;
   /** Callback to toggle collapse state */
   onToggleCollapse?: (stateId: string) => void;
+  /** Card display options */
+  displayOptions?: CardDisplayOptions;
 }
 
 /**
@@ -83,6 +86,7 @@ const KanbanIssueItem = memo(
     isFocused,
     onToggleSelect,
     canEdit,
+    displayOptions,
   }: {
     issue: Issue;
     columnIndex: number;
@@ -93,6 +97,7 @@ const KanbanIssueItem = memo(
     isFocused: boolean;
     onToggleSelect: (issueId: Id<"issues">) => void;
     canEdit: boolean;
+    displayOptions?: CardDisplayOptions;
   }) => {
     const style = {
       animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + index * ANIMATION.STAGGER_DELAY}ms`,
@@ -109,6 +114,7 @@ const KanbanIssueItem = memo(
           onToggleSelect={onToggleSelect}
           canEdit={canEdit}
           status={issue.status}
+          displayOptions={displayOptions}
         />
       </div>
     );
@@ -362,6 +368,7 @@ const KanbanColumnComponent = function KanbanColumn({
   onIssueReorder: _onIssueReorder,
   isCollapsed = false,
   onToggleCollapse,
+  displayOptions,
 }: KanbanColumnProps) {
   const columnRef = useRef<HTMLElement>(null);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
@@ -472,6 +479,7 @@ const KanbanColumnComponent = function KanbanColumn({
                 isFocused={issue._id === focusedIssueId}
                 onToggleSelect={onToggleSelect}
                 canEdit={canEdit}
+                displayOptions={displayOptions}
               />
             ))}
 

@@ -10,6 +10,7 @@ import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
+import { type CardDisplayOptions, DEFAULT_CARD_DISPLAY } from "@/lib/card-display-utils";
 import type { IssueType } from "@/lib/issue-utils";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import {
@@ -114,6 +115,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   const [swimlaneGroupBy, setSwimlanGroupBy] = useState<SwimlanGroupBy>("none");
   const [collapsedSwimlanes, setCollapsedSwimlanes] = useState<CollapsedSwimlanes>(new Set());
   const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set());
+  const [displayOptions, setDisplayOptions] = useState<CardDisplayOptions>(DEFAULT_CARD_DISPLAY);
   const boardContainerRef = useRef<HTMLDivElement>(null);
 
   const isTeamMode = !!teamId;
@@ -303,6 +305,8 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
         showControls={!isTeamMode}
         swimlaneGroupBy={swimlaneGroupBy}
         onSwimlanGroupByChange={isTeamMode ? undefined : setSwimlanGroupBy}
+        displayOptions={displayOptions}
+        onDisplayOptionsChange={setDisplayOptions}
       />
 
       {swimlaneGroupBy === "none" ? (
@@ -335,6 +339,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
                 onIssueReorder={handleIssueReorder}
                 isCollapsed={collapsedColumns.has(state.id)}
                 onToggleCollapse={handleToggleColumnCollapse}
+                displayOptions={displayOptions}
               />
             );
           })}

@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
+import type { CardDisplayOptions } from "@/lib/card-display-utils";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import { Typography } from "../ui/Typography";
+import { DisplayPropertiesSelector } from "./DisplayPropertiesSelector";
 import { SwimlanSelector } from "./SwimlanSelector";
 
 interface BoardToolbarProps {
@@ -19,6 +21,10 @@ interface BoardToolbarProps {
   swimlaneGroupBy?: SwimlanGroupBy;
   /** Callback when swimlane grouping changes */
   onSwimlanGroupByChange?: (value: SwimlanGroupBy) => void;
+  /** Card display options */
+  displayOptions?: CardDisplayOptions;
+  /** Callback when display options change */
+  onDisplayOptionsChange?: (value: CardDisplayOptions) => void;
 }
 
 /**
@@ -36,6 +42,8 @@ export function BoardToolbar({
   showControls = true,
   swimlaneGroupBy = "none",
   onSwimlanGroupByChange,
+  displayOptions,
+  onDisplayOptionsChange,
 }: BoardToolbarProps) {
   return (
     <Flex align="center" justify="between" gap="sm" className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3">
@@ -91,6 +99,11 @@ export function BoardToolbar({
               </IconButton>
             </Tooltip>
           </Flex>
+
+          {/* Display properties selector */}
+          {displayOptions && onDisplayOptionsChange && (
+            <DisplayPropertiesSelector value={displayOptions} onChange={onDisplayOptionsChange} />
+          )}
 
           {/* Swimlane selector */}
           {onSwimlanGroupByChange && (

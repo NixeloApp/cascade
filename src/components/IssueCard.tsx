@@ -12,6 +12,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { type CardDisplayOptions, DEFAULT_CARD_DISPLAY } from "@/lib/card-display-utils";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import {
   getIssueAccessibleLabel,
@@ -66,6 +67,8 @@ interface IssueCardProps {
     targetStatus: string,
     edge: "top" | "bottom",
   ) => void;
+  /** Card display options to show/hide properties */
+  displayOptions?: CardDisplayOptions;
 }
 
 /**
@@ -136,7 +139,10 @@ export const IssueCard = memo(function IssueCard({
   canEdit = true,
   onDragStateChange,
   onIssueDrop,
+  displayOptions = DEFAULT_CARD_DISPLAY,
 }: IssueCardProps) {
+  // Merge with defaults to ensure all properties are defined
+  const display = { ...DEFAULT_CARD_DISPLAY, ...displayOptions };
   const cardRef = useRef<HTMLDivElement>(null);
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -293,8 +299,30 @@ export const IssueCard = memo(function IssueCard({
                 className="w-4 h-4 text-brand border-ui-border rounded focus:ring-brand-ring cursor-pointer pointer-events-auto"
               />
             )}
-            <Tooltip content={getTypeLabel(issue.type)}>
-              {/* Tooltip trigger needs pointer events */}
+            {display.issueType && (
+              <Tooltip content={getTypeLabel(issue.type)}>
+                {/* Tooltip trigger needs pointer events */}
+                <Flex
+                  as="span"
+                  inline
+                  align="center"
+                  justify="center"
+                  onClick={handleClick}
+                  className="pointer-events-auto rounded-sm cursor-default"
+                  aria-hidden="true"
+                >
+                  <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" className="cursor-help" />
+                </Flex>
+              </Tooltip>
+            )}
+            <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
+              {issue.key}
+            </Typography>
+          </Flex>
+          {display.priority && (
+            <Tooltip
+              content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
+            >
               <Flex
                 as="span"
                 inline
@@ -304,33 +332,15 @@ export const IssueCard = memo(function IssueCard({
                 className="pointer-events-auto rounded-sm cursor-default"
                 aria-hidden="true"
               >
-                <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" className="cursor-help" />
+                <Icon
+                  icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
+                  size="sm"
+                  data-testid={TEST_IDS.ISSUE.PRIORITY}
+                  className={cn("cursor-help", getPriorityColor(issue.priority))}
+                />
               </Flex>
             </Tooltip>
-            <Typography variant="inlineCode" data-testid={TEST_IDS.ISSUE.KEY}>
-              {issue.key}
-            </Typography>
-          </Flex>
-          <Tooltip
-            content={`Priority: ${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`}
-          >
-            <Flex
-              as="span"
-              inline
-              align="center"
-              justify="center"
-              onClick={handleClick}
-              className="pointer-events-auto rounded-sm cursor-default"
-              aria-hidden="true"
-            >
-              <Icon
-                icon={PRIORITY_ICONS[issue.priority] ?? PRIORITY_ICONS.medium}
-                size="sm"
-                data-testid={TEST_IDS.ISSUE.PRIORITY}
-                className={cn("cursor-help", getPriorityColor(issue.priority))}
-              />
-            </Flex>
-          </Tooltip>
+          )}
         </Flex>
 
         {/* Title */}
@@ -347,7 +357,7 @@ export const IssueCard = memo(function IssueCard({
         </Tooltip>
 
         {/* Labels */}
-        {issue.labels.length > 0 && (
+        {display.labels && issue.labels.length > 0 && (
           <Flex wrap gap="xs" className="mb-2">
             {issue.labels.slice(0, 3).map((label) => (
               <Badge
@@ -384,52 +394,55 @@ export const IssueCard = memo(function IssueCard({
           </Flex>
         )}
 
-        {/* Footer */}
-        <Flex
-          direction="column"
-          align="start"
-          justify="between"
-          gap="sm"
-          className="sm:flex-row sm:items-center"
-        >
-          <Flex align="center" gap="sm">
-            {issue.assignee && (
-              <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
-                <Flex
-                  as="span"
-                  inline
-                  align="center"
-                  justify="center"
-                  gap="xs"
-                  onClick={handleClick}
-                  className="pointer-events-auto rounded-sm cursor-default"
-                  aria-hidden="true"
-                >
-                  {issue.assignee.image ? (
-                    <img
-                      src={issue.assignee.image}
-                      alt={issue.assignee.name}
-                      className="w-5 h-5 rounded-full"
-                    />
-                  ) : (
-                    <Flex
-                      align="center"
-                      justify="center"
-                      className="size-5 rounded-full bg-ui-bg-tertiary text-ui-text-secondary"
-                    >
-                      {issue.assignee.name.charAt(0).toUpperCase()}
-                    </Flex>
-                  )}
-                </Flex>
-              </Tooltip>
+        {/* Footer - only show if assignee or story points are visible and have values */}
+        {((display.assignee && issue.assignee) ||
+          (display.storyPoints && issue.storyPoints !== undefined)) && (
+          <Flex
+            direction="column"
+            align="start"
+            justify="between"
+            gap="sm"
+            className="sm:flex-row sm:items-center"
+          >
+            <Flex align="center" gap="sm">
+              {display.assignee && issue.assignee && (
+                <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
+                  <Flex
+                    as="span"
+                    inline
+                    align="center"
+                    justify="center"
+                    gap="xs"
+                    onClick={handleClick}
+                    className="pointer-events-auto rounded-sm cursor-default"
+                    aria-hidden="true"
+                  >
+                    {issue.assignee.image ? (
+                      <img
+                        src={issue.assignee.image}
+                        alt={issue.assignee.name}
+                        className="w-5 h-5 rounded-full"
+                      />
+                    ) : (
+                      <Flex
+                        align="center"
+                        justify="center"
+                        className="size-5 rounded-full bg-ui-bg-tertiary text-ui-text-secondary"
+                      >
+                        {issue.assignee.name.charAt(0).toUpperCase()}
+                      </Flex>
+                    )}
+                  </Flex>
+                </Tooltip>
+              )}
+            </Flex>
+            {display.storyPoints && issue.storyPoints !== undefined && (
+              <Badge variant="neutral" size="sm">
+                {issue.storyPoints} pts
+              </Badge>
             )}
           </Flex>
-          {issue.storyPoints !== undefined && (
-            <Badge variant="neutral" size="sm">
-              {issue.storyPoints} pts
-            </Badge>
-          )}
-        </Flex>
+        )}
       </div>
     </div>
   );
