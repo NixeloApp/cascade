@@ -19,6 +19,7 @@ import {
 } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { DuplicateDetection } from "./DuplicateDetection";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { Dialog } from "./ui/Dialog";
@@ -321,6 +322,24 @@ export function CreateIssueModal({
             <FormInput field={field} label="Title" placeholder="Enter issue title..." required />
           )}
         </form.Field>
+
+        {/* Duplicate Detection */}
+        <form.Subscribe selector={(state) => state.values.title}>
+          {(title) =>
+            effectiveProjectId && title ? (
+              <DuplicateDetection
+                title={title}
+                projectId={effectiveProjectId}
+                onIssueClick={(issueId) => {
+                  // Close modal and let user view the existing issue
+                  // The user can navigate to the issue from the main UI
+                  onOpenChange(false);
+                  showSuccess(`Opening ${issueId.slice(0, 8)}... You can find it in the board.`);
+                }}
+              />
+            ) : null
+          }
+        </form.Subscribe>
 
         {/* AI Suggestions Button */}
         <Flex align="center" gap="sm" className="pb-2">

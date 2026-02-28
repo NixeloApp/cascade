@@ -789,6 +789,55 @@ export const search = authenticatedQuery({
   },
 });
 
+/**
+ * Find similar issues by title for duplicate detection.
+ *
+ * Used in CreateIssueModal to warn users about potential duplicates
+ * before creating a new issue.
+ */
+export const findSimilarIssues = authenticatedQuery({
+  args: {
+    query: v.string(),
+    projectId: v.id("projects"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("issues"),
+      key: v.string(),
+      title: v.string(),
+      status: v.string(),
+      type: v.string(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    // Skip if query is too short
+    if (!args.query || args.query.trim().length < 3) {
+      return [];
+    }
+
+    const limit = args.limit ?? 5;
+
+    // Search for issues with similar titles
+    const issues = await ctx.db
+      .query("issues")
+      .withSearchIndex("search_title", (q) =>
+        q.search("searchContent", args.query).eq("projectId", args.projectId),
+      )
+      .filter(notDeleted)
+      .take(limit);
+
+    // Return minimal info for duplicate detection UI
+    return issues.map((issue) => ({
+      _id: issue._id,
+      key: issue.key,
+      title: issue.title,
+      status: issue.status,
+      type: issue.type,
+    }));
+  },
+});
+
 // Import the rest of the smart loading queries
 import { DEFAULT_PAGE_SIZE, getDoneColumnThreshold } from "../lib/pagination";
 
