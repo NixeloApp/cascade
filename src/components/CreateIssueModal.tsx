@@ -28,6 +28,7 @@ import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { SelectItem } from "./ui/Select";
 import { Stack } from "./ui/Stack";
+import { Switch } from "./ui/Switch";
 import { Typography } from "./ui/Typography";
 
 // =============================================================================
@@ -87,6 +88,8 @@ export function CreateIssueModal({
   // AI state
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
+  // Create another toggle
+  const [createAnother, setCreateAnother] = useState(false);
 
   // Queries
   const orgProjects = useQuery(
@@ -148,7 +151,16 @@ export function CreateIssueModal({
         });
 
         showSuccess("Issue created successfully");
-        onOpenChange(false);
+
+        if (createAnother) {
+          // Reset form for another issue
+          form.reset();
+          setSelectedLabels([]);
+          setSelectedTemplate("");
+          setShowAISuggestions(false);
+        } else {
+          onOpenChange(false);
+        }
       } catch (error) {
         showError(error, "Failed to create issue");
       }
@@ -454,18 +466,26 @@ export function CreateIssueModal({
         {/* Footer - form.Subscribe needs to stay inside the form */}
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <Flex gap="sm" justify="end" className="pt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" isLoading={isSubmitting}>
-                Create Issue
-              </Button>
+            <Flex align="center" justify="between" className="pt-4">
+              <Switch
+                id="create-another"
+                checked={createAnother}
+                onCheckedChange={setCreateAnother}
+                label="Create another"
+              />
+              <Flex gap="sm">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" isLoading={isSubmitting}>
+                  Create Issue
+                </Button>
+              </Flex>
             </Flex>
           )}
         </form.Subscribe>
