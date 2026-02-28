@@ -45,13 +45,13 @@ This documentation analyzes how features are implemented across three codebases 
 | Sprint Board | ✅ Done | [sprint-board.md](./sprints-cycles/sprint-board.md) |
 | Sprint Reports | ✅ Done | [sprint-reports.md](./sprints-cycles/sprint-reports.md) |
 
-### ⬜ Views
+### ✅ Views
 | Feature | Status | Doc |
 |---------|--------|-----|
-| Kanban Board | ⬜ Pending | [kanban-board.md](./views/kanban-board.md) |
-| List View | ⬜ Pending | [list-view.md](./views/list-view.md) |
-| Calendar View | ⬜ Pending | [calendar-view.md](./views/calendar-view.md) |
-| Gantt Chart | ⬜ Pending | [gantt-chart.md](./views/gantt-chart.md) |
+| Kanban Board | ✅ Done | [kanban-board.md](./views/kanban-board.md) |
+| List View | ✅ Done | [list-view.md](./views/list-view.md) |
+| Calendar View | ✅ Done | [calendar-view.md](./views/calendar-view.md) |
+| Gantt Chart | ✅ Done | [gantt-chart.md](./views/gantt-chart.md) |
 
 ### ⬜ Documents
 | Feature | Status | Doc |
@@ -133,6 +133,24 @@ This documentation analyzes how features are implemented across three codebases 
 9. **Date overlap validation** - Prevent conflicting sprint dates
 10. **Progress snapshots** - Historical tracking
 
+### Views Improvements (from views/ comparison)
+
+#### High Priority
+1. **Spreadsheet/table view** - Add proper list view with columns, inline editing, sorting
+2. **Calendar drag-and-drop** - Reschedule issues by dragging between days
+3. **Gantt block resizing** - Adjust start/end dates by resizing timeline bars
+
+#### Medium Priority
+4. **Display properties toggle** - Show/hide card properties (assignee, labels, etc.)
+5. **More grouping options** - Group Kanban by assignee, priority, type
+6. **Week view for calendar** - Single week with more issues per day
+7. **Dependency lines in Gantt** - Visualize issue relationships
+
+#### Nice to Have
+8. **Sub-grouping (swimlanes v2)** - Dual grouping like plane
+9. **Quick add on calendar day** - Click empty day to create issue
+10. **Configurable Gantt timeline** - 1/3/6/12 month spans
+
 ### Cascade Strengths vs Plane
 - **Saved filters with sharing** - Team-wide filter presets
 - **Advanced search modal** - Dedicated complex search UI
@@ -140,6 +158,9 @@ This documentation analyzes how features are implemented across three codebases 
 - **Color picker with preview** - Full color selection
 - **Confirmation dialogs** - Safer destructive actions
 - **Bulk operations free** - Plane charges for bulk ops
+- **Smart done loading** - Only loads recent done issues in Kanban
+- **Undo/redo history** - Revert drag operations with Ctrl+Z
+- **Virtual scrolling in Roadmap** - Handles large issue counts efficiently
 
 ---
 
@@ -151,7 +172,7 @@ Last updated: 2026-02-28
 - [x] issues/ category complete (6 docs)
 - [x] projects/ category complete (3 docs)
 - [x] sprints-cycles/ category complete (3 docs)
-- [ ] views/
+- [x] views/ category complete (4 docs)
 - [ ] documents/
 - [ ] notifications/
 - [ ] settings/

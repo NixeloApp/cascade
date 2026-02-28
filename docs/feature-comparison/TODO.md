@@ -175,7 +175,7 @@ Brief description of what this feature does.
 - [x] issues/ (plane + Cascade focus)
 - [x] projects/
 - [x] sprints-cycles/
-- [ ] views/
+- [x] views/
 - [ ] documents/
 - [ ] notifications/
 - [ ] settings/
