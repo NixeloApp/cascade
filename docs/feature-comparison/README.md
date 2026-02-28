@@ -173,7 +173,7 @@ This documentation analyzes how features are implemented across three codebases 
 
 #### High Priority
 1. **Snooze notifications** - Hide temporarily, reappear at scheduled time
-2. **Notification filters** - Filter by type (mentions, assigned, etc.)
+2. ~~**Notification filters**~~ ✅ Filter by type (All, Mentions, Assigned, Comments, Updates)
 3. **Archive capability** - Archive instead of delete
 
 #### Medium Priority

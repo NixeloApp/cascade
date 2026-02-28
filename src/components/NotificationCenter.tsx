@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { Bell } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -11,6 +11,7 @@ import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
 import { Badge } from "./ui/Badge";
 import { Card } from "./ui/Card";
@@ -18,17 +19,38 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
+/** Notification filter categories */
+type NotificationFilter = "all" | "mentions" | "assigned" | "comments" | "updates";
+
+/** Map filter categories to notification types */
+const FILTER_TYPE_MAP: Record<NotificationFilter, string[] | null> = {
+  all: null, // No filtering
+  mentions: ["issue_mentioned", "document_mentioned"],
+  assigned: ["issue_assigned"],
+  comments: ["issue_commented"],
+  updates: ["issue_status_changed", "sprint_started", "sprint_ended", "document_shared"],
+};
+
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState<NotificationFilter>("all");
   const orgContext = useOrganizationOptional();
 
   const { results: notificationsRaw } = usePaginatedQuery(
     api.notifications.list,
     {},
-    { initialNumItems: 20 },
+    { initialNumItems: 50 }, // Fetch more to allow client-side filtering
   );
-  const notifications = notificationsRaw as NotificationWithActor[];
+  const allNotifications = notificationsRaw as NotificationWithActor[];
+
+  // Filter notifications based on selected filter
+  const notifications = useMemo(() => {
+    if (!allNotifications) return [];
+    const typeFilter = FILTER_TYPE_MAP[filter];
+    if (!typeFilter) return allNotifications;
+    return allNotifications.filter((n) => typeFilter.includes(n.type));
+  }, [allNotifications, filter]);
   const unreadCount = useQuery(api.notifications.getUnreadCount, {});
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
@@ -107,20 +129,50 @@ export function NotificationCenter() {
             variant="ghost"
             className="border-x-0 border-t-0 sticky top-0 bg-ui-bg rounded-t-lg"
           >
-            <Flex align="center" justify="between">
-              <Typography variant="h3">Notifications</Typography>
-              {unreadCount != null && unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleMarkAllAsRead}
-                  isLoading={isLoading}
-                  className="text-brand hover:text-brand-hover"
-                >
-                  Mark all read
-                </Button>
-              )}
-            </Flex>
+            <Stack gap="sm">
+              <Flex align="center" justify="between">
+                <Typography variant="h3">Notifications</Typography>
+                {unreadCount != null && unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleMarkAllAsRead}
+                    isLoading={isLoading}
+                    className="text-brand hover:text-brand-hover"
+                  >
+                    Mark all read
+                  </Button>
+                )}
+              </Flex>
+
+              {/* Filter Tabs */}
+              <Flex gap="xs" className="overflow-x-auto pb-1 -mb-1">
+                {(
+                  [
+                    { key: "all", label: "All" },
+                    { key: "mentions", label: "Mentions" },
+                    { key: "assigned", label: "Assigned" },
+                    { key: "comments", label: "Comments" },
+                    { key: "updates", label: "Updates" },
+                  ] as const
+                ).map(({ key, label }) => (
+                  <Button
+                    key={key}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFilter(key)}
+                    className={cn(
+                      "shrink-0 px-3 h-7",
+                      filter === key
+                        ? "bg-ui-bg-secondary text-ui-text"
+                        : "text-ui-text-secondary hover:text-ui-text",
+                    )}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </Flex>
+            </Stack>
           </Card>
 
           {/* Notifications List */}

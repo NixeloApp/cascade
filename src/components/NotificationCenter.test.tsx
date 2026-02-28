@@ -5,7 +5,8 @@ import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@/test/custom-render";
+import { TEST_IDS } from "@/lib/test-ids";
+import { render, screen, waitFor, within } from "@/test/custom-render";
 import { NotificationCenter } from "./NotificationCenter";
 
 // Mock Convex hooks
@@ -431,13 +432,19 @@ describe("NotificationCenter", () => {
     });
     vi.mocked(useQuery).mockReturnValue(2); // Unread count
 
-    const { container } = render(<NotificationCenter />);
+    render(<NotificationCenter />);
 
-    const button = screen.getByRole("button");
-    await user.click(button);
+    // Click the notification bell button (has aria-label "Notifications, 2 unread")
+    const bellButton = screen.getByRole("button", { name: /notifications/i });
+    await user.click(bellButton);
 
+    // Wait for notification panel to appear and show the notification title "Assigned"
+    // Note: There's also a filter tab called "Assigned", so we look specifically within the notifications
     await waitFor(() => {
-      expect(screen.getByText("Assigned")).toBeInTheDocument();
+      // The notification's title "Assigned" should appear as a label/heading in the notification item
+      const panel = screen.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
+      // Find the notification content, not the filter button
+      expect(within(panel).getAllByText("Assigned").length).toBeGreaterThanOrEqual(1);
     });
 
     // Check that Lucide icons are rendered by looking for their SVG class names
