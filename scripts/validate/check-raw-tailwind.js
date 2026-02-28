@@ -28,6 +28,7 @@ export function run() {
     "src/components/Settings/", // Form-heavy with input styling
     "src/components/TimeTracking/", // Complex forms and tables
     "src/components/TimeTracker/", // Time entry components
+    "src/components/IssueDetail/", // Issue detail metadata components
     "src/components/IssueDetailView/", // Issue detail with form inputs
     "src/components/ProjectSettings/", // Settings forms
     "src/components/FuzzySearch/", // Search dropdowns with custom styling

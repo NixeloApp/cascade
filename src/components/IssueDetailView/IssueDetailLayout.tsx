@@ -8,12 +8,15 @@ interface IssueDetailLayoutProps {
   detail: ReturnType<typeof useIssueDetail>;
   billingEnabled: boolean;
   header?: ReactNode;
+  /** Whether the user can edit the issue (passed to sidebar for inline editing) */
+  canEdit?: boolean;
 }
 
 export function IssueDetailLayout({
   detail,
   billingEnabled,
   header,
+  canEdit = true,
 }: IssueDetailLayoutProps): ReactNode {
   const { issue, subtasks } = detail;
 
@@ -49,12 +52,14 @@ export function IssueDetailLayout({
             projectId={issue.projectId}
             status={issue.status}
             type={issue.type}
+            priority={issue.priority}
             assignee={issue.assignee}
             reporter={issue.reporter}
             storyPoints={issue.storyPoints}
             labels={issue.labels}
             estimatedHours={issue.estimatedHours}
             billingEnabled={billingEnabled}
+            canEdit={canEdit}
           />
         </Flex>
       </FlexItem>
