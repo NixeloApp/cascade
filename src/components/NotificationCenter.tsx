@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { isThisWeek, isToday, isYesterday, startOfDay } from "date-fns";
 import { Bell } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +32,41 @@ const FILTER_TYPE_MAP: Record<NotificationFilter, string[] | null> = {
   updates: ["issue_status_changed", "sprint_started", "sprint_ended", "document_shared"],
 };
 
+/** Date group labels */
+type DateGroup = "today" | "yesterday" | "this_week" | "older";
+
+const DATE_GROUP_LABELS: Record<DateGroup, string> = {
+  today: "Today",
+  yesterday: "Yesterday",
+  this_week: "This Week",
+  older: "Older",
+};
+
+/** Determine which date group a timestamp belongs to */
+function getDateGroup(timestamp: number): DateGroup {
+  const date = new Date(timestamp);
+  if (isToday(date)) return "today";
+  if (isYesterday(date)) return "yesterday";
+  if (isThisWeek(date, { weekStartsOn: 1 })) return "this_week";
+  return "older";
+}
+
+/** Group notifications by date */
+function groupNotificationsByDate(
+  notifications: NotificationWithActor[],
+): Map<DateGroup, NotificationWithActor[]> {
+  const groups = new Map<DateGroup, NotificationWithActor[]>();
+
+  for (const notification of notifications) {
+    const group = getDateGroup(notification._creationTime);
+    const existing = groups.get(group) || [];
+    existing.push(notification);
+    groups.set(group, existing);
+  }
+
+  return groups;
+}
+
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +87,14 @@ export function NotificationCenter() {
     if (!typeFilter) return allNotifications;
     return allNotifications.filter((n) => typeFilter.includes(n.type));
   }, [allNotifications, filter]);
+
+  // Group notifications by date
+  const groupedNotifications = useMemo(() => {
+    return groupNotificationsByDate(notifications);
+  }, [notifications]);
+
+  // Ordered groups for display
+  const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];
   const unreadCount = useQuery(api.notifications.getUnreadCount, {});
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
@@ -175,22 +219,44 @@ export function NotificationCenter() {
             </Stack>
           </Card>
 
-          {/* Notifications List */}
+          {/* Notifications List - Grouped by Date */}
           <FlexItem flex="1" className="overflow-y-auto">
             {!notifications || notifications.length === 0 ? (
               <EmptyState icon={Inbox} title="No notifications" />
             ) : (
-              <div className="divide-y divide-ui-border">
-                {notifications.map((notification) => (
-                  <NotificationItem
-                    key={notification._id}
-                    notification={notification}
-                    onMarkAsRead={handleMarkAsRead}
-                    onDelete={handleDelete}
-                    orgSlug={orgContext?.orgSlug}
-                  />
-                ))}
-              </div>
+              <Stack gap="none">
+                {orderedGroups.map((group) => {
+                  const groupNotifs = groupedNotifications.get(group);
+                  if (!groupNotifs || groupNotifs.length === 0) return null;
+
+                  return (
+                    <div key={group}>
+                      {/* Group Header */}
+                      <div className="px-4 py-2 bg-ui-bg-secondary border-b border-ui-border sticky top-0">
+                        <Typography
+                          variant="caption"
+                          color="secondary"
+                          className="uppercase tracking-wide"
+                        >
+                          {DATE_GROUP_LABELS[group]}
+                        </Typography>
+                      </div>
+                      {/* Group Items */}
+                      <div className="divide-y divide-ui-border">
+                        {groupNotifs.map((notification) => (
+                          <NotificationItem
+                            key={notification._id}
+                            notification={notification}
+                            onMarkAsRead={handleMarkAsRead}
+                            onDelete={handleDelete}
+                            orgSlug={orgContext?.orgSlug}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </Stack>
             )}
           </FlexItem>
         </Stack>

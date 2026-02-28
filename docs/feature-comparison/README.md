@@ -178,7 +178,7 @@ This documentation analyzes how features are implemented across three codebases 
 
 #### Medium Priority
 4. **Full notifications page** - Dedicated route for managing many notifications
-5. **Notification grouping** - Group by date or entity
+5. ~~**Notification grouping**~~ ✅ Group by date (Today, Yesterday, This Week, Older)
 6. **Smart batching** - Consolidate similar notifications into single email
 
 #### Nice to Have
