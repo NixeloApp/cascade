@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { useState } from "react";
+import { useMemo } from "react";
 import { ExportButton } from "@/components/ExportButton";
 import { type BoardFilters, FilterBar } from "@/components/FilterBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
@@ -17,8 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
+import {
+  type BoardSearchFilters,
+  filtersToSearchParams,
+  searchParamsToFilters,
+  validateBoardSearchFilters,
+} from "@/lib/filter-url";
 
-interface BoardSearch {
+interface BoardSearch extends BoardSearchFilters {
   sprint?: string;
 }
 
@@ -26,14 +32,50 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/board")
   component: BoardPage,
   validateSearch: (search: Record<string, unknown>): BoardSearch => ({
     sprint: typeof search.sprint === "string" ? search.sprint : undefined,
+    ...validateBoardSearchFilters(search),
   }),
 });
 
 function BoardPage() {
   const { key } = Route.useParams();
-  const { sprint: sprintParam } = Route.useSearch();
+  const searchParams = Route.useSearch();
+  const { sprint: sprintParam } = searchParams;
   const navigate = Route.useNavigate();
-  const [filters, setFilters] = useState<BoardFilters>({});
+
+  // Derive filters from URL (URL is source of truth)
+  // Use individual params as dependencies for stable memoization
+  const filters = useMemo(
+    () =>
+      searchParamsToFilters({
+        type: searchParams.type,
+        priority: searchParams.priority,
+        assigneeId: searchParams.assigneeId,
+        labels: searchParams.labels,
+        dueDate: searchParams.dueDate,
+        startDate: searchParams.startDate,
+        createdAt: searchParams.createdAt,
+      }),
+    [
+      searchParams.type,
+      searchParams.priority,
+      searchParams.assigneeId,
+      searchParams.labels,
+      searchParams.dueDate,
+      searchParams.startDate,
+      searchParams.createdAt,
+    ],
+  );
+
+  // Update URL when filters change
+  const handleFilterChange = (newFilters: BoardFilters) => {
+    navigate({
+      search: (prev) => ({
+        sprint: prev.sprint,
+        ...filtersToSearchParams(newFilters),
+      }),
+      replace: true,
+    });
+  };
 
   const project = useQuery(api.projects.getByKey, { key });
   const sprints = useQuery(
@@ -106,7 +148,7 @@ function BoardPage() {
       </div>
 
       {/* Filter Bar */}
-      <FilterBar projectId={project._id} filters={filters} onFilterChange={setFilters} />
+      <FilterBar projectId={project._id} filters={filters} onFilterChange={handleFilterChange} />
 
       {/* Board Content */}
       <FlexItem flex="1" className="overflow-hidden">
