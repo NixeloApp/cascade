@@ -48,7 +48,7 @@ import {
   TableRowPlugin,
 } from "@platejs/table/react";
 // Core
-import { BaseParagraphPlugin, createPlatePlugin } from "platejs";
+import { BaseParagraphPlugin, createSlatePlugin } from "platejs";
 import { MentionElement } from "@/components/Plate/MentionElement";
 import { MentionInputElement } from "@/components/Plate/MentionInputElement";
 
@@ -69,34 +69,17 @@ export const platePlugins = [
   HighlightPlugin,
 
   // Custom color marks (font color and background color with color picker)
-  createPlatePlugin({
+  // These are simple mark plugins - styling is handled in the Leaf component
+  createSlatePlugin({
     key: "fontColor",
     node: {
       isLeaf: true,
     },
-    inject: {
-      leafProps: ({ element }) => {
-        const fontColor = element?.fontColor as string | undefined;
-        if (fontColor) {
-          return { style: { color: fontColor } };
-        }
-        return {};
-      },
-    },
   }),
-  createPlatePlugin({
+  createSlatePlugin({
     key: "backgroundColor",
     node: {
       isLeaf: true,
-    },
-    inject: {
-      leafProps: ({ element }) => {
-        const bgColor = element?.backgroundColor as string | undefined;
-        if (bgColor) {
-          return { style: { backgroundColor: bgColor } };
-        }
-        return {};
-      },
     },
   }),
 

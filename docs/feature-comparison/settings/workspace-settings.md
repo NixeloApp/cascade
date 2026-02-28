@@ -1,586 +1,600 @@
-# Workspace Settings
+# Workspace & Organization Settings - Deep UX Comparison
 
 ## Overview
-
-Workspace settings allow administrators to configure organization-wide preferences, manage members, handle billing, and control exports. This includes project-level settings for individual project configuration.
+Workspace/organization settings allow administrators to configure organization-wide preferences, manage members, handle billing, and control exports. This analysis compares Plane vs Cascade across settings hierarchy, member management, and administrative controls.
 
 ---
 
-## plane
+## Entry Points Comparison
 
-### Trigger
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Sidebar gear icon** | Yes | Yes | Tie |
+| **Location** | Left sidebar → Settings | Header dropdown → Settings | Tie |
+| **URL direct** | `/:workspace/settings/` | `/:org/settings` (Admin tab) | Tie |
+| **Project settings** | Separate route | Separate route | Tie |
+| **Hierarchy** | Workspace only | Org → Workspace → Project | Cascade |
+| **Tab count** | 5 tabs (2 categories) | Multiple tabs + Admin | Cascade |
 
-- **Icon**: Gear icon in workspace sidebar
-- **Location**: Workspace → Settings
-- **URL**: `/:workspaceSlug/settings/`
+---
 
-### UI Elements
+## Settings Hierarchy
 
-**Layout**: Settings sidebar with categories
+### Plane Hierarchy
+```
+Workspace (top-level)
+└── Projects (within workspace)
+    └── Project Settings
+```
 
-**Workspace Settings Categories** (2 categories, 5 tabs):
+### Cascade Hierarchy
+```
+Organization (top-level)
+├── Organization Settings (Admin tab)
+├── Workspaces
+│   └── Workspace Settings (Coming Soon)
+└── Projects
+    └── Project Settings (full featured)
+```
 
-**Administration Category:**
-1. General
-2. Members
-3. Billing & Plans
-4. Exports
+---
 
-**Developer Category:**
-5. Webhooks
+## Layout Comparison
+
+### Plane Workspace Settings
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Workspace Settings                                                           │
+├────────────────────────┬────────────────────────────────────────────────────┤
+│ Sidebar                │ Content Area                                        │
+│                        │                                                     │
+│ ADMINISTRATION         │ ┌─────────────────────────────────────────────────┐ │
+│ ├─ General          ○  │ │ Workspace Details                               │ │
+│ ├─ Members             │ ├─────────────────────────────────────────────────┤ │
+│ ├─ Billing & Plans     │ │ Logo: [🖼️ Upload]    Name: [My Workspace    ]  │ │
+│ └─ Exports             │ │                                                 │ │
+│                        │ │ Org Size: [10-50          ▼]                    │ │
+│ DEVELOPER              │ │ Timezone: [America/New_York ▼]                  │ │
+│ └─ Webhooks            │ │                                                 │ │
+│                        │ │ URL: app.plane.so/my-workspace     [📋 Copy]    │ │
+│                        │ │                                                 │ │
+│                        │ │                               [Save Changes]    │ │
+│                        │ │                                                 │ │
+│                        │ │ ─────────────────────────────────────────────── │ │
+│                        │ │ Danger Zone                                     │ │
+│                        │ │ [🗑️ Delete Workspace]                           │ │
+│                        │ └─────────────────────────────────────────────────┘ │
+└────────────────────────┴────────────────────────────────────────────────────┘
+
+Members Tab:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Members                                              [+ Invite Members]      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [🔍 Search by name or email...]        [Role: All ▼]                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ▼ Pending Invitations (2)                                                    │
+│ ├─ alice@example.com    Admin    Invited 2 days ago    [Resend] [Cancel]   │
+│ └─ bob@example.com      Member   Invited 1 day ago     [Resend] [Cancel]   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Members (15)                                                                 │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ 👤 John Doe        john@example.com      [Admin ▼]       [Remove]     │   │
+│ │    Owner • Joined Jan 2026                                            │   │
+│ ├───────────────────────────────────────────────────────────────────────┤   │
+│ │ 👤 Jane Smith      jane@example.com      [Member ▼]      [Remove]     │   │
+│ │    Joined Feb 2026                                                    │   │
+│ ├───────────────────────────────────────────────────────────────────────┤   │
+│ │ 👤 Bob Wilson      bob@example.com       [Guest ▼]       [Remove]     │   │
+│ │    Joined Feb 2026                                                    │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Webhooks Tab:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Webhooks                                                  [+ Add Webhook]    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ https://api.example.com/webhook                        [Enabled ✓]    │   │
+│ │ Events: All                                                           │   │
+│ │ Created: Jan 15, 2026                        [Edit] [Delete]         │   │
+│ ├───────────────────────────────────────────────────────────────────────┤   │
+│ │ https://hooks.slack.com/...                            [Disabled]     │   │
+│ │ Events: issue, issue_comment                                          │   │
+│ │ Created: Feb 1, 2026                         [Edit] [Delete]         │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Create Webhook Modal:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Create Webhook                                                         [×]  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Webhook URL *                                                               │
+│ [https://api.example.com/webhook                                       ]    │
+│                                                                             │
+│ Event Mode                                                                  │
+│ ○ All events (project, cycle, module, issue, issue_comment)                 │
+│ ○ Individual events                                                         │
+│   ☐ project                                                                 │
+│   ☑ issue                                                                   │
+│   ☑ issue_comment                                                           │
+│   ☐ cycle                                                                   │
+│   ☐ module                                                                  │
+│                                                                             │
+│ [Cancel]                                                    [Create Webhook]│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Secret Key Display (after creation):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ⚠️ Secret Key - Copy now! This will not be shown again.                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ whsec_abc123def456...                                            [📋 Copy]  │
+│                                                                             │
+│ Use this secret to validate webhook signatures                              │
+│                                                                     [Done]  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade Organization/Project Settings
+```
+Organization Settings (Admin Tab):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Settings                                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Profile] [Security] [Preferences] [Notifications] [Integrations] [Admin]   │
+│                                                                    ↑        │
+│                                                          (Admins only)       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Organization Configuration                                                   │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ Organization Name    [Acme Corp                                   ]   │   │
+│ │                                                                       │   │
+│ │ Hour Compliance                                                       │   │
+│ │ Max Hours/Week       [40    ]    Max Hours/Day     [8     ]          │   │
+│ │                                                                       │   │
+│ │ Time Settings                                                         │   │
+│ │ ○ Requires Time Approval                              [Toggle Off]   │   │
+│ │ ○ Billing Enabled                                     [Toggle On ]   │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Security & Access                                                           │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ IP Restrictions                                                       │   │
+│ │ [+ Add IP Range]                                                      │   │
+│ │ 192.168.1.0/24    Office Network                          [Remove]   │   │
+│ │ 10.0.0.0/8        VPN                                     [Remove]   │   │
+│ │                                                                       │   │
+│ │ SSO Configuration                                                     │   │
+│ │ [Configure SAML] [Configure OIDC]                                     │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ User Management                                        [Manage Users →]     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Workspace Settings (Coming Soon):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Workspace Settings                                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│         ┌───────────────────────────────────────────────────┐              │
+│         │                                                   │              │
+│         │              🚧 Coming Soon                       │              │
+│         │                                                   │              │
+│         │     Workspace settings are being developed.       │              │
+│         │     Features planned:                             │              │
+│         │     • Permissions                                 │              │
+│         │     • Integrations                                │              │
+│         │     • Preferences                                 │              │
+│         │                                                   │              │
+│         └───────────────────────────────────────────────────┘              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Project Settings:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Project Settings                                              PROJ          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ General                                                      [Edit]         │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ Project Name        My Project                                        │   │
+│ │ Project Key         PROJ (immutable)                                  │   │
+│ │ Description         A project for tracking features...               │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Members                                                 [+ Add Member]      │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ 👤 John Doe        john@example.com     👑 Owner                      │   │
+│ ├───────────────────────────────────────────────────────────────────────┤   │
+│ │ 👤 Jane Smith      jane@example.com     [Admin ▼]      [Remove]       │   │
+│ ├───────────────────────────────────────────────────────────────────────┤   │
+│ │ 👤 Bob Wilson      bob@example.com      [Editor ▼]     [Remove]       │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Workflow States                                                             │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ TODO                                                                  │   │
+│ │ ├─ ○ Backlog                                    WIP: —     [⋯]       │   │
+│ │ └─ ○ To Do                                      WIP: —     [⋯]       │   │
+│ │                                                                       │   │
+│ │ IN PROGRESS                                                           │   │
+│ │ ├─ 🔵 In Progress                               WIP: 5     [⋯]       │   │
+│ │ └─ 🔵 In Review                                 WIP: 3     [⋯]       │   │
+│ │                                                                       │   │
+│ │ DONE                                                                  │   │
+│ │ └─ ✓ Done                                       WIP: —     [⋯]       │   │
+│ │                                                                       │   │
+│ │ [+ Add State]                                                         │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Danger Zone                                                                 │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ ⚠️ Delete Project                                                     │   │
+│ │ Type project key "PROJ" to confirm:                                   │   │
+│ │ [                    ]                       [Delete Project]         │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Feature Comparison
 
 ### General Settings
 
-| Field | Type | Required | Validation |
-|-------|------|----------|------------|
-| Workspace Name | Text | Yes | Max 80 chars |
-| Logo | Image upload | No | Modal with upload/delete |
-| Organization Size | Dropdown | No | 2-10, 10-50, 50-100, etc. |
-| Timezone | Dropdown | No | TimezoneSelect |
-| URL | Text (readonly) | - | Copy to clipboard |
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **Workspace name** | Yes | Coming Soon | Plane |
+| **Logo upload** | Yes (modal) | Coming Soon | Plane |
+| **Organization size** | Yes (dropdown) | No | Plane only |
+| **Timezone** | Yes | Coming Soon | Plane |
+| **URL copy** | Yes | Coming Soon | Plane |
+| **Delete workspace** | Yes (admin) | Coming Soon | Plane |
 
-**Additional Actions**:
-- Delete workspace (admin only)
-- Copy workspace URL
+### Member Management
 
-**Access Control**:
-- ADMIN: Full edit access
-- MEMBER: Read-only
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **List members** | Yes | Yes (project-level) | Tie |
+| **Search members** | Yes (name/email) | No | Plane |
+| **Filter by role** | Yes | No | Plane |
+| **Bulk invite** | Yes (modal) | No | Plane |
+| **Pending invitations** | Yes (collapsible) | No | Plane |
+| **Change role** | Yes (dropdown) | Yes (dropdown) | Tie |
+| **Remove member** | Yes | Yes | Tie |
+| **Owner badge** | Via role | Yes (visual) | Cascade clearer |
 
-### Members Settings
+### Role Systems
 
-**Features**:
-- List all workspace members
-- Search by name/email
-- Filter by role (Admin, Member, Guest)
-- Invite new members (bulk modal)
-- Pending invitations section (collapsible)
-- Manage member roles
-- Remove members
+| Role | Plane | Cascade |
+|------|-------|---------|
+| **Owner** | Via ADMIN role | Explicit owner field |
+| **Admin** | 20 (full control) | Full project control |
+| **Member/Editor** | 15 (standard) | Edit issues/docs |
+| **Guest/Viewer** | 5 (limited) | Read-only |
 
-**Role System** (`EUserWorkspaceRoles`):
-| Role | Value | Permissions |
-|------|-------|-------------|
-| ADMIN | 20 | Full workspace control |
-| MEMBER | 15 | Standard access |
-| GUEST | 5 | Limited access |
+### Webhooks
 
-**Access Control**:
-- ADMIN: Invite, manage roles, remove
-- MEMBER: View, search only
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **Create webhook** | Yes (modal) | Yes (Pumble) | Tie |
+| **Event modes** | All or individual | Individual only | Plane |
+| **Available events** | 5 events | 6 events | Cascade |
+| **Secret key** | Yes (HMAC) | No | Plane more secure |
+| **Enable/disable** | Yes | Yes | Tie |
+| **Edit webhook** | Yes | Yes | Tie |
+| **Delete webhook** | Yes | Yes | Tie |
 
-### Billing & Plans
+### Administrative Features
 
-- Subscription management
-- Plan selection
-- Payment information
-- Admin only access
-
-### Exports
-
-- Data export options
-- Export guides
-- Available to ADMIN and MEMBER
-
-### Webhooks (Developer)
-
-**Location**: `/settings/webhooks/`
-
-**Create Webhook Form**:
-| Field | Type | Description |
-|-------|------|-------------|
-| URL | Text | Webhook endpoint |
-| is_active | Toggle | Enable/disable |
-| Event Mode | Radio | "all" or "individual" |
-
-**Available Events** (individual mode):
-- project
-- cycle
-- module
-- issue
-- issue_comment
-
-**Features**:
-- Create webhook (modal)
-- List all webhooks
-- Edit settings
-- Delete webhook
-- View secret key (one-time display)
-
-**Secret Key**:
-- Generated on creation
-- Used for HMAC validation
-- Displayed once, then hidden
-
-### Data Model
-
-```typescript
-// IWorkspace
-{
-  id: string
-  name: string
-  slug: string (readonly)
-  logo_url: string | null
-  organization_size: string
-  timezone: string
-  owner: IUser
-  total_members: number
-  role: number
-}
-
-// IWorkspaceMember
-{
-  id: string
-  member: IUserLite
-  role: TUserPermissions
-  is_active: boolean
-  email, first_name, last_name
-  joining_date, last_login_medium
-}
-```
-
----
-
-## Cascade
-
-### Workspace/Organization Structure
-
-Cascade has a three-tier hierarchy:
-1. **Organization**: Top-level container
-2. **Workspace**: Division within organization
-3. **Project**: Work container within workspace
-
-### Organization Settings
-
-**Trigger**: Admin tab in settings (organization admins only)
-
-**Location**: `/:orgSlug/settings` → Admin tab
-
-**Configuration Fields**:
-| Field | Type | Description |
-|-------|------|-------------|
-| Name | Text | Organization name |
-| Default Max Hours/Week | Number | Compliance limit |
-| Default Max Hours/Day | Number | Daily limit |
-| Requires Time Approval | Toggle | Time entry approvals |
-| Billing Enabled | Toggle | Enable billing features |
-
-### Admin-Only Features
-
-**User Management**:
-- Manage organization members
-- Assign roles and permissions
-- IP restrictions
-- Hour compliance dashboard
-- User type configuration
-- SSO settings (SAML/OIDC)
-
-### Workspace Settings
-
-**Status**: Currently "Coming Soon" placeholder
-
-**Planned Features**:
-- Permissions
-- Integrations
-- Preferences
-
-### Team Settings
-
-**Status**: Currently "Coming Soon" placeholder
-
-**Planned Features**:
-- Member management
-- Roles
-- Permissions
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **Billing settings** | Yes | Yes | Tie |
+| **Data exports** | Yes | No | Plane |
+| **Hour compliance** | No | Yes (max hours) | Cascade |
+| **Time approval** | No | Yes (toggle) | Cascade |
+| **IP restrictions** | No | Yes | Cascade |
+| **SSO (SAML/OIDC)** | Instance-level | Per-org | Cascade |
 
 ### Project Settings
 
-**Trigger**: Settings icon in project header
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **Project name** | Yes | Yes | Tie |
+| **Project key** | Yes (mutable?) | Yes (immutable) | Cascade safer |
+| **Description** | Yes | Yes | Tie |
+| **Custom workflows** | Yes | Yes | Tie |
+| **WIP limits** | No | Yes | Cascade |
+| **Delete project** | Yes | Yes (type to confirm) | Cascade safer |
 
-**Location**: `/:orgSlug/projects/:key/settings`
+---
 
-**Access Control**:
-- Admin/Owner: Full access
-- Non-admins: Redirected to board
+## Click Analysis
 
-**Sections**:
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **Open workspace settings** | 2 clicks (gear → tab) | 2 clicks (avatar → admin) | Tie |
+| **Change workspace name** | 1 click (inline) | N/A | Plane only |
+| **Upload logo** | 2 clicks (upload → save) | N/A | Plane only |
+| **Invite member** | 2 clicks (modal → submit) | 3+ clicks (add → email → role) | Plane faster |
+| **Bulk invite** | 3 clicks (modal → paste → submit) | N/A | Plane only |
+| **Change member role** | 1 click (dropdown) | 1 click (dropdown) | Tie |
+| **Remove member** | 2 clicks (remove → confirm) | 2 clicks (remove → confirm) | Tie |
+| **Create webhook** | 3 clicks (add → config → create) | 3 clicks (add → config → create) | Tie |
+| **Configure SSO** | Instance admin | 2 clicks (admin → configure) | Cascade easier |
+| **Add IP restriction** | N/A | 2 clicks (add → enter) | Cascade only |
+| **Open project settings** | 2 clicks | 2 clicks | Tie |
+| **Add workflow state** | 2 clicks | 2 clicks | Tie |
+| **Set WIP limit** | N/A | 1 click (edit state) | Cascade only |
+| **Delete project** | 2 clicks | 3 clicks (type key → confirm) | Cascade safer |
 
-#### 1. General Settings
+---
 
-| Field | Type | Editable |
-|-------|------|----------|
-| Name | Text | Yes |
-| Project Key | Text | No (immutable) |
-| Description | Textarea | Yes |
+## Invite Flow Comparison
 
-**UI Pattern**: Toggle between view and edit modes
+### Plane Bulk Invite Modal
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Invite Members                                                         [×]  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Enter email addresses (comma-separated):                                    │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ alice@example.com, bob@example.com, carol@example.com                 │   │
+│ │                                                                       │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Or paste from CSV:                                                          │
+│ [📁 Upload CSV]                                                             │
+│                                                                             │
+│ Role for all invites:                                                       │
+│ [Member ▼]                                                                  │
+│                                                                             │
+│ Preview:                                                                    │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ alice@example.com     Member                                          │   │
+│ │ bob@example.com       Member                                          │   │
+│ │ carol@example.com     Member                                          │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ [Cancel]                                            [Send 3 Invitations]    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
-#### 2. Member Management
-
-**Display**:
-- Avatar
-- Name
-- Email
-- Role (Admin/Editor/Viewer)
-- Owner badge
-
-**Actions**:
-- Add member (email + role)
-- Change role (dropdown)
-- Remove member (confirmation)
-
-**Roles**:
-| Role | Color | Permissions |
-|------|-------|-------------|
-| Admin | Primary | Full project control |
-| Editor | Secondary | Edit issues/docs |
-| Viewer | Neutral | Read-only |
-
-#### 3. Workflow Settings
-
-**Workflow States**:
-| Property | Type | Description |
-|----------|------|-------------|
-| name | String | Display name |
-| category | Enum | todo/inprogress/done |
-| order | Number | Position |
-| wipLimit | Number | WIP limit (optional) |
-
-**Validation**:
-- All states must have names
-- At least one state per category
-- Category-based color coding
-
-#### 4. Danger Zone
-
-- Delete project (soft delete)
-- Type project key to confirm
-- Owner only
-- Cascades to issues, sprints
-
-### API Keys (Settings Tab)
-
-**Features**:
-- Generate keys (`sk_casc_*` format)
-- Scoped permissions
-- Rate limiting config
-- Usage statistics
-- Key rotation
-- Expiration dates
-- Project-specific or global
-
-**Available Scopes**:
-- `issues:read`, `issues:write`, `issues:delete`
-- `projects:read`, `projects:write`
-- `comments:read`, `comments:write`
-- `documents:read`, `documents:write`
-- `search:read`
-
-**Role-Based Restrictions**:
-| Role | Available Scopes |
-|------|------------------|
-| Admin | All scopes |
-| Editor | All except delete |
-| Viewer | Read-only |
-| Global | Read-only |
-
-### Data Model
-
-```typescript
-// projects
-{
-  name: string
-  key: string
-  description: optional<string>
-  boardType: "kanban" | "scrum"
-  members: array<{
-    userId: id<"users">
-    role: "admin" | "editor" | "viewer"
-    addedAt: number
-  }>
-  workflowStates: array<{
-    id: string
-    name: string
-    category: "todo" | "inprogress" | "done"
-    order: number
-    wipLimit: optional<number>
-  }>
-  createdBy: id<"users">
-  ownerId: id<"users">
-  organizationId: id<"organizations">
-  workspaceId: id<"workspaces">
-}
+### Cascade Add Member (Project-Level)
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Add Member                                                             [×]  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Email Address *                                                             │
+│ [alice@example.com                                                     ]    │
+│                                                                             │
+│ Role *                                                                      │
+│ [Editor ▼]                                                                  │
+│   ├─ Admin   - Full project control                                        │
+│   ├─ Editor  - Edit issues and documents                                   │
+│   └─ Viewer  - Read-only access                                            │
+│                                                                             │
+│ Note: User must be a member of the organization.                            │
+│                                                                             │
+│ [Cancel]                                                    [Add Member]    │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Comparison Table
+## Workflow Settings (Cascade)
 
-| Aspect | plane | Cascade | Best |
-|--------|-------|---------|------|
-| Workspace settings | Full feature | Coming soon | plane |
-| Organization settings | Via workspace | Dedicated admin | Cascade |
-| Project settings | Yes | Yes | tie |
-| Logo upload | Yes (modal) | Coming soon | plane |
-| Organization size | Yes | No | plane |
-| Timezone (workspace) | Yes | Coming soon | plane |
-| Member management | Yes | Yes (project-level) | plane |
-| Bulk invite | Yes (modal) | No | plane |
-| Role system | 3 roles | 3 roles | tie |
-| Pending invitations | Yes | No | plane |
-| Billing settings | Yes | Yes | tie |
-| Data exports | Yes | No | plane |
-| Webhooks | Yes | Yes (Pumble) | tie |
-| Custom workflows | Yes (project) | Yes (project) | tie |
-| WIP limits | No | Yes | Cascade |
-| API keys | User-level | User + project scope | Cascade |
-| Key rotation | No | Yes | Cascade |
-| Usage stats (keys) | No | Yes | Cascade |
-| Hour compliance | No | Yes (admin) | Cascade |
-| SSO settings | Via instance | Per-org config | Cascade |
-| IP restrictions | No | Yes (admin) | Cascade |
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Workflow States                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ TODO (drag to reorder)                                                      │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ ≡  ○ Backlog                              WIP: —           [⋯]       │   │
+│ │     Gray dot • First state for new issues                            │   │
+│ ├───────────────────────────────────────────────────────────────────────┤   │
+│ │ ≡  ○ To Do                                WIP: —           [⋯]       │   │
+│ │     Gray dot • Ready for development                                  │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ IN PROGRESS                                                                 │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ ≡  🔵 In Progress                         WIP: 5           [⋯]       │   │
+│ │     Blue dot • Active development                                     │   │
+│ ├───────────────────────────────────────────────────────────────────────┤   │
+│ │ ≡  🔵 In Review                           WIP: 3           [⋯]       │   │
+│ │     Blue dot • Code review stage                                      │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ DONE                                                                        │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ ≡  ✓ Done                                 WIP: —           [⋯]       │   │
+│ │     Green check • Completed issues                                    │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ [+ Add State]                                                               │
+│                                                                             │
+│ Validation:                                                                 │
+│ • All states must have names                                                │
+│ • At least one state per category                                           │
+│ • Category determines color                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
 
----
-
-## Recommendations
-
-1. **Priority 1**: Implement workspace settings
-   - Currently placeholder
-   - Add name, logo, timezone config
-   - Member management at workspace level
-
-2. **Priority 2**: Add bulk member invite
-   - Modal for multiple emails
-   - Role assignment per invite
-   - CSV import option
-
-3. **Priority 3**: Add pending invitations view
-   - List sent invitations
-   - Resend/cancel options
-   - Expiration tracking
-
-4. **Priority 4**: Add data export
-   - Export issues, projects, docs
-   - Multiple formats (CSV, JSON)
-   - Scheduled exports
-
-5. **Priority 5**: Add organization size field
-   - Useful for analytics
-   - Plan recommendations
-   - Feature suggestions
-
----
-
-## Cascade Strengths
-
-1. **API Key Scoping**: Project-specific keys with granular permissions
-2. **Key Rotation**: Secure key management with rotation support
-3. **Usage Statistics**: Track API key usage and activity
-4. **WIP Limits**: Workflow states with work-in-progress limits
-5. **Hour Compliance**: Time tracking limits and approvals
-6. **IP Restrictions**: Security controls at org level
-7. **SSO Configuration**: Per-organization SAML/OIDC
-
----
-
-## Implementation: Workspace Settings
-
-```tsx
-// Route: /:orgSlug/workspaces/:workspaceSlug/settings
-function WorkspaceSettings() {
-  const { workspace } = useWorkspace();
-  const updateWorkspace = useMutation(api.workspaces.update);
-
-  const [name, setName] = useState(workspace?.name ?? "");
-  const [timezone, setTimezone] = useState(workspace?.timezone ?? "UTC");
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleSave = async () => {
-    await updateWorkspace({
-      workspaceId: workspace._id,
-      name: name.trim(),
-      timezone,
-    });
-    setIsEditing(false);
-    showSuccess("Workspace updated");
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <Flex justify="between" align="center">
-          <Typography variant="h3">Workspace Settings</Typography>
-          {!isEditing && (
-            <Button variant="secondary" onClick={() => setIsEditing(true)}>
-              Edit
-            </Button>
-          )}
-        </Flex>
-      </CardHeader>
-
-      <CardContent>
-        <Stack gap="4">
-          <Flex direction="column" gap="1">
-            <Typography variant="label">Workspace Name</Typography>
-            {isEditing ? (
-              <Input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Workspace name"
-              />
-            ) : (
-              <Typography>{workspace?.name}</Typography>
-            )}
-          </Flex>
-
-          <Flex direction="column" gap="1">
-            <Typography variant="label">Timezone</Typography>
-            {isEditing ? (
-              <TimezoneSelect
-                value={timezone}
-                onChange={setTimezone}
-              />
-            ) : (
-              <Typography>{workspace?.timezone ?? "UTC"}</Typography>
-            )}
-          </Flex>
-
-          <Flex direction="column" gap="1">
-            <Typography variant="label">URL</Typography>
-            <Flex gap="2" align="center">
-              <Typography variant="mono">
-                {window.location.origin}/{orgSlug}/workspaces/{workspace?.slug}
-              </Typography>
-              <Button variant="ghost" size="sm" onClick={copyUrl}>
-                <Copy className="size-4" />
-              </Button>
-            </Flex>
-          </Flex>
-        </Stack>
-
-        {isEditing && (
-          <Flex gap="2" className="mt-4">
-            <Button variant="secondary" onClick={() => setIsEditing(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
-          </Flex>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+Edit State Modal:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Edit Workflow State                                                    [×]  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ State Name *            [In Progress                                   ]    │
+│                                                                             │
+│ Category *              [inprogress ▼]                                      │
+│                           ├─ todo                                           │
+│                           ├─ inprogress                                     │
+│                           └─ done                                           │
+│                                                                             │
+│ WIP Limit               [5          ]   (optional)                          │
+│ Maximum issues allowed in this state                                        │
+│                                                                             │
+│ [Cancel]                                                    [Save Changes] │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Implementation: Bulk Member Invite
+## API Keys Comparison
 
-```typescript
-// Convex mutation
-export const bulkInviteMembers = mutation({
-  args: {
-    projectId: v.id("projects"),
-    invites: v.array(v.object({
-      email: v.string(),
-      role: v.union(
-        v.literal("admin"),
-        v.literal("editor"),
-        v.literal("viewer")
-      ),
-    })),
-  },
-  returns: v.object({
-    success: v.number(),
-    failed: v.array(v.object({
-      email: v.string(),
-      reason: v.string(),
-    })),
-  }),
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+### Plane API Tokens (User-Level)
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ API Tokens                                                 [+ Create Token] │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ My CI Token                                                           │   │
+│ │ Created: Jan 15, 2026                                                 │   │
+│ │ Last used: 2 hours ago                              [Revoke]          │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
-    const project = await ctx.db.get(args.projectId);
-    if (!project) throw new Error("Project not found");
+### Cascade API Keys (Scoped)
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ API Keys                                                   [+ Generate Key] │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ CI Pipeline Key                              sk_casc_abc1...          │   │
+│ │ Project: PROJ                                                         │   │
+│ │ Scopes: issues:read, issues:write                                     │   │
+│ │ Rate limit: 1000/hour                                                 │   │
+│ │ Expires: Mar 15, 2026                                                 │   │
+│ │ Usage: 1,247 requests │ Last: 5 min ago                               │   │
+│ │                                                                       │   │
+│ │ [Rotate Key] [View Usage] [Revoke]                                    │   │
+│ ├───────────────────────────────────────────────────────────────────────┤   │
+│ │ Production API                               sk_casc_def2...          │   │
+│ │ Project: Global (all projects)                                        │   │
+│ │ Scopes: search:read                                                   │   │
+│ │ Rate limit: 500/hour                                                  │   │
+│ │ Expires: Never                                                        │   │
+│ │ Usage: 8,432 requests │ Last: 1 min ago                               │   │
+│ │                                                                       │   │
+│ │ [Rotate Key] [View Usage] [Revoke]                                    │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-    // Check admin permission
-    const isAdmin = project.members.some(
-      m => m.userId === userId && m.role === "admin"
-    );
-    if (!isAdmin) throw new Error("Admin access required");
-
-    const results = { success: 0, failed: [] };
-
-    for (const invite of args.invites) {
-      try {
-        // Find or create user by email
-        const user = await ctx.db
-          .query("users")
-          .withIndex("by_email", q => q.eq("email", invite.email))
-          .first();
-
-        if (!user) {
-          // Send invitation email
-          await sendInviteEmail(ctx, invite.email, project);
-          results.success++;
-          continue;
-        }
-
-        // Check org membership
-        const isMember = await isOrganizationMember(
-          ctx,
-          project.organizationId,
-          user._id
-        );
-        if (!isMember) {
-          results.failed.push({
-            email: invite.email,
-            reason: "Not an organization member",
-          });
-          continue;
-        }
-
-        // Add to project
-        await ctx.db.patch(args.projectId, {
-          members: [
-            ...project.members,
-            {
-              userId: user._id,
-              role: invite.role,
-              addedAt: Date.now(),
-            },
-          ],
-        });
-
-        results.success++;
-      } catch (error) {
-        results.failed.push({
-          email: invite.email,
-          reason: error.message,
-        });
-      }
-    }
-
-    return results;
-  },
-});
+Create API Key Modal:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Generate API Key                                                       [×]  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Name *                  [CI Pipeline Key                               ]    │
+│                                                                             │
+│ Project Scope           [PROJ - My Project ▼]                               │
+│                           ├─ Global (all projects)                          │
+│                           ├─ PROJ - My Project                              │
+│                           └─ OTHER - Other Project                          │
+│                                                                             │
+│ Permissions             (based on your role: Admin)                         │
+│ ☑ issues:read           ☑ issues:write         ☑ issues:delete             │
+│ ☑ projects:read         ☑ projects:write                                   │
+│ ☑ comments:read         ☑ comments:write                                   │
+│ ☑ documents:read        ☑ documents:write                                  │
+│ ☑ search:read                                                               │
+│                                                                             │
+│ Rate Limit              [1000    ] requests/hour                            │
+│                                                                             │
+│ Expiration              [○ Never  ○ 30 days  ○ 90 days  ○ Custom]          │
+│                                                                             │
+│ [Cancel]                                                [Generate Key]      │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Screenshots/References
+## Keyboard Support
 
-### plane
-- Workspace details: `~/Desktop/plane/apps/web/core/components/workspace/settings/workspace-details.tsx`
-- Members: `~/Desktop/plane/apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/members/page.tsx`
-- Webhooks: `~/Desktop/plane/apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/webhooks/`
-- Billing: `~/Desktop/plane/apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/billing/`
+| Shortcut | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| **Tab between fields** | Yes | Yes | Both |
+| **Enter to save** | Yes | Yes | Both |
+| **Escape to cancel** | Yes | Yes | Both |
+| **Search focus** | / in members | N/A | Plane only |
+| **Navigate list** | Arrow keys | Arrow keys | Both |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Workspace settings | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane full featured |
+| Logo upload | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Member management | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane search + filter |
+| Bulk invite | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Pending invitations | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Role system | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Both 3 roles |
+| Webhooks | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane has secrets |
+| Data exports | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Hour compliance | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| IP restrictions | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| SSO per-org | ⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade per-org |
+| API key scopes | ⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade granular |
+| Key rotation | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Usage tracking | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| WIP limits | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Delete safety | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade type-to-confirm |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Implement workspace settings** - Currently placeholder
+   ```tsx
+   // Route: /:orgSlug/workspaces/:workspaceSlug/settings
+   <WorkspaceSettings>
+     <GeneralSection name={name} timezone={timezone} />
+     <MembersSection members={members} />
+     <IntegrationsSection />
+   </WorkspaceSettings>
+   ```
+
+### P1 - High
+2. **Add bulk member invite** - Modal for multiple emails with role
+3. **Add pending invitations view** - List with resend/cancel
+4. **Add member search/filter** - Search by name/email, filter by role
+
+### P2 - Medium
+5. **Add data export** - Export issues, projects, docs (CSV/JSON)
+6. **Add webhook secrets** - Generate HMAC secret on creation
+7. **Add organization size field** - Useful for analytics
+
+### P3 - Nice to Have
+8. **Add workspace logo upload** - Brand customization
+9. **Add workspace URL copy** - Quick share
+10. **Add scheduled exports** - Automated data backups
+
+---
+
+## Code References
+
+### Plane
+- Workspace details: `apps/web/core/components/workspace/settings/workspace-details.tsx`
+- Members page: `apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/members/page.tsx`
+- Member invite: `apps/web/core/components/workspace/settings/members-list.tsx`
+- Webhooks: `apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/webhooks/`
+- Billing: `apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/billing/`
+- Exports: `apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/exports/`
 
 ### Cascade
-- Project settings: `~/Desktop/cascade/src/components/ProjectSettings/index.tsx`
-- General settings: `~/Desktop/cascade/src/components/ProjectSettings/GeneralSettings.tsx`
-- Member management: `~/Desktop/cascade/src/components/ProjectSettings/MemberManagement.tsx`
-- Workflow settings: `~/Desktop/cascade/src/components/ProjectSettings/WorkflowSettings.tsx`
-- API keys: `~/Desktop/cascade/src/components/Settings/ApiKeysManager.tsx`
-- Admin settings: `~/Desktop/cascade/src/components/Admin/OrganizationSettings.tsx`
+- Project settings: `src/components/ProjectSettings/index.tsx`
+- General settings: `src/components/ProjectSettings/GeneralSettings.tsx`
+- Member management: `src/components/ProjectSettings/MemberManagement.tsx`
+- Workflow settings: `src/components/ProjectSettings/WorkflowSettings.tsx`
+- Admin settings: `src/components/Admin/OrganizationSettings.tsx`
+- API keys: `src/components/Settings/ApiKeysManager.tsx`
+- Backend projects: `convex/projects.ts`
+- Backend API keys: `convex/apiKeys.ts`

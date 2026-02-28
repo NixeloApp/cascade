@@ -1,179 +1,324 @@
-# Issue Relations
+# Issue Relations - Deep UX Comparison
 
 ## Overview
-Issue relations (dependencies, links) allow connecting issues together to express relationships like "blocks", "relates to", "duplicates", or parent/child. This helps track dependencies between work items and understand impact.
+Issue relations (dependencies/links) connect issues to express relationships like "blocks", "relates to", or "duplicates". This analysis compares Plane vs Cascade across relation types, creation flow, and UX efficiency.
 
 ---
 
-## cal.com
-> **N/A** - cal.com is a scheduling platform and doesn't have issue tracking features.
+## Entry Points Comparison
+
+### How Users Add Relations
+
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Issue detail sidebar** | Add relation button | Add Dependency button | Tie |
+| **Issue detail widgets** | Relations section | Dependencies section | Tie |
+| **Quick action** | Command palette | N/A | Plane |
+| **Context menu** | N/A | N/A | Tie |
+| **Drag between issues** | N/A | N/A | Tie |
 
 ---
 
-## plane
+## Relations UI Layout
 
-### Trigger
-- **Issue Detail Sidebar**: Add relation button
-- **Issue Detail Widgets**: Relations section
-- **Command Palette**: Quick relation commands
+### Plane Relations Widget
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ Issue Detail                                                         │
+├─────────────────────────────────────────────────────────────────────┤
+│ [Content]                          │ [Properties Sidebar]           │
+│                                    ├─────────────────────────────────
+│                                    │ State: [In Progress ▼]        │
+│                                    │ Priority: [High ▼]            │
+│                                    │ ...                            │
+├────────────────────────────────────┴─────────────────────────────────┤
+│ ┌─ Widgets ───────────────────────────────────────────────────────┐ │
+│ │                                                                  │ │
+│ │ ┌─ Relations ▼ ───────────────────────────────────────────────┐ │ │
+│ │ │                                          [+ Add Relation]   │ │ │
+│ │ ├──────────────────────────────────────────────────────────────┤ │ │
+│ │ │ Blocks (2)                                                   │ │ │
+│ │ │ ┌────────────────────────────────────────────────────────┐  │ │ │
+│ │ │ │ PROJ-456  Fix auth flow      [In Progress ▼] [🗑️]     │  │ │ │
+│ │ │ │           ↑ clickable        ↑ editable inline         │  │ │ │
+│ │ │ └────────────────────────────────────────────────────────┘  │ │ │
+│ │ │ ┌────────────────────────────────────────────────────────┐  │ │ │
+│ │ │ │ PROJ-789  Update API         [To Do ▼]        [🗑️]     │  │ │ │
+│ │ │ └────────────────────────────────────────────────────────┘  │ │ │
+│ │ │                                                              │ │ │
+│ │ │ Blocked by (1)                                               │ │ │
+│ │ │ ┌────────────────────────────────────────────────────────┐  │ │ │
+│ │ │ │ PROJ-123  Database migration  [Done ✓]        [🗑️]     │  │ │ │
+│ │ │ └────────────────────────────────────────────────────────┘  │ │ │
+│ │ │                                                              │ │ │
+│ │ │ Relates to (1)                                               │ │ │
+│ │ │ ┌────────────────────────────────────────────────────────┐  │ │ │
+│ │ │ │ PROJ-234  Design mockups     [In Review]      [🗑️]     │  │ │ │
+│ │ │ └────────────────────────────────────────────────────────┘  │ │ │
+│ │ └──────────────────────────────────────────────────────────────┘ │ │
+│ └──────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
 
-### UI Elements
+Add Relation Modal:
+┌─────────────────────────────────────────────────────────────────────┐
+│ Add Relation                                                    [×] │
+├─────────────────────────────────────────────────────────────────────┤
+│ Relation Type                                                        │
+│ [Blocks ▼]                                                          │
+│                                                                      │
+│ Search Issues                                                        │
+│ [🔍 Search by title or key...]                                      │
+│                                                                      │
+│ ┌─ Results ──────────────────────────────────────────────────────┐  │
+│ │ PROJ-456  Fix authentication flow              High  To Do     │  │
+│ │ PROJ-789  Update API endpoints                 Medium In Prog  │  │
+│ │ PROJ-234  Design mockups                       Low    Review   │  │
+│ └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│                                    [Cancel] [Add Relation]           │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-**Relations Widget (issue-detail-widgets/relations)**
-- Collapsible section in issue detail
-- Lists all related issues
-- Add relation button
+### Cascade Dependencies Section
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ Issue Detail Sheet/Page                                              │
+├─────────────────────────────────────────────────────────────────────┤
+│ [Title & Content]                                                    │
+│                                                                      │
+│ [Metadata Section]                                                   │
+├─────────────────────────────────────────────────────────────────────┤
+│ ┌─ Dependencies ────────────────────────────────────────────────┐   │
+│ │                                        [+ Add Dependency]     │   │
+│ ├────────────────────────────────────────────────────────────────┤   │
+│ │ Dependencies (outgoing):                                       │   │
+│ │ ┌────────────────────────────────────────────────────────────┐│   │
+│ │ │ [Blocks]  🔧 PROJ-456  Fix auth flow                   [×] ││   │
+│ │ └────────────────────────────────────────────────────────────┘│   │
+│ │ ┌────────────────────────────────────────────────────────────┐│   │
+│ │ │ [Relates] 🐛 PROJ-789  Update API                      [×] ││   │
+│ │ └────────────────────────────────────────────────────────────┘│   │
+│ │                                                                │   │
+│ │ Referenced By (incoming):                                      │   │
+│ │ ┌────────────────────────────────────────────────────────────┐│   │
+│ │ │ [Blocked by] 📖 PROJ-123  Database migration           [×] ││   │
+│ │ └────────────────────────────────────────────────────────────┘│   │
+│ └────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
 
-**Relation Select (relation-select.tsx)**
-- Modal to search and select target issue
-- Relation type dropdown
-- Issue search with filters
-
-**Relation Types**
-| Type | Direction | Description |
-|------|-----------|-------------|
-| Blocks | Outgoing | This issue blocks another |
-| Is blocked by | Incoming | Another issue blocks this |
-| Relates to | Bidirectional | General relationship |
-| Duplicates | Outgoing | This duplicates another |
-| Is duplicated by | Incoming | Another duplicates this |
-
-**Related Issue Display (issue-list-item.tsx)**
-- Issue identifier (PROJECT-123)
-- Issue title
-- State badge
-- Priority indicator
-- Assignee avatars
-- Remove button
-
-**Inline Properties (properties.tsx)**
-- State dropdown (editable)
-- Priority dropdown (editable)
-- Assignee dropdown (editable)
-- Can update related issue properties inline
-
-### Flow
-
-**Adding Relation**
-1. Open issue detail
-2. Navigate to Relations section
-3. Click "Add relation"
-4. Select relation type (blocks, relates, duplicates)
-5. Search for target issue
-6. Click to add
-7. Relation appears in list
-
-**Viewing Relations**
-1. Relations grouped by type
-2. Outgoing (this issue affects...)
-3. Incoming (...affects this issue)
-4. Click to navigate to related issue
-
-**Removing Relation**
-1. Click remove/delete on relation row
-2. Relation removed
-3. Both issues updated
-
-**Editing Related Issue**
-1. Change state/priority/assignee directly in relation row
-2. Updates apply to related issue
-3. No need to navigate away
-
-### Feedback
-- **Search**: Live results while typing
-- **Add**: Issue added to relation list
-- **Remove**: Removed from list
-- **Update**: Inline changes save immediately
-
-### Notable Features
-- **Bidirectional**: Relations show on both issues
-- **Inline editing**: Update related issue properties
-- **Multiple types**: Blocks, relates, duplicates
-- **Search within modal**: Find issues quickly
+Add Dependency Sheet (slides in from right):
+┌─────────────────────────────────────────────────────────────────────┐
+│ Add Dependency                                                  [×] │
+├─────────────────────────────────────────────────────────────────────┤
+│ Relationship Type                                                    │
+│ ( ) Blocks - This issue blocks another                              │
+│ (●) Relates to - General relationship                               │
+│ ( ) Duplicates - This issue duplicates another                      │
+│                                                                      │
+│ Search Issue (min 2 characters)                                      │
+│ [🔍 Search issues...                                    ]           │
+│                                                                      │
+│ ┌─ Results ──────────────────────────────────────────────────────┐  │
+│ │ 🔧 PROJ-456  Fix authentication flow                           │  │
+│ │ 🐛 PROJ-789  Update API endpoints                              │  │
+│ │ 📖 PROJ-234  Design mockups                                    │  │
+│ └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│ Selected: PROJ-456                                                   │
+│                                                                      │
+│                                    [Cancel] [Add Dependency]         │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Cascade
+## Relation Types
 
-### Trigger
-- **Issue Detail Sidebar**: Dependencies section
-- **"+ Add Dependency" button**: Opens add dialog
+| Type | Plane | Cascade | Description |
+|------|-------|---------|-------------|
+| **Blocks / Blocked by** | Yes | Yes | Dependency relationship |
+| **Relates to** | Yes | Yes | General association |
+| **Duplicates / Duplicated by** | Yes | Yes | Duplicate detection |
+| **Parent / Child** | Yes (separate) | N/A | Sub-issue relationship |
+| **Custom relation types** | N/A | N/A | Neither supports |
 
-### UI Elements
+---
 
-**IssueDependencies Component**
-- Stack layout with sections
-- Add Dependency button at top
+## Click Analysis
 
-**Dependencies Section (Outgoing)**
-- Title: "Dependencies"
-- Cards for each link
-- Badge showing relationship type
-- Issue display (icon + key + title)
-- Remove button (X)
+### Minimum Clicks to Complete Actions
 
-**Referenced By Section (Incoming)**
-- Title: "Referenced By"
-- Same card format
-- Shows inverse relationship
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **Open add relation** | 1 click | 1 click | Tie |
+| **Add blocking relation** | 4 clicks (type + search + select + add) | 4 clicks | Tie |
+| **Navigate to related issue** | 1 click | Unknown | Plane wins |
+| **Remove relation** | 1 click | 2 clicks (+ confirm) | Plane faster, Cascade safer |
+| **Change related issue status** | 2 clicks (inline dropdown) | N/A | Plane only |
+| **Change related issue priority** | 2 clicks (inline dropdown) | N/A | Plane only |
 
-**Add Dependency Sheet**
-| Element | Description |
-|---------|-------------|
-| Relationship Type | Select: blocks, relates, duplicates |
-| Search Issue | Text input (min 2 chars) |
-| Results List | Clickable issue cards |
-| Selected | Shows selected issue key |
-| Cancel/Add buttons | Footer actions |
+---
 
-**Issue Display Component**
-- Type icon
-- Issue key (PROJECT-123)
-- Issue title (truncated)
+## Inline Editing Comparison
 
-**Link Type Labels**
-| Type | Outgoing | Incoming |
-|------|----------|----------|
-| blocks | "Blocks" | "Blocked by" |
-| relates | "Relates to" | "Related by" |
-| duplicates | "Duplicates" | "Duplicated by" |
+### Plane Inline Properties
+```
+Related Issue Row:
+┌─────────────────────────────────────────────────────────────────────┐
+│ PROJ-456  Fix auth flow   [In Progress ▼] [High ▼] [@user] [🗑️]   │
+│                           ↑ clickable dropdown edits target issue  │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-### Flow
+### Cascade (No inline editing)
+```
+Related Issue Card:
+┌─────────────────────────────────────────────────────────────────────┐
+│ [Blocks]  🔧 PROJ-456  Fix auth flow                           [×] │
+│ ↑ badge   ↑ type icon                                              │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-**Adding Dependency**
-1. Click "+ Add Dependency" button
-2. Sheet slides in from side
-3. Select relationship type
-4. Type to search issues (min 2 chars)
-5. Results appear below
-6. Click issue to select
-7. Click "Add Dependency"
-8. Sheet closes, link added
+| Inline Feature | Plane | Cascade |
+|----------------|-------|---------|
+| **State/Status** | Editable dropdown | Display only |
+| **Priority** | Editable dropdown | Display only |
+| **Assignee** | Editable dropdown | Display only |
+| **Navigate** | Click title | Unknown |
 
-**Viewing Dependencies**
-1. Outgoing: "Dependencies" section shows what this blocks/relates
-2. Incoming: "Referenced By" shows what blocks/relates this
-3. Each shows as card with badge + issue info
+---
 
-**Removing Dependency**
-1. Click X button on link card
-2. Confirmation dialog opens
-3. Confirm to remove
-4. Link removed from both issues
+## Bidirectional Display
 
-### Feedback
-- **Search**: Results appear after 2+ chars
-- **Add**: Toast "Dependency added"
-- **Remove**: Confirmation required, toast "Dependency removed"
-- **Error**: Toast with error context
-- **Empty**: "No dependencies yet" message
+### How Both Sides Show Relations
 
-### Code Structure
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Outgoing section** | "Blocks", "Relates to", "Duplicates" | "Dependencies" |
+| **Incoming section** | "Blocked by", "Related by", "Duplicated by" | "Referenced By" |
+| **Labels** | Semantic direction labels | Badge + semantic labels |
+| **Grouping** | By relation type | By direction |
+
+---
+
+## Search Functionality
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Search scope** | All project issues | All project issues |
+| **Exclude current** | Yes | Yes |
+| **Filter by type** | Unknown | N/A |
+| **Filter by status** | Unknown | N/A |
+| **Min characters** | Unknown | 2 characters |
+| **Live results** | Yes | Yes |
+
+---
+
+## Confirmation & Feedback
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Add confirmation** | No (immediate) | No (immediate) |
+| **Remove confirmation** | Unknown | Yes (dialog) |
+| **Success feedback** | Visual update | Toast message |
+| **Error feedback** | Toast | Toast with context |
+| **Empty state** | Unknown | "No dependencies yet" |
+
+---
+
+## Keyboard Support
+
+| Shortcut | Plane | Cascade |
+|----------|-------|---------|
+| **Tab through results** | Yes | Yes |
+| **Enter to select** | Yes | Yes |
+| **Escape to close** | Yes | Yes |
+| **Arrow keys** | Navigate results | Navigate results |
+| **Quick add shortcut** | Command palette | N/A |
+
+---
+
+## Accessibility
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Section headings** | Yes | Yes |
+| **Button labels** | ARIA labels | Button labels |
+| **Keyboard navigation** | Full | Full |
+| **Screen reader** | Relation type announced | Relation type in badge |
+| **Focus management** | Modal focus trap | Sheet focus trap |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Relation types | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Plane has parent/child |
+| Click efficiency | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Similar workflow |
+| Inline editing | ⭐⭐⭐⭐⭐ | ⭐ | Plane edits inline |
+| Navigation | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane click to navigate |
+| Bidirectional | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Both show both sides |
+| Search | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Similar capability |
+| Safety (remove) | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade has confirm |
+| Empty state | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade has message |
+| Visual design | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Both clean |
+| Accessibility | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Both good |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Click to navigate** - Make related issue cards clickable to navigate to that issue
+   ```tsx
+   <Card
+     as={Link}
+     to={ROUTES.issues.detail(orgSlug, issue.key)}
+     // ... existing props
+   >
+   ```
+
+### P1 - High
+2. **Inline property editing** - Allow changing status/priority/assignee of related issues directly
+3. **Parent/child relations** - Add sub-issue relationship type
+
+### P2 - Medium
+4. **Visual dependency graph** - Add optional visualization
+   ```
+   ┌─────────┐     ┌─────────┐     ┌─────────┐
+   │ PROJ-1  │────▶│ PROJ-2  │────▶│ PROJ-3  │
+   └─────────┘     └─────────┘     └─────────┘
+   ```
+5. **Blocked indicator** - Show prominent indicator when issue is blocked
+6. **Bulk add relations** - Add multiple related issues at once
+
+### P3 - Nice to Have
+7. **Relation impact preview** - Show how relation affects sprint/timeline
+8. **Quick unblock action** - One-click to view blockers when issue is blocked
+9. **Relation suggestions** - AI-suggested relations based on issue content
+
+---
+
+## Code References
+
+### Plane
+- Relations Widget: `apps/web/core/components/issues/issue-detail-widgets/relations/`
+- Relation Select: `apps/web/core/components/issues/issue-detail/relation-select.tsx`
+- Issue List Item: `apps/web/core/components/issues/relations/issue-list-item.tsx`
+- Properties: `apps/web/core/components/issues/relations/properties.tsx`
+- Relation Store: `apps/web/core/store/issue/relation.store.ts`
+
+### Cascade
+- Dependencies: `src/components/IssueDependencies.tsx`
+- Tests: `src/components/IssueDependencies.test.tsx`
+- Issue Links API: `convex/issueLinks.ts`
+- Search API: `convex/issues.ts` → `search` function
+
+### Cascade Data Structures
 ```typescript
-// Link types
 type LinkType = "blocks" | "relates" | "duplicates";
 
-// Link with details
 interface IssueLinkWithDetails {
   _id: Id<"issueLinks">;
   fromIssueId: Id<"issues">;
@@ -186,100 +331,8 @@ interface IssueLinkWithDetails {
   };
 }
 
-// API
-api.issueLinks.getForIssue({ issueId }) // Returns { outgoing, incoming }
-api.issueLinks.create({ fromIssueId, toIssueId, linkType })
-api.issueLinks.remove({ linkId })
+// API returns { outgoing, incoming }
+api.issueLinks.getForIssue({ issueId });
+api.issueLinks.create({ fromIssueId, toIssueId, linkType });
+api.issueLinks.remove({ linkId });
 ```
-
-### Notable Features
-- **Bidirectional display**: Shows both directions
-- **Sheet UI**: Uses Sheet instead of modal (avoids nesting issues)
-- **Search exclusion**: Current issue excluded from search results
-- **Semantic labels**: "Blocks" vs "Blocked by" based on direction
-
----
-
-## Comparison Table
-
-| Aspect | cal.com | plane | Cascade | Best |
-|--------|---------|-------|---------|------|
-| Create relations | N/A | ✅ Yes | ✅ Yes | tie |
-| Remove relations | N/A | ✅ Yes | ✅ Yes | tie |
-| Bidirectional display | N/A | ✅ Yes | ✅ Yes | tie |
-| Blocks/Blocked by | N/A | ✅ Yes | ✅ Yes | tie |
-| Relates to | N/A | ✅ Yes | ✅ Yes | tie |
-| Duplicates | N/A | ✅ Yes | ✅ Yes | tie |
-| Parent/Child | N/A | ✅ Separate feature | ❌ No | plane |
-| Inline property edit | N/A | ✅ State/Priority/Assignee | ❌ No | plane |
-| Issue search | N/A | ✅ With filters | ✅ Basic | plane |
-| Navigate to related | N/A | ✅ Click to open | ⚠️ Unknown | plane |
-| Bulk add relations | N/A | ⚠️ Unknown | ❌ No | — |
-| Visual graph | N/A | ❌ No | ❌ No | — |
-| Confirmation on remove | N/A | ⚠️ Unknown | ✅ Yes | Cascade |
-| Empty state | N/A | ⚠️ Unknown | ✅ Yes | Cascade |
-
----
-
-## Recommendations
-
-### Priority 1: Click to Navigate to Related Issue
-Make related issue cards clickable to navigate to that issue.
-
-**Implementation:**
-```tsx
-<Card 
-  as={Link} 
-  href={`/project/${projectId}/issues/${issue._id}`}
-  // ... existing props
->
-```
-
-### Priority 2: Inline Property Editing
-Allow changing state/priority/assignee of related issues directly from the relation list.
-
-**Benefits:**
-- Quick triage without leaving context
-- Update blockers without switching views
-- Faster workflow
-
-### Priority 3: Parent/Child Relations
-Add parent/child (sub-issue) relationship type.
-
-**Use cases:**
-- Epic → Story breakdown
-- Story → Task breakdown
-- Bug → Sub-task fixes
-
-### Priority 4: Visual Dependency Graph
-Add optional visualization of issue dependencies.
-
-**Options:**
-- Simple tree view
-- Graph visualization (using D3 or similar)
-- Gantt-style dependency view
-
-### Priority 5: Add "Is blocked by" Quick Action
-When an issue is blocked, show a prominent indicator and quick action to view/resolve blockers.
-
-### Priority 6: Relation Impact Preview
-When viewing a relation, show if the related issue would affect:
-- Sprint completion
-- Due dates
-- Blocking chains
-
----
-
-## Screenshots/References
-
-### Plane Code Paths
-- Relations Widget: `~/Desktop/plane/apps/web/core/components/issues/issue-detail-widgets/relations/`
-- Relation Select: `~/Desktop/plane/apps/web/core/components/issues/issue-detail/relation-select.tsx`
-- Issue List Item: `~/Desktop/plane/apps/web/core/components/issues/relations/issue-list-item.tsx`
-- Properties: `~/Desktop/plane/apps/web/core/components/issues/relations/properties.tsx`
-
-### Cascade Code Paths
-- Dependencies: `~/Desktop/cascade/src/components/IssueDependencies.tsx`
-- Tests: `~/Desktop/cascade/src/components/IssueDependencies.test.tsx`
-- Issue Links API: `~/Desktop/cascade/convex/issueLinks.ts`
-- Issues Search API: `~/Desktop/cascade/convex/issues.ts` (search function with excludeIssueId)

@@ -1,158 +1,340 @@
-# Create Sprint/Cycle
+# Create Sprint/Cycle - Deep UX Comparison
 
 ## Overview
-
-Creating a sprint (Cascade) or cycle (plane) is the first step in iteration planning. This allows teams to group issues into time-boxed periods for focused delivery.
-
----
-
-## plane
-
-### Trigger
-
-- **Button**: "Add Cycle" in cycles list header
-- **Location**: `/[workspace]/projects/[project]/cycles/`
-- **Keyboard shortcut**: None for creation (Escape to close modal)
-
-### UI Elements
-
-**Modal**: `CycleCreateUpdateModal`
-- Position: Top of viewport (`EModalPosition.TOP`)
-- Width: XXL
-- Backdrop click to close: Yes
-
-**Form Fields** (`CycleForm`):
-
-| Field | Type | Required | Validation |
-|-------|------|----------|------------|
-| Project | Dropdown | Yes | Auto-selected, can change |
-| Name | Text input | Yes | Max 255 chars, auto-focused |
-| Description | TextArea | No | Min-height 24px |
-| Start Date | DateRangeDropdown | No | Min date = today |
-| End Date | DateRangeDropdown | No | Must be after start |
-
-### Flow
-
-1. User clicks "Add Cycle" button in header
-2. Modal opens with form, name field auto-focused
-3. Project pre-selected (can be changed via dropdown)
-4. User enters cycle name (required)
-5. Optionally adds description
-6. Optionally selects date range
-7. On submit:
-   - If dates provided, validates no overlap with existing cycles
-   - Creates cycle via `createCycle()` store method
-   - Mutates `PROJECT_ACTIVE_CYCLE` cache if applicable
-8. Modal closes on success
-
-### Feedback
-
-- **Success**: Toast notification, modal closes
-- **Error**: Inline validation for date conflicts
-- **Draft cycles**: Allowed without dates (no validation)
-
-### Notable Features
-
-- **Date overlap prevention**: Cannot create cycles with overlapping dates
-- **Draft mode**: Cycles without dates are valid ("Draft" status)
-- **Project switcher**: Can create cycle in different project from modal
-- **Tab index support**: Full accessibility via `getTabIndex()`
+Creating a sprint (Cascade) or cycle (Plane) is the first step in iteration planning. This allows teams to group issues into time-boxed periods for focused delivery. This analysis compares Plane vs Cascade across triggers, modals, form fields, and UX efficiency.
 
 ---
 
-## Cascade
+## Entry Points Comparison
 
-### Trigger
-
-- **Button**: "New Sprint" in sprint manager
-- **Location**: `/[org]/projects/[key]/sprints`
-- **Keyboard shortcut**: None
-
-### UI Elements
-
-**Inline Form** (not modal):
-- Expands within SprintManager component
-- Card-based design
-
-**Form Fields**:
-
-| Field | Type | Required | Validation |
-|-------|------|----------|------------|
-| Sprint Name | Text input | Yes | Non-empty after trim |
-| Sprint Goal | TextArea (2 rows) | No | — |
-| Duration | Preset selector | Yes | 1/2/3/4 weeks or Custom |
-| Start Date | Date input | If Custom | HTML5 date validation |
-| End Date | Date input | If Custom | HTML5 date validation |
-
-**Duration Presets**:
-- 1 Week (7 days) — "Short iteration for rapid delivery"
-- 2 Weeks (14 days) — "Standard sprint duration" [DEFAULT]
-- 3 Weeks (21 days) — "Extended sprint for larger features"
-- 4 Weeks (28 days) — "Monthly iteration cycle"
-- Custom — "Set custom start and end dates"
-
-### Flow
-
-1. User clicks "New Sprint" button
-2. Inline form expands below button
-3. User enters sprint name (required)
-4. Optionally enters sprint goal
-5. Selects duration preset (default: 2 weeks)
-6. If "Custom" selected, date inputs appear
-7. Clicks "Create Sprint"
-8. Sprint created with `status: "future"`
-9. Form collapses, sprint card appears in list
-
-### Feedback
-
-- **Success**: "Sprint created successfully" toast
-- **Error**: "Failed to create sprint" toast with details
-- **Validation**: Empty name prevented from submit
-
-### Notable Features
-
-- **Duration presets**: Quick selection for common sprint lengths
-- **Inline form**: No modal, form expands in place
-- **Future status**: New sprints start in "future" state
-- **Start sprint separate**: Dates finalized when starting, not creating
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Primary button** | "Add Cycle" in header | "New Sprint" in manager | Tie |
+| **Sidebar action** | N/A | N/A | Tie |
+| **Context menu** | N/A | N/A | Tie |
+| **Keyboard shortcut** | Escape (close only) | None | Tie |
+| **Command palette** | N/A | N/A | Tie |
+| **Empty state CTA** | "Create your first cycle" | "Create Sprint" | Tie |
+| **URL direct** | `/[ws]/projects/[proj]/cycles/create` | N/A | Plane |
 
 ---
 
-## Comparison Table
+## Layout Comparison
 
-| Aspect | plane | Cascade | Best |
-|--------|-------|---------|------|
-| Trigger location | Header button | Inline in manager | tie |
-| UI pattern | Modal | Inline form | plane (cleaner) |
-| Keyboard shortcut | Escape to close | None | plane |
-| Auto-focus name | Yes | No | plane |
-| Duration presets | No | Yes (1-4 weeks) | Cascade |
-| Date overlap check | Yes | No | plane |
-| Draft/dateless support | Yes | Yes (future status) | tie |
-| Project switcher | Yes (in modal) | No | plane |
-| Description field | Yes | Yes (goal) | tie |
-| Tab accessibility | Yes (`getTabIndex`) | Basic | plane |
+### Plane Cycle Creation
+```
+Location: Modal overlay (top-center)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Cycles List Page Header                                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 🔄 Cycles                           [🔍 Search] [+ Add Cycle] ← Trigger     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Active Cycle                                                                 │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ ⭕ 75%  Sprint 5  •  Jan 15 - Jan 29  •  👤👤👤  •  [⭐] [⋯]           │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ ▼ Upcoming Cycles (3)                                                       │
+│   ...                                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Modal (CycleCreateUpdateModal):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Create Cycle                                  [×] │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Project *                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ [🔵 Current Project ▼]                                              │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Cycle Name *                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Sprint 6 (auto-focused)                                            │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Description                                                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Optional description...                                             │   │
+│  │                                                                      │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Date Range                                                                 │
+│  ┌───────────────────────────┐  ┌───────────────────────────┐              │
+│  │ [📅 Start Date]           │  │ [📅 End Date]             │              │
+│  └───────────────────────────┘  └───────────────────────────┘              │
+│  (Optional - leave blank for Draft status)                                  │
+│                                                                             │
+│                                         [Cancel]  [Create Cycle]           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+Position: EModalPosition.TOP (center-top of viewport)
+Width: max-w-xl (XXL size)
+Backdrop: Click to close
+```
+
+### Cascade Sprint Creation
+```
+Location: Inline form (expands in place)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Sprint Manager Page                                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Sprints                                                                      │
+│                                                                             │
+│ [+ New Sprint] ← Primary trigger                                            │
+│                                                                             │
+│ ┌─────────────────────────────────────────────────────────────────────────┐│
+│ │ Sprint Name *                                                           ││
+│ │ ┌─────────────────────────────────────────────────────────────────────┐││
+│ │ │ Enter sprint name...                                                │││
+│ │ └─────────────────────────────────────────────────────────────────────┘││
+│ │                                                                         ││
+│ │ Sprint Goal                                                             ││
+│ │ ┌─────────────────────────────────────────────────────────────────────┐││
+│ │ │ Optional goal for this sprint...                                    │││
+│ │ │                                                                      │││
+│ │ └─────────────────────────────────────────────────────────────────────┘││
+│ │                                                                         ││
+│ │ Duration                                                                ││
+│ │ ┌─────────────────────────────────────────────────────────────────────┐││
+│ │ │ ( ) 1 Week   (●) 2 Weeks   ( ) 3 Weeks   ( ) 4 Weeks   ( ) Custom  │││
+│ │ │      ↑            ↑                                         ↑       │││
+│ │ │   7 days     14 days (default)                         Show dates   │││
+│ │ └─────────────────────────────────────────────────────────────────────┘││
+│ │                                                                         ││
+│ │ (When Custom selected):                                                 ││
+│ │ ┌───────────────────────────┐  ┌───────────────────────────┐           ││
+│ │ │ [📅 Start Date]           │  │ [📅 End Date]             │           ││
+│ │ └───────────────────────────┘  └───────────────────────────┘           ││
+│ │                                                                         ││
+│ │                                     [Cancel]  [Create Sprint]          ││
+│ │                                                                         ││
+│ └─────────────────────────────────────────────────────────────────────────┘│
+│                                                                             │
+│ ┌─ Sprint 5 ─────────────────────────────────────────────────────────────┐ │
+│ │ 🟢 Active  •  12 issues  •  Jan 15 - Jan 29                    [...]  │ │
+│ │ Goal: Complete payment integration                                     │ │
+│ │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░  8 of 12 (67%)            │ │
+│ │                                                [Complete Sprint]       │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Recommendations
+## Form Fields Comparison
 
-1. **Priority 1**: Add keyboard shortcut for creating sprints (e.g., `S` or `Shift+S`)
-2. **Priority 2**: Auto-focus sprint name input when form opens
-3. **Priority 3**: Consider modal pattern for consistency with other create flows
-4. **Priority 4**: Add date overlap validation when starting sprints
-5. **Priority 5**: Add ability to create sprint from different views (board, backlog)
+| Field | Plane | Cascade | Notes |
+|-------|-------|---------|-------|
+| **Name** | Required, auto-focused | Required | Plane auto-focus |
+| **Description/Goal** | TextArea | TextArea (2 rows) | Tie |
+| **Project** | Dropdown (switchable) | Implicit (current project) | Plane more flexible |
+| **Start Date** | Date picker (optional) | Date picker (if Custom) | Different UX |
+| **End Date** | Date picker (optional) | Date picker (if Custom) | Different UX |
+| **Duration presets** | N/A | 1/2/3/4 weeks + Custom | **Cascade** |
+
+### Form Field Count
+
+| Metric | Plane | Cascade |
+|--------|-------|---------|
+| Required fields | 2 (project, name) | 2 (name, duration) |
+| Optional fields | 3 (description, start, end) | 2 (goal, custom dates) |
+| Total form fields | 5 | 4 |
+| Duration presets | 0 | 5 |
 
 ---
 
-## Screenshots/References
+## Click Analysis
 
-### plane
-- Modal: `~/Desktop/plane/apps/web/core/components/cycles/modal.tsx`
-- Form: `~/Desktop/plane/apps/web/core/components/cycles/form.tsx`
-- Date validation: `CycleService.cycleDateCheck()`
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **Create minimal sprint** | 3 clicks (+ → name → create) | 3 clicks (+ → name → create) | Tie |
+| **Create with dates** | 5 clicks (+ dates picker × 2 + create) | 2 clicks (preset + create) | **Cascade faster** |
+| **Create 2-week sprint** | 5 clicks | 3 clicks (+ → name → create) | **Cascade** (preset default) |
+| **Create custom duration** | 5 clicks | 5 clicks (+ → name → custom → dates → create) | Tie |
+| **Create in different project** | 4 clicks (+ → project dropdown → name → create) | N/A | Plane only |
+| **Cancel creation** | 1 click (Cancel/Escape/backdrop) | 1 click (Cancel) | Tie |
+| **Close modal** | 1 click (×) | N/A (inline) | Different UX |
+
+---
+
+## Creation Flow Comparison
+
+### Plane Flow (Modal-based)
+```
+User Journey:
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│Click [+ Add] │───▶│ Modal opens  │───▶│ Fill fields  │───▶│Click Create  │
+└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
+      │                   │                    │                   │
+   1 click          (auto-focus)          2-4 clicks          1 click
+      │                   │                    │                   │
+      ▼                   ▼                    ▼                   ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                        Total: 4-6 clicks                                   │
+│                        Modals: 1                                            │
+│                        Form fields visible: All at once                     │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade Flow (Inline Form)
+```
+User Journey:
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│Click [+ New] │───▶│ Form expands │───▶│ Fill fields  │───▶│Click Create  │
+└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
+      │                   │                    │                   │
+   1 click         (inline expand)        2-3 clicks          1 click
+      │                   │                    │                   │
+      ▼                   ▼                    ▼                   ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                        Total: 3-5 clicks                                   │
+│                        Modals: 0                                            │
+│                        Duration presets: Reduce date selection friction     │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Duration Presets (Cascade Only)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Duration                                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ( ) 1 Week                                                                 │
+│      "Short iteration for rapid delivery" (7 days)                          │
+│                                                                             │
+│  (●) 2 Weeks  [DEFAULT]                                                     │
+│      "Standard sprint duration" (14 days)                                   │
+│                                                                             │
+│  ( ) 3 Weeks                                                                │
+│      "Extended sprint for larger features" (21 days)                        │
+│                                                                             │
+│  ( ) 4 Weeks                                                                │
+│      "Monthly iteration cycle" (28 days)                                    │
+│                                                                             │
+│  ( ) Custom                                                                 │
+│      "Set custom start and end dates"                                       │
+│      ↓ (reveals date inputs when selected)                                  │
+│      ┌───────────────────┐  ┌───────────────────┐                          │
+│      │ [📅 Start Date]   │  │ [📅 End Date]     │                          │
+│      └───────────────────┘  └───────────────────┘                          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Date Validation
+
+| Validation | Plane | Cascade |
+|------------|-------|---------|
+| **Start < End** | Yes | Yes (HTML5) |
+| **Start >= Today** | Yes | No |
+| **Overlap prevention** | Yes (API validation) | No |
+| **Draft without dates** | Yes | Yes ("future" status) |
+| **Date format** | Date range dropdown | HTML5 date input |
+
+### Plane Date Overlap Prevention
+```
+Create Cycle API:
+1. User selects dates
+2. cycleDateCheck() called
+3. Compares with existing cycles in project
+4. Returns error if overlap detected
+5. User must adjust dates
+
+Error Message:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ⚠️ Date conflict                                                            │
+│ These dates overlap with "Sprint 5" (Jan 15 - Jan 29).                      │
+│ Please select different dates.                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Keyboard Support
+
+| Shortcut | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| **Create sprint** | N/A | N/A | Neither |
+| **Focus name** | Auto-focus on open | Manual click | Plane better |
+| **Submit form** | Enter (in single-line) | Enter? | Plane |
+| **Cancel/Close** | Escape | Escape? | Plane documented |
+| **Tab navigation** | Full (getTabIndex) | Basic | Plane |
+
+---
+
+## Loading & Feedback
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Loading indicator** | Button spinner | Button spinner |
+| **Success feedback** | Toast + modal closes | Toast + form collapses |
+| **Error feedback** | Inline validation | Toast with error |
+| **Date conflict** | Inline error message | N/A |
+| **Validation timing** | On submit | On submit |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Click efficiency | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade presets faster |
+| Duration presets | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Auto-focus | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane auto-focuses |
+| Project flexibility | ⭐⭐⭐⭐⭐ | ⭐ | Plane can switch project |
+| Date validation | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane overlap check |
+| UI pattern | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Modal vs inline |
+| Keyboard support | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane full tab support |
+| Form simplicity | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade fewer fields |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add auto-focus to name field** - Focus input when form expands
+   ```tsx
+   useEffect(() => {
+     if (isExpanded) {
+       nameInputRef.current?.focus();
+     }
+   }, [isExpanded]);
+   ```
+
+### P1 - High
+2. **Add keyboard shortcut** - `Cmd/Ctrl+Shift+S` or just `S` to create sprint
+3. **Add date overlap validation** - Prevent overlapping sprints
+4. **Auto-calculate end date** - When start date selected with preset duration
+
+### P2 - Medium
+5. **Add project switcher** - Allow creating sprint in different project from context
+6. **Add sprint templates** - Pre-fill name patterns like "Sprint {N}"
+7. **Add recurrence option** - Auto-create next sprint
+
+### P3 - Nice to Have
+8. **Add calendar view for date selection** - Visual date range picker
+9. **Add sprint capacity planning** - Team velocity-based suggestions
+10. **Add import from backlog** - Pre-select issues during creation
+
+---
+
+## Code References
+
+### Plane
+- Modal: `apps/web/core/components/cycles/modal.tsx`
+- Form: `apps/web/core/components/cycles/form.tsx`
+- Date validation: `apps/web/core/services/cycle.service.ts` → `cycleDateCheck`
+- Store: `apps/web/core/store/cycle.store.ts`
+- Date dropdown: `apps/web/core/components/cycles/date-range-dropdown.tsx`
 
 ### Cascade
-- Manager: `~/Desktop/cascade/src/components/SprintManager.tsx`
-- Presets: `~/Desktop/cascade/src/lib/sprint-presets.ts`
-- Backend: `~/Desktop/cascade/convex/sprints.ts` (create mutation)
+- Sprint manager: `src/components/SprintManager.tsx`
+- Duration presets: `src/lib/sprint-presets.ts` (if exists)
+- Backend: `convex/sprints.ts` → `create` mutation
+- Route: `src/routes/_auth/_app/$orgSlug/projects/$key/sprints.tsx`

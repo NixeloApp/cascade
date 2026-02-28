@@ -1,296 +1,439 @@
-# Sprint/Cycle Reports & Analytics
+# Sprint/Cycle Reports & Analytics - Deep UX Comparison
 
 ## Overview
-
-Sprint reports provide insights into team velocity, burndown progress, and completion metrics. These help teams understand their capacity and improve estimation over time.
-
----
-
-## plane
-
-### Analytics Location
-
-- **Sidebar**: Collapsible panel on cycle detail page
-- **Header button**: "Analytics" opens WorkItemsModal for advanced analytics
-- **Always visible**: When on cycle detail page
-
-### Analytics Sidebar Structure
-
-```
-CycleDetailsSidebar
-├── CycleSidebarHeader
-│   ├── Cycle name
-│   ├── Status badge
-│   └── Cycle lead avatar
-├── CycleSidebarDetails
-│   ├── Work items count (completed/total)
-│   ├── Estimate points (completed/total)
-│   ├── Members (avatar group)
-│   ├── Lead
-│   └── Description
-└── CycleAnalyticsProgress
-    ├── SidebarChartRoot (burndown/burnup)
-    └── CycleProgressStats (tabs)
-```
-
-### Metrics Displayed
-
-| Metric | Location | Visualization |
-|--------|----------|---------------|
-| Progress % | Cycle list item | Circular indicator |
-| Completed/Total Issues | Sidebar details | Text "3/5 work items" |
-| Completed/Total Points | Sidebar details | Text "15/50 points" |
-| State Distribution | Progress Stats tab | Breakdown by state group |
-| Assignee Workload | Progress Stats tab | Per-user completion |
-| Label Distribution | Progress Stats tab | Per-label breakdown |
-| Burndown/Burnup | Chart | Line chart |
-
-### Burndown/Burnup Chart
-
-**Features**:
-- Toggle between burndown and burnup views
-- Estimate type selector: "Work Items" vs "Estimates" (points)
-- Data source: `progress_snapshot` in cycle details
-- `completion_chart` nested in distribution data
-- Validates via `validateCycleSnapshot()`
-
-### Progress Stats Tabs
-
-**Tab 1: State Groups**
-- Counts by: backlog, unstarted, started, completed, cancelled
-- Filterable by state
-
-**Tab 2: Assignees**
-- Per-assignee metrics
-- Avatar, name, completed/total
-- Points or issues based on estimate type
-
-**Tab 3: Labels**
-- Per-label breakdown
-- Label color, name, completed/total
-- Filterable selection
-
-### Active Cycle Statistics
-
-**Location**: `ActiveCycleRoot` in cycle list
-
-**Tabbed View**:
-- Priority-Issues tab
-- Assignees tab
-- Labels tab
-
-**Per-tab metrics**:
-- Issue count
-- Priority distribution (high/medium/low/none)
-- User assignment breakdown
-- Label distribution with colors
-
-**Features**:
-- Infinite scroll for issue lists
-- Theme-aware empty state images
-
-### Data Fetching
-
-| Function | Purpose |
-|----------|---------|
-| `fetchActiveCycleProgress()` | TProgressSnapshot data |
-| `fetchActiveCycleProgressPro()` | Enterprise analytics |
-| `fetchActiveCycleAnalytics()` | Distribution breakdown |
+Sprint reports provide insights into team velocity, burndown progress, and completion metrics. These help teams understand their capacity and improve estimation over time. This analysis compares Plane vs Cascade across analytics location, chart types, and UX efficiency.
 
 ---
 
-## Cascade
+## Entry Points Comparison
 
-### Analytics Location
-
-- **Separate page**: `/projects/[key]/analytics`
-- **Component**: `AnalyticsDashboard`
-- **Not inline**: Requires navigation to view
-
-### Metrics Displayed
-
-| Metric | Location | Visualization |
-|--------|----------|---------------|
-| Total Issues | Metric card | Number |
-| Unassigned | Metric card | Number (highlighted if > 0) |
-| Avg Velocity | Metric card | Number + "points/sprint" |
-| Completed Sprints | Metric card | Number |
-| Velocity History | Bar chart | Last 10 sprints |
-| Sprint Progress | Sprint card | Progress bar |
-
-### Velocity Chart
-
-**Display**: "Team Velocity (Last 10 Sprints)"
-
-**Chart**:
-- Bar chart component
-- X-axis: Sprint names
-- Y-axis: Story points completed
-- Color: Brand accent
-
-**Metrics**:
-- Average velocity calculation
-- Sprint count displayed
-- Points per sprint breakdown
-
-### Burndown Analytics
-
-**Query**: `getSprintBurndown`
-
-**Returned Metrics**:
-```typescript
-{
-  totalPoints: number,           // sum of story points
-  completedPoints: number,       // done issues points
-  remainingPoints: number,       // total - completed
-  progressPercentage: number,    // (completed / total) * 100
-  totalIssues: number,
-  completedIssues: number,
-  idealBurndown: [               // linear ideal line
-    { day: 0, points: totalPoints },
-    { day: N, points: 0 }
-  ],
-  daysElapsed: number,
-  totalDays: number
-}
-```
-
-**Story Points Calculation**:
-- Uses `storyPoints` field if available
-- Falls back to `estimatedHours`
-
-### Team Velocity Query
-
-**Query**: `getTeamVelocity`
-
-**Returns** (last 10 completed sprints):
-```typescript
-{
-  sprintName: string,
-  sprintId: Id<"sprints">,
-  points: number,              // completed issues points
-  issuesCompleted: number
-}
-```
-
-**Average**: `sum(points) / sprints.length`
-
-### Sprint Card Progress
-
-**Location**: Sprint manager view
-
-**Display**:
-- Visual progress bar
-- Text: "X of Y completed"
-- Percentage: "(X/Y * 100)%"
-
-### Additional Analytics
-
-**Status Distribution**:
-- Issues by workflow state
-- Bar chart visualization
-
-**Type Distribution**:
-- Issues by type (bug, feature, task, etc.)
-- Bar chart
-
-**Priority Distribution**:
-- Issues by priority level
-- Bar chart
-
-**Recent Activity**:
-- Project activity feed
-- Not sprint-specific
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Sidebar analytics** | Collapsible in cycle detail | N/A | Plane |
+| **Analytics page** | Header button → modal | `/projects/[key]/analytics` | Different UX |
+| **Sprint card progress** | Circular % in list | Progress bar | Tie |
+| **Inline burndown** | In sidebar | Separate chart component | Plane |
+| **URL direct** | N/A | `/analytics` route | Cascade |
 
 ---
 
-## Comparison Table
+## Layout Comparison
 
-| Aspect | plane | Cascade | Best |
-|--------|-------|---------|------|
-| Analytics location | Inline sidebar | Separate page | plane |
-| Burndown chart | Yes (interactive) | Yes (computed) | plane |
-| Burnup chart | Yes (toggle) | No | plane |
-| Velocity chart | Yes | Yes (bar chart) | tie |
-| State distribution | Yes (tabs) | Yes | tie |
-| Assignee breakdown | Yes (tab) | No | plane |
-| Label breakdown | Yes (tab) | No | plane |
-| Progress indicator | Circular + sidebar | Progress bar | plane |
-| Estimate types | Work Items vs Points | Points only | plane |
-| Real-time updates | Yes | Yes | tie |
-| Historical snapshots | Yes (progress_snapshot) | No | plane |
-| Enterprise analytics | Yes (Pro) | No | plane |
-| Sprint comparison | Via list | Via velocity chart | Cascade |
-
----
-
-## Recommendations
-
-1. **Priority 1**: Add analytics sidebar to sprint board view (inline, not separate page)
-2. **Priority 2**: Add burndown chart visualization to sprint view
-3. **Priority 3**: Add assignee workload breakdown tab
-4. **Priority 4**: Add label distribution breakdown tab
-5. **Priority 5**: Implement burnup chart option (toggle with burndown)
-6. **Priority 6**: Add progress snapshots for historical tracking
-7. **Priority 7**: Add "Work Items" vs "Story Points" toggle for metrics
-8. **Priority 8**: Show sprint analytics in cycle/sprint cards (not just active sprint)
-
----
-
-## Data Model Comparison
-
-### plane
-
-```typescript
-// Cycle with analytics
-{
-  ...cycle,
-  progress_snapshot: TProgressSnapshot,
-  distribution: {
-    completion_chart: ChartData,
-    state_distribution: StateBreakdown,
-    assignee_distribution: AssigneeBreakdown,
-    label_distribution: LabelBreakdown
-  },
-  estimate_distribution: EstimateBreakdown
-}
+### Plane Analytics
 ```
+Inline Sidebar (always available in cycle detail):
+┌────────────────────────────────────────────────────────────┬─────────────────┐
+│ Cycle Detail Page                                          │ Analytics       │
+│                                                            │ Sidebar [←]     │
+│ [Kanban board content...]                                  │                 │
+│                                                            │ ┌─────────────┐ │
+│                                                            │ │ Cycle Name  │ │
+│                                                            │ │ 🟢 Active   │ │
+│                                                            │ │ Lead: @user │ │
+│                                                            │ └─────────────┘ │
+│                                                            │                 │
+│                                                            │ Progress        │
+│                                                            │ ┌─────────────┐ │
+│                                                            │ │ ━━━━━━░░ 75%│ │
+│                                                            │ └─────────────┘ │
+│                                                            │                 │
+│                                                            │ Work Items      │
+│                                                            │ 12/16           │
+│                                                            │                 │
+│                                                            │ Points          │
+│                                                            │ 42/56           │
+│                                                            │                 │
+│                                                            │ ─────────────── │
+│                                                            │                 │
+│                                                            │ [State][Assign] │
+│                                                            │ [Labels]        │
+│                                                            │ ┌─────────────┐ │
+│                                                            │ │ To Do:    3 │ │
+│                                                            │ │ In Prog:  4 │ │
+│                                                            │ │ Review:   2 │ │
+│                                                            │ │ Done:     7 │ │
+│                                                            │ └─────────────┘ │
+│                                                            │                 │
+│                                                            │ Chart           │
+│                                                            │ ┌─────────────┐ │
+│                                                            │ │   📉        │ │
+│                                                            │ │    ────     │ │
+│                                                            │ │       ───   │ │
+│                                                            │ └─────────────┘ │
+│                                                            │ [Down][Up]      │
+│                                                            │ [Items][Points] │
+└────────────────────────────────────────────────────────────┴─────────────────┘
+Sidebar Position: Right side, collapsible
+Width: ~280px
+```
+
+### Cascade Analytics
+```
+Separate Analytics Page:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Analytics Dashboard                                        [Project ▼]      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│ │ Total Issues│ │ Unassigned  │ │ Avg Velocity│ │ Completed   │           │
+│ │     156     │ │      12     │ │   42 pts    │ │  Sprints: 8 │           │
+│ │             │ │  ⚠️ warning │ │  /sprint    │ │             │           │
+│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘           │
+│  ↑ Metric cards with summary stats                                          │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Team Velocity (Last 10 Sprints)                                             │
+│ ┌─────────────────────────────────────────────────────────────────────────┐│
+│ │                                                                          ││
+│ │   █                                                                      ││
+│ │   █    █         █                                                       ││
+│ │   █    █    █    █    █                                                  ││
+│ │   █    █    █    █    █    █    █                                        ││
+│ │   █    █    █    █    █    █    █    █                                   ││
+│ │   █    █    █    █    █    █    █    █    █    █                         ││
+│ │ ──────────────────────────────────────────────────────  Average: 42     ││
+│ │  S1   S2   S3   S4   S5   S6   S7   S8   S9   S10                       ││
+│ │                                                                          ││
+│ └─────────────────────────────────────────────────────────────────────────┘│
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Sprint Progress (Active)                                                    │
+│ ┌─────────────────────────────────────────────────────────────────────────┐│
+│ │ Sprint 5: 67% complete                                                   ││
+│ │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░░░░░                          ││
+│ │ 8 of 12 issues • 34 of 50 story points                                   ││
+│ └─────────────────────────────────────────────────────────────────────────┘│
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Distribution Charts                                                          │
+│ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐            │
+│ │ By Status        │ │ By Type          │ │ By Priority      │            │
+│ │ █████ To Do: 24  │ │ ████ Bug: 45     │ │ ██ Highest: 12   │            │
+│ │ ███ In Prog: 18  │ │ ██ Feature: 30   │ │ ████ High: 34    │            │
+│ │ █ Review: 8      │ │ ██ Task: 28      │ │ █████ Med: 56    │            │
+│ │ ███████ Done: 56 │ │ █ Story: 15      │ │ ██ Low: 20       │            │
+│ └──────────────────┘ └──────────────────┘ └──────────────────┘            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+Location: Separate route /analytics
+```
+
+---
+
+## Metrics Comparison
+
+### Summary Metrics
+
+| Metric | Plane Location | Cascade Location | Visualization |
+|--------|----------------|------------------|---------------|
+| **Progress %** | Sidebar + cycle card | Sprint card | Bar/Circular |
+| **Issues completed** | Sidebar "Work Items" | Metric card | Text "X/Y" |
+| **Points completed** | Sidebar "Points" | Metric card | Text "X/Y" |
+| **Total issues** | N/A | Metric card | Number |
+| **Unassigned count** | N/A | Metric card (warning) | Number |
+| **Avg velocity** | N/A | Metric card | "X pts/sprint" |
+| **Completed sprints** | Cycle list count | Metric card | Number |
+
+### Chart Types
+
+| Chart | Plane | Cascade |
+|-------|-------|---------|
+| **Burndown** | Yes (interactive) | Yes (basic) |
+| **Burnup** | Yes (toggle) | No |
+| **Velocity** | In stats tabs | Bar chart |
+| **State distribution** | Tab with bars | Bar chart |
+| **Assignee breakdown** | Tab with avatars | No |
+| **Label breakdown** | Tab with colors | No |
+| **Type distribution** | N/A | Bar chart |
+| **Priority distribution** | N/A | Bar chart |
+
+---
+
+## Click Analysis
+
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **View analytics** | 0 clicks (visible) | 2 clicks (nav → page) | **Plane inline** |
+| **Toggle sidebar** | 1 click | N/A | Plane |
+| **Switch chart type** | 2 clicks (toggle) | N/A | Plane |
+| **Switch metric type** | 2 clicks (toggle) | N/A | Plane |
+| **View by state** | 1 click (tab) | 0 clicks (always visible) | Cascade |
+| **View by assignee** | 1 click (tab) | N/A | Plane only |
+| **View by label** | 1 click (tab) | N/A | Plane only |
+| **View velocity trend** | 1 click (tab) | 0 clicks (always visible) | Cascade |
+
+---
+
+## Burndown Chart Comparison
+
+### Plane Burndown
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Chart Header                                                                 │
+│ [Burndown ▼] [Burnup]    [Work Items ▼] [Estimates]                        │
+│      ↑ Toggle type           ↑ Toggle metric                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ^                                                                          │
+│  │ ●                                                                        │
+│  │   ●                                                                      │
+│  │     ● Ideal                                                              │
+│  │       ●         ─────────                                                │
+│  │         ●     ─         ────────────                                     │
+│  │   ─ ─ ─ ─ ● ─         Actual          ─────────                         │
+│  │                 ●                              ─────                     │
+│  │                   ●                                 ─────●              │
+│  │                     ●                                     ●             │
+│  └────────────────────────────────────────────────────────────────▶        │
+│    Day 1   Day 3   Day 5   Day 7   Day 9   Day 11  Day 13  Today          │
+│                                                                             │
+│ Data: progress_snapshot.completion_chart                                    │
+│ Validation: validateCycleSnapshot()                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade Burndown
+```
+Data Structure (getSprintBurndown query):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ {                                                                           │
+│   totalPoints: 50,                                                          │
+│   completedPoints: 34,                                                      │
+│   remainingPoints: 16,                                                      │
+│   progressPercentage: 68,                                                   │
+│   totalIssues: 12,                                                          │
+│   completedIssues: 8,                                                       │
+│   idealBurndown: [                                                          │
+│     { day: 0, points: 50 },                                                 │
+│     { day: 14, points: 0 }                                                  │
+│   ],                                                                        │
+│   daysElapsed: 9,                                                           │
+│   totalDays: 14                                                             │
+│ }                                                                           │
+│                                                                             │
+│ Uses: storyPoints field, falls back to estimatedHours                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Chart would look like:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Sprint Burndown                                                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ^                                                                          │
+│  │ ●─ Ideal line (linear)                                                   │
+│  │   ─                                                                      │
+│  │     ─                                                                    │
+│  │       ─                                                                  │
+│  │         ─                                                                │
+│  │           ─   ← Actual (NOT IMPLEMENTED)                                │
+│  │             ─                                                            │
+│  │               ─                                                          │
+│  │                 ─                                                        │
+│  │                   ●                                                      │
+│  └────────────────────────────────────────────────────────────────▶        │
+│   Sprint Start                              Sprint End                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Velocity Chart Comparison
+
+### Plane Velocity
+```
+Location: In Active Cycle stats, via tabs
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Active Cycle: Sprint 5                                                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Priority-Issues] [Assignees] [Labels]                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Priority Distribution:                                                       │
+│ High: ████████████████ 24                                                   │
+│ Medium: ██████████████████████████ 38                                       │
+│ Low: ████████ 12                                                            │
+│ None: ████ 6                                                                │
+│                                                                             │
+│ (Velocity not directly shown - inferred from completed sprints)             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade Velocity
+```
+Location: Analytics page, prominent bar chart
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Team Velocity (Last 10 Sprints)                                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  60 │                                                                       │
+│     │           █                                                           │
+│  50 │           █         █                                                 │
+│     │     █     █    █    █                                                 │
+│  40 │     █     █    █    █    █                     ─────── Average: 42   │
+│     │     █     █    █    █    █    █                                       │
+│  30 │  █  █     █    █    █    █    █    █                                  │
+│     │  █  █     █    █    █    █    █    █    █    █                        │
+│  20 │  █  █     █    █    █    █    █    █    █    █                        │
+│     │  █  █     █    █    █    █    █    █    █    █                        │
+│  10 │  █  █     █    █    █    █    █    █    █    █                        │
+│     │  █  █     █    █    █    █    █    █    █    █                        │
+│   0 └──────────────────────────────────────────────────────────────────▶   │
+│       S1   S2   S3   S4   S5   S6   S7   S8   S9   S10                     │
+│                                                                             │
+│ Query: getTeamVelocity (last 10 completed sprints)                          │
+│ Average: sum(points) / sprints.length                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Progress Indicator Styles
+
+### Plane Circular Progress
+```
+Cycle Card:
+┌─────────────────────────────────────────────┐
+│  ⭕ 75%    Sprint 5    Jan 15 - Jan 29     │
+│   ↑                                         │
+│  30px circular indicator                    │
+│  Fill color based on percentage             │
+│  100% shows ✓ checkmark                     │
+└─────────────────────────────────────────────┘
+
+Sidebar Progress:
+┌────────────────────────┐
+│ Progress               │
+│ ┌────────────────────┐ │
+│ │ ━━━━━━━━━━━━━░░░░ │ │
+│ │       75%          │ │
+│ └────────────────────┘ │
+└────────────────────────┘
+```
+
+### Cascade Progress Bar
+```
+Sprint Card:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Sprint 5                                                                     │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░  8 of 12 completed (67%)        │
+│  ↑ Linear progress bar                                                      │
+│  Fill color: brand color                                                    │
+│  Text shows: "X of Y completed (Z%)"                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Data Freshness
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Real-time updates** | Yes (MobX reactive) | Yes (Convex reactive) |
+| **Historical snapshots** | Yes (progress_snapshot) | No |
+| **Fetch functions** | fetchActiveCycleProgress() | getSprintBurndown() |
+| **Caching** | Store-based | Convex query cache |
+| **Polling** | N/A | N/A |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Analytics location | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane inline sidebar |
+| Burndown chart | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane interactive |
+| Burnup chart | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Velocity chart | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade prominent |
+| State breakdown | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Both have |
+| Assignee breakdown | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Label breakdown | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Type distribution | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Priority distribution | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade chart |
+| Metric toggles | ⭐⭐⭐⭐⭐ | ⭐ | Plane has options |
+| Progress indicator | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Plane circular |
+| Historical data | ⭐⭐⭐⭐⭐ | ⭐ | Plane snapshots |
+| Enterprise features | ⭐⭐⭐⭐⭐ | ⭐ | Plane Pro tier |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add analytics sidebar to sprint board** - Inline collapsible panel
+   ```tsx
+   <aside className="w-72 border-l">
+     <SprintAnalyticsSidebar sprintId={activeSprintId} />
+   </aside>
+   ```
+
+2. **Add burndown chart visualization** - Line chart component
+   ```tsx
+   <SprintBurnChart
+     data={burndownData}
+     idealLine={idealBurndown}
+     currentDay={daysElapsed}
+   />
+   ```
+
+### P1 - High
+3. **Add assignee workload tab** - Per-user completion metrics
+4. **Add label distribution tab** - Per-label breakdown
+5. **Add burnup chart toggle** - Alternative view option
+
+### P2 - Medium
+6. **Add historical snapshots** - Track daily progress for historical comparison
+7. **Add "Work Items" vs "Story Points" toggle** - Metric type selector
+8. **Add circular progress indicator** - For sprint cards
+9. **Add completion trend line** - Actual vs ideal burndown
+
+### P3 - Nice to Have
+10. **Add sprint comparison view** - Side-by-side sprint metrics
+11. **Add export to PDF/PNG** - Share reports
+12. **Add custom date range analytics** - Beyond single sprint
+13. **Add enterprise analytics** - Advanced forecasting
+
+---
+
+## Code References
+
+### Plane
+- Analytics sidebar: `apps/web/core/components/cycles/analytics-sidebar/`
+- Progress chart: `apps/web/core/components/cycles/analytics-sidebar/issue-progress.tsx`
+- Stats tabs: `apps/web/core/components/cycles/analytics-sidebar/progress-stats.tsx`
+- Active cycle stats: `apps/web/core/components/cycles/active-cycle/cycle-stats.tsx`
+- Chart component: `apps/web/core/components/cycles/analytics-sidebar/sidebar-chart.tsx`
+- Data fetching: `apps/web/core/store/cycle.store.ts`
 
 ### Cascade
+- Analytics dashboard: `src/components/AnalyticsDashboard.tsx`
+- Metric card: `src/components/Analytics/MetricCard.tsx`
+- Bar chart: `src/components/Analytics/BarChart.tsx`
+- Line chart: `src/components/Analytics/LineChart.tsx`
+- Sprint burn chart: `src/components/Analytics/SprintBurnChart.tsx`
+- Burndown query: `convex/analytics.ts` → `getSprintBurndown`
+- Velocity query: `convex/analytics.ts` → `getTeamVelocity`
 
+### Cascade Data Structures
 ```typescript
-// Sprint (basic)
-{
-  ...sprint,
-  issueCount: number,
-  completedCount: number
+// Sprint burndown data
+interface SprintBurndown {
+  totalPoints: number;
+  completedPoints: number;
+  remainingPoints: number;
+  progressPercentage: number;
+  totalIssues: number;
+  completedIssues: number;
+  idealBurndown: Array<{ day: number; points: number }>;
+  daysElapsed: number;
+  totalDays: number;
 }
 
-// Burndown (separate query)
-{
-  totalPoints, completedPoints, remainingPoints,
-  progressPercentage, totalIssues, completedIssues,
-  idealBurndown: Array<{ day, points }>,
-  daysElapsed, totalDays
+// Team velocity history
+interface VelocityEntry {
+  sprintName: string;
+  sprintId: Id<"sprints">;
+  points: number;
+  issuesCompleted: number;
 }
-
-// Velocity (separate query)
-Array<{ sprintName, sprintId, points, issuesCompleted }>
 ```
-
----
-
-## Screenshots/References
-
-### plane
-- Analytics sidebar: `~/Desktop/plane/apps/web/core/components/cycles/analytics-sidebar/`
-- Progress chart: `~/Desktop/plane/apps/web/core/components/cycles/analytics-sidebar/issue-progress.tsx`
-- Stats tabs: `~/Desktop/plane/apps/web/core/components/cycles/analytics-sidebar/progress-stats.tsx`
-- Active cycle stats: `~/Desktop/plane/apps/web/core/components/cycles/active-cycle/cycle-stats.tsx`
-
-### Cascade
-- Analytics dashboard: `~/Desktop/cascade/src/components/AnalyticsDashboard.tsx`
-- Metric card: `~/Desktop/cascade/src/components/Analytics/MetricCard.tsx`
-- Bar chart: `~/Desktop/cascade/src/components/Analytics/BarChart.tsx`
-- Burndown query: `~/Desktop/cascade/convex/analytics.ts` (getSprintBurndown)
-- Velocity query: `~/Desktop/cascade/convex/analytics.ts` (getTeamVelocity)

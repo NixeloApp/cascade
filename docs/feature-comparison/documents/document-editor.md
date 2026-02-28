@@ -1,393 +1,400 @@
-# Document Editor
+# Document Editor - Deep UX Comparison
 
 ## Overview
-
-The document editor is the core writing experience. A powerful rich text editor enables teams to create formatted content with headings, lists, code blocks, images, and more.
-
----
-
-## plane
-
-### Editor Library
-
-**TipTap 2.22.3** (ProseMirror-based)
-- Industry-standard rich text editor
-- Extensive extension ecosystem
-- Built-in collaboration support
-
-### Editor Structure
-
-```
-PageRoot
-├── PageEditorToolbarRoot (formatting toolbar)
-├── PageEditorBody (main editor)
-│   └── CollaborativeDocumentEditorWithRef
-│       ├── PageEditorTitle (separate title editor)
-│       └── TipTap Editor
-└── PageNavigationPaneRoot (sidebar)
-    ├── Outline tab (table of contents)
-    ├── Assets tab (images)
-    └── Info tab (metadata)
-```
-
-### Formatting Features
-
-**Typography**:
-- Headings (H1-H6)
-- Bold, Italic, Underline, Strikethrough
-- Code inline
-- Text colors and backgrounds
-- Text alignment
-
-**Block Elements**:
-- Bullet lists
-- Numbered lists
-- Task lists (checkboxes)
-- Blockquotes
-- Code blocks (syntax highlighting via highlight.js)
-- Tables
-- Horizontal rules
-- Callout blocks
-
-**Advanced**:
-- Images with upload
-- Links with preview
-- User @mentions
-- Work item embeds
-- Slash commands (`/` menu)
-- Side menu for block operations
-- Drag-and-drop blocks
-
-### Toolbar
-
-**Location**: Fixed top toolbar
-
-**Features**:
-- Typography presets (H1, H2, paragraph)
-- Bold, Italic, Underline buttons
-- List type toggles
-- Link insertion
-- Color picker (text/background)
-- More options dropdown
-
-**Dynamic States**:
-- Buttons reflect current selection
-- Keyboard shortcuts in tooltips
-
-### Real-Time Collaboration
-
-**Stack**:
-- Yjs (CRDT) for conflict-free editing
-- Hocuspocus Provider (WebSocket)
-- IndexedDB persistence (offline support)
-
-**Features**:
-- Multiple cursors with user colors
-- Real-time sync across devices
-- Offline editing with sync on reconnect
-- Connection state tracking
-
-**Collaboration States**:
-- Initial → Connecting → Awaiting Sync → Synced
-- Reconnection with retry logic (max 3)
-- Fallback recovery for corrupted cache
-
-### Navigation Pane (Sidebar)
-
-**Outline Tab**:
-- Auto-generated from headings
-- Click to jump to section
-- Hierarchical structure
-
-**Assets Tab**:
-- List of embedded images
-- Click to jump to image
-
-**Info Tab**:
-- Creation date, owner
-- Collaborators list
-- Activity log
-
-### Version History
-
-- Full version tracking
-- Restore previous versions
-- Compare changes
-- Version metadata (author, timestamp)
+The document editor is the core writing experience. A powerful rich text editor enables teams to create formatted content with headings, lists, code blocks, images, and more. This analysis compares Plane (TipTap) vs Cascade (Plate.js) across formatting, toolbars, collaboration, and UX efficiency.
 
 ---
 
-## Cascade
+## Entry Points Comparison
 
-### Editor Library
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Document click** | Opens in same page | Opens document page | Tie |
+| **New document** | Modal → editor | Direct to editor | Cascade faster |
+| **Sidebar link** | Click page name | Click document name | Tie |
+| **URL direct** | `/[ws]/projects/[proj]/pages/[id]` | `/:org/documents/:id` | Tie |
+| **Search result** | Click opens editor | Click opens editor | Tie |
 
-**Plate.js** (Slate-based)
-- Modern React-first editor
-- shadcn/ui styling compatibility
-- AI plugin support
+---
 
-### Editor Structure
+## Layout Comparison
 
+### Plane Editor Layout
 ```
-DocumentPage
-├── DocumentHeader (title, controls)
-├── PlateEditor (main editor)
-│   ├── FloatingToolbar (context menu)
-│   ├── SlashMenu (/ commands)
-│   └── DragHandle (block reordering)
-└── PresenceIndicator (collaborators)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Page Header                                                                  │
+│ [← Back] 📄 Document Title                    [👤 Collaborators] [⋯ Menu]  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Fixed Toolbar                                                                │
+│ ┌─────────────────────────────────────────────────────────────────────────┐│
+│ │ [H1▼] [B] [I] [U] [S] │ [📝] [🔗] [📷] │ [≡] [•] [☐] │ [A▼] [🎨▼] [⋯]││
+│ │  ↑     ↑   ↑   ↑   ↑      ↑    ↑    ↑      ↑   ↑   ↑     ↑    ↑      ││
+│ │ Text  Bold Ital Under Strike Code Link Img List Bullet Todo Color Bg  ││
+│ └─────────────────────────────────────────────────────────────────────────┘│
+├──────────────────────────────────────────────────────┬──────────────────────┤
+│ Editor Body                                          │ Navigation Pane      │
+│ ┌──────────────────────────────────────────────────┐ │ ┌──────────────────┐│
+│ │                                                  │ │ │ [Outline] [📎] [ℹ]│
+│ │ # Heading 1                                      │ │ ├──────────────────┤│
+│ │                                                  │ │ │ Heading 1        ││
+│ │ Paragraph text here...                           │ │ │   Heading 2      ││
+│ │                                                  │ │ │   Heading 2      ││
+│ │ ## Heading 2                                     │ │ │     Heading 3    ││
+│ │                                                  │ │ │ Another H1       ││
+│ │ - Bullet point                                   │ │ │                  ││
+│ │ - Another point                                  │ │ │ ↑ Click to jump  ││
+│ │                                                  │ │ └──────────────────┘│
+│ │ ```javascript                                    │ │                      │
+│ │ const code = "highlighted";                      │ │ Assets (📎 tab):     │
+│ │ ```                                              │ │ ┌──────────────────┐│
+│ │                                                  │ │ │ 📷 image1.png    ││
+│ │ [+ Side menu appears on hover]                   │ │ │ 📷 image2.png    ││
+│ │                                                  │ │ │ Click to jump    ││
+│ └──────────────────────────────────────────────────┘ │ └──────────────────┘│
+│                                                      │                      │
+│ Collaboration:                                       │ Info (ℹ tab):       │
+│ ┌──────────────────────────────────────────────────┐ │ ┌──────────────────┐│
+│ │ 🔴 Alice (typing...)  🟢 Bob (viewing)           │ │ │ Created: Jan 15  ││
+│ │ ↑ Multiple cursors with user colors              │ │ │ By: @alice       ││
+│ └──────────────────────────────────────────────────┘ │ │ Editors: 3       ││
+│                                                      │ │ Words: 1,234     ││
+│                                                      │ └──────────────────┘│
+└──────────────────────────────────────────────────────┴──────────────────────┘
 ```
 
-### Formatting Features
-
-**Typography**:
-- Headings (H1-H3)
-- Bold, Italic, Underline, Strikethrough
-- Code inline
-
-**Block Elements**:
-- Bullet lists
-- Numbered lists
-- Todo lists (checkboxes)
-- Blockquotes
-- Code blocks (syntax highlighting)
-- Tables
-- Images
-
-**Plugins** (from plugins.ts):
-- `BoldPlugin`, `ItalicPlugin`, `UnderlinePlugin`
-- `CodePlugin`, `CodeSyntaxPlugin`
-- `BlockquotePlugin`, `HeadingPlugin`
-- `ListPlugin`, `TodoListPlugin`
-- `TablePlugin`, `ImagePlugin`
-- `DndPlugin` (drag-and-drop)
-- `BaseSlashPlugin` (slash commands)
-
-### Toolbar
-
-**Location**: Floating toolbar (appears on selection)
-
-**Features**:
-- Bold, Italic, Underline buttons
-- Heading toggles
-- List toggles
-- Code toggle
-- Context-sensitive (shows relevant options)
-
-### Real-Time Collaboration
-
-**Stack**:
-- Yjs for CRDT
-- Convex-Yjs Provider (custom)
-- Convex presence API
-
-**Features**:
-- User presence indicators
-- Cursor colors per user
-- Real-time sync via Convex
-
-**Tables**:
-- `yjsDocuments`: Stores Y.js state
-- `yjsAwareness`: Tracks active editors
-
-### Slash Commands
-
-**Trigger**: Type `/`
-
-**Available Commands**:
-- Headings (H1, H2, H3)
-- Lists (bullet, numbered, todo)
-- Quote
-- Code block
-- Table
-- Image
-
-### Version History
-
-- Auto-save versions
-- Up to 50 versions kept
-- Restore with reload
-- Creator attribution
-- Relative timestamps
-
----
-
-## Comparison Table
-
-| Aspect | plane | Cascade | Best |
-|--------|-------|---------|------|
-| Editor library | TipTap | Plate.js | tie |
-| Heading levels | H1-H6 | H1-H3 | plane |
-| Text colors | Yes | No | plane |
-| Code highlighting | Yes (highlight.js) | Yes | tie |
-| Tables | Yes | Yes | tie |
-| Images | Yes (upload) | Yes | tie |
-| User mentions | Yes | No | plane |
-| Work item embeds | Yes | No | plane |
-| Toolbar position | Fixed top | Floating | preference |
-| Slash commands | Yes | Yes | tie |
-| Drag-drop blocks | Yes | Yes | tie |
-| Real-time collab | Yes (Hocuspocus) | Yes (Convex) | tie |
-| Multiple cursors | Yes | Yes | tie |
-| Offline support | Yes (IndexedDB) | No | plane |
-| Navigation pane | Yes (outline, assets, info) | No | plane |
-| Version history | Yes | Yes | tie |
-| Version comparison | Yes | No | plane |
-
----
-
-## Recommendations
-
-1. **Priority 1**: Add navigation pane sidebar
-   - Outline tab with auto-generated TOC
-   - Click to jump to sections
-   - Show document structure
-
-2. **Priority 2**: Add user @mentions
-   - Trigger with `@` symbol
-   - Search users in org
-   - Link to user profile
-
-3. **Priority 3**: Add text colors
-   - Text foreground color
-   - Background highlight color
-   - Color picker UI
-
-4. **Priority 4**: Add H4-H6 heading levels
-   - Full heading hierarchy
-   - Useful for long documents
-
-5. **Priority 5**: Add offline support
-   - IndexedDB persistence
-   - Sync when reconnected
-   - Offline indicator
-
-6. **Priority 6**: Add issue/work item embeds
-   - Embed issue cards in documents
-   - Link to issue detail
-   - Real-time status updates
-
----
-
-## Implementation: Navigation Pane
-
-```tsx
-function DocumentNavigationPane({ editor }) {
-  const [activeTab, setActiveTab] = useState<"outline" | "assets" | "info">("outline");
-
-  return (
-    <div className="w-64 border-l">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="assets">Assets</TabsTrigger>
-          <TabsTrigger value="info">Info</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="outline">
-          <OutlineTree editor={editor} />
-        </TabsContent>
-
-        <TabsContent value="assets">
-          <AssetsList editor={editor} />
-        </TabsContent>
-
-        <TabsContent value="info">
-          <DocumentInfo document={document} />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
-
-function OutlineTree({ editor }) {
-  const headings = useMemo(() => {
-    return editor.children
-      .filter(node => node.type?.startsWith("h"))
-      .map(node => ({
-        level: parseInt(node.type.replace("h", "")),
-        text: Node.string(node),
-        id: node.id,
-      }));
-  }, [editor.children]);
-
-  return (
-    <ul className="space-y-1">
-      {headings.map(heading => (
-        <li
-          key={heading.id}
-          style={{ paddingLeft: `${(heading.level - 1) * 12}px` }}
-        >
-          <button onClick={() => scrollToHeading(heading.id)}>
-            {heading.text}
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-}
+### Cascade Editor Layout
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Document Header                                                              │
+│ 📄 Document Title                              [👥 3 online] [🔒] [⋯ Menu] │
+│ ↑ Click to edit inline                                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Editor Body (No fixed toolbar)                                               │
+│ ┌─────────────────────────────────────────────────────────────────────────┐│
+│ │                                                                          ││
+│ │ # Heading 1                                                              ││
+│ │                                                                          ││
+│ │ Paragraph text here...                                                   ││
+│ │ ┌──────────────────────────────────┐                                     ││
+│ │ │ [B] [I] [U] [S] [H1▼] [📝] [⋯]  │ ← Floating Toolbar                  ││
+│ │ └──────────────────────────────────┘   (appears on text selection)       ││
+│ │ ## Heading 2                                                             ││
+│ │                                                                          ││
+│ │ - Bullet point                                                           ││
+│ │ - Another point                                                          ││
+│ │                                                                          ││
+│ │ Type / for commands...                                                   ││
+│ │ ┌──────────────────────────────────┐                                     ││
+│ │ │ 📝 Heading 1                     │ ← Slash Menu                        ││
+│ │ │ 📝 Heading 2                     │   (appears on /)                    ││
+│ │ │ • Bullet List                    │                                     ││
+│ │ │ 1. Numbered List                 │                                     ││
+│ │ │ ☐ Todo List                      │                                     ││
+│ │ │ " Quote                          │                                     ││
+│ │ │ </> Code Block                   │                                     ││
+│ │ └──────────────────────────────────┘                                     ││
+│ │                                                                          ││
+│ │ ⣿ (drag handle on hover)                                                 ││
+│ │                                                                          ││
+│ └─────────────────────────────────────────────────────────────────────────┘│
+│                                                                             │
+│ Presence Indicators (bottom-right corner):                                  │
+│ ┌───────────────────────────┐                                               │
+│ │ 🟢 Alice  🟢 Bob  🟡 Carol │ ← Cursor colors match in editor              │
+│ └───────────────────────────┘                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Implementation: @Mentions
+## Toolbar Comparison
 
-```tsx
-// Plate.js mention plugin
-const mentionPlugin = createPluginFactory({
-  key: "mention",
-  isElement: true,
-  isInline: true,
-  isVoid: true,
-  handlers: {
-    onKeyDown: (editor) => (event) => {
-      if (event.key === "@") {
-        // Open mention picker
-        openMentionPicker();
-      }
-    },
-  },
-})();
+### Toolbar Position
 
-// Mention picker component
-function MentionPicker({ onSelect }) {
-  const users = useQuery(api.users.listOrganizationMembers, { organizationId });
-  const [search, setSearch] = useState("");
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Position** | Fixed top bar | Floating (on selection) |
+| **Visibility** | Always visible | On-demand |
+| **Screen usage** | ~40px height always | 0px when not selecting |
+| **Mobile friendly** | Fixed bar scrolls | Floating adapts |
 
-  const filtered = users?.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase())
-  );
+### Toolbar Features
 
-  return (
-    <Command>
-      <CommandInput value={search} onValueChange={setSearch} />
-      <CommandList>
-        {filtered?.map(user => (
-          <CommandItem key={user._id} onSelect={() => onSelect(user)}>
-            <Avatar user={user} size="sm" />
-            <span>{user.name}</span>
-          </CommandItem>
-        ))}
-      </CommandList>
-    </Command>
-  );
-}
+| Feature | Plane Toolbar | Cascade Toolbar |
+|---------|---------------|-----------------|
+| **Heading presets** | Dropdown (H1-H6) | Dropdown (H1-H3) |
+| **Bold** | Yes (Cmd+B) | Yes (Cmd+B) |
+| **Italic** | Yes (Cmd+I) | Yes (Cmd+I) |
+| **Underline** | Yes (Cmd+U) | Yes (Cmd+U) |
+| **Strikethrough** | Yes | Yes |
+| **Inline code** | Yes | Yes |
+| **Link** | Yes | Yes |
+| **Text color** | Color picker | No |
+| **Background color** | Color picker | No |
+| **Text alignment** | Yes (L/C/R/J) | No |
+| **List toggles** | Yes | Yes |
+| **Table insert** | Via menu | Via slash |
+
+---
+
+## Formatting Features
+
+### Typography
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Heading levels** | H1-H6 | H1-H3 |
+| **Bold** | Yes | Yes |
+| **Italic** | Yes | Yes |
+| **Underline** | Yes | Yes |
+| **Strikethrough** | Yes | Yes |
+| **Inline code** | Yes | Yes |
+| **Text colors** | Yes (picker) | No |
+| **Background colors** | Yes (picker) | No |
+| **Text alignment** | L/C/R/Justify | No |
+
+### Block Elements
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Bullet lists** | Yes | Yes |
+| **Numbered lists** | Yes | Yes |
+| **Todo lists** | Yes (checkboxes) | Yes (checkboxes) |
+| **Blockquotes** | Yes | Yes |
+| **Code blocks** | Yes (highlight.js) | Yes (syntax) |
+| **Tables** | Yes (full editing) | Yes |
+| **Horizontal rules** | Yes | Yes |
+| **Callout blocks** | Yes | No |
+| **Images** | Yes (upload) | Yes (upload) |
+| **Embeds** | Issue cards | No |
+
+### Advanced Features
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **@mentions** | Users, issues | No |
+| **Slash commands** | Yes (/) | Yes (/) |
+| **Side menu** | Block operations | No |
+| **Drag-drop blocks** | Yes | Yes |
+| **AI assistance** | Yes (if enabled) | No |
+
+---
+
+## Click Analysis
+
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **Bold text** | 1 click (toolbar) or Cmd+B | Select + 1 click or Cmd+B | Tie |
+| **Add heading** | 2 clicks (dropdown → select) | Type `#` or 2 clicks | Tie |
+| **Insert code block** | 2 clicks (toolbar → code) | Type `/code` + Enter | Cascade faster |
+| **Insert table** | 3 clicks (menu → table → size) | Type `/table` + Enter | Cascade faster |
+| **Add image** | 2 clicks (toolbar → upload) | Type `/image` + Enter | Cascade faster |
+| **Change text color** | 3 clicks (A → picker → color) | N/A | Plane only |
+| **Add @mention** | Type `@` + select | N/A | Plane only |
+| **Navigate to heading** | 1 click (sidebar outline) | N/A | Plane only |
+| **Jump to image** | 1 click (assets tab) | N/A | Plane only |
+
+---
+
+## Slash Commands
+
+| Command | Plane | Cascade |
+|---------|-------|---------|
+| **Trigger** | `/` | `/` |
+| **Heading 1** | `/heading1` | `/h1` |
+| **Heading 2** | `/heading2` | `/h2` |
+| **Heading 3** | `/heading3` | `/h3` |
+| **Bullet list** | `/bullet` | `/bullet` |
+| **Numbered list** | `/number` | `/numbered` |
+| **Todo list** | `/todo` | `/todo` |
+| **Quote** | `/quote` | `/quote` |
+| **Code block** | `/code` | `/code` |
+| **Table** | `/table` | `/table` |
+| **Image** | `/image` | `/image` |
+| **Divider** | `/divider` | `/divider` |
+| **Callout** | `/callout` | N/A |
+| **Mention** | `@` | N/A |
+
+---
+
+## Navigation Pane (Plane Only)
+
+```
+┌──────────────────────────────────────┐
+│ [Outline] [Assets] [Info]            │
+├──────────────────────────────────────┤
+│                                      │
+│ Outline Tab:                         │
+│ ├─ Introduction                      │
+│ │   ├─ Background                    │
+│ │   └─ Objectives                    │
+│ ├─ Implementation                    │
+│ │   ├─ Phase 1                       │
+│ │   └─ Phase 2                       │
+│ └─ Conclusion                        │
+│                                      │
+│ Click any heading to scroll →        │
+│                                      │
+├──────────────────────────────────────┤
+│ Assets Tab:                          │
+│ 📷 screenshot1.png                   │
+│ 📷 diagram.svg                       │
+│ 📎 document.pdf                      │
+├──────────────────────────────────────┤
+│ Info Tab:                            │
+│ Created: Jan 15, 2026                │
+│ By: @alice                           │
+│ Last edited: 2 hours ago             │
+│ Word count: 1,234                    │
+│ Editors: Alice, Bob, Carol           │
+└──────────────────────────────────────┘
 ```
 
 ---
 
-## Screenshots/References
+## Real-Time Collaboration
 
-### plane
-- Editor body: `~/Desktop/plane/apps/web/core/components/pages/editor/editor-body.tsx`
-- Collaborative editor: `~/Desktop/plane/packages/editor/src/core/components/editors/document/collaborative-editor.tsx`
-- Extensions: `~/Desktop/plane/packages/editor/src/core/extensions/`
-- Toolbar: `~/Desktop/plane/apps/web/core/components/pages/editor/toolbar/`
-- Navigation pane: `~/Desktop/plane/apps/web/core/components/pages/navigation-pane/`
+### Technology Stack
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **CRDT library** | Yjs | Yjs |
+| **Transport** | Hocuspocus (WebSocket) | Convex-Yjs Provider |
+| **Persistence** | IndexedDB | Convex DB |
+| **Offline support** | Yes | No |
+
+### Collaboration Features
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Multiple cursors** | Yes (colored) | Yes (colored) |
+| **Cursor names** | Username labels | On hover |
+| **Presence indicators** | Header avatars | Avatar pile |
+| **Offline editing** | Yes (sync on reconnect) | No |
+| **Connection state** | Visual indicator | Basic indicator |
+| **Conflict resolution** | CRDT automatic | CRDT automatic |
+
+### Collaboration States (Plane)
+```
+┌────────────┐    ┌─────────────┐    ┌───────────────┐    ┌────────────┐
+│  Initial   │───▶│ Connecting  │───▶│ Awaiting Sync │───▶│   Synced   │
+└────────────┘    └─────────────┘    └───────────────┘    └────────────┘
+                         │                                       │
+                         │ fail                                  │ disconnect
+                         ▼                                       ▼
+                  ┌─────────────┐                        ┌─────────────┐
+                  │  Retry (3x) │                        │ Reconnecting│
+                  └─────────────┘                        └─────────────┘
+```
+
+---
+
+## Version History
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Auto-save versions** | Yes | Yes |
+| **Max versions** | Unlimited? | 50 |
+| **Restore version** | Yes | Yes |
+| **Compare versions** | Yes (diff view) | No |
+| **Version metadata** | Author, timestamp | Creator, timestamp |
+| **Delete versions** | No | No |
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Plane | Cascade |
+|----------|-------|---------|
+| **Bold** | Cmd/Ctrl+B | Cmd/Ctrl+B |
+| **Italic** | Cmd/Ctrl+I | Cmd/Ctrl+I |
+| **Underline** | Cmd/Ctrl+U | Cmd/Ctrl+U |
+| **Code** | Cmd/Ctrl+E | Cmd/Ctrl+E |
+| **Link** | Cmd/Ctrl+K | Cmd/Ctrl+K |
+| **Undo** | Cmd/Ctrl+Z | Cmd/Ctrl+Z |
+| **Redo** | Cmd/Ctrl+Shift+Z | Cmd/Ctrl+Shift+Z |
+| **Heading 1** | Cmd+Alt+1 | N/A |
+| **Heading 2** | Cmd+Alt+2 | N/A |
+| **Bullet list** | Cmd+Shift+8 | N/A |
+| **Numbered list** | Cmd+Shift+7 | N/A |
+| **Slash menu** | / | / |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Formatting richness | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane has colors, alignment |
+| Toolbar accessibility | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane always visible |
+| Clean interface | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade minimal |
+| Navigation pane | ⭐⭐⭐⭐⭐ | ⭐ | Plane has outline/assets |
+| @Mentions | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Slash commands | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Both full support |
+| Offline support | ⭐⭐⭐⭐⭐ | ⭐ | Plane IndexedDB |
+| Version comparison | ⭐⭐⭐⭐⭐ | ⭐ | Plane diff view |
+| Real-time collab | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Both excellent |
+| Keyboard shortcuts | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane more shortcuts |
+| Drag-drop blocks | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Both supported |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add @mentions** - Trigger with `@`, search users, link to profile
+   ```tsx
+   // Already in progress via MentionPlugin
+   const MentionElement = ({ attributes, children, element }) => (
+     <span {...attributes} className="text-brand">
+       @{element.value}
+       {children}
+     </span>
+   );
+   ```
+
+2. **Add text colors** - Text foreground and background color pickers
+   ```tsx
+   <ColorPickerButton
+     icon={<TextColorIcon />}
+     onChange={(color) => toggleMark(editor, "textColor", { color })}
+   />
+   ```
+
+### P1 - High
+3. **Add navigation pane sidebar** - Outline, assets, info tabs
+4. **Add H4-H6 heading levels** - Full heading hierarchy for long documents
+5. **Add text alignment** - Left, center, right, justify
+
+### P2 - Medium
+6. **Add offline support** - IndexedDB persistence with sync on reconnect
+7. **Add version comparison** - Diff view between versions
+8. **Add callout blocks** - Info, warning, error, success callouts
+9. **Add more keyboard shortcuts** - Heading levels, list toggles
+
+### P3 - Nice to Have
+10. **Add fixed toolbar option** - Toggle between floating and fixed
+11. **Add issue/work item embeds** - Embed issue cards in documents
+12. **Add AI writing assistance** - Grammar, summarize, expand
+
+---
+
+## Code References
+
+### Plane
+- Editor body: `apps/web/core/components/pages/editor/editor-body.tsx`
+- Collaborative editor: `packages/editor/src/core/components/editors/document/collaborative-editor.tsx`
+- Extensions: `packages/editor/src/core/extensions/`
+- Toolbar: `apps/web/core/components/pages/editor/toolbar/`
+- Navigation pane: `apps/web/core/components/pages/navigation-pane/`
+- Yjs provider: `packages/editor/src/core/providers/`
 
 ### Cascade
-- PlateEditor: `~/Desktop/cascade/src/components/PlateEditor.tsx`
-- Plugins: `~/Desktop/cascade/src/lib/plate/plugins.ts`
-- FloatingToolbar: `~/Desktop/cascade/src/components/Plate/FloatingToolbar.tsx`
-- SlashMenu: `~/Desktop/cascade/src/components/Plate/SlashMenu.tsx`
-- Collaborators: `~/Desktop/cascade/src/components/Plate/Collaborators.tsx`
+- PlateEditor: `src/components/PlateEditor.tsx`
+- Plugins: `src/lib/plate/plugins.ts`
+- FloatingToolbar: `src/components/Plate/FloatingToolbar.tsx`
+- SlashMenu: `src/components/Plate/SlashMenu.tsx`
+- MentionElement: `src/components/Plate/MentionElement.tsx`
+- ColorPickerButton: `src/components/Plate/ColorPickerButton.tsx`
+- Collaborators: `src/components/Plate/Collaborators.tsx`
+- Yjs integration: `convex/yjsDocuments.ts`

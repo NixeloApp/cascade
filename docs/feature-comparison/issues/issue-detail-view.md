@@ -1,226 +1,378 @@
-# Issue Detail View
+# Issue Detail View - Deep UX Comparison
 
 ## Overview
-The issue detail view displays all information about a single issue, including its properties, description, activity feed, comments, attachments, and related items. This is where users spend significant time reviewing and updating issues.
+The issue detail view is where users spend significant time reviewing and updating issues. This analysis compares Plane vs Cascade across every UX dimension including view modes, clicks, properties, and keyboard support.
 
 ---
 
-## cal.com
-> **N/A** - cal.com is a scheduling platform and doesn't have issue tracking features.
+## Entry Points Comparison
+
+### How Users Access Issue Details
+
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Click on list item** | Side peek slides in | Sheet slides in | Tie |
+| **Click on kanban card** | Side peek slides in | Sheet slides in | Tie |
+| **Click on calendar event** | Side peek slides in | Sheet slides in | Tie |
+| **Direct URL** | Full page view | Full page view | Tie |
+| **Keyboard `Enter`** | Opens peek for focused item | Not implemented | Plane |
+| **Right-click context menu** | "Open" option | Not implemented | Plane |
+| **Command palette** | `Cmd+K` → "Open issue" | Not implemented | Plane |
+| **Notification click** | Opens peek from notification | Opens sheet | Tie |
+| **Arrow keys navigation** | Move between issues while peek open | Not implemented | Plane |
+
+**Entry Points Score:** Plane 4, Cascade 0, Tie 5
 
 ---
 
-## plane
+## View Mode Analysis
 
-### Trigger
-- **Click**: Click on any issue row in list/kanban/spreadsheet views
-- **Keyboard**: `Enter` on focused issue
-- **URL**: Direct link to `/workspace/project/issues/[issue-id]`
-- **Peek overview**: Half-height preview panel (configurable)
+### Available View Modes
 
-### UI Elements
+| Mode | Plane | Cascade |
+|------|-------|---------|
+| **Side peek** | 50% width, right side | max-w-2xl Sheet |
+| **Modal** | 5/6 screen centered | N/A |
+| **Full screen** | Fills viewport with margins | N/A |
+| **Full page** | Dedicated route | Dedicated route |
 
-**Layout Options**
-1. **Full page**: Takes entire screen
-2. **Side peek**: Slides in from right (default in list view)
-3. **Modal peek**: Centered modal with backdrop
+### Plane View Modes (3 options)
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ Side Peek (default)                                                  │
+├─────────────────────────────────┬───────────────────────────────────┤
+│                                 │                                   │
+│  Issue List/Board               │  Issue Detail (50% width)         │
+│  (visible, interactive)         │  ┌───────────────────────────┐   │
+│                                 │  │ Header: PROJ-123 [⋮]      │   │
+│  [Card] [Card] [Card]          │  │ Title (editable)          │   │
+│  [Card] [Card] [Card]          │  │ Description (rich text)   │   │
+│  [Card] [Card] [Card]          │  │ Activity tabs             │   │
+│                                 │  │                           │   │
+│                                 │  │ Properties sidebar        │   │
+│                                 │  └───────────────────────────┘   │
+└─────────────────────────────────┴───────────────────────────────────┘
 
-**Header Section**
-- Issue identifier (PROJECT-123)
-- Breadcrumb (Project > Issue)
-- Quick actions: Subscribe, Copy link, Move, Archive, Delete
-- Close button (X)
+┌─────────────────────────────────────────────────────────────────────┐
+│ Modal (centered overlay)                                             │
+├─────────────────────────────────────────────────────────────────────┤
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│ ░░░┌─────────────────────────────────────────────────────┐░░░░░░░░░░│
+│ ░░░│                Issue Detail (5/6 screen)            │░░░░░░░░░░│
+│ ░░░│  Header: PROJ-123 [Actions ▼]                       │░░░░░░░░░░│
+│ ░░░│  ┌───────────────────────────────────────────────┐  │░░░░░░░░░░│
+│ ░░░│  │ Title (large, editable inline)               │  │░░░░░░░░░░│
+│ ░░░│  │ Description (rich text editor)               │  │░░░░░░░░░░│
+│ ░░░│  │ [Widgets] [Activity]                         │  │░░░░░░░░░░│
+│ ░░░│  └───────────────────────────────────────────────┘  │░░░░░░░░░░│
+│ ░░░│  Properties (below content in modal mode)           │░░░░░░░░░░│
+│ ░░░└─────────────────────────────────────────────────────┘░░░░░░░░░░│
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+└─────────────────────────────────────────────────────────────────────┘
 
-**Main Content Area (Left)**
-- **Title**: Inline editable, large text
-- **Description**: Rich text editor with collaborative editing
-- **Activity tabs**:
-  - All (combined feed)
-  - Comments
-  - Activity (system events)
-- **Comment input**: Rich text with file attachments
+┌─────────────────────────────────────────────────────────────────────┐
+│ Full Screen                                                          │
+├─────────────────────────────────────────────────────────────────────┤
+│ ┌───────────────────────────────────────────────────────────────────┐│
+│ │                    Issue Detail (with margins)                    ││
+│ │                                                                   ││
+│ │  ┌─────────────────────────────┬────────────────────────────────┐││
+│ │  │ Main Content                │ Properties Sidebar (400px)    │││
+│ │  │ Title                       │ State: [dropdown]             │││
+│ │  │ Description                 │ Assignees: [multi-select]     │││
+│ │  │ Widgets                     │ Priority: [dropdown]          │││
+│ │  │ Activity                    │ Dates, Labels, etc.           │││
+│ │  └─────────────────────────────┴────────────────────────────────┘││
+│ └───────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-**Sidebar (Right) - Properties**
-| Property | Component | Behavior |
-|----------|-----------|----------|
-| State | Dropdown | Inline change, groups by state |
-| Assignees | Multi-select dropdown | Avatar display |
-| Priority | Dropdown | Icon + text |
-| Created by | Display only | Avatar + name |
-| Start date | Date picker | With calendar |
-| Due date | Date picker | Highlights overdue |
-| Estimate | Dropdown | When enabled |
-| Module | Multi-select | Project-level |
-| Cycle | Dropdown | Project-level |
-| Parent | Issue search modal | Shows identifier |
-| Labels | Multi-select | With colors |
-| Worklog | Custom widget | Time tracking |
-| Additional properties | Dynamic | Custom fields |
+### Cascade View Mode (1 mode + full page)
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ Sheet (slide-out from right)                                         │
+├─────────────────────────────────────────────┬───────────────────────┤
+│                                             │ max-w-2xl             │
+│  Issue List/Board                           │                       │
+│  (visible, NOT interactive - backdrop)      │ Header:               │
+│                                             │ [Icon] PROJ-123 [📋]  │
+│  [Card] [Card] [Card]                      │ Priority badge        │
+│  [Card] [Card] [Card]                      │ Title                 │
+│  [Card] [Card] [Card]                      │ [Edit] button         │
+│                                             │─────────────────────│
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ Content + Sidebar    │
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ (stacked, scrollable)│
+│                                             │                       │
+└─────────────────────────────────────────────┴───────────────────────┘
+```
 
-**Widgets Section**
-- Sub-issues list (collapsible)
-- Related issues / Links
-- Attachments
-
-### Flow
-1. User clicks on issue row
-2. Side peek slides in (or full page loads)
-3. All data loads reactively (MobX store)
-4. User can edit any field inline
-5. Changes save immediately (optimistic updates)
-6. Activity feed shows real-time updates
-7. User can switch between tabs
-8. Close via X, Escape, or clicking outside
-
-### Feedback
-- **Loading**: Skeleton loaders for each section
-- **Save**: No explicit save button - auto-saves
-- **Error**: Toast for failed operations
-- **Real-time**: Live updates from other users
-
-### Notable Features
-- **Inline editing**: Click any property to edit directly
-- **Real-time collaboration**: See changes from teammates
-- **Peek modes**: Full page, side peek, or modal
-- **Quick actions menu**: Copy link, archive, delete
-- **Activity timeline**: Mixed comments + system events
-- **Worklog tracking**: Built-in time tracking widget
-- **Custom properties**: Dynamic additional fields
-
----
-
-## Cascade
-
-### Trigger
-- **Click**: Click on issue card/row
-- **URL**: Direct link (assumed)
-
-### UI Elements
-
-**Layout**
-- Two-column layout
-- Left: Main content (header, description, comments)
-- Right: Sidebar (properties, time tracking, attachments, dependencies)
-
-**Header Section**
-- Issue title (IssueDetailHeader component)
-- Issue key/identifier
-
-**Main Content Area (IssueDetailContent)**
-- Description
-- Activity feed
-- Comments section
-
-**Sidebar (IssueDetailSidebar)**
-
-| Section | Contents |
-|---------|----------|
-| Properties | Status, Type, Assignee, Reporter, Story Points, Labels |
-| Time Tracking | TimeTracker component with estimated hours |
-| Attachments | FileAttachments component |
-| Watchers | IssueWatchers component |
-| Dependencies | IssueDependencies component |
-
-### Flow
-1. User clicks on issue
-2. Detail view opens (layout or modal)
-3. Data loaded via Convex queries
-4. User edits via IssueMetadataSection dropdowns
-5. Changes trigger mutations
-6. Success/error toasts shown
-
-### Feedback
-- **Loading**: Standard loading states
-- **Success**: Toast notifications
-- **Error**: Toast with error details
-
-### Notable Features
-- **Watchers**: Subscribe to issue updates
-- **Dependencies**: Blocks/relates/duplicates relationships
-- **Time tracking**: Built-in time tracker with billing support
-- **Attachments**: File upload and display
+**View Modes Score:** Plane 3 modes, Cascade 1 mode (+full page)
 
 ---
 
-## Comparison Table
+## Header Comparison
 
-| Aspect | cal.com | plane | Cascade | Best |
-|--------|---------|-------|---------|------|
-| Layout options | N/A | ✅ 3 modes (full/peek/modal) | ⚠️ 1 mode | plane |
-| Inline title edit | N/A | ✅ Yes | ❌ Unknown | plane |
-| Inline property edit | N/A | ✅ All properties | ⚠️ Some | plane |
-| Rich text description | N/A | ✅ Full editor | ⚠️ Limited | plane |
-| Activity tabs | N/A | ✅ All/Comments/Activity | ⚠️ Single feed | plane |
-| Real-time updates | N/A | ✅ MobX reactive | ✅ Convex reactive | tie |
-| Quick actions menu | N/A | ✅ Yes | ❌ Limited | plane |
-| Copy link | N/A | ✅ Yes | ❌ Unknown | plane |
-| Keyboard navigation | N/A | ✅ Escape to close | ⚠️ Limited | plane |
-| Worklog/Time tracking | N/A | ✅ Yes | ✅ Yes | tie |
-| Watchers/Subscribe | N/A | ✅ Subscription button | ✅ Watchers section | tie |
-| Dependencies/Relations | N/A | ✅ Yes | ✅ Yes | tie |
-| Attachments | N/A | ✅ Yes | ✅ Yes | tie |
-| Custom fields | N/A | ✅ Dynamic | ❌ No | plane |
-| Sub-issues widget | N/A | ✅ Yes | ❌ No | plane |
-| Due date alerts | N/A | ✅ Overdue highlight | ❌ Unknown | plane |
-| Start/Due dates | N/A | ✅ Both | ⚠️ Due only? | plane |
-| Multiple assignees | N/A | ✅ Yes | ❌ No | plane |
-| Parent issue display | N/A | ✅ Yes | ⚠️ Unknown | plane |
+### Plane Header
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ [PROJECT-123] ← identifier                                           │
+│ ┌──────────────────────────────────────────────────────────────────┐│
+│ │ [Breadcrumb: Project > Issues > PROJ-123]                        ││
+│ ├──────────────────────────────────────────────────────────────────┤│
+│ │ [◀ ▶] ← Peek mode buttons   [Subscribe 🔔] [Copy 📋] [⋮ Actions]││
+│ │                             ↑ icon toggles    ↑ dropdown menu   ││
+│ └──────────────────────────────────────────────────────────────────┘│
+│                                                                      │
+│ Actions dropdown contains:                                           │
+│  • Edit issue                                                        │
+│  • Duplicate issue                                                   │
+│  • Archive issue                                                     │
+│  • Delete issue                                                      │
+│  • Open in new tab                                                   │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
----
+### Cascade Header
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ [Icon] PROJ-123 [📋 Copy] [Priority Badge]                          │
+│                                                                      │
+│ Issue Title Text                                                     │
+│                                                                      │
+│ [Edit] button (if canEdit && !isEditing)                            │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-## Recommendations
-
-### Priority 1: Add Peek/Side Panel Mode
-Allow viewing issue details without leaving the current context (list view stays visible).
-
-**Implementation:**
-- Create `IssueDetailPeek` component that slides in from right
-- Add view mode preference in user settings
-- Support keyboard navigation (arrows to move between issues)
-
-### Priority 2: Full Inline Editing
-Make all properties editable by clicking directly on them without needing separate edit buttons.
-
-### Priority 3: Multiple View Modes
-Add options for:
-- Side peek (slide-in panel)
-- Modal (centered overlay)
-- Full page (dedicated route)
-
-### Priority 4: Activity Tab Separation
-Split activity into tabs:
-- **All**: Combined feed
-- **Comments**: User comments only
-- **History**: System events only
-
-### Priority 5: Quick Actions Menu
-Add dropdown with:
-- Copy issue link
-- Copy issue key
-- Archive issue
-- Delete issue
-- Move to project (if supported)
-
-### Priority 6: Sub-Issues Widget
-Show child/sub-issues in a collapsible section within the detail view.
-
-### Priority 7: Due Date Visual Alerts
-Highlight overdue dates in red, upcoming dates in yellow.
+| Header Element | Plane | Cascade | Notes |
+|----------------|-------|---------|-------|
+| **Issue identifier** | In breadcrumb + display | Prominent with icon | Cascade slightly cleaner |
+| **Copy button** | In actions menu | Direct button + tooltip | Cascade more accessible |
+| **Priority display** | In sidebar only | Badge in header | Cascade shows priority sooner |
+| **Subscribe/Watch** | Header button with toggle | Not in header | Plane |
+| **Peek mode buttons** | Arrows to switch modes | N/A | Plane |
+| **Actions dropdown** | Full menu (edit, dup, archive, delete) | No dropdown, just Edit button | Plane |
+| **Breadcrumb** | Full navigation path | N/A | Plane |
 
 ---
 
-## Screenshots/References
+## Sidebar Properties Comparison
 
-### Plane Code Paths
-- Root: `~/Desktop/plane/apps/web/core/components/issues/issue-detail/root.tsx`
-- Main Content: `~/Desktop/plane/apps/web/core/components/issues/issue-detail/main-content.tsx`
-- Sidebar: `~/Desktop/plane/apps/web/core/components/issues/issue-detail/sidebar.tsx`
-- Activity: `~/Desktop/plane/apps/web/core/components/issues/issue-detail/issue-activity/`
-- Peek Overview: `~/Desktop/plane/apps/web/core/components/issues/peek-overview/`
+### Property Count & Types
 
-### Cascade Code Paths
-- Layout: `~/Desktop/cascade/src/components/IssueDetailView/IssueDetailLayout.tsx`
-- Header: `~/Desktop/cascade/src/components/IssueDetailView/IssueDetailHeader.tsx`
-- Content: `~/Desktop/cascade/src/components/IssueDetailView/IssueDetailContent.tsx`
-- Sidebar: `~/Desktop/cascade/src/components/IssueDetailView/IssueDetailSidebar.tsx`
-- Hook: `~/Desktop/cascade/src/components/IssueDetailView/useIssueDetail.ts`
+| Property | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| **State/Status** | Dropdown | Dropdown | Both |
+| **Assignees** | Multi-select with avatars | Single-select | **Plane wins** |
+| **Priority** | Dropdown with icons | Dropdown | Both |
+| **Created by** | Display only (avatar + name) | Reporter field (dropdown) | Different approach |
+| **Start date** | Date picker with calendar | N/A | **Plane wins** |
+| **Due date** | Date picker + overdue highlight | N/A | **Plane wins** |
+| **Estimate** | Dropdown (when enabled) | Story points dropdown | Both |
+| **Module** | Multi-select | N/A (no modules) | N/A |
+| **Cycle/Sprint** | Dropdown | Via sprint context | Different |
+| **Parent issue** | Search modal | N/A | **Plane wins** |
+| **Labels** | Multi-select with colors | Multi-select | Both |
+| **Worklog** | Time tracking widget | Estimated hours | Different |
+| **Issue type** | In header/modal | Dropdown in sidebar | Different placement |
+| **Custom fields** | Dynamic additional properties | N/A | **Plane wins** |
+
+**Property Count:** Plane ~13+, Cascade ~8
+
+### Sidebar Layout
+
+**Plane Sidebar (fixed right, 300-400px)**
+```
+┌─────────────────────────────────┐
+│ Properties                      │
+├─────────────────────────────────┤
+│ 🏷️ State       [Dropdown ▼]    │ ← Inline editable
+│ 👥 Assignees   [Avatar +Add]   │ ← Multi-select
+│ ⚡ Priority    [Icon] Medium   │ ← Visual indicator
+│ 👤 Created by  [Avatar] Name   │ ← Display only
+│ 📅 Start date  [Date picker]   │ ← With constraints
+│ 📅 Due date    [Date picker]   │ ← Highlights overdue
+│ 📊 Estimate    [None ▼]        │ ← When enabled
+│ 📦 Module      [Select ▼]      │ ← Multi-select
+│ 🔄 Cycle       [Select ▼]      │ ← With transfer info
+│ ⬆️ Parent      [Search...]     │ ← Modal search
+│ 🏷️ Labels      [Bug ×] [+Add]  │ ← Inline create
+│ ⏱️ Worklog     [Track time]    │ ← Widget
+│ + Additional properties...      │ ← Dynamic/custom
+└─────────────────────────────────┘
+```
+
+**Cascade Sidebar (responsive, stacked on mobile)**
+```
+┌─────────────────────────────────┐
+│ 📊 Status     [To Do ▼]        │
+│ 🔧 Type       [Task ▼]         │
+│ ⚡ Priority   [Medium ▼]       │
+│ 👤 Assignee   [Select ▼]       │ ← Single only
+│ 👤 Reporter   [Select ▼]       │
+│ 📈 Story Pts  [3 ▼]            │
+│ 🏷️ Labels     [Bug ×] [+]      │
+│ ⏱️ Est. Hours [number]         │ ← If billing enabled
+└─────────────────────────────────┘
+```
+
+---
+
+## Click Analysis
+
+### Minimum Clicks to Complete Actions
+
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **View issue** | 1 click | 1 click | Both open on single click |
+| **Copy issue link** | 2 clicks (actions → copy) | 1 click (direct button) | **Cascade wins** |
+| **Change status** | 2 clicks (open dropdown → select) | 2 clicks | Tie |
+| **Add assignee** | 2 clicks | 2 clicks | Tie |
+| **Remove assignee** | 2 clicks (open → click X) | N/A (single assignee) | N/A |
+| **Add multiple assignees** | N clicks (open once, click N) | N/A | Plane only |
+| **Change priority** | 2 clicks | 2 clicks | Tie |
+| **Set due date** | 2 clicks (open picker → select) | N/A | Plane only |
+| **Subscribe to issue** | 1 click (header toggle) | N/A | Plane only |
+| **Archive issue** | 3 clicks (actions → archive → confirm) | N/A | Plane only |
+| **Delete issue** | 3 clicks (actions → delete → confirm) | N/A | Plane only |
+| **Switch peek modes** | 1 click (mode buttons) | N/A | Plane only |
+| **Close peek** | 1 click (X or Escape) | 1 click | Tie |
+
+---
+
+## Keyboard Support
+
+| Shortcut | Plane | Cascade |
+|----------|-------|---------|
+| **Escape** | Close peek/return to list | Close sheet |
+| **Arrow Up/Down** | Navigate to prev/next issue (in peek) | N/A |
+| **Enter** | Open focused issue | N/A |
+| **Tab** | Navigate through fields | Navigate through fields |
+| **Ctrl+Enter** | Submit comment | N/A |
+
+**Keyboard Score:** Plane has more keyboard shortcuts
+
+---
+
+## Content Area Comparison
+
+### Main Content Features
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Title** | Inline editable, large text | Display only (edit via button) |
+| **Description** | Rich text editor (collaborative) | Textarea (edit mode) |
+| **Edit mode** | Always editable (no explicit toggle) | Explicit Edit button |
+| **Activity tabs** | All / Comments / Activity (3 tabs) | Single activity feed |
+| **Comment input** | Rich text with file attachments | Not visible in sheet |
+| **Reactions** | On issue and comments | N/A |
+| **Real-time** | MobX reactive + optimistic | Convex reactive |
+
+### Widgets Section
+
+| Widget | Plane | Cascade |
+|--------|-------|---------|
+| **Sub-issues** | Collapsible list with progress | SubtasksList component |
+| **Relations** | Blocking/blocked by/related | Dependencies section |
+| **Links** | External URL links | N/A |
+| **Attachments** | File upload/download | FileAttachments |
+| **Watchers** | N/A | IssueWatchers |
+
+---
+
+## Loading & Error States
+
+| State | Plane | Cascade |
+|-------|-------|---------|
+| **Initial load** | Skeleton loader for sections | Skeleton with pulse animation |
+| **Error** | Error component with retry | N/A (handled by parent) |
+| **Empty state** | EmptyState component with CTA | Returns null |
+| **Saving** | isSubmitting state indicator | N/A |
+| **Optimistic updates** | Via MobX stores | Via Convex optimistic |
+
+---
+
+## Accessibility
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Focus trap** | In modal/peek modes | In Sheet component |
+| **Escape to close** | Implemented | Implemented |
+| **Screen reader labels** | aria-labels on buttons | aria-labels + live regions |
+| **Focus management** | Returns focus to trigger | Via Sheet component |
+| **Loading announcements** | N/A | aria-live="polite" on loading |
+| **Test IDs** | Various | TEST_IDS.ISSUE.DETAIL_MODAL |
+
+---
+
+## Mobile/Responsive
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Peek width** | Full width on mobile | max-w-xl on sm, max-w-2xl on lg |
+| **Sidebar** | Stacks below content | Stacks below content |
+| **Touch gestures** | N/A | N/A |
+| **Swipe to close** | N/A | N/A |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| View modes | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane has 3 modes vs 1 |
+| Entry points | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane has keyboard nav |
+| Header actions | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane has more options |
+| Property count | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane 13+ vs Cascade 8 |
+| Multi-assignee | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Date fields | ⭐⭐⭐⭐⭐ | ⭐ | Plane has start/due |
+| Inline editing | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane always editable |
+| Activity tabs | ⭐⭐⭐⭐ | ⭐⭐ | Plane has filtered tabs |
+| Keyboard support | ⭐⭐⭐⭐ | ⭐⭐ | Plane has arrow nav |
+| Copy link UX | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade 1-click copy |
+| Loading states | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Both good |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add peek mode toggle** - Allow users to switch between side-peek, modal, and full-screen views
+2. **Multi-assignee support** - Enable multiple assignees per issue
+
+### P1 - High
+3. **Inline editing** - Remove explicit Edit button, make fields directly editable
+4. **Add start/due date fields** - Essential for project management
+5. **Actions dropdown menu** - Archive, delete, duplicate from header
+6. **Arrow key navigation** - Navigate between issues while peek is open
+
+### P2 - Medium
+7. **Activity tabs** - Separate Comments from Activity history
+8. **Subscribe/Watch toggle** - Quick header button to follow issue
+9. **Parent issue selector** - Enable sub-issue creation
+10. **Rich text comments** - With file attachments
+
+### P3 - Nice to Have
+11. **Custom fields** - User-defined additional properties
+12. **Reactions on comments** - Emoji reactions
+13. **Links widget** - External URL attachments
+
+---
+
+## Code References
+
+### Plane
+- Root: `apps/web/core/components/issues/issue-detail/root.tsx`
+- Peek Overview: `apps/web/core/components/issues/peek-overview/root.tsx`
+- View Component: `apps/web/core/components/issues/peek-overview/view.tsx`
+- Sidebar: `apps/web/core/components/issues/issue-detail/sidebar.tsx`
+- Quick Actions: `apps/web/core/components/issues/issue-detail/issue-detail-quick-actions.tsx`
+- Activity: `apps/web/core/components/issues/issue-detail/issue-activity/root.tsx`
+- Widgets: `apps/web/core/components/issues/issue-detail-widgets/root.tsx`
+
+### Cascade
+- Sheet: `src/components/IssueDetailSheet.tsx`
+- Layout: `src/components/IssueDetailView/IssueDetailLayout.tsx`
+- Header: `src/components/IssueDetailView/IssueDetailHeader.tsx`
+- Content: `src/components/IssueDetailView/IssueDetailContent.tsx`
+- Sidebar: `src/components/IssueDetailView/IssueDetailSidebar.tsx`
+- Hook: `src/components/IssueDetailView/useIssueDetail.ts`

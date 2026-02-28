@@ -1,215 +1,225 @@
-# List View
+# List View - Deep UX Comparison
 
 ## Overview
-
-The list view displays issues in a tabular or row-based format, offering dense information display and efficient scanning of many issues at once. plane offers two variants: List (grouped rows) and Spreadsheet (database-like table).
-
----
-
-## plane
-
-### List View
-
-**File Locations**:
-- Base: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/list/base-list-root.tsx`
-- Rows: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/list/block.tsx`
-- Groups: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/list/list-group.tsx`
-
-**Layout Structure**:
-```
-BaseListRoot
-├── IssueLayoutHOC
-└── List
-    └── ListGroup[] (per group value)
-        ├── Group header (collapsible)
-        ├── IssueBlock[] (rows)
-        │   ├── Issue key + title
-        │   ├── Properties (inline)
-        │   └── Quick actions menu
-        └── QuickAddIssueRoot
-```
-
-**Features**:
-- Single grouping (by status, priority, assignee, etc.)
-- Collapsible groups
-- Drag-and-drop rows between groups
-- Hierarchical sub-issues (expand/collapse)
-- Nesting level indicators
-- Inline property editing
-- Display properties toggle
-- 50-100 items per page (grouped/ungrouped)
-
-### Spreadsheet View
-
-**File Locations**:
-- Base: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/spreadsheet/base-spreadsheet-root.tsx`
-- Table: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/spreadsheet/spreadsheet-table.tsx`
-- Rows: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/spreadsheet/issue-row.tsx`
-- Columns: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/spreadsheet/columns/`
-
-**Layout Structure**:
-```
-SpreadsheetView
-├── SpreadsheetTable (HTML table)
-│   ├── SpreadsheetHeader (column headers)
-│   └── IssueRow[] (table rows)
-│       ├── Checkbox (bulk select)
-│       ├── Issue key + title
-│       └── Column cells (editable)
-└── SpreadsheetAddIssueButton
-```
-
-**Available Columns**:
-- Assignee, Attachment, Created On, Cycle
-- Due Date, Estimate, Label, Link
-- Module, Priority, Start Date, State
-- Sub-issue Count, Updated On
-
-**Features**:
-- No grouping (flat list)
-- Dynamic column selection
-- Inline cell editing per property type
-- Bulk operations with checkboxes
-- Column-specific components (dropdowns, date pickers, etc.)
-- 100 items per page
-- Conditional columns based on project settings
+The list view displays issues in a tabular format for dense information scanning. Plane offers List (grouped rows) and Spreadsheet (database table). Cascade currently uses card grids.
 
 ---
 
-## Cascade
+## Entry Points Comparison
 
-### Issues List (Card Grid)
-
-**File Location**: `~/Desktop/cascade/src/routes/_auth/_app/$orgSlug/issues/index.tsx`
-
-**Layout Structure**:
-```
-AllIssuesPage
-├── PageHeader (title, Create Issue button)
-├── Filter Bar (search + status dropdown)
-├── Grid (responsive columns)
-│   └── IssueCard[] (same as Kanban cards)
-└── Load More button
-```
-
-**Features**:
-- Responsive grid layout (1-4 columns based on screen width)
-- Card-based display (not rows)
-- Client-side search (title or key)
-- Status filter dropdown
-- Pagination with "Load More"
-- 20 items initial load
-
-**Data Query**: `api.issues.listOrganizationIssues`
-
-### Missing List/Table View
-
-Cascade does not have a true list or spreadsheet view. The issues page uses the same `IssueCard` component as the Kanban board, displayed in a grid layout rather than rows.
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Tab selection** | "List" or "Spreadsheet" tab | N/A | Plane |
+| **URL direct** | `/project/list` | N/A | Plane |
+| **View toggle** | In display options | N/A | Plane |
+| **All issues page** | Uses list layout | Uses card grid | Different |
 
 ---
 
-## Comparison Table
+## Layout Comparison
 
-| Aspect | plane (List) | plane (Spreadsheet) | Cascade | Best |
-|--------|--------------|---------------------|---------|------|
-| Layout | Rows with grouping | Table columns | Card grid | plane |
-| Grouping | Yes (single) | No | No | plane |
-| Drag-drop | Yes | No | No | plane |
-| Inline editing | Yes | Yes (all columns) | No | plane |
-| Column selection | Display props | Yes | N/A | plane |
-| Sub-issues | Hierarchical expand | No | No | plane |
-| Bulk select | No | Yes (checkboxes) | No | plane |
-| Search | Via filters | Via filters | Yes (client-side) | tie |
-| Pagination | 50-100/page | 100/page | 20/page | plane |
-| Responsive | Yes | Limited | Yes | Cascade |
-| Dense display | Medium | High | Low (cards) | plane |
-
----
-
-## Recommendations
-
-1. **Priority 1**: Add spreadsheet/table view for issues
-   - Column headers with sort
-   - Inline editing per cell
-   - Column visibility toggle
-   - Fixed left column for issue key
-
-2. **Priority 2**: Add list view with grouping
-   - Group by status, priority, assignee, type
-   - Collapsible group headers
-   - Row-based display (denser than cards)
-
-3. **Priority 3**: Add sub-issue hierarchy display
-   - Expand/collapse sub-issues inline
-   - Indentation for nesting levels
-
-4. **Priority 4**: Add bulk selection with checkboxes
-   - "Select All" in header
-   - Bulk operations bar
-
-5. **Priority 5**: Add column-based sorting
-   - Click header to sort
-   - Multiple sort criteria
-
----
-
-## Implementation Suggestion
-
-### Table Component Structure
-
-```tsx
-<IssuesTable>
-  <TableHeader>
-    <SelectAllCheckbox />
-    <SortableColumn field="key">Key</SortableColumn>
-    <SortableColumn field="title">Title</SortableColumn>
-    <SortableColumn field="status">Status</SortableColumn>
-    <SortableColumn field="priority">Priority</SortableColumn>
-    <SortableColumn field="assignee">Assignee</SortableColumn>
-    <SortableColumn field="dueDate">Due Date</SortableColumn>
-  </TableHeader>
-  <TableBody>
-    {issues.map(issue => (
-      <TableRow key={issue._id}>
-        <Checkbox />
-        <IssueKeyCell />
-        <TitleCell editable />
-        <StatusDropdown inline />
-        <PriorityDropdown inline />
-        <AssigneeSelect inline />
-        <DatePicker inline />
-      </TableRow>
-    ))}
-  </TableBody>
-</IssuesTable>
+### Plane List View (Grouped Rows)
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ [Board] [List] [Calendar] [Spreadsheet] [Gantt]                     │
+├─────────────────────────────────────────────────────────────────────┤
+│ [Filters ▼] [Display ▼] [Group by: Status ▼]                       │
+├─────────────────────────────────────────────────────────────────────┤
+│ ▼ Backlog (5 issues)                                        [+]    │
+├─────────────────────────────────────────────────────────────────────┤
+│ ├─ PROJ-123  Fix auth bug        ● High   @user  [bug]     [⋮]    │
+│ │  └─ PROJ-124  Sub-task 1       ● Med    @user            [⋮]    │ ← nested
+│ ├─ PROJ-125  Add feature         ● Low    @user  [feat]    [⋮]    │
+│ └─ PROJ-126  Refactor code       ● Med    @user            [⋮]    │
+├─────────────────────────────────────────────────────────────────────┤
+│ ▼ In Progress (3 issues)                                    [+]    │
+├─────────────────────────────────────────────────────────────────────┤
+│ ├─ PROJ-456  Update API          ● High   @user  [api]     [⋮]    │
+│ └─ PROJ-457  Review PR           ● Med    @user            [⋮]    │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Column Visibility Config
+### Plane Spreadsheet View (Table)
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ [Board] [List] [Calendar] [Spreadsheet] [Gantt]                     │
+├─────────────────────────────────────────────────────────────────────┤
+│ [Filters ▼] [Columns ▼]                              [+ Add Issue]  │
+├─────────────────────────────────────────────────────────────────────┤
+│ ☐ │ Key      │ Title           │ Status    │ Priority │ Assignee  │
+├───┼──────────┼─────────────────┼───────────┼──────────┼───────────┤
+│ ☐ │ PROJ-123 │ Fix auth bug    │ [To Do ▼] │ [High ▼] │ [@usr ▼]  │
+│ ☐ │ PROJ-124 │ Add feature     │ [To Do ▼] │ [Med ▼]  │ [@usr ▼]  │
+│ ☐ │ PROJ-125 │ Update docs     │ [Done ▼]  │ [Low ▼]  │ [@usr ▼]  │
+│ ☐ │ PROJ-126 │ Refactor        │ [In Prog] │ [Med ▼]  │ [@usr ▼]  │
+│   │          │                 │    ↑ inline editing   │           │
+├───┴──────────┴─────────────────┴───────────┴──────────┴───────────┤
+│ [+ Add Issue]                                      Showing 1-20/45 │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-```typescript
-const columns = [
-  { key: "key", label: "Key", alwaysVisible: true },
-  { key: "title", label: "Title", alwaysVisible: true },
-  { key: "status", label: "Status", defaultVisible: true },
-  { key: "priority", label: "Priority", defaultVisible: true },
-  { key: "assignee", label: "Assignee", defaultVisible: true },
-  { key: "type", label: "Type", defaultVisible: false },
-  { key: "labels", label: "Labels", defaultVisible: false },
-  { key: "dueDate", label: "Due Date", defaultVisible: true },
-  { key: "createdAt", label: "Created", defaultVisible: false },
-  { key: "updatedAt", label: "Updated", defaultVisible: false },
-];
+### Cascade All Issues (Card Grid)
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ All Issues                                        [Create Issue]    │
+├─────────────────────────────────────────────────────────────────────┤
+│ [🔍 Search...] [Status: All ▼]                                      │
+├─────────────────────────────────────────────────────────────────────┤
+│ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────┐│
+│ │ 🐛 PROJ-123   │ │ 🔧 PROJ-456   │ │ 📖 PROJ-789   │ │ PROJ-012  ││
+│ │ Fix auth bug  │ │ Add feature   │ │ Update docs   │ │ Refactor  ││
+│ │ ● High        │ │ ● Medium      │ │ ● Low         │ │ ● Medium  ││
+│ │ [bug] @user   │ │ [feat] @user  │ │ [docs] @user  │ │ @user     ││
+│ └───────────────┘ └───────────────┘ └───────────────┘ └───────────┘│
+│ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │
+│ │ ...more cards │ │               │ │               │              │
+│ └───────────────┘ └───────────────┘ └───────────────┘              │
+│                                                                      │
+│                        [Load More]                                   │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Screenshots/References
+## Feature Comparison
 
-### plane
-- List layout: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/list/`
-- Spreadsheet: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/spreadsheet/`
-- Column components: `~/Desktop/plane/apps/web/core/components/issues/issue-layouts/spreadsheet/columns/`
+### View Modes Available
+
+| Mode | Plane | Cascade |
+|------|-------|---------|
+| **List (grouped rows)** | Yes | No |
+| **Spreadsheet (table)** | Yes | No |
+| **Card grid** | No | Yes |
+
+### Row/Cell Features
+
+| Feature | Plane List | Plane Spreadsheet | Cascade |
+|---------|------------|-------------------|---------|
+| **Grouping** | By any field | None (flat) | None |
+| **Sub-issues** | Nested expand | None | None |
+| **Inline editing** | Click property | Click any cell | None |
+| **Bulk select** | No | Checkbox column | No |
+| **Column selection** | Display props | Full column picker | N/A |
+| **Drag-drop rows** | Yes | No | No |
+| **Sorting** | By group | Click headers | None |
+| **Pagination** | 50-100/page | 100/page | 20/page |
+
+---
+
+## Click Analysis
+
+| Action | Plane List | Plane Spreadsheet | Cascade |
+|--------|------------|-------------------|---------|
+| **Change status** | 2 clicks (inline) | 2 clicks (cell) | 3+ clicks (open + change) |
+| **Change priority** | 2 clicks (inline) | 2 clicks (cell) | 3+ clicks |
+| **Assign user** | 2 clicks (inline) | 2 clicks (cell) | 3+ clicks |
+| **Select multiple** | N/A | N clicks (checkboxes) | N/A |
+| **Expand sub-issues** | 1 click | N/A | N/A |
+| **Collapse group** | 1 click | N/A | N/A |
+| **Create issue** | 2 clicks (+) | 2 clicks | 2 clicks |
+| **Open issue** | 1 click | 1 click | 1 click |
+
+---
+
+## Information Density
+
+| Metric | Plane List | Plane Spreadsheet | Cascade Cards |
+|--------|------------|-------------------|---------------|
+| **Issues visible** | ~15-20 | ~20-25 | ~8-12 |
+| **Properties per row** | 5-8 | 10+ | 4-5 |
+| **Vertical space** | Low (rows) | Lowest (table) | High (cards) |
+| **Horizontal scroll** | No | Yes (columns) | No |
+
+---
+
+## Column Configuration
+
+### Plane Spreadsheet Columns
+```
+Available columns:
+☑ Key (always visible)
+☑ Title (always visible)
+☑ Status
+☑ Priority
+☑ Assignee
+☐ Start Date
+☑ Due Date
+☐ Estimate
+☑ Labels
+☐ Cycle
+☐ Module
+☐ Created On
+☐ Updated On
+☐ Attachments
+☐ Links
+```
+
+### Cascade (Fixed Properties)
+```
+Fixed on cards:
+- Issue key
+- Title
+- Priority
+- Type icon
+- Labels
+- Assignee
+```
+
+---
+
+## Summary Scorecard
+
+| Category | Plane List | Plane Spreadsheet | Cascade | Notes |
+|----------|------------|-------------------|---------|-------|
+| Information density | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | Table is densest |
+| Grouping | ⭐⭐⭐⭐⭐ | ⭐ | ⭐ | List has groups |
+| Sub-issues | ⭐⭐⭐⭐⭐ | ⭐ | ⭐ | List has nesting |
+| Inline editing | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐ | Both Plane modes |
+| Column config | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐ | Spreadsheet flexible |
+| Bulk operations | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | Spreadsheet checkboxes |
+| Responsive | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | Cards best |
+| Visual appeal | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | Cards more visual |
+| Search | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | All have search |
+| Load more | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane paginated |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add table/list view** - Dense row-based display for power users
+   ```tsx
+   <IssuesTable columns={selectedColumns}>
+     <TableRow issue={issue} onEdit={handleInlineEdit} />
+   </IssuesTable>
+   ```
+
+### P1 - High
+2. **Inline cell editing** - Click any cell to edit value
+3. **Column selection** - Show/hide columns dynamically
+4. **Header sorting** - Click column header to sort
+
+### P2 - Medium
+5. **Grouped list view** - Group by status, priority, assignee
+6. **Sub-issue nesting** - Expand to show child issues
+7. **Bulk selection** - Checkbox column with select all
+
+### P3 - Nice to Have
+8. **Column reordering** - Drag columns to rearrange
+9. **Column resizing** - Drag to adjust width
+10. **Fixed columns** - Keep key/title visible on scroll
+
+---
+
+## Code References
+
+### Plane
+- List layout: `apps/web/core/components/issues/issue-layouts/list/`
+- Spreadsheet: `apps/web/core/components/issues/issue-layouts/spreadsheet/`
+- Column components: `apps/web/core/components/issues/issue-layouts/spreadsheet/columns/`
+- Row component: `apps/web/core/components/issues/issue-layouts/spreadsheet/issue-row.tsx`
 
 ### Cascade
-- Issues page: `~/Desktop/cascade/src/routes/_auth/_app/$orgSlug/issues/index.tsx`
-- IssueCard: `~/Desktop/cascade/src/components/IssueCard.tsx`
+- Issues page: `src/routes/_auth/_app/$orgSlug/issues/index.tsx`
+- IssueCard: `src/components/IssueCard.tsx`
+- Query: `convex/issues.ts` → `listOrganizationIssues`

@@ -26,6 +26,15 @@ export function run() {
     /convex\/otpVerification\.ts$/, // Complexity threshold update
     /convex\/rateLimits\.ts$/, // Type assertion required
     /src\/components\/AppSidebar\.tsx$/, // Complexity threshold update
+    /src\/components\/CreateIssueModal\.tsx$/, // Complex form modal (complexity)
+    /src\/components\/DocumentHeader\.tsx$/, // Many conditional action buttons (complexity)
+    /src\/components\/IssueCard\.tsx$/, // Card with drag-drop and selection logic (complexity)
+    /src\/components\/IssuesCalendarView\.tsx$/, // Calendar cells are drop targets (a11y)
+    /src\/components\/PlateEditor\.tsx$/, // Editor with multiple document operations (complexity)
+    /src\/components\/RoadmapView\.tsx$/, // Timeline with resize and SVG generation (complexity)
+    /src\/components\/Settings\/AvatarUploadModal\.tsx$/, // Drop zone requires div (a11y)
+    /src\/components\/Settings\/CoverImageUploadModal\.tsx$/, // Drop zone requires div (a11y)
+    /convex\/users\.ts$/, // Search logic with membership checks (complexity)
   ];
 
   let errorCount = 0;

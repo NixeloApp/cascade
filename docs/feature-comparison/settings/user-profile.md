@@ -1,387 +1,418 @@
-# User Profile
+# User Profile Settings - Deep UX Comparison
 
 ## Overview
-
-User profile settings allow users to manage their personal information, appearance preferences, security settings, and account details. A well-designed profile page provides control over identity and experience.
-
----
-
-## plane
-
-### Trigger
-
-- **Icon**: User avatar in sidebar
-- **Location**: Settings → Profile
-- **URL**: `/settings/profile/[profileTabId]`
-
-### UI Elements
-
-**Layout**: Settings sidebar with content area
-
-**Profile Tabs** (6 sections in 2 categories):
-
-**Your Profile Category:**
-1. General
-2. Preferences
-3. Notifications
-4. Security
-5. Activity
-
-**Developer Category:**
-6. API Tokens
-
-### Profile Fields (General Tab)
-
-| Field | Type | Required | Validation |
-|-------|------|----------|------------|
-| First Name | Text | Yes | Max 24 chars |
-| Last Name | Text | No | Max 24 chars |
-| Display Name | Text | Yes | 1-20 non-whitespace chars |
-| Email | Text (readonly) | Yes | Change via modal |
-| Avatar | Image upload | No | Modal with upload |
-| Cover Image | Image selector | No | Preset picker |
-| Role/Title | Text | No | Free text |
-
-### Avatar Upload
-
-**Modal**: `UserImageUploadModal`
-- File upload with drag-drop
-- Preview before save
-- Delete option
-- Asset type tracking
-
-### Preferences Tab
-
-| Setting | Type | Description |
-|---------|------|-------------|
-| Language | Dropdown | SUPPORTED_LANGUAGES list |
-| Timezone | Dropdown | TimezoneSelect component |
-| First Day of Week | Dropdown | StartOfWeekPreference |
-
-### Security Tab
-
-- **Change Password**: Old password + new password + confirm
-- **Password Strength**: Visual indicator
-- **Show/Hide Toggle**: For each password field
-- **CSRF Protection**: Token validation
-
-### Activity Tab
-
-- Activity log/history
-- Pagination (100 items per page)
-- Load more button
-
-### API Tokens Tab
-
-- Create new tokens (modal)
-- List existing tokens
-- Delete tokens
-- Token visibility controls
-
-### Flow
-
-1. User clicks avatar → Settings
-2. Navigate to desired tab
-3. Edit fields inline
-4. Changes auto-save or Save button
-5. Toast notifications for success/error
-
-### Feedback
-
-- **Success**: Toast notification
-- **Error**: Inline validation messages
-- **Loading**: Button loading states
-- **Validation**: Red borders, error text
+User profile settings allow users to manage their personal information, appearance preferences, security settings, and account details. This analysis compares Plane vs Cascade across profile sections, form fields, and security features.
 
 ---
 
-## Cascade
+## Entry Points Comparison
 
-### Trigger
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Avatar click** | Opens dropdown → Settings | Opens dropdown → Settings | Tie |
+| **Location** | Left sidebar menu | Header dropdown | Tie |
+| **URL direct** | `/settings/profile/[tab]` | `/:org/settings` (Profile tab) | Tie |
+| **Section count** | 6 tabs (2 categories) | 6 tabs | Tie |
+| **Keyboard shortcut** | N/A | N/A | Tie |
 
-- **Icon**: User avatar in header
-- **Location**: Settings → Profile tab
-- **URL**: `/:orgSlug/settings/profile`
+---
 
-### UI Elements
+## Layout Comparison
 
-**Layout**: Tab-based settings (Profile, Security, Preferences, Notifications, Integrations, API Keys)
+### Plane Profile Settings
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Settings                                                                     │
+├────────────────────────┬────────────────────────────────────────────────────┤
+│ Sidebar                │ Content Area                                        │
+│                        │                                                     │
+│ YOUR PROFILE           │ ┌─────────────────────────────────────────────────┐ │
+│ ├─ General          ○  │ │ Profile                                         │ │
+│ ├─ Preferences         │ ├─────────────────────────────────────────────────┤ │
+│ ├─ Notifications       │ │ Avatar: [📷 Upload]         Cover: [🖼️ Change] │ │
+│ ├─ Security            │ │ ┌──────────────┐                                 │ │
+│ └─ Activity            │ │ │    👤        │  First Name: [John          ] │ │
+│                        │ │ │   Avatar     │  Last Name:  [Doe           ] │ │
+│ DEVELOPER              │ │ └──────────────┘  Display:    [johnd         ] │ │
+│ └─ API Tokens          │ │                                                 │ │
+│                        │ │ Email: john@example.com    [Change Email]       │ │
+│                        │ │ Role:  [Product Manager                      ]  │ │
+│                        │ │                                                 │ │
+│                        │ │                               [Save Changes]    │ │
+│                        │ └─────────────────────────────────────────────────┘ │
+└────────────────────────┴────────────────────────────────────────────────────┘
 
-**Profile Content**:
-- Profile header with avatar, name, email
-- Two-column stat cards grid
-- Edit mode toggle
+Preferences Tab:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Preferences                                                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Language         [English (US)           ▼]                                 │
+│ Timezone         [America/New_York       ▼]                                 │
+│ First day of week [Monday                ▼]                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Security Tab:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Change Password                                                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Current Password    [••••••••            ] 👁️                               │
+│ New Password        [••••••••            ] 👁️                               │
+│ Confirm Password    [••••••••            ] 👁️                               │
+│                                                                             │
+│ Strength: [████████████░░░░░░] Strong                                       │
+│                                                                             │
+│                                          [Update Password]                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade Profile Settings
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Settings                                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Profile] [Security] [Preferences] [Notifications] [Integrations] [API Keys]│
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ Profile Header                                                         │   │
+│ │ ┌────────────┐                                                         │   │
+│ │ │    👤      │  John Doe                            [Edit Profile]    │   │
+│ │ │  Avatar    │  john@example.com                                       │   │
+│ │ └────────────┘                                                         │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ ┌─ Stats Cards (2-column grid) ─────────────────────────────────────────┐   │
+│ │ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐           │   │
+│ │ │ Workspaces      │ │ Issues Created  │ │ Issues Assigned │           │   │
+│ │ │      3          │ │      47         │ │      23         │           │   │
+│ │ └─────────────────┘ └─────────────────┘ └─────────────────┘           │   │
+│ │ ┌─────────────────┐ ┌─────────────────┐                               │   │
+│ │ │ Issues Done     │ │ Comments        │                               │   │
+│ │ │      38         │ │      156        │                               │   │
+│ │ └─────────────────┘ └─────────────────┘                               │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Edit Mode:                                                                  │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ Name      [John Doe                                               ]   │   │
+│ │ Email     [john@example.com                                       ]   │   │
+│ │ Bio       [Product Manager passionate about agile development...  ]   │   │
+│ │ Timezone  [America/New_York                                      ▼]   │   │
+│ │                                                                       │   │
+│ │ [Cancel]                                            [Save Changes]    │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Security Tab (2FA):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Two-Factor Authentication                                    [Enabled ✓]   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Setup Wizard (if not enabled):                                              │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ Step 1: Scan QR Code                                                   │   │
+│ │ ┌────────────────┐                                                     │   │
+│ │ │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │  Or enter manually:                                │   │
+│ │ │ ▓▓          ▓▓ │  JBSW Y3DP EHPK 3PXP                               │   │
+│ │ │ ▓▓ ▓▓▓▓▓▓▓ ▓▓ │  [Copy]                                            │   │
+│ │ │ ▓▓          ▓▓ │                                                     │   │
+│ │ │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │                                                     │   │
+│ │ └────────────────┘                                                     │   │
+│ │                                                                        │   │
+│ │ Step 2: Enter 6-digit code                                             │   │
+│ │ [  ] [  ] [  ] [  ] [  ] [  ]                                         │   │
+│ │                                                    [Verify & Enable]   │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Backup Codes (shown after setup):                                           │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │   │
+│ │ │ ABCD-1234   │ │ EFGH-5678   │ │ IJKL-9012   │ │ MNOP-3456   │       │   │
+│ │ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘       │   │
+│ │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │   │
+│ │ │ QRST-7890   │ │ UVWX-1234   │ │ YZAB-5678   │ │ CDEF-9012   │       │   │
+│ │ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘       │   │
+│ │                                                                        │   │
+│ │ [Download Codes] [Regenerate] [Print]                                  │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Preferences Tab:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Preferences                                                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Theme                                                                       │
+│ ┌─────────────────────────────────────────────────────────────┐             │
+│ │ [☀️ Light] [🌙 Dark] [💻 System]                            │             │
+│ └─────────────────────────────────────────────────────────────┘             │
+│                                                                             │
+│ Timezone         [America/New_York                             ▼]           │
+│                                                                             │
+│ Desktop Notifications                                                       │
+│ ○ Enable browser notifications for updates                    [Toggle]     │
+│                                                                             │
+│                                                   [Request Permission]      │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Feature Comparison
 
 ### Profile Fields
 
-| Field | Type | Required | Validation |
-|-------|------|----------|------------|
-| Name | Text | Yes | Not empty |
-| Email | Text | Yes | Verification flow |
-| Avatar/Image | Image | No | User image field |
-| Bio | Textarea | No | Optional |
-| Timezone | Dropdown | No | IANA format |
+| Field | Plane | Cascade | Notes |
+|-------|-------|---------|-------|
+| **First Name** | Yes | No (single name) | Plane better |
+| **Last Name** | Yes | No | Plane better |
+| **Display Name** | Yes | No | Plane only |
+| **Full Name** | Via first+last | Yes | Different approach |
+| **Email** | Yes (modal change) | Yes (verification) | Tie |
+| **Avatar** | Yes (modal upload) | Yes (inline) | Plane more featured |
+| **Cover Image** | Yes | No | Plane only |
+| **Role/Title** | Yes | No | Plane only |
+| **Bio** | No | Yes | Cascade only |
+| **Timezone** | Yes | Yes | Tie |
 
-### Avatar Handling
+### Security Features
 
-- Default: Initial circle with first letter
-- Upload: Via image field update
-- Display: Avatar component with fallback
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **Password change** | Yes (form) | OAuth-based | Different auth models |
+| **Password strength** | Visual indicator | N/A | Plane only |
+| **2FA/TOTP** | No | Yes (full RFC 6238) | Cascade better |
+| **Backup codes** | No | Yes (8 codes) | Cascade only |
+| **Backup regenerate** | No | Yes | Cascade only |
+| **Security lockout** | No | 5 attempts → 15min | Cascade more secure |
+| **Encrypted storage** | Unknown | Yes | Cascade |
 
-### Stats Cards
+### Preferences
 
-Displayed in two-column grid:
-- Workspaces count
-- Issues Created
-- Issues Assigned
-- Issues Completed
-- Comments count
+| Setting | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **Theme toggle** | Elsewhere | Yes (Light/Dark/System) | Cascade in profile |
+| **Language** | Yes | No | Plane only |
+| **Timezone** | Yes | Yes | Tie |
+| **First day of week** | Yes | No | Plane only |
+| **Desktop notifications** | Elsewhere | Yes (toggle + permission) | Cascade in profile |
 
-### Security Tab (2FA)
+### Additional Features
 
-**Two-Factor Authentication**:
-- Setup wizard with QR code
-- Manual secret code entry
-- 6-digit TOTP verification
-- 8 backup codes (2-column grid)
-- Regenerate backup codes
-- Disable with TOTP or backup code
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **Activity log** | Yes (100/page) | No | Plane only |
+| **API tokens** | Yes (tab) | Yes (tab) | Tie |
+| **User stats** | No | Yes (5 metrics) | Cascade only |
+| **Stats cards** | No | Workspaces, Issues, Comments | Cascade only |
 
-**Implementation**:
+---
+
+## Click Analysis
+
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **Open profile** | 2 clicks (avatar → settings → profile) | 2 clicks (avatar → settings) | Tie |
+| **Change name** | 1 click (inline edit) | 2 clicks (Edit → type) | Plane faster |
+| **Upload avatar** | 2 clicks (upload → modal → save) | 2 clicks (change → upload) | Tie |
+| **Change password** | 4 fields + submit | N/A (OAuth) | Different |
+| **Enable 2FA** | N/A | 4 steps (QR → code → verify → save codes) | Cascade only |
+| **Change theme** | Navigate elsewhere | 1 click (toggle) | Cascade faster |
+| **View activity** | 1 tab click | N/A | Plane only |
+| **View stats** | N/A | 0 (always visible) | Cascade only |
+| **Change timezone** | 1 click (dropdown) | 2 clicks (edit → dropdown) | Plane faster |
+| **Copy backup code** | N/A | 1 click per code | Cascade only |
+
+---
+
+## Avatar Upload Comparison
+
+### Plane Avatar Modal
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Update Profile Picture                                    [×]  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│         ┌───────────────────────────────────────┐              │
+│         │                                       │              │
+│         │      Drag and drop image here         │              │
+│         │              or                       │              │
+│         │        [Browse Files]                 │              │
+│         │                                       │              │
+│         │      JPG, PNG, GIF up to 5MB          │              │
+│         └───────────────────────────────────────┘              │
+│                                                                 │
+│ Preview:                                                        │
+│ ┌────────────────┐                                              │
+│ │                │                                              │
+│ │    Current     │ → [Delete Current]                          │
+│ │    Avatar      │                                              │
+│ └────────────────┘                                              │
+│                                                                 │
+│ [Cancel]                                          [Save Image] │
+└─────────────────────────────────────────────────────────────────┘
+Features:
+- Drag-drop upload
+- File type validation
+- Size limit (5MB)
+- Preview before save
+- Delete option
+- Progress indicator
+```
+
+### Cascade Avatar Update
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Edit Profile                                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ Profile Photo                                                   │
+│ ┌────────────────┐                                              │
+│ │                │  [Change Photo] [Remove]                    │
+│ │    Current     │                                              │
+│ │    Avatar      │                                              │
+│ └────────────────┘                                              │
+│                                                                 │
+│ Click "Change Photo" → File picker opens                        │
+│ → Upload → Preview → Auto-save                                  │
+└─────────────────────────────────────────────────────────────────┘
+Features:
+- File picker (no drag-drop)
+- Inline preview
+- Auto-save on selection
+- Remove option
+- Fallback to initials
+```
+
+---
+
+## 2FA Setup Flow (Cascade Only)
+
+```
+Step 1: Enable 2FA                     Step 2: Scan QR Code
+┌─────────────────────────┐           ┌─────────────────────────────────┐
+│ Two-Factor              │           │ Scan this QR code with your     │
+│ Authentication          │           │ authenticator app               │
+│                         │           │                                 │
+│ Add an extra layer      │    →      │ ┌─────────────────────────┐    │
+│ of security to your     │           │ │ █▀▀▀▀▀█ █ █▀█ █▀▀▀▀▀█ │    │
+│ account.                │           │ │ █ ███ █ ▄▀▀ ▀ █ ███ █ │    │
+│                         │           │ │ █▀▀▀▀▀█ █▀█▀█ █▀▀▀▀▀█ │    │
+│ [Enable 2FA]            │           │ └─────────────────────────┘    │
+└─────────────────────────┘           │                                 │
+                                      │ Manual entry: JBSWY3DPEHPK3PXP  │
+                                      │               [Copy]            │
+                                      │                                 │
+                                      │                        [Next →] │
+                                      └─────────────────────────────────┘
+
+Step 3: Verify Code                    Step 4: Save Backup Codes
+┌─────────────────────────────────┐   ┌─────────────────────────────────┐
+│ Enter the 6-digit code from     │   │ Save these backup codes in a    │
+│ your authenticator app          │   │ safe place. Each can be used    │
+│                                 │   │ once to access your account.    │
+│ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐│   │                                 │
+│ │ 1 │ │ 2 │ │ 3 │ │ 4 │ │ 5 │ │ 6 ││ → │ ABCD-1234    EFGH-5678         │
+│ └───┘ └───┘ └───┘ └───┘ └───┘ └───┘│   │ IJKL-9012    MNOP-3456         │
+│                                 │   │ QRST-7890    UVWX-1234         │
+│ Auto-advances on complete       │   │ YZAB-5678    CDEF-9012         │
+│                                 │   │                                 │
+│ [← Back]              [Verify]  │   │ [Download] [Print]     [Done]  │
+└─────────────────────────────────┘   └─────────────────────────────────┘
+
+Implementation:
 - RFC 6238 TOTP standard
 - 30-second periods
-- Max 5 failed attempts → 15-min lockout
+- 6-digit codes
+- HMAC-SHA1 algorithm
+- 8 single-use backup codes
+- 5 failed attempts → 15-min lockout
 - Encrypted secret storage
-
-### Preferences Tab
-
-| Setting | Type | Description |
-|---------|------|-------------|
-| Theme | Toggle group | Light/Dark/System |
-| Timezone | Dropdown | IANA timezone |
-| Desktop Notifications | Switch | Browser permission |
-
-### Flow
-
-1. User clicks avatar → Settings
-2. Navigate via tabs
-3. Edit fields in forms
-4. Save button triggers mutation
-5. Toast notification feedback
-
-### Feedback
-
-- **Success**: `showSuccess()` toast
-- **Error**: `showError()` toast
-- **Loading**: Spinner states
-- **Validation**: Field-level errors
-
----
-
-## Comparison Table
-
-| Aspect | plane | Cascade | Best |
-|--------|-------|---------|------|
-| Profile fields | 7 fields | 5 fields | plane |
-| First/Last name | Yes | Single name | plane |
-| Display name | Yes | No | plane |
-| Avatar upload | Modal | Field update | plane |
-| Cover image | Yes | No | plane |
-| Email change | Modal flow | Verification flow | tie |
-| Language setting | Yes | No | plane |
-| Timezone | Yes | Yes | tie |
-| First day of week | Yes | No | plane |
-| Theme settings | No (in profile) | Yes | Cascade |
-| 2FA | No | Yes (full TOTP) | Cascade |
-| Backup codes | No | Yes (8 codes) | Cascade |
-| Password change | Yes | OAuth-based | plane |
-| Activity log | Yes | No | plane |
-| API tokens | Yes | Yes | tie |
-| User stats | No | Yes (5 stats) | Cascade |
-| Bio field | No | Yes | Cascade |
-| Settings layout | Sidebar tabs | Top tabs | preference |
-
----
-
-## Recommendations
-
-1. **Priority 1**: Add First/Last name fields
-   - Split name into first + last
-   - Display name option
-   - Better for formal contexts
-
-2. **Priority 2**: Add avatar upload modal
-   - Dedicated upload UI
-   - Crop/resize options
-   - Preview before save
-
-3. **Priority 3**: Add cover image
-   - Profile header background
-   - Preset images or upload
-   - Visual personalization
-
-4. **Priority 4**: Add language selection
-   - Multi-language support
-   - User locale preference
-   - Affects date/number formats
-
-5. **Priority 5**: Add activity log
-   - User's recent activity
-   - Pagination for history
-   - Filter by activity type
-
----
-
-## Cascade Strengths
-
-1. **Two-Factor Authentication**: Full TOTP implementation with backup codes
-2. **User Stats Dashboard**: Quick view of activity metrics
-3. **Theme Control**: Light/Dark/System toggle
-4. **Bio Field**: Personal description for team context
-5. **Modern Tab Layout**: Clean horizontal navigation
-
----
-
-## Implementation: Avatar Upload Modal
-
-```tsx
-function AvatarUploadModal({ open, onClose, onSave }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFile(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSave = async () => {
-    if (!file) return;
-    const storageId = await uploadFile(file);
-    await onSave(storageId);
-    onClose();
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Upload Avatar</DialogTitle>
-        </DialogHeader>
-
-        <Flex direction="column" align="center" gap="4">
-          {preview ? (
-            <Avatar size="xl" src={preview} />
-          ) : (
-            <Flex
-              className="size-32 rounded-full border-2 border-dashed"
-              align="center"
-              justify="center"
-            >
-              <Typography variant="small">Drop image here</Typography>
-            </Flex>
-          )}
-
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-          />
-        </Flex>
-
-        <DialogFooter>
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={!file}>
-            Save
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 ```
 
 ---
 
-## Implementation: Activity Log
+## Keyboard Support
 
-```typescript
-// Convex query
-export const getUserActivity = query({
-  args: {
-    userId: v.optional(v.id("users")),
-    limit: v.optional(v.number()),
-    cursor: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const userId = args.userId ?? await getAuthUserId(ctx);
-    if (!userId) return { activities: [], nextCursor: null };
-
-    const limit = args.limit ?? 50;
-
-    let query = ctx.db
-      .query("activityLog")
-      .withIndex("by_user", q => q.eq("userId", userId))
-      .order("desc");
-
-    if (args.cursor) {
-      query = query.filter(q =>
-        q.lt(q.field("createdAt"), args.cursor)
-      );
-    }
-
-    const activities = await query.take(limit + 1);
-    const hasMore = activities.length > limit;
-
-    return {
-      activities: activities.slice(0, limit),
-      nextCursor: hasMore
-        ? activities[limit - 1].createdAt
-        : null,
-    };
-  },
-});
-
-// Component
-function ActivityLog({ userId }) {
-  const { activities, nextCursor, loadMore } = usePaginatedQuery(
-    api.users.getUserActivity,
-    { userId }
-  );
-
-  return (
-    <Stack gap="2">
-      {activities.map(activity => (
-        <ActivityItem key={activity._id} activity={activity} />
-      ))}
-      {nextCursor && (
-        <Button variant="secondary" onClick={loadMore}>
-          Load More
-        </Button>
-      )}
-    </Stack>
-  );
-}
-```
+| Shortcut | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| **Tab between fields** | Yes | Yes | Both |
+| **Enter to save** | Yes | Yes | Both |
+| **Escape to cancel** | Yes | Yes | Both |
+| **Open settings** | N/A | N/A | Neither |
+| **Navigate tabs** | Arrow keys | Arrow keys | Both |
+| **2FA digit auto-advance** | N/A | Yes | Cascade only |
 
 ---
 
-## Screenshots/References
+## Summary Scorecard
 
-### plane
-- Profile layout: `~/Desktop/plane/apps/web/app/(all)/settings/profile/layout.tsx`
-- General form: `~/Desktop/plane/apps/web/core/components/settings/profile/content/pages/general/form.tsx`
-- Security: `~/Desktop/plane/apps/web/core/components/settings/profile/content/pages/security/index.tsx`
-- Preferences: `~/Desktop/plane/apps/web/core/components/settings/profile/content/pages/preferences/`
-- API tokens: `~/Desktop/plane/apps/web/core/components/settings/profile/content/pages/api-tokens.tsx`
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Profile fields | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane more fields |
+| Name handling | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane first/last/display |
+| Avatar upload | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane drag-drop modal |
+| Cover image | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| 2FA security | ⭐ | ⭐⭐⭐⭐⭐ | Cascade full TOTP |
+| Backup codes | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Password change | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane dedicated UI |
+| Theme control | ⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade in profile |
+| User stats | ⭐ | ⭐⭐⭐⭐⭐ | Cascade dashboard |
+| Activity log | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Language | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Bio field | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Desktop notifications | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade toggle + request |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add avatar upload modal** - Dedicated upload UI with drag-drop
+   ```tsx
+   <Dialog open={isAvatarModalOpen}>
+     <DropZone onDrop={handleAvatarUpload}>
+       <AvatarPreview src={preview} />
+       <Button>Browse Files</Button>
+     </DropZone>
+     <DialogFooter>
+       <Button variant="destructive" onClick={handleDelete}>Remove</Button>
+       <Button onClick={handleSave}>Save</Button>
+     </DialogFooter>
+   </Dialog>
+   ```
+
+### P1 - High
+2. **Add first/last name fields** - Split name into components
+3. **Add display name option** - Customize how name appears
+4. **Add cover image** - Profile header background customization
+
+### P2 - Medium
+5. **Add activity log** - User's recent activity with pagination
+6. **Add language selection** - Multi-language support
+7. **Add first day of week** - Calendar preference
+
+### P3 - Nice to Have
+8. **Add role/title field** - Job title display
+9. **Add profile visibility settings** - Control what others see
+10. **Add linked accounts** - Show connected OAuth providers
+
+---
+
+## Code References
+
+### Plane
+- Profile layout: `apps/web/app/(all)/settings/profile/layout.tsx`
+- General form: `apps/web/core/components/settings/profile/content/pages/general/form.tsx`
+- Avatar upload: `apps/web/core/components/common/user-image-upload-modal.tsx`
+- Security: `apps/web/core/components/settings/profile/content/pages/security/index.tsx`
+- Preferences: `apps/web/core/components/settings/profile/content/pages/preferences/`
+- Activity: `apps/web/core/components/settings/profile/content/pages/activity.tsx`
+- API tokens: `apps/web/core/components/settings/profile/content/pages/api-tokens.tsx`
 
 ### Cascade
-- Settings: `~/Desktop/cascade/src/components/Settings.tsx`
-- Profile content: `~/Desktop/cascade/src/components/Settings/ProfileContent.tsx`
-- 2FA settings: `~/Desktop/cascade/src/components/Settings/TwoFactorSettings.tsx`
-- Preferences: `~/Desktop/cascade/src/components/Settings/PreferencesTab.tsx`
-- Backend: `~/Desktop/cascade/convex/users.ts`
+- Settings page: `src/components/Settings.tsx`
+- Profile content: `src/components/Settings/ProfileContent.tsx`
+- 2FA settings: `src/components/Settings/TwoFactorSettings.tsx`
+- Preferences tab: `src/components/Settings/PreferencesTab.tsx`
+- Avatar upload modal: `src/components/Settings/AvatarUploadModal.tsx`
+- Backend: `convex/users.ts`
+- 2FA backend: `convex/twoFactor.ts`

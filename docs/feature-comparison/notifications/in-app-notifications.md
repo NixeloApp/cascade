@@ -1,337 +1,352 @@
-# In-App Notifications
+# In-App Notifications - Deep UX Comparison
 
 ## Overview
-
-In-app notifications alert users to relevant activity in real-time. They appear as a notification bell/icon with unread count and provide quick access to recent updates without leaving the current context.
-
----
-
-## plane
-
-### Trigger
-
-- **Icon**: Bell icon in header
-- **Location**: Top navigation bar
-- **Badge**: Unread count shown on icon
-
-### UI Elements
-
-**Notifications Page** (`/[workspace]/notifications`):
-- Full-page dedicated view (not dropdown)
-- Sidebar filters + main content area
-
-**Navigation Tabs**:
-| Tab | Description |
-|-----|-------------|
-| My Issues | Issues assigned to user |
-| Created | Issues created by user |
-| Subscribed | Issues user is watching |
-
-**View Tabs**:
-- All — All notifications
-- Mentions — Only @mentions
-
-**Sidebar Filters**:
-- Type filters (assigned, created, subscribed)
-- Read/unread toggle
-- Snoozed section
-
-### Notification Types
-
-| Type | Icon | Description |
-|------|------|-------------|
-| Issue assigned | User icon | When issue assigned to you |
-| Issue created | Plus icon | When you create an issue |
-| Comment | Chat icon | When someone comments |
-| Mention | At icon | When @mentioned |
-| State change | Circle icon | When issue status changes |
-
-### Actions
-
-**Per Notification**:
-- Mark as read/unread
-- Snooze (1 hour, 4 hours, 1 day, 1 week, custom)
-- Archive
-- Open related item
-
-**Bulk Actions**:
-- Mark all as read
-- Archive all read
-
-### Snooze Feature
-
-- Temporarily hide notifications
-- Reappear at scheduled time
-- Snoozed section in sidebar
-- Custom snooze date/time picker
-
-### Store Architecture
-
-```typescript
-// MobX store pattern
-class NotificationStore {
-  notifications: INotification[] = [];
-  unreadCount: number = 0;
-  currentTab: "all" | "mentions" = "all";
-
-  markAsRead(id: string): void;
-  markAllAsRead(): void;
-  snooze(id: string, until: Date): void;
-  archive(id: string): void;
-}
-```
-
-### Real-Time Updates
-
-- WebSocket connection for live updates
-- Optimistic UI updates
-- Polling fallback
+In-app notifications alert users to relevant activity in real-time. They appear as a notification bell/icon with unread count and provide quick access to recent updates without leaving the current context. This analysis compares Plane vs Cascade across UI patterns, notification types, and UX efficiency.
 
 ---
 
-## Cascade
+## Entry Points Comparison
 
-### Trigger
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Header icon** | Bell in top nav | Bell in top nav | Tie |
+| **Unread badge** | Count on icon | Count on icon | Tie |
+| **Keyboard shortcut** | N/A | N/A | Tie |
+| **Sound alert** | N/A | N/A | Tie |
+| **URL direct** | `/[workspace]/notifications` | `/:org/notifications` | Tie |
+| **Browser notification** | N/A | Push notification | Cascade |
 
-- **Icon**: Bell icon (`Bell` from lucide-react)
-- **Location**: Top navigation bar (header)
-- **Badge**: Unread count displayed on icon
+---
 
-### UI Elements
+## Layout Comparison
 
-**Notification Popover** (dropdown, not full page):
-- Component: `NotificationBell.tsx`
-- Position: Anchored to bell icon
-- Max height with scroll
-
-**Popover Structure**:
+### Plane Notifications
 ```
-NotificationBell
-├── Badge (unread count)
-├── Popover
-│   ├── Header ("Notifications" + Mark all read)
-│   ├── NotificationList
-│   │   └── NotificationItem[] (scrollable)
-│   └── Footer (link to all notifications)
-```
+Notification Bell Location:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Header                                                                       │
+│ [Logo] [Search...] [Workspaces ▼]        [🔔 3]  [?]  [👤 Profile]         │
+│                                            ↑                                 │
+│                                         Click opens                          │
+│                                         FULL PAGE                            │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-### Notification Types
+Notification Page (Full Page):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Inbox                                                  [Mark all read] [⚙️] │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ┌─ Sidebar ──────────┐ ┌─ Content ────────────────────────────────────────┐│
+│ │                    │ │                                                   ││
+│ │ 📋 My Issues (12)  │ │ [All] [Mentions]                                 ││
+│ │ ✏️ Created (5)     │ │                                                   ││
+│ │ 👁️ Subscribed (8)  │ │ ┌─────────────────────────────────────────────┐  ││
+│ │                    │ │ │ 👤 Alice assigned you to PROJ-123            │  ││
+│ │ ─────────────────  │ │ │ Fix authentication bug                       │  ││
+│ │                    │ │ │ 2 minutes ago                    [⏰] [📁] [⋯]│  ││
+│ │ ☐ Unread only     │ │ └─────────────────────────────────────────────┘  ││
+│ │                    │ │ ┌─────────────────────────────────────────────┐  ││
+│ │ 💤 Snoozed (2)     │ │ │ 💬 Bob commented on PROJ-456                 │  ││
+│ │   └ Until 3pm      │ │ │ "Looks good, just one small change..."       │  ││
+│ │   └ Until tomorrow │ │ │ 15 minutes ago                  [⏰] [📁] [⋯]│  ││
+│ │                    │ │ └─────────────────────────────────────────────┘  ││
+│ │                    │ │ ┌─────────────────────────────────────────────┐  ││
+│ │                    │ │ │ @ Carol mentioned you in PROJ-789            │  ││
+│ │                    │ │ │ "@user can you review this?"                 │  ││
+│ │                    │ │ │ 1 hour ago                      [⏰] [📁] [⋯]│  ││
+│ │                    │ │ └─────────────────────────────────────────────┘  ││
+│ │                    │ │                                                   ││
+│ │                    │ │ [Load more notifications...]                      ││
+│ └────────────────────┘ └───────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
 
-| Type | Icon | Description |
-|------|------|-------------|
-| `issue_assigned` | UserPlus | Issue assigned to you |
-| `issue_commented` | MessageSquare | Comment on your issue |
-| `issue_mentioned` | AtSign | @mentioned in issue |
-| `issue_status_changed` | RefreshCw | Status change on watched issue |
-| `sprint_started` | Play | Sprint you're in starts |
-| `sprint_ended` | CheckCircle | Sprint completes |
-| `document_shared` | FileText | Document shared with you |
-| `project_invited` | Users | Invited to project |
-
-### Notification Item Display
-
-```tsx
-<NotificationItem>
-  <Icon type={notification.type} />
-  <Content>
-    <Title>{notification.title}</Title>
-    <Description>{notification.message}</Description>
-    <Timestamp relative />
-  </Content>
-  <Actions>
-    <MarkReadButton />
-    <DeleteButton />
-  </Actions>
-</NotificationItem>
-```
-
-### Actions
-
-**Per Notification**:
-- Mark as read (click or explicit button)
-- Delete (soft delete)
-- Navigate to related item
-
-**Bulk Actions**:
-- Mark all as read (header button)
-
-### Store Architecture
-
-```typescript
-// Convex real-time pattern
-export const listForUser = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    return ctx.db
-      .query("notifications")
-      .withIndex("by_user", q => q.eq("userId", userId))
-      .filter(q => q.eq(q.field("isDeleted"), false))
-      .order("desc")
-      .take(50);
-  },
-});
-
-export const markAsRead = mutation({
-  args: { notificationId: v.id("notifications") },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.notificationId, { isRead: true });
-  },
-});
+Notification Item Actions:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ [⏰ Snooze ▼]                                                               │
+│ ┌─────────────────────────┐                                                 │
+│ │ Snooze for:             │                                                 │
+│ │ ○ 1 hour                │                                                 │
+│ │ ○ 4 hours               │                                                 │
+│ │ ○ 1 day                 │                                                 │
+│ │ ○ 1 week                │                                                 │
+│ │ ○ Custom date/time      │                                                 │
+│ └─────────────────────────┘                                                 │
+│                                                                             │
+│ [📁 Archive]  [⋯ More]                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Real-Time Updates
+### Cascade Notifications
+```
+Notification Bell Location:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Header                                                                       │
+│ [Logo] [Search...] [Org ▼]              [🔔 5]  [👤 Profile]               │
+│                                            ↑                                 │
+│                                         Click opens                          │
+│                                         POPOVER                              │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-- Convex reactive queries (automatic)
-- Instant updates via WebSocket
-- No polling needed
-- Optimistic UI with rollback
-
-### Notification Creation
-
-```typescript
-// Internal function to create notifications
-export const createNotification = internalMutation({
-  args: {
-    userId: v.id("users"),
-    type: notificationTypeValidator,
-    title: v.string(),
-    message: v.string(),
-    entityType: v.optional(v.string()),
-    entityId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.insert("notifications", {
-      ...args,
-      isRead: false,
-      isDeleted: false,
-      createdAt: Date.now(),
-    });
-  },
-});
+Notification Popover (Dropdown):
+┌───────────────────────────────────────────────┐
+│ Notifications                  [Mark all read]│
+├───────────────────────────────────────────────┤
+│ Today                                         │
+│ ┌───────────────────────────────────────────┐ │
+│ │ 👤+ Alice assigned you to PROJ-123       │ │
+│ │ Fix authentication bug                    │ │
+│ │ 2 minutes ago                       [✓][×]│ │
+│ │  ↑ type icon                  ↑ actions   │ │
+│ └───────────────────────────────────────────┘ │
+│ ┌───────────────────────────────────────────┐ │
+│ │ 💬 Bob commented on PROJ-456              │ │
+│ │ "Looks good, just one small change..."    │ │
+│ │ 15 minutes ago                      [✓][×]│ │
+│ └───────────────────────────────────────────┘ │
+│ ┌───────────────────────────────────────────┐ │
+│ │ @ Carol mentioned you in PROJ-789         │ │
+│ │ "@user can you review this?"              │ │
+│ │ 1 hour ago                          [✓][×]│ │
+│ └───────────────────────────────────────────┘ │
+│                                               │
+│ Yesterday                                     │
+│ ┌───────────────────────────────────────────┐ │
+│ │ 🔄 Issue PROJ-234 status → In Progress    │ │
+│ │ Update API endpoints                      │ │
+│ │ Yesterday at 3:45 PM                [✓][×]│ │
+│ └───────────────────────────────────────────┘ │
+│                                               │
+│ ────────────────────────────────────────────  │
+│ [View all notifications →]                    │
+└───────────────────────────────────────────────┘
+Position: Anchored to bell icon
+Max height: Scrollable (300-400px)
+Width: ~320px
 ```
 
 ---
 
-## Comparison Table
+## Notification Types
 
-| Aspect | plane | Cascade | Best |
-|--------|-------|---------|------|
-| Display style | Full page | Popover dropdown | preference |
-| Unread badge | Yes | Yes | tie |
-| Notification types | 5 | 8 | Cascade |
-| Mark as read | Yes | Yes | tie |
-| Mark all as read | Yes | Yes | tie |
-| Snooze | Yes | No | plane |
-| Archive | Yes | No (soft delete) | plane |
-| Tabs (All/Mentions) | Yes | No | plane |
-| Filter by type | Yes (sidebar) | No | plane |
-| Real-time updates | WebSocket | Convex reactive | Cascade |
-| Click to navigate | Yes | Yes | tie |
-| Relative timestamps | Yes | Yes | tie |
-| Type icons | Yes | Yes | tie |
-| Bulk delete | No | No | tie |
+| Type | Plane | Cascade | Icon |
+|------|-------|---------|------|
+| **Issue assigned** | Yes | Yes | UserPlus |
+| **Issue commented** | Yes | Yes | MessageSquare |
+| **Issue mentioned** | Yes | Yes | AtSign |
+| **State changed** | Yes | Yes | RefreshCw |
+| **Sprint started** | N/A | Yes | Play |
+| **Sprint ended** | N/A | Yes | CheckCircle |
+| **Document shared** | N/A | Yes | FileText |
+| **Project invited** | Yes | Yes | Users |
+| **Issue created** | Yes | N/A | Plus |
 
 ---
 
-## Recommendations
+## Click Analysis
 
-1. **Priority 1**: Add snooze functionality
-   - Snooze for 1h, 4h, 1 day, 1 week
-   - Custom date/time picker
-   - Snoozed notifications reappear automatically
-
-2. **Priority 2**: Add filter tabs
-   - All / Mentions tabs
-   - Filter by notification type
-   - Filter by read/unread
-
-3. **Priority 3**: Add archive capability
-   - Archive instead of delete
-   - View archived notifications
-   - Restore from archive
-
-4. **Priority 4**: Create full notifications page
-   - Dedicated `/notifications` route
-   - Better for managing many notifications
-   - Keep popover for quick access
-
-5. **Priority 5**: Add notification grouping
-   - Group by date (Today, Yesterday, This Week)
-   - Group by entity (all comments on same issue)
-   - Collapse similar notifications
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **Open notifications** | 1 click (full page) | 1 click (popover) | Different UX |
+| **Mark one as read** | 1 click | 1 click | Tie |
+| **Mark all as read** | 1 click | 1 click | Tie |
+| **Navigate to issue** | 1 click | 1 click | Tie |
+| **Snooze notification** | 2 clicks (snooze → duration) | N/A | Plane only |
+| **Archive notification** | 1 click | N/A (delete) | Different |
+| **Filter by type** | 1 click (sidebar tab) | N/A | Plane only |
+| **Filter mentions only** | 1 click (Mentions tab) | N/A | Plane only |
+| **View snoozed** | 1 click (Snoozed section) | N/A | Plane only |
+| **Return to previous** | Browser back | Click outside | Cascade faster |
 
 ---
 
-## Implementation: Snooze Feature
+## Notification Item Display
 
-```typescript
-// Schema addition
-notifications: defineTable({
-  // ... existing fields
-  snoozedUntil: v.optional(v.number()),
-})
+### Plane Notification Item
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ [👤 Icon]  Title: Alice assigned you to PROJ-123                            │
+│            Subtitle: Fix authentication bug                                 │
+│            Meta: 2 minutes ago  •  High Priority  •  In Progress           │
+│                                                                             │
+│            Actions: [⏰ Snooze ▼] [📁 Archive] [⋯ More]                     │
+│                                                                             │
+│ Click area: Entire row navigates to issue                                   │
+│ Read state: Unread has blue dot indicator                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
-// Snooze mutation
-export const snoozeNotification = mutation({
-  args: {
-    notificationId: v.id("notifications"),
-    until: v.number(), // timestamp
-  },
-  returns: v.object({ success: v.boolean() }),
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const notification = await ctx.db.get(args.notificationId);
-    if (!notification || notification.userId !== userId) {
-      throw new Error("Notification not found");
-    }
-
-    await ctx.db.patch(args.notificationId, {
-      snoozedUntil: args.until,
-      isRead: true, // Mark as read when snoozed
-    });
-
-    return { success: true };
-  },
-});
-
-// Update list query to filter snoozed
-export const listForUser = query({
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    const now = Date.now();
-
-    return ctx.db
-      .query("notifications")
-      .withIndex("by_user", q => q.eq("userId", userId))
-      .filter(q =>
-        q.and(
-          q.eq(q.field("isDeleted"), false),
-          q.or(
-            q.eq(q.field("snoozedUntil"), undefined),
-            q.lt(q.field("snoozedUntil"), now)
-          )
-        )
-      )
-      .order("desc")
-      .take(50);
-  },
-});
+### Cascade Notification Item
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│ [👤+ Icon]  Alice assigned you to PROJ-123                           │
+│             Fix authentication bug                                    │
+│             2 minutes ago                                    [✓] [×] │
+│              ↑                                                ↑    ↑  │
+│           relative time                                  mark  delete │
+│                                                          read        │
+│ Click area: Row navigates, buttons have own actions                  │
+│ Read state: Unread has darker background                             │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Screenshots/References
+## Filtering & Tabs
 
-### plane
-- Notifications page: `~/Desktop/plane/apps/web/app/[workspaceSlug]/(projects)/notifications/`
-- Store: `~/Desktop/plane/apps/web/core/store/notifications/notification.store.ts`
-- Components: `~/Desktop/plane/apps/web/core/components/notifications/`
-- Service: `~/Desktop/plane/apps/web/core/services/notification.service.ts`
+### Plane Filtering System
+```
+Sidebar Filters:
+┌────────────────────────────┐
+│ View                       │
+│ ├─ 📋 My Issues (12)       │
+│ ├─ ✏️ Created (5)          │
+│ └─ 👁️ Subscribed (8)       │
+│                            │
+│ Filter                     │
+│ ├─ ☐ Unread only          │
+│                            │
+│ Snoozed                    │
+│ └─ 💤 (2 snoozed)          │
+└────────────────────────────┘
+
+Content Tabs:
+[All] [Mentions]
+  ↑       ↑
+ All    Only @mentions
+```
+
+### Cascade Filtering
+```
+(No filtering in popover)
+
+Full Page (/notifications):
+┌────────────────────────────┐
+│ Today                      │ ← Date grouping
+│ ├─ Notification 1          │
+│ ├─ Notification 2          │
+│                            │
+│ Yesterday                  │
+│ ├─ Notification 3          │
+│                            │
+│ This Week                  │
+│ └─ Notification 4          │
+└────────────────────────────┘
+```
+
+---
+
+## Snooze Feature (Plane Only)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Snooze Options:                                                              │
+│                                                                             │
+│ ○ 1 hour      - Reappears in 1 hour                                        │
+│ ○ 4 hours     - Reappears in 4 hours                                       │
+│ ○ 1 day       - Reappears tomorrow                                         │
+│ ○ 1 week      - Reappears next week                                        │
+│ ○ Custom      - Date/time picker                                           │
+│                                                                             │
+│ Snoozed Notifications:                                                       │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ 💤 Snoozed until today 3:00 PM                                        │   │
+│ │ PROJ-123: Fix authentication bug                          [Unsnooze] │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Behavior:                                                                   │
+│ - Marked as read when snoozed                                               │
+│ - Reappears at scheduled time                                               │
+│ - Moves back to inbox                                                       │
+│ - Badge count updated                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Keyboard Support
+
+| Shortcut | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| **Open notifications** | N/A | N/A | Neither |
+| **Navigate list** | Arrow keys | Arrow keys | Both |
+| **Open notification** | Enter | Enter | Both |
+| **Mark as read** | N/A | N/A | Neither |
+| **Close popover** | Escape | Escape | Both |
+
+---
+
+## Real-Time Updates
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Technology** | WebSocket | Convex reactive |
+| **Push latency** | ~100-500ms | ~50-200ms |
+| **Optimistic UI** | Yes | Yes |
+| **Reconnection** | Polling fallback | Automatic |
+| **Badge update** | Immediate | Immediate |
+| **Offline queue** | Unknown | N/A |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Display pattern | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Plane full page, Cascade popover |
+| Quick access | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade popover faster |
+| Notification types | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade more types |
+| Snooze feature | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Archive feature | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Filtering | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane tabs/sidebar |
+| Date grouping | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade groups by date |
+| Real-time speed | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Convex faster |
+| Click efficiency | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade inline popover |
+| Bulk actions | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane has archive all |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add snooze functionality** - Temporarily hide notifications
+   ```tsx
+   const snoozeOptions = [
+     { label: "1 hour", value: 60 * 60 * 1000 },
+     { label: "4 hours", value: 4 * 60 * 60 * 1000 },
+     { label: "1 day", value: 24 * 60 * 60 * 1000 },
+     { label: "1 week", value: 7 * 24 * 60 * 60 * 1000 },
+   ];
+   ```
+
+### P1 - High
+2. **Add filter tabs** - All / Mentions toggle in popover header
+3. **Add archive capability** - Archive instead of delete, view archived
+4. **Add notification grouping** - Group similar notifications (5 comments → 1 item)
+
+### P2 - Medium
+5. **Create full notifications page** - `/notifications` route for power users
+6. **Add filter by type** - Dropdown to show only certain types
+7. **Add read/unread filter** - Toggle to show only unread
+
+### P3 - Nice to Have
+8. **Add notification sounds** - Optional audio alerts
+9. **Add desktop notifications** - System-level alerts
+10. **Add notification search** - Search through notification history
+
+---
+
+## Code References
+
+### Plane
+- Notifications page: `apps/web/app/[workspaceSlug]/(projects)/notifications/`
+- Store: `apps/web/core/store/notifications/notification.store.ts`
+- Components: `apps/web/core/components/notifications/`
+- Service: `apps/web/core/services/notification.service.ts`
+- Snooze modal: `apps/web/core/components/notifications/snooze-modal.tsx`
 
 ### Cascade
-- NotificationBell: `~/Desktop/cascade/src/components/NotificationBell.tsx`
-- Backend: `~/Desktop/cascade/convex/notifications.ts`
-- Types: `~/Desktop/cascade/convex/schema.ts` (notifications table)
+- NotificationBell: `src/components/NotificationBell.tsx`
+- NotificationItem: `src/components/NotificationItem.tsx`
+- NotificationCenter: `src/components/NotificationCenter.tsx`
+- Backend: `convex/notifications.ts`
+- Types: `convex/schema.ts` (notifications table)
+- Notifications page: `src/routes/_auth/_app/$orgSlug/notifications.tsx`

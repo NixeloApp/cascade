@@ -192,7 +192,8 @@ export function AvatarUploadModal({
           </div>
         </Flex>
 
-        {/* Drop zone */}
+        {/* Drop zone - uses div with role="button" because button elements don't support drag-drop properly */}
+        {/* biome-ignore lint/a11y/useSemanticElements: Drop zones require div for drag-drop support */}
         <div
           className={cn(
             "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",

@@ -168,19 +168,15 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   useEffect(() => {
     if (!resizing || !timelineRef.current) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (_e: MouseEvent) => {
       const container = timelineRef.current;
       if (!container) return;
 
-      const rect = container.getBoundingClientRect();
-      const containerWidth = rect.width;
-      const deltaX = e.clientX - resizing.startX;
-      const deltaPercent = (deltaX / containerWidth) * 100;
-
-      // Calculate new dates based on drag delta
-      // This is visual feedback only - actual update happens on mouse up
+      // Visual feedback only - actual update happens on mouse up
+      // Mouse position is tracked relative to container for date calculation
     };
 
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Date calculation and resize logic requires multiple conditions
     const handleMouseUp = async (e: MouseEvent) => {
       const container = timelineRef.current;
       if (!container) return;
@@ -236,6 +232,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
+    // biome-ignore lint/correctness/useExhaustiveDependencies: getPositionOnTimeline uses component-level timeRange which is stable
   }, [resizing, getDateFromPosition, getPositionOnTimeline, updateIssue]);
 
   // Keyboard navigation
@@ -277,46 +274,49 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       return (daysSinceStart / totalDays) * 100;
     };
 
-    return issueLinks.links
-      .filter((link) => link.linkType === "blocks")
-      .map((link) => {
-        const fromIndex = issueIndexMap.get(link.fromIssueId);
-        const toIndex = issueIndexMap.get(link.toIssueId);
+    return (
+      issueLinks.links
+        .filter((link) => link.linkType === "blocks")
+        // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: SVG path generation requires multiple calculations
+        .map((link) => {
+          const fromIndex = issueIndexMap.get(link.fromIssueId);
+          const toIndex = issueIndexMap.get(link.toIssueId);
 
-        if (fromIndex === undefined || toIndex === undefined) return null;
+          if (fromIndex === undefined || toIndex === undefined) return null;
 
-        const fromIssue = filteredIssues[fromIndex];
-        const toIssue = filteredIssues[toIndex];
+          const fromIssue = filteredIssues[fromIndex];
+          const toIssue = filteredIssues[toIndex];
 
-        if (!fromIssue?.dueDate || !toIssue?.dueDate) return null;
+          if (!fromIssue?.dueDate || !toIssue?.dueDate) return null;
 
-        // Calculate Y positions based on row index
-        const fromY = fromIndex * rowHeight + rowHeight / 2;
-        const toY = toIndex * rowHeight + rowHeight / 2;
+          // Calculate Y positions based on row index
+          const fromY = fromIndex * rowHeight + rowHeight / 2;
+          const toY = toIndex * rowHeight + rowHeight / 2;
 
-        // Calculate X positions as percentages
-        // From: end of blocking issue bar
-        const fromStartX = fromIssue.startDate
-          ? getPos(fromIssue.startDate)
-          : getPos(fromIssue.dueDate) - 2.5;
-        const fromWidth = fromIssue.startDate
-          ? Math.max(2, getPos(fromIssue.dueDate) - getPos(fromIssue.startDate))
-          : 5;
-        const fromX = fromStartX + fromWidth;
+          // Calculate X positions as percentages
+          // From: end of blocking issue bar
+          const fromStartX = fromIssue.startDate
+            ? getPos(fromIssue.startDate)
+            : getPos(fromIssue.dueDate) - 2.5;
+          const fromWidth = fromIssue.startDate
+            ? Math.max(2, getPos(fromIssue.dueDate) - getPos(fromIssue.startDate))
+            : 5;
+          const fromX = fromStartX + fromWidth;
 
-        // To: start of blocked issue bar
-        const toX = toIssue.startDate ? getPos(toIssue.startDate) : getPos(toIssue.dueDate) - 2.5;
+          // To: start of blocked issue bar
+          const toX = toIssue.startDate ? getPos(toIssue.startDate) : getPos(toIssue.dueDate) - 2.5;
 
-        return {
-          fromX,
-          fromY,
-          toX,
-          toY,
-          fromIssueId: link.fromIssueId,
-          toIssueId: link.toIssueId,
-        };
-      })
-      .filter((line): line is DependencyLine => line !== null);
+          return {
+            fromX,
+            fromY,
+            toX,
+            toY,
+            fromIssueId: link.fromIssueId,
+            toIssueId: link.toIssueId,
+          };
+        })
+        .filter((line): line is DependencyLine => line !== null)
+    );
   }, [showDependencies, issueLinks, filteredIssues, issueIndexMap, totalDays, startOfMonth]);
 
   // Row renderer for virtualization
@@ -649,6 +649,8 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                       width: "calc(100% - 256px)",
                       height: 600,
                     }}
+                    role="img"
+                    aria-label="Issue dependency lines"
                   >
                     <defs>
                       <marker
@@ -664,10 +666,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                     </defs>
                     {dependencyLines.map((line) => {
                       if (!line) return null;
-                      // Calculate path with curve
-                      const midX = (line.fromX + line.toX) / 2;
-                      const controlOffset = Math.abs(line.toY - line.fromY) * 0.3;
-
                       return (
                         <path
                           key={`${line.fromIssueId}-${line.toIssueId}`}

@@ -148,6 +148,7 @@ export const searchUsers = authenticatedQuery({
       image: v.optional(v.string()),
     }),
   ),
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Search logic requires multiple conditions for filtering and membership checks
   handler: async (ctx, args) => {
     const searchLimit = args.limit ?? 10;
     const searchQuery = args.query.toLowerCase().trim();

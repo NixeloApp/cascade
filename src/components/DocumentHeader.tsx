@@ -42,6 +42,7 @@ interface DocumentHeaderProps {
   editorReady: boolean;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Header component with many conditional action buttons based on permissions
 export function DocumentHeader({
   document,
   userId,

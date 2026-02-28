@@ -311,11 +311,7 @@ export function ProfileContent({ userId }: ProfileContentProps) {
             )}
           >
             {coverImageUrl && (
-              <img
-                src={coverImageUrl}
-                alt="Profile cover"
-                className="w-full h-full object-cover"
-              />
+              <img src={coverImageUrl} alt="Profile cover" className="w-full h-full object-cover" />
             )}
           </div>
           <Button

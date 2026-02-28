@@ -128,6 +128,7 @@ export function areIssuesEqual(prevIssue: Issue, nextIssue: Issue) {
   return true;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Card component with drag-drop, selection, and conditional display logic
 export const IssueCard = memo(function IssueCard({
   issue,
   status,

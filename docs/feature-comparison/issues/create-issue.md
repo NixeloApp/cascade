@@ -1,208 +1,343 @@
-# Create Issue
+# Create Issue - Deep UX Comparison
 
 ## Overview
-The create issue modal allows users to quickly create new work items/issues with relevant metadata like title, description, type, priority, assignee, and labels.
+The create issue flow is one of the most critical UX paths in any project management tool. This analysis compares Plane vs Cascade across every UX dimension.
 
 ---
 
-## cal.com
-> **N/A** - cal.com is a scheduling platform and doesn't have issue tracking features.
+## Entry Points Comparison
+
+### How Users Trigger "Create Issue"
+
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Keyboard shortcut** | ✅ `C` (global) | ✅ `C` (global) | Tie |
+| **Sidebar button** | ✅ "New work item" with icon | ✅ Button in sidebar | Tie |
+| **Header button** | ✅ Per-view header buttons | ✅ Per-page header | Tie |
+| **Right-click context menu** | ✅ On board columns/list items | ❌ None | Plane |
+| **Empty state CTA** | ✅ "Create your first issue" button | ✅ Empty state button | Tie |
+| **Command palette** | ✅ `Cmd+K` → "Create issue" | ❌ No command palette | Plane |
+| **Floating action button (mobile)** | ❌ | ❌ | Tie |
+| **Quick add row in list** | ✅ Inline row at bottom | ❌ | Plane |
+| **Drag from draft** | ✅ Draft sidebar → drag to project | ❌ | Plane |
+
+**Entry Points Score:** Plane 5, Cascade 0, Tie 5
 
 ---
 
-## plane
+## Button/Trigger Locations
 
-### Trigger
-- **Keyboard shortcut**: `C` (global shortcut when in project context)
-- **Button**: "Create work item" button in header
-- **Context menu**: Right-click on kanban column or list view
-- **Cycle/Module context**: Auto-assigns cycle or module when creating from within those views
-
-### UI Elements
-
-**Modal Layout (2-column when duplicate detection active)**
-- Left panel: Main form
-- Right panel: Duplicate issue suggestions (optional)
-
-**Header Section**
-- Project selector (dropdown)
-- Issue type selector (Task, Bug, Feature, etc.)
-- Work item template selector (optional)
-
-**Main Form Fields**
-| Field | Type | Validation | Notes |
-|-------|------|------------|-------|
-| Title | Text input | Required | Auto-focuses on open |
-| Description | Rich text editor (Plane editor) | Optional | Supports markdown, images, mentions |
-| State | Dropdown | Required | Default: first "unstarted" state |
-| Priority | Dropdown | Optional | Default: None |
-| Assignees | Multi-select dropdown | Optional | Shows avatars |
-| Labels | Multi-select | Optional | With inline create |
-| Start Date | Date picker | Optional | Min: none, Max: target_date |
-| Due Date | Date picker | Optional | Min: start_date |
-| Cycle | Dropdown | Optional | When cycle_view enabled |
-| Module | Multi-select | Optional | When module_view enabled |
-| Estimate | Dropdown | Optional | When estimates enabled |
-| Parent | Issue search | Optional | Opens separate modal |
-
-**Footer Section**
-- "Create more" toggle switch
-- Discard button (secondary)
-- Save/Submit button (primary)
-
-### Flow
-1. User triggers modal via shortcut `C` or button
-2. Modal opens with focus on title input
-3. Project auto-selected if in project context
-4. User fills in title (required)
-5. User optionally fills other fields
-6. If title matches existing issues, duplicate panel appears on right
-7. User can review duplicates or ignore
-8. Click "Save" to create issue
-9. If "Create more" enabled, form resets; otherwise modal closes
-10. Toast shows success with issue link
-
-### Feedback
-- **Loading**: Button shows spinner during submission
-- **Success**: Toast with "Issue created" + link to view
-- **Error**: Toast with error message
-- **Duplicate warning**: Side panel with similar issues
-- **Draft auto-save**: Work saved to workspace drafts if abandoned
-
-### Notable Features
-- **Duplicate detection**: Real-time search for similar issues while typing
-- **Work item types**: Different forms/workflows based on issue type
-- **Templates**: Pre-fill form with template values
-- **Draft system**: Auto-saves to workspace drafts, can be moved to projects later
-- **GPT Assistant**: AI button to help write descriptions
-- **Create more**: Toggle to keep modal open for rapid creation
-
----
-
-## Cascade
-
-### Trigger
-- **Button**: "Create Issue" button in header/sidebar
-- **No keyboard shortcut** (❌ Gap)
-
-### UI Elements
-
-**Modal Layout (single column dialog)**
-- Standard Dialog component with title "Create Issue"
-
-**Form Fields**
-| Field | Type | Validation | Notes |
-|-------|------|------------|-------|
-| Project | Dropdown | Required if not in context | Only shown when no projectId prop |
-| Template | Dropdown | Optional | Applies preset values |
-| Title | Text input | Required, min 1 char | Uses FormInput |
-| AI Suggestions | Button | N/A | Generates description/priority/labels |
-| Description | Textarea | Optional | Plain text, 6 rows |
-| Type | Radix Select | Required | task, bug, story, epic, subtask |
-| Priority | Radix Select | Required | lowest to highest |
-| Assignee | Radix Select | Optional | "Unassigned" default |
-| Story Points | Number input | Optional | step 0.5 |
-| Labels | Toggle buttons | Optional | Multi-select via toggle |
-
-**Footer**
-- Cancel button (secondary)
-- Create Issue button (primary with loading state)
-
-### Flow
-1. User clicks "Create Issue" button
-2. Modal opens with focus on title (implicit)
-3. If no projectId passed, user must select project first
-4. Default template auto-selected if exists
-5. User fills in title
-6. Optionally clicks "Get AI Suggestions" for smart defaults
-7. User fills remaining fields
-8. Click "Create Issue"
-9. Success toast shown
-10. Modal closes
-
-### Feedback
-- **Loading**: Button shows loading spinner
-- **Success**: Toast "Issue created successfully"
-- **Error**: Toast with error details
-- **AI Applied**: "AI suggestions applied" indicator shows
-
-### Notable Features
-- **AI Suggestions**: One-click AI to fill description, priority, labels
-- **Templates**: Apply preset configurations
-- **Label toggles**: Visual toggle buttons vs dropdown
-
----
-
-## Comparison Table
-
-| Aspect | cal.com | plane | Cascade | Best |
-|--------|---------|-------|---------|------|
-| Keyboard shortcut | N/A | ✅ `C` | ❌ None | plane |
-| Duplicate detection | N/A | ✅ Real-time | ❌ None | plane |
-| Draft auto-save | N/A | ✅ Yes | ❌ None | plane |
-| AI assistance | N/A | ✅ GPT in editor | ✅ AI button | tie |
-| Templates | N/A | ✅ Full system | ✅ Basic | plane |
-| Work item types | N/A | ✅ Configurable | ⚠️ Fixed list | plane |
-| Rich text editor | N/A | ✅ Plane editor | ❌ Plain textarea | plane |
-| Inline label create | N/A | ✅ Yes | ❌ No | plane |
-| Create more toggle | N/A | ✅ Yes | ❌ No | plane |
-| Assignee avatars | N/A | ✅ Yes | ✅ Yes | tie |
-| Multiple assignees | N/A | ✅ Yes | ❌ No | plane |
-| Start date | N/A | ✅ Yes | ❌ No | plane |
-| Due date | N/A | ✅ Yes | ❌ No | plane |
-| Cycle/Module link | N/A | ✅ Yes | ⚠️ Sprint only | plane |
-| Parent issue | N/A | ✅ Yes | ❌ No | plane |
-| Form validation | N/A | ✅ react-hook-form | ✅ TanStack Form + Zod | tie |
-
----
-
-## Recommendations
-
-### Priority 1: Add Keyboard Shortcut
-Add global `C` shortcut to trigger create issue modal from anywhere in project context.
-
-**Implementation:**
-```tsx
-// In CommandPalette or global key handler
-useHotkeys('c', () => setCreateIssueOpen(true), { 
-  enabled: isInProjectContext 
-});
+### Plane
+```
+┌─────────────────────────────────────────────────────────┐
+│ [Logo] [Search] [Notifications] [+] ← Header create    │
+├──────────┬──────────────────────────────────────────────┤
+│ Sidebar  │  Project View Header                        │
+│          │  ┌──────────────────────────────────────┐   │
+│ [+ New   │  │ [Filters] [Display] [+ Add Issue] ← │   │
+│  Item] ← │  └──────────────────────────────────────┘   │
+│          │                                              │
+│ Favorites│  Board/List/Calendar                        │
+│ Projects │  ┌─────────┬─────────┬─────────┐            │
+│          │  │ Column  │ Column  │ Column  │            │
+│          │  │ [+] ←───┼─[+]─────┼─[+]     │ ← Per-col  │
+│          │  │ Card    │ Card    │ Card    │            │
+│          │  │ [⋮] ────┼─────────┼─────────│ ← Context  │
+│          │  └─────────┴─────────┴─────────┘   menu     │
+└──────────┴──────────────────────────────────────────────┘
 ```
 
-### Priority 2: Rich Text Editor for Description
-Replace plain textarea with a proper rich text editor (TipTap or similar).
-
-**Benefits:**
-- Markdown support
-- Image uploads
-- @mentions
-- Better parity with competitors
-
-### Priority 3: Add "Create More" Toggle
-Let power users create multiple issues without closing the modal.
-
-### Priority 4: Duplicate Detection
-Search existing issues as user types title, show warning if potential duplicates exist.
-
-### Priority 5: Add Missing Fields
-- Start date / Due date
-- Parent issue selector
-- Multiple assignees
-
-### Priority 6: Auto-Save Drafts
-Save form state to localStorage or backend draft system to prevent data loss.
+### Cascade
+```
+┌─────────────────────────────────────────────────────────┐
+│ [Logo] [Breadcrumb] [Search]        [Create Issue] ←   │
+├──────────┬──────────────────────────────────────────────┤
+│ Sidebar  │  Project View Header                        │
+│          │  ┌──────────────────────────────────────┐   │
+│ Projects │  │ [Filters] [Display] [+ Create] ←     │   │
+│ Docs     │  └──────────────────────────────────────┘   │
+│ Settings │                                              │
+│          │  Board/List/Calendar                        │
+│          │  ┌─────────┬─────────┬─────────┐            │
+│          │  │ Column  │ Column  │ Column  │            │
+│          │  │ [+] ←───┼─[+]─────┼─[+]     │ ← Per-col  │
+│          │  │ Card    │ Card    │ Card    │            │
+│          │  └─────────┴─────────┴─────────┘            │
+└──────────┴──────────────────────────────────────────────┘
+```
 
 ---
 
-## Screenshots/References
+## Modal Analysis
 
-### Plane Code Paths
-- Modal: `~/Desktop/plane/apps/web/core/components/issues/issue-modal/modal.tsx`
-- Form: `~/Desktop/plane/apps/web/core/components/issues/issue-modal/form.tsx`
-- Properties: `~/Desktop/plane/apps/web/core/components/issues/issue-modal/components/default-properties.tsx`
-- Store: `~/Desktop/plane/apps/web/core/store/`
+### Modal Dimensions & Position
 
-### Cascade Code Paths
-- Modal: `~/Desktop/cascade/src/components/CreateIssueModal.tsx`
-- Issue utils: `~/Desktop/cascade/src/lib/issue-utils.ts`
-- Convex mutations: `~/Desktop/cascade/convex/issues.ts`
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Width** | ~720px (2-col when duplicates) | ~500px (single col) |
+| **Height** | Dynamic, max 80vh | Dynamic, max 85vh |
+| **Position** | Center, fixed | Center, fixed |
+| **Backdrop** | Semi-transparent overlay | Semi-transparent overlay |
+| **Animation** | Fade + scale in | Fade + scale in |
+| **Z-index** | Modal layer (50) | Modal layer (50) |
+
+### Modal Structure
+
+**Plane (2-column layout possible):**
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ Create new issue                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│ [Project ▼] [Type ▼] [Template ▼]        [2 duplicates found →] ←  │
+├────────────────────────────────────┬────────────────────────────────┤
+│                                    │ Duplicate Panel (optional)     │
+│ ┌─ Parent tag (if set) ──────────┐│ ┌──────────────────────────┐  │
+│ │ Sub-issue of PROJ-123          ││ │ Similar: PROJ-456        │  │
+│ └────────────────────────────────┘│ │ "Fix login button..."    │  │
+│                                    │ │ [View] [Link as dup]     │  │
+│ [Title input - large, focused] ←   │ └──────────────────────────┘  │
+│                                    │ ┌──────────────────────────┐  │
+│ ┌─ Rich text editor ─────────────┐│ │ Similar: PROJ-789        │  │
+│ │ [B][I][Link][Code][AI ✨]      ││ │ "Login page not..."      │  │
+│ │                                ││ │ [View] [Link as dup]     │  │
+│ │ Description with markdown...   ││ └──────────────────────────┘  │
+│ │                                ││                                │
+│ └────────────────────────────────┘│                                │
+├────────────────────────────────────┴────────────────────────────────┤
+│ Properties (collapsible sections)                                    │
+│ ┌───────────┬───────────┬───────────┬───────────┬─────────────────┐│
+│ │ State ▼   │ Priority ▼│ Assignees │ Labels    │ Dates           ││
+│ │ Backlog   │ None      │ [+Add]    │ [+Add]    │ Start: [date]   ││
+│ └───────────┴───────────┴───────────┴───────────┴─────────────────┘│
+│ [+ Add more properties]                                              │
+├─────────────────────────────────────────────────────────────────────┤
+│ [□ Create more]                         [Discard] [Save] ←          │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Cascade (single column):**
+```
+┌───────────────────────────────────────────┐
+│ Create Issue                        [×]   │
+├───────────────────────────────────────────┤
+│ ┌─ Draft restored banner ───────────────┐ │
+│ │ Draft from 2 min ago restored [×]     │ │
+│ └───────────────────────────────────────┘ │
+│                                           │
+│ Project (if no context)                   │
+│ [Select project ▼]                        │
+│                                           │
+│ Template                                  │
+│ [Select template ▼]                       │
+│                                           │
+│ Title *                                   │
+│ [Enter issue title...              ]      │
+│                                           │
+│ ┌─ AI Suggestions ──────────────────────┐ │
+│ │ [✨ Generate AI Suggestions]          │ │
+│ │ Applied: description, priority        │ │
+│ └───────────────────────────────────────┘ │
+│                                           │
+│ Description                               │
+│ ┌───────────────────────────────────────┐ │
+│ │ [Plain textarea, 6 rows]              │ │ ← NOT rich text
+│ └───────────────────────────────────────┘ │
+│                                           │
+│ [Type ▼ Task    ] [Priority ▼ None   ]   │
+│                                           │
+│ Assignee              Story Points        │
+│ [Select ▼    ]        [Select ▼    ]     │
+│                                           │
+│ Labels                                    │
+│ [Bug ×] [Feature ×] [+ Add] [+ Create]   │
+│                                           │
+│ ┌─ Duplicates (if found) ───────────────┐ │
+│ │ ⚠ 2 potential duplicates found        │ │
+│ │ • PROJ-123: Fix login...              │ │
+│ │ • PROJ-456: Login page...             │ │
+│ └───────────────────────────────────────┘ │
+│                                           │
+│ [□ Create another]                        │
+│                                           │
+│            [Cancel] [Create Issue]        │
+└───────────────────────────────────────────┘
+```
+
+---
+
+## Form Fields Comparison
+
+| Field | Plane | Cascade | Notes |
+|-------|-------|---------|-------|
+| **Project selector** | ✅ Dropdown, disabled if in context | ✅ Dropdown, hidden if in context | Similar |
+| **Issue type** | ✅ Dropdown with icons | ✅ Radio-style dropdown | Similar |
+| **Template** | ✅ Dropdown, resets form | ✅ Dropdown, resets form | Similar |
+| **Title** | ✅ Large input, auto-focus | ✅ Standard input, auto-focus | Plane larger |
+| **Description** | ✅ **Rich text** (markdown, images, mentions) | ❌ **Plain textarea** | **Plane wins** |
+| **State/Status** | ✅ Dropdown | ❌ Not in create modal | Plane |
+| **Priority** | ✅ Dropdown with icons | ✅ Dropdown with icons | Tie |
+| **Assignee** | ✅ Multi-select with avatars | ✅ Single-select with avatar | Plane (multi) |
+| **Labels** | ✅ Multi-select | ✅ Multi-select + inline create | Cascade (inline create) |
+| **Start date** | ✅ Date picker | ❌ Not in create modal | Plane |
+| **Due date** | ✅ Date picker | ✅ Pre-filled from calendar | Tie |
+| **Estimate/Points** | ✅ Dropdown (when enabled) | ✅ Dropdown | Tie |
+| **Cycle/Sprint** | ✅ Dropdown (when in context) | ✅ Auto-assigned from context | Tie |
+| **Module** | ✅ Multi-select | N/A | Plane |
+| **Parent issue** | ✅ Search modal | ❌ Not in create modal | Plane |
+
+**Field Count:** Plane ~14 fields, Cascade ~9 fields
+
+---
+
+## Click Analysis
+
+### Minimum Clicks to Create Issue
+
+| Scenario | Plane | Cascade |
+|----------|-------|---------|
+| **Basic issue (title only)** | 2 clicks (open + save) | 2 clicks |
+| **Issue with priority** | 4 clicks | 4 clicks |
+| **Issue with assignee** | 5 clicks | 5 clicks |
+| **Issue with description** | 2 clicks + typing | 2 clicks + typing |
+| **Issue with new label** | 6+ clicks (separate flow) | 4 clicks (inline) |
+
+### Keyboard Efficiency
+
+| Action | Plane | Cascade |
+|--------|-------|---------|
+| **Open modal** | `C` | `C` |
+| **Tab through fields** | ✅ Full tab support | ✅ Full tab support |
+| **Submit** | `Cmd+Enter` | `Enter` (on button focus) |
+| **Close** | `Escape` | `Escape` |
+| **Create another** | Toggle stays, Enter submits | Toggle stays, button click |
+
+---
+
+## Special Features Comparison
+
+### Duplicate Detection
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Trigger** | Debounced title + description search | Debounced title search |
+| **Display** | Side panel (2-column layout) | Inline alert box |
+| **Actions** | View, Link as duplicate | View only |
+| **Dismiss** | Toggle panel closed | Alert dismisses auto |
+
+### AI Assistance
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Trigger** | Button in description editor | Separate "Generate" button |
+| **Capabilities** | Description writing | Description, priority, labels |
+| **Integration** | Inline in editor | Populates form fields |
+
+### Draft System
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Auto-save** | ✅ To workspace drafts | ✅ To localStorage |
+| **Recovery** | Sidebar draft list, re-open | Banner on modal open |
+| **Per-project** | ✅ Workspace-wide drafts | ✅ Per-project drafts |
+| **Move to project** | ✅ Drag draft to project | ❌ Auto-restores only |
+
+### Create More Toggle
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Location** | Footer, left side | Footer, left side |
+| **Behavior** | Resets form, keeps project/type | Resets form, keeps project |
+| **Shortcut** | None | None |
+
+---
+
+## Accessibility
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Focus trap** | ✅ | ✅ |
+| **Escape to close** | ✅ | ✅ |
+| **Screen reader labels** | ✅ aria-labels | ✅ aria-labels |
+| **Required field indicators** | ✅ Asterisk + validation | ✅ Asterisk + validation |
+| **Error messages** | ✅ Inline + toast | ✅ Inline + toast |
+| **Tab order** | ✅ Logical | ✅ Logical |
+| **Color contrast** | ✅ | ✅ |
+
+---
+
+## Loading & Error States
+
+| State | Plane | Cascade |
+|-------|-------|---------|
+| **Initial load** | Skeleton in fields | Full modal loads |
+| **Submitting** | Button spinner + disabled | Button spinner + disabled |
+| **Success** | Toast + close/reset | Toast + close/reset |
+| **Error** | Toast with message | Toast with message |
+| **Validation** | Inline red borders + text | Inline red borders + text |
+
+---
+
+## Mobile/Responsive
+
+| Aspect | Plane | Cascade |
+|--------|-------|---------|
+| **Modal width** | Full width on mobile | Full width on mobile |
+| **Input sizing** | Touch-friendly | Touch-friendly |
+| **Duplicate panel** | Stacks below form | Inline (same layout) |
+| **Sticky footer** | ✅ Fixed buttons | ✅ Fixed buttons |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Entry points | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane has more ways to create |
+| Form completeness | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Plane has more fields |
+| Description editor | ⭐⭐⭐⭐⭐ | ⭐⭐ | **Plane: rich text, Cascade: plain** |
+| Duplicate detection | ⭐⭐⭐⭐ | ⭐⭐⭐ | Plane side-panel UX better |
+| Inline label create | ⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade wins here |
+| Draft system | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Plane's sidebar drafts better |
+| AI assistance | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Both have AI |
+| Click efficiency | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Similar |
+| Keyboard support | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Plane slightly better |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Rich text description editor** - Replace textarea with Plate/TipTap. Biggest gap.
+
+### P1 - High
+2. **Command palette** - Add `Cmd+K` with "Create issue" action
+3. **Right-click context menu** - On board cards and columns
+4. **State selector in create modal** - Let users set initial state
+
+### P2 - Medium
+5. **Multi-assignee support** - Allow multiple assignees
+6. **Quick add row in list view** - Inline creation without modal
+7. **Parent issue selector** - Sub-issue creation from modal
+8. **Start date field** - Add to modal
+
+### P3 - Nice to Have
+9. **Draft sidebar** - Visual draft management
+10. **Duplicate side panel** - 2-column layout for better UX
+
+---
+
+## Code References
+
+### Plane
+- Modal: `apps/web/core/components/issues/issue-modal/modal.tsx`
+- Form: `apps/web/core/components/issues/issue-modal/form.tsx`
+- Components: `apps/web/core/components/issues/issue-modal/components/`
+- Trigger: `apps/web/core/components/workspace/sidebar/quick-actions.tsx`
+- Shortcuts: Uses `useCommandPalette` hook from `hooks/store/use-command-palette`
+
+### Cascade
+- Modal: `src/components/CreateIssueModal.tsx` (597 lines)
+- Draft hook: `src/hooks/useDraftAutoSave.ts`
+- Duplicate detection: `src/components/DuplicateDetection.tsx`
+- Issue utils: `src/lib/issue-utils.ts`
+- Convex mutations: `convex/issues.ts`

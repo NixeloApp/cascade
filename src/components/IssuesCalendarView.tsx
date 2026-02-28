@@ -176,6 +176,7 @@ export function IssuesCalendarView({
     const isTodayDate = isToday(day);
 
     calendarDays.push(
+      // biome-ignore lint/a11y/noStaticElementInteractions: Calendar cells are drag-drop targets; interaction is via child buttons
       <div
         key={day}
         className={cn(

@@ -9,14 +9,17 @@ vi.mock("@convex/_generated/api", () => ({
   api: {
     issues: {
       listIssuesByDateRange: "api.issues.listIssuesByDateRange",
+      update: "api.issues.update",
     },
   },
 }));
 
 // Mock Convex React
 const mockUseQuery = vi.fn();
+const mockUseMutation = vi.fn(() => vi.fn());
 vi.mock("convex/react", () => ({
-  useQuery: (query: any, args: any) => mockUseQuery(query, args),
+  useQuery: (query: unknown, args: unknown) => mockUseQuery(query, args),
+  useMutation: () => mockUseMutation(),
 }));
 
 // Mock Utils
@@ -96,8 +99,11 @@ describe("IssuesCalendarView", () => {
 
     if (issueButton) {
       await user.hover(issueButton);
+      // canEdit defaults to true, so tooltip shows "title - Drag to reschedule"
       expect(
-        await screen.findByRole("tooltip", { name: "Test Issue with Tooltip" }),
+        await screen.findByRole("tooltip", {
+          name: "Test Issue with Tooltip - Drag to reschedule",
+        }),
       ).toBeInTheDocument();
     }
   });

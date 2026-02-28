@@ -35,7 +35,6 @@ export function LineChart({
     const maxValue = Math.max(...data.map((d) => Math.max(d.value, d.idealValue ?? 0)), 1);
 
     // Calculate chart dimensions
-    const chartWidth = 100; // percentage-based
     const chartHeight = height - padding.top - padding.bottom;
 
     // Generate path for actual data
@@ -97,9 +96,15 @@ export function LineChart({
   const { actualPath, idealPath, actualPoints, yLabels, padding, chartHeight } = chartData;
 
   return (
-    <svg width="100%" height={height} className="overflow-visible">
+    <svg
+      width="100%"
+      height={height}
+      className="overflow-visible"
+      role="img"
+      aria-label="Line chart"
+    >
       {/* Y-axis labels */}
-      {yLabels.map((label, i) => {
+      {yLabels.map((label) => {
         const y = padding.top + chartHeight * (1 - label / chartData.maxValue);
         return (
           <text
@@ -148,8 +153,8 @@ export function LineChart({
       />
 
       {/* Data points */}
-      {actualPoints.map((point, i) => (
-        <g key={i}>
+      {actualPoints.map((point, index) => (
+        <g key={`point-${point.label}`}>
           <circle
             cx={`${point.x}%`}
             cy={point.y}
@@ -158,7 +163,7 @@ export function LineChart({
             className="transition-default"
           />
           {/* X-axis labels (show every other for space) */}
-          {(i === 0 || i === actualPoints.length - 1 || i % 2 === 0) && (
+          {(index === 0 || index === actualPoints.length - 1 || index % 2 === 0) && (
             <text
               x={`${point.x}%`}
               y={height - 8}

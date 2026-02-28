@@ -1,378 +1,460 @@
-# Document Sharing
+# Document Sharing - Deep UX Comparison
 
 ## Overview
-
-Document sharing controls who can view and edit documents. This includes access levels, permission management, collaboration features, and public link sharing.
+Document sharing controls who can view and edit documents. This includes access levels, permission management, collaboration features, and public link sharing. This analysis compares Plane vs Cascade across sharing controls, permissions, and UX efficiency.
 
 ---
 
-## plane
+## Entry Points Comparison
 
-### Access Model
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Header icon** | Share button in header | Lock/Globe icon | Tie |
+| **Document menu** | Actions dropdown | Menu dropdown | Tie |
+| **Keyboard shortcut** | N/A | N/A | Tie |
+| **Quick action** | Lock icon (1-click) | Toggle button | Tie |
+| **Bulk share** | N/A | N/A | Tie |
 
-**Access Levels** (`EPageAccess` enum):
-- `PUBLIC` — Visible to all project members
-- `PRIVATE` — Restricted to owner only
+---
 
-### Permissions System
+## Layout Comparison
 
-**Permission Matrix** (`TBasePagePermissions`):
+### Plane Sharing Controls
+```
+Document Header:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ← Back   📄 Document Title                                                  │
+│                                                                             │
+│ ┌───────────────────────────────────────────────────────────────────────┐  │
+│ │ [👥 Collaborators pile] [🔒 Lock] [🌐 Share ▼] [⭐ Fav] [📁 Move] [⋯]│  │
+│ │         ↑                   ↑          ↑          ↑         ↑         │  │
+│ │    Show editors        Lock page   Share menu  Favorite  Move page   │  │
+│ └───────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-| Permission | Description |
-|------------|-------------|
-| `canCurrentUserAccessPage` | View access |
-| `canCurrentUserEditPage` | Edit access |
-| `canCurrentUserDuplicatePage` | Copy page |
-| `canCurrentUserLockPage` | Lock/unlock |
-| `canCurrentUserChangeAccess` | Toggle public/private |
-| `canCurrentUserArchivePage` | Archive page |
-| `canCurrentUserDeletePage` | Delete page |
-| `canCurrentUserFavoritePage` | Add to favorites |
-| `canCurrentUserMovePage` | Move between projects |
-| `isContentEditable` | Overall edit flag |
+Share Dropdown:
+┌─────────────────────────────────────┐
+│ Access                              │
+│ ┌─────────────────────────────────┐ │
+│ │ (●) 🔓 Public                   │ │
+│ │     All project members can view│ │
+│ │ ( ) 🔒 Private                  │ │
+│ │     Only you can access         │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ─────────────────────────────────── │
+│                                     │
+│ [📋 Copy Link]                      │
+│                                     │
+└─────────────────────────────────────┘
 
-### Page Actions
+Lock Control (when clicked):
+┌─────────────────────────────────────┐
+│ 🔒 Lock Page                        │
+│ ─────────────────────────────────── │
+│ ☐ Lock all child pages too         │
+│                                     │
+│         [Cancel] [Lock Page]        │
+└─────────────────────────────────────┘
 
-**Sharing Controls** (Header actions):
-- Make Public / Make Private toggle
-- Copy link button
-- Lock/Unlock page
-- Move to different project
-
-**Lock Feature**:
-- Prevents concurrent editing
-- Shows lock icon when active
-- Recursive lock option (lock children)
-- Only lock owner can unlock
-
-### Collaborative Features
-
-**Active Collaborators**:
-- Avatar list in header
-- Shows who's currently viewing/editing
-- Color-coded cursors in editor
-- Real-time presence via HocuspocusDocs
-
-**Enterprise Features** (EE):
-- Granular permission controls
-- Team-based access
-- Share with external users
-
-### Service Methods
-
-```typescript
-// Access control
-updateAccess(workspaceSlug, projectId, pageId, { access })
-  → POST /api/.../pages/{pageId}/access/
-
-// Locking
-lock() → POST /api/.../pages/{pageId}/lock/
-unlock() → DELETE /api/.../pages/{pageId}/lock/
-
-// Archiving
-archive() → POST /api/.../pages/{pageId}/archive/
-restore() → DELETE /api/.../pages/{pageId}/archive/
-
-// Favorites
-addToFavorites() → POST /api/.../favorite-pages/{pageId}/
-removeFromFavorites() → DELETE /api/.../favorite-pages/{pageId}/
+Locked State Indicator:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🔒 Locked by Alice on Jan 15, 2026                              [Unlock]   │
+│ ↑ Banner appears at top of editor                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Page Organization
+### Cascade Sharing Controls
+```
+Document Header:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 📄 Document Title                                                           │
+│                                                                             │
+│ ┌───────────────────────────────────────────────────────────────────────┐  │
+│ │ [👥 3 online] [🔒/🌐 Toggle] [⋯ Menu]                                 │  │
+│ │       ↑            ↑            ↑                                     │  │
+│ │   Presence    Visibility    Actions                                   │  │
+│ └───────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-**Favorites**: Star pages for quick access
-**Archive**: Soft-delete with restore option
-**Move**: Transfer pages between projects
+Visibility Toggle (click icon):
+┌─────────────────────────────┐
+│ Current: Private 🔒        │
+│                            │
+│ [Make Public]              │
+│ All org members can view   │
+└─────────────────────────────┘
+
+OR
+
+┌─────────────────────────────┐
+│ Current: Public 🌐         │
+│                            │
+│ [Make Private]             │
+│ Only you can access        │
+└─────────────────────────────┘
+
+Menu Dropdown:
+┌─────────────────────────────────────┐
+│ [📝 Edit Title]                     │
+│ [📁 Move to...]                     │
+│ [🔒 Make Private / 🌐 Make Public] │
+│ ─────────────────────────────────── │
+│ [🗑️ Delete]                         │
+└─────────────────────────────────────┘
+```
 
 ---
 
-## Cascade
+## Access Model Comparison
 
-### Access Model
+### Access Levels
 
-**Visibility Levels**:
-- `isPublic: true` — Visible to all organization members
-- `isPublic: false` — Creator-only access (with exceptions)
+| Level | Plane | Cascade |
+|-------|-------|---------|
+| **Public** | All project members | All organization members |
+| **Private** | Owner only | Creator only |
+| **Specific users** | EE feature | N/A |
+| **Team-based** | EE feature | N/A |
+| **External sharing** | EE feature | N/A |
 
-**Scoping**:
-- Organization-scoped (default)
-- Workspace-scoped (editors + admins)
-- Project-scoped (project members)
+### Scoping Model
 
-### Permissions System
+| Scope | Plane | Cascade |
+|-------|-------|---------|
+| **Project-scoped** | Required | Optional |
+| **Workspace-scoped** | N/A | Yes |
+| **Organization-scoped** | N/A | Yes (default) |
 
-**Access Rules**:
+---
 
-| Scenario | Can View | Can Edit |
-|----------|----------|----------|
-| Public document, org member | Yes | Creator only |
-| Private document, creator | Yes | Yes |
-| Private document, other user | No | No |
-| Project document, project member | Yes | Editor role |
-| Workspace document, workspace editor | Yes | Yes |
+## Permission Matrix
+
+### Plane Permissions
+```
+Permission Flags (TBasePagePermissions):
+
+| Permission                    | Owner | Project Editor | Project Viewer |
+|-------------------------------|-------|----------------|----------------|
+| canCurrentUserAccessPage      | ✅    | ✅ (if public) | ✅ (if public) |
+| canCurrentUserEditPage        | ✅    | ✅ (if public) | ❌             |
+| canCurrentUserDuplicatePage   | ✅    | ✅             | ❌             |
+| canCurrentUserLockPage        | ✅    | ✅             | ❌             |
+| canCurrentUserChangeAccess    | ✅    | ❌             | ❌             |
+| canCurrentUserArchivePage     | ✅    | ❌             | ❌             |
+| canCurrentUserDeletePage      | ✅    | ❌             | ❌             |
+| canCurrentUserFavoritePage    | ✅    | ✅             | ✅             |
+| canCurrentUserMovePage        | ✅    | ❌             | ❌             |
+| isContentEditable             | ✅    | ✅ (if public) | ❌             |
+```
+
+### Cascade Permissions
+```
+Permission Rules (based on document visibility + project role):
+
+| Scenario                      | Can View | Can Edit | Can Delete |
+|-------------------------------|----------|----------|------------|
+| Public doc, org member        | ✅       | ❌       | ❌         |
+| Public doc, creator           | ✅       | ✅       | ✅         |
+| Private doc, creator          | ✅       | ✅       | ✅         |
+| Private doc, other user       | ❌       | ❌       | ❌         |
+| Project doc, project viewer   | ✅       | ❌       | ❌         |
+| Project doc, project editor   | ✅       | ✅       | ❌         |
+| Project doc, project admin    | ✅       | ✅       | ✅         |
+```
+
+---
+
+## Click Analysis
+
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **Make public** | 2 clicks (Share → Public) | 2 clicks (icon → confirm) | Tie |
+| **Make private** | 2 clicks (Share → Private) | 2 clicks (icon → confirm) | Tie |
+| **Lock document** | 2 clicks (Lock → confirm) | N/A | Plane only |
+| **Unlock document** | 1 click (Unlock button) | N/A | Plane only |
+| **Copy link** | 2 clicks (Share → Copy) | N/A | Plane only |
+| **Add to favorites** | 1 click (⭐) | N/A | Plane only |
+| **Move document** | 3 clicks (Move → select → confirm) | 3 clicks (menu → select → confirm) | Tie |
+| **Archive document** | 2 clicks (menu → archive) | N/A | Plane only |
+| **Delete document** | 2 clicks (menu → delete) | 2 clicks (menu → delete) | Tie |
+| **View collaborators** | Hover avatar pile | Hover presence | Tie |
+
+---
+
+## Sharing Features Comparison
 
 ### Sharing Controls
 
-**Toggle Visibility** (`togglePublic` mutation):
-- Button in DocumentHeader
-- Requires EDITOR permission on linked project
-- Only document creator can toggle
-- Validation prevents viewers from making public
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Public/Private toggle** | Yes | Yes |
+| **Copy shareable link** | Yes | No |
+| **Link expiration** | No | N/A |
+| **Password protection** | No | N/A |
+| **Granular permissions** | EE | No |
+| **Share with specific users** | EE | No |
+| **Share with teams** | EE | No |
+| **External sharing** | EE | No |
 
-**UI**:
-- Lock icon for private documents
-- Globe icon for public documents
-- Click to toggle (if permitted)
+### Document Locking
 
-### Security Enforcement
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Lock page** | Yes | No |
+| **Lock children** | Yes (recursive) | N/A |
+| **Lock indicator** | Banner + icon | N/A |
+| **Lock owner info** | Yes (name, date) | N/A |
+| **Force unlock (admin)** | Unknown | N/A |
 
-**Multi-tenant Isolation**:
-- Organization membership checked
-- Cross-org access blocked
-- Tests in `documentsPermissionSecurity.test.ts`
+### Organization
 
-**RBAC Integration**:
-- Uses project role (EDITOR, VIEWER)
-- Workspace role inheritance
-- Admin override capabilities
-
-### Collaborative Features
-
-**Presence Indicators**:
-- Component: `PresenceIndicator.tsx`
-- Shows active editors count
-- Avatar pile of collaborators
-- Uses Convex presence API
-
-**Collaborators Display**:
-- Component: `Collaborators.tsx`
-- Cursor colors per user
-- Online indicator dots
-- Names on hover
-
-### Document Hierarchy
-
-**Parent-Child Relationships**:
-- Documents can have parent documents
-- Nested organization structure
-- Order field for siblings
-- Breadcrumbs navigation
-
-**Operations**:
-- `moveDocument`: Change parent
-- `reorderDocuments`: Reorder siblings
-- `getTree`: Build full hierarchy
-- `getBreadcrumbs`: Path to root
-
-### Comments System
-
-**Features**:
-- Add comments to documents
-- Threading (reply to comments)
-- Emoji reactions
-- Mentions in comments
-- Soft delete (author only)
-
-**Rate Limiting**: 60 comments per minute
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Favorites** | Yes (star) | No |
+| **Archive/Restore** | Yes | Soft delete only |
+| **Move between projects** | Yes | Yes |
+| **Document hierarchy** | No | Yes |
+| **Breadcrumbs** | No | Yes |
 
 ---
 
-## Comparison Table
+## Collaboration Display
 
-| Aspect | plane | Cascade | Best |
-|--------|-------|---------|------|
-| Access levels | Public/Private | Public/Private | tie |
-| Project scoping | Always required | Optional | Cascade |
-| Lock/unlock | Yes | No | plane |
-| Move between projects | Yes | No | plane |
-| Favorites | Yes | No | plane |
-| Archive/restore | Yes | Soft delete | plane |
-| Collaborator display | Yes (avatars) | Yes (avatars) | tie |
-| Document hierarchy | No | Yes (parent/child) | Cascade |
-| Comments | No | Yes | Cascade |
-| Emoji reactions | No | Yes (on comments) | Cascade |
-| Granular permissions | EE only | Project-based | Cascade |
-| Multi-tenant isolation | Yes | Yes | tie |
-| Rate limiting | Unknown | Yes | Cascade |
-| Breadcrumbs | No | Yes | Cascade |
+### Plane Collaborators
+```
+Header Area:
+┌─────────────────────────────────────────────────────────────────┐
+│                    👤👤👤 +2                                    │
+│                     ↑ Avatar pile shows active editors          │
+│                     └─ Click to see full list                   │
+└─────────────────────────────────────────────────────────────────┘
 
----
+Expanded View:
+┌─────────────────────────────────────┐
+│ Currently Editing:                  │
+│ 🟢 Alice (active)                   │
+│ 🟢 Bob (active)                     │
+│ 🟡 Carol (idle)                     │
+│ ─────────────────────────────────── │
+│ Recent Editors:                     │
+│ Dave - 2 hours ago                  │
+│ Eve - Yesterday                     │
+└─────────────────────────────────────┘
+```
 
-## Recommendations
+### Cascade Collaborators
+```
+Header Area:
+┌─────────────────────────────────────────────────────────────────┐
+│                    👥 3 online                                  │
+│                     ↑ Count badge                               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
-1. **Priority 1**: Add page lock/unlock feature
-   - Prevent concurrent edits
-   - Lock icon in header
-   - Only lock owner can unlock
+Hover Tooltip:
+┌─────────────────────────────────────┐
+│ 🔴 Alice                            │
+│ 🟢 Bob                              │
+│ 🔵 Carol                            │
+│ ↑ Colors match cursors in editor    │
+└─────────────────────────────────────┘
 
-2. **Priority 2**: Add favorites system
-   - Star documents
-   - Quick access list
-   - Sidebar favorites section
-
-3. **Priority 3**: Add archive/restore
-   - Soft archive (not delete)
-   - Archived documents tab
-   - Restore with one click
-
-4. **Priority 4**: Add move between projects
-   - Move document to different project
-   - Update permissions accordingly
-   - Maintain hierarchy
-
-5. **Priority 5**: Add share link generation
-   - Copy shareable link
-   - Optional expiration
-   - Password protection (optional)
-
----
-
-## Implementation: Page Lock
-
-```typescript
-// Schema addition
-documents: defineTable({
-  // ... existing fields
-  isLocked: v.optional(v.boolean()),
-  lockedBy: v.optional(v.id("users")),
-  lockedAt: v.optional(v.number()),
-})
-
-// Lock mutation
-export const lockDocument = mutation({
-  args: {
-    documentId: v.id("documents"),
-  },
-  returns: v.object({ success: v.boolean() }),
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const doc = await ctx.db.get(args.documentId);
-    if (!doc) throw new Error("Document not found");
-
-    // Check if already locked by someone else
-    if (doc.isLocked && doc.lockedBy !== userId) {
-      const locker = await ctx.db.get(doc.lockedBy!);
-      throw new Error(`Document locked by ${locker?.name}`);
-    }
-
-    await ctx.db.patch(args.documentId, {
-      isLocked: true,
-      lockedBy: userId,
-      lockedAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-// Unlock mutation
-export const unlockDocument = mutation({
-  args: {
-    documentId: v.id("documents"),
-  },
-  returns: v.object({ success: v.boolean() }),
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const doc = await ctx.db.get(args.documentId);
-    if (!doc) throw new Error("Document not found");
-
-    // Only lock owner can unlock
-    if (doc.lockedBy !== userId) {
-      throw new Error("Only the lock owner can unlock");
-    }
-
-    await ctx.db.patch(args.documentId, {
-      isLocked: false,
-      lockedBy: undefined,
-      lockedAt: undefined,
-    });
-
-    return { success: true };
-  },
-});
+Presence Indicator Component:
+┌─────────────────────────────────────┐
+│ 👤 👤 👤                             │
+│ ↑ Avatar pile with online dots      │
+└─────────────────────────────────────┘
 ```
 
 ---
 
-## Implementation: Favorites
+## Document Hierarchy (Cascade Only)
 
-```typescript
-// Schema addition (separate table)
-documentFavorites: defineTable({
-  documentId: v.id("documents"),
-  userId: v.id("users"),
-  createdAt: v.number(),
-})
-  .index("by_user", ["userId"])
-  .index("by_document", ["documentId"])
-  .index("by_user_document", ["userId", "documentId"]),
+### Tree Structure
+```
+Documents
+├─ 📄 Product Roadmap
+│   ├─ 📄 Q1 Goals
+│   ├─ 📄 Q2 Goals
+│   └─ 📄 Technical Spec
+│       ├─ 📄 API Design
+│       └─ 📄 Database Schema
+├─ 📄 Meeting Notes
+│   ├─ 📄 Standup Jan 15
+│   └─ 📄 Sprint Review
+└─ 📄 Engineering Wiki
+```
 
-// Add to favorites
-export const addToFavorites = mutation({
-  args: { documentId: v.id("documents") },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    // Check if already favorited
-    const existing = await ctx.db
-      .query("documentFavorites")
-      .withIndex("by_user_document", q =>
-        q.eq("userId", userId).eq("documentId", args.documentId)
-      )
-      .first();
-
-    if (existing) return { success: true };
-
-    await ctx.db.insert("documentFavorites", {
-      documentId: args.documentId,
-      userId,
-      createdAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-// List favorites
-export const listFavorites = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const favorites = await ctx.db
-      .query("documentFavorites")
-      .withIndex("by_user", q => q.eq("userId", userId))
-      .collect();
-
-    const documents = await Promise.all(
-      favorites.map(f => ctx.db.get(f.documentId))
-    );
-
-    return documents.filter(Boolean);
-  },
-});
+### Breadcrumbs Navigation
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Documents › Product Roadmap › Technical Spec › API Design      │
+│     ↑             ↑                ↑              ↑             │
+│   Root       Parent 1          Parent 2       Current           │
+│ (clickable)  (clickable)      (clickable)                       │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Screenshots/References
+## Comments System (Cascade Only)
 
-### plane
-- Access control: `~/Desktop/plane/apps/web/core/store/pages/base-page.ts`
-- Header actions: `~/Desktop/plane/apps/web/core/components/pages/header/actions.tsx`
-- Lock control: `~/Desktop/plane/apps/web/core/components/pages/header/lock-control.tsx`
-- Share control: `~/Desktop/plane/apps/web/core/components/pages/header/share-control.tsx`
-- Service: `~/Desktop/plane/apps/web/core/services/page/project-page.service.ts`
+### Comment Thread
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Comments (3)                                               [+]  │
+├─────────────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ 👤 Alice • 2 hours ago                                      │ │
+│ │ Great progress on this document! @Bob can you review?       │ │
+│ │                                        [👍 2] [💬 Reply] [⋯]│ │
+│ ├─────────────────────────────────────────────────────────────┤ │
+│ │   👤 Bob • 1 hour ago                                       │ │
+│ │   Sure, I'll take a look this afternoon.                    │ │
+│ │                                            [👍 1] [💬] [⋯] │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ 👤 Carol • 30 minutes ago                                   │ │
+│ │ Should we add a section about deployment?                   │ │
+│ │                                              [👍] [💬] [⋯] │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ Add a comment...                                       [📤] │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Comment Features
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Add comments** | No | Yes |
+| **Threaded replies** | N/A | Yes |
+| **@mentions in comments** | N/A | Yes |
+| **Emoji reactions** | N/A | Yes |
+| **Edit own comments** | N/A | Yes |
+| **Delete own comments** | N/A | Yes |
+| **Rate limiting** | N/A | 60/min |
+
+---
+
+## Keyboard Support
+
+| Shortcut | Plane | Cascade |
+|----------|-------|---------|
+| **Toggle visibility** | N/A | N/A |
+| **Lock document** | N/A | N/A |
+| **Copy link** | N/A | N/A |
+| **Add to favorites** | F (global?) | N/A |
+| **Archive** | N/A | N/A |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Access levels | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Both have public/private |
+| Page locking | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Favorites | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Copy link | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Archive/restore | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane full archive |
+| Move documents | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Both supported |
+| Document hierarchy | ⭐ | ⭐⭐⭐⭐⭐ | Cascade parent/child |
+| Breadcrumbs | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Comments | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Emoji reactions | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Collaborator display | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Plane richer |
+| Granular permissions | ⭐⭐⭐⭐⭐ (EE) | ⭐⭐ | Plane EE feature |
+| Security isolation | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Both multi-tenant |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add page lock/unlock** - Prevent concurrent editing conflicts
+   ```tsx
+   // Schema addition
+   documents: defineTable({
+     // ... existing
+     isLocked: v.optional(v.boolean()),
+     lockedBy: v.optional(v.id("users")),
+     lockedAt: v.optional(v.number()),
+   })
+   ```
+
+### P1 - High
+2. **Add favorites system** - Star documents for quick access
+   ```tsx
+   // New table
+   documentFavorites: defineTable({
+     documentId: v.id("documents"),
+     userId: v.id("users"),
+   }).index("by_user", ["userId"])
+   ```
+
+3. **Add copy shareable link** - One-click copy URL with access check
+4. **Add archive/restore** - Soft archive instead of hard delete
+
+### P2 - Medium
+5. **Add collaborator list view** - Expand to see all active editors
+6. **Add lock recursive option** - Lock all child documents
+7. **Add share with specific users** - Share with select org members
+
+### P3 - Nice to Have
+8. **Add link expiration** - Time-limited share links
+9. **Add password protection** - Password-protected public links
+10. **Add share analytics** - Track who viewed shared documents
+11. **Add external sharing** - Share with users outside organization
+
+---
+
+## Code References
+
+### Plane
+- Access control: `apps/web/core/store/pages/base-page.ts` (permissions)
+- Header actions: `apps/web/core/components/pages/header/actions.tsx`
+- Lock control: `apps/web/core/components/pages/header/lock-control.tsx`
+- Share control: `apps/web/core/components/pages/header/share-control.tsx`
+- Favorites: `apps/web/core/components/pages/header/favorites-control.tsx`
+- Service: `apps/web/core/services/page/project-page.service.ts`
+- Page store: `apps/web/core/store/pages/project-page.store.ts`
 
 ### Cascade
-- Backend: `~/Desktop/cascade/convex/documents.ts` (togglePublic, permissions)
-- Security tests: `~/Desktop/cascade/convex/documentsPermissionSecurity.test.ts`
-- Header: `~/Desktop/cascade/src/components/DocumentHeader.tsx`
-- Presence: `~/Desktop/cascade/src/components/PresenceIndicator.tsx`
-- Comments: `~/Desktop/cascade/src/components/DocumentComments.tsx`
+- Backend: `convex/documents.ts` (togglePublic, permissions)
+- Security tests: `convex/documentsPermissionSecurity.test.ts`
+- Document header: `src/components/DocumentHeader.tsx`
+- Move dialog: `src/components/MoveDocumentDialog.tsx`
+- Presence indicator: `src/components/PresenceIndicator.tsx`
+- Collaborators: `src/components/Plate/Collaborators.tsx`
+- Comments: `src/components/DocumentComments.tsx`
+
+### Cascade Data Structures
+```typescript
+// Document with hierarchy
+interface Document {
+  _id: Id<"documents">;
+  title: string;
+  isPublic: boolean;
+  createdBy: Id<"users">;
+  organizationId: Id<"organizations">;
+  projectId?: Id<"projects">;
+  workspaceId?: Id<"workspaces">;
+  parentDocumentId?: Id<"documents">; // Hierarchy
+  order: number; // Sibling order
+}
+
+// Comment with threading
+interface DocumentComment {
+  _id: Id<"documentComments">;
+  documentId: Id<"documents">;
+  userId: Id<"users">;
+  content: string;
+  parentCommentId?: Id<"documentComments">; // Threading
+  reactions: { emoji: string; userId: Id<"users"> }[];
+}
+```

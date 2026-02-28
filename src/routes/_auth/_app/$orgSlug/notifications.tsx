@@ -3,7 +3,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
-import { Archive, Bell, CheckCheck, RotateCcw } from "lucide-react";
+import { Archive, Bell, CheckCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { NotificationItem, type NotificationWithActor } from "@/components/NotificationItem";

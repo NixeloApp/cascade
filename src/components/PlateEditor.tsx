@@ -40,6 +40,7 @@ interface PlateEditorProps {
 /**
  * Main editor component - renders the Plate editor with document sync
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Editor component with multiple document operations and state management
 export function PlateEditor({ documentId }: PlateEditorProps) {
   const document = useQuery(api.documents.getDocument, { id: documentId });
   const updateTitle = useMutation(api.documents.updateTitle);

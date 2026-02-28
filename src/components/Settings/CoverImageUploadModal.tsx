@@ -173,11 +173,7 @@ export function CoverImageUploadModal({
             )}
           >
             {displayImage ? (
-              <img
-                src={displayImage}
-                alt="Cover preview"
-                className="w-full h-full object-cover"
-              />
+              <img src={displayImage} alt="Cover preview" className="w-full h-full object-cover" />
             ) : (
               <Flex align="center" justify="center" className="h-full">
                 <Typography variant="caption" color="tertiary">
@@ -198,7 +194,8 @@ export function CoverImageUploadModal({
           )}
         </div>
 
-        {/* Drop zone */}
+        {/* Drop zone - uses div with role="button" because button elements don't support drag-drop properly */}
+        {/* biome-ignore lint/a11y/useSemanticElements: Drop zones require div for drag-drop support */}
         <div
           className={cn(
             "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",

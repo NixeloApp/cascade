@@ -28,6 +28,12 @@ describe("NotificationCenter", () => {
   const mockMarkAllAsRead = Object.assign(vi.fn(), {
     withOptimisticUpdate: vi.fn().mockReturnThis(),
   }) as Mock & ReactMutation<FunctionReference<"mutation">>;
+  const mockArchive = Object.assign(vi.fn(), {
+    withOptimisticUpdate: vi.fn().mockReturnThis(),
+  }) as Mock & ReactMutation<FunctionReference<"mutation">>;
+  const mockSnooze = Object.assign(vi.fn(), {
+    withOptimisticUpdate: vi.fn().mockReturnThis(),
+  }) as Mock & ReactMutation<FunctionReference<"mutation">>;
   const mockRemove = Object.assign(vi.fn(), {
     withOptimisticUpdate: vi.fn().mockReturnThis(),
   }) as Mock & ReactMutation<FunctionReference<"mutation">>;
@@ -39,14 +45,20 @@ describe("NotificationCenter", () => {
     mutationCallCount = 0;
     mockMarkAsRead.mockReset();
     mockMarkAllAsRead.mockReset();
+    mockArchive.mockReset();
+    mockSnooze.mockReset();
     mockRemove.mockReset();
 
     // Set up mutation mocks to persist across re-renders
+    // Order matches component: markAsRead, markAllAsRead, archiveNotification, snoozeNotification, removeNotification
     vi.mocked(useMutation).mockImplementation(() => {
       mutationCallCount++;
-      if (mutationCallCount % 3 === 1) return mockMarkAsRead; // 1st, 4th, 7th calls
-      if (mutationCallCount % 3 === 2) return mockMarkAllAsRead; // 2nd, 5th, 8th calls
-      return mockRemove; // 3rd, 6th, 9th calls
+      const idx = ((mutationCallCount - 1) % 5) + 1;
+      if (idx === 1) return mockMarkAsRead;
+      if (idx === 2) return mockMarkAllAsRead;
+      if (idx === 3) return mockArchive;
+      if (idx === 4) return mockSnooze;
+      return mockRemove; // 5th
     });
 
     // Default mock for useQuery

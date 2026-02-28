@@ -87,6 +87,7 @@ interface CreateIssueModalProps {
  * @param onOpenChange - Callback invoked when the modal open state changes; receives the new open state.
  * @returns The modal's JSX element, or `null` when required project data is not yet available.
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex modal with form state, templates, labels, AI suggestions, and draft management
 export function CreateIssueModal({
   projectId,
   sprintId,
@@ -235,31 +236,21 @@ export function CreateIssueModal({
   useEffect(() => {
     if (!open) return;
 
-    const values = form.state.values;
+    const { title, description, type, priority, assigneeId, storyPoints } = form.state.values;
     // Only save if there's meaningful content
-    if (!values.title?.trim()) return;
+    if (!title?.trim()) return;
 
     const draftData: IssueDraft = {
-      title: values.title,
-      description: values.description,
-      type: values.type,
-      priority: values.priority,
-      assigneeId: values.assigneeId,
-      storyPoints: values.storyPoints,
+      title,
+      description,
+      type,
+      priority,
+      assigneeId,
+      storyPoints,
       selectedLabels,
     };
     saveDraft(draftData);
-  }, [
-    open,
-    form.state.values.title,
-    form.state.values.description,
-    form.state.values.type,
-    form.state.values.priority,
-    form.state.values.assigneeId,
-    form.state.values.storyPoints,
-    selectedLabels,
-    saveDraft,
-  ]);
+  }, [open, form.state.values, selectedLabels, saveDraft]);
 
   // Reset draft dismissed state when modal closes
   useEffect(() => {
