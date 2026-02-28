@@ -5,6 +5,8 @@ import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createProjectInOrganization, createTestContext, createTestIssue } from "./testUtils";
 
+const TIME_OFFSET_MS = 10000;
+
 describe("Dashboard - Missing Coverage", () => {
   describe("getMyRecentActivity", () => {
     it("should handle activities with null/undefined projects gracefully", async () => {
@@ -27,7 +29,7 @@ describe("Dashboard - Missing Coverage", () => {
 
       // Instead of soft deleting the project (which might still be fetched by get),
       // we can literally delete the project document entirely to force `projectMap.get` to return undefined.
-      await t.run(async (ctx: any) => {
+      await t.run(async (ctx) => {
         await ctx.db.delete(projectId);
       });
 
@@ -57,8 +59,8 @@ describe("Dashboard - Missing Coverage", () => {
       });
 
       // Update the issue to set its updatedAt to an older timestamp
-      await t.run(async (ctx: any) => {
-        await ctx.db.patch(issueId1, { updatedAt: Date.now() - 10000 });
+      await t.run(async (ctx) => {
+        await ctx.db.patch(issueId1, { updatedAt: Date.now() - TIME_OFFSET_MS });
       });
 
       const issueId2 = await createTestIssue(t, projectId, userId, {
@@ -68,7 +70,7 @@ describe("Dashboard - Missing Coverage", () => {
       });
 
       // Update the issue to set its updatedAt to a newer timestamp
-      await t.run(async (ctx: any) => {
+      await t.run(async (ctx) => {
         await ctx.db.patch(issueId2, { updatedAt: Date.now() });
       });
 
@@ -97,7 +99,7 @@ describe("Dashboard - Missing Coverage", () => {
       });
 
       // Hard delete the project so ctx.db.get(focusTask.projectId) returns null
-      await t.run(async (ctx: any) => {
+      await t.run(async (ctx) => {
         await ctx.db.delete(projectId);
       });
 

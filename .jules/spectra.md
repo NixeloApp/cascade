@@ -19,7 +19,7 @@
 ## 2025-03-08 - Testing Convex HTTP Actions
 **Learning:** Convex HTTP actions (`httpAction`) are best tested by directly importing the handler function and mocking the `ActionCtx` and `Request` object. Standard `convex-test` utilities are optimized for internal functions, not HTTP endpoints.
 **Action:** When testing HTTP actions, import the handler, mock `ActionCtx` (including `runQuery`/`runMutation`), and use `vi.fn()` for `fetch` and environment variables.
-### [2024-xx-xx] Dashboard Test Coverage
+### [2026-02-28] Dashboard Test Coverage
 
 **What was done:**
 Added `convex/dashboard.jules.test.ts` to improve coverage of `convex/dashboard.ts`, focusing on:
