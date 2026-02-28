@@ -492,7 +492,7 @@ export const remove = projectEditorMutation({
 
     await ctx.db.delete(args.id);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
