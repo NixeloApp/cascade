@@ -186,6 +186,7 @@ export const remove = authenticatedMutation({
   args: {
     reminderId: v.id("eventReminders"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const reminder = await ctx.db.get(args.reminderId);
     if (!reminder) throw notFound("reminder", args.reminderId);
@@ -196,6 +197,8 @@ export const remove = authenticatedMutation({
     }
 
     await ctx.db.delete(args.reminderId);
+
+    return { success: true, deleted: true } as const;
   },
 });
 
