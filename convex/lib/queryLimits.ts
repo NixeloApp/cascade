@@ -22,6 +22,9 @@ export const DEFAULT_SEARCH_PAGE_SIZE = 20;
 /** Maximum allowed page size (prevents abuse) */
 export const MAX_PAGE_SIZE = 100;
 
+/** Sidebar display limit - no pagination/search exists, so keep it light */
+export const SIDEBAR_DISPLAY_LIMIT = 25;
+
 /** Maximum offset for pagination (prevents deep pagination abuse) */
 export const MAX_OFFSET = 1000;
 

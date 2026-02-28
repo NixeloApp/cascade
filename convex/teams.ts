@@ -17,10 +17,10 @@ import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import {
-  MAX_PAGE_SIZE,
   MAX_PROJECTS_PER_TEAM,
   MAX_TEAM_MEMBERS,
   MAX_TEAMS_PER_ORG,
+  SIDEBAR_DISPLAY_LIMIT,
 } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -614,10 +614,8 @@ export const getOrganizationTeams = organizationQuery({
     const isAdmin = ctx.organizationRole === "admin" || ctx.organizationRole === "owner";
 
     // Fetch team members and projects per team using indexes with limits
-    // Optimization: Use smaller limits for counting — we only need counts + current user's role
+    // Optimization: Use SIDEBAR_DISPLAY_LIMIT - no pagination/search in sidebar
     const teamIds = teams.map((t) => t._id);
-
-    const MEMBER_COUNT_LIMIT = 100; // Sufficient for counting; saves bandwidth vs MAX_TEAM_MEMBERS (500)
 
     const [teamMembersArrays, projectCountsArray] = await Promise.all([
       Promise.all(
@@ -626,7 +624,7 @@ export const getOrganizationTeams = organizationQuery({
             .query("teamMembers")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter(notDeleted)
-            .take(MEMBER_COUNT_LIMIT),
+            .take(SIDEBAR_DISPLAY_LIMIT),
         ),
       ),
       Promise.all(
@@ -635,7 +633,7 @@ export const getOrganizationTeams = organizationQuery({
             .query("projects")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter(notDeleted)
-            .take(MAX_PAGE_SIZE);
+            .take(SIDEBAR_DISPLAY_LIMIT);
           return projects.length;
         }),
       ),
