@@ -26,7 +26,13 @@ export async function encryptE2EData(data: string, apiKey: string): Promise<stri
 
 export async function decryptE2EData(encryptedData: string, apiKey: string): Promise<string> {
   // Decode base64
-  const binaryString = atob(encryptedData);
+  let binaryString: string;
+  try {
+    binaryString = atob(encryptedData);
+  } catch (e) {
+    throw new Error(`Invalid base64 string provided to decryptE2EData: ${String(e)}`);
+  }
+
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
