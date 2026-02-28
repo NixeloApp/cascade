@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput, FormSelectRadix, FormTextarea } from "@/lib/form";
-import { Check, Sparkles, User } from "@/lib/icons";
+import { Check, Plus, Sparkles, User } from "@/lib/icons";
 import {
   getPriorityColor,
   getTypeLabel,
@@ -22,11 +22,13 @@ import { cn } from "@/lib/utils";
 import { DuplicateDetection } from "./DuplicateDetection";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
+import { ColorPicker } from "./ui/ColorPicker";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
-import { Select } from "./ui/form";
+import { Input, Select } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { SelectItem } from "./ui/Select";
 import { Stack } from "./ui/Stack";
 import { Switch } from "./ui/Switch";
@@ -86,6 +88,11 @@ export function CreateIssueModal({
   const [selectedTemplate, setSelectedTemplate] = useState<Id<"issueTemplates"> | "">("");
   // Labels (array state, not simple string)
   const [selectedLabels, setSelectedLabels] = useState<Id<"labels">[]>([]);
+  // Inline label creation state
+  const [showCreateLabel, setShowCreateLabel] = useState(false);
+  const [newLabelName, setNewLabelName] = useState("");
+  const [newLabelColor, setNewLabelColor] = useState("#6366F1"); // Default to brand-ring
+  const [isCreatingLabel, setIsCreatingLabel] = useState(false);
   // AI state
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
@@ -115,6 +122,7 @@ export function CreateIssueModal({
 
   // Mutations
   const createIssue = useMutation(api.issues.createIssue);
+  const createLabel = useMutation(api.labels.createLabel);
   const generateSuggestions = useAction(api.ai.actions.generateIssueSuggestions);
 
   type CreateIssueForm = z.infer<typeof createIssueSchema>;
@@ -208,6 +216,30 @@ export function CreateIssueModal({
 
   const toggleLabel = (labelId: Id<"labels">) => {
     setSelectedLabels((prev) => toggleInArray(prev, labelId));
+  };
+
+  const handleCreateLabel = async () => {
+    if (!effectiveProjectId || !newLabelName.trim()) return;
+
+    setIsCreatingLabel(true);
+    try {
+      const { labelId } = await createLabel({
+        projectId: effectiveProjectId,
+        name: newLabelName.trim(),
+        color: newLabelColor,
+      });
+      // Auto-select the newly created label
+      setSelectedLabels((prev) => [...prev, labelId]);
+      // Reset the form
+      setNewLabelName("");
+      setNewLabelColor("#6366F1");
+      setShowCreateLabel(false);
+      showSuccess("Label created");
+    } catch (error) {
+      showError(error, "Failed to create label");
+    } finally {
+      setIsCreatingLabel(false);
+    }
   };
 
   interface AISuggestions {
@@ -452,13 +484,13 @@ export function CreateIssueModal({
         </form.Field>
 
         {/* Labels (outside form - array state) */}
-        {labels && labels.length > 0 && (
+        {effectiveProjectId && (
           <Stack as="fieldset" gap="xs">
             <Typography as="legend" variant="label" className="block text-ui-text">
               Labels
             </Typography>
-            <Flex wrap gap="sm">
-              {labels.map((label: Doc<"labels">) => (
+            <Flex wrap gap="sm" align="center">
+              {labels?.map((label: Doc<"labels">) => (
                 <Button
                   key={label._id}
                   variant="unstyled"
@@ -478,6 +510,58 @@ export function CreateIssueModal({
                   {label.name}
                 </Button>
               ))}
+              {/* Inline label creation */}
+              <Popover open={showCreateLabel} onOpenChange={setShowCreateLabel}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2"
+                    aria-label="Create new label"
+                  >
+                    <Icon icon={Plus} size="sm" />
+                    <span className="ml-1">New</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-64">
+                  <Stack gap="sm">
+                    <Typography variant="label">Create Label</Typography>
+                    <Input
+                      placeholder="Label name"
+                      value={newLabelName}
+                      onChange={(e) => setNewLabelName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleCreateLabel();
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <ColorPicker value={newLabelColor} onChange={setNewLabelColor} label="Color" />
+                    <Flex justify="end" gap="sm">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setShowCreateLabel(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleCreateLabel}
+                        disabled={!newLabelName.trim()}
+                        isLoading={isCreatingLabel}
+                      >
+                        Create
+                      </Button>
+                    </Flex>
+                  </Stack>
+                </PopoverContent>
+              </Popover>
             </Flex>
           </Stack>
         )}

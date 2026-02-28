@@ -37,6 +37,7 @@ export function run() {
     "convex/schema.ts",
     "convex/lib/issueHelpers.ts",
     "src/components/LabelsManager.tsx",
+    "src/components/CreateIssueModal.tsx", // Inline label creation with custom colors
     "src/components/Settings/DevToolsTab.tsx",
     "src/components/AI/config.ts",
     "src/lib/yjs/", // Y.js collaboration cursor colors (dynamic per-user)

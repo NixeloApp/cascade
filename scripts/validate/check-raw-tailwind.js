@@ -47,6 +47,7 @@ export function run() {
     "/AppHeader.tsx", // Navigation header with internal components
     "/BulkOperationsBar.tsx", // Responsive layout patterns
     "/CommandPalette.tsx", // Keyboard shortcut styling
+    "/CreateIssueModal.tsx", // Inline label creation popover
     "/CommentReactions.tsx", // Popover overrides
     "/CommentRenderer.tsx", // Inline markdown code element styling
     "/CreateProjectFromTemplate.tsx", // Responsive button layout

@@ -96,24 +96,24 @@ This documentation analyzes how features are implemented across three codebases 
 ### Top Recommendations for Cascade (Prioritized)
 
 #### High Priority
-1. **Keyboard shortcuts** - Add global `C` for create issue, `Escape` to close, arrow navigation
+1. ~~**Keyboard shortcuts**~~ ✅ Global `C` for create issue, `Escape` to close, arrow navigation
 2. **Rich text description editor** - Replace plain textarea with TipTap or similar (markdown, images, @mentions)
-3. **Inline editing** - Click any property to edit directly without opening modals
-4. **Duplicate detection** - Show potential duplicates while creating issues
+3. ~~**Inline editing**~~ ✅ Click any property to edit directly in issue detail sidebar
+4. ~~**Duplicate detection**~~ ✅ Shows potential duplicates while creating issues (debounced search)
 
 #### Medium Priority
-5. **Peek/side panel mode** - View issue details without leaving list context
+5. ~~**Peek/side panel mode**~~ ✅ Toggle between modal and side panel view for issue details
 6. **Drag-drop reordering** - For labels, issue ordering
-7. **Date range filters** - Filter by start/due date ranges
-8. **URL filter persistence** - Shareable filtered views
-9. **"Create more" toggle** - Rapid issue creation without closing modal
+7. ~~**Date range filters**~~ ✅ Filter by start/due date ranges
+8. ~~**URL filter persistence**~~ ✅ Shareable filtered views
+9. ~~**"Create more" toggle**~~ ✅ Rapid issue creation without closing modal
 
 #### Nice to Have
 10. **Draft auto-save** - Prevent data loss on modal close
-11. **Parent/child issues** - Sub-issue relationships
+11. **Parent/child issues** - Sub-issue relationships (subtasks exist)
 12. **Inline label creation** - Create labels from issue form
 13. **Multiple assignees** - Assign issues to multiple people
-14. **Display/view options** - Group by, sort by, property toggles
+14. ~~**Display/view options**~~ ✅ Display properties toggle in board toolbar
 
 ### Sprint/Cycle Improvements (from sprints-cycles comparison)
 
