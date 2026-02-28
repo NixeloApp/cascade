@@ -1,0 +1,159 @@
+# Feature Comparison Index
+
+A detailed UI/UX comparison between **cal.com**, **plane**, and **Cascade**.
+
+## Purpose
+
+This documentation analyzes how features are implemented across three codebases to identify:
+- What each app does well
+- Where Cascade can improve
+- UI/UX patterns to adopt
+
+## Repository Paths
+
+| App | Path | Focus |
+|-----|------|-------|
+| cal.com | `~/Desktop/cal.com` | Scheduling/booking platform |
+| plane | `~/Desktop/plane` | Project management (issues, cycles, modules) |
+| Cascade | `~/Desktop/cascade` | Issues, projects, sprints, docs |
+
+---
+
+## Feature Categories
+
+### ✅ Issues (Plane + Cascade focus)
+| Feature | Status | Doc |
+|---------|--------|-----|
+| Create Issue | ✅ Done | [create-issue.md](./issues/create-issue.md) |
+| Issue Detail View | ✅ Done | [issue-detail-view.md](./issues/issue-detail-view.md) |
+| Bulk Actions | ✅ Done | [bulk-actions.md](./issues/bulk-actions.md) |
+| Filters and Search | ✅ Done | [filters-and-search.md](./issues/filters-and-search.md) |
+| Labels and Tags | ✅ Done | [labels-and-tags.md](./issues/labels-and-tags.md) |
+| Issue Relations | ✅ Done | [issue-relations.md](./issues/issue-relations.md) |
+
+### ✅ Projects
+| Feature | Status | Doc |
+|---------|--------|-----|
+| Create Project | ✅ Done | [create-project.md](./projects/create-project.md) |
+| Project Settings | ✅ Done | [project-settings.md](./projects/project-settings.md) |
+| Project Members | ✅ Done | [project-members.md](./projects/project-members.md) |
+
+### ✅ Sprints/Cycles
+| Feature | Status | Doc |
+|---------|--------|-----|
+| Create Sprint | ✅ Done | [create-sprint.md](./sprints-cycles/create-sprint.md) |
+| Sprint Board | ✅ Done | [sprint-board.md](./sprints-cycles/sprint-board.md) |
+| Sprint Reports | ✅ Done | [sprint-reports.md](./sprints-cycles/sprint-reports.md) |
+
+### ⬜ Views
+| Feature | Status | Doc |
+|---------|--------|-----|
+| Kanban Board | ⬜ Pending | [kanban-board.md](./views/kanban-board.md) |
+| List View | ⬜ Pending | [list-view.md](./views/list-view.md) |
+| Calendar View | ⬜ Pending | [calendar-view.md](./views/calendar-view.md) |
+| Gantt Chart | ⬜ Pending | [gantt-chart.md](./views/gantt-chart.md) |
+
+### ⬜ Documents
+| Feature | Status | Doc |
+|---------|--------|-----|
+| Create Document | ⬜ Pending | [create-document.md](./documents/create-document.md) |
+| Document Editor | ⬜ Pending | [document-editor.md](./documents/document-editor.md) |
+| Document Sharing | ⬜ Pending | [document-sharing.md](./documents/document-sharing.md) |
+
+### ⬜ Notifications
+| Feature | Status | Doc |
+|---------|--------|-----|
+| In-App Notifications | ⬜ Pending | [in-app-notifications.md](./notifications/in-app-notifications.md) |
+| Email Notifications | ⬜ Pending | [email-notifications.md](./notifications/email-notifications.md) |
+| Notification Preferences | ⬜ Pending | [notification-preferences.md](./notifications/notification-preferences.md) |
+
+### ⬜ Settings
+| Feature | Status | Doc |
+|---------|--------|-----|
+| User Profile | ⬜ Pending | [user-profile.md](./settings/user-profile.md) |
+| Workspace Settings | ⬜ Pending | [workspace-settings.md](./settings/workspace-settings.md) |
+| Integrations | ⬜ Pending | [integrations.md](./settings/integrations.md) |
+
+### ⬜ Auth
+| Feature | Status | Doc |
+|---------|--------|-----|
+| Login/Signup | ⬜ Pending | [login-signup.md](./auth/login-signup.md) |
+| SSO | ⬜ Pending | [sso.md](./auth/sso.md) |
+| 2FA | ⬜ Pending | [2fa.md](./auth/2fa.md) |
+
+### ⬜ Scheduling (cal.com focus)
+| Feature | Status | Doc |
+|---------|--------|-----|
+| Create Booking | ⬜ Pending | [create-booking.md](./scheduling/create-booking.md) |
+| Availability | ⬜ Pending | [availability.md](./scheduling/availability.md) |
+| Recurring Events | ⬜ Pending | [recurring-events.md](./scheduling/recurring-events.md) |
+| Calendar Integrations | ⬜ Pending | [calendar-integrations.md](./scheduling/calendar-integrations.md) |
+
+---
+
+## Key Findings Summary
+
+### Top Recommendations for Cascade (Prioritized)
+
+#### High Priority
+1. **Keyboard shortcuts** - Add global `C` for create issue, `Escape` to close, arrow navigation
+2. **Rich text description editor** - Replace plain textarea with TipTap or similar (markdown, images, @mentions)
+3. **Inline editing** - Click any property to edit directly without opening modals
+4. **Duplicate detection** - Show potential duplicates while creating issues
+
+#### Medium Priority
+5. **Peek/side panel mode** - View issue details without leaving list context
+6. **Drag-drop reordering** - For labels, issue ordering
+7. **Date range filters** - Filter by start/due date ranges
+8. **URL filter persistence** - Shareable filtered views
+9. **"Create more" toggle** - Rapid issue creation without closing modal
+
+#### Nice to Have
+10. **Draft auto-save** - Prevent data loss on modal close
+11. **Parent/child issues** - Sub-issue relationships
+12. **Inline label creation** - Create labels from issue form
+13. **Multiple assignees** - Assign issues to multiple people
+14. **Display/view options** - Group by, sort by, property toggles
+
+### Sprint/Cycle Improvements (from sprints-cycles comparison)
+
+#### High Priority
+1. **Analytics sidebar in board view** - Inline burndown/progress, not separate page
+2. **Multiple view layouts** - Add List, Calendar, Gantt views for sprints
+3. **Real-time search in sprint board** - Filter issues within sprint
+
+#### Medium Priority
+4. **Assignee/label breakdown tabs** - Show workload distribution
+5. **Burnup chart toggle** - Alternative to burndown
+6. **Issue peek/quick view** - Click to expand without full navigation
+7. **Transfer remaining issues modal** - When completing sprints
+
+#### Nice to Have
+8. **Keyboard shortcuts for sprint creation** - `S` or `Shift+S`
+9. **Date overlap validation** - Prevent conflicting sprint dates
+10. **Progress snapshots** - Historical tracking
+
+### Cascade Strengths vs Plane
+- **Saved filters with sharing** - Team-wide filter presets
+- **Advanced search modal** - Dedicated complex search UI
+- **Label groups with descriptions** - Better organization
+- **Color picker with preview** - Full color selection
+- **Confirmation dialogs** - Safer destructive actions
+- **Bulk operations free** - Plane charges for bulk ops
+
+---
+
+## Progress
+
+Last updated: 2026-02-28
+
+- [x] README.md created
+- [x] issues/ category complete (6 docs)
+- [x] projects/ category complete (3 docs)
+- [x] sprints-cycles/ category complete (3 docs)
+- [ ] views/
+- [ ] documents/
+- [ ] notifications/
+- [ ] settings/
+- [ ] auth/
+- [ ] scheduling/
