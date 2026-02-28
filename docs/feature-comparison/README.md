@@ -53,12 +53,12 @@ This documentation analyzes how features are implemented across three codebases 
 | Calendar View | ✅ Done | [calendar-view.md](./views/calendar-view.md) |
 | Gantt Chart | ✅ Done | [gantt-chart.md](./views/gantt-chart.md) |
 
-### ⬜ Documents
+### ✅ Documents
 | Feature | Status | Doc |
 |---------|--------|-----|
-| Create Document | ⬜ Pending | [create-document.md](./documents/create-document.md) |
-| Document Editor | ⬜ Pending | [document-editor.md](./documents/document-editor.md) |
-| Document Sharing | ⬜ Pending | [document-sharing.md](./documents/document-sharing.md) |
+| Create Document | ✅ Done | [create-document.md](./documents/create-document.md) |
+| Document Editor | ✅ Done | [document-editor.md](./documents/document-editor.md) |
+| Document Sharing | ✅ Done | [document-sharing.md](./documents/document-sharing.md) |
 
 ### ⬜ Notifications
 | Feature | Status | Doc |
@@ -151,6 +151,24 @@ This documentation analyzes how features are implemented across three codebases 
 9. **Quick add on calendar day** - Click empty day to create issue
 10. **Configurable Gantt timeline** - 1/3/6/12 month spans
 
+### Documents Improvements (from documents/ comparison)
+
+#### High Priority
+1. **Navigation pane sidebar** - Outline/TOC, assets list, document info tabs
+2. **User @mentions in editor** - Tag users with `@` trigger
+3. **Page lock/unlock** - Prevent concurrent editing conflicts
+
+#### Medium Priority
+4. **Favorites system** - Star documents for quick access
+5. **Archive/restore** - Soft archive instead of delete
+6. **Text colors** - Foreground and background color picker
+7. **H4-H6 heading levels** - Full heading hierarchy
+
+#### Nice to Have
+8. **Offline support** - IndexedDB persistence for editor
+9. **Work item embeds** - Embed issue cards in documents
+10. **Move between projects** - Transfer documents across projects
+
 ### Cascade Strengths vs Plane
 - **Saved filters with sharing** - Team-wide filter presets
 - **Advanced search modal** - Dedicated complex search UI
@@ -161,6 +179,10 @@ This documentation analyzes how features are implemented across three codebases 
 - **Smart done loading** - Only loads recent done issues in Kanban
 - **Undo/redo history** - Revert drag operations with Ctrl+Z
 - **Virtual scrolling in Roadmap** - Handles large issue counts efficiently
+- **Document hierarchy** - Nested parent/child documents
+- **Document comments** - Threaded comments with emoji reactions
+- **Instant document creation** - No modal, create and start typing
+- **Document templates** - Built-in and custom templates with categories
 
 ---
 
@@ -173,7 +195,7 @@ Last updated: 2026-02-28
 - [x] projects/ category complete (3 docs)
 - [x] sprints-cycles/ category complete (3 docs)
 - [x] views/ category complete (4 docs)
-- [ ] documents/
+- [x] documents/ category complete (3 docs)
 - [ ] notifications/
 - [ ] settings/
 - [ ] auth/
