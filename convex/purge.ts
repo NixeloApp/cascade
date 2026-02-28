@@ -7,6 +7,7 @@ export const TABLES: TableNames[] = [
   "documents",
   "documentVersions",
   "documentTemplates",
+  "documentFavorites",
   "yjsDocuments",
   "yjsAwareness",
   "workspaces",

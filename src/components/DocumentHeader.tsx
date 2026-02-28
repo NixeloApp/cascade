@@ -4,13 +4,14 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
-import { Download, History, Upload } from "@/lib/icons";
+import { Download, History, Star, Upload } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { PresenceIndicator } from "./PresenceIndicator";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/form/Input";
+import { IconButton } from "./ui/IconButton";
 import { Stack } from "./ui/Stack";
 
 interface DocumentHeaderProps {
@@ -20,8 +21,10 @@ interface DocumentHeaderProps {
   };
   userId: string;
   versionCount: number | undefined;
+  isFavorite: boolean;
   onTitleEdit: (title: string) => Promise<void>;
   onTogglePublic: () => Promise<void>;
+  onToggleFavorite: () => Promise<void>;
   onImportMarkdown: () => Promise<void>;
   onExportMarkdown: () => Promise<void>;
   onShowVersionHistory: () => void;
@@ -32,8 +35,10 @@ export function DocumentHeader({
   document,
   userId,
   versionCount,
+  isFavorite,
   onTitleEdit,
   onTogglePublic,
+  onToggleFavorite,
   onImportMarkdown,
   onExportMarkdown,
   onShowVersionHistory,
@@ -122,6 +127,20 @@ export function DocumentHeader({
 
           <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
             <PresenceIndicator roomId={document._id} userId={userId} />
+
+            {/* Favorite */}
+            <Tooltip content={isFavorite ? "Remove from favorites" : "Add to favorites"}>
+              <IconButton
+                variant={isFavorite ? "brand" : "ghost"}
+                size="sm"
+                onClick={() => void onToggleFavorite()}
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                aria-pressed={isFavorite}
+                className={cn(isFavorite && "text-status-warning")}
+              >
+                <Star className={cn("w-4 h-4", isFavorite && "fill-current")} aria-hidden="true" />
+              </IconButton>
+            </Tooltip>
 
             {/* Version History */}
             <Tooltip content="View version history">

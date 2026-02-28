@@ -31,6 +31,7 @@ Tired of paying $10+/user/month for Jira and Confluence? Nixelo gives you:
 - Rich text editor with formatting, tables, code blocks
 - Document templates and organization
 - Full-text search
+- Document favorites (star for quick access)
 
 ### 📊 Project Management (Jira-like)
 

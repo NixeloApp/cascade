@@ -1350,3 +1350,139 @@ async function fetchPublicDocuments(
     .filter(notDeleted)
     .take(limit);
 }
+
+// ===========================================================================
+// DOCUMENT FAVORITES
+// ===========================================================================
+
+/**
+ * Toggle favorite status for a document.
+ * If already favorited, removes it. Otherwise, adds it.
+ */
+export const toggleFavorite = authenticatedMutation({
+  args: {
+    documentId: v.id("documents"),
+  },
+  returns: v.object({ isFavorite: v.boolean() }),
+  handler: async (ctx, args) => {
+    // Check document exists and user can access it
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.isDeleted) {
+      throw notFound("document", args.documentId);
+    }
+
+    // Check access to the document
+    const canAccess = await canAccessDocument(ctx, document);
+    if (!canAccess) {
+      throw forbidden("You don't have access to this document");
+    }
+
+    // Check if already favorited
+    const existing = await ctx.db
+      .query("documentFavorites")
+      .withIndex("by_user_document", (q) =>
+        q.eq("userId", ctx.userId).eq("documentId", args.documentId),
+      )
+      .first();
+
+    if (existing) {
+      // Remove favorite
+      await ctx.db.delete(existing._id);
+      return { isFavorite: false };
+    }
+
+    // Add favorite
+    await ctx.db.insert("documentFavorites", {
+      documentId: args.documentId,
+      userId: ctx.userId,
+      createdAt: Date.now(),
+    });
+    return { isFavorite: true };
+  },
+});
+
+/**
+ * Check if a document is favorited by the current user.
+ */
+export const isFavorite = authenticatedQuery({
+  args: {
+    documentId: v.id("documents"),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const favorite = await ctx.db
+      .query("documentFavorites")
+      .withIndex("by_user_document", (q) =>
+        q.eq("userId", ctx.userId).eq("documentId", args.documentId),
+      )
+      .first();
+
+    return favorite !== null;
+  },
+});
+
+/**
+ * List all favorite documents for the current user.
+ * Returns documents the user has access to, sorted by when they were favorited.
+ */
+export const listFavorites = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("documents"),
+      _creationTime: v.number(),
+      title: v.string(),
+      isPublic: v.boolean(),
+      createdBy: v.id("users"),
+      updatedAt: v.number(),
+      organizationId: v.id("organizations"),
+      workspaceId: v.optional(v.id("workspaces")),
+      projectId: v.optional(v.id("projects")),
+      parentId: v.optional(v.id("documents")),
+      order: v.optional(v.number()),
+      favoritedAt: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const pageSize = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+
+    // Get user's favorites, most recent first
+    const favorites = await ctx.db
+      .query("documentFavorites")
+      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+      .order("desc")
+      .take(pageSize * 2); // Fetch extra to account for deleted/inaccessible docs
+
+    // Batch fetch documents
+    const documentIds = favorites.map((f) => f.documentId);
+    const documents = await Promise.all(documentIds.map((id) => ctx.db.get(id)));
+
+    // Filter and enrich
+    const result: Array<Doc<"documents"> & { favoritedAt: number }> = [];
+
+    for (let i = 0; i < favorites.length && result.length < pageSize; i++) {
+      const favorite = favorites[i];
+      const doc = documents[i];
+
+      // Skip deleted or missing documents
+      if (!doc || doc.isDeleted) continue;
+
+      // Only include docs from the requested organization
+      if (doc.organizationId !== args.organizationId) continue;
+
+      // Check access
+      const canAccess = await canAccessDocument(ctx, doc);
+      if (!canAccess) continue;
+
+      result.push({
+        ...doc,
+        favoritedAt: favorite.createdAt,
+      });
+    }
+
+    return result;
+  },
+});

@@ -110,6 +110,7 @@ export {
   ShieldCheck,
   Smartphone,
   Sparkles,
+  Star,
   Sun,
   Tag,
   Target,

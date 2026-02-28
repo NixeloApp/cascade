@@ -10,6 +10,7 @@ import {
   FolderOpen,
   MoreHorizontal,
   Plus,
+  Star,
 } from "lucide-react";
 import { useState } from "react";
 import { ROUTES } from "@/config/routes";
@@ -53,9 +54,16 @@ export function DocumentTree({
   selectedId,
   onCreateDocument,
 }: DocumentTreeProps) {
+  const [favoritesExpanded, setFavoritesExpanded] = useState(true);
+
   const rootDocs = useQuery(api.documents.listChildren, {
     organizationId,
     parentId: undefined,
+  });
+
+  const favorites = useQuery(api.documents.listFavorites, {
+    organizationId,
+    limit: 10,
   });
 
   if (rootDocs === undefined) {
@@ -102,6 +110,59 @@ export function DocumentTree({
           New Document
         </Button>
       )}
+
+      {/* Favorites Section */}
+      {favorites && favorites.length > 0 && (
+        <div className="mb-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start px-2 py-1.5 text-ui-text-secondary hover:text-ui-text"
+            onClick={() => setFavoritesExpanded((prev) => !prev)}
+          >
+            {favoritesExpanded ? (
+              <ChevronDown className="w-3.5 h-3.5 mr-1" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 mr-1" />
+            )}
+            <Star className="w-4 h-4 mr-2 text-status-warning fill-status-warning" />
+            <Typography variant="small">Favorites</Typography>
+          </Button>
+
+          {favoritesExpanded && (
+            <Stack gap="none">
+              {favorites.map((doc) => (
+                <Link
+                  key={doc._id}
+                  to={ROUTES.documents.detail.path}
+                  params={{ orgSlug, id: doc._id }}
+                  className="block"
+                >
+                  <Flex
+                    align="center"
+                    gap="xs"
+                    className={cn(
+                      "px-2 py-1.5 rounded-md cursor-pointer transition-colors ml-6",
+                      selectedId === doc._id
+                        ? "bg-brand/10 text-brand"
+                        : "hover:bg-ui-bg-hover text-ui-text-secondary hover:text-ui-text",
+                    )}
+                  >
+                    <File className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
+                    <Typography
+                      variant={selectedId === doc._id ? "label" : "small"}
+                      className="truncate"
+                    >
+                      {doc.title || "Untitled"}
+                    </Typography>
+                  </Flex>
+                </Link>
+              ))}
+            </Stack>
+          )}
+        </div>
+      )}
+
       {rootDocs.map((node) => (
         <TreeNodeItem
           key={node._id}

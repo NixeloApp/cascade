@@ -354,6 +354,16 @@ const applicationTables = {
     .index("by_document_user", ["documentId", "userId"])
     .index("by_last_seen", ["lastSeenAt"]),
 
+  // Document favorites - junction table for user favorites
+  documentFavorites: defineTable({
+    documentId: v.id("documents"),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId", "createdAt"])
+    .index("by_document", ["documentId"])
+    .index("by_user_document", ["userId", "documentId"]),
+
   documentTemplates: defineTable({
     name: v.string(),
     description: v.optional(v.string()),

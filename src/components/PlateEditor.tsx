@@ -41,6 +41,8 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const document = useQuery(api.documents.getDocument, { id: documentId });
   const updateTitle = useMutation(api.documents.updateTitle);
   const togglePublic = useMutation(api.documents.togglePublic);
+  const toggleFavorite = useMutation(api.documents.toggleFavorite);
+  const isFavorite = useQuery(api.documents.isFavorite, { documentId });
   const userId = useQuery(api.presence.getUserId);
   const versionCount = useQuery(api.documentVersions.getVersionCount, { documentId });
 
@@ -70,6 +72,16 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
       showSuccess(document.isPublic ? "Document is now private" : "Document is now public");
     } catch (error) {
       showError(error, "Failed to update document visibility");
+    }
+  };
+
+  // Handle toggle favorite
+  const handleToggleFavorite = async () => {
+    try {
+      const result = await toggleFavorite({ documentId });
+      showSuccess(result.isFavorite ? "Added to favorites" : "Removed from favorites");
+    } catch (error) {
+      showError(error, "Failed to update favorite");
     }
   };
 
@@ -160,8 +172,10 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
         document={document}
         userId={userId}
         versionCount={versionCount}
+        isFavorite={isFavorite ?? false}
         onTitleEdit={handleTitleEdit}
         onTogglePublic={handleTogglePublic}
+        onToggleFavorite={handleToggleFavorite}
         onImportMarkdown={async () => {
           // TODO: Implement markdown import
           showError("Markdown import not yet implemented for Plate editor");
