@@ -227,7 +227,7 @@ This documentation analyzes how features are implemented across three codebases 
 #### High Priority
 1. **Add more OAuth providers** - GitHub, Microsoft, generic OIDC
 2. **Implement SAML/OIDC sign-in flows** - Currently only config UI exists
-3. **Add password strength indicator** - zxcvbn visual feedback
+3. ~~**Add password strength indicator**~~ ✅ zxcvbn visual feedback with color-coded bar
 
 #### Medium Priority
 4. **Add magic link option** - Passwordless sign-in via email
