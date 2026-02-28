@@ -60,12 +60,12 @@ This documentation analyzes how features are implemented across three codebases 
 | Document Editor | ✅ Done | [document-editor.md](./documents/document-editor.md) |
 | Document Sharing | ✅ Done | [document-sharing.md](./documents/document-sharing.md) |
 
-### ⬜ Notifications
+### ✅ Notifications
 | Feature | Status | Doc |
 |---------|--------|-----|
-| In-App Notifications | ⬜ Pending | [in-app-notifications.md](./notifications/in-app-notifications.md) |
-| Email Notifications | ⬜ Pending | [email-notifications.md](./notifications/email-notifications.md) |
-| Notification Preferences | ⬜ Pending | [notification-preferences.md](./notifications/notification-preferences.md) |
+| In-App Notifications | ✅ Done | [in-app-notifications.md](./notifications/in-app-notifications.md) |
+| Email Notifications | ✅ Done | [email-notifications.md](./notifications/email-notifications.md) |
+| Notification Preferences | ✅ Done | [notification-preferences.md](./notifications/notification-preferences.md) |
 
 ### ⬜ Settings
 | Feature | Status | Doc |
@@ -169,6 +169,32 @@ This documentation analyzes how features are implemented across three codebases 
 9. **Work item embeds** - Embed issue cards in documents
 10. **Move between projects** - Transfer documents across projects
 
+### Notifications Improvements (from notifications/ comparison)
+
+#### High Priority
+1. **Snooze notifications** - Hide temporarily, reappear at scheduled time
+2. **Notification filters** - Filter by type (mentions, assigned, etc.)
+3. **Archive capability** - Archive instead of delete
+
+#### Medium Priority
+4. **Full notifications page** - Dedicated route for managing many notifications
+5. **Notification grouping** - Group by date or entity
+6. **Smart batching** - Consolidate similar notifications into single email
+
+#### Nice to Have
+7. **Quiet hours** - Do not disturb times
+8. **Slack/Teams integration** - Additional notification channels
+9. **Email preview** - Show sample of each notification type
+
+### Cascade Strengths vs Plane (Notifications)
+- **Push notifications** - Web Push API for browser notifications
+- **Digest emails** - Daily and weekly summaries
+- **More notification types** - 8 types vs 5
+- **Digest frequency control** - None/Daily/Weekly options
+- **Project subscriptions** - Watch entire projects
+- **Document subscriptions** - Extends to docs, not just issues
+- **Test push button** - Verify push notifications work
+
 ### Cascade Strengths vs Plane
 - **Saved filters with sharing** - Team-wide filter presets
 - **Advanced search modal** - Dedicated complex search UI
@@ -196,7 +222,7 @@ Last updated: 2026-02-28
 - [x] sprints-cycles/ category complete (3 docs)
 - [x] views/ category complete (4 docs)
 - [x] documents/ category complete (3 docs)
-- [ ] notifications/
+- [x] notifications/ category complete (3 docs)
 - [ ] settings/
 - [ ] auth/
 - [ ] scheduling/

@@ -177,7 +177,7 @@ Brief description of what this feature does.
 - [x] sprints-cycles/
 - [x] views/
 - [x] documents/
-- [ ] notifications/
+- [x] notifications/
 - [ ] settings/
 - [ ] auth/
 
