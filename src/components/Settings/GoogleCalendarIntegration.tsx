@@ -28,6 +28,11 @@ export function GoogleCalendarIntegration() {
   // Handle OAuth callback message from popup
   useEffect(() => {
     const handleOAuthMessage = async (event: MessageEvent) => {
+      // Validate message origin for security
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
       if (event.data?.type !== "google-calendar-connected") return;
 
       const { providerAccountId, accessToken, refreshToken, expiresAt } = event.data.data;
