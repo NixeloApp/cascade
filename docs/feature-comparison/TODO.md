@@ -178,7 +178,7 @@ Brief description of what this feature does.
 - [x] views/
 - [x] documents/
 - [x] notifications/
-- [ ] settings/
+- [x] settings/
 - [ ] auth/
 
 ---

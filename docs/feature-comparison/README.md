@@ -67,12 +67,12 @@ This documentation analyzes how features are implemented across three codebases 
 | Email Notifications | ✅ Done | [email-notifications.md](./notifications/email-notifications.md) |
 | Notification Preferences | ✅ Done | [notification-preferences.md](./notifications/notification-preferences.md) |
 
-### ⬜ Settings
+### ✅ Settings
 | Feature | Status | Doc |
 |---------|--------|-----|
-| User Profile | ⬜ Pending | [user-profile.md](./settings/user-profile.md) |
-| Workspace Settings | ⬜ Pending | [workspace-settings.md](./settings/workspace-settings.md) |
-| Integrations | ⬜ Pending | [integrations.md](./settings/integrations.md) |
+| User Profile | ✅ Done | [user-profile.md](./settings/user-profile.md) |
+| Workspace Settings | ✅ Done | [workspace-settings.md](./settings/workspace-settings.md) |
+| Integrations | ✅ Done | [integrations.md](./settings/integrations.md) |
 
 ### ⬜ Auth
 | Feature | Status | Doc |
@@ -195,6 +195,33 @@ This documentation analyzes how features are implemented across three codebases 
 - **Document subscriptions** - Extends to docs, not just issues
 - **Test push button** - Verify push notifications work
 
+### Settings Improvements (from settings/ comparison)
+
+#### High Priority
+1. **Implement workspace settings** - Currently placeholder, add name/logo/timezone
+2. **Add avatar upload modal** - Dedicated upload UI with crop/preview
+3. **Add Slack integration** - OAuth-based popular chat integration
+
+#### Medium Priority
+4. **Add First/Last name fields** - Split name for formal contexts
+5. **Add bulk member invite** - Modal for multiple emails + CSV import
+6. **Add webhook secret keys** - HMAC signature validation
+
+#### Nice to Have
+7. **Add activity log** - User's recent activity with pagination
+8. **Add cover image** - Profile header personalization
+9. **Add integration marketplace** - Browse/install integrations UI
+
+### Cascade Strengths vs Plane (Settings)
+- **Two-Factor Authentication** - Full TOTP with backup codes
+- **Google Calendar sync** - Bi-directional calendar integration
+- **SSO per-organization** - Each org configures own SAML/OIDC
+- **API key scopes** - Granular permission control
+- **Key rotation** - Secure key management
+- **Usage tracking** - Monitor API usage and activity
+- **WIP limits** - Workflow states with work-in-progress limits
+- **Hour compliance** - Time tracking limits and approvals
+
 ### Cascade Strengths vs Plane
 - **Saved filters with sharing** - Team-wide filter presets
 - **Advanced search modal** - Dedicated complex search UI
@@ -223,6 +250,6 @@ Last updated: 2026-02-28
 - [x] views/ category complete (4 docs)
 - [x] documents/ category complete (3 docs)
 - [x] notifications/ category complete (3 docs)
-- [ ] settings/
+- [x] settings/ category complete (3 docs)
 - [ ] auth/
 - [ ] scheduling/
