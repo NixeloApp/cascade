@@ -101,6 +101,8 @@ export function OnboardingChecklist() {
             onClick={() => setIsExpanded(!isExpanded)}
             className="h-7 w-7"
             aria-label={isExpanded ? "Collapse checklist" : "Expand checklist"}
+            aria-expanded={isExpanded}
+            aria-controls="onboarding-checklist-items"
           >
             {isExpanded ? (
               <ChevronDown className="w-4 h-4 text-ui-text-tertiary" />
@@ -136,7 +138,7 @@ export function OnboardingChecklist() {
 
       {/* Checklist Items - Mintlify-inspired with cleaner spacing */}
       {isExpanded && (
-        <Flex direction="column" gap="sm" className="p-4">
+        <Flex id="onboarding-checklist-items" direction="column" gap="sm" className="p-4">
           {items.map((item, index) => (
             <Flex
               key={item.id}
