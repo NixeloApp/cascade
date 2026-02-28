@@ -129,8 +129,8 @@ This documentation analyzes how features are implemented across three codebases 
 7. **Transfer remaining issues modal** - When completing sprints
 
 #### Nice to Have
-8. **Keyboard shortcuts for sprint creation** - `S` or `Shift+S`
-9. **Date overlap validation** - Prevent conflicting sprint dates
+8. ~~**Keyboard shortcuts for sprint creation**~~ ✅ `Shift+S` opens create sprint form
+9. ~~**Date overlap validation**~~ ✅ Warns when sprint dates overlap with existing sprints
 10. **Progress snapshots** - Historical tracking
 
 ### Views Improvements (from views/ comparison)

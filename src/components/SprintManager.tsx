@@ -1,8 +1,9 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { formatDate } from "@/lib/dates";
 import { Trophy } from "@/lib/icons";
 import { getStatusColor } from "@/lib/issue-utils";
@@ -13,6 +14,7 @@ import {
 } from "@/lib/sprint-presets";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { Alert } from "./ui/Alert";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -24,13 +26,46 @@ import { SkeletonProjectCard } from "./ui/Skeleton";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
+type SprintWithCounts = Doc<"sprints"> & { issueCount: number; completedCount: number };
+
+/**
+ * Check if two date ranges overlap
+ */
+function dateRangesOverlap(
+  start1: number,
+  end1: number,
+  start2: number | undefined,
+  end2: number | undefined,
+): boolean {
+  if (!start2 || !end2) return false;
+  return start1 <= end2 && end1 >= start2;
+}
+
+/**
+ * Find sprints that overlap with the given date range
+ */
+function findOverlappingSprints(
+  sprints: SprintWithCounts[],
+  startDate: number,
+  endDate: number,
+  excludeSprintId?: Id<"sprints">,
+): SprintWithCounts[] {
+  return sprints.filter((sprint) => {
+    // Skip the sprint being edited/started
+    if (excludeSprintId && sprint._id === excludeSprintId) return false;
+    // Only check active or future sprints (completed sprints don't matter)
+    if (sprint.status === "completed") return false;
+    return dateRangesOverlap(startDate, endDate, sprint.startDate, sprint.endDate);
+  });
+}
+
 interface SprintManagerProps {
   projectId: Id<"projects">;
   canEdit?: boolean;
 }
 
 interface SprintCardProps {
-  sprint: Doc<"sprints"> & { issueCount: number; completedCount: number };
+  sprint: SprintWithCounts;
   canEdit: boolean;
   onStartSprint: (sprintId: Id<"sprints">) => void;
   onCompleteSprint: (sprintId: Id<"sprints">) => Promise<void>;
@@ -137,6 +172,52 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
   const createSprint = useMutation(api.sprints.create);
   const startSprint = useMutation(api.sprints.startSprint);
   const completeSprint = useMutation(api.sprints.completeSprint);
+
+  // Keyboard shortcut: Shift+S to create sprint
+  useKeyboardShortcuts(
+    [
+      {
+        key: "s",
+        shift: true,
+        description: "Create new sprint",
+        handler: () => {
+          if (canEdit && !showCreateForm && !startingSprintId) {
+            setShowCreateForm(true);
+          }
+        },
+      },
+    ],
+    canEdit,
+  );
+
+  // Check for overlapping sprints when creating with custom dates
+  const createOverlappingSprints = useMemo(() => {
+    if (!sprints || selectedPreset !== "custom" || !customStartDate || !customEndDate) {
+      return [];
+    }
+    const startDate = new Date(customStartDate).getTime();
+    const endDate = new Date(customEndDate).getTime();
+    return findOverlappingSprints(sprints, startDate, endDate);
+  }, [sprints, selectedPreset, customStartDate, customEndDate]);
+
+  // Check for overlapping sprints when starting a sprint
+  const startOverlappingSprints = useMemo(() => {
+    if (!sprints || !startingSprintId) return [];
+
+    let startDate: number;
+    let endDate: number;
+
+    if (startPreset === "custom") {
+      if (!startCustomStart || !startCustomEnd) return [];
+      startDate = new Date(startCustomStart).getTime();
+      endDate = new Date(startCustomEnd).getTime();
+    } else {
+      startDate = Date.now();
+      endDate = calculateEndDate(startDate, startPreset).getTime();
+    }
+
+    return findOverlappingSprints(sprints, startDate, endDate, startingSprintId);
+  }, [sprints, startingSprintId, startPreset, startCustomStart, startCustomEnd]);
 
   const handleCreateSprint = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,26 +393,36 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
 
             {/* Custom date inputs (shown when "Custom" is selected) */}
             {selectedPreset === "custom" && (
-              <Flex direction="column" gap="md" className="sm:flex-row">
-                <FlexItem flex="1">
-                  <Input
-                    label="Start Date"
-                    type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                    required={selectedPreset === "custom"}
-                  />
-                </FlexItem>
-                <FlexItem flex="1">
-                  <Input
-                    label="End Date"
-                    type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                    required={selectedPreset === "custom"}
-                  />
-                </FlexItem>
-              </Flex>
+              <Stack gap="md">
+                <Flex direction="column" gap="md" className="sm:flex-row">
+                  <FlexItem flex="1">
+                    <Input
+                      label="Start Date"
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      required={selectedPreset === "custom"}
+                    />
+                  </FlexItem>
+                  <FlexItem flex="1">
+                    <Input
+                      label="End Date"
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      required={selectedPreset === "custom"}
+                    />
+                  </FlexItem>
+                </Flex>
+                {createOverlappingSprints.length > 0 && (
+                  <Alert variant="warning">
+                    <Typography variant="small">
+                      These dates overlap with:{" "}
+                      {createOverlappingSprints.map((s) => s.name).join(", ")}
+                    </Typography>
+                  </Alert>
+                )}
+              </Stack>
             )}
 
             <Flex direction="column" gap="sm" className="sm:flex-row">
@@ -371,7 +462,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             }
           />
         ) : (
-          sprints.map((sprint: Doc<"sprints"> & { issueCount: number; completedCount: number }) => (
+          sprints.map((sprint: SprintWithCounts) => (
             <SprintCard
               key={sprint._id}
               sprint={sprint}
@@ -460,6 +551,16 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                     />
                   </FlexItem>
                 </Flex>
+              )}
+
+              {/* Overlap warning */}
+              {startOverlappingSprints.length > 0 && (
+                <Alert variant="warning">
+                  <Typography variant="small">
+                    These dates overlap with:{" "}
+                    {startOverlappingSprints.map((s) => s.name).join(", ")}
+                  </Typography>
+                </Alert>
               )}
 
               <Flex gap="sm" justify="end">
