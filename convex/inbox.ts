@@ -475,6 +475,7 @@ export const remove = projectEditorMutation({
   args: {
     id: v.id("inboxIssues"),
   },
+  returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
     const inboxIssue = await ctx.db.get(args.id);
     if (!inboxIssue) {
@@ -492,7 +493,7 @@ export const remove = projectEditorMutation({
 
     await ctx.db.delete(args.id);
 
-    return { success: true };
+    return { success: true, deleted: true } as const;
   },
 });
 
