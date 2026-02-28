@@ -37,7 +37,7 @@ describe("Soft Delete Cleanup", () => {
 
     // Verify result stats
     expect(result.deleted).toBeGreaterThan(0);
-    expect(result.deletedByTable["issues"]).toBe(1);
+    expect(result.deletedByTable.issues).toBe(1);
 
     // Verify issue is gone
     const issue = await t.run(async (ctx) => {
