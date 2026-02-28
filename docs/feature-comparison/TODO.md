@@ -179,7 +179,7 @@ Brief description of what this feature does.
 - [x] documents/
 - [x] notifications/
 - [x] settings/
-- [ ] auth/
+- [x] auth/
 
 ---
 

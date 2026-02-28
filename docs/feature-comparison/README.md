@@ -74,12 +74,12 @@ This documentation analyzes how features are implemented across three codebases 
 | Workspace Settings | ✅ Done | [workspace-settings.md](./settings/workspace-settings.md) |
 | Integrations | ✅ Done | [integrations.md](./settings/integrations.md) |
 
-### ⬜ Auth
+### ✅ Auth
 | Feature | Status | Doc |
 |---------|--------|-----|
-| Login/Signup | ⬜ Pending | [login-signup.md](./auth/login-signup.md) |
-| SSO | ⬜ Pending | [sso.md](./auth/sso.md) |
-| 2FA | ⬜ Pending | [2fa.md](./auth/2fa.md) |
+| Login/Signup | ✅ Done | [login-signup.md](./auth/login-signup.md) |
+| SSO | ✅ Done | [sso.md](./auth/sso.md) |
+| 2FA | ✅ Done | [2fa.md](./auth/2fa.md) |
 
 ### ⬜ Scheduling (cal.com focus)
 | Feature | Status | Doc |
@@ -222,6 +222,32 @@ This documentation analyzes how features are implemented across three codebases 
 - **WIP limits** - Workflow states with work-in-progress limits
 - **Hour compliance** - Time tracking limits and approvals
 
+### Auth Improvements (from auth/ comparison)
+
+#### High Priority
+1. **Add more OAuth providers** - GitHub, Microsoft, generic OIDC
+2. **Implement SAML/OIDC sign-in flows** - Currently only config UI exists
+3. **Add password strength indicator** - zxcvbn visual feedback
+
+#### Medium Priority
+4. **Add magic link option** - Passwordless sign-in via email
+5. **Add WebAuthn/FIDO2 support** - Hardware security keys
+6. **Add domain verification** - Required for production SSO
+
+#### Nice to Have
+7. **Add device management** - List/revoke active sessions
+8. **Add admin 2FA enforcement** - Require 2FA per organization
+9. **Add SCIM support** - Enterprise user provisioning
+
+### Cascade Strengths vs Plane (Auth)
+- **Full 2FA implementation** - TOTP with backup codes (plane has none)
+- **Per-organization SSO** - SAML/OIDC config per org
+- **Email enumeration protection** - Password reset always returns success
+- **Smart redirect logic** - Handles all auth states
+- **Replay attack prevention** - TOTP time step tracking
+- **Session verification** - Per-session 2FA with 24h window
+- **Rate limiting** - 5 attempts, 15-minute lockout
+
 ### Cascade Strengths vs Plane
 - **Saved filters with sharing** - Team-wide filter presets
 - **Advanced search modal** - Dedicated complex search UI
@@ -251,5 +277,5 @@ Last updated: 2026-02-28
 - [x] documents/ category complete (3 docs)
 - [x] notifications/ category complete (3 docs)
 - [x] settings/ category complete (3 docs)
-- [ ] auth/
-- [ ] scheduling/
+- [x] auth/ category complete (3 docs)
+- [ ] scheduling/ (cal.com focus - lower priority)
