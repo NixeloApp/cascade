@@ -22,6 +22,8 @@ import { EmptyState } from "./ui/EmptyState";
 import { Input } from "./ui/form/Input";
 import { Textarea } from "./ui/form/Textarea";
 import { Grid } from "./ui/Grid";
+import { RadioGroup, RadioGroupItem } from "./ui/RadioGroup";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { SkeletonProjectCard } from "./ui/Skeleton";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
@@ -68,7 +70,7 @@ interface SprintCardProps {
   sprint: SprintWithCounts;
   canEdit: boolean;
   onStartSprint: (sprintId: Id<"sprints">) => void;
-  onCompleteSprint: (sprintId: Id<"sprints">) => Promise<void>;
+  onCompleteSprint: (sprintId: Id<"sprints">) => void;
 }
 
 function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: SprintCardProps) {
@@ -168,10 +170,21 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
   const [startCustomStart, setStartCustomStart] = useState("");
   const [startCustomEnd, setStartCustomEnd] = useState("");
 
+  // Complete sprint modal state
+  const [completingSprintId, setCompletingSprintId] = useState<Id<"sprints"> | null>(null);
+  const [transferOption, setTransferOption] = useState<"backlog" | "sprint" | "keep">("backlog");
+  const [targetSprintId, setTargetSprintId] = useState<Id<"sprints"> | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+
   const sprints = useQuery(api.sprints.listByProject, { projectId });
+  const incompleteIssueIds = useQuery(
+    api.sprints.getIncompleteIssueIds,
+    completingSprintId ? { sprintId: completingSprintId } : "skip",
+  );
   const createSprint = useMutation(api.sprints.create);
   const startSprint = useMutation(api.sprints.startSprint);
   const completeSprint = useMutation(api.sprints.completeSprint);
+  const bulkMoveToSprint = useMutation(api.issues.bulkMoveToSprint);
 
   // Keyboard shortcut: Shift+S to create sprint
   useKeyboardShortcuts(
@@ -181,7 +194,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
         shift: true,
         description: "Create new sprint",
         handler: () => {
-          if (canEdit && !showCreateForm && !startingSprintId) {
+          if (canEdit && !showCreateForm && !startingSprintId && !completingSprintId) {
             setShowCreateForm(true);
           }
         },
@@ -303,12 +316,42 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
     }
   };
 
-  const handleCompleteSprint = async (sprintId: Id<"sprints">) => {
+  // Open complete sprint modal
+  const openCompleteSprintModal = (sprintId: Id<"sprints">) => {
+    setCompletingSprintId(sprintId);
+    setTransferOption("backlog");
+    setTargetSprintId(null);
+  };
+
+  const closeCompleteSprintModal = () => {
+    setCompletingSprintId(null);
+    setTransferOption("backlog");
+    setTargetSprintId(null);
+    setIsCompleting(false);
+  };
+
+  const handleCompleteSprint = async () => {
+    if (!completingSprintId) return;
+
+    setIsCompleting(true);
+
     try {
-      await completeSprint({ sprintId });
+      // Transfer incomplete issues if needed
+      if (incompleteIssueIds && incompleteIssueIds.length > 0 && transferOption !== "keep") {
+        const destinationSprintId = transferOption === "sprint" ? targetSprintId : null;
+        await bulkMoveToSprint({
+          issueIds: incompleteIssueIds,
+          sprintId: destinationSprintId,
+        });
+      }
+
+      // Complete the sprint
+      await completeSprint({ sprintId: completingSprintId });
       showSuccess("Sprint completed successfully");
+      closeCompleteSprintModal();
     } catch (error) {
       showError(error, "Failed to complete sprint");
+      setIsCompleting(false);
     }
   };
 
@@ -468,11 +511,145 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
               sprint={sprint}
               canEdit={canEdit}
               onStartSprint={openStartSprintModal}
-              onCompleteSprint={handleCompleteSprint}
+              onCompleteSprint={openCompleteSprintModal}
             />
           ))
         )}
       </Stack>
+
+      {/* Complete Sprint Modal */}
+      {completingSprintId &&
+        (() => {
+          const completingSprint = sprints.find((s) => s._id === completingSprintId);
+          const incompleteCount = incompleteIssueIds?.length ?? 0;
+          const availableTargetSprints = sprints.filter(
+            (s) => s._id !== completingSprintId && s.status !== "completed",
+          );
+
+          return (
+            <Flex
+              align="center"
+              justify="center"
+              className="fixed inset-0 z-modal bg-overlay"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) closeCompleteSprintModal();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") closeCompleteSprintModal();
+              }}
+            >
+              <Card
+                padding="lg"
+                className="max-w-md w-full m-4 animate-scale-in"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="complete-sprint-title"
+              >
+                <Stack gap="lg">
+                  <Stack gap="sm">
+                    <Typography variant="h4" id="complete-sprint-title">
+                      Complete Sprint
+                    </Typography>
+                    <Typography variant="small" color="secondary">
+                      {completingSprint?.name}
+                    </Typography>
+                  </Stack>
+
+                  {incompleteCount > 0 ? (
+                    <Stack gap="md">
+                      <Alert variant="info">
+                        <Typography variant="small">
+                          {incompleteCount} issue{incompleteCount !== 1 ? "s" : ""} not completed.
+                          Choose what to do with them.
+                        </Typography>
+                      </Alert>
+
+                      <Stack gap="sm">
+                        <Typography variant="label">Transfer incomplete issues to:</Typography>
+                        <RadioGroup
+                          value={transferOption}
+                          onValueChange={(value) => {
+                            setTransferOption(value as "backlog" | "sprint" | "keep");
+                            if (value !== "sprint") {
+                              setTargetSprintId(null);
+                            }
+                          }}
+                        >
+                          <RadioGroupItem
+                            value="backlog"
+                            label="Move to Backlog"
+                            description="Remove from sprint, keep in project backlog"
+                          />
+                          <RadioGroupItem
+                            value="sprint"
+                            label="Move to Another Sprint"
+                            description="Transfer to a different sprint"
+                            disabled={availableTargetSprints.length === 0}
+                          />
+                          <RadioGroupItem
+                            value="keep"
+                            label="Keep in Completed Sprint"
+                            description="Leave issues in this sprint"
+                          />
+                        </RadioGroup>
+                      </Stack>
+
+                      {transferOption === "sprint" && availableTargetSprints.length > 0 && (
+                        <Stack gap="sm">
+                          <Typography variant="label">Select target sprint:</Typography>
+                          <Select
+                            value={targetSprintId ?? ""}
+                            onValueChange={(value) => setTargetSprintId(value as Id<"sprints">)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a sprint" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableTargetSprints.map((sprint) => (
+                                <SelectItem key={sprint._id} value={sprint._id}>
+                                  <Flex align="center" gap="sm">
+                                    <Typography variant="small">{sprint.name}</Typography>
+                                    <Badge size="sm" className={getStatusColor(sprint.status)}>
+                                      {sprint.status}
+                                    </Badge>
+                                  </Flex>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </Stack>
+                      )}
+                    </Stack>
+                  ) : (
+                    <Typography variant="small" color="secondary">
+                      All issues in this sprint are completed. Ready to mark the sprint as done.
+                    </Typography>
+                  )}
+
+                  <Flex gap="sm" justify="end">
+                    <Button
+                      variant="secondary"
+                      onClick={closeCompleteSprintModal}
+                      disabled={isCompleting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={() => void handleCompleteSprint()}
+                      disabled={
+                        isCompleting ||
+                        (transferOption === "sprint" && !targetSprintId && incompleteCount > 0)
+                      }
+                    >
+                      {isCompleting ? "Completing..." : "Complete Sprint"}
+                    </Button>
+                  </Flex>
+                </Stack>
+              </Card>
+            </Flex>
+          );
+        })()}
 
       {/* Start Sprint Modal */}
       {startingSprintId && (

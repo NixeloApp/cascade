@@ -126,7 +126,7 @@ This documentation analyzes how features are implemented across three codebases 
 4. **Assignee/label breakdown tabs** - Show workload distribution
 5. **Burnup chart toggle** - Alternative to burndown
 6. **Issue peek/quick view** - Click to expand without full navigation
-7. **Transfer remaining issues modal** - When completing sprints
+7. ~~**Transfer remaining issues modal**~~ ✅ Modal when completing sprints to move incomplete issues
 
 #### Nice to Have
 8. ~~**Keyboard shortcuts for sprint creation**~~ ✅ `Shift+S` opens create sprint form
