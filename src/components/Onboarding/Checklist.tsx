@@ -100,6 +100,7 @@ export function OnboardingChecklist() {
             size="icon"
             onClick={() => setIsExpanded(!isExpanded)}
             className="h-7 w-7"
+            aria-label={isExpanded ? "Collapse checklist" : "Expand checklist"}
           >
             {isExpanded ? (
               <ChevronDown className="w-4 h-4 text-ui-text-tertiary" />
@@ -107,7 +108,13 @@ export function OnboardingChecklist() {
               <ChevronUp className="w-4 h-4 text-ui-text-tertiary" />
             )}
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleDismiss} className="h-7 w-7">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDismiss}
+            className="h-7 w-7"
+            aria-label="Dismiss checklist"
+          >
             <X className="w-4 h-4 text-ui-text-tertiary" />
           </Button>
         </Flex>
