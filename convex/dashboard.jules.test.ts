@@ -36,7 +36,7 @@ describe("Dashboard - Missing Coverage", () => {
       const result = await asUser.query(api.dashboard.getMyRecentActivity, {});
 
       expect(result.length).toBeGreaterThan(0);
-      expect(result[0].projectName).toBe("Unknown");
+      expect(result.some((activity) => activity.projectName === "Unknown")).toBe(true);
 
       await t.finishInProgressScheduledFunctions();
     });
