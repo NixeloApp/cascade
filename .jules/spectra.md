@@ -19,3 +19,13 @@
 ## 2025-03-08 - Testing Convex HTTP Actions
 **Learning:** Convex HTTP actions (`httpAction`) are best tested by directly importing the handler function and mocking the `ActionCtx` and `Request` object. Standard `convex-test` utilities are optimized for internal functions, not HTTP endpoints.
 **Action:** When testing HTTP actions, import the handler, mock `ActionCtx` (including `runQuery`/`runMutation`), and use `vi.fn()` for `fetch` and environment variables.
+### [2026-02-28] Dashboard Test Coverage
+
+**What was done:**
+Added `convex/dashboard.jules.test.ts` to improve coverage of `convex/dashboard.ts`, focusing on:
+- Handling missing project details inside `getMyRecentActivity`.
+- Fallbacks for priority-based sorting logic in `getFocusTask`.
+- Fallbacks for missing/deleted project records returning "Unknown".
+
+**Learnings:**
+- `convex-test` strictly enforces schema validators during patch operations. Tests aiming to cover scenarios with missing *required* schema fields (e.g. testing `projectId` fallback in `getFocusTask` when `issues.projectId` is technically strictly required) cannot simply `patch({ projectId: undefined })`. Instead, simulating a missing record via deleting the associated entity (like the project document itself) allows for testing the fallback logic correctly without violating schema types.
