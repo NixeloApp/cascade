@@ -3,8 +3,9 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { z } from "zod";
+import { useDraftAutoSave } from "@/hooks/useDraftAutoSave";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput, FormSelectRadix, FormTextarea } from "@/lib/form";
@@ -20,6 +21,7 @@ import {
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { DuplicateDetection } from "./DuplicateDetection";
+import { Alert, AlertDescription } from "./ui/Alert";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { ColorPicker } from "./ui/ColorPicker";
@@ -46,6 +48,17 @@ const createIssueSchema = z.object({
   assigneeId: z.string(),
   storyPoints: z.string(),
 });
+
+/** Draft data structure for auto-save */
+interface IssueDraft {
+  title: string;
+  description: string;
+  type: IssueTypeWithSubtask;
+  priority: IssuePriority;
+  assigneeId: string;
+  storyPoints: string;
+  selectedLabels: Id<"labels">[];
+}
 
 // =============================================================================
 // Component
@@ -101,6 +114,8 @@ export function CreateIssueModal({
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   // Create another toggle
   const [createAnother, setCreateAnother] = useState(false);
+  // Draft restore banner dismissed
+  const [draftDismissed, setDraftDismissed] = useState(false);
 
   // Queries
   const orgProjects = useQuery(
@@ -109,6 +124,16 @@ export function CreateIssueModal({
   );
 
   const effectiveProjectId = projectId || internalSelectedProjectId;
+
+  // Draft auto-save hook
+  const { hasDraft, draft, saveDraft, clearDraft, draftTimestamp } = useDraftAutoSave<IssueDraft>({
+    key: "create-issue",
+    contextKey: effectiveProjectId || undefined,
+    enabled: open,
+  });
+
+  // Show draft banner only if draft exists, not dismissed, and modal just opened
+  const showDraftBanner = hasDraft && !draftDismissed && draft?.title;
 
   const project = useQuery(
     api.projects.getProject,
@@ -165,6 +190,10 @@ export function CreateIssueModal({
 
         showSuccess("Issue created successfully");
 
+        // Clear draft on successful submit
+        clearDraft();
+        setDraftDismissed(false);
+
         if (createAnother) {
           // Reset form for another issue
           form.reset();
@@ -179,6 +208,65 @@ export function CreateIssueModal({
       }
     },
   });
+
+  // Restore draft handler
+  const handleRestoreDraft = useCallback(() => {
+    if (!draft) return;
+    form.setFieldValue("title", draft.title);
+    form.setFieldValue("description", draft.description);
+    form.setFieldValue("type", draft.type);
+    form.setFieldValue("priority", draft.priority);
+    form.setFieldValue("assigneeId", draft.assigneeId);
+    form.setFieldValue("storyPoints", draft.storyPoints);
+    if (draft.selectedLabels) {
+      setSelectedLabels(draft.selectedLabels);
+    }
+    setDraftDismissed(true);
+    showSuccess("Draft restored");
+  }, [draft, form]);
+
+  // Discard draft handler
+  const handleDiscardDraft = useCallback(() => {
+    clearDraft();
+    setDraftDismissed(true);
+  }, [clearDraft]);
+
+  // Save draft when form values change
+  useEffect(() => {
+    if (!open) return;
+
+    const values = form.state.values;
+    // Only save if there's meaningful content
+    if (!values.title?.trim()) return;
+
+    const draftData: IssueDraft = {
+      title: values.title,
+      description: values.description,
+      type: values.type,
+      priority: values.priority,
+      assigneeId: values.assigneeId,
+      storyPoints: values.storyPoints,
+      selectedLabels,
+    };
+    saveDraft(draftData);
+  }, [
+    open,
+    form.state.values.title,
+    form.state.values.description,
+    form.state.values.type,
+    form.state.values.priority,
+    form.state.values.assigneeId,
+    form.state.values.storyPoints,
+    selectedLabels,
+    saveDraft,
+  ]);
+
+  // Reset draft dismissed state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setDraftDismissed(false);
+    }
+  }, [open]);
 
   // Auto-select default template when modal opens
   useEffect(() => {
@@ -317,6 +405,30 @@ export function CreateIssueModal({
         }}
         gap="md"
       >
+        {/* Draft Restore Banner */}
+        {showDraftBanner && (
+          <Alert variant="info">
+            <Flex align="center" justify="between" className="w-full">
+              <AlertDescription>
+                You have an unsaved draft
+                {draftTimestamp && (
+                  <Typography as="span" variant="caption" className="ml-1">
+                    (saved {new Date(draftTimestamp).toLocaleTimeString()})
+                  </Typography>
+                )}
+              </AlertDescription>
+              <Flex gap="sm">
+                <Button type="button" variant="secondary" size="sm" onClick={handleDiscardDraft}>
+                  Discard
+                </Button>
+                <Button type="button" size="sm" onClick={handleRestoreDraft}>
+                  Restore
+                </Button>
+              </Flex>
+            </Flex>
+          </Alert>
+        )}
+
         {/* Project Selector (if no projectId passed) */}
         {!projectId && orgProjects && (
           <Select

@@ -1631,3 +1631,176 @@ export const listArchived = authenticatedQuery({
       }));
   },
 });
+
+/**
+ * Lock a document to prevent concurrent editing.
+ * Only the document owner or org admin can lock.
+ */
+export const lockDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Only owner or org admin can lock
+    const isAdmin = await isOrganizationAdmin(ctx, document.organizationId, ctx.userId);
+    if (document.createdBy !== ctx.userId && !isAdmin) {
+      throw forbidden("Only the document owner or an admin can lock this document");
+    }
+
+    // Already locked
+    if (document.isLocked) {
+      throw conflict("Document is already locked");
+    }
+
+    await ctx.db.patch(args.id, {
+      isLocked: true,
+      lockedBy: ctx.userId,
+      lockedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Unlock a document to allow editing.
+ * Only the user who locked it or org admin can unlock.
+ */
+export const unlockDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Not locked
+    if (!document.isLocked) {
+      return null; // No-op if not locked
+    }
+
+    // Only the user who locked it or org admin can unlock
+    const isAdmin = await isOrganizationAdmin(ctx, document.organizationId, ctx.userId);
+    if (document.lockedBy !== ctx.userId && !isAdmin) {
+      throw forbidden("Only the user who locked this document or an admin can unlock it");
+    }
+
+    await ctx.db.patch(args.id, {
+      isLocked: undefined,
+      lockedBy: undefined,
+      lockedAt: undefined,
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Get the lock status of a document.
+ */
+export const getLockStatus = authenticatedQuery({
+  args: {
+    documentId: v.id("documents"),
+  },
+  returns: v.union(
+    v.object({
+      isLocked: v.literal(false),
+    }),
+    v.object({
+      isLocked: v.literal(true),
+      lockedBy: v.id("users"),
+      lockedByName: v.optional(v.string()),
+      lockedAt: v.number(),
+      canUnlock: v.boolean(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.isDeleted) {
+      return { isLocked: false as const };
+    }
+
+    if (!document.isLocked || !document.lockedBy) {
+      return { isLocked: false as const };
+    }
+
+    // Get the name of who locked it
+    const lockedByUser = await ctx.db.get(document.lockedBy);
+    const lockedByName = getUserName(lockedByUser);
+
+    // Check if current user can unlock
+    const isAdmin = await isOrganizationAdmin(ctx, document.organizationId, ctx.userId);
+    const canUnlock = document.lockedBy === ctx.userId || isAdmin;
+
+    return {
+      isLocked: true as const,
+      lockedBy: document.lockedBy,
+      lockedByName,
+      lockedAt: document.lockedAt ?? Date.now(),
+      canUnlock,
+    };
+  },
+});
+
+/**
+ * Move a document to a different project (or remove from project).
+ * Only the document owner can move it.
+ */
+export const moveToProject = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+    projectId: v.optional(v.id("projects")),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Only owner can move
+    if (document.createdBy !== ctx.userId) {
+      throw forbidden("Only the document owner can move this document");
+    }
+
+    // Validate new project if provided
+    if (args.projectId) {
+      const project = await ctx.db.get(args.projectId);
+      if (!project) {
+        throw notFound("project", args.projectId);
+      }
+      // Project must be in same organization
+      if (project.organizationId !== document.organizationId) {
+        throw validation("projectId", "Project must be in the same organization");
+      }
+      // User must have access to the project
+      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+    }
+
+    // Update the document's project
+    await ctx.db.patch(args.id, {
+      projectId: args.projectId,
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});

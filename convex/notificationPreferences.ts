@@ -20,6 +20,11 @@ export const DEFAULT_PREFERENCES = {
   emailDigest: "none" as const,
   digestDay: undefined,
   digestTime: undefined,
+  // Quiet hours defaults
+  quietHoursEnabled: false,
+  quietHoursStart: undefined,
+  quietHoursEnd: undefined,
+  quietHoursTimezone: undefined,
 };
 
 /**
@@ -79,6 +84,11 @@ export const update = authenticatedMutation({
     emailDigest: v.optional(emailDigests),
     digestDay: v.optional(v.string()),
     digestTime: v.optional(v.string()),
+    // Quiet hours
+    quietHoursEnabled: v.optional(v.boolean()),
+    quietHoursStart: v.optional(v.string()),
+    quietHoursEnd: v.optional(v.string()),
+    quietHoursTimezone: v.optional(v.string()),
   },
   returns: v.object({
     success: v.boolean(),

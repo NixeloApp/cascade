@@ -171,7 +171,7 @@ Brief description of what this feature does.
 ## Progress Tracking
 
 - [x] README.md created
-- [ ] scheduling/ (cal.com focus)
+- [~] scheduling/ (cal.com focus - **SKIPPED**: Not applicable to Cascade/Plane project management)
 - [x] issues/ (plane + Cascade focus)
 - [x] projects/
 - [x] sprints-cycles/

@@ -1,14 +1,15 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
+import { LinkIcon } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
@@ -29,13 +30,49 @@ interface RoadmapViewProps {
   canEdit?: boolean;
 }
 
+/** Timeline span options in months */
+type TimelineSpan = 1 | 3 | 6 | 12;
+
+const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
+  { value: 1, label: "1 Month" },
+  { value: 3, label: "3 Months" },
+  { value: 6, label: "6 Months" },
+  { value: 12, label: "1 Year" },
+];
+
+/** Dependency line data for rendering SVG arrows */
+interface DependencyLine {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  fromIssueId: string;
+  toIssueId: string;
+}
+
 export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapViewProps) {
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [viewMode, setViewMode] = useState<"months" | "weeks">("months");
   const [filterEpic, setFilterEpic] = useState<Id<"issues"> | "all">("all");
+  const [timelineSpan, setTimelineSpan] = useState<TimelineSpan>(6);
+  const [showDependencies, setShowDependencies] = useState(true);
+
+  // Resize state
+  const [resizing, setResizing] = useState<{
+    issueId: Id<"issues">;
+    edge: "left" | "right";
+    startX: number;
+    originalStartDate?: number;
+    originalDueDate?: number;
+  } | null>(null);
+
+  const updateIssue = useMutation(api.issues.update);
 
   // Fetch epics for the dropdown (separate optimized query)
   const epics = useQuery(api.issues.listEpics, { projectId });
+
+  // Fetch issue dependencies for visualizing connections
+  const issueLinks = useQuery(api.issueLinks.getForProject, { projectId });
 
   // Fetch filtered issues - backend applies all filters
   const filteredIssues = useQuery(api.issues.listRoadmapIssues, {
@@ -53,24 +90,153 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
   const today = new Date();
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const endDate = new Date(today.getFullYear(), today.getMonth() + 6, 0); // 6 months ahead
+  const endDate = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
 
-  // Generate timeline columns
+  // Generate timeline columns based on selected span
   const timelineMonths: Date[] = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < timelineSpan; i++) {
     timelineMonths.push(new Date(today.getFullYear(), today.getMonth() + i, 1));
   }
 
+  const totalDays = Math.floor(
+    (endDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
   function getPositionOnTimeline(date: number) {
     const issueDate = new Date(date);
-    const totalDays = Math.floor(
-      (endDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
-    );
     const daysSinceStart = Math.floor(
       (issueDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
     );
     return (daysSinceStart / totalDays) * 100;
   }
+
+  // Convert percentage position back to timestamp
+  const getDateFromPosition = useCallback(
+    (percent: number) => {
+      const days = Math.round((percent / 100) * totalDays);
+      const date = new Date(startOfMonth.getTime() + days * 24 * 60 * 60 * 1000);
+      // Set to end of day for due dates
+      date.setHours(23, 59, 59, 999);
+      return date.getTime();
+    },
+    [totalDays, startOfMonth],
+  );
+
+  // Get bar width as percentage from startDate to dueDate
+  function getBarWidth(startDate: number | undefined, dueDate: number) {
+    if (!startDate) {
+      return 5; // Default width when no start date
+    }
+    const start = getPositionOnTimeline(startDate);
+    const end = getPositionOnTimeline(dueDate);
+    return Math.max(2, end - start); // Minimum 2% width
+  }
+
+  // Get bar left position
+  function getBarLeft(startDate: number | undefined, dueDate: number) {
+    if (startDate) {
+      return getPositionOnTimeline(startDate);
+    }
+    // When no start date, position at dueDate minus half the default width
+    return getPositionOnTimeline(dueDate) - 2.5;
+  }
+
+  // Reference to timeline container for calculating positions
+  const timelineRef = useRef<HTMLDivElement>(null);
+
+  // Start resizing
+  const handleResizeStart = (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    edge: "left" | "right",
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => {
+    if (!canEdit) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setResizing({
+      issueId,
+      edge,
+      startX: e.clientX,
+      originalStartDate: startDate,
+      originalDueDate: dueDate,
+    });
+  };
+
+  // Handle mouse move during resize
+  useEffect(() => {
+    if (!resizing || !timelineRef.current) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = timelineRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const containerWidth = rect.width;
+      const deltaX = e.clientX - resizing.startX;
+      const deltaPercent = (deltaX / containerWidth) * 100;
+
+      // Calculate new dates based on drag delta
+      // This is visual feedback only - actual update happens on mouse up
+    };
+
+    const handleMouseUp = async (e: MouseEvent) => {
+      const container = timelineRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const containerWidth = rect.width;
+      const deltaX = e.clientX - resizing.startX;
+      const deltaPercent = (deltaX / containerWidth) * 100;
+
+      // Calculate new date
+      let newDate: number;
+      if (resizing.edge === "left" && resizing.originalStartDate) {
+        const originalPercent = getPositionOnTimeline(resizing.originalStartDate);
+        newDate = getDateFromPosition(originalPercent + deltaPercent);
+        // Set to start of day for start dates
+        const dateObj = new Date(newDate);
+        dateObj.setHours(0, 0, 0, 0);
+        newDate = dateObj.getTime();
+
+        // Don't allow start date after due date
+        if (resizing.originalDueDate && newDate >= resizing.originalDueDate) {
+          setResizing(null);
+          return;
+        }
+
+        await updateIssue({
+          issueId: resizing.issueId,
+          startDate: newDate,
+        });
+      } else if (resizing.edge === "right" && resizing.originalDueDate) {
+        const originalPercent = getPositionOnTimeline(resizing.originalDueDate);
+        newDate = getDateFromPosition(originalPercent + deltaPercent);
+
+        // Don't allow due date before start date
+        if (resizing.originalStartDate && newDate <= resizing.originalStartDate) {
+          setResizing(null);
+          return;
+        }
+
+        await updateIssue({
+          issueId: resizing.issueId,
+          dueDate: newDate,
+        });
+      }
+
+      setResizing(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [resizing, getDateFromPosition, getPositionOnTimeline, updateIssue]);
 
   // Keyboard navigation
   const listRef = useRef<ListImperativeAPI>(null);
@@ -85,6 +251,73 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       listRef.current.scrollToRow({ index: selectedIndex });
     }
   }, [selectedIndex]);
+
+  // Create issue index map for dependency line rendering
+  const issueIndexMap = useMemo(() => {
+    if (!filteredIssues) return new Map<string, number>();
+    const map = new Map<string, number>();
+    filteredIssues.forEach((issue, index) => {
+      map.set(issue._id, index);
+    });
+    return map;
+  }, [filteredIssues]);
+
+  // Calculate dependency lines for "blocks" relationships
+  const dependencyLines = useMemo((): DependencyLine[] => {
+    if (!showDependencies || !issueLinks?.links || !filteredIssues) return [];
+
+    const rowHeight = 56;
+
+    // Inline position calculator using closure over totalDays and startOfMonth
+    const getPos = (date: number) => {
+      const issueDate = new Date(date);
+      const daysSinceStart = Math.floor(
+        (issueDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      return (daysSinceStart / totalDays) * 100;
+    };
+
+    return issueLinks.links
+      .filter((link) => link.linkType === "blocks")
+      .map((link) => {
+        const fromIndex = issueIndexMap.get(link.fromIssueId);
+        const toIndex = issueIndexMap.get(link.toIssueId);
+
+        if (fromIndex === undefined || toIndex === undefined) return null;
+
+        const fromIssue = filteredIssues[fromIndex];
+        const toIssue = filteredIssues[toIndex];
+
+        if (!fromIssue?.dueDate || !toIssue?.dueDate) return null;
+
+        // Calculate Y positions based on row index
+        const fromY = fromIndex * rowHeight + rowHeight / 2;
+        const toY = toIndex * rowHeight + rowHeight / 2;
+
+        // Calculate X positions as percentages
+        // From: end of blocking issue bar
+        const fromStartX = fromIssue.startDate
+          ? getPos(fromIssue.startDate)
+          : getPos(fromIssue.dueDate) - 2.5;
+        const fromWidth = fromIssue.startDate
+          ? Math.max(2, getPos(fromIssue.dueDate) - getPos(fromIssue.startDate))
+          : 5;
+        const fromX = fromStartX + fromWidth;
+
+        // To: start of blocked issue bar
+        const toX = toIssue.startDate ? getPos(toIssue.startDate) : getPos(toIssue.dueDate) - 2.5;
+
+        return {
+          fromX,
+          fromY,
+          toX,
+          toY,
+          fromIssueId: link.fromIssueId,
+          toIssueId: link.toIssueId,
+        };
+      })
+      .filter((line): line is DependencyLine => line !== null);
+  }, [showDependencies, issueLinks, filteredIssues, issueIndexMap, totalDays, startOfMonth]);
 
   // Row renderer for virtualization
   type RowData = {
@@ -135,26 +368,62 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         </FlexItem>
 
         {/* Timeline Bar */}
-        <FlexItem flex="1" className="relative h-8">
+        <FlexItem flex="1" className="relative h-8" ref={timelineRef}>
           {issue.dueDate && (
-            <Button
-              variant="unstyled"
+            <div
               className={cn(
-                "absolute h-6 rounded-full opacity-80 hover:opacity-100 transition-opacity cursor-pointer flex items-center px-2",
+                "group/bar absolute h-6 rounded-full opacity-80 hover:opacity-100 transition-opacity flex items-center",
                 getPriorityColor(issue.priority, "bg"),
+                resizing?.issueId === issue._id && "opacity-100 ring-2 ring-brand-ring",
               )}
               style={{
-                left: `${getPositionOnTimeline(issue.dueDate)}%`,
-                width: "5%", // Default width for single date
+                left: `${getBarLeft(issue.startDate, issue.dueDate)}%`,
+                width: `${getBarWidth(issue.startDate, issue.dueDate)}%`,
               }}
-              onClick={() => setSelectedIssue(issue._id)}
-              title={`${issue.title} - Due: ${formatDate(issue.dueDate)}`}
-              aria-label={`View issue ${issue.key}`}
             >
-              <Typography variant="label" className="text-brand-foreground truncate">
-                {issue.assignee?.name.split(" ")[0]}
-              </Typography>
-            </Button>
+              {/* Left resize handle */}
+              {canEdit && issue.startDate && (
+                <Flex
+                  align="center"
+                  justify="center"
+                  className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/bar:opacity-100 bg-ui-bg-elevated/50 rounded-l-full"
+                  onMouseDown={(e) =>
+                    handleResizeStart(e, issue._id, "left", issue.startDate, issue.dueDate)
+                  }
+                  title="Drag to change start date"
+                >
+                  <div className="w-0.5 h-3 bg-ui-text-tertiary" />
+                </Flex>
+              )}
+
+              {/* Bar content - clickable */}
+              <Button
+                variant="unstyled"
+                className="flex-1 h-full flex items-center justify-center px-2 cursor-pointer"
+                onClick={() => setSelectedIssue(issue._id)}
+                title={`${issue.title}${issue.startDate ? ` - Start: ${formatDate(issue.startDate)}` : ""} - Due: ${formatDate(issue.dueDate)}`}
+                aria-label={`View issue ${issue.key}`}
+              >
+                <Typography variant="label" className="text-brand-foreground truncate">
+                  {issue.assignee?.name.split(" ")[0]}
+                </Typography>
+              </Button>
+
+              {/* Right resize handle */}
+              {canEdit && (
+                <Flex
+                  align="center"
+                  justify="center"
+                  className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/bar:opacity-100 bg-ui-bg-elevated/50 rounded-r-full"
+                  onMouseDown={(e) =>
+                    handleResizeStart(e, issue._id, "right", issue.startDate, issue.dueDate)
+                  }
+                  title="Drag to change due date"
+                >
+                  <div className="w-0.5 h-3 bg-ui-text-tertiary" />
+                </Flex>
+              )}
+            </div>
           )}
 
           {/* Today Indicator */}
@@ -278,6 +547,23 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               </SelectContent>
             </Select>
 
+            {/* Timeline Span Selector */}
+            <Select
+              value={String(timelineSpan)}
+              onValueChange={(value) => setTimelineSpan(Number(value) as TimelineSpan)}
+            >
+              <SelectTrigger className="w-28 px-3 py-2 border border-ui-border rounded-lg bg-ui-bg text-ui-text">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMELINE_SPANS.map((span) => (
+                  <SelectItem key={span.value} value={String(span.value)}>
+                    {span.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             {/* View Mode Toggle */}
             <ToggleGroup
               type="single"
@@ -288,6 +574,16 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               <ToggleGroupItem value="months">Months</ToggleGroupItem>
               <ToggleGroupItem value="weeks">Weeks</ToggleGroupItem>
             </ToggleGroup>
+
+            {/* Dependency Lines Toggle */}
+            <Button
+              variant={showDependencies ? "primary" : "ghost"}
+              size="sm"
+              onClick={() => setShowDependencies(!showDependencies)}
+              title={showDependencies ? "Hide dependency lines" : "Show dependency lines"}
+            >
+              <Icon icon={LinkIcon} size="sm" />
+            </Button>
           </Flex>
         </Flex>
 
@@ -304,7 +600,11 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               <Typography variant="label" className="w-64 shrink-0">
                 Issue
               </Typography>
-              <FlexItem flex="1" className="grid grid-cols-6">
+              <FlexItem
+                flex="1"
+                className="grid"
+                style={{ gridTemplateColumns: `repeat(${timelineSpan}, minmax(0, 1fr))` }}
+              >
                 {timelineMonths.map((month) => (
                   <Typography
                     key={month.getTime()}
@@ -330,14 +630,63 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 </Stack>
               </Card>
             ) : (
-              <List<RowData>
-                listRef={listRef}
-                style={{ height: 600, width: "100%" }}
-                rowCount={filteredIssues.length}
-                rowHeight={56}
-                rowProps={{ issues: filteredIssues, selectedIndex }}
-                rowComponent={Row}
-              />
+              <div className="relative">
+                <List<RowData>
+                  listRef={listRef}
+                  style={{ height: 600, width: "100%" }}
+                  rowCount={filteredIssues.length}
+                  rowHeight={56}
+                  rowProps={{ issues: filteredIssues, selectedIndex }}
+                  rowComponent={Row}
+                />
+
+                {/* Dependency Lines SVG Overlay */}
+                {showDependencies && dependencyLines.length > 0 && (
+                  <svg
+                    className="absolute top-0 pointer-events-none"
+                    style={{
+                      left: 256, // w-64 issue info column
+                      width: "calc(100% - 256px)",
+                      height: 600,
+                    }}
+                  >
+                    <defs>
+                      <marker
+                        id="arrowhead"
+                        markerWidth="6"
+                        markerHeight="4"
+                        refX="5"
+                        refY="2"
+                        orient="auto"
+                      >
+                        <polygon points="0 0, 6 2, 0 4" fill="var(--color-status-warning)" />
+                      </marker>
+                    </defs>
+                    {dependencyLines.map((line) => {
+                      if (!line) return null;
+                      // Calculate path with curve
+                      const midX = (line.fromX + line.toX) / 2;
+                      const controlOffset = Math.abs(line.toY - line.fromY) * 0.3;
+
+                      return (
+                        <path
+                          key={`${line.fromIssueId}-${line.toIssueId}`}
+                          d={`M ${line.fromX}% ${line.fromY}
+                              C ${line.fromX + 5}% ${line.fromY},
+                                ${line.toX - 5}% ${line.toY},
+                                ${line.toX}% ${line.toY}`}
+                          fill="none"
+                          stroke="var(--color-status-warning)"
+                          strokeWidth="2"
+                          strokeDasharray="4 2"
+                          markerEnd="url(#arrowhead)"
+                          opacity="0.7"
+                        />
+                      );
+                    })}
+                  </svg>
+                )}
+              </div>
             )}
           </FlexItem>
         </Card>

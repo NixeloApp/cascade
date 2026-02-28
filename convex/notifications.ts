@@ -8,7 +8,7 @@ import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { boundedCount } from "./lib/boundedQueries";
 import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
-import { softDeleteFields } from "./lib/softDeleteHelpers";
+import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 
 /** Get paginated notifications for the current user, optionally filtered to unread only. */
 export const list = authenticatedQuery({
@@ -18,6 +18,7 @@ export const list = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     const onlyUnread = args.onlyUnread ?? false;
+    const now = Date.now();
 
     const results = await fetchPaginatedQuery<Doc<"notifications">>(ctx, {
       paginationOpts: args.paginationOpts,
@@ -29,11 +30,25 @@ export const list = authenticatedQuery({
             .query("notifications")
             .withIndex("by_user_read", (q) =>
               q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
+            )
+            .filter((q) =>
+              q.and(
+                q.neq(q.field("isArchived"), true),
+                // Filter out currently snoozed notifications
+                q.or(q.eq(q.field("snoozedUntil"), undefined), q.lt(q.field("snoozedUntil"), now)),
+              ),
             );
         }
         return db
           .query("notifications")
-          .withIndex("by_user_active", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true));
+          .withIndex("by_user_active", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true))
+          .filter((q) =>
+            q.and(
+              q.neq(q.field("isArchived"), true),
+              // Filter out currently snoozed notifications
+              q.or(q.eq(q.field("snoozedUntil"), undefined), q.lt(q.field("snoozedUntil"), now)),
+            ),
+          );
       },
     });
 
@@ -71,7 +86,8 @@ export const getUnreadCount = authenticatedQuery({
         .query("notifications")
         .withIndex("by_user_read", (q) =>
           q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
-        ),
+        )
+        .filter((q) => q.neq(q.field("isArchived"), true)),
       { limit: MAX_UNREAD_COUNT },
     );
 
@@ -126,6 +142,194 @@ export const softDeleteNotification = authenticatedMutation({
     await ctx.db.patch(args.id, softDeleteFields(ctx.userId));
 
     return { success: true, deleted: true } as const;
+  },
+});
+
+/** Archive a notification. Archived notifications are hidden but can be restored. */
+export const archiveNotification = authenticatedMutation({
+  args: { id: v.id("notifications") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const notification = await ctx.db.get(args.id);
+    requireOwned(notification, ctx.userId, "notification");
+
+    await ctx.db.patch(args.id, {
+      isArchived: true,
+      archivedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/** Unarchive a notification. */
+export const unarchiveNotification = authenticatedMutation({
+  args: { id: v.id("notifications") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const notification = await ctx.db.get(args.id);
+    requireOwned(notification, ctx.userId, "notification");
+
+    await ctx.db.patch(args.id, {
+      isArchived: undefined,
+      archivedAt: undefined,
+    });
+
+    return null;
+  },
+});
+
+/** Snooze a notification until a specified time. */
+export const snoozeNotification = authenticatedMutation({
+  args: {
+    id: v.id("notifications"),
+    snoozedUntil: v.number(), // Timestamp when notification should reappear
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const notification = await ctx.db.get(args.id);
+    requireOwned(notification, ctx.userId, "notification");
+
+    // Validate snooze time is in the future
+    if (args.snoozedUntil <= Date.now()) {
+      throw new Error("Snooze time must be in the future");
+    }
+
+    await ctx.db.patch(args.id, {
+      snoozedUntil: args.snoozedUntil,
+    });
+
+    return null;
+  },
+});
+
+/** Unsnooze a notification (make it visible immediately). */
+export const unsnoozeNotification = authenticatedMutation({
+  args: { id: v.id("notifications") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const notification = await ctx.db.get(args.id);
+    requireOwned(notification, ctx.userId, "notification");
+
+    await ctx.db.patch(args.id, {
+      snoozedUntil: undefined,
+    });
+
+    return null;
+  },
+});
+
+/** Archive all notifications for the current user. */
+export const archiveAllNotifications = authenticatedMutation({
+  args: {},
+  returns: v.object({ archivedCount: v.number() }),
+  handler: async (ctx) => {
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_active", (q) => q.eq("userId", ctx.userId).eq("isDeleted", false))
+      .filter((q) => q.neq(q.field("isArchived"), true))
+      .take(500);
+
+    const now = Date.now();
+    await asyncMap(notifications, (n) =>
+      ctx.db.patch(n._id, {
+        isArchived: true,
+        archivedAt: now,
+      }),
+    );
+
+    return { archivedCount: notifications.length };
+  },
+});
+
+/** List archived notifications for the current user. */
+export const listArchived = authenticatedQuery({
+  args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("notifications"),
+      _creationTime: v.number(),
+      userId: v.id("users"),
+      type: v.string(),
+      title: v.string(),
+      message: v.string(),
+      issueId: v.optional(v.id("issues")),
+      projectId: v.optional(v.id("projects")),
+      documentId: v.optional(v.id("documents")),
+      actorId: v.optional(v.id("users")),
+      isRead: v.boolean(),
+      isArchived: v.optional(v.boolean()),
+      archivedAt: v.optional(v.number()),
+    }),
+  ),
+  handler: async (ctx) => {
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_archived", (q) => q.eq("userId", ctx.userId).eq("isArchived", true))
+      .filter(notDeleted)
+      .order("desc")
+      .take(100);
+
+    return notifications.map((n) => ({
+      _id: n._id,
+      _creationTime: n._creationTime,
+      userId: n.userId,
+      type: n.type,
+      title: n.title,
+      message: n.message,
+      issueId: n.issueId,
+      projectId: n.projectId,
+      documentId: n.documentId,
+      actorId: n.actorId,
+      isRead: n.isRead,
+      isArchived: n.isArchived,
+      archivedAt: n.archivedAt,
+    }));
+  },
+});
+
+/** List snoozed notifications for the current user. */
+export const listSnoozed = authenticatedQuery({
+  args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("notifications"),
+      _creationTime: v.number(),
+      userId: v.id("users"),
+      type: v.string(),
+      title: v.string(),
+      message: v.string(),
+      issueId: v.optional(v.id("issues")),
+      projectId: v.optional(v.id("projects")),
+      documentId: v.optional(v.id("documents")),
+      actorId: v.optional(v.id("users")),
+      isRead: v.boolean(),
+      snoozedUntil: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const now = Date.now();
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_snoozed", (q) => q.eq("userId", ctx.userId).gt("snoozedUntil", now))
+      .filter(notDeleted)
+      .order("desc")
+      .take(100);
+
+    return notifications.map((n) => ({
+      _id: n._id,
+      _creationTime: n._creationTime,
+      userId: n.userId,
+      type: n.type,
+      title: n.title,
+      message: n.message,
+      issueId: n.issueId,
+      projectId: n.projectId,
+      documentId: n.documentId,
+      actorId: n.actorId,
+      isRead: n.isRead,
+      snoozedUntil: n.snoozedUntil as number,
+    }));
   },
 });
 

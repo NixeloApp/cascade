@@ -1,13 +1,15 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { Link } from "@tanstack/react-router";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
-import { Bell } from "lucide-react";
+import { Bell, ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
+import { ROUTES } from "@/config/routes";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -98,6 +100,8 @@ export function NotificationCenter() {
   const unreadCount = useQuery(api.notifications.getUnreadCount, {});
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
+  const archiveNotification = useMutation(api.notifications.archiveNotification);
+  const snoozeNotification = useMutation(api.notifications.snoozeNotification);
   const removeNotification = useMutation(api.notifications.softDeleteNotification);
 
   const handleMarkAsRead = async (id: Id<"notifications">) => {
@@ -105,6 +109,14 @@ export function NotificationCenter() {
       await markAsRead({ id });
     } catch (error) {
       showError(error, "Failed to mark notification as read");
+    }
+  };
+
+  const handleArchive = async (id: Id<"notifications">) => {
+    try {
+      await archiveNotification({ id });
+    } catch (error) {
+      showError(error, "Failed to archive notification");
     }
   };
 
@@ -124,6 +136,14 @@ export function NotificationCenter() {
       await removeNotification({ id });
     } catch (error) {
       showError(error, "Failed to delete notification");
+    }
+  };
+
+  const handleSnooze = async (id: Id<"notifications">, snoozedUntil: number) => {
+    try {
+      await snoozeNotification({ id, snoozedUntil });
+    } catch (error) {
+      showError(error, "Failed to snooze notification");
     }
   };
 
@@ -248,7 +268,9 @@ export function NotificationCenter() {
                             key={notification._id}
                             notification={notification}
                             onMarkAsRead={handleMarkAsRead}
+                            onArchive={handleArchive}
                             onDelete={handleDelete}
+                            onSnooze={handleSnooze}
                             orgSlug={orgContext?.orgSlug}
                           />
                         ))}
@@ -259,6 +281,26 @@ export function NotificationCenter() {
               </Stack>
             )}
           </FlexItem>
+
+          {/* Footer - View All Link */}
+          {orgContext?.orgSlug && (
+            <Card
+              padding="sm"
+              radius="none"
+              variant="ghost"
+              className="border-x-0 border-b-0 bg-ui-bg-secondary rounded-b-lg"
+            >
+              <Link
+                to={ROUTES.notifications.path}
+                params={{ orgSlug: orgContext.orgSlug }}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-center gap-2 text-sm text-brand hover:text-brand-hover transition-colors"
+              >
+                View all notifications
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </Card>
+          )}
         </Stack>
       </PopoverContent>
     </Popover>

@@ -71,6 +71,8 @@ export function run() {
     "/ProjectsList.tsx", // Project avatar styling
     "/RoadmapView.tsx", // Timeline/roadmap styling
     "/SprintManager.tsx", // Progress bars, responsive layout
+    "/SprintProgressBar.tsx", // Progress bar styling
+    "/SprintWorkload.tsx", // Popover with assignee breakdown
     "/TimeTracker.tsx", // Time element styling
     "/UserMenu.tsx", // Dropdown menu styling
     "/UserProfile.tsx", // Dialog overrides

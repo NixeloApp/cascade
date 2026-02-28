@@ -12,6 +12,7 @@ import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
+import { notDeleted } from "./lib/softDeleteHelpers";
 import { MINUTE } from "./lib/timeUtils";
 import { collectUserStats } from "./lib/userStats";
 import { sanitizeUserForAuth, sanitizeUserForCurrent } from "./lib/userUtils";
@@ -55,6 +56,8 @@ export const getUser = authenticatedQuery({
       name: v.optional(v.string()),
       email: v.optional(v.string()),
       image: v.optional(v.string()),
+      firstName: v.optional(v.string()),
+      lastName: v.optional(v.string()),
     }),
   ),
   handler: async (ctx, args) => {
@@ -101,12 +104,114 @@ export const getCurrent = authenticatedQuery({
       inviteId: v.optional(v.id("invites")),
       isTestUser: v.optional(v.boolean()),
       testUserCreatedAt: v.optional(v.number()),
+      coverImageStorageId: v.optional(v.id("_storage")),
     }),
   ),
   handler: async (ctx) => {
     // Current user can see their full profile
     const user = await ctx.db.get(ctx.userId);
     return sanitizeUserForCurrent(user);
+  },
+});
+
+/**
+ * Get the cover image URL for the current user.
+ * Returns null if no cover image is set.
+ */
+export const getCoverImageUrl = authenticatedQuery({
+  args: {},
+  returns: v.union(v.null(), v.string()),
+  handler: async (ctx) => {
+    const user = await ctx.db.get(ctx.userId);
+    if (!user?.coverImageStorageId) {
+      return null;
+    }
+    return await ctx.storage.getUrl(user.coverImageStorageId);
+  },
+});
+
+/**
+ * Search for users by name or email.
+ * Returns users that share an organization with the current user.
+ * Used for @mentions in documents and other user search features.
+ */
+export const searchUsers = authenticatedQuery({
+  args: {
+    query: v.string(),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.optional(v.string()),
+      email: v.optional(v.string()),
+      image: v.optional(v.string()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const searchLimit = args.limit ?? 10;
+    const searchQuery = args.query.toLowerCase().trim();
+
+    // Get current user's organizations
+    const { items: myMemberships } = await getOrganizationMemberships(ctx, ctx.userId);
+    if (myMemberships.length === 0) {
+      return [];
+    }
+
+    // Get all users from the same organizations
+    const organizationIds = myMemberships.map((m) => m.organizationId);
+    const seenUserIds = new Set<string>();
+    const results: Array<{
+      _id: typeof ctx.userId;
+      name?: string;
+      email?: string;
+      image?: string;
+    }> = [];
+
+    // Fetch all organization members in parallel
+    const allMembersArrays = await Promise.all(
+      organizationIds.map((orgId) =>
+        ctx.db
+          .query("organizationMembers")
+          .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+          .take(100),
+      ),
+    );
+
+    // Collect unique user IDs
+    const userIdsToFetch: (typeof ctx.userId)[] = [];
+    for (const members of allMembersArrays) {
+      for (const member of members) {
+        if (!seenUserIds.has(member.userId)) {
+          seenUserIds.add(member.userId);
+          userIdsToFetch.push(member.userId);
+        }
+      }
+    }
+
+    // Fetch all users in parallel
+    const users = await Promise.all(userIdsToFetch.map((id) => ctx.db.get(id)));
+
+    // Filter and build results
+    for (const user of users) {
+      if (results.length >= searchLimit) break;
+      if (!user) continue;
+
+      // Search in name and email
+      const userName = (user.name || "").toLowerCase();
+      const userEmail = (user.email || "").toLowerCase();
+
+      if (searchQuery === "" || userName.includes(searchQuery) || userEmail.includes(searchQuery)) {
+        results.push({
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+        });
+      }
+    }
+
+    return results;
   },
 });
 
@@ -124,6 +229,8 @@ export const getCurrent = authenticatedQuery({
 export const updateProfile = authenticatedMutation({
   args: {
     name: v.optional(v.string()),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
     email: v.optional(v.string()),
     avatar: v.optional(v.string()),
     bio: v.optional(v.string()),
@@ -135,6 +242,8 @@ export const updateProfile = authenticatedMutation({
   handler: async (ctx, args) => {
     const updates: {
       name?: string;
+      firstName?: string;
+      lastName?: string;
       image?: string;
       bio?: string;
       timezone?: string;
@@ -152,6 +261,18 @@ export const updateProfile = authenticatedMutation({
       }
       validate.name(trimmedName);
       updates.name = trimmedName;
+    }
+
+    if (args.firstName !== undefined) {
+      const trimmedFirstName = args.firstName.trim();
+      // Allow empty to clear the field
+      updates.firstName = trimmedFirstName || undefined;
+    }
+
+    if (args.lastName !== undefined) {
+      const trimmedLastName = args.lastName.trim();
+      // Allow empty to clear the field
+      updates.lastName = trimmedLastName || undefined;
     }
 
     if (args.email !== undefined) {
@@ -176,6 +297,203 @@ export const updateProfile = authenticatedMutation({
       updates.desktopNotifications = args.desktopNotifications;
 
     await ctx.db.patch(ctx.userId, updates);
+
+    return { success: true };
+  },
+});
+
+// Allowed image MIME types for avatars
+const AVATAR_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
+
+// Max avatar file size (2MB)
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
+
+// Max cover image file size (5MB)
+const MAX_COVER_IMAGE_SIZE = 5 * 1024 * 1024;
+
+/**
+ * Upload a new avatar image for the current user.
+ *
+ * @param storageId - The storage ID from a previously uploaded file
+ * @returns The new avatar URL
+ */
+export const uploadAvatar = authenticatedMutation({
+  args: {
+    storageId: v.id("_storage"),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    url: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    // Validate the uploaded file
+    const metadata = await ctx.storage.getMetadata(args.storageId);
+
+    if (!metadata) {
+      return { success: false, error: "File not found in storage" };
+    }
+
+    // Check MIME type
+    if (!metadata.contentType || !AVATAR_MIME_TYPES.has(metadata.contentType)) {
+      await ctx.storage.delete(args.storageId);
+      return {
+        success: false,
+        error: `Invalid file type: ${metadata.contentType || "unknown"}. Please upload a JPG, PNG, GIF, or WebP image.`,
+      };
+    }
+
+    // Check file size
+    if (metadata.size > MAX_AVATAR_SIZE) {
+      await ctx.storage.delete(args.storageId);
+      return {
+        success: false,
+        error: `File too large: ${Math.round(metadata.size / 1024)}KB. Maximum size is 2MB.`,
+      };
+    }
+
+    // Get the URL for the uploaded file
+    const url = await ctx.storage.getUrl(args.storageId);
+    if (!url) {
+      return { success: false, error: "Failed to get file URL" };
+    }
+
+    // Delete old avatar if it exists and is stored in our storage
+    const user = await ctx.db.get(ctx.userId);
+    if (user?.avatarStorageId) {
+      try {
+        await ctx.storage.delete(user.avatarStorageId);
+      } catch {
+        // Ignore errors deleting old avatar
+      }
+    }
+
+    // Update user profile with new avatar
+    await ctx.db.patch(ctx.userId, {
+      image: url,
+      avatarStorageId: args.storageId,
+    });
+
+    return { success: true, url };
+  },
+});
+
+/**
+ * Remove the current user's avatar.
+ */
+export const removeAvatar = authenticatedMutation({
+  args: {},
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx) => {
+    const user = await ctx.db.get(ctx.userId);
+
+    // Delete avatar from storage if it exists
+    if (user?.avatarStorageId) {
+      try {
+        await ctx.storage.delete(user.avatarStorageId);
+      } catch {
+        // Ignore errors deleting avatar
+      }
+    }
+
+    // Clear avatar fields
+    await ctx.db.patch(ctx.userId, {
+      image: undefined,
+      avatarStorageId: undefined,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Upload a new cover image for the current user's profile.
+ *
+ * @param storageId - The storage ID from a previously uploaded file
+ * @returns The new cover image URL
+ */
+export const uploadCoverImage = authenticatedMutation({
+  args: {
+    storageId: v.id("_storage"),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    url: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    // Validate the uploaded file
+    const metadata = await ctx.storage.getMetadata(args.storageId);
+
+    if (!metadata) {
+      return { success: false, error: "File not found in storage" };
+    }
+
+    // Check MIME type (same as avatar)
+    if (!metadata.contentType || !AVATAR_MIME_TYPES.has(metadata.contentType)) {
+      await ctx.storage.delete(args.storageId);
+      return {
+        success: false,
+        error: `Invalid file type: ${metadata.contentType || "unknown"}. Please upload a JPG, PNG, GIF, or WebP image.`,
+      };
+    }
+
+    // Check file size (5MB for cover images)
+    if (metadata.size > MAX_COVER_IMAGE_SIZE) {
+      await ctx.storage.delete(args.storageId);
+      return {
+        success: false,
+        error: `File too large: ${Math.round(metadata.size / 1024)}KB. Maximum size is 5MB.`,
+      };
+    }
+
+    // Get the URL for the uploaded file
+    const url = await ctx.storage.getUrl(args.storageId);
+    if (!url) {
+      return { success: false, error: "Failed to get file URL" };
+    }
+
+    // Delete old cover image if it exists
+    const user = await ctx.db.get(ctx.userId);
+    if (user?.coverImageStorageId) {
+      try {
+        await ctx.storage.delete(user.coverImageStorageId);
+      } catch {
+        // Ignore errors deleting old cover image
+      }
+    }
+
+    // Update user profile with new cover image
+    await ctx.db.patch(ctx.userId, {
+      coverImageStorageId: args.storageId,
+    });
+
+    return { success: true, url };
+  },
+});
+
+/**
+ * Remove the current user's cover image.
+ */
+export const removeCoverImage = authenticatedMutation({
+  args: {},
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx) => {
+    const user = await ctx.db.get(ctx.userId);
+
+    // Delete cover image from storage if it exists
+    if (user?.coverImageStorageId) {
+      try {
+        await ctx.storage.delete(user.coverImageStorageId);
+      } catch {
+        // Ignore errors deleting cover image
+      }
+    }
+
+    // Clear cover image field
+    await ctx.db.patch(ctx.userId, {
+      coverImageStorageId: undefined,
+    });
 
     return { success: true };
   },
@@ -472,6 +790,149 @@ export const getUserStats = authenticatedQuery({
     // that shared context. The filtering in collectUserStats ensures no
     // information about private projects is leaked.
     return await collectUserStats(ctx, ctx.userId, args.userId);
+  },
+});
+
+/**
+ * Get a user's activity across all accessible projects.
+ *
+ * Privacy:
+ * - If viewing your own profile, shows activity from all your projects.
+ * - If viewing another user's profile, only shows activity from SHARED projects.
+ *
+ * Returns activity entries with:
+ * - Action type (created, updated, commented, etc.)
+ * - Issue key and title
+ * - Project info
+ * - Timestamps
+ */
+export const getUserActivity = authenticatedQuery({
+  args: {
+    userId: v.id("users"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("issueActivity"),
+      action: v.string(),
+      field: v.optional(v.string()),
+      oldValue: v.optional(v.string()),
+      newValue: v.optional(v.string()),
+      _creationTime: v.number(),
+      issueKey: v.string(),
+      issueTitle: v.string(),
+      projectKey: v.string(),
+      projectName: v.string(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 50;
+    const isOwnProfile = ctx.userId === args.userId;
+
+    // Fetch user's activity using the by_user index
+    const activities = await ctx.db
+      .query("issueActivity")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .take(limit * 2); // Fetch extra to account for filtered items
+
+    // Filter out deleted activities
+    const activeActivities = activities.filter((a) => !a.isDeleted);
+
+    // Batch fetch issues
+    const issueIds = [...new Set(activeActivities.map((a) => a.issueId))];
+    const issueMap = new Map<
+      Id<"issues">,
+      { key: string; title: string; projectId: Id<"projects"> }
+    >();
+
+    // Fetch issues in parallel
+    await Promise.all(
+      issueIds.map(async (issueId) => {
+        const issue = await ctx.db.get(issueId);
+        if (issue) {
+          issueMap.set(issueId, {
+            key: issue.key,
+            title: issue.title,
+            projectId: issue.projectId,
+          });
+        }
+      }),
+    );
+
+    // Get unique project IDs
+    const projectIds = [...new Set([...issueMap.values()].map((i) => i.projectId))];
+
+    // Fetch projects and check access
+    const projectMap = new Map<Id<"projects">, { key: string; name: string; hasAccess: boolean }>();
+
+    await Promise.all(
+      projectIds.map(async (projectId) => {
+        const project = await ctx.db.get(projectId);
+        if (project && !project.isDeleted) {
+          // Check access - for own profile, show all; for others, check membership
+          let hasAccess = isOwnProfile;
+          if (!hasAccess) {
+            // Check if viewer is a member of the project via projectMembers table
+            const viewerMembership = await ctx.db
+              .query("projectMembers")
+              .withIndex("by_project_user", (q) =>
+                q.eq("projectId", projectId).eq("userId", ctx.userId),
+              )
+              .filter(notDeleted)
+              .first();
+            const targetMembership = await ctx.db
+              .query("projectMembers")
+              .withIndex("by_project_user", (q) =>
+                q.eq("projectId", projectId).eq("userId", args.userId),
+              )
+              .filter(notDeleted)
+              .first();
+            hasAccess = !!(viewerMembership && targetMembership);
+          } else {
+            // For own profile, verify user is actually a member
+            const userMembership = await ctx.db
+              .query("projectMembers")
+              .withIndex("by_project_user", (q) =>
+                q.eq("projectId", projectId).eq("userId", ctx.userId),
+              )
+              .filter(notDeleted)
+              .first();
+            hasAccess = !!userMembership;
+          }
+          projectMap.set(projectId, { key: project.key, name: project.name, hasAccess });
+        }
+      }),
+    );
+
+    // Filter and enrich activities
+    const enrichedActivities = activeActivities
+      .filter((activity) => {
+        const issue = issueMap.get(activity.issueId);
+        if (!issue) return false;
+        const project = projectMap.get(issue.projectId);
+        return project?.hasAccess;
+      })
+      .slice(0, limit)
+      .map((activity) => {
+        const issue = issueMap.get(activity.issueId);
+        const project = issue ? projectMap.get(issue.projectId) : undefined;
+
+        return {
+          _id: activity._id,
+          action: activity.action,
+          field: activity.field,
+          oldValue: activity.oldValue,
+          newValue: activity.newValue,
+          _creationTime: activity._creationTime,
+          issueKey: issue?.key ?? "Unknown",
+          issueTitle: issue?.title ?? "Unknown",
+          projectKey: project?.key ?? "Unknown",
+          projectName: project?.name ?? "Unknown",
+        };
+      });
+
+    return enrichedActivities;
   },
 });
 

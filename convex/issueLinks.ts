@@ -107,6 +107,59 @@ export const remove = authenticatedMutation({
 });
 
 /**
+ * Get all links for issues in a project
+ * Used for Gantt chart dependency visualization
+ */
+export const getForProject = authenticatedQuery({
+  args: {
+    projectId: v.id("projects"),
+  },
+  handler: async (ctx, args) => {
+    // Get all non-deleted issues in the project with dates (for Gantt relevance)
+    const issues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter((q) => q.neq(q.field("isDeleted"), true))
+      .take(MAX_PAGE_SIZE);
+
+    const issueIds = new Set(issues.map((i) => i._id));
+
+    // Fetch links for all issues in parallel
+    const linksArrays = await Promise.all(
+      issues.map((issue) =>
+        ctx.db
+          .query("issueLinks")
+          .withIndex("by_from_issue", (q) => q.eq("fromIssueId", issue._id))
+          .filter((q) => q.neq(q.field("isDeleted"), true))
+          .take(MAX_PAGE_SIZE),
+      ),
+    );
+
+    // Filter to project-internal links and format
+    const allLinks: Array<{
+      fromIssueId: string;
+      toIssueId: string;
+      linkType: string;
+    }> = [];
+
+    for (const outgoingLinks of linksArrays) {
+      for (const link of outgoingLinks) {
+        // Only include if target is also in this project
+        if (issueIds.has(link.toIssueId)) {
+          allLinks.push({
+            fromIssueId: link.fromIssueId,
+            toIssueId: link.toIssueId,
+            linkType: link.linkType,
+          });
+        }
+      }
+    }
+
+    return { links: allLinks };
+  },
+});
+
+/**
  * Get all links for an issue (both outgoing and incoming)
  */
 export const getForIssue = authenticatedQuery({

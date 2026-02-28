@@ -24,6 +24,8 @@ export type PublicUser = {
  */
 export type AuthenticatedUser = Omit<PublicUser, "email"> & {
   email?: string;
+  firstName?: string;
+  lastName?: string;
 };
 
 /**
@@ -60,6 +62,8 @@ export function sanitizeUserForAuth(
     name: user.name || user.email || "Unknown",
     email: user.email,
     image: user.image,
+    firstName: user.firstName,
+    lastName: user.lastName,
   };
 }
 
@@ -75,6 +79,8 @@ export function sanitizeUserForCurrent(user: Doc<"users"> | null | undefined) {
     _id: user._id,
     _creationTime: user._creationTime,
     name: user.name,
+    firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
     image: user.image,
     emailVerificationTime: user.emailVerificationTime,
@@ -89,6 +95,7 @@ export function sanitizeUserForCurrent(user: Doc<"users"> | null | undefined) {
     inviteId: user.inviteId,
     isTestUser: user.isTestUser,
     testUserCreatedAt: user.testUserCreatedAt,
+    coverImageStorageId: user.coverImageStorageId,
   };
 }
 

@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -43,6 +43,10 @@ export function IssuesCalendarView({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [createForDate, setCreateForDate] = useState<number | null>(null);
+  const [draggedIssue, setDraggedIssue] = useState<Id<"issues"> | null>(null);
+  const [dragOverDay, setDragOverDay] = useState<number | null>(null);
+
+  const updateIssue = useMutation(api.issues.update);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -116,6 +120,48 @@ export function IssuesCalendarView({
     return date.getTime();
   };
 
+  // Drag and drop handlers for rescheduling issues
+  const handleDragStart = (e: React.DragEvent, issueId: Id<"issues">) => {
+    if (!canEdit) return;
+    setDraggedIssue(issueId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", issueId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIssue(null);
+    setDragOverDay(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, day: number) => {
+    if (!canEdit || !draggedIssue) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverDay(day);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverDay(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, day: number) => {
+    e.preventDefault();
+    if (!canEdit || !draggedIssue) return;
+
+    const newDueDate = getDayTimestamp(day);
+    try {
+      await updateIssue({
+        issueId: draggedIssue,
+        dueDate: newDueDate,
+      });
+    } catch {
+      // Error handling - mutation will show toast on failure
+    }
+
+    setDraggedIssue(null);
+    setDragOverDay(null);
+  };
+
   // Generate calendar grid
   const calendarDays = [];
   // Add empty cells for days before first day of month
@@ -133,9 +179,13 @@ export function IssuesCalendarView({
       <div
         key={day}
         className={cn(
-          "group min-h-32 md:min-h-24 border border-ui-border p-2",
+          "group min-h-32 md:min-h-24 border border-ui-border p-2 transition-colors",
           isTodayDate ? "bg-brand-indigo-track" : "bg-ui-bg",
+          dragOverDay === day && "bg-brand-subtle ring-2 ring-inset ring-brand-ring",
         )}
+        onDragOver={(e) => handleDragOver(e, day)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, day)}
       >
         <Flex align="center" justify="between" className="mb-1">
           <Flex align="center" gap="xs">
@@ -173,11 +223,21 @@ export function IssuesCalendarView({
 
         <Stack gap="xs">
           {(dayIssues ?? []).slice(0, 3).map((issue: Doc<"issues">) => (
-            <Tooltip key={issue._id} content={issue.title}>
+            <Tooltip
+              key={issue._id}
+              content={canEdit ? `${issue.title} - Drag to reschedule` : issue.title}
+            >
               <Button
                 variant="ghost"
                 onClick={() => setSelectedIssue(issue._id)}
-                className="w-full justify-start text-left p-1.5 h-auto"
+                className={cn(
+                  "w-full justify-start text-left p-1.5 h-auto",
+                  canEdit && "cursor-grab active:cursor-grabbing",
+                  draggedIssue === issue._id && "opacity-50",
+                )}
+                draggable={canEdit}
+                onDragStart={(e) => handleDragStart(e, issue._id)}
+                onDragEnd={handleDragEnd}
               >
                 <Flex align="center" gap="xs" className="w-full">
                   <div

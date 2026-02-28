@@ -7,6 +7,8 @@ import { ExportButton } from "@/components/ExportButton";
 import { type BoardFilters, FilterBar } from "@/components/FilterBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { PageContent, PageError } from "@/components/layout";
+import { SprintProgressBar } from "@/components/SprintProgressBar";
+import { SprintWorkload } from "@/components/SprintWorkload";
 import { Badge } from "@/components/ui/Badge";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import {
@@ -128,7 +130,15 @@ function BoardPage() {
               {project.boardType}
             </Badge>
           </Flex>
-          <Flex align="center" gap="sm">
+          <Flex align="center" gap="md">
+            {/* Sprint Progress & Workload */}
+            {project.boardType === "scrum" && effectiveSprintId && (
+              <>
+                <SprintProgressBar projectId={project._id} sprintId={effectiveSprintId} />
+                <SprintWorkload sprintId={effectiveSprintId} />
+              </>
+            )}
+
             <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
             {project.boardType === "scrum" && sprints && (
               <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>

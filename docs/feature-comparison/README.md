@@ -81,13 +81,15 @@ This documentation analyzes how features are implemented across three codebases 
 | SSO | ✅ Done | [sso.md](./auth/sso.md) |
 | 2FA | ✅ Done | [2fa.md](./auth/2fa.md) |
 
-### ⬜ Scheduling (cal.com focus)
+### ⏭️ Scheduling (cal.com focus - SKIPPED)
+> **Note:** These features are specific to cal.com's scheduling/booking platform and don't apply to Cascade or Plane's project management focus.
+
 | Feature | Status | Doc |
 |---------|--------|-----|
-| Create Booking | ⬜ Pending | [create-booking.md](./scheduling/create-booking.md) |
-| Availability | ⬜ Pending | [availability.md](./scheduling/availability.md) |
-| Recurring Events | ⬜ Pending | [recurring-events.md](./scheduling/recurring-events.md) |
-| Calendar Integrations | ⬜ Pending | [calendar-integrations.md](./scheduling/calendar-integrations.md) |
+| Create Booking | ⏭️ N/A | — |
+| Availability | ⏭️ N/A | — |
+| Recurring Events | ⏭️ N/A | — |
+| Calendar Integrations | ⏭️ N/A | — |
 
 ---
 
@@ -109,7 +111,7 @@ This documentation analyzes how features are implemented across three codebases 
 9. ~~**"Create more" toggle**~~ ✅ Rapid issue creation without closing modal
 
 #### Nice to Have
-10. **Draft auto-save** - Prevent data loss on modal close
+10. ~~**Draft auto-save**~~ ✅ Auto-saves form data to localStorage with restore banner
 11. **Parent/child issues** - Sub-issue relationships (subtasks exist)
 12. ~~**Inline label creation**~~ ✅ Create labels directly from issue form via popover
 13. **Multiple assignees** - Assign issues to multiple people
@@ -118,14 +120,14 @@ This documentation analyzes how features are implemented across three codebases 
 ### Sprint/Cycle Improvements (from sprints-cycles comparison)
 
 #### High Priority
-1. **Analytics sidebar in board view** - Inline burndown/progress, not separate page
+1. ~~**Analytics sidebar in board view**~~ ✅ Sprint progress bar showing done/total in board header
 2. **Multiple view layouts** - Add List, Calendar, Gantt views for sprints
 3. ~~**Real-time search in sprint board**~~ ✅ Filter issues within sprint
 
 #### Medium Priority
-4. **Assignee/label breakdown tabs** - Show workload distribution
-5. **Burnup chart toggle** - Alternative to burndown
-6. **Issue peek/quick view** - Click to expand without full navigation
+4. ~~**Assignee/label breakdown tabs**~~ ✅ Sprint workload popover showing assignee progress
+5. ~~**Burnup chart toggle**~~ ✅ SprintBurnChart with burndown/burnup toggle in SprintManager
+6. ~~**Issue peek/quick view**~~ ✅ IssueDetailViewer opens as modal/panel without navigation
 7. ~~**Transfer remaining issues modal**~~ ✅ Modal when completing sprints to move incomplete issues
 
 #### Nice to Have
@@ -137,52 +139,52 @@ This documentation analyzes how features are implemented across three codebases 
 
 #### High Priority
 1. **Spreadsheet/table view** - Add proper list view with columns, inline editing, sorting
-2. **Calendar drag-and-drop** - Reschedule issues by dragging between days
-3. **Gantt block resizing** - Adjust start/end dates by resizing timeline bars
+2. ~~**Calendar drag-and-drop**~~ ✅ Drag issues between days to reschedule due dates
+3. ~~**Gantt block resizing**~~ ✅ Drag edges of timeline bars to adjust start/end dates
 
 #### Medium Priority
-4. **Display properties toggle** - Show/hide card properties (assignee, labels, etc.)
-5. **More grouping options** - Group Kanban by assignee, priority, type
-6. **Week view for calendar** - Single week with more issues per day
-7. **Dependency lines in Gantt** - Visualize issue relationships
+4. ~~**Display properties toggle**~~ ✅ Show/hide card properties (type, priority, labels, assignee, story points)
+5. ~~**More grouping options**~~ ✅ Swimlane selector with Priority, Assignee, Type, Label options
+6. ~~**Week view for calendar**~~ ✅ Week mode with time slots and event display (default view)
+7. ~~**Dependency lines in Gantt**~~ ✅ SVG lines with arrows for "blocks" relationships in RoadmapView
 
 #### Nice to Have
 8. **Sub-grouping (swimlanes v2)** - Dual grouping like plane
 9. ~~**Quick add on calendar day**~~ ✅ Click day to create issue with pre-filled due date
-10. **Configurable Gantt timeline** - 1/3/6/12 month spans
+10. ~~**Configurable Gantt timeline**~~ ✅ 1/3/6/12 month span selector in RoadmapView
 
 ### Documents Improvements (from documents/ comparison)
 
 #### High Priority
 1. **Navigation pane sidebar** - Outline/TOC, assets list, document info tabs
-2. **User @mentions in editor** - Tag users with `@` trigger
-3. **Page lock/unlock** - Prevent concurrent editing conflicts
+2. ~~**User @mentions in editor**~~ ✅ Tag users with `@` trigger using Plate MentionPlugin
+3. ~~**Page lock/unlock**~~ ✅ Lock button in document header, locked banner, read-only editor when locked
 
 #### Medium Priority
 4. ~~**Favorites system**~~ ✅ Star documents for quick access, sidebar favorites section
 5. ~~**Archive/restore**~~ ✅ Soft archive instead of delete, archived section in sidebar
-6. **Text colors** - Foreground and background color picker
-7. **H4-H6 heading levels** - Full heading hierarchy
+6. ~~**Text colors**~~ ✅ Foreground and background color picker in Plate FloatingToolbar
+7. ~~**H4-H6 heading levels**~~ ✅ Full heading hierarchy (H1-H6) in slash menu
 
 #### Nice to Have
 8. **Offline support** - IndexedDB persistence for editor
 9. **Work item embeds** - Embed issue cards in documents
-10. **Move between projects** - Transfer documents across projects
+10. ~~**Move between projects**~~ ✅ "Move to project" button in header, project picker dialog
 
 ### Notifications Improvements (from notifications/ comparison)
 
 #### High Priority
-1. **Snooze notifications** - Hide temporarily, reappear at scheduled time
+1. ~~**Snooze notifications**~~ ✅ Snooze popover with preset durations (1h, 3h, tomorrow, next week)
 2. ~~**Notification filters**~~ ✅ Filter by type (All, Mentions, Assigned, Comments, Updates)
-3. **Archive capability** - Archive instead of delete
+3. ~~**Archive capability**~~ ✅ Archive instead of delete, with unarchive option
 
 #### Medium Priority
-4. **Full notifications page** - Dedicated route for managing many notifications
+4. ~~**Full notifications page**~~ ✅ Dedicated route at `/:orgSlug/notifications` with tabs for inbox/archived
 5. ~~**Notification grouping**~~ ✅ Group by date (Today, Yesterday, This Week, Older)
 6. **Smart batching** - Consolidate similar notifications into single email
 
 #### Nice to Have
-7. **Quiet hours** - Do not disturb times
+7. ~~**Quiet hours**~~ ✅ Do not disturb time window with start/end time pickers
 8. **Slack/Teams integration** - Additional notification channels
 9. **Email preview** - Show sample of each notification type
 
@@ -198,18 +200,18 @@ This documentation analyzes how features are implemented across three codebases 
 ### Settings Improvements (from settings/ comparison)
 
 #### High Priority
-1. **Implement workspace settings** - Currently placeholder, add name/logo/timezone
-2. **Add avatar upload modal** - Dedicated upload UI with crop/preview
+1. ~~**Implement workspace settings**~~ ✅ Name, icon, description, visibility, and sharing settings
+2. ~~**Add avatar upload modal**~~ ✅ Dedicated upload UI with drag-drop, preview, and validation
 3. **Add Slack integration** - OAuth-based popular chat integration
 
 #### Medium Priority
-4. **Add First/Last name fields** - Split name for formal contexts
+4. ~~**Add First/Last name fields**~~ ✅ firstName/lastName in schema, profile settings UI with display name
 5. **Add bulk member invite** - Modal for multiple emails + CSV import
 6. **Add webhook secret keys** - HMAC signature validation
 
 #### Nice to Have
-7. **Add activity log** - User's recent activity with pagination
-8. **Add cover image** - Profile header personalization
+7. ~~**Add activity log**~~ ✅ User's recent activity in profile page grouped by date
+8. ~~**Add cover image**~~ ✅ Profile header personalization with upload/remove modal
 9. **Add integration marketplace** - Browse/install integrations UI
 
 ### Cascade Strengths vs Plane (Settings)

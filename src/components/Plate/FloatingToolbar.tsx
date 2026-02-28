@@ -5,7 +5,7 @@
  * Provides quick access to formatting options.
  */
 
-import { Bold, Code, Italic, Link, Strikethrough, Underline } from "lucide-react";
+import { Bold, Code, Highlighter, Italic, Link, Strikethrough, Underline } from "lucide-react";
 import {
   useEditorRef,
   useEditorSelection,
@@ -19,6 +19,7 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover"
 import { Separator } from "@/components/ui/Separator";
 import { NODE_TYPES } from "@/lib/plate/plugins";
 import { cn } from "@/lib/utils";
+import { ColorPickerButton } from "./ColorPickerButton";
 
 interface MarkButtonProps {
   nodeType: string;
@@ -159,6 +160,12 @@ export function FloatingToolbar() {
         <Separator orientation="vertical" className="h-5 mx-1.5 bg-ui-border" />
 
         <MarkButton nodeType={NODE_TYPES.code} icon={Code} tooltip="Inline Code (Ctrl+`)" />
+
+        <Separator orientation="vertical" className="h-5 mx-1.5 bg-ui-border" />
+
+        <MarkButton nodeType={NODE_TYPES.highlight} icon={Highlighter} tooltip="Highlight" />
+        <ColorPickerButton type="fontColor" />
+        <ColorPickerButton type="backgroundColor" />
 
         <Separator orientation="vertical" className="h-5 mx-1.5 bg-ui-border" />
 

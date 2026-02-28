@@ -26,6 +26,7 @@ export function run() {
     "src/components/Auth/GoogleAuthButton.tsx",
     "src/components/ui/ColorPicker.tsx",
     "src/components/ui/ColorPicker.test.tsx",
+    "src/components/Plate/ColorPickerButton.tsx", // Text color picker for Plate editor
     "src/index.css",
     "src/components/Landing/",
     "convex/http/",

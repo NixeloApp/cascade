@@ -194,6 +194,71 @@ export const getSprintBurndown = sprintQuery({
 });
 
 /**
+ * Get sprint assignee breakdown
+ * Shows workload distribution by assignee for a sprint
+ */
+export const getSprintAssigneeBreakdown = sprintQuery({
+  args: {},
+  handler: async (ctx) => {
+    // Get all issues in the sprint
+    const sprintIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_sprint", (q) => q.eq("sprintId", ctx.sprint._id))
+      .filter(notDeleted)
+      .take(MAX_SPRINT_ISSUES);
+
+    // Get done states
+    const doneStates = ctx.project.workflowStates
+      .filter((s) => s.category === "done")
+      .map((s) => s.id);
+
+    // Count issues by assignee
+    const assigneeCounts: Record<string, { total: number; done: number }> = {};
+    const unassigned = { total: 0, done: 0 };
+
+    for (const issue of sprintIssues) {
+      const isDone = doneStates.includes(issue.status);
+      if (issue.assigneeId) {
+        if (!assigneeCounts[issue.assigneeId]) {
+          assigneeCounts[issue.assigneeId] = { total: 0, done: 0 };
+        }
+        assigneeCounts[issue.assigneeId].total += 1;
+        if (isDone) {
+          assigneeCounts[issue.assigneeId].done += 1;
+        }
+      } else {
+        unassigned.total += 1;
+        if (isDone) {
+          unassigned.done += 1;
+        }
+      }
+    }
+
+    // Batch fetch assignee users
+    const assigneeIds = Object.keys(assigneeCounts).map((id) => id as Id<"users">);
+    const userMap = await batchFetchUsers(ctx, assigneeIds);
+
+    // Build result with user names
+    const assignees = Object.entries(assigneeCounts).map(([id, counts]) => ({
+      id: id as Id<"users">,
+      name: getUserName(userMap.get(id as Id<"users">)),
+      total: counts.total,
+      done: counts.done,
+      percent: Math.round((counts.done / counts.total) * 100),
+    }));
+
+    // Sort by total issues (most to least)
+    assignees.sort((a, b) => b.total - a.total);
+
+    return {
+      assignees,
+      unassigned: unassigned.total > 0 ? unassigned : null,
+      totalIssues: sprintIssues.length,
+    };
+  },
+});
+
+/**
  * Get team velocity (completed points per sprint)
  * Requires viewer access to project
  */

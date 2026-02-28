@@ -4,7 +4,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
-import { Archive, Download, History, Star, Upload } from "@/lib/icons";
+import { Archive, Download, FolderInput, History, Lock, LockOpen, Star, Upload } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { PresenceIndicator } from "./PresenceIndicator";
 import { Badge } from "./ui/Badge";
@@ -13,6 +13,12 @@ import { Card } from "./ui/Card";
 import { Input } from "./ui/form/Input";
 import { IconButton } from "./ui/IconButton";
 import { Stack } from "./ui/Stack";
+
+interface LockStatus {
+  isLocked: boolean;
+  lockedByName?: string;
+  canUnlock?: boolean;
+}
 
 interface DocumentHeaderProps {
   document: Doc<"documents"> & {
@@ -23,10 +29,13 @@ interface DocumentHeaderProps {
   versionCount: number | undefined;
   isFavorite: boolean;
   isArchived: boolean;
+  lockStatus?: LockStatus;
   onTitleEdit: (title: string) => Promise<void>;
   onTogglePublic: () => Promise<void>;
   onToggleFavorite: () => Promise<void>;
   onToggleArchive: () => Promise<void>;
+  onToggleLock?: () => Promise<void>;
+  onMoveToProject?: () => void;
   onImportMarkdown: () => Promise<void>;
   onExportMarkdown: () => Promise<void>;
   onShowVersionHistory: () => void;
@@ -39,10 +48,13 @@ export function DocumentHeader({
   versionCount,
   isFavorite,
   isArchived,
+  lockStatus,
   onTitleEdit,
   onTogglePublic,
   onToggleFavorite,
   onToggleArchive,
+  onToggleLock,
+  onMoveToProject,
   onImportMarkdown,
   onExportMarkdown,
   onShowVersionHistory,
@@ -158,6 +170,49 @@ export function DocumentHeader({
                   className={cn(isArchived && "text-ui-text-secondary")}
                 >
                   <Archive className="w-4 h-4" aria-hidden="true" />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* Lock (owner only) */}
+            {document.isOwner && onToggleLock && (
+              <Tooltip
+                content={
+                  lockStatus?.isLocked
+                    ? lockStatus.canUnlock
+                      ? "Unlock document (currently locked)"
+                      : `Locked by ${lockStatus.lockedByName || "another user"}`
+                    : "Lock document to prevent editing"
+                }
+              >
+                <IconButton
+                  variant={lockStatus?.isLocked ? "subtle" : "ghost"}
+                  size="sm"
+                  onClick={() => void onToggleLock()}
+                  disabled={lockStatus?.isLocked && !lockStatus.canUnlock}
+                  aria-label={lockStatus?.isLocked ? "Unlock document" : "Lock document"}
+                  aria-pressed={lockStatus?.isLocked}
+                  className={cn(lockStatus?.isLocked && "text-status-warning")}
+                >
+                  {lockStatus?.isLocked ? (
+                    <Lock className="w-4 h-4" aria-hidden="true" />
+                  ) : (
+                    <LockOpen className="w-4 h-4" aria-hidden="true" />
+                  )}
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* Move to Project (owner only) */}
+            {document.isOwner && onMoveToProject && (
+              <Tooltip content="Move to another project">
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={onMoveToProject}
+                  aria-label="Move to another project"
+                >
+                  <FolderInput className="w-4 h-4" aria-hidden="true" />
                 </IconButton>
               </Tooltip>
             )}

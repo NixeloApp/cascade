@@ -2,6 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useMemo, useState } from "react";
+import { SprintBurnChart } from "@/components/Analytics/SprintBurnChart";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { formatDate } from "@/lib/dates";
@@ -506,13 +507,16 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
           />
         ) : (
           sprints.map((sprint: SprintWithCounts) => (
-            <SprintCard
-              key={sprint._id}
-              sprint={sprint}
-              canEdit={canEdit}
-              onStartSprint={openStartSprintModal}
-              onCompleteSprint={openCompleteSprintModal}
-            />
+            <Stack key={sprint._id} gap="md">
+              <SprintCard
+                sprint={sprint}
+                canEdit={canEdit}
+                onStartSprint={openStartSprintModal}
+                onCompleteSprint={openCompleteSprintModal}
+              />
+              {/* Show burn chart for active sprints */}
+              {sprint.status === "active" && <SprintBurnChart sprintId={sprint._id} />}
+            </Stack>
           ))
         )}
       </Stack>

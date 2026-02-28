@@ -298,6 +298,10 @@ const applicationTables = {
     isArchived: v.optional(v.boolean()),
     archivedAt: v.optional(v.number()),
     archivedBy: v.optional(v.id("users")),
+    // Page Lock (prevent concurrent editing)
+    isLocked: v.optional(v.boolean()),
+    lockedBy: v.optional(v.id("users")),
+    lockedAt: v.optional(v.number()),
     // Soft Delete
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
@@ -822,6 +826,12 @@ const applicationTables = {
     documentId: v.optional(v.id("documents")),
     actorId: v.optional(v.id("users")),
     isRead: v.boolean(),
+    // Snooze (hide until later)
+    snoozedUntil: v.optional(v.number()), // Timestamp when notification reappears
+    // Archive (hidden but accessible)
+    isArchived: v.optional(v.boolean()),
+    archivedAt: v.optional(v.number()),
+    // Soft Delete
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
@@ -829,6 +839,8 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_user_read", ["userId", "isRead", "isDeleted"])
     .index("by_user_active", ["userId", "isDeleted"])
+    .index("by_user_archived", ["userId", "isArchived"])
+    .index("by_user_snoozed", ["userId", "snoozedUntil"])
     .index("by_deleted", ["isDeleted"]),
 
   notificationPreferences: defineTable({
@@ -847,6 +859,11 @@ const applicationTables = {
     pushAssignments: v.optional(v.boolean()),
     pushComments: v.optional(v.boolean()),
     pushStatusChanges: v.optional(v.boolean()),
+    // Quiet hours (do not disturb)
+    quietHoursEnabled: v.optional(v.boolean()),
+    quietHoursStart: v.optional(v.string()), // Time like "22:00"
+    quietHoursEnd: v.optional(v.string()), // Time like "08:00"
+    quietHoursTimezone: v.optional(v.string()), // IANA timezone e.g., "America/New_York"
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -1735,12 +1752,16 @@ export default defineSchema({
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
     image: v.optional(v.string()),
+    avatarStorageId: v.optional(v.id("_storage")),
+    coverImageStorageId: v.optional(v.id("_storage")),
     isAnonymous: v.optional(v.boolean()),
     // Pending email verification
     pendingEmail: v.optional(v.string()),
     pendingEmailVerificationToken: v.optional(v.string()),
     pendingEmailVerificationExpires: v.optional(v.number()),
     // Custom fields for Nixelo
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
     defaultOrganizationId: v.optional(v.id("organizations")),
     bio: v.optional(v.string()),
     timezone: v.optional(v.string()),
