@@ -303,7 +303,7 @@ Before advancing to Phase 4:
 
 ### Color Tokens
 - `src/index.css` - `@theme` block, `:root` primitives
-- `docs/design-system/tokens/colors.md`
+- `docs/COLORS.md`
 
 ### Validators
 - `scripts/validate.js`

@@ -16,9 +16,9 @@ With visual polish complete (Phases 1-3), we ensure:
 
 ---
 
-## Task 1: Audit MASTER_PLAN.md
+## Task 1: Audit Design Standards
 
-### File: `docs/design-system/MASTER_PLAN.md`
+### File: `docs/design/STANDARDS.md`
 
 Review each section and update status:
 
@@ -47,28 +47,28 @@ Review each section and update status:
 
 ---
 
-## Task 2: Audit INDEX.md
+## Task 2: Audit Design README
 
-### File: `docs/design-system/INDEX.md`
+### File: `docs/design/README.md`
 
 #### Update Status Tables
 
-Token Docs:
+Core Docs:
 | File | Status in Doc | Actual Status |
 |------|---------------|---------------|
-| `colors.md` | | |
-| `typography.md` | | |
-| `spacing.md` | | |
-| `animations.md` | | |
+| `STANDARDS.md` | | |
+| `PATTERNS.md` | | |
+| `REFERENCE.md` | | |
+| `GAPS.md` | | |
 
-Page Specs:
+Page Specs (in `specs/pages/`):
 | File | Status in Doc | Actual Status |
 |------|---------------|---------------|
-| `01-landing.md` | | |
-| `02-signin.md` | | |
+| `01-landing/` | | |
+| `02-signin/` | | |
 | ... | | |
 
-Component Specs:
+Component Specs (in `specs/components/`):
 | File | Status in Doc | Actual Status |
 |------|---------------|---------------|
 
@@ -82,7 +82,7 @@ Component Specs:
 
 ## Task 3: Audit Page Specs
 
-### Files: `docs/design-system/pages/*.md`
+### Files: `docs/design/specs/pages/*/`
 
 For each page spec:
 
@@ -118,7 +118,7 @@ For each page spec:
 
 ## Task 4: Audit Component Specs
 
-### Files: `docs/design-system/components/*.md`
+### Files: `docs/design/specs/components/*.md`
 
 For each component spec:
 
@@ -156,17 +156,17 @@ For each component spec:
 
 ### Collection Method
 
-Search all design-system docs for unchecked items:
+Search all design docs for unchecked items:
 
 ```bash
 # Find all unchecked checkboxes
-grep -r "\[ \]" docs/design-system/ --include="*.md"
+grep -r "\[ \]" docs/design/ --include="*.md"
 
 # Find TODO comments
-grep -r "TODO" docs/design-system/ --include="*.md"
+grep -r "TODO" docs/design/ --include="*.md"
 
 # Find TBD markers
-grep -r "TBD" docs/design-system/ --include="*.md"
+grep -r "TBD" docs/design/ --include="*.md"
 ```
 
 ### TODO Master List
@@ -249,7 +249,7 @@ During Phases 1-3, document any new patterns:
 ### Docs Accuracy Review
 
 ```
-Review all files in docs/design-system/
+Review all files in docs/design/
 
 For each file:
 1. Compare documented state vs actual implementation
@@ -279,8 +279,8 @@ Return:
 
 Before marking protocol complete:
 
-- [ ] MASTER_PLAN.md reflects actual progress
-- [ ] INDEX.md status table accurate
+- [ ] STANDARDS.md reflects actual progress
+- [ ] README.md status table accurate
 - [ ] All page specs have current screenshot refs
 - [ ] All component specs match implementation
 - [ ] All P0 TODOs executed
@@ -291,16 +291,16 @@ Before marking protocol complete:
 
 ## Related Files
 
-### Design System Docs
-- `docs/design-system/MASTER_PLAN.md`
-- `docs/design-system/INDEX.md`
-- `docs/design-system/pages/*.md`
-- `docs/design-system/components/*.md`
-- `docs/design-system/tokens/*.md`
+### Design Docs
+- `docs/design/STANDARDS.md`
+- `docs/design/README.md`
+- `docs/design/PATTERNS.md`
+- `docs/design/specs/pages/`
+- `docs/design/specs/components/`
 
 ### Project TODOs
-- `TODO.md` - Active feature TODOs
-- `DESIGN_PERFECTION.md` - This protocol
+- `TODO.md` - Active feature TODOs (points to `/todos/`)
+- `todos/README.md` - Roadmap and recursive improvement phases
 
 ### Implementation
 - `src/components/ui/` - Component source

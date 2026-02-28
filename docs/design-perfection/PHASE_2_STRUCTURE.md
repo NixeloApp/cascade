@@ -306,7 +306,7 @@ pnpm screenshots
 - `src/components/Header.tsx`
 
 ### Page Specs
-- `docs/design-system/pages/*.md`
+- `docs/design/specs/pages/`
 
 ---
 
