@@ -31,6 +31,40 @@ Nixelo is a modern web application built with the following technologies:
 - **Verify File Paths**: Ensure imports point to existing files. Use `@/` alias for `src/` where configured.
 - **Context Awareness**: Read `README.md` and existing code to understand conventions before changing them.
 
+## Code Quality Rules
+
+### Forbidden Patterns (Never Introduce)
+
+**Type Safety Bypasses:**
+- `// @ts-ignore` — Never suppress TypeScript errors
+- `// @ts-expect-error` — Never expect TypeScript errors
+- `// biome-ignore` — Never disable Biome rules
+- `// eslint-disable` — Never disable linting
+
+**Unsafe Type Coercions:**
+- `as any` — Never cast to any
+- `as never` — Never cast to never
+- `as unknown` — Never cast to unknown (unless immediately followed by a proper type guard)
+
+If you encounter a type error, **fix the underlying issue** rather than suppressing it. If the types are genuinely wrong in a dependency, document it and raise the issue.
+
+### File Hygiene (Never Commit)
+
+**Scratch Files:**
+- Test scripts at repo root (e.g., `test_*.ts`, `verify_*.py`)
+- Screenshot artifacts (e.g., `*.png`, `*.jpg` outside designated asset folders)
+- Debug/exploration files
+
+**Before committing, always:**
+1. Run `git status` and review the file list
+2. Remove any files that aren't part of the intended change
+3. Ensure no root-level scratch files are staged
+
+### Constants & Configuration
+
+- **No magic numbers** in test files — import shared constants or define them in a constants file
+- **No pnpm overrides** for security fixes unless explicitly approved — prefer upgrading the parent package or documenting accepted risk
+
 ## Git Safety Protocol
 
 **CRITICAL**: Agents must prevent data loss during version control operations.
