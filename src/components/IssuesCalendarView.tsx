@@ -6,13 +6,16 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Plus } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
+import { CreateIssueModal } from "./CreateIssueModal";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
+import { IconButton } from "./ui/IconButton";
 import { Typography } from "./ui/Typography";
 
 interface IssuesCalendarViewProps {
@@ -39,6 +42,7 @@ export function IssuesCalendarView({
 }: IssuesCalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
+  const [createForDate, setCreateForDate] = useState<number | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -106,6 +110,12 @@ export function IssuesCalendarView({
     return issuesByDate[dateKey] || [];
   };
 
+  const getDayTimestamp = (day: number) => {
+    // Set to end of day (23:59:59.999) for due date
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day, 23, 59, 59, 999);
+    return date.getTime();
+  };
+
   // Generate calendar grid
   const calendarDays = [];
   // Add empty cells for days before first day of month
@@ -123,22 +133,37 @@ export function IssuesCalendarView({
       <div
         key={day}
         className={cn(
-          "min-h-32 md:min-h-24 border border-ui-border p-2",
+          "group min-h-32 md:min-h-24 border border-ui-border p-2",
           isTodayDate ? "bg-brand-indigo-track" : "bg-ui-bg",
         )}
       >
         <Flex align="center" justify="between" className="mb-1">
-          <Typography
-            variant="label"
-            className={cn(
-              "text-sm font-medium",
-              isTodayDate
-                ? "bg-brand text-brand-foreground w-6 h-6 rounded-full flex items-center justify-center"
-                : "text-ui-text",
+          <Flex align="center" gap="xs">
+            <Typography
+              variant="label"
+              className={cn(
+                "text-sm font-medium",
+                isTodayDate
+                  ? "bg-brand text-brand-foreground w-6 h-6 rounded-full flex items-center justify-center"
+                  : "text-ui-text",
+              )}
+            >
+              {day}
+            </Typography>
+            {canEdit && (
+              <Tooltip content="Create issue">
+                <IconButton
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => setCreateForDate(getDayTimestamp(day))}
+                  aria-label={`Create issue for ${day}`}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Plus className="w-3 h-3" />
+                </IconButton>
+              </Tooltip>
             )}
-          >
-            {day}
-          </Typography>
+          </Flex>
           {dayIssues.length > 0 && (
             <Badge size="sm" variant="neutral">
               {dayIssues.length}
@@ -329,6 +354,21 @@ export function IssuesCalendarView({
             }
           }}
           canEdit={canEdit}
+        />
+      )}
+
+      {/* Create Issue Modal (from calendar quick add) */}
+      {createForDate !== null && (
+        <CreateIssueModal
+          projectId={projectId}
+          sprintId={sprintId}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setCreateForDate(null);
+            }
+          }}
+          defaultDueDate={createForDate}
         />
       )}
     </FlexItem>

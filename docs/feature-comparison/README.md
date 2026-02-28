@@ -111,7 +111,7 @@ This documentation analyzes how features are implemented across three codebases 
 #### Nice to Have
 10. **Draft auto-save** - Prevent data loss on modal close
 11. **Parent/child issues** - Sub-issue relationships (subtasks exist)
-12. **Inline label creation** - Create labels from issue form
+12. ~~**Inline label creation**~~ ✅ Create labels directly from issue form via popover
 13. **Multiple assignees** - Assign issues to multiple people
 14. ~~**Display/view options**~~ ✅ Display properties toggle in board toolbar
 
@@ -120,7 +120,7 @@ This documentation analyzes how features are implemented across three codebases 
 #### High Priority
 1. **Analytics sidebar in board view** - Inline burndown/progress, not separate page
 2. **Multiple view layouts** - Add List, Calendar, Gantt views for sprints
-3. **Real-time search in sprint board** - Filter issues within sprint
+3. ~~**Real-time search in sprint board**~~ ✅ Filter issues within sprint
 
 #### Medium Priority
 4. **Assignee/label breakdown tabs** - Show workload distribution
@@ -148,7 +148,7 @@ This documentation analyzes how features are implemented across three codebases 
 
 #### Nice to Have
 8. **Sub-grouping (swimlanes v2)** - Dual grouping like plane
-9. **Quick add on calendar day** - Click empty day to create issue
+9. ~~**Quick add on calendar day**~~ ✅ Click day to create issue with pre-filled due date
 10. **Configurable Gantt timeline** - 1/3/6/12 month spans
 
 ### Documents Improvements (from documents/ comparison)

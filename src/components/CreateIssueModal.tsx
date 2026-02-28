@@ -56,6 +56,8 @@ interface CreateIssueModalProps {
   sprintId?: Id<"sprints">;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Pre-filled due date timestamp (e.g., from calendar quick add) */
+  defaultDueDate?: number;
 }
 
 /**
@@ -77,6 +79,7 @@ export function CreateIssueModal({
   sprintId,
   open,
   onOpenChange,
+  defaultDueDate,
 }: CreateIssueModalProps) {
   const { organizationId } = useOrganization();
 
@@ -157,6 +160,7 @@ export function CreateIssueModal({
           sprintId,
           labels: selectedLabels.length > 0 ? selectedLabels : undefined,
           storyPoints: value.storyPoints ? Number.parseFloat(value.storyPoints) : undefined,
+          dueDate: defaultDueDate,
         });
 
         showSuccess("Issue created successfully");

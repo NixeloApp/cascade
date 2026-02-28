@@ -47,6 +47,7 @@ function BoardPage() {
   const filters = useMemo(
     () =>
       searchParamsToFilters({
+        query: searchParams.query,
         type: searchParams.type,
         priority: searchParams.priority,
         assigneeId: searchParams.assigneeId,
@@ -56,6 +57,7 @@ function BoardPage() {
         createdAt: searchParams.createdAt,
       }),
     [
+      searchParams.query,
       searchParams.type,
       searchParams.priority,
       searchParams.assigneeId,

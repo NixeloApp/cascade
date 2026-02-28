@@ -64,6 +64,16 @@ function matchesLabelsFilter(issue: EnrichedIssue, labelNames?: BoardFilters["la
   return issue.labels?.some((label) => labelNames.includes(label.name)) ?? false;
 }
 
+/** Check if issue matches search query (searches title, key, and description) */
+function matchesSearchQuery(issue: EnrichedIssue, query?: string): boolean {
+  if (!query?.trim()) return true;
+  const searchTerm = query.toLowerCase().trim();
+  const titleMatch = issue.title.toLowerCase().includes(searchTerm);
+  const keyMatch = issue.key.toLowerCase().includes(searchTerm);
+  const descriptionMatch = issue.description?.toLowerCase().includes(searchTerm) ?? false;
+  return titleMatch || keyMatch || descriptionMatch;
+}
+
 /** Convert ISO date string to start-of-day timestamp */
 function dateStringToTimestamp(dateStr: string, endOfDay = false): number {
   const date = new Date(dateStr);
@@ -97,6 +107,7 @@ function applyFilters(issues: EnrichedIssue[], filters?: BoardFilters): Enriched
 
   return issues.filter(
     (issue) =>
+      matchesSearchQuery(issue, filters.query) &&
       matchesTypeFilter(issue, filters.type) &&
       matchesPriorityFilter(issue, filters.priority) &&
       matchesAssigneeFilter(issue, filters.assigneeId) &&

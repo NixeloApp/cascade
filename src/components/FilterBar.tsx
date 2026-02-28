@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, X } from "@/lib/icons";
+import { ChevronDown, Search, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
@@ -30,6 +30,7 @@ export interface DateRangeFilter {
 }
 
 export interface BoardFilters {
+  query?: string;
   type?: Exclude<IssueType, "subtask">[];
   priority?: IssuePriority[];
   assigneeId?: Id<"users">[];
@@ -55,6 +56,7 @@ function hasDateRange(range?: DateRangeFilter): boolean {
 /** Count total active filters across all filter types */
 function countActiveFilters(filters: BoardFilters): number {
   return (
+    (filters.query?.trim() ? 1 : 0) +
     (filters.type?.length ?? 0) +
     (filters.priority?.length ?? 0) +
     (filters.assigneeId?.length ?? 0) +
@@ -378,9 +380,33 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
   const activeFilterCount = countActiveFilters(filters);
   const hasActiveFilters = activeFilterCount > 0;
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    onFilterChange({
+      ...filters,
+      query: value || undefined,
+    });
+  };
+
   return (
     <div className="bg-ui-bg-soft border-b border-ui-border">
       <Flex align="center" gap="sm" wrap>
+        {/* Search Input */}
+        <Flex align="center" className="relative">
+          <Search className="absolute left-2 w-4 h-4 text-ui-text-tertiary pointer-events-none" />
+          <Input
+            type="text"
+            placeholder="Search issues..."
+            value={filters.query ?? ""}
+            onChange={handleSearchChange}
+            className="h-8 pl-8 pr-3 w-48"
+            aria-label="Search issues"
+          />
+        </Flex>
+
+        {/* Divider */}
+        <div className="w-px h-6 bg-ui-border" />
+
         {/* Type Filter */}
         <FilterDropdown
           label="Type"

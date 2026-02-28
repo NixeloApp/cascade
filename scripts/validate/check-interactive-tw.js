@@ -60,6 +60,7 @@ const ALLOWED_FILES = [
   "LabelsManager.tsx",
   // Calendar
   "Calendar/",
+  "IssuesCalendarView.tsx",
   "RoadmapView.tsx",
   // Settings/admin
   "Settings/",

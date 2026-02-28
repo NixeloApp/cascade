@@ -6,6 +6,7 @@ import type { BoardFilters, DateRangeFilter } from "@/components/FilterBar";
  * Arrays are comma-separated strings, dates are "from,to" format
  */
 export interface BoardSearchFilters {
+  query?: string;
   type?: string;
   priority?: string;
   assigneeId?: string;
@@ -36,6 +37,9 @@ function deserializeDateRange(str: string | undefined): DateRangeFilter | undefi
 export function filtersToSearchParams(filters: BoardFilters): BoardSearchFilters {
   const params: BoardSearchFilters = {};
 
+  if (filters.query?.trim()) {
+    params.query = filters.query.trim();
+  }
   if (filters.type?.length) {
     params.type = filters.type.join(",");
   }
@@ -68,6 +72,9 @@ export function filtersToSearchParams(filters: BoardFilters): BoardSearchFilters
 export function searchParamsToFilters(search: BoardSearchFilters): BoardFilters {
   const filters: BoardFilters = {};
 
+  if (search.query) {
+    filters.query = search.query;
+  }
   if (search.type) {
     filters.type = search.type.split(",").filter(Boolean) as BoardFilters["type"];
   }
@@ -99,6 +106,7 @@ export function searchParamsToFilters(search: BoardSearchFilters): BoardFilters 
  */
 export function validateBoardSearchFilters(search: Record<string, unknown>): BoardSearchFilters {
   return {
+    query: typeof search.query === "string" ? search.query : undefined,
     type: typeof search.type === "string" ? search.type : undefined,
     priority: typeof search.priority === "string" ? search.priority : undefined,
     assigneeId: typeof search.assigneeId === "string" ? search.assigneeId : undefined,
@@ -114,6 +122,7 @@ export function validateBoardSearchFilters(search: Record<string, unknown>): Boa
  */
 export function hasActiveSearchFilters(search: BoardSearchFilters): boolean {
   return !!(
+    search.query ||
     search.type ||
     search.priority ||
     search.assigneeId ||
