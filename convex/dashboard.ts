@@ -21,7 +21,13 @@ import { WEEK } from "./lib/timeUtils";
 import { issueActivityFields, issuesFields, projectsFields } from "./schemaFields";
 import { projectRoles } from "./validators";
 
-// Get all issues assigned to the current user across all projects
+/**
+ * Get all issues assigned to the current user across all accessible projects.
+ * Uses pagination and batches related data fetches (projects, users) to prevent N+1 query performance issues.
+ *
+ * @param paginationOpts - Cursor and item count for paginating results.
+ * @returns A paginated page of issues, enriched with their project and user details.
+ */
 export const getMyIssues = authenticatedQuery({
   args: { paginationOpts: paginationOptsValidator }, // Pagination args
   returns: v.object({
@@ -96,7 +102,13 @@ export const getMyIssues = authenticatedQuery({
   },
 });
 
-// Get issues created by the current user
+/**
+ * Get the most recently created issues reported by the current user.
+ * Results are sorted by creation time (descending) and limited by `MAX_USER_ASSIGNED_ISSUES`.
+ * Uses batched data fetches to efficiently attach assignee and project details.
+ *
+ * @returns An array of issues created by the user, enriched with project and assignee details.
+ */
 export const getMyCreatedIssues = authenticatedQuery({
   args: {},
   returns: v.array(
@@ -149,7 +161,13 @@ export const getMyCreatedIssues = authenticatedQuery({
   },
 });
 
-// Get projects the user is a member of
+/**
+ * Get all active projects the user is a member of.
+ * Computes an efficient "My Issues" count based on active assigned tasks, while omitting
+ * the full "totalIssues" calculation for performance.
+ *
+ * @returns An array of the user's projects, including their role and assigned issue count.
+ */
 export const getMyProjects = authenticatedQuery({
   args: {},
   returns: v.array(
@@ -216,7 +234,13 @@ export const getMyProjects = authenticatedQuery({
   },
 });
 
-// Get recent activity across all projects the user has access to
+/**
+ * Retrieve recent activity events across all projects the user has access to.
+ * Ensures the returned activity strictly belongs to projects the user is currently a member of.
+ *
+ * @param limit - Optional maximum number of recent activities to fetch (defaults to `DEFAULT_SEARCH_PAGE_SIZE`).
+ * @returns An array of recent issue activity items, enriched with project and user names.
+ */
 export const getMyRecentActivity = authenticatedQuery({
   args: { limit: v.optional(v.number()) },
   returns: v.array(
@@ -289,7 +313,13 @@ export const getMyRecentActivity = authenticatedQuery({
   },
 });
 
-// Get dashboard stats
+/**
+ * Calculate aggregated dashboard statistics for the current user.
+ * Stats include total assigned tasks, created tasks, issues completed this week, and high priority assignments.
+ * Relies on bounded queries to avoid full table scans.
+ *
+ * @returns An object containing `assignedToMe`, `createdByMe`, `completedThisWeek`, and `highPriority` counts.
+ */
 export const getMyStats = authenticatedQuery({
   args: {},
   returns: v.object({
@@ -347,7 +377,13 @@ export const getMyStats = authenticatedQuery({
   },
 });
 
-// Get the single most important task for the Focus Zone
+/**
+ * Determine the single most important task for the user's Focus Zone.
+ * Excludes issues that are in a "done" workflow state, prioritizing by highest `priority` first,
+ * then breaking ties by most recently updated.
+ *
+ * @returns The top priority uncompleted issue, or `null` if none exist.
+ */
 export const getFocusTask = authenticatedQuery({
   args: {},
   returns: v.union(
