@@ -11,7 +11,7 @@ import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
-import { IssueDetailModal } from "./IssueDetailModal";
+import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Card } from "./ui/Card";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
@@ -342,9 +342,9 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           </FlexItem>
         </Card>
 
-        {/* Issue Detail Modal */}
+        {/* Issue Detail */}
         {selectedIssue && (
-          <IssueDetailModal
+          <IssueDetailViewer
             issueId={selectedIssue}
             open={true}
             onOpenChange={(open) => {

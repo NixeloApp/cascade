@@ -8,7 +8,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
-import { IssueDetailModal } from "./IssueDetailModal";
+import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -318,9 +318,9 @@ export function IssuesCalendarView({
         </Flex>
       </Flex>
 
-      {/* Issue Detail Modal */}
+      {/* Issue Detail */}
       {selectedIssue && (
-        <IssueDetailModal
+        <IssueDetailViewer
           issueId={selectedIssue}
           open={true}
           onOpenChange={(open) => {

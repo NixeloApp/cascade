@@ -21,7 +21,7 @@ import {
 import { BulkOperationsBar } from "./BulkOperationsBar";
 import { CreateIssueModal } from "./CreateIssueModal";
 import type { BoardFilters, DateRangeFilter } from "./FilterBar";
-import { IssueDetailModal } from "./IssueDetailModal";
+import { IssueDetailViewer } from "./IssueDetailViewer";
 import { BoardToolbar } from "./Kanban/BoardToolbar";
 import { KanbanColumn } from "./Kanban/KanbanColumn";
 import { SwimlanRow } from "./Kanban/SwimlanRow";
@@ -382,7 +382,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
       )}
 
       {selectedIssue && (
-        <IssueDetailModal
+        <IssueDetailViewer
           issueId={selectedIssue}
           open={true}
           onOpenChange={(open) => {

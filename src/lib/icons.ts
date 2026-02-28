@@ -91,6 +91,7 @@ export {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  PanelRightOpen,
   Paperclip,
   Pause,
   Pencil,

@@ -58,6 +58,7 @@ export function run() {
     "/InboxList.tsx", // TabsContent styling
     "/IssueCard.tsx", // Responsive card layout
     "/IssueDependencies.tsx", // min-w-0 truncation pattern
+    "/IssueDetailSheet.tsx", // Sheet panel styling
     "/IssuesCalendarView.tsx", // Calendar grid styling
     "/KanbanBoard.tsx", // Board columns with specific widths
     "/KeyboardShortcutsHelp.tsx", // kbd element styling

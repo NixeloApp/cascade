@@ -14,6 +14,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { createKeyboardShortcuts, createKeySequences } from "@/config/keyboardShortcuts";
 import { ROUTES } from "@/config/routes";
+import { IssueViewModeProvider } from "@/contexts/IssueViewModeContext";
 import { useKeyboardShortcutsWithSequences } from "@/hooks/useKeyboardShortcuts";
 import {
   OrgContext,
@@ -211,62 +212,64 @@ function OrganizationLayoutInner() {
 
   return (
     <SidebarProvider>
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:bg-ui-bg focus:p-2 focus:border focus:border-ui-border focus:shadow-md focus:rounded-md focus:text-ui-text font-medium"
-      >
-        Skip to content
-      </a>
-      <Flex className="h-screen overflow-hidden bg-ui-bg-secondary">
-        {/* Unified sidebar */}
-        <AppSidebar />
+      <IssueViewModeProvider>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:bg-ui-bg focus:p-2 focus:border focus:border-ui-border focus:shadow-md focus:rounded-md focus:text-ui-text font-medium"
+        >
+          Skip to content
+        </a>
+        <Flex className="h-screen overflow-hidden bg-ui-bg-secondary">
+          {/* Unified sidebar */}
+          <AppSidebar />
 
-        {/* Main content area */}
-        <Flex direction="column" className="flex-1 min-w-0">
-          {/* Slim header */}
-          <AppHeader
-            onShowCommandPalette={() => setShowCommandPalette(true)}
-            onShowShortcutsHelp={() => setShowShortcutsHelp(true)}
+          {/* Main content area */}
+          <Flex direction="column" className="flex-1 min-w-0">
+            {/* Slim header */}
+            <AppHeader
+              onShowCommandPalette={() => setShowCommandPalette(true)}
+              onShowShortcutsHelp={() => setShowShortcutsHelp(true)}
+            />
+
+            {/* Page content */}
+            <FlexItem
+              as="main"
+              flex="1"
+              className="overflow-auto bg-ui-bg scrollbar-subtle"
+              id="main-content"
+              tabIndex={-1}
+            >
+              <Outlet />
+            </FlexItem>
+          </Flex>
+
+          {/* Command Palette Modal */}
+          <CommandPalette
+            isOpen={showCommandPalette}
+            onClose={() => setShowCommandPalette(false)}
+            commands={commands}
           />
 
-          {/* Page content */}
-          <FlexItem
-            as="main"
-            flex="1"
-            className="overflow-auto bg-ui-bg scrollbar-subtle"
-            id="main-content"
-            tabIndex={-1}
-          >
-            <Outlet />
-          </FlexItem>
+          {/* Keyboard Shortcuts Help Modal */}
+          <KeyboardShortcutsHelp open={showShortcutsHelp} onOpenChange={setShowShortcutsHelp} />
+
+          {/* Create Issue Modal */}
+          <CreateIssueModal open={showCreateIssue} onOpenChange={setShowCreateIssue} />
+
+          {/* Create Project Modal */}
+          <CreateProjectFromTemplate
+            open={showCreateProject}
+            onOpenChange={setShowCreateProject}
+            onProjectCreated={async (_projectId, projectKey) => {
+              setShowCreateProject(false);
+              await navigate({
+                to: ROUTES.projects.board.path,
+                params: { orgSlug, key: projectKey },
+              });
+            }}
+          />
         </Flex>
-
-        {/* Command Palette Modal */}
-        <CommandPalette
-          isOpen={showCommandPalette}
-          onClose={() => setShowCommandPalette(false)}
-          commands={commands}
-        />
-
-        {/* Keyboard Shortcuts Help Modal */}
-        <KeyboardShortcutsHelp open={showShortcutsHelp} onOpenChange={setShowShortcutsHelp} />
-
-        {/* Create Issue Modal */}
-        <CreateIssueModal open={showCreateIssue} onOpenChange={setShowCreateIssue} />
-
-        {/* Create Project Modal */}
-        <CreateProjectFromTemplate
-          open={showCreateProject}
-          onOpenChange={setShowCreateProject}
-          onProjectCreated={async (_projectId, projectKey) => {
-            setShowCreateProject(false);
-            await navigate({
-              to: ROUTES.projects.board.path,
-              params: { orgSlug, key: projectKey },
-            });
-          }}
-        />
-      </Flex>
+      </IssueViewModeProvider>
     </SidebarProvider>
   );
 }

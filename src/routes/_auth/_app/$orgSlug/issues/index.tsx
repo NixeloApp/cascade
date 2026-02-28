@@ -5,7 +5,7 @@ import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
 import { CreateIssueModal } from "@/components/CreateIssueModal";
 import { IssueCard } from "@/components/IssueCard";
-import { IssueDetailModal } from "@/components/IssueDetailModal";
+import { IssueDetailViewer } from "@/components/IssueDetailViewer";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -127,7 +127,7 @@ function AllIssuesPage() {
       <CreateIssueModal open={showCreateModal} onOpenChange={setShowCreateModal} />
 
       {selectedIssueId !== null && (
-        <IssueDetailModal
+        <IssueDetailViewer
           issueId={selectedIssueId}
           open={selectedIssueId !== null}
           onOpenChange={handleCloseDetail}

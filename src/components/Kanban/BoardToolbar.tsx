@@ -7,6 +7,7 @@ import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import { Typography } from "../ui/Typography";
 import { DisplayPropertiesSelector } from "./DisplayPropertiesSelector";
 import { SwimlanSelector } from "./SwimlanSelector";
+import { ViewModeToggle } from "./ViewModeToggle";
 
 interface BoardToolbarProps {
   sprintId?: string;
@@ -99,6 +100,9 @@ export function BoardToolbar({
               </IconButton>
             </Tooltip>
           </Flex>
+
+          {/* View mode toggle (modal/peek) */}
+          <ViewModeToggle />
 
           {/* Display properties selector */}
           {displayOptions && onDisplayOptionsChange && (
