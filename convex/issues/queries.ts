@@ -1054,10 +1054,9 @@ export const getTeamIssueCounts = authenticatedQuery({
           const count = await efficientCount(
             ctx.db
               .query("issues")
-              .withIndex("by_team_status", (q) =>
-                q.eq("teamId", args.teamId).eq("status", state.id),
-              )
-              .filter(notDeleted),
+              .withIndex("by_team_status_deleted", (q) =>
+                q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
+              ),
             1000,
           );
           totalCount = count;
@@ -1159,10 +1158,9 @@ export const getIssueCounts = authenticatedQuery({
             const count = await efficientCount(
               ctx.db
                 .query("issues")
-                .withIndex("by_project_status", (q) =>
-                  q.eq("projectId", args.projectId).eq("status", state.id),
-                )
-                .filter(notDeleted),
+                .withIndex("by_project_status_deleted", (q) =>
+                  q.eq("projectId", args.projectId).eq("status", state.id).lt("isDeleted", true),
+                ),
               1000,
             );
             totalCount = count;
