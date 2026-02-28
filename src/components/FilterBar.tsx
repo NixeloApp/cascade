@@ -24,11 +24,19 @@ import { IconButton } from "./ui/IconButton";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
+export interface DateRangeFilter {
+  from?: string; // ISO date string (YYYY-MM-DD)
+  to?: string;
+}
+
 export interface BoardFilters {
   type?: Exclude<IssueType, "subtask">[];
   priority?: IssuePriority[];
   assigneeId?: Id<"users">[];
   labels?: string[];
+  dueDate?: DateRangeFilter;
+  startDate?: DateRangeFilter;
+  createdAt?: DateRangeFilter;
 }
 
 interface FilterBarProps {
@@ -39,13 +47,21 @@ interface FilterBarProps {
 
 const PRIORITIES_DISPLAY_ORDER = [...ISSUE_PRIORITIES].reverse();
 
+/** Check if a date range filter has any values */
+function hasDateRange(range?: DateRangeFilter): boolean {
+  return !!(range?.from || range?.to);
+}
+
 /** Count total active filters across all filter types */
 function countActiveFilters(filters: BoardFilters): number {
   return (
     (filters.type?.length ?? 0) +
     (filters.priority?.length ?? 0) +
     (filters.assigneeId?.length ?? 0) +
-    (filters.labels?.length ?? 0)
+    (filters.labels?.length ?? 0) +
+    (hasDateRange(filters.dueDate) ? 1 : 0) +
+    (hasDateRange(filters.startDate) ? 1 : 0) +
+    (hasDateRange(filters.createdAt) ? 1 : 0)
   );
 }
 
@@ -104,6 +120,69 @@ function FilterDropdown<T>({
             </Typography>
           </Card>
         )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Date range filter dropdown component */
+interface DateRangeDropdownProps {
+  label: string;
+  value?: DateRangeFilter;
+  onChange: (value: DateRangeFilter | undefined) => void;
+}
+
+function DateRangeDropdown({ label, value, onChange }: DateRangeDropdownProps) {
+  const isActive = hasDateRange(value);
+
+  const handleFromChange = (from: string) => {
+    const newValue = { ...value, from: from || undefined };
+    onChange(hasDateRange(newValue) ? newValue : undefined);
+  };
+
+  const handleToChange = (to: string) => {
+    const newValue = { ...value, to: to || undefined };
+    onChange(hasDateRange(newValue) ? newValue : undefined);
+  };
+
+  const handleClear = () => {
+    onChange(undefined);
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn("h-8 px-3", isActive && "bg-brand-subtle text-brand")}
+        >
+          {label}
+          {isActive && " (1)"}
+          <ChevronDown className="ml-1 w-4 h-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="p-3 min-w-56">
+        <Stack gap="sm">
+          <Input
+            label="From"
+            type="date"
+            value={value?.from ?? ""}
+            onChange={(e) => handleFromChange(e.target.value)}
+          />
+          <Input
+            label="To"
+            type="date"
+            value={value?.to ?? ""}
+            onChange={(e) => handleToChange(e.target.value)}
+          />
+          {isActive && (
+            <Button variant="ghost" size="sm" onClick={handleClear} className="w-full">
+              <X className="w-4 h-4 mr-1" />
+              Clear
+            </Button>
+          )}
+        </Stack>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -372,6 +451,30 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           }}
           emptyMessage="No labels"
           scrollable
+        />
+
+        {/* Date divider */}
+        <div className="w-px h-6 bg-ui-border" />
+
+        {/* Due Date Filter */}
+        <DateRangeDropdown
+          label="Due Date"
+          value={filters.dueDate}
+          onChange={(dueDate) => onFilterChange({ ...filters, dueDate })}
+        />
+
+        {/* Start Date Filter */}
+        <DateRangeDropdown
+          label="Start Date"
+          value={filters.startDate}
+          onChange={(startDate) => onFilterChange({ ...filters, startDate })}
+        />
+
+        {/* Created Date Filter */}
+        <DateRangeDropdown
+          label="Created"
+          value={filters.createdAt}
+          onChange={(createdAt) => onFilterChange({ ...filters, createdAt })}
         />
 
         {/* Divider */}

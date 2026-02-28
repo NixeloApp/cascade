@@ -19,7 +19,7 @@ import {
 } from "@/lib/swimlane-utils";
 import { BulkOperationsBar } from "./BulkOperationsBar";
 import { CreateIssueModal } from "./CreateIssueModal";
-import type { BoardFilters } from "./FilterBar";
+import type { BoardFilters, DateRangeFilter } from "./FilterBar";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { BoardToolbar } from "./Kanban/BoardToolbar";
 import { KanbanColumn } from "./Kanban/KanbanColumn";
@@ -63,6 +63,33 @@ function matchesLabelsFilter(issue: EnrichedIssue, labelNames?: BoardFilters["la
   return issue.labels?.some((label) => labelNames.includes(label.name)) ?? false;
 }
 
+/** Convert ISO date string to start-of-day timestamp */
+function dateStringToTimestamp(dateStr: string, endOfDay = false): number {
+  const date = new Date(dateStr);
+  if (endOfDay) {
+    date.setHours(23, 59, 59, 999);
+  } else {
+    date.setHours(0, 0, 0, 0);
+  }
+  return date.getTime();
+}
+
+/** Check if a timestamp falls within a date range */
+function matchesDateRange(timestamp: number | undefined, range?: DateRangeFilter): boolean {
+  if (!range?.from && !range?.to) return true;
+  if (timestamp === undefined) return false;
+
+  if (range.from) {
+    const fromTs = dateStringToTimestamp(range.from);
+    if (timestamp < fromTs) return false;
+  }
+  if (range.to) {
+    const toTs = dateStringToTimestamp(range.to, true);
+    if (timestamp > toTs) return false;
+  }
+  return true;
+}
+
 /** Apply client-side filters to issues */
 function applyFilters(issues: EnrichedIssue[], filters?: BoardFilters): EnrichedIssue[] {
   if (!filters) return issues;
@@ -72,7 +99,10 @@ function applyFilters(issues: EnrichedIssue[], filters?: BoardFilters): Enriched
       matchesTypeFilter(issue, filters.type) &&
       matchesPriorityFilter(issue, filters.priority) &&
       matchesAssigneeFilter(issue, filters.assigneeId) &&
-      matchesLabelsFilter(issue, filters.labels),
+      matchesLabelsFilter(issue, filters.labels) &&
+      matchesDateRange(issue.dueDate, filters.dueDate) &&
+      matchesDateRange(issue.startDate, filters.startDate) &&
+      matchesDateRange(issue._creationTime, filters.createdAt),
   );
 }
 
