@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import { isThisWeek, isToday, isYesterday, startOfDay } from "date-fns";
+import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Bell } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
