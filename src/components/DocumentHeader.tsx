@@ -4,7 +4,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
-import { Download, History, Star, Upload } from "@/lib/icons";
+import { Archive, Download, History, Star, Upload } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { PresenceIndicator } from "./PresenceIndicator";
 import { Badge } from "./ui/Badge";
@@ -22,9 +22,11 @@ interface DocumentHeaderProps {
   userId: string;
   versionCount: number | undefined;
   isFavorite: boolean;
+  isArchived: boolean;
   onTitleEdit: (title: string) => Promise<void>;
   onTogglePublic: () => Promise<void>;
   onToggleFavorite: () => Promise<void>;
+  onToggleArchive: () => Promise<void>;
   onImportMarkdown: () => Promise<void>;
   onExportMarkdown: () => Promise<void>;
   onShowVersionHistory: () => void;
@@ -36,9 +38,11 @@ export function DocumentHeader({
   userId,
   versionCount,
   isFavorite,
+  isArchived,
   onTitleEdit,
   onTogglePublic,
   onToggleFavorite,
+  onToggleArchive,
   onImportMarkdown,
   onExportMarkdown,
   onShowVersionHistory,
@@ -141,6 +145,22 @@ export function DocumentHeader({
                 <Star className={cn("w-4 h-4", isFavorite && "fill-current")} aria-hidden="true" />
               </IconButton>
             </Tooltip>
+
+            {/* Archive (owner only) */}
+            {document.isOwner && (
+              <Tooltip content={isArchived ? "Unarchive document" : "Archive document"}>
+                <IconButton
+                  variant={isArchived ? "subtle" : "ghost"}
+                  size="sm"
+                  onClick={() => void onToggleArchive()}
+                  aria-label={isArchived ? "Unarchive document" : "Archive document"}
+                  aria-pressed={isArchived}
+                  className={cn(isArchived && "text-ui-text-secondary")}
+                >
+                  <Archive className="w-4 h-4" aria-hidden="true" />
+                </IconButton>
+              </Tooltip>
+            )}
 
             {/* Version History */}
             <Tooltip content="View version history">

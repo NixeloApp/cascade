@@ -606,7 +606,7 @@ export const listChildren = authenticatedQuery({
       throw forbidden(undefined, "You are not a member of this organization");
     }
 
-    // Get documents at this level (bounded)
+    // Get documents at this level (bounded), excluding deleted and archived
     const documents = await ctx.db
       .query("documents")
       .withIndex("by_organization_parent", (q) =>
@@ -615,6 +615,7 @@ export const listChildren = authenticatedQuery({
           .eq("parentId", args.parentId)
           .lt("isDeleted", true),
       )
+      .filter((q) => q.neq(q.field("isArchived"), true))
       .take(BOUNDED_RELATION_LIMIT);
 
     // Pre-build org IDs set to avoid N+1 membership queries
@@ -644,6 +645,7 @@ export const listChildren = authenticatedQuery({
               .eq("parentId", doc._id)
               .lt("isDeleted", true),
           )
+          .filter((q) => q.neq(q.field("isArchived"), true))
           .first();
 
         return {
@@ -1467,8 +1469,8 @@ export const listFavorites = authenticatedQuery({
       const favorite = favorites[i];
       const doc = documents[i];
 
-      // Skip deleted or missing documents
-      if (!doc || doc.isDeleted) continue;
+      // Skip deleted, archived, or missing documents
+      if (!doc || doc.isDeleted || doc.isArchived) continue;
 
       // Only include docs from the requested organization
       if (doc.organizationId !== args.organizationId) continue;
@@ -1484,5 +1486,148 @@ export const listFavorites = authenticatedQuery({
     }
 
     return result;
+  },
+});
+
+// ============================================================================
+// ARCHIVE/UNARCHIVE
+// ============================================================================
+
+/**
+ * Archive a document (soft hide without deleting).
+ * Archived documents are hidden from normal views but can be restored.
+ */
+export const archiveDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Only owner can archive
+    if (document.createdBy !== ctx.userId) {
+      throw forbidden("Only the document owner can archive");
+    }
+
+    await ctx.db.patch(args.id, {
+      isArchived: true,
+      archivedAt: Date.now(),
+      archivedBy: ctx.userId,
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Unarchive (restore) a document.
+ */
+export const unarchiveDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Only owner can unarchive
+    if (document.createdBy !== ctx.userId) {
+      throw forbidden("Only the document owner can unarchive");
+    }
+
+    await ctx.db.patch(args.id, {
+      isArchived: undefined,
+      archivedAt: undefined,
+      archivedBy: undefined,
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Check if a document is archived.
+ */
+export const isArchived = authenticatedQuery({
+  args: {
+    documentId: v.id("documents"),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.isDeleted) {
+      return false;
+    }
+    return document.isArchived === true;
+  },
+});
+
+/**
+ * List archived documents for the current user.
+ */
+export const listArchived = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("documents"),
+      _creationTime: v.number(),
+      title: v.string(),
+      isPublic: v.boolean(),
+      createdBy: v.id("users"),
+      updatedAt: v.number(),
+      organizationId: v.id("organizations"),
+      workspaceId: v.optional(v.id("workspaces")),
+      projectId: v.optional(v.id("projects")),
+      parentId: v.optional(v.id("documents")),
+      order: v.optional(v.number()),
+      archivedAt: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const pageSize = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+
+    // Get archived documents for the organization
+    const archivedDocs = await ctx.db
+      .query("documents")
+      .withIndex("by_organization_archived", (q) =>
+        q.eq("organizationId", args.organizationId).eq("isArchived", true),
+      )
+      .filter(notDeleted)
+      .order("desc")
+      .take(pageSize);
+
+    // Only return documents the user owns
+    return archivedDocs
+      .filter((doc) => doc.createdBy === ctx.userId && doc.archivedAt !== undefined)
+      .map((doc) => ({
+        _id: doc._id,
+        _creationTime: doc._creationTime,
+        title: doc.title,
+        isPublic: doc.isPublic,
+        createdBy: doc.createdBy,
+        updatedAt: doc.updatedAt,
+        organizationId: doc.organizationId,
+        workspaceId: doc.workspaceId,
+        projectId: doc.projectId,
+        parentId: doc.parentId,
+        order: doc.order,
+        archivedAt: doc.archivedAt as number,
+      }));
   },
 });

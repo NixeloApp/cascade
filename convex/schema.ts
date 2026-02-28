@@ -294,12 +294,17 @@ const applicationTables = {
     // Nested pages - parent document and sibling order
     parentId: v.optional(v.id("documents")),
     order: v.optional(v.number()),
+    // Archive (hidden but accessible)
+    isArchived: v.optional(v.boolean()),
+    archivedAt: v.optional(v.number()),
+    archivedBy: v.optional(v.id("users")),
     // Soft Delete
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
   })
     .index("by_creator", ["createdBy"])
+    .index("by_organization_archived", ["organizationId", "isArchived"])
     .index("by_public", ["isPublic"])
     .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"])

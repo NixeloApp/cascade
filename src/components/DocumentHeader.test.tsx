@@ -31,9 +31,11 @@ describe("DocumentHeader", () => {
           userId="user123"
           versionCount={5}
           isFavorite={false}
+          isArchived={false}
           onTitleEdit={vi.fn()}
           onTogglePublic={vi.fn()}
           onToggleFavorite={vi.fn()}
+          onToggleArchive={vi.fn()}
           onImportMarkdown={vi.fn()}
           onExportMarkdown={vi.fn()}
           onShowVersionHistory={vi.fn()}
@@ -52,9 +54,11 @@ describe("DocumentHeader", () => {
           userId="user123"
           versionCount={5}
           isFavorite={false}
+          isArchived={false}
           onTitleEdit={vi.fn()}
           onTogglePublic={vi.fn()}
           onToggleFavorite={vi.fn()}
+          onToggleArchive={vi.fn()}
           onImportMarkdown={vi.fn()}
           onExportMarkdown={vi.fn()}
           onShowVersionHistory={vi.fn()}
@@ -63,6 +67,7 @@ describe("DocumentHeader", () => {
       </TooltipProvider>,
     );
     expect(screen.getByRole("button", { name: "Add to favorites" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Archive document" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Version history" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Import from Markdown" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export as Markdown" })).toBeInTheDocument();

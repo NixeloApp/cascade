@@ -159,8 +159,8 @@ This documentation analyzes how features are implemented across three codebases 
 3. **Page lock/unlock** - Prevent concurrent editing conflicts
 
 #### Medium Priority
-4. **Favorites system** - Star documents for quick access
-5. **Archive/restore** - Soft archive instead of delete
+4. ~~**Favorites system**~~ ✅ Star documents for quick access, sidebar favorites section
+5. ~~**Archive/restore**~~ ✅ Soft archive instead of delete, archived section in sidebar
 6. **Text colors** - Foreground and background color picker
 7. **H4-H6 heading levels** - Full heading hierarchy
 

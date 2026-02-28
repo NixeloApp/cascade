@@ -42,7 +42,10 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const updateTitle = useMutation(api.documents.updateTitle);
   const togglePublic = useMutation(api.documents.togglePublic);
   const toggleFavorite = useMutation(api.documents.toggleFavorite);
+  const archiveDocument = useMutation(api.documents.archiveDocument);
+  const unarchiveDocument = useMutation(api.documents.unarchiveDocument);
   const isFavorite = useQuery(api.documents.isFavorite, { documentId });
+  const isArchived = useQuery(api.documents.isArchived, { documentId });
   const userId = useQuery(api.presence.getUserId);
   const versionCount = useQuery(api.documentVersions.getVersionCount, { documentId });
 
@@ -82,6 +85,21 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
       showSuccess(result.isFavorite ? "Added to favorites" : "Removed from favorites");
     } catch (error) {
       showError(error, "Failed to update favorite");
+    }
+  };
+
+  // Handle toggle archive
+  const handleToggleArchive = async () => {
+    try {
+      if (isArchived) {
+        await unarchiveDocument({ id: documentId });
+        showSuccess("Document unarchived");
+      } else {
+        await archiveDocument({ id: documentId });
+        showSuccess("Document archived");
+      }
+    } catch (error) {
+      showError(error, "Failed to update archive status");
     }
   };
 
@@ -173,9 +191,11 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
         userId={userId}
         versionCount={versionCount}
         isFavorite={isFavorite ?? false}
+        isArchived={isArchived ?? false}
         onTitleEdit={handleTitleEdit}
         onTogglePublic={handleTogglePublic}
         onToggleFavorite={handleToggleFavorite}
+        onToggleArchive={handleToggleArchive}
         onImportMarkdown={async () => {
           // TODO: Implement markdown import
           showError("Markdown import not yet implemented for Plate editor");
