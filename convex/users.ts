@@ -7,6 +7,7 @@ import { internalAction, internalQuery, type MutationCtx } from "./_generated/se
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { constantTimeEqual } from "./lib/apiAuth";
 import { batchFetchIssues, batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
@@ -872,14 +873,14 @@ export const getUserActivity = authenticatedQuery({
         .query("projectMembers")
         .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
         .filter(notDeleted)
-        .collect(),
+        .take(BOUNDED_LIST_LIMIT),
       isOwnProfile
         ? Promise.resolve([]) // No need to fetch target memberships if we are viewing our own profile
         : ctx.db
             .query("projectMembers")
             .withIndex("by_user", (q) => q.eq("userId", args.userId))
             .filter(notDeleted)
-            .collect(),
+            .take(BOUNDED_LIST_LIMIT),
     ]);
 
     // Create lookup maps for memberships, filtered to relevant projects
