@@ -1,3 +1,11 @@
+/**
+ * Password Strength Indicator
+ *
+ * Visual password strength meter using zxcvbn.
+ * Shows strength level and feedback suggestions.
+ * Lazy-loads zxcvbn library for performance.
+ */
+
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";

@@ -1,3 +1,11 @@
+/**
+ * Sign Up Form
+ *
+ * Registration form with email/password and Google OAuth.
+ * Includes password strength indicator and email verification.
+ * Validates form inputs before submission.
+ */
+
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";

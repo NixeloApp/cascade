@@ -1,3 +1,11 @@
+/**
+ * Forgot Password Form
+ *
+ * Email entry form for initiating password reset.
+ * Sends verification code to user's email address.
+ * Provides navigation back to sign in form.
+ */
+
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";

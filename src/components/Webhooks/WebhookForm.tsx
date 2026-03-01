@@ -1,3 +1,11 @@
+/**
+ * Webhook Form
+ *
+ * Dialog form for creating and editing webhooks.
+ * Configures URL, secret, and event subscriptions.
+ * Validates webhook configuration before saving.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";

@@ -1,3 +1,11 @@
+/**
+ * Reset Password Form
+ *
+ * New password entry with verification code.
+ * Validates password strength using zxcvbn.
+ * Completes the password reset flow.
+ */
+
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
