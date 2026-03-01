@@ -40,11 +40,11 @@
 
 ### Validator Gaps
 
-- [ ] **No JSDoc enforcement** - Many exported functions lack documentation
-- [ ] **No file header enforcement** - Inconsistent module-level documentation
-- [ ] **No import order enforcement** - Relies on Biome (not explicit validation)
-- [ ] **No component naming enforcement** - PascalCase not validated
-- [ ] **No Convex function naming enforcement** - `list`/`get`/`create` patterns not enforced
+- [x] **JSDoc enforcement** ✅ - `check-jsdoc.js` created, reports missing docs
+- [x] **File header enforcement** ✅ - `check-file-headers.js` created, reports missing headers
+- [x] **Import order enforcement** ✅ - `check-import-order.js` exists (disabled by default)
+- [x] **Component naming enforcement** ✅ - `check-component-naming.js` validates PascalCase
+- [x] **Convex function naming enforcement** ✅ - `check-convex-naming.js` validates patterns
 
 ---
 
@@ -310,100 +310,19 @@ src/components/ui/Button/
 
 ---
 
-## Proposed New Validators
+## Implemented Validators
 
-### 1. `check-jsdoc.js` (NEW)
+All proposed validators have been implemented:
 
-**Purpose:** Enforce JSDoc on exported functions and components.
-
-```javascript
-// Proposed rules:
-const RULES = [
-  // Exported functions must have JSDoc
-  { pattern: /^export (async )?function \w+/, requireJSDoc: true },
-  // Exported components must have JSDoc
-  { pattern: /^export function [A-Z]\w+\(/, requireJSDoc: true },
-  // Exported constants can skip JSDoc if name is self-documenting
-  { pattern: /^export const [A-Z_]+/, requireJSDoc: false },
-];
-
-// Ignore patterns:
-const IGNORE = [
-  /\.test\.tsx?$/,
-  /\.stories\.tsx?$/,
-  /index\.ts$/,
-  /routeTree\.gen\.ts$/,
-];
-```
-
-### 2. `check-file-headers.js` (NEW)
-
-**Purpose:** Require file headers for non-trivial files.
-
-```javascript
-// Proposed rules:
-const MIN_LINES_FOR_HEADER = 50;  // Files > 50 lines need headers
-
-const HEADER_PATTERN = /^\/\*\*[\s\S]*?\*\//;  // Must start with /** ... */
-
-// Required sections:
-const REQUIRED_SECTIONS = [
-  // None required, just presence of header
-];
-
-// Ignore patterns:
-const IGNORE = [
-  /index\.ts$/,
-  /\.test\.tsx?$/,
-  /\.d\.ts$/,
-  /routeTree\.gen\.ts$/,
-];
-```
-
-### 3. `check-convex-naming.js` (NEW)
-
-**Purpose:** Enforce consistent Convex function naming.
-
-```javascript
-// Proposed rules:
-const PATTERNS = {
-  query: {
-    single: /^get[A-Z]/,      // getProject, getUser
-    multiple: /^list[A-Z]/,   // listProjects, listUsers
-    search: /^search[A-Z]/,   // searchUsers
-  },
-  mutation: {
-    create: /^create[A-Z]/,   // createProject
-    update: /^update[A-Z]/,   // updateProject
-    delete: /^(delete|archive|remove)[A-Z]/,
-    toggle: /^toggle[A-Z]/,   // togglePublic
-  },
-};
-
-// Allowed exceptions:
-const ALLOWED = [
-  "list",  // Generic list (deprecated, but still used)
-  "get",   // Generic get (deprecated)
-];
-```
-
-### 4. `check-component-structure.js` (NEW)
-
-**Purpose:** Enforce component file structure.
-
-```javascript
-// Proposed rules:
-const RULES = [
-  // Props interface must be named {ComponentName}Props
-  { component: /function (\w+)/, propsInterface: /interface $1Props/ },
-
-  // Components must use named exports (not default)
-  { forbidden: /export default/ },
-
-  // Hook files must start with "use"
-  { hookFile: /use[A-Z]\w+\.tsx?$/, mustExport: /export function use/ },
-];
-```
+| Validator | Status | Notes |
+|-----------|--------|-------|
+| `check-jsdoc.js` | ✅ Implemented | Reports missing JSDoc on exports |
+| `check-file-headers.js` | ✅ Implemented | Reports missing headers on files >50 lines |
+| `check-convex-naming.js` | ✅ Implemented | Validates `get`/`list`/`create` patterns |
+| `check-component-naming.js` | ✅ Implemented | Validates PascalCase for components |
+| `check-component-props.js` | ✅ Implemented | Validates prop interface naming |
+| `check-hook-patterns.js` | ✅ Implemented | Validates hook return patterns |
+| `check-unused-params.js` | ✅ Implemented | Flags underscore-prefixed params |
 
 ---
 
@@ -560,6 +479,7 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Fixed check-unused-params.js return properties | Validator now passes correctly |
 | 2026-03-01 | Added Convex hook allowlist to check-hook-patterns.js | Reduced false positives |
 | 2026-03-01 | Fixed useAIChat toast.error → showError | Better error handling |
 | 2026-03-01 | Updated check-raw-tailwind.js with prop detection | Detects component prop misuse |
