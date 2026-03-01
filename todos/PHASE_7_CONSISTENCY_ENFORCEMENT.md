@@ -3,7 +3,7 @@
 > **Status:** ✅ Complete (Phase 7-10)
 > **Goal:** All styling lives in CVA components. No raw Tailwind in app code.
 > **Last Updated:** 2026-03-01
-> **Progress:** 25 validators, all passing, 0 errors
+> **Progress:** 27 validators, all passing, 0 errors
 
 ---
 
@@ -113,10 +113,10 @@ grep -r "from.*ui/PageHeader" src/
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
 | check-duplicate-components.js | Flag components with same name in different dirs | Medium | [x] ✅ Created (3 duplicates) |
-| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] |
-| check-import-paths.js | Flag imports from wrong locations | Medium | [ ] |
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [x] ✅ Created, 0 issues (Stack gap scale fixed) |
+| check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created (0 issues) |
 
-**Note:** These are optional. The raw-tailwind validator is the main enforcement.
+**Note:** All optional validators are now created. The raw-tailwind validator is the main enforcement.
 
 ---
 
@@ -269,9 +269,7 @@ Items intentionally not in scope for Phase 7:
 | Item | Reason | Track In |
 |------|--------|----------|
 | CVA for all existing ui/ components | Too disruptive | Future phase |
-| Standardize Flex vs Stack usage | Needs design decision | PATTERNS.md |
-| check-duplicate-components.js | Nice-to-have | Backlog |
-| check-import-paths.js | Nice-to-have | Backlog |
+| Standardize Flex vs Stack usage | ✅ Resolved - gap scales now match | N/A |
 
 ---
 
@@ -279,7 +277,7 @@ Items intentionally not in scope for Phase 7:
 
 **Last Run:** 2026-03-01
 **Files Migrated:** 220+
-**Validators:** 25 (all passing)
+**Validators:** 27 (all passing)
 **Violations Remaining:** 170 (down from 1145)
 
 **Note:** Remaining 170 violations are edge cases that don't warrant migration:
@@ -420,8 +418,8 @@ Document which validators are STRICT (block CI) vs INFO (report only):
 | check-jsdoc.js | MEDIUM | 171 exports missing docs |
 | check-file-headers.js | MEDIUM | 319 files missing headers |
 | check-convex-naming.js | MEDIUM | 0 warnings (2 allowlisted) |
-| check-component-naming.js | INFO | 4 naming issues (file/component mismatches) |
-| check-duplicate-components.js | INFO | 3 duplicate names (ui/form allowed) |
+| check-component-naming.js | INFO | 0 issues (allowlists for intentional patterns) |
+| check-duplicate-components.js | INFO | 0 issues (allowlists for intentional duplicates) |
 
 ---
 
@@ -631,6 +629,8 @@ The 78 missing test files are primarily external integrations:
 | check-hook-patterns.js | React hook patterns | MEDIUM | ✅ |
 | check-async-patterns.js | Error handling | MEDIUM | ✅ |
 | check-test-coverage.js | Test coverage | MEDIUM | ✅ |
+| check-import-paths.js | Import path consistency | INFO | ✅ |
+| check-component-props.js | Gap scale consistency | INFO | ✅ |
 | check-component-naming.js | PascalCase naming | INFO | ✅ |
 | check-duplicate-components.js | Duplicate names | INFO | ✅ |
 
@@ -648,7 +648,7 @@ The 78 missing test files are primarily external integrations:
 | Phase 10 | Issue Resolution | ✅ Complete |
 
 **Key Achievements:**
-- 25 validators covering all aspects of code quality
+- 27 validators covering all aspects of code quality
 - 0 blocking errors across all validators
 - 220+ files migrated to CVA components
 - Raw Tailwind reduced from 1145 to 170 edge cases
@@ -664,31 +664,31 @@ The 78 missing test files are primarily external integrations:
 
 Issues detected by validators that could be addressed in future iterations:
 
-### 11.1 Component Naming Issues (4 issues)
+### 11.1 Component Naming Issues (0 issues - RESOLVED)
 
-| File | Issue | Suggested Fix |
-|------|-------|---------------|
-| `Dashboard/ProjectsList.tsx` | Exports `WorkspacesList` | Rename file to `WorkspacesList.tsx` |
-| `IssueDetail/InlinePropertyEdit.tsx` | Exports multiple components | Split or rename to `InlinePropertySelects.tsx` |
-| `Landing/icons.tsx` | Lowercase filename | Rename to `Icons.tsx` |
-| `Onboarding/Checklist.tsx` | Exports `OnboardingChecklist` | Rename to `OnboardingChecklist.tsx` |
+| File | Issue | Resolution |
+|------|-------|------------|
+| `Dashboard/ProjectsList.tsx` | Exports `WorkspacesList` | ✅ Renamed to `WorkspacesList.tsx` |
+| `IssueDetail/InlinePropertyEdit.tsx` | Exports multiple components | ✅ Added to allowlist (co-located pattern) |
+| `Landing/icons.tsx` | Lowercase filename | ✅ Renamed to `Icons.tsx`, added to allowlist (icon bundle) |
+| `Onboarding/Checklist.tsx` | Exports `OnboardingChecklist` | ✅ Renamed to `OnboardingChecklist.tsx` |
 
-### 11.2 Duplicate Component Names (3 issues)
+### 11.2 Duplicate Component Names (0 issues - RESOLVED)
 
-| Component | Locations | Analysis |
-|-----------|-----------|----------|
-| `RecentActivity` | Analytics/, Dashboard/ | Different purposes - consider renaming to `AnalyticsActivity`/`DashboardActivity` |
-| `RoadmapView` | Calendar/, root | Calendar version is embedded gantt, root is standalone page |
-| `ProjectsList` | Dashboard/, root | Dashboard version is dashboard-specific widget |
+| Component | Locations | Resolution |
+|-----------|-----------|------------|
+| `RecentActivity` | Analytics/, Dashboard/ | ✅ Added to allowlist (different implementations for different contexts) |
+| `RoadmapView` | Calendar/, root | ✅ Added to allowlist (embedded gantt vs standalone page) |
+| `ProjectsList` | Dashboard/, root | ✅ Dashboard version renamed to `WorkspacesList.tsx` |
 
-**Note:** These duplicates may be intentional (different implementations for different contexts). Review before renaming.
+**Note:** Intentional duplicates added to `check-duplicate-components.js` allowlist.
 
-### 11.3 Optional Validators (Not Yet Created)
+### 11.3 Optional Validators
 
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
-| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] Optional |
-| check-import-paths.js | Flag imports from wrong locations | Medium | [ ] Optional |
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [x] ✅ Created, 0 issues (Stack gap scale fixed) |
+| check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created, 0 issues (6 fixed) |
 
 ---
 
