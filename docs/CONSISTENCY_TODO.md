@@ -383,10 +383,11 @@ All proposed validators have been implemented:
   - Common patterns
   - Anti-patterns
 
-- [ ] **Update CLAUDE.md with new patterns**
-  - Add validator descriptions
-  - Add naming conventions
-  - Add file structure guidelines
+- [x] **Update CLAUDE.md with new patterns** ✅
+  - Added feature directory structure (App/, Documents/, IssueDetail/, etc.)
+  - Added Flex gap prop documentation
+  - Updated validator list (28 validators)
+  - Added error handling patterns (showError/showSuccess)
 
 ---
 
@@ -481,6 +482,7 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Updated CLAUDE.md with new patterns and structure | Documentation consistency |
 | 2026-03-01 | Moved IssueCard and CreateIssueModal to IssueDetail/ | Feature directory organization |
 | 2026-03-01 | Added COLORS.DEFAULT_LABEL constant | Runtime color values centralized |
 | 2026-03-01 | Updated auth forms to use showError/showSuccess | Consistent error handling |
