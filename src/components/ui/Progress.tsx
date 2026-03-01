@@ -1,3 +1,11 @@
+/**
+ * Progress Component
+ *
+ * Progress bar with color variants.
+ * Wraps Radix UI Progress with semantic styling.
+ * Use for loading states and completion indicators.
+ */
+
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";

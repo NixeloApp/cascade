@@ -1,3 +1,11 @@
+/**
+ * Icon Component
+ *
+ * Wrapper for Lucide icons with size variants.
+ * Provides consistent sizing and styling props.
+ * Use instead of raw Lucide icon imports.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import type { LucideIcon } from "lucide-react";
 import { forwardRef, type SVGProps } from "react";

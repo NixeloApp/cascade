@@ -1,3 +1,11 @@
+/**
+ * Skeleton Component
+ *
+ * Placeholder loading states with shimmer animation.
+ * Includes presets for cards, lists, and text blocks.
+ * Use to maintain layout during async data loading.
+ */
+
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 

@@ -1,3 +1,11 @@
+/**
+ * Loading Spinner Component
+ *
+ * Animated spinner with size and color variants.
+ * Includes LoadingState wrapper with optional message.
+ * Use for indicating pending async operations.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";

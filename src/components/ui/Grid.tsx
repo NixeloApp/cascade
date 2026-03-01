@@ -1,3 +1,11 @@
+/**
+ * Grid Component
+ *
+ * CSS Grid container with responsive column props.
+ * Supports 1-12 columns with breakpoint overrides.
+ * Use for card layouts and dashboard grids.
+ */
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
