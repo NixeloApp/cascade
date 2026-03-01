@@ -75,7 +75,7 @@ export function run() {
 
   function reportWarning(filePath, message) {
     const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? c.red + "ERROR" : c.yellow + "WARN";
+    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
     warnings.push(`  ${prefix}${c.reset} ${rel} - ${message}`);
     warningCount++;
   }

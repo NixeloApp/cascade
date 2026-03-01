@@ -167,7 +167,7 @@ export function run() {
 
   function reportWarning(filePath, line, message) {
     const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? c.red + "ERROR" : c.yellow + "WARN";
+    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
     warnings.push(`  ${prefix}${c.reset} ${rel}:${line} - ${message}`);
     warningCount++;
   }
@@ -188,7 +188,7 @@ export function run() {
 
     // Check that imports are grouped by category and in order
     let lastCategory = 0;
-    let lastCategoryLine = 0;
+    let _lastCategoryLine = 0;
 
     for (const imp of imports) {
       if (imp.category < lastCategory) {
@@ -199,7 +199,7 @@ export function run() {
         );
       }
       lastCategory = imp.category;
-      lastCategoryLine = imp.line;
+      _lastCategoryLine = imp.line;
     }
   }
 

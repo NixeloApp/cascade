@@ -111,7 +111,7 @@ export function run() {
 
             if (j >= 0 && lines[j].includes("/**")) {
               const commentBlock = lines.slice(j, commentEnd + 1).join("\n");
-              hasJSDoc = JSDOC_PATTERN.test(commentBlock + "\n");
+              hasJSDoc = JSDOC_PATTERN.test(`${commentBlock}\n`);
             }
           }
 
@@ -167,7 +167,7 @@ export function run() {
   }
 
   // Calculate coverage
-  const totalExports = violations.length; // This is just missing ones
+  const _totalExports = violations.length; // This is just missing ones
   // Note: We'd need to count all exports for accurate %, but for now report count
 
   return {

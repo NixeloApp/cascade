@@ -99,7 +99,7 @@ export function run() {
 
   function reportWarning(filePath, line, _match, message) {
     const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? c.red + "ERROR" : c.yellow + "WARN";
+    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
     warnings.push(`  ${prefix}${c.reset} ${rel}:${line} - ${message}`);
     warningCount++;
   }

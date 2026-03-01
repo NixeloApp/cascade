@@ -251,7 +251,7 @@ export function run() {
 
   function reportWarning(filePath, line, name, message) {
     const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? c.red + "ERROR" : c.yellow + "WARN";
+    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
     warnings.push(`  ${prefix}${c.reset} ${rel}:${line} - '${name}': ${message}`);
     warningCount++;
   }
@@ -259,7 +259,7 @@ export function run() {
   /**
    * Extract exported function names from a Convex file
    */
-  function extractExportedFunctions(content, lines) {
+  function extractExportedFunctions(content, _lines) {
     const functions = [];
 
     // Pattern: export const <name> = <query|mutation|action|internalQuery|...>
@@ -284,7 +284,7 @@ export function run() {
    * Check if a function name follows naming conventions
    */
   function checkFunctionName(filePath, func) {
-    const { name, type, line } = func;
+    const { name, line } = func;
 
     // Skip allowed generic names
     if (ALLOWED_GENERIC_NAMES.has(name)) return;
@@ -329,11 +329,11 @@ export function run() {
   /**
    * Check for naming consistency within a file
    */
-  function checkFileConsistency(filePath, functions) {
+  function checkFileConsistency(_filePath, functions) {
     // Group by operation type
     const getters = functions.filter((f) => f.name.startsWith("get"));
-    const listers = functions.filter((f) => f.name.startsWith("list"));
-    const creators = functions.filter((f) => f.name.startsWith("create"));
+    const _listers = functions.filter((f) => f.name.startsWith("list"));
+    const _creators = functions.filter((f) => f.name.startsWith("create"));
 
     // Check if there's a mix of short and long forms that might be inconsistent
     // This is informational only, not an error
