@@ -1,3 +1,11 @@
+/**
+ * Templates Manager
+ *
+ * Admin interface for managing issue templates.
+ * Templates pre-fill fields when creating issues of specific types.
+ * Supports default values for title, description, labels, and assignees.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

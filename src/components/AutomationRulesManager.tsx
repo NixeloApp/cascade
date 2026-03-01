@@ -1,3 +1,11 @@
+/**
+ * Automation Rules Manager
+ *
+ * Admin interface for configuring project automation rules.
+ * Rules trigger actions based on issue events (create, status change).
+ * Supports auto-assignment, field updates, and notification actions.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type {

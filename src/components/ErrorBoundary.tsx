@@ -1,3 +1,11 @@
+/**
+ * Error Boundary
+ *
+ * React error boundary for catching and displaying runtime errors.
+ * Shows a friendly error UI instead of crashing the entire app.
+ * Supports custom fallback rendering and error reporting callbacks.
+ */
+
 import { AlertTriangle } from "lucide-react";
 import { Component, type ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";

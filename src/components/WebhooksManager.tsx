@@ -1,3 +1,11 @@
+/**
+ * Webhooks Manager
+ *
+ * Admin interface for managing project webhook integrations.
+ * Supports Slack, Discord, and custom webhook destinations.
+ * Configures event triggers like issue creation and status changes.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
