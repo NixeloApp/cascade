@@ -24,6 +24,9 @@ const ALLOWED_TYPES = [
   "application/json",
 ];
 
+/**
+ * File upload button for attaching files to issues.
+ */
 export function AttachmentUpload({ issueId, onAttached }: AttachmentUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

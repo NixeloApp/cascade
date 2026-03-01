@@ -11,6 +11,9 @@ interface AuthPageLayoutProps {
   children: ReactNode;
 }
 
+/**
+ * Shared layout wrapper for authentication pages (sign in, sign up, etc.).
+ */
 export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProps) {
   return (
     <Flex align="center" justify="center" className="min-h-screen w-full bg-ui-bg p-4">

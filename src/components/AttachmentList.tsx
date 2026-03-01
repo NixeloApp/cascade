@@ -29,6 +29,9 @@ interface AttachmentListProps {
   canEdit?: boolean;
 }
 
+/**
+ * Displays list of file attachments with download and delete actions.
+ */
 export function AttachmentList({ attachmentIds, issueId, canEdit = false }: AttachmentListProps) {
   const removeAttachment = useMutation(api.attachments.removeAttachment);
 

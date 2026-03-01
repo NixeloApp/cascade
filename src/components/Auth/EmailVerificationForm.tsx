@@ -13,6 +13,9 @@ interface EmailVerificationFormProps {
   onResend: () => void;
 }
 
+/**
+ * Form for entering email verification code sent during registration.
+ */
 export function EmailVerificationForm({ email, onVerified, onResend }: EmailVerificationFormProps) {
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);

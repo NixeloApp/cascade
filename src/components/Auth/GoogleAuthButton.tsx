@@ -7,6 +7,9 @@ interface GoogleAuthButtonProps {
   text: string;
 }
 
+/**
+ * OAuth button for signing in/up with Google.
+ */
 export function GoogleAuthButton({ redirectTo, text }: GoogleAuthButtonProps) {
   const { signIn } = useAuthActions();
 

@@ -12,6 +12,9 @@ interface ForgotPasswordFormProps {
   onBack: () => void;
 }
 
+/**
+ * Form for initiating password reset by entering email address.
+ */
 export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormProps) {
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);

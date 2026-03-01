@@ -13,6 +13,9 @@ interface ResetPasswordFormProps {
   onRetry: () => void;
 }
 
+/**
+ * Form for entering new password and verification code during password reset.
+ */
 export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFormProps) {
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);
