@@ -1,3 +1,11 @@
+/**
+ * Dialog Component
+ *
+ * Modal dialog with overlay and configurable sizes.
+ * Wraps Radix UI Dialog with accessible defaults.
+ * Includes header, content, and footer composition.
+ */
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { XIcon } from "lucide-react";

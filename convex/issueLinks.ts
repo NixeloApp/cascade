@@ -1,3 +1,11 @@
+/**
+ * Issue Links
+ *
+ * Manages relationships between issues (blocks, duplicates, relates).
+ * Supports bidirectional link types with automatic reverse creation.
+ * Enforces project access permissions on link operations.
+ */
+
 import { v } from "convex/values";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues } from "./lib/batchHelpers";

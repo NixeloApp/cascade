@@ -1,3 +1,11 @@
+/**
+ * Card Component
+ *
+ * Container with elevation and padding variants.
+ * Includes CardHeader, CardContent, and CardFooter slots.
+ * Use for grouping related content in a visual container.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";

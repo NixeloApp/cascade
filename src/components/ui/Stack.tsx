@@ -1,3 +1,11 @@
+/**
+ * Stack Component
+ *
+ * Vertical flex container with gap and alignment props.
+ * Semantic alternative to raw flex divs.
+ * Use for consistent vertical spacing between elements.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
