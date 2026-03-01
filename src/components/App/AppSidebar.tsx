@@ -13,6 +13,11 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
+import { Button } from "@/components/ui/Button";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { NavItem as NavItemBase } from "@/components/ui/NavItem";
+import { Tooltip, TooltipProvider } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
@@ -39,11 +44,6 @@ import {
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/Button";
-import { Flex, FlexItem } from "./ui/Flex";
-import { NavItem as NavItemBase } from "./ui/NavItem";
-import { Tooltip, TooltipProvider } from "./ui/Tooltip";
-import { Typography } from "./ui/Typography";
 
 /**
  * Main application sidebar with navigation, projects, and teams.

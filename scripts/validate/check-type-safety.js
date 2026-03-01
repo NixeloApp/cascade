@@ -27,7 +27,7 @@ export function run() {
     /convex\/otpPasswordReset\.ts$/, // Complexity threshold update
     /convex\/otpVerification\.ts$/, // Complexity threshold update
     /convex\/rateLimits\.ts$/, // Type assertion required
-    /src\/components\/AppSidebar\.tsx$/, // Complexity: multiple nav sections - TODO: split into NavSection components
+    /src\/components\/App\/AppSidebar\.tsx$/, // Complexity: multiple nav sections - TODO: split into NavSection components
     /src\/components\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
     /src\/components\/Documents\/DocumentHeader\.tsx$/, // Complexity: conditional actions - TODO: extract DocumentActions
     /src\/components\/IssueCard\.tsx$/, // Complexity: drag-drop + selection - TODO: split DraggableIssueCard
