@@ -17,16 +17,19 @@
  *  13. Convex patterns      — Envelope Pattern returns, security checks, test destructuring
  *  14. Convex naming        — function naming conventions (get/list/create/update/delete)
  *  15. Component naming     — PascalCase components, {Component}Props interfaces
- *  16. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
- *  16. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
- *  17. JSDoc coverage       — exported functions/components should have JSDoc documentation
- *  18. File headers         — non-trivial files (>50 lines) should have documentation headers
- *  19. Import order         — imports should follow standard grouping order
- *  20. Hook patterns        — custom hooks should follow consistent patterns
- *  21. Async patterns       — consistent error handling in async operations
- *  22. Test coverage        — critical files should have corresponding tests
+ *  16. Component props      — consistent prop naming across components
+ *  17. Duplicate components — detect components with same name in different directories
+ *  18. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
+ *  19. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  20. JSDoc coverage       — exported functions/components should have JSDoc documentation
+ *  21. File headers         — non-trivial files (>50 lines) should have documentation headers
+ *  22. Import order         — imports should follow standard grouping order
+ *  23. Import paths         — validates import path conventions
+ *  24. Hook patterns        — custom hooks should follow consistent patterns
+ *  25. Async patterns       — consistent error handling in async operations
+ *  26. Test coverage        — critical files should have corresponding tests
  *
- * Exit code 1 if any check fails. No warning levels — everything is an error.
+ * Exit code 1 if any check reports errors. Some checks are warn-only and do not affect exit code.
  *
  * Usage:
  *   node scripts/validate.js

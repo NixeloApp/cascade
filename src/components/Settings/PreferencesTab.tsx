@@ -68,7 +68,7 @@ export function PreferencesTab() {
     if (enabled && "Notification" in window && Notification.permission !== "granted") {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        showError("permission", "Browser notifications blocked");
+        showError("Browser notifications blocked");
         return;
       }
     }
