@@ -1,3 +1,11 @@
+/**
+ * Issue Watchers
+ *
+ * Subscribe users to issue updates and notifications.
+ * Tracks who is watching which issues for activity feeds.
+ * Provides watch/unwatch mutations and listing queries.
+ */
+
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Id } from "./_generated/dataModel";

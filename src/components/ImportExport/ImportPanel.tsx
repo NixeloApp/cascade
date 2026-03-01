@@ -1,3 +1,11 @@
+/**
+ * Import Panel
+ *
+ * Issue import UI for CSV and JSON files.
+ * Handles file selection and validation.
+ * Reports import success and failure counts.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";

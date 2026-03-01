@@ -1,4 +1,10 @@
-// Service Worker Registration Utility
+/**
+ * Service Worker Registration
+ *
+ * PWA service worker registration and lifecycle management.
+ * Handles periodic updates, cache clearing, and install prompts.
+ * Provides update notifications and standalone mode detection.
+ */
 
 import { HOUR } from "@convex/lib/timeUtils";
 
