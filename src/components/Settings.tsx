@@ -35,6 +35,7 @@ const validTabs = [
 ] as const;
 type TabValue = (typeof validTabs)[number];
 
+/** Main settings page with tabs for profile, preferences, integrations, and admin. */
 export function Settings() {
   const currentUser = useQuery(api.users.getCurrent);
   const isAdmin = useQuery(api.users.isOrganizationAdmin);

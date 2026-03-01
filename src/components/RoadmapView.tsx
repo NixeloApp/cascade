@@ -50,6 +50,7 @@ interface DependencyLine {
   toIssueId: string;
 }
 
+/** Gantt-style roadmap view with issue timeline bars and dependency lines. */
 export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapViewProps) {
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [viewMode, setViewMode] = useState<"months" | "weeks">("months");

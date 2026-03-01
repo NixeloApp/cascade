@@ -44,6 +44,7 @@ const AVAILABLE_EVENTS = [
   { value: "comment.created", label: "Comment Added" },
 ];
 
+/** Pumble webhook integration manager with add/edit/delete functionality. */
 export function PumbleIntegration() {
   const [showAddModal, setShowAddModal] = useState(false);
   const webhooks = useQuery(api.pumble.listWebhooks);

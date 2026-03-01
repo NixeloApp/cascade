@@ -22,6 +22,7 @@ interface SidebarTeamItemProps {
   onNavClick: () => void;
 }
 
+/** Expandable sidebar item for a team with board and settings links. */
 export function SidebarTeamItem({
   team,
   workspaceSlug,

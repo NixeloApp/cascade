@@ -39,6 +39,7 @@ interface BillingReportProps {
   projectId: Id<"projects">;
 }
 
+/** Time tracking billing report with exportable member time summaries. */
 export function BillingReport({ projectId }: BillingReportProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("month");
   const project = useQuery(api.projects.getProject, { id: projectId });

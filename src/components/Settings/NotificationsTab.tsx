@@ -269,6 +269,7 @@ function PushNotificationsCard({
   );
 }
 
+/** Settings tab for notification preferences (email, push, digest). */
 export function NotificationsTab() {
   const preferences = useQuery(api.notificationPreferences.get);
   const pushPreferences = useQuery(api.pushNotifications.getPreferences);
