@@ -19,6 +19,7 @@ type EnrichedUserRate = Doc<"userRates"> & {
   user: { _id: Id<"users">; name: string; email?: string } | null;
 };
 
+/** Admin panel for managing user hourly rates for billing calculations. */
 export function UserRatesManagement() {
   const currentUser = useQuery(api.auth.loggedInUser);
   const projects = useQuery(api.projects.getCurrentUserProjects, {});

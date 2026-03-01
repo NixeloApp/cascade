@@ -111,6 +111,7 @@ interface ManualTimeEntryModalProps {
   issueId?: Id<"issues">;
 }
 
+/** Modal for manually logging time with duration or time range entry modes. */
 export function ManualTimeEntryModal({
   open,
   onOpenChange,

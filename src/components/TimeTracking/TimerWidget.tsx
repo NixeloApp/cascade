@@ -12,6 +12,7 @@ import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
 
+/** Real-time timer widget for tracking work on issues. */
 export function TimerWidget() {
   const runningTimer = useQuery(api.timeTracking.getRunningTimer);
   const stopTimer = useMutation(api.timeTracking.stopTimer);

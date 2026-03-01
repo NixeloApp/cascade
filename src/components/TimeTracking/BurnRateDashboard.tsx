@@ -27,6 +27,7 @@ interface UserWithBurnRate {
   billableHours: number;
 }
 
+/** Dashboard showing billable hours, burn rate, and utilization metrics. */
 export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "quarter">("month");
 

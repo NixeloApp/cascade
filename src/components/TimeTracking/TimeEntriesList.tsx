@@ -26,6 +26,7 @@ interface TimeEntriesListProps {
   billingEnabled?: boolean;
 }
 
+/** Filterable list of time entries with edit and delete actions. */
 export function TimeEntriesList({
   projectId,
   userId,

@@ -9,6 +9,7 @@ interface UserProfileProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** Dialog for viewing and editing a user's profile. */
 export function UserProfile({ userId, open, onOpenChange }: UserProfileProps) {
   return (
     <Dialog

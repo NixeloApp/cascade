@@ -21,6 +21,7 @@ type TimesheetData = FunctionReturnType<typeof api.timeTracking.getCurrentWeekTi
 // Extract the entry type from the byDay record
 type TimeEntryWithHours = NonNullable<TimesheetData>["byDay"][string][number];
 
+/** Weekly timesheet grid showing time entries grouped by day. */
 export function Timesheet() {
   const timesheet = useQuery(api.timeTracking.getCurrentWeekTimesheet);
   const _updateEntry = useMutation(api.timeTracking.updateTimeEntry);

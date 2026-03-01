@@ -19,6 +19,7 @@ import {
 } from "./ui/DropdownMenu";
 import { Typography } from "./ui/Typography";
 
+/** User dropdown menu with settings and sign out options. */
 export function UserMenu() {
   const user = useQuery(api.users.getCurrent);
   const { signOut } = useAuthActions();
