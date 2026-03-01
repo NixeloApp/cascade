@@ -303,7 +303,10 @@ export class OfflineStatusManager {
 // Global instance
 export const offlineStatus = new OfflineStatusManager();
 
-// Queue a mutation for offline sync
+/**
+ * Queues a mutation for offline sync. Stores mutation in IndexedDB to be
+ * processed when connectivity is restored.
+ */
 export async function queueOfflineMutation(
   mutationType: string,
   mutationArgs: Record<string, unknown>,
@@ -320,7 +323,10 @@ export async function queueOfflineMutation(
   return id;
 }
 
-// Process offline queue
+/**
+ * Processes pending offline mutations. Attempts to sync each mutation,
+ * marking as synced on success or failed after 3 retries.
+ */
 export async function processOfflineQueue() {
   const pending = await offlineDB.getPendingMutations();
 

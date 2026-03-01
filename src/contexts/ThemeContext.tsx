@@ -30,6 +30,10 @@ function getInitialEffectiveTheme(theme: Theme): "light" | "dark" {
   return theme;
 }
 
+/**
+ * Provides theme context to the application, managing light/dark mode state.
+ * Syncs with localStorage and respects system preferences when set to "system".
+ */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
@@ -78,6 +82,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Hook to access theme context. Returns current theme, effective theme, and setter.
+ * Must be used within a ThemeProvider.
+ */
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
