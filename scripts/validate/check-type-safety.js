@@ -25,17 +25,17 @@ export function run() {
     /convex\/otpPasswordReset\.ts$/, // Complexity threshold update
     /convex\/otpVerification\.ts$/, // Complexity threshold update
     /convex\/rateLimits\.ts$/, // Type assertion required
-    /src\/components\/AppSidebar\.tsx$/, // Complexity threshold update
-    /src\/components\/CreateIssueModal\.tsx$/, // Complex form modal (complexity)
-    /src\/components\/DocumentHeader\.tsx$/, // Many conditional action buttons (complexity)
-    /src\/components\/IssueCard\.tsx$/, // Card with drag-drop and selection logic (complexity)
-    /src\/components\/IssuesCalendarView\.tsx$/, // Calendar cells are drop targets (a11y)
-    /src\/components\/PlateEditor\.tsx$/, // Editor with multiple document operations (complexity)
-    /src\/components\/RoadmapView\.tsx$/, // Timeline with resize and SVG generation (complexity)
-    /src\/components\/Settings\/AvatarUploadModal\.tsx$/, // Drop zone requires div (a11y)
-    /src\/components\/Settings\/CoverImageUploadModal\.tsx$/, // Drop zone requires div (a11y)
-    /convex\/users\.ts$/, // Search logic with membership checks (complexity)
-    /src\/components\/Plate\/MentionInputElement\.tsx$/, // useEffect deps ignore for intentional reset pattern
+    /src\/components\/AppSidebar\.tsx$/, // Complexity: multiple nav sections - TODO: split into NavSection components
+    /src\/components\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
+    /src\/components\/DocumentHeader\.tsx$/, // Complexity: conditional actions - TODO: extract DocumentActions
+    /src\/components\/IssueCard\.tsx$/, // Complexity: drag-drop + selection - TODO: split DraggableIssueCard
+    /src\/components\/IssuesCalendarView\.tsx$/, // a11y: calendar cells are drop targets (clickable divs)
+    /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
+    /src\/components\/RoadmapView\.tsx$/, // Complexity: timeline + SVG - TODO: extract TimelineRenderer
+    /src\/components\/Settings\/AvatarUploadModal\.tsx$/, // a11y: drop zone requires div for keyboard handling
+    /src\/components\/Settings\/CoverImageUploadModal\.tsx$/, // a11y: drop zone requires div for keyboard handling
+    /convex\/users\.ts$/, // Complexity: search with filters - TODO: extract searchUsersHelper
+    /src\/components\/Plate\/MentionInputElement\.tsx$/, // Intentional useEffect deps pattern for combobox reset
   ];
 
   let errorCount = 0;

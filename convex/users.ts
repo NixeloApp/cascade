@@ -148,7 +148,8 @@ export const searchUsers = authenticatedQuery({
       image: v.optional(v.string()),
     }),
   ),
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Search logic requires multiple conditions for filtering and membership checks
+  // TODO: Refactor into helpers (fetchMemberships, fetchUsersByIds, filterAndBuildResults)
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Search with multi-org membership + name/email filtering
   handler: async (ctx, args) => {
     const searchLimit = args.limit ?? 10;
     const searchQuery = args.query.toLowerCase().trim();
@@ -169,13 +170,15 @@ export const searchUsers = authenticatedQuery({
       image?: string;
     }> = [];
 
-    // Fetch all organization members in parallel
+    // Fetch all organization members in parallel (bounded to reasonable org size)
     const allMembersArrays = await Promise.all(
-      organizationIds.map((orgId) =>
-        ctx.db
-          .query("organizationMembers")
-          .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
-          .take(100),
+      organizationIds.map(
+        (orgId) =>
+          ctx.db
+            .query("organizationMembers")
+            .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+            .filter(notDeleted)
+            .take(500), // Increased limit for larger orgs, bounded for performance
       ),
     );
 
@@ -831,11 +834,15 @@ export const getUserActivity = authenticatedQuery({
     const isOwnProfile = ctx.userId === args.userId;
 
     // Fetch user's activity using the by_user index
+    // Note: We fetch extra (limit * 3) to account for items filtered by:
+    // 1. Deleted activities 2. Inaccessible projects
+    // For profiles with mostly accessible content, this provides enough buffer.
+    // A cursor-based approach would be more accurate but adds complexity.
     const activities = await ctx.db
       .query("issueActivity")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")
-      .take(limit * 2); // Fetch extra to account for filtered items
+      .take(limit * 3);
 
     // Filter out deleted activities
     const activeActivities = activities.filter((a) => !a.isDeleted);

@@ -40,6 +40,23 @@ interface IssueDescriptionEditorProps {
 }
 
 /**
+ * Validate that parsed JSON has the expected Plate node structure.
+ * Each node must have a children array (the basic Slate/Plate node shape).
+ */
+function isValidPlateValue(candidate: unknown): candidate is Value {
+  if (!Array.isArray(candidate) || candidate.length === 0) {
+    return false;
+  }
+  return candidate.every(
+    (node) =>
+      typeof node === "object" &&
+      node !== null &&
+      "children" in node &&
+      Array.isArray((node as { children: unknown }).children),
+  );
+}
+
+/**
  * Parse initial value - handles both JSON and plain text
  */
 function parseInitialValue(value: string | null | undefined): Value {
@@ -49,8 +66,8 @@ function parseInitialValue(value: string | null | undefined): Value {
 
   // Try parsing as JSON first
   try {
-    const parsed = JSON.parse(value) as Value;
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    const parsed: unknown = JSON.parse(value);
+    if (isValidPlateValue(parsed)) {
       return parsed;
     }
   } catch {

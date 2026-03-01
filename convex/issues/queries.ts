@@ -816,6 +816,12 @@ export const findSimilarIssues = authenticatedQuery({
       return [];
     }
 
+    // Verify user has access to the project
+    const hasAccess = await canAccessProject(ctx, args.projectId, ctx.userId);
+    if (!hasAccess) {
+      return [];
+    }
+
     const limit = args.limit ?? 5;
 
     // Search for issues with similar titles

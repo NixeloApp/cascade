@@ -306,21 +306,22 @@ Error Message:
      }
    }, [isExpanded]);
    ```
+2. **Add date overlap validation** - Prevent overlapping sprints (data integrity)
+3. **Add past date prevention** - Require start date >= today (prevents user error)
 
 ### P1 - High
-2. **Add keyboard shortcut** - `Cmd/Ctrl+Shift+S` or just `S` to create sprint
-3. **Add date overlap validation** - Prevent overlapping sprints
-4. **Auto-calculate end date** - When start date selected with preset duration
+4. **Add keyboard shortcut** - `Cmd/Ctrl+Shift+S` or just `S` to create sprint
+5. **Auto-calculate end date** - When start date selected with preset duration
 
 ### P2 - Medium
-5. **Add project switcher** - Allow creating sprint in different project from context
-6. **Add sprint templates** - Pre-fill name patterns like "Sprint {N}"
-7. **Add recurrence option** - Auto-create next sprint
+6. **Add project switcher** - Allow creating sprint in different project from context
+7. **Add sprint templates** - Pre-fill name patterns like "Sprint {N}"
+8. **Add recurrence option** - Auto-create next sprint
 
 ### P3 - Nice to Have
-8. **Add calendar view for date selection** - Visual date range picker
-9. **Add sprint capacity planning** - Team velocity-based suggestions
-10. **Add import from backlog** - Pre-select issues during creation
+9. **Add calendar view for date selection** - Visual date range picker
+10. **Add sprint capacity planning** - Team velocity-based suggestions
+11. **Add import from backlog** - Pre-select issues during creation
 
 ---
 

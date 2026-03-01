@@ -247,7 +247,7 @@ Login and signup flows are the entry points for user authentication. A well-desi
 | GitHub OAuth | Yes | No | plane |
 | GitLab OAuth | Yes | No | plane |
 | Multiple OAuth | 4 providers | 1 provider | plane |
-| Password strength | zxcvbn | Min 8 chars | plane |
+| Password strength | zxcvbn | zxcvbn (lazy-loaded) | tie |
 | Email verification | Magic code | OTP code | tie |
 | Password reset | Token link | OTP code | tie |
 | Remember me | No | No | tie |
@@ -274,10 +274,10 @@ Login and signup flows are the entry points for user authentication. A well-desi
    - Email code entry
    - Good for mobile users
 
-3. **Priority 3**: Add password strength indicator
-   - Visual feedback during signup
-   - zxcvbn or similar library
-   - Minimum score requirement
+3. ~~**Priority 3**: Add password strength indicator~~ ✅ **DONE**
+   - Visual feedback during signup (PasswordStrengthIndicator component)
+   - zxcvbn library (lazy-loaded for bundle optimization)
+   - Visual bar with strength labels
 
 4. **Priority 4**: Add detailed error codes
    - Specific error handling
