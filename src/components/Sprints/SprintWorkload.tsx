@@ -8,15 +8,15 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
 import { Users } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { Avatar } from "./ui/Avatar";
-import { Button } from "./ui/Button";
-import { Flex, FlexItem } from "./ui/Flex";
-import { Icon } from "./ui/Icon";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
-import { Stack } from "./ui/Stack";
-import { Typography } from "./ui/Typography";
 
 interface SprintWorkloadProps {
   sprintId: Id<"sprints">;

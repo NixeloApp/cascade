@@ -11,7 +11,26 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { SprintBurnChart } from "@/components/Analytics/SprintBurnChart";
+import { Alert } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Input } from "@/components/ui/form/Input";
+import { Textarea } from "@/components/ui/form/Textarea";
+import { Grid } from "@/components/ui/Grid";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
+import { SkeletonProjectCard } from "@/components/ui/Skeleton";
+import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { formatDate } from "@/lib/dates";
 import { Trophy } from "@/lib/icons";
@@ -23,19 +42,6 @@ import {
 } from "@/lib/sprint-presets";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { Alert } from "./ui/Alert";
-import { Badge } from "./ui/Badge";
-import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
-import { EmptyState } from "./ui/EmptyState";
-import { Input } from "./ui/form/Input";
-import { Textarea } from "./ui/form/Textarea";
-import { Grid } from "./ui/Grid";
-import { RadioGroup, RadioGroupItem } from "./ui/RadioGroup";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
-import { SkeletonProjectCard } from "./ui/Skeleton";
-import { Stack } from "./ui/Stack";
-import { Typography } from "./ui/Typography";
 
 type SprintWithCounts = Doc<"sprints"> & { issueCount: number; completedCount: number };
 

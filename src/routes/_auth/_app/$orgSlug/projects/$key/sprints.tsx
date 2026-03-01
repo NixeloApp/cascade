@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { PageContent, PageError, PageLayout } from "@/components/layout";
-import { SprintManager } from "@/components/SprintManager";
+import { SprintManager } from "@/components/Sprints";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/sprints")({
   component: SprintsPage,
