@@ -29,6 +29,9 @@ interface EventDetailsModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * Modal for viewing event details with attendance tracking and delete options.
+ */
 export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsModalProps) {
   const event = useQuery(api.calendarEvents.get, { id: eventId });
   const attendance = useQuery(api.calendarEventsAttendance.getAttendance, { eventId });

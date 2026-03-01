@@ -14,6 +14,9 @@ interface UnifiedCalendarViewProps {
 
 type ViewType = "calendar" | "roadmap";
 
+/**
+ * Combined view with toggle between calendar and roadmap modes.
+ */
 export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
   const [viewType, setViewType] = useState<ViewType>("calendar");
 

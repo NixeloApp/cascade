@@ -13,6 +13,9 @@ import { EmailVerificationForm } from "./EmailVerificationForm";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
+/**
+ * Sign up form with email/password registration and Google OAuth.
+ */
 export function SignUpForm() {
   const { signIn } = useAuthActions();
   const navigate = useNavigate();

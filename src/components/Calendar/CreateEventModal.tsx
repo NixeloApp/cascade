@@ -53,6 +53,9 @@ interface CreateEventModalProps {
   issueId?: Id<"issues">;
 }
 
+/**
+ * Modal for creating calendar events with date/time pickers and project linking.
+ */
 export function CreateEventModal({
   open,
   onOpenChange,

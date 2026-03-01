@@ -21,6 +21,9 @@ interface BulkOperationsBarProps {
   workflowStates: Array<{ id: string; name: string }>;
 }
 
+/**
+ * Action bar for bulk operations on selected issues (status, assignee, archive).
+ */
 export function BulkOperationsBar({
   projectId,
   selectedIssueIds,
