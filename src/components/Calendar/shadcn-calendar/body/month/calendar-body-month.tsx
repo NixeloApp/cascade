@@ -1,3 +1,11 @@
+/**
+ * Calendar Month View
+ *
+ * Month grid showing all days with event indicators.
+ * Supports day cell selection and event overflow display.
+ * Includes animated transitions between months.
+ */
+
 import {
   eachDayOfInterval,
   endOfMonth,

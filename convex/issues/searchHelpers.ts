@@ -1,3 +1,11 @@
+/**
+ * Issue Search Helpers
+ *
+ * Query builder utilities for Convex search indexes.
+ * Handles filter translation and optimization.
+ * Supports multi-value filters with in-memory fallback.
+ */
+
 import type { SearchFilterBuilder, SearchFilterFinalizer } from "convex/server";
 import type { DataModel, Doc, Id } from "../_generated/dataModel";
 
