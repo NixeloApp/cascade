@@ -20,6 +20,7 @@ interface Watcher {
   userEmail?: string;
 }
 
+/** Issue watchers panel with watch/unwatch toggle and watcher list. */
 export function IssueWatchers({ issueId }: IssueWatchersProps) {
   const watchers = useQuery(api.watchers.getWatchers, { issueId });
   const isWatching = useQuery(api.watchers.isWatching, { issueId });

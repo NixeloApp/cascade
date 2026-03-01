@@ -21,6 +21,7 @@ interface IssueDetailModalProps {
   canEdit?: boolean;
 }
 
+/** Modal dialog for viewing and editing issue details. */
 export function IssueDetailModal({
   issueId,
   open,

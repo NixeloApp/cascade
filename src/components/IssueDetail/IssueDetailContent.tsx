@@ -29,6 +29,7 @@ interface IssueDetailContentProps {
   onCancel: () => void;
 }
 
+/** Main content area of issue detail with title, description, subtasks, and comments. */
 export function IssueDetailContent({
   issueId,
   projectId,

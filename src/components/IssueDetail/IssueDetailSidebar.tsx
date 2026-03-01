@@ -43,6 +43,7 @@ function SidebarSection({ title, children }: { title: string; children: ReactNod
   );
 }
 
+/** Sidebar with issue metadata fields (status, assignee, priority, labels, etc.). */
 export function IssueDetailSidebar({
   issueId,
   projectId,
