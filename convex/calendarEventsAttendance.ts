@@ -1,3 +1,11 @@
+/**
+ * Meeting Attendance
+ *
+ * Track attendance for required calendar meetings.
+ * Supports present, tardy, and absent status marking.
+ * Generates attendance reports and user history.
+ */
+
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";

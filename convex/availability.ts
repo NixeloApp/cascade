@@ -1,3 +1,11 @@
+/**
+ * Availability Slots
+ *
+ * Manage user availability for booking pages.
+ * Supports day-based scheduling with timezone support.
+ * Provides default working hours configuration.
+ */
+
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";

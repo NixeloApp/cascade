@@ -1,3 +1,11 @@
+/**
+ * API Authentication
+ *
+ * Utilities for API key authentication and authorization.
+ * Handles key extraction, validation, and scope checking.
+ * Provides rate limiting and project access verification.
+ */
+
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { checkApiKeyRateLimit } from "./rateLimiter";
