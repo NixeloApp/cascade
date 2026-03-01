@@ -94,8 +94,8 @@ export function run() {
           let hasJSDoc = false;
           let j = i - 1;
 
-          // Look backwards for JSDoc, skipping empty lines
-          while (j >= 0 && lines[j].trim() === "") {
+          // Look backwards for JSDoc, skipping empty lines and single-line comments
+          while (j >= 0 && (lines[j].trim() === "" || lines[j].trim().startsWith("//"))) {
             j--;
           }
 
