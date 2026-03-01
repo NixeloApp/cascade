@@ -1,5 +1,4 @@
 import type { Id } from "@convex/_generated/dataModel";
-import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 

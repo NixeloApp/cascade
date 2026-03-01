@@ -1,7 +1,7 @@
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@/test/custom-render";
+import { render, screen } from "@/test/custom-render";
 
 // Mock Convex
 vi.mock("convex/react", () => ({

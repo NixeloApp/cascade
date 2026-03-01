@@ -47,7 +47,7 @@ const mockDeleteKey = vi.fn();
 
 // Mock Convex
 vi.mock("convex/react", () => ({
-  useQuery: vi.fn((query: unknown, args: unknown) => {
+  useQuery: vi.fn((_query: unknown, args: unknown) => {
     if (args === "skip") return undefined;
     // Return usage stats when keyId is provided
     if (typeof args === "object" && args !== null && "keyId" in args) {
