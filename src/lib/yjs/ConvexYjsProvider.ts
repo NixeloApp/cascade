@@ -10,10 +10,10 @@
  * 3. Proper conflict resolution
  */
 
+import type { Id } from "@convex/_generated/dataModel";
 import type { ConvexReactClient } from "convex/react";
 import { Observable } from "lib0/observable";
 import type * as Y from "yjs";
-import type { Id } from "../../../convex/_generated/dataModel";
 
 // Types
 export interface ConvexYjsProviderOptions {

@@ -1,6 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
+import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
-import type { LabelInfo } from "../../../convex/lib/issueHelpers";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";

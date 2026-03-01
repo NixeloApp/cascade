@@ -9,8 +9,8 @@
  * 2. Real-time subscription to other users' cursor positions
  */
 
+import type { Id } from "@convex/_generated/dataModel";
 import type { ConvexReactClient } from "convex/react";
-import type { Id } from "../../../convex/_generated/dataModel";
 
 // Types for cursor/selection state
 export interface CursorPosition {

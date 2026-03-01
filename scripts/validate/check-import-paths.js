@@ -30,6 +30,7 @@ const SKIP_PATTERNS = [
   /\.stories\.(ts|tsx)$/,
   /_generated/,
   /\.d\.ts$/,
+  /shadcn-calendar/, // Vendored component with internal relative imports
 ];
 
 // Deprecated/deleted import paths (should not be used)
