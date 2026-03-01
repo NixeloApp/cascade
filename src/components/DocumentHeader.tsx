@@ -1,3 +1,11 @@
+/**
+ * Document Header
+ *
+ * Header component for the document editor page.
+ * Shows title, metadata, visibility status, and action buttons.
+ * Supports title editing, locking, archiving, and import/export.
+ */
+
 import type { Doc } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";

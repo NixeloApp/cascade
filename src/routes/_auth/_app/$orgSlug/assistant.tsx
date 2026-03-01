@@ -1,3 +1,11 @@
+/**
+ * AI Assistant Page
+ *
+ * Management interface for AI assistant configuration and prompts.
+ * Shows usage stats, active chats, and allows customizing AI behavior.
+ * Supports multiple AI modes and conversation history.
+ */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";

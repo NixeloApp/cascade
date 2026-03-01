@@ -1,3 +1,11 @@
+/**
+ * Template Form
+ *
+ * Dialog form for creating and editing issue templates.
+ * Configures template name, type, title/description patterns, and defaults.
+ * Supports default priority, labels, assignee, and story points.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
