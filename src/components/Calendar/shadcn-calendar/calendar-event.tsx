@@ -1,3 +1,11 @@
+/**
+ * Calendar Event Block
+ *
+ * Renders individual event blocks in calendar grid.
+ * Handles event positioning and overlap calculation.
+ * Supports animated transitions and keyboard navigation.
+ */
+
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { Typography } from "@/components/ui/Typography";

@@ -1,3 +1,11 @@
+/**
+ * Calendar Color System
+ *
+ * Color constants and utilities for calendar events.
+ * Provides event card, badge, and picker styling maps.
+ * Uses semantic palette tokens for consistent theming.
+ */
+
 import type { Doc } from "@convex/_generated/dataModel";
 
 // Derive palette color type from the schema — single source of truth

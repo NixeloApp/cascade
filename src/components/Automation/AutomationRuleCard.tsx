@@ -1,3 +1,11 @@
+/**
+ * Automation Rule Card
+ *
+ * Displays an individual automation rule with trigger and action.
+ * Supports enable/disable toggle and inline editing.
+ * Shows execution count and rule status badge.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type {
