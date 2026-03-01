@@ -1,3 +1,11 @@
+/**
+ * User Menu
+ *
+ * User profile dropdown with settings and sign out options.
+ * Shows user avatar, name, and email in the trigger button.
+ * Links to profile settings and handles sign out action.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Link } from "@tanstack/react-router";
