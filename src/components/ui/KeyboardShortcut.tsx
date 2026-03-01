@@ -1,3 +1,11 @@
+/**
+ * Keyboard Shortcut Component
+ *
+ * Displays keyboard shortcuts with styled key caps.
+ * Supports modifier keys (Cmd, Ctrl, Shift, Alt).
+ * Auto-detects platform for correct key symbols.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import type { LucideIcon } from "lucide-react";
 import type * as React from "react";

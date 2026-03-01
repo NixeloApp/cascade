@@ -1,3 +1,11 @@
+/**
+ * Google Calendar Integration
+ *
+ * Settings card for connecting Google Calendar.
+ * Handles OAuth flow and sync configuration.
+ * Supports bidirectional event synchronization.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";

@@ -1,3 +1,11 @@
+/**
+ * Popover Component
+ *
+ * Floating content anchored to a trigger element.
+ * Wraps Radix UI Popover with styled content.
+ * Supports controlled and uncontrolled modes.
+ */
+
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as React from "react";
 

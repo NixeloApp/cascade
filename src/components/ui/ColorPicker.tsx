@@ -1,3 +1,11 @@
+/**
+ * Color Picker Component
+ *
+ * Color selection with preset swatches.
+ * Includes native input for custom colors.
+ * Theme-aligned preset colors by default.
+ */
+
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 import { Typography } from "./Typography";

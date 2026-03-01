@@ -1,3 +1,11 @@
+/**
+ * Empty State Component
+ *
+ * Placeholder for empty lists and no-data states.
+ * Displays icon, title, description, and action button.
+ * Supports semantic variants for different contexts.
+ */
+
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";

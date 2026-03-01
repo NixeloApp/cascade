@@ -1,3 +1,11 @@
+/**
+ * Separator Component
+ *
+ * Visual divider with orientation and spacing.
+ * Wraps Radix UI Separator with variants.
+ * Use to separate sections of content.
+ */
+
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
