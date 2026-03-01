@@ -6,7 +6,8 @@ import type { Id } from "./_generated/dataModel";
 import { internalAction, internalQuery, type MutationCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { constantTimeEqual } from "./lib/apiAuth";
-import { batchFetchUsers } from "./lib/batchHelpers";
+import { batchFetchIssues, batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
 import { conflict, validation } from "./lib/errors";
@@ -193,13 +194,13 @@ export const searchUsers = authenticatedQuery({
       }
     }
 
-    // Fetch all users in parallel
-    const users = await Promise.all(userIdsToFetch.map((id) => ctx.db.get(id)));
+    // Batch fetch all users
+    const userMap = await batchFetchUsers(ctx, userIdsToFetch);
+    const users = userIdsToFetch.map((id) => userMap.get(id)).filter((u) => u !== undefined);
 
     // Filter and build results
     for (const user of users) {
       if (results.length >= searchLimit) break;
-      if (!user) continue;
 
       // Search in name and email
       const userName = (user.name || "").toLowerCase();
@@ -849,69 +850,60 @@ export const getUserActivity = authenticatedQuery({
 
     // Batch fetch issues
     const issueIds = [...new Set(activeActivities.map((a) => a.issueId))];
+    const fetchedIssues = await batchFetchIssues(ctx, issueIds);
     const issueMap = new Map<
       Id<"issues">,
       { key: string; title: string; projectId: Id<"projects"> }
     >();
-
-    // Fetch issues in parallel
-    await Promise.all(
-      issueIds.map(async (issueId) => {
-        const issue = await ctx.db.get(issueId);
-        if (issue) {
-          issueMap.set(issueId, {
-            key: issue.key,
-            title: issue.title,
-            projectId: issue.projectId,
-          });
-        }
-      }),
-    );
+    for (const [issueId, issue] of fetchedIssues.entries()) {
+      issueMap.set(issueId, {
+        key: issue.key,
+        title: issue.title,
+        projectId: issue.projectId,
+      });
+    }
 
     // Get unique project IDs
     const projectIds = [...new Set([...issueMap.values()].map((i) => i.projectId))];
 
+    // Fetch all memberships for viewer and target user in two queries (O(users) not O(projects))
+    const projectIdSet = new Set(projectIds);
+    const [viewerMemberships, targetMemberships] = await Promise.all([
+      ctx.db
+        .query("projectMembers")
+        .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+        .filter(notDeleted)
+        .take(BOUNDED_LIST_LIMIT),
+      isOwnProfile
+        ? Promise.resolve([]) // No need to fetch target memberships if we are viewing our own profile
+        : ctx.db
+            .query("projectMembers")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .filter(notDeleted)
+            .take(BOUNDED_LIST_LIMIT),
+    ]);
+
+    // Create lookup maps for memberships, filtered to relevant projects
+    const viewerMembershipMap = new Set(
+      viewerMemberships.filter((m) => projectIdSet.has(m.projectId)).map((m) => m.projectId),
+    );
+    const targetMembershipMap = new Set(
+      targetMemberships.filter((m) => projectIdSet.has(m.projectId)).map((m) => m.projectId),
+    );
+
     // Fetch projects and check access
+    const fetchedProjects = await batchFetchProjects(ctx, projectIds);
     const projectMap = new Map<Id<"projects">, { key: string; name: string; hasAccess: boolean }>();
 
-    await Promise.all(
-      projectIds.map(async (projectId) => {
-        const project = await ctx.db.get(projectId);
-        if (project && !project.isDeleted) {
-          // Check access - for own profile, show all; for others, check membership
-          let hasAccess = isOwnProfile;
-          if (!hasAccess) {
-            // Check if viewer is a member of the project via projectMembers table
-            const viewerMembership = await ctx.db
-              .query("projectMembers")
-              .withIndex("by_project_user", (q) =>
-                q.eq("projectId", projectId).eq("userId", ctx.userId),
-              )
-              .filter(notDeleted)
-              .first();
-            const targetMembership = await ctx.db
-              .query("projectMembers")
-              .withIndex("by_project_user", (q) =>
-                q.eq("projectId", projectId).eq("userId", args.userId),
-              )
-              .filter(notDeleted)
-              .first();
-            hasAccess = !!(viewerMembership && targetMembership);
-          } else {
-            // For own profile, verify user is actually a member
-            const userMembership = await ctx.db
-              .query("projectMembers")
-              .withIndex("by_project_user", (q) =>
-                q.eq("projectId", projectId).eq("userId", ctx.userId),
-              )
-              .filter(notDeleted)
-              .first();
-            hasAccess = !!userMembership;
-          }
-          projectMap.set(projectId, { key: project.key, name: project.name, hasAccess });
-        }
-      }),
-    );
+    for (const project of fetchedProjects.values()) {
+      if (!project.isDeleted) {
+        // Check access: own profile requires viewer membership, other profiles require both viewer and target membership
+        const hasAccess = isOwnProfile
+          ? viewerMembershipMap.has(project._id)
+          : viewerMembershipMap.has(project._id) && targetMembershipMap.has(project._id);
+        projectMap.set(project._id, { key: project.key, name: project.name, hasAccess });
+      }
+    }
 
     // Filter and enrich activities
     const enrichedActivities = activeActivities
