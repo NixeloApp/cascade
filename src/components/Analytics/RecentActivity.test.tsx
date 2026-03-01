@@ -1,3 +1,4 @@
+import { HOUR } from "@convex/lib/timeUtils";
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { RecentActivity } from "./RecentActivity";
@@ -9,7 +10,7 @@ describe("RecentActivity", () => {
       userName: "John Doe",
       action: "created issue",
       issueKey: "TEST-1",
-      _creationTime: Date.now() - 3600000, // 1 hour ago
+      _creationTime: Date.now() - HOUR,
     },
     {
       _id: "activity-2",
@@ -17,13 +18,13 @@ describe("RecentActivity", () => {
       action: "updated",
       field: "status",
       issueKey: "TEST-2",
-      _creationTime: Date.now() - 7200000, // 2 hours ago
+      _creationTime: Date.now() - 2 * HOUR,
     },
     {
       _id: "activity-3",
       userName: "Bob Wilson",
       action: "commented on",
-      _creationTime: Date.now() - 10800000, // 3 hours ago
+      _creationTime: Date.now() - 3 * HOUR,
     },
   ];
 
