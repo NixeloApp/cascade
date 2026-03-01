@@ -1,3 +1,11 @@
+/**
+ * Organization Layout Route
+ *
+ * Root layout for authenticated organization routes.
+ * Provides organization context, sidebar, header, and keyboard shortcuts.
+ * Handles global modals and command palette integration.
+ */
+
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";

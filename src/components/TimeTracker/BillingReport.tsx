@@ -1,3 +1,11 @@
+/**
+ * Billing Report
+ *
+ * Financial reporting view for time tracking data.
+ * Shows billable hours, revenue, team utilization, and project breakdowns.
+ * Supports date range filtering and CSV export.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";

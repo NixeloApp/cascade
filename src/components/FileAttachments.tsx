@@ -1,3 +1,11 @@
+/**
+ * File Attachments
+ *
+ * Issue file attachment management component.
+ * Handles file upload, download, preview, and deletion.
+ * Supports various file types with appropriate icons.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
