@@ -3,7 +3,7 @@
 > **Status:** ✅ Complete (Phase 7-10)
 > **Goal:** All styling lives in CVA components. No raw Tailwind in app code.
 > **Last Updated:** 2026-03-01
-> **Progress:** 24 validators, all passing, 0 errors
+> **Progress:** 25 validators, all passing, 0 errors
 
 ---
 
@@ -112,7 +112,7 @@ grep -r "from.*ui/PageHeader" src/
 
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
-| check-duplicate-components.js | Flag components with same name in different dirs | Medium | [ ] |
+| check-duplicate-components.js | Flag components with same name in different dirs | Medium | [x] ✅ Created (3 duplicates) |
 | check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] |
 | check-import-paths.js | Flag imports from wrong locations | Medium | [ ] |
 
@@ -279,7 +279,7 @@ Items intentionally not in scope for Phase 7:
 
 **Last Run:** 2026-03-01
 **Files Migrated:** 220+
-**Validators:** 24 (all passing)
+**Validators:** 25 (all passing)
 **Violations Remaining:** 170 (down from 1145)
 
 **Note:** Remaining 170 violations are edge cases that don't warrant migration:
@@ -421,6 +421,7 @@ Document which validators are STRICT (block CI) vs INFO (report only):
 | check-file-headers.js | MEDIUM | 319 files missing headers |
 | check-convex-naming.js | MEDIUM | 0 warnings (2 allowlisted) |
 | check-component-naming.js | INFO | 4 naming issues (file/component mismatches) |
+| check-duplicate-components.js | INFO | 3 duplicate names (ui/form allowed) |
 
 ---
 
@@ -631,6 +632,7 @@ The 78 missing test files are primarily external integrations:
 | check-async-patterns.js | Error handling | MEDIUM | ✅ |
 | check-test-coverage.js | Test coverage | MEDIUM | ✅ |
 | check-component-naming.js | PascalCase naming | INFO | ✅ |
+| check-duplicate-components.js | Duplicate names | INFO | ✅ |
 
 ---
 
@@ -646,7 +648,7 @@ The 78 missing test files are primarily external integrations:
 | Phase 10 | Issue Resolution | ✅ Complete |
 
 **Key Achievements:**
-- 24 validators covering all aspects of code quality
+- 25 validators covering all aspects of code quality
 - 0 blocking errors across all validators
 - 220+ files migrated to CVA components
 - Raw Tailwind reduced from 1145 to 170 edge cases
@@ -655,6 +657,38 @@ The 78 missing test files are primarily external integrations:
 - JSDoc coverage: 171 exports (deferred)
 - File headers: 319 files (deferred)
 - Test coverage: External integrations only
+
+---
+
+## Phase 11: Potential Future Improvements
+
+Issues detected by validators that could be addressed in future iterations:
+
+### 11.1 Component Naming Issues (4 issues)
+
+| File | Issue | Suggested Fix |
+|------|-------|---------------|
+| `Dashboard/ProjectsList.tsx` | Exports `WorkspacesList` | Rename file to `WorkspacesList.tsx` |
+| `IssueDetail/InlinePropertyEdit.tsx` | Exports multiple components | Split or rename to `InlinePropertySelects.tsx` |
+| `Landing/icons.tsx` | Lowercase filename | Rename to `Icons.tsx` |
+| `Onboarding/Checklist.tsx` | Exports `OnboardingChecklist` | Rename to `OnboardingChecklist.tsx` |
+
+### 11.2 Duplicate Component Names (3 issues)
+
+| Component | Locations | Analysis |
+|-----------|-----------|----------|
+| `RecentActivity` | Analytics/, Dashboard/ | Different purposes - consider renaming to `AnalyticsActivity`/`DashboardActivity` |
+| `RoadmapView` | Calendar/, root | Calendar version is embedded gantt, root is standalone page |
+| `ProjectsList` | Dashboard/, root | Dashboard version is dashboard-specific widget |
+
+**Note:** These duplicates may be intentional (different implementations for different contexts). Review before renaming.
+
+### 11.3 Optional Validators (Not Yet Created)
+
+| Validator | Purpose | Priority | Status |
+|-----------|---------|----------|--------|
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] Optional |
+| check-import-paths.js | Flag imports from wrong locations | Medium | [ ] Optional |
 
 ---
 
