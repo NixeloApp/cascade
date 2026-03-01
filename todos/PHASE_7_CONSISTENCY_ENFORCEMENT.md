@@ -279,6 +279,7 @@ Items intentionally not in scope for Phase 7:
 **Files Migrated:** 220+
 **Validators:** 27 (all passing)
 **Violations Remaining:** 170 (down from 1145)
+**JSDoc Coverage:** 105 exports missing (down from 171)
 
 **Note:** Remaining 170 violations are edge cases that don't warrant migration:
 
@@ -621,7 +622,7 @@ The 78 missing test files are primarily external integrations:
 | check-tailwind-consistency.js | TW patterns | MEDIUM | ✅ (all patterns consistent, peer class support added) |
 | check-interactive-tw.js | Hover/focus | MEDIUM | ✅ |
 | check-e2e-quality.js | E2E patterns | MEDIUM | ✅ |
-| check-jsdoc.js | Documentation | MEDIUM | ✅ |
+| check-jsdoc.js | Documentation | MEDIUM | ✅ (105 missing, down from 171) |
 | check-file-headers.js | File headers | MEDIUM | ✅ |
 | check-convex-naming.js | Function naming | MEDIUM | ✅ |
 | check-route-constants.js | Route centralization | MEDIUM | ✅ |
