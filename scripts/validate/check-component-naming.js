@@ -27,7 +27,9 @@ const CONFIG = {
 };
 
 // Directories to check
-const COMPONENT_DIRS = ["src/components", "src/routes"];
+// NOTE: src/routes excluded - TanStack Router uses lowercase file naming convention
+// (route files like dashboard.tsx, settings.tsx represent URL segments)
+const COMPONENT_DIRS = ["src/components"];
 
 // Files/directories to skip
 const SKIP_PATTERNS = [
@@ -37,6 +39,8 @@ const SKIP_PATTERNS = [
   /routeTree\.gen\.ts$/,
   /__tests__/,
   /\.d\.ts$/,
+  /\.example\.tsx?$/, // Example files
+  /shadcn-calendar/, // Vendored component with own conventions
 ];
 
 // Valid non-PascalCase file names (utilities, hooks, etc.)
