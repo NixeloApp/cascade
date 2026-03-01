@@ -1,3 +1,11 @@
+/**
+ * Booking Pages
+ *
+ * Cal.com-style booking page management for scheduling meetings.
+ * Creates shareable booking links with custom duration and availability.
+ * Supports confirmation workflow and custom booking form questions.
+ */
+
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
