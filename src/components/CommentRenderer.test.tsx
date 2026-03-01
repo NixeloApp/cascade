@@ -1,4 +1,3 @@
-import type { Id } from "@convex/_generated/dataModel";
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { CommentRenderer } from "./CommentRenderer";
@@ -212,27 +211,6 @@ describe("CommentRenderer", () => {
       expect(screen.getByText(/Start/)).toBeInTheDocument();
       expect(screen.getByText("@User")).toBeInTheDocument();
       expect(screen.getByText(/End/)).toBeInTheDocument();
-    });
-  });
-
-  describe("Mentions Prop", () => {
-    it("should accept mentions array (though not currently used in rendering)", () => {
-      const mentions = ["user-1", "user-2"] as Id<"users">[];
-      render(<CommentRenderer content="Test @[User](user-1)" mentions={mentions} />);
-
-      expect(screen.getByText("@User")).toBeInTheDocument();
-    });
-
-    it("should work without mentions prop", () => {
-      render(<CommentRenderer content="Test @[User](user-1)" />);
-
-      expect(screen.getByText("@User")).toBeInTheDocument();
-    });
-
-    it("should handle empty mentions array", () => {
-      render(<CommentRenderer content="Test @[User](user-1)" mentions={[]} />);
-
-      expect(screen.getByText("@User")).toBeInTheDocument();
     });
   });
 

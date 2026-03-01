@@ -164,7 +164,7 @@ export function IssueDetailSidebar({
           <IssueWatchers issueId={issueId} />
         </SidebarSection>
         <SidebarSection title="Dependencies">
-          <IssueDependencies issueId={issueId} projectId={projectId} />
+          <IssueDependencies issueId={issueId} />
         </SidebarSection>
       </Stack>
     </Card>

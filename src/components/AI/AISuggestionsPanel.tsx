@@ -25,7 +25,6 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
     isGenerating,
     selectedType,
     suggestions,
-    unreadCount: _unreadCount,
     setSelectedType,
     handleGenerateInsights,
     handleAcceptSuggestion,

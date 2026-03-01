@@ -11,14 +11,13 @@ import { Badge } from "./ui/Badge";
 
 interface CommentRendererProps {
   content: string;
-  mentions?: Id<"users">[];
 }
 
 /**
  * Renders comment content with mentions and basic inline markdown support.
  * Supports: **bold**, *italic*, `code`, ~~strikethrough~~, [links](url)
  */
-export function CommentRenderer({ content, mentions: _mentions = [] }: CommentRendererProps) {
+export function CommentRenderer({ content }: CommentRendererProps) {
   // Parse the content to find mentions and apply inline markdown
   const renderContent = () => {
     const mentionPattern = /@\[([^\]]+)\]\(([^)]+)\)/g;

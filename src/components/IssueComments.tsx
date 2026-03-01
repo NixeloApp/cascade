@@ -124,7 +124,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                     </Flex>
 
                     {/* Comment Text with Mentions */}
-                    <CommentRenderer content={comment.content} mentions={comment.mentions} />
+                    <CommentRenderer content={comment.content} />
 
                     {/* Comment Reactions */}
                     <CommentReactions

@@ -28,6 +28,7 @@
  *  24. Hook patterns        — custom hooks should follow consistent patterns
  *  25. Async patterns       — consistent error handling in async operations
  *  26. Test coverage        — critical files should have corresponding tests
+ *  27. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
  *
  * Exit code 1 if any check reports errors. Some checks are warn-only and do not affect exit code.
  *
@@ -62,6 +63,7 @@ import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
 import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
 import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
 import { run as runUIPatternsCheck } from "./validate/check-ui-patterns.js";
+import { run as runUnusedParamsCheck } from "./validate/check-unused-params.js";
 import { c } from "./validate/utils.js";
 
 const checks = [
@@ -92,6 +94,7 @@ const checks = [
   { name: "Hook patterns", fn: runHookPatternsCheck },
   { name: "Async patterns", fn: runAsyncPatternsCheck },
   { name: "Test coverage", fn: runTestCoverageCheck },
+  { name: "Unused parameters", fn: runUnusedParamsCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);
