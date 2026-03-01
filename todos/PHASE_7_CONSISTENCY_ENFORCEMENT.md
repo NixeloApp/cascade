@@ -660,4 +660,36 @@ The 78 missing test files are primarily external integrations:
 
 ---
 
+## Phase 11: Potential Future Improvements
+
+Issues detected by validators that could be addressed in future iterations:
+
+### 11.1 Component Naming Issues (4 issues)
+
+| File | Issue | Suggested Fix |
+|------|-------|---------------|
+| `Dashboard/ProjectsList.tsx` | Exports `WorkspacesList` | Rename file to `WorkspacesList.tsx` |
+| `IssueDetail/InlinePropertyEdit.tsx` | Exports multiple components | Split or rename to `InlinePropertySelects.tsx` |
+| `Landing/icons.tsx` | Lowercase filename | Rename to `Icons.tsx` |
+| `Onboarding/Checklist.tsx` | Exports `OnboardingChecklist` | Rename to `OnboardingChecklist.tsx` |
+
+### 11.2 Duplicate Component Names (3 issues)
+
+| Component | Locations | Analysis |
+|-----------|-----------|----------|
+| `RecentActivity` | Analytics/, Dashboard/ | Different purposes - consider renaming to `AnalyticsActivity`/`DashboardActivity` |
+| `RoadmapView` | Calendar/, root | Calendar version is embedded gantt, root is standalone page |
+| `ProjectsList` | Dashboard/, root | Dashboard version is dashboard-specific widget |
+
+**Note:** These duplicates may be intentional (different implementations for different contexts). Review before renaming.
+
+### 11.3 Optional Validators (Not Yet Created)
+
+| Validator | Purpose | Priority | Status |
+|-----------|---------|----------|--------|
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] Optional |
+| check-import-paths.js | Flag imports from wrong locations | Medium | [ ] Optional |
+
+---
+
 *Zero raw Tailwind = zero AI slop. One file at a time. Flag duplicates, don't merge.*
