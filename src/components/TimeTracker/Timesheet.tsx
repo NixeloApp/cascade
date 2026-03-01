@@ -1,3 +1,11 @@
+/**
+ * Timesheet Component
+ *
+ * Weekly timesheet view for time entry management.
+ * Shows time entries grouped by day with totals.
+ * Supports adding, editing, and deleting entries.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
