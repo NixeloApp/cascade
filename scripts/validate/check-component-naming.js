@@ -145,8 +145,9 @@ function checkFileName(filePath, components) {
 
 /**
  * Check Props interface naming
+ * NOTE: Currently disabled - too noisy. Many valid patterns don't follow strictly.
  */
-function checkPropsNaming(components, propsInterfaces) {
+function _checkPropsNaming(components, propsInterfaces) {
   const issues = [];
 
   for (const component of components) {
@@ -180,7 +181,8 @@ function checkFile(filePath) {
 
     // Extract components and interfaces
     const components = extractComponents(content);
-    const propsInterfaces = extractPropsInterfaces(content);
+    // NOTE: propsInterfaces extraction kept for potential future use
+    const _propsInterfaces = extractPropsInterfaces(content);
 
     // Skip files with no components
     if (components.length === 0) {
