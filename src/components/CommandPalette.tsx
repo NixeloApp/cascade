@@ -40,6 +40,9 @@ interface CommandPaletteProps {
   commands: CommandAction[];
 }
 
+/**
+ * Global command palette for quick navigation and actions (Cmd+K).
+ */
 export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProps) {
   const [search, setSearch] = useState("");
 
@@ -140,7 +143,10 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
   );
 }
 
-// Hook to build commands dynamically
+/**
+ * Hook to build command palette actions dynamically.
+ * Includes navigation, projects, recent issues, and create actions.
+ */
 export function useCommands({
   onCreateIssue,
   onCreateDocument,

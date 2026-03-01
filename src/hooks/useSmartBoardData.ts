@@ -83,6 +83,10 @@ function mergeStatusGroup(
   return [...(existingIssues || []), ...uniqueNewIssues];
 }
 
+/**
+ * Merges smart-loaded issues with additional loaded issues by status.
+ * Deduplicates based on issue ID and preserves status grouping.
+ */
 export function mergeIssuesByStatus(
   smartIssues: Record<string, EnrichedIssue[]> | undefined,
   additionalIssues: EnrichedIssue[],
@@ -244,6 +248,10 @@ function calculateHiddenDoneCount(
   return total;
 }
 
+/**
+ * Hook for loading board data with pagination and smart loading strategy.
+ * Loads all todo/inprogress issues but only recent done issues.
+ */
 export function useSmartBoardData({
   projectId,
   teamId,
