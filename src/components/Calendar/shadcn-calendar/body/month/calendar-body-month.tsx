@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarEvent } from "../../calendar-event";
 
+/** Month view grid showing all days with event indicators. */
 export function CalendarBodyMonth(): React.ReactElement {
   const { date, events, setDate, setMode } = useCalendarContext();
 

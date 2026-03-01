@@ -60,6 +60,7 @@ function calculateEventPosition(
   };
 }
 
+/** Individual event block rendered in calendar grid. */
 export function CalendarEvent({
   event,
   month = false,

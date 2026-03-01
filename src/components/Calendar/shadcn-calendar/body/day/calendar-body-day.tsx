@@ -4,6 +4,7 @@ import { CalendarBodyDayContent } from "./calendar-body-day-content";
 import { CalendarBodyDayEvents } from "./calendar-body-day-events";
 import { CalendarBodyMarginDayMargin } from "./calendar-body-margin-day-margin";
 
+/** Day view layout with time grid, events sidebar, and mini calendar. */
 export function CalendarBodyDay(): React.ReactElement {
   const { date } = useCalendarContext();
   return (

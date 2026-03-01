@@ -3,6 +3,7 @@ import { useCalendarContext } from "../../calendar-context";
 import { CalendarBodyDayContent } from "../day/calendar-body-day-content";
 import { CalendarBodyMarginDayMargin } from "../day/calendar-body-margin-day-margin";
 
+/** Week view showing 7 days side-by-side with time grid. */
 export function CalendarBodyWeek(): React.ReactElement {
   const { date } = useCalendarContext();
 

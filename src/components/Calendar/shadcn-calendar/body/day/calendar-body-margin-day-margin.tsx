@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 export const hours = Array.from({ length: 24 }, (_, i) => i);
 
+/** Hour labels margin column for day/week views. */
 export function CalendarBodyMarginDayMargin({
   className,
 }: {

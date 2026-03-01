@@ -5,6 +5,7 @@ import { DOT_COLOR_CLASSES, type EventColor } from "../../../calendar-colors";
 
 import { useCalendarContext } from "../../calendar-context";
 
+/** List of events for the current day in day view sidebar. */
 export function CalendarBodyDayEvents(): React.ReactElement {
   const { events, date, onEventClick } = useCalendarContext();
   const dayEvents = events.filter((event) => isSameDay(event.start, date));
