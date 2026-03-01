@@ -1,3 +1,11 @@
+/**
+ * Notifications Page
+ *
+ * Full-page notification center with filtering and pagination.
+ * Groups notifications by date (today, yesterday, this week, earlier).
+ * Supports mark all read, archive, and individual notification actions.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";

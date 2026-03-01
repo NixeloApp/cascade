@@ -1,3 +1,11 @@
+/**
+ * Automation Rule Form
+ *
+ * Form dialog for creating and editing automation rules.
+ * Configures triggers, conditions, and actions for issue automation.
+ * Supports status changes, assignments, labels, and notifications.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type {

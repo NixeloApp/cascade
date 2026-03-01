@@ -1,3 +1,11 @@
+/**
+ * Issue Dependencies
+ *
+ * UI for managing issue relationships (blocks, is blocked by, relates to).
+ * Shows linked issues with quick navigation and removal actions.
+ * Supports adding new dependencies via search or issue key.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

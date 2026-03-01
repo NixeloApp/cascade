@@ -1,3 +1,11 @@
+/**
+ * Create Project From Template
+ *
+ * Template selection and project creation wizard.
+ * Displays available templates with descriptions and previews.
+ * Handles project key generation and initial configuration.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
