@@ -689,7 +689,7 @@ Issues detected by validators that could be addressed in future iterations:
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
 | check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] Optional |
-| check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created (6 deep-relative imports) |
+| check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created, 0 issues (6 fixed) |
 
 ---
 
