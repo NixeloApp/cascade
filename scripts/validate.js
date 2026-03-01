@@ -28,7 +28,8 @@
  *  24. Hook patterns        — custom hooks should follow consistent patterns
  *  25. Async patterns       — consistent error handling in async operations
  *  26. Test coverage        — critical files should have corresponding tests
- *  27. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
+ *  27. Time constants       — enforces use of timeUtils constants instead of magic numbers
+ *  28. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
  *
  * Exit code 1 if any check reports errors. Some checks are warn-only and do not affect exit code.
  *
@@ -60,6 +61,7 @@ import { run as runStandardsCheck } from "./validate/check-standards.js";
 import { run as runTailwindConsistencyCheck } from "./validate/check-tailwind-consistency.js";
 import { run as runTestCoverageCheck } from "./validate/check-test-coverage.js";
 import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
+import { run as runTimeConstantsCheck } from "./validate/check-time-constants.js";
 import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
 import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
 import { run as runUIPatternsCheck } from "./validate/check-ui-patterns.js";
@@ -94,6 +96,7 @@ const checks = [
   { name: "Hook patterns", fn: runHookPatternsCheck },
   { name: "Async patterns", fn: runAsyncPatternsCheck },
   { name: "Test coverage", fn: runTestCoverageCheck },
+  { name: "Time constants", fn: runTimeConstantsCheck },
   { name: "Unused parameters", fn: runUnusedParamsCheck },
 ];
 
