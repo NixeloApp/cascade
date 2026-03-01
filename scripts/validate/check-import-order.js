@@ -1,7 +1,13 @@
 /**
  * CHECK: Import Order
  *
- * Validates that imports follow a consistent ordering:
+ * DISABLED: This validator is disabled because Biome's `organizeImports: "on"`
+ * (in biome.json) automatically handles import ordering. Having both would
+ * cause conflicts where Biome reverts manual changes.
+ *
+ * Biome enforces consistent import ordering automatically via `pnpm biome`.
+ *
+ * Original intent was to validate:
  * 1. Node built-ins (node:fs, path)
  * 2. External packages (react, lodash, convex)
  * 3. Internal aliases (@/, @convex/)
@@ -9,17 +15,17 @@
  * 5. Sibling imports (./)
  * 6. Style imports (*.css)
  *
- * @strictness MEDIUM - Reports warnings, does not block CI
+ * @strictness OFF - Handled by Biome organizeImports
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Configuration
+// Configuration - DISABLED, Biome handles import ordering
 const CONFIG = {
   // 'error' | 'warn' | 'off'
-  strictness: "warn",
+  strictness: "off",
 };
 
 // Files/directories to skip
