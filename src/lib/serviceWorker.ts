@@ -13,6 +13,10 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+/**
+ * Registers the service worker for PWA functionality.
+ * Sets up periodic update checks and handles SW lifecycle events.
+ */
 export function register() {
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -50,6 +54,9 @@ export function register() {
   }
 }
 
+/**
+ * Unregisters the service worker, disabling PWA functionality.
+ */
 export function unregister() {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.ready
@@ -62,6 +69,9 @@ export function unregister() {
   }
 }
 
+/**
+ * Clears the service worker cache by sending a message to the active worker.
+ */
 export function clearCache() {
   if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
@@ -97,7 +107,10 @@ function showUpdateNotification() {
   });
 }
 
-// Check if app is running in standalone mode (installed as PWA)
+/**
+ * Checks if the app is running in standalone mode (installed as PWA).
+ * Detects both standard display-mode and iOS standalone property.
+ */
 export function isStandalone(): boolean {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
@@ -105,7 +118,10 @@ export function isStandalone(): boolean {
   );
 }
 
-// Prompt user to install PWA
+/**
+ * Sets up PWA install prompt handling.
+ * Listens for beforeinstallprompt event and shows custom install UI.
+ */
 export function promptInstall() {
   let deferredPrompt: BeforeInstallPromptEvent | null = null;
 

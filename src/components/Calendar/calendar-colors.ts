@@ -134,6 +134,10 @@ export const DOT_COLOR_CLASSES: Record<EventColor, string> = {
   gray: "bg-palette-gray",
 };
 
+/**
+ * Returns Tailwind classes for a calendar event card based on color.
+ * Defaults to blue if color is invalid.
+ */
 export function getEventColorClasses(color: string): {
   bg: string;
   hover: string;
@@ -143,6 +147,10 @@ export function getEventColorClasses(color: string): {
   return EVENT_COLOR_CLASSES[color as EventColor] ?? EVENT_COLOR_CLASSES.blue;
 }
 
+/**
+ * Returns badge class for an event, resolving type-based defaults.
+ * Falls back to type default color if no color specified.
+ */
 export function getEventBadgeClass(eventType: string, color?: string | null): string {
   const resolved = (color ?? EVENT_TYPE_DEFAULT_COLOR[eventType] ?? "blue") as EventColor;
   return EVENT_COLOR_BADGE[resolved] ?? EVENT_COLOR_BADGE.blue;

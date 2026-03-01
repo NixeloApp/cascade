@@ -1,3 +1,6 @@
+/**
+ * Nixelo brand logo SVG with gradient effect.
+ */
 export function NixeloLogo({ size = 28, className }: { size?: number; className?: string }) {
   return (
     <svg
@@ -32,6 +35,7 @@ export function NixeloLogo({ size = 28, className }: { size?: number; className?
   );
 }
 
+/** Workflow automation icon with gear and network elements. */
 export function WorkflowIcon() {
   return (
     <svg
@@ -71,6 +75,7 @@ export function WorkflowIcon() {
   );
 }
 
+/** Calendar and time tracking icon. */
 export function TimeIcon() {
   return (
     <svg
@@ -90,6 +95,7 @@ export function TimeIcon() {
   );
 }
 
+/** Real-time collaboration icon with cursors. */
 export function CollabIcon() {
   return (
     <svg
@@ -115,6 +121,7 @@ export function CollabIcon() {
   );
 }
 
+/** Dashboard clarity icon with grid layout. */
 export function ClarityIcon() {
   return (
     <svg
@@ -135,6 +142,7 @@ export function ClarityIcon() {
   );
 }
 
+/** Arrow icon for navigation and CTAs. */
 export function ArrowIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -150,6 +158,7 @@ export function ArrowIcon({ className }: { className?: string }) {
   );
 }
 
+/** Play button icon for video/demo CTAs. */
 export function PlayIcon({ className }: { className?: string }) {
   return (
     <svg aria-hidden="true" className={className} viewBox="0 0 16 16" fill="currentColor">
@@ -158,7 +167,7 @@ export function PlayIcon({ className }: { className?: string }) {
   );
 }
 
-// Grid icons from AI template
+/** Security shield icon with center dot. */
 export function SecurityIcon() {
   return (
     <svg
@@ -176,6 +185,7 @@ export function SecurityIcon() {
   );
 }
 
+/** Cloud hosting/infrastructure icon. */
 export function CloudIcon() {
   return (
     <svg
@@ -193,6 +203,7 @@ export function CloudIcon() {
   );
 }
 
+/** Settings/preferences icon with sliders. */
 export function SettingsIcon() {
   return (
     <svg
@@ -217,6 +228,7 @@ export function SettingsIcon() {
   );
 }
 
+/** Team/people management icon. */
 export function PeopleIcon() {
   return (
     <svg
@@ -236,6 +248,7 @@ export function PeopleIcon() {
   );
 }
 
+/** Code/development integration icon. */
 export function CodeIcon() {
   return (
     <svg
@@ -254,6 +267,7 @@ export function CodeIcon() {
   );
 }
 
+/** Technology stack/layers icon. */
 export function StackIcon() {
   return (
     <svg
@@ -273,6 +287,7 @@ export function StackIcon() {
   );
 }
 
+/** Notifications bell icon. */
 export function BellIcon() {
   return (
     <svg
@@ -291,6 +306,7 @@ export function BellIcon() {
   );
 }
 
+/** Document/file icon. */
 export function FileIcon() {
   return (
     <svg
@@ -310,6 +326,7 @@ export function FileIcon() {
   );
 }
 
+/** Hyperlink/connection icon. */
 export function LinkIcon() {
   return (
     <svg
