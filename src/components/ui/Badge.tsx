@@ -1,3 +1,11 @@
+/**
+ * Badge Component
+ *
+ * Small status indicator with color variants.
+ * Supports semantic colors, sizes, and dot decorations.
+ * Use for labels, counts, and status indicators.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";

@@ -1,3 +1,11 @@
+/**
+ * Switch Component
+ *
+ * Toggle switch for boolean settings.
+ * Wraps Radix UI Switch with label and description.
+ * Supports accessible labeling and disabled states.
+ */
+
 import * as SwitchPrimitives from "@radix-ui/react-switch";
 import * as React from "react";
 import { cn } from "@/lib/utils";

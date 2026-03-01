@@ -1,3 +1,11 @@
+/**
+ * Select Component
+ *
+ * Dropdown select with keyboard navigation.
+ * Wraps Radix UI Select with styled trigger and content.
+ * Includes item groups, separators, and scroll buttons.
+ */
+
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import * as React from "react";

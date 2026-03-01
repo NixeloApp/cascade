@@ -1,3 +1,11 @@
+/**
+ * Avatar Component
+ *
+ * User profile image with fallback initials.
+ * Wraps Radix UI Avatar with size variants.
+ * Includes AvatarGroup for stacked displays.
+ */
+
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";

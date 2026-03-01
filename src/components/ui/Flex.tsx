@@ -1,3 +1,11 @@
+/**
+ * Flex Component
+ *
+ * Horizontal flex container with gap and alignment props.
+ * Semantic alternative to raw flex divs with responsive support.
+ * Includes FlexItem for controlling individual child sizing.
+ */
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 

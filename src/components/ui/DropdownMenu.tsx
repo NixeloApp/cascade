@@ -1,3 +1,11 @@
+/**
+ * Dropdown Menu Component
+ *
+ * Context menu with items, checkboxes, and submenus.
+ * Wraps Radix UI DropdownMenu with styled content.
+ * Supports keyboard navigation and nested menus.
+ */
+
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import * as React from "react";
 import { Check, ChevronRight, Circle } from "@/lib/icons";
