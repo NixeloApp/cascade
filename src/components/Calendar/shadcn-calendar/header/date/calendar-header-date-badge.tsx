@@ -1,6 +1,7 @@
 import { isSameMonth } from "date-fns";
 import { useCalendarContext } from "../../calendar-context";
 
+/** Badge showing event count for the current month. */
 export function CalendarHeaderDateBadge(): React.ReactElement | null {
   const { events, date } = useCalendarContext();
   const monthEvents = events.filter((event) => isSameMonth(event.start, date));

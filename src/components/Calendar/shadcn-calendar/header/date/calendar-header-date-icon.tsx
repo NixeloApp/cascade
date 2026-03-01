@@ -3,6 +3,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useCalendarContext } from "../../calendar-context";
 
+/** Calendar icon widget showing month and day number. */
 export function CalendarHeaderDateIcon(): React.ReactElement {
   const { calendarIconIsToday, date: calendarDate } = useCalendarContext();
   const date = calendarIconIsToday ? new Date() : calendarDate;

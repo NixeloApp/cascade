@@ -7,6 +7,7 @@ import { CalendarHeaderActionsMode } from "./header/actions/calendar-header-acti
 import { CalendarHeader } from "./header/calendar-header";
 import { CalendarHeaderDate } from "./header/date/calendar-header-date";
 
+/** Main calendar component with header, body, and provider. */
 export function ShadcnCalendar({
   events,
   mode,

@@ -6,6 +6,7 @@ import { CalendarHeaderDateBadge } from "./calendar-header-date-badge";
 import { CalendarHeaderDateChevrons } from "./calendar-header-date-chevrons";
 import { CalendarHeaderDateIcon } from "./calendar-header-date-icon";
 
+/** Header section displaying current date with navigation controls. */
 export function CalendarHeaderDate(): React.ReactElement {
   const { date } = useCalendarContext();
   return (

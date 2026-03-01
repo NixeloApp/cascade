@@ -6,6 +6,7 @@ import { calendarModeIconMap } from "../../calendar-mode-icon-map";
 import type { Mode } from "../../calendar-types";
 import { calendarModes } from "../../calendar-types";
 
+/** Toggle group for switching between day/week/month calendar views. */
 export function CalendarHeaderActionsMode(): React.ReactElement {
   const { mode, setMode } = useCalendarContext();
 
