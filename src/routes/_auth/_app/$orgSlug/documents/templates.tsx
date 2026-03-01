@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { DocumentTemplatesManager } from "@/components/DocumentTemplatesManager";
+import { DocumentTemplatesManager } from "@/components/Documents";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 

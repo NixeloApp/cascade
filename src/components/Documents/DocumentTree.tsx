@@ -22,23 +22,23 @@ import {
   Star,
 } from "lucide-react";
 import { useState } from "react";
-import { ROUTES } from "@/config/routes";
-import { showError } from "@/lib/toast";
-import { cn } from "@/lib/utils";
-import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/DropdownMenu";
-import { Flex, FlexItem } from "./ui/Flex";
-import { Icon } from "./ui/Icon";
-import { Skeleton } from "./ui/Skeleton";
-import { Stack } from "./ui/Stack";
-import { Typography } from "./ui/Typography";
+} from "@/components/ui/DropdownMenu";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
+import { ROUTES } from "@/config/routes";
+import { showError } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 
 interface DocumentTreeProps {
   organizationId: Id<"organizations">;

@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/Tooltip";
 import { DocumentHeader } from "./DocumentHeader";
 
 // Mock PresenceIndicator
-vi.mock("./PresenceIndicator", () => ({
+vi.mock("@/components/PresenceIndicator", () => ({
   PresenceIndicator: () => <div data-testid="presence-indicator" />,
 }));
 

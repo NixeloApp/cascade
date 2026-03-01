@@ -8,19 +8,19 @@
 
 import type { Doc } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { PresenceIndicator } from "@/components/PresenceIndicator";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Input } from "@/components/ui/form/Input";
+import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
+import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { Archive, Download, FolderInput, History, Lock, LockOpen, Star, Upload } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { PresenceIndicator } from "./PresenceIndicator";
-import { Badge } from "./ui/Badge";
-import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
-import { Input } from "./ui/form/Input";
-import { IconButton } from "./ui/IconButton";
-import { Stack } from "./ui/Stack";
 
 interface LockStatus {
   isLocked: boolean;

@@ -10,18 +10,18 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Textarea } from "@/components/ui/form/Textarea";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Stack } from "@/components/ui/Stack";
+import { Typography } from "@/components/ui/Typography";
 import { formatRelativeTime } from "@/lib/formatting";
 import { MessageCircle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { Avatar } from "./ui/Avatar";
-import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
-import { EmptyState } from "./ui/EmptyState";
-import { Textarea } from "./ui/form/Textarea";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
-import { Stack } from "./ui/Stack";
-import { Typography } from "./ui/Typography";
 
 interface DocumentCommentsProps {
   documentId: Id<"documents">;
