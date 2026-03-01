@@ -39,6 +39,7 @@ import { run as runColorAudit } from "./validate/check-colors.js";
 import { run as runComponentNamingCheck } from "./validate/check-component-naming.js";
 import { run as runConvexNamingCheck } from "./validate/check-convex-naming.js";
 import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
+import { run as runDuplicateComponentsCheck } from "./validate/check-duplicate-components.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
 import { run as runEmojiCheck } from "./validate/check-emoji.js";
 import { run as runFileHeadersCheck } from "./validate/check-file-headers.js";
@@ -75,6 +76,7 @@ const checks = [
   { name: "Convex patterns", fn: runConvexPatternsCheck },
   { name: "Convex naming", fn: runConvexNamingCheck },
   { name: "Component naming", fn: runComponentNamingCheck },
+  { name: "Duplicate components", fn: runDuplicateComponentsCheck },
   { name: "Interactive Tailwind", fn: runInteractiveTwCheck },
   { name: "Tailwind consistency", fn: runTailwindConsistencyCheck },
   { name: "JSDoc coverage", fn: runJSDocCheck },
