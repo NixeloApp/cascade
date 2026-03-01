@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import zxcvbn from "zxcvbn";
+import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
@@ -7,6 +6,14 @@ import { cn } from "@/lib/utils";
 interface PasswordStrengthIndicatorProps {
   password: string;
   className?: string;
+}
+
+interface ZxcvbnResult {
+  score: 0 | 1 | 2 | 3 | 4;
+  feedback: {
+    warning?: string;
+    suggestions?: string[];
+  };
 }
 
 const STRENGTH_LABELS = ["Very weak", "Weak", "Fair", "Good", "Strong"] as const;
@@ -28,13 +35,29 @@ const STRENGTH_TEXT_COLORS = [
 ] as const;
 
 /**
- * Password strength indicator using zxcvbn.
+ * Password strength indicator using zxcvbn (lazy-loaded to reduce bundle size).
  * Shows a visual bar with 4 segments and a text label.
  */
 export function PasswordStrengthIndicator({ password, className }: PasswordStrengthIndicatorProps) {
-  const result = useMemo(() => {
-    if (!password) return null;
-    return zxcvbn(password);
+  const [result, setResult] = useState<ZxcvbnResult | null>(null);
+
+  useEffect(() => {
+    if (!password) {
+      setResult(null);
+      return;
+    }
+
+    // Lazy load zxcvbn (~400KB) only when password is entered
+    let cancelled = false;
+    import("zxcvbn").then((module) => {
+      if (!cancelled) {
+        setResult(module.default(password));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [password]);
 
   if (!password || !result) {
