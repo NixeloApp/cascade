@@ -1,6 +1,7 @@
 import { CalendarContext } from "./calendar-context";
 import type { CalendarEvent, Mode } from "./calendar-types";
 
+/** Context provider for calendar state and event handlers. */
 export function CalendarProvider({
   events,
   mode,

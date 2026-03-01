@@ -1,3 +1,11 @@
+/**
+ * Custom Fields
+ *
+ * Project-level custom field definitions and value management.
+ * Supports text, number, date, select, and user reference types.
+ * Enforces field validation and project access permissions.
+ */
+
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import {

@@ -1,3 +1,11 @@
+/**
+ * Sheet Component
+ *
+ * Slide-in panel from screen edges.
+ * Wraps Radix UI Dialog with directional animations.
+ * Use for secondary navigation and forms.
+ */
+
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";

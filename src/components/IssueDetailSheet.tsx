@@ -13,7 +13,7 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
-import { IssueDetailLayout, useIssueDetail } from "./IssueDetailView";
+import { IssueDetailLayout, useIssueDetail } from "./IssueDetail";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Icon } from "./ui/Icon";

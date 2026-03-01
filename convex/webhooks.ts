@@ -1,3 +1,11 @@
+/**
+ * Webhook Management
+ *
+ * Outgoing webhooks for external integrations and automation.
+ * Handles webhook registration, event triggering, and delivery logging.
+ * Supports retry logic, payload signing, and delivery status tracking.
+ */
+
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";

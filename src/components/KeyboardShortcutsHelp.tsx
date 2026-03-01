@@ -231,6 +231,7 @@ function ShortcutBadge({ item }: { item: ShortcutItem }) {
 // Main Component
 // =============================================================================
 
+/** Dialog displaying available keyboard shortcuts grouped by category. */
 export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsHelpProps) {
   const [searchQuery, setSearchQuery] = useState("");
 

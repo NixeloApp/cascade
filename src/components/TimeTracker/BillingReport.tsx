@@ -1,3 +1,11 @@
+/**
+ * Billing Report
+ *
+ * Financial reporting view for time tracking data.
+ * Shows billable hours, revenue, team utilization, and project breakdowns.
+ * Supports date range filtering and CSV export.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
@@ -39,6 +47,7 @@ interface BillingReportProps {
   projectId: Id<"projects">;
 }
 
+/** Time tracking billing report with exportable member time summaries. */
 export function BillingReport({ projectId }: BillingReportProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("month");
   const project = useQuery(api.projects.getProject, { id: projectId });

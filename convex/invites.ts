@@ -1,3 +1,11 @@
+/**
+ * Invitation System
+ *
+ * Organization and project invitations via email or direct link.
+ * Handles invite creation, acceptance, expiration, and role assignment.
+ * Supports platform-wide, organization, and project-level invites.
+ */
+
 import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";

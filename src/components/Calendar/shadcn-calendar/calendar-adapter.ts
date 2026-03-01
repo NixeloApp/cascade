@@ -2,6 +2,9 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { EVENT_TYPE_DEFAULT_COLOR } from "../calendar-colors";
 import type { NixeloCalendarEvent } from "./calendar-types";
 
+/**
+ * Converts a Convex calendar event document to the internal calendar format.
+ */
 export function toCalendarEvent(doc: Doc<"calendarEvents">): NixeloCalendarEvent {
   return {
     id: doc._id,
@@ -14,6 +17,9 @@ export function toCalendarEvent(doc: Doc<"calendarEvents">): NixeloCalendarEvent
   };
 }
 
+/**
+ * Extracts the Convex document ID from a calendar event.
+ */
 export function extractConvexId(event: NixeloCalendarEvent): Id<"calendarEvents"> {
   return event.convexId as Id<"calendarEvents">;
 }

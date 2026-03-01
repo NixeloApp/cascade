@@ -1,8 +1,17 @@
+/**
+ * Landing Page Footer
+ *
+ * Site footer with navigation links and branding.
+ * Includes product, company, and resource sections.
+ * Contains social media links and legal pages.
+ */
+
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
-import { NixeloLogo } from "./icons";
+import { NixeloLogo } from "./Icons";
 
+/** Landing page footer with navigation links and branding. */
 export function Footer() {
   return (
     <footer className="px-6 py-16 border-t border-ui-border/20 bg-transparent transition-colors">

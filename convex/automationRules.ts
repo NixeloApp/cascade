@@ -1,3 +1,11 @@
+/**
+ * Automation Rules
+ *
+ * Project automation for status changes and field updates.
+ * Supports triggers (on create, status change) and actions (auto-assign, set fields).
+ * Runs automatically when issue events match rule conditions.
+ */
+
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";

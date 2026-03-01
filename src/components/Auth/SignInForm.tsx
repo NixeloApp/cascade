@@ -1,3 +1,11 @@
+/**
+ * Sign In Form
+ *
+ * Login form with email/password and Google OAuth.
+ * Handles authentication state and navigation.
+ * Provides forgot password and sign up links.
+ */
+
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -12,6 +20,9 @@ import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 
+/**
+ * Sign in form with email/password and Google OAuth options.
+ */
 export function SignInForm() {
   const { signIn } = useAuthActions();
   const navigate = useNavigate();

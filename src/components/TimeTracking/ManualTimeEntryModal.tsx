@@ -1,3 +1,11 @@
+/**
+ * Manual Time Entry Modal
+ *
+ * Dialog for manually logging time entries against issues or projects.
+ * Supports duration input (e.g., "2h 30m") and time range selection.
+ * Includes activity type selection and notes for billing purposes.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useForm, useStore } from "@tanstack/react-form";
@@ -111,6 +119,7 @@ interface ManualTimeEntryModalProps {
   issueId?: Id<"issues">;
 }
 
+/** Modal for manually logging time with duration or time range entry modes. */
 export function ManualTimeEntryModal({
   open,
   onOpenChange,

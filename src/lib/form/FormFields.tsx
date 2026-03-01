@@ -1,3 +1,11 @@
+/**
+ * Form Fields
+ *
+ * TanStack Form field wrapper components for form integration.
+ * Provides FormInput, FormSelect, FormTextarea, and FormCheckbox.
+ * Handles field state, validation errors, and form binding.
+ */
+
 import type { Updater, ValidationError } from "@tanstack/react-form";
 import { useId } from "react";
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/form";

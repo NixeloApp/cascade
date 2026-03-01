@@ -1,3 +1,11 @@
+/**
+ * Webhook Logs
+ *
+ * Dialog showing webhook execution history.
+ * Displays success/failure status and response details.
+ * Supports retrying failed webhook deliveries.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery } from "convex/react";
@@ -25,6 +33,7 @@ interface WebhookLogsProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** Dialog showing webhook execution history with retry option. */
 export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps) {
   const [selectedExecution, setSelectedExecution] = useState<string | null>(null);
 

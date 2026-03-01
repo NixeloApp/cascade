@@ -1,3 +1,11 @@
+/**
+ * User Management
+ *
+ * User profiles, settings, and authentication state.
+ * Handles 2FA, email verification, notification preferences, and user stats.
+ * Manages organization memberships and cross-org user resolution.
+ */
+
 import type { FunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";

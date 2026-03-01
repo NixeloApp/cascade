@@ -1,12 +1,20 @@
+/**
+ * Custom Field Values
+ *
+ * UI for displaying and editing custom field values on issues.
+ * Renders appropriate input controls based on field type.
+ * Supports inline editing with optimistic updates.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Check, X } from "@/lib/icons";
+import { showError } from "@/lib/toast";
 import { Avatar } from "./ui/Avatar";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
@@ -21,6 +29,7 @@ interface CustomFieldValuesProps {
   projectId: Id<"projects">;
 }
 
+/** Displays and allows editing of custom field values on an issue. */
 export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps) {
   const [editingFieldId, setEditingFieldId] = useState<Id<"customFields"> | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -60,7 +69,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
       setEditingFieldId(null);
       setEditValue("");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update field");
+      showError(error, "Failed to update field");
     }
   };
 

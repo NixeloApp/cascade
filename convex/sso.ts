@@ -1,3 +1,11 @@
+/**
+ * Single Sign-On (SSO)
+ *
+ * Enterprise SSO configuration for SAML and OIDC providers.
+ * Supports organization-level identity provider setup and user provisioning.
+ * Handles assertion validation, attribute mapping, and session management.
+ */
+
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";

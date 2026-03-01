@@ -1,3 +1,11 @@
+/**
+ * Typography Component
+ *
+ * Semantic text rendering with variant-based styling.
+ * Supports headings, body text, captions, and labels.
+ * Use as prop to override the underlying HTML element.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";

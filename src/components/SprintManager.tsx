@@ -1,3 +1,11 @@
+/**
+ * Sprint Manager
+ *
+ * Comprehensive sprint planning and tracking interface.
+ * Supports sprint creation, issue assignment, status transitions, and burn charts.
+ * Provides drag-and-drop backlog management and sprint goal tracking.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

@@ -1,3 +1,11 @@
+/**
+ * Button Component
+ *
+ * Primary interactive element with multiple variants.
+ * Supports loading states, icons, and polymorphic rendering.
+ * Use asChild prop to render as a different element.
+ */
+
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";

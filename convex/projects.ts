@@ -1,3 +1,11 @@
+/**
+ * Project Management
+ *
+ * CRUD operations for projects including membership, workflow states, and settings.
+ * Handles project creation, archival, templates, and team assignments.
+ * Core entity linking issues, documents, and sprints within an organization.
+ */
+
 import { paginationOptsValidator } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { pruneNull } from "convex-helpers";

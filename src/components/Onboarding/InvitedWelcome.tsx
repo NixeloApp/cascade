@@ -1,3 +1,11 @@
+/**
+ * Invited Welcome
+ *
+ * Welcome screen for users joining via invite link.
+ * Shows inviter name and onboarding tour option.
+ * Allows skipping to go directly to dashboard.
+ */
+
 import { Check, PartyPopper } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
@@ -9,6 +17,7 @@ interface InvitedWelcomeProps {
   onSkip: () => void;
 }
 
+/** Welcome screen for invited users with tour option. */
 export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelcomeProps) {
   return (
     <div className="text-center space-y-8">

@@ -1,3 +1,11 @@
+/**
+ * Issue Query Functions
+ *
+ * Read operations for issues including list, search, and detail queries.
+ * Supports pagination, filtering, sorting, and enrichment with related data.
+ * Handles permission checks and soft-delete filtering automatically.
+ */
+
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";

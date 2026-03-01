@@ -1,3 +1,11 @@
+/**
+ * Calendar Month View
+ *
+ * Month grid showing all days with event indicators.
+ * Supports day cell selection and event overflow display.
+ * Includes animated transitions between months.
+ */
+
 import {
   eachDayOfInterval,
   endOfMonth,
@@ -14,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarEvent } from "../../calendar-event";
 
+/** Month view grid showing all days with event indicators. */
 export function CalendarBodyMonth(): React.ReactElement {
   const { date, events, setDate, setMode } = useCalendarContext();
 

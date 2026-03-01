@@ -1,3 +1,11 @@
+/**
+ * App Layout Route
+ *
+ * Gateway route for authenticated app access.
+ * Handles onboarding redirects and organization initialization.
+ * Resolves user destination based on auth and org state.
+ */
+
 import { api } from "@convex/_generated/api";
 import { isReservedSlug } from "@convex/shared/constants";
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
@@ -44,8 +52,8 @@ function AppLayout() {
   useEffect(() => {
     if (redirectPath && redirectPath !== ROUTES.app.path) {
       const isGateway = pathname === "/app" || pathname === "/app/";
-      const isOnboardingTarget = redirectPath.includes("/onboarding");
-      const isOnboardingCurrent = pathname.includes("/onboarding");
+      const isOnboardingTarget = redirectPath.includes(ROUTES.onboarding.path);
+      const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
 
       if (isOnboardingTarget && !isOnboardingCurrent) {
         navigate({ to: redirectPath, replace: true });
@@ -67,8 +75,8 @@ function AppLayout() {
   // If we have a redirect path that's not /app, potentially show loading if we are about to redirect
   if (redirectPath && redirectPath !== ROUTES.app.path) {
     const isGateway = pathname === "/app" || pathname === "/app/";
-    const isOnboardingTarget = redirectPath.includes("/onboarding");
-    const isOnboardingCurrent = pathname.includes("/onboarding");
+    const isOnboardingTarget = redirectPath.includes(ROUTES.onboarding.path);
+    const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
 
     const willRedirect = (isOnboardingTarget && !isOnboardingCurrent) || isGateway;
 

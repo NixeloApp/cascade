@@ -1,3 +1,11 @@
+/**
+ * Member Management
+ *
+ * Project member list and role management component.
+ * Supports inviting members, changing roles, and removing access.
+ * Shows member avatars, emails, and join dates.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
@@ -41,6 +49,7 @@ const ROLE_BADGE_VARIANTS: Record<string, "brand" | "secondary" | "neutral"> = {
   viewer: "neutral",
 };
 
+/** Project member list with add/remove and role management. */
 export function MemberManagement({
   projectId,
   members,

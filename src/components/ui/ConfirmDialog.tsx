@@ -1,3 +1,11 @@
+/**
+ * Confirm Dialog
+ *
+ * Specialized alert dialog with icon variants.
+ * Supports danger, warning, and info confirmation types.
+ * Includes loading state and accessible labels.
+ */
+
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { AlertCircle, AlertTriangle, Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";

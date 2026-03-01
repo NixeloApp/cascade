@@ -1,3 +1,11 @@
+/**
+ * File Attachments
+ *
+ * Issue file attachment management component.
+ * Handles file upload, download, preview, and deletion.
+ * Supports various file types with appropriate icons.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -29,6 +37,7 @@ interface FileAttachmentsProps {
   issueId: Id<"issues">;
 }
 
+/** File attachment manager with drag-drop upload and file listing. */
 export function FileAttachments({ issueId }: FileAttachmentsProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);

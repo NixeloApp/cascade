@@ -1,3 +1,11 @@
+/**
+ * Dashboard
+ *
+ * Main dashboard page showing organization overview.
+ * Displays workspaces, recent activity, and quick actions.
+ * Provides navigation to projects, issues, and documents.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
@@ -13,13 +21,14 @@ import { useListNavigation } from "../hooks/useListNavigation";
 import { FocusZone } from "./Dashboard/FocusZone";
 import { Greeting } from "./Dashboard/Greeting";
 import { MyIssuesList } from "./Dashboard/MyIssuesList";
-import { WorkspacesList } from "./Dashboard/ProjectsList";
 import { QuickStats } from "./Dashboard/QuickStats";
 import { RecentActivity } from "./Dashboard/RecentActivity";
+import { WorkspacesList } from "./Dashboard/WorkspacesList";
 import { Typography } from "./ui/Typography";
 
 type IssueFilter = "assigned" | "created" | "all";
 
+/** Main dashboard page with focus task, stats, issues, and activity. */
 export function Dashboard() {
   const navigate = useNavigate();
   const { orgSlug } = useOrganization();

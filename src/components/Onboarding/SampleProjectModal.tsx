@@ -14,6 +14,7 @@ interface SampleProjectModalProps {
   onStartFromScratch: () => void;
 }
 
+/** Dialog offering choice between sample project or starting from scratch. */
 export function SampleProjectModal({
   open,
   onOpenChange,

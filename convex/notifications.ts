@@ -1,3 +1,11 @@
+/**
+ * Notification System
+ *
+ * In-app notifications for issue updates, comments, mentions, and assignments.
+ * Supports read/unread state, soft-delete, and preference-based filtering.
+ * Integrates with email digests for offline notification delivery.
+ */
+
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";

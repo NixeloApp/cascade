@@ -1,3 +1,11 @@
+/**
+ * Team Management
+ *
+ * Teams are groups of users within an organization for workload management.
+ * Handles team CRUD, membership, and team-based issue assignment/filtering.
+ * Supports team leads with elevated permissions for their team's issues.
+ */
+
 import { type PaginationResult, paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";

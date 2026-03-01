@@ -2,6 +2,8 @@
  * CHECK: Raw Tailwind
  * Flags raw Tailwind classes outside allowed directories.
  * Part of Phase 7: Zero Raw Tailwind enforcement.
+ *
+ * @strictness STRICT - Blocks CI. ~40 files/dirs in allowlist for edge cases.
  */
 
 import fs from "node:fs";
@@ -28,8 +30,7 @@ export function run() {
     "src/components/Settings/", // Form-heavy with input styling
     "src/components/TimeTracking/", // Complex forms and tables
     "src/components/TimeTracker/", // Time entry components
-    "src/components/IssueDetail/", // Issue detail metadata components
-    "src/components/IssueDetailView/", // Issue detail with form inputs
+    "src/components/IssueDetail/", // Issue detail components (consolidated)
     "src/components/ProjectSettings/", // Settings forms
     "src/components/FuzzySearch/", // Search dropdowns with custom styling
     "src/components/ImportExport/", // Import/export UI
@@ -52,6 +53,7 @@ export function run() {
     "/CommentRenderer.tsx", // Inline markdown code element styling
     "/CreateProjectFromTemplate.tsx", // Responsive button layout
     "/DocumentHeader.tsx", // Header with breadcrumbs
+    "/DocumentSidebar.tsx", // Sidebar with TOC and info sections
     "/DocumentTemplatesManager.tsx", // Template cards with gradients
     "/FilterBar.tsx", // Filter dropdowns
     "/GlobalSearch.tsx", // Search modal
@@ -68,6 +70,7 @@ export function run() {
     "/MentionInput.tsx", // Dropdown positioning
     "/NotificationCenter.tsx", // Popover with badge positioning
     "/NotificationItem.tsx", // Link with flex styling
+    "/PlateEditor.tsx", // Document editor with sidebar layout
     "/ProjectsList.tsx", // Project avatar styling
     "/RoadmapView.tsx", // Timeline/roadmap styling
     "/SprintManager.tsx", // Progress bars, responsive layout

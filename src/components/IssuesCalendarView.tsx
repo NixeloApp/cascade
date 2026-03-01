@@ -1,3 +1,11 @@
+/**
+ * Issues Calendar View
+ *
+ * Monthly calendar grid showing issues by their due dates.
+ * Supports issue creation, quick viewing, and drag-to-reschedule.
+ * Displays priority indicators and issue type icons on calendar cells.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

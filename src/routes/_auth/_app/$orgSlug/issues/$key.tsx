@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { IssueDetailHeader, IssueDetailLayout, useIssueDetail } from "@/components/IssueDetailView";
+import { IssueDetailHeader, IssueDetailLayout, useIssueDetail } from "@/components/IssueDetail";
 import { PageContent, PageError } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { ROUTES } from "@/config/routes";

@@ -62,12 +62,7 @@ describe("IssueDependencies", () => {
       return undefined;
     });
 
-    render(
-      <IssueDependencies
-        issueId={"issue1" as Id<"issues">}
-        projectId={"project1" as Id<"projects">}
-      />,
-    );
+    render(<IssueDependencies issueId={"issue1" as Id<"issues">} />);
 
     // Check if the dependency is rendered
     expect(screen.getByText("Blocked Issue")).toBeInTheDocument();

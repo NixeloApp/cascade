@@ -1,6 +1,8 @@
 /**
  * CHECK 3: API calls
  * Validates api.X.Y calls match Convex exports
+ *
+ * @strictness STRICT - Blocks CI. All API calls must reference existing Convex functions.
  */
 
 import fs from "node:fs";

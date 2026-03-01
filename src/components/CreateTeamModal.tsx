@@ -1,9 +1,16 @@
+/**
+ * Create Team Modal
+ *
+ * Dialog form for creating new teams within a workspace.
+ * Collects team name, description, and visibility settings.
+ * Navigates to team settings after successful creation.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
@@ -14,6 +21,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Textarea } from "@/components/ui/Textarea";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { showError, showSuccess } from "@/lib/toast";
 
 interface CreateTeamModalProps {
   isOpen: boolean;
@@ -22,6 +30,7 @@ interface CreateTeamModalProps {
   workspaceSlug?: string;
 }
 
+/** Modal form for creating a new team within a workspace. */
 export function CreateTeamModal({
   isOpen,
   onClose,
@@ -51,7 +60,7 @@ export function CreateTeamModal({
         workspaceId,
       });
 
-      toast.success("Team created successfully");
+      showSuccess("Team created successfully");
       navigate({
         to: ROUTES.workspaces.teams.detail.path,
         params: { orgSlug, workspaceSlug, teamSlug },
@@ -63,7 +72,7 @@ export function CreateTeamModal({
       setDescription("");
       setIsPrivate(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create team");
+      showError(error, "Failed to create team");
     } finally {
       setIsSubmitting(false);
     }

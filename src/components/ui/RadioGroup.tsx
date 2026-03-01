@@ -1,3 +1,11 @@
+/**
+ * Radio Group Component
+ *
+ * Accessible radio button group with labels.
+ * Wraps Radix UI RadioGroup with consistent styling.
+ * Supports vertical and horizontal layouts.
+ */
+
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as React from "react";
 import { cn } from "@/lib/utils";

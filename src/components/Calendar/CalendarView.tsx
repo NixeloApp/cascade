@@ -34,6 +34,9 @@ function getDateRange(date: Date, mode: Mode): { startDate: number; endDate: num
   }
 }
 
+/**
+ * Main calendar view with day/week/month modes and event management.
+ */
 export function CalendarView(): React.ReactElement {
   const [mode, setMode] = useState<Mode>("week");
   const [date, setDate] = useState(new Date());

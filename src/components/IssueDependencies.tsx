@@ -1,3 +1,11 @@
+/**
+ * Issue Dependencies
+ *
+ * UI for managing issue relationships (blocks, is blocked by, relates to).
+ * Shows linked issues with quick navigation and removal actions.
+ * Supports adding new dependencies via search or issue key.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -53,10 +61,10 @@ function IssueDisplay({
 
 interface IssueDependenciesProps {
   issueId: Id<"issues">;
-  projectId: Id<"projects">;
 }
 
-export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDependenciesProps) {
+/** Manages issue dependencies (blocks, relates, duplicates) with link creation. */
+export function IssueDependencies({ issueId }: IssueDependenciesProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<{ id: Id<"issues">; key: string } | null>(
     null,

@@ -1,3 +1,11 @@
+/**
+ * Mention Input
+ *
+ * Rich text input with @mention support for users.
+ * Shows autocomplete dropdown when typing @ followed by text.
+ * Tracks mentioned users and renders usernames with highlights.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
@@ -22,6 +30,7 @@ interface MentionInputProps {
   enablePreview?: boolean;
 }
 
+/** Textarea with @mention autocomplete and markdown preview toggle. */
 export function MentionInput({
   projectId,
   value,

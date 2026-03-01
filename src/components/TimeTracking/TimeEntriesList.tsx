@@ -1,3 +1,11 @@
+/**
+ * Time Entries List
+ *
+ * Displays paginated time entries for a user or project.
+ * Shows entry details with issue links, duration, and billing status.
+ * Supports editing, deleting, and adding new time entries.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -26,6 +34,7 @@ interface TimeEntriesListProps {
   billingEnabled?: boolean;
 }
 
+/** Filterable list of time entries with edit and delete actions. */
 export function TimeEntriesList({
   projectId,
   userId,

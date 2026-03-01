@@ -1,3 +1,4 @@
+/** Container for calendar header action buttons. */
 export function CalendarHeaderActions({
   children,
 }: {

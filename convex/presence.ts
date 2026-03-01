@@ -1,3 +1,11 @@
+/**
+ * Presence System
+ *
+ * Real-time user presence tracking for collaborative features.
+ * Shows who's online, viewing documents, or editing issues.
+ * Integrates with @convex-dev/presence for WebSocket updates.
+ */
+
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Presence } from "@convex-dev/presence";
 import { v } from "convex/values";

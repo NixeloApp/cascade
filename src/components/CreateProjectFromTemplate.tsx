@@ -1,14 +1,22 @@
+/**
+ * Create Project From Template
+ *
+ * Template selection and project creation wizard.
+ * Displays available templates with descriptions and previews.
+ * Handles project key generation and initial configuration.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowLeft, CheckCircle } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
@@ -25,6 +33,7 @@ interface CreateProjectFromTemplateProps {
   onProjectCreated?: (projectId: Id<"projects">, projectKey: string) => void;
 }
 
+/** Modal wizard for creating projects from pre-configured templates. */
 export function CreateProjectFromTemplate({
   open,
   onOpenChange,
@@ -69,7 +78,7 @@ export function CreateProjectFromTemplate({
 
   const handleCreate = async () => {
     if (!(selectedTemplateId && selectedWorkspaceId && projectName.trim() && projectKey.trim())) {
-      toast.error("Please fill in all required fields");
+      showError("validation", "Please fill in all required fields");
       return;
     }
 
@@ -84,12 +93,12 @@ export function CreateProjectFromTemplate({
         workspaceId: selectedWorkspaceId,
       });
 
-      toast.success("Project created successfully");
+      showSuccess("Project created successfully");
       onProjectCreated?.(projectId, projectKey.trim().toUpperCase());
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create project");
+      showError(error, "Failed to create project");
     } finally {
       setIsSubmitting(false);
     }

@@ -6,7 +6,7 @@
  */
 
 import type { Value } from "platejs";
-import { toast } from "sonner";
+import { showError, showSuccess } from "@/lib/toast";
 import { NODE_TYPES } from "./plugins";
 
 // Slate node types
@@ -520,10 +520,10 @@ export function handleMarkdownImport(): Promise<Value | null> {
       try {
         const markdown = await readMarkdownFile(file);
         const value = markdownToValue(markdown);
-        toast.success(`Imported ${file.name}`);
+        showSuccess(`Imported ${file.name}`);
         resolve(value);
-      } catch (_error) {
-        toast.error("Failed to import markdown file");
+      } catch (error) {
+        showError(error, "Failed to import markdown file");
         resolve(null);
       }
     });
@@ -542,8 +542,8 @@ export function readMarkdownForPreview(): Promise<{
       try {
         const markdown = await readMarkdownFile(file);
         resolve({ markdown, filename: file.name });
-      } catch (_error) {
-        toast.error("Failed to read markdown file");
+      } catch (error) {
+        showError(error, "Failed to read markdown file");
         resolve(null);
       }
     });
@@ -558,8 +558,8 @@ export function handleMarkdownExport(value: Value, documentTitle: string): void 
     const markdown = valueToMarkdown(value);
     const filename = documentTitle.toLowerCase().replace(/\s+/g, "-");
     downloadMarkdown(markdown, filename);
-    toast.success("Document exported as markdown");
-  } catch (_error) {
-    toast.error("Failed to export document");
+    showSuccess("Document exported as markdown");
+  } catch (error) {
+    showError(error, "Failed to export document");
   }
 }

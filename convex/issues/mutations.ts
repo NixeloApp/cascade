@@ -1,3 +1,11 @@
+/**
+ * Issue Mutation Functions
+ *
+ * Write operations for issues: create, update, delete, status changes.
+ * Handles subtasks, assignments, priorities, and workflow transitions.
+ * Enforces permissions and triggers activity logging/notifications.
+ */
+
 import { type Infer, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";

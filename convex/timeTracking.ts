@@ -1,3 +1,11 @@
+/**
+ * Time Tracking
+ *
+ * Time entries, timesheets, and billing rate management.
+ * Supports manual entries, timer tracking, and burn rate analytics.
+ * Integrates with issues and projects for billable hours reporting.
+ */
+
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";

@@ -4,6 +4,7 @@ import { Flex } from "@/components/ui/Flex";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
 import { useCalendarContext } from "../../calendar-context";
 
+/** Navigation buttons for moving between dates (today, prev, next). */
 export function CalendarHeaderDateChevrons(): React.ReactElement {
   const { mode, date, setDate } = useCalendarContext();
 

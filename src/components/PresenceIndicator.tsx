@@ -1,3 +1,11 @@
+/**
+ * Presence Indicator
+ *
+ * Real-time presence display showing active document editors.
+ * Uses Convex presence to track who is currently viewing/editing.
+ * Displays avatar facepile and count of active collaborators.
+ */
+
 import { api } from "@convex/_generated/api";
 import FacePile from "@convex-dev/presence/facepile";
 import usePresence from "@convex-dev/presence/react";
@@ -12,6 +20,7 @@ interface PresenceIndicatorProps {
   userId: string;
 }
 
+/** Real-time presence indicator showing users currently editing a document. */
 export function PresenceIndicator({ roomId, userId }: PresenceIndicatorProps) {
   const presenceState = usePresence(api.presence as PresenceApi, roomId, userId);
 

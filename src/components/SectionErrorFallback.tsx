@@ -1,3 +1,11 @@
+/**
+ * Section Error Fallback
+ *
+ * Inline error display for component-level failures.
+ * Shows error message with optional retry button.
+ * Used as fallback for ErrorBoundary components.
+ */
+
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -11,6 +19,7 @@ interface Props {
   onRetry?: () => void;
 }
 
+/** Error fallback UI for section-level error boundaries with retry option. */
 export function SectionErrorFallback({ title, message, onRetry }: Props) {
   return (
     <Flex align="center" justify="center" className="h-full">

@@ -26,6 +26,9 @@ interface SearchResultsListProps {
   onLoadMore: () => void;
 }
 
+/**
+ * Paginated list of search results with issue cards and load more.
+ */
 export function SearchResultsList({
   searchQuery,
   results,

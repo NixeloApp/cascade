@@ -1,3 +1,11 @@
+/**
+ * Document Tree
+ *
+ * Hierarchical navigation tree for project documents.
+ * Supports nested folders, drag-and-drop reordering, and favorites.
+ * Displays document icons based on type with expand/collapse state.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
@@ -49,6 +57,7 @@ interface TreeNode {
   hasChildren: boolean;
 }
 
+/** Hierarchical tree view of documents with favorites, archived, and folder sections. */
 export function DocumentTree({
   organizationId,
   orgSlug,

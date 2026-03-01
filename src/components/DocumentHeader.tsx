@@ -1,3 +1,11 @@
+/**
+ * Document Header
+ *
+ * Header component for the document editor page.
+ * Shows title, metadata, visibility status, and action buttons.
+ * Supports title editing, locking, archiving, and import/export.
+ */
+
 import type { Doc } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -42,6 +50,7 @@ interface DocumentHeaderProps {
   editorReady: boolean;
 }
 
+/** Document header with title, metadata, and action buttons (favorite, archive, lock, export). */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Header component with many conditional action buttons based on permissions
 export function DocumentHeader({
   document,

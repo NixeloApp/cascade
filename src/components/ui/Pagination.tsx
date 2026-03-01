@@ -1,11 +1,15 @@
+/**
+ * Pagination Component
+ *
+ * Page navigation with numbered buttons and ellipsis.
+ * Mintlify-inspired styling with configurable siblings.
+ * Supports edge buttons and responsive display modes.
+ */
+
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button, type ButtonProps } from "./Button";
-
-/* ============================================================
- * Pagination Component - Mintlify-inspired styling
- * ============================================================ */
 
 export interface PaginationProps extends React.ComponentProps<"nav"> {
   /** Total number of pages */

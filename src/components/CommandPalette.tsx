@@ -1,3 +1,11 @@
+/**
+ * Command Palette
+ *
+ * Global command palette for quick navigation and actions.
+ * Accessible via keyboard shortcut (⌘K / Ctrl+K).
+ * Supports searching issues, documents, and executing commands.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
@@ -40,6 +48,9 @@ interface CommandPaletteProps {
   commands: CommandAction[];
 }
 
+/**
+ * Global command palette for quick navigation and actions (Cmd+K).
+ */
 export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProps) {
   const [search, setSearch] = useState("");
 
@@ -140,7 +151,10 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
   );
 }
 
-// Hook to build commands dynamically
+/**
+ * Hook to build command palette actions dynamically.
+ * Includes navigation, projects, recent issues, and create actions.
+ */
 export function useCommands({
   onCreateIssue,
   onCreateDocument,

@@ -1,3 +1,11 @@
+/**
+ * Create Issue Modal
+ *
+ * Modal dialog for creating new issues with full field support.
+ * Includes type, priority, assignee, labels, sprint, due date, and AI suggestions.
+ * Supports draft auto-save and keyboard shortcuts for quick issue creation.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";

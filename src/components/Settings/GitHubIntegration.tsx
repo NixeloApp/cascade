@@ -1,3 +1,11 @@
+/**
+ * GitHub Integration
+ *
+ * OAuth integration for connecting GitHub accounts.
+ * Manages repository linking and connection status.
+ * Handles popup-based OAuth flow with message passing.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";

@@ -1,3 +1,11 @@
+/**
+ * Draft Auto Save Hook
+ *
+ * Persists form data to localStorage for recovery after browser close.
+ * Automatically saves drafts on change with debouncing.
+ * Supports clearing drafts after successful form submission.
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const DRAFT_PREFIX = "cascade_draft_";

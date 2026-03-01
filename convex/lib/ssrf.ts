@@ -1,3 +1,11 @@
+/**
+ * SSRF Protection Utilities
+ *
+ * Server-Side Request Forgery prevention helpers.
+ * Validates URLs and IP addresses to block internal network access.
+ * Supports IPv4, IPv6, and DNS rebinding attack prevention.
+ */
+
 import { resolveDNS } from "./dns";
 import { validation } from "./errors";
 

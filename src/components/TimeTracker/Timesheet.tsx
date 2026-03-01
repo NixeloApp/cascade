@@ -1,10 +1,18 @@
+/**
+ * Timesheet Component
+ *
+ * Weekly timesheet view for time entry management.
+ * Shows time entries grouped by day with totals.
+ * Supports adding, editing, and deleting entries.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
+import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -21,6 +29,7 @@ type TimesheetData = FunctionReturnType<typeof api.timeTracking.getCurrentWeekTi
 // Extract the entry type from the byDay record
 type TimeEntryWithHours = NonNullable<TimesheetData>["byDay"][string][number];
 
+/** Weekly timesheet grid showing time entries grouped by day. */
 export function Timesheet() {
   const timesheet = useQuery(api.timeTracking.getCurrentWeekTimesheet);
   const _updateEntry = useMutation(api.timeTracking.updateTimeEntry);
@@ -68,9 +77,9 @@ export function Timesheet() {
 
     try {
       await deleteEntry({ entryId });
-      toast.success("Time entry deleted");
-    } catch (_error) {
-      toast.error("Failed to delete entry");
+      showSuccess("Time entry deleted");
+    } catch (error) {
+      showError(error, "Failed to delete entry");
     }
   };
 

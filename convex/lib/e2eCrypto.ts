@@ -1,3 +1,7 @@
+/**
+ * Encrypts data using AES-GCM with a key derived from the API key.
+ * Returns base64-encoded ciphertext with prepended IV.
+ */
 export async function encryptE2EData(data: string, apiKey: string): Promise<string> {
   // Hash the key to get 256 bits
   const encoder = new TextEncoder();
@@ -24,6 +28,10 @@ export async function encryptE2EData(data: string, apiKey: string): Promise<stri
   return btoa(String.fromCharCode(...combined));
 }
 
+/**
+ * Decrypts AES-GCM encrypted data using a key derived from the API key.
+ * Expects base64-encoded ciphertext with prepended IV.
+ */
 export async function decryptE2EData(encryptedData: string, apiKey: string): Promise<string> {
   // Decode base64
   let binaryString: string;

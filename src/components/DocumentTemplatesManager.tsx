@@ -1,3 +1,11 @@
+/**
+ * Document Templates Manager
+ *
+ * UI for managing reusable document templates within a project.
+ * Supports creating, editing, and deleting templates with preview.
+ * Templates can be used to quickly create new documents with preset content.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
@@ -41,6 +49,7 @@ interface DocumentTemplatesManagerProps {
   createRequested?: number;
 }
 
+/** Manages document templates with create, edit, and delete functionality. */
 export function DocumentTemplatesManager({
   projectId,
   onSelectTemplate,

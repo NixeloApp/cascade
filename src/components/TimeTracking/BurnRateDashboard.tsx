@@ -1,3 +1,11 @@
+/**
+ * Burn Rate Dashboard
+ *
+ * Project financial dashboard showing burn rate and budget metrics.
+ * Displays weekly/monthly spend, team utilization, and cost projections.
+ * Supports date range filtering and per-user cost breakdown.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
@@ -27,6 +35,7 @@ interface UserWithBurnRate {
   billableHours: number;
 }
 
+/** Dashboard showing billable hours, burn rate, and utilization metrics. */
 export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "quarter">("month");
 

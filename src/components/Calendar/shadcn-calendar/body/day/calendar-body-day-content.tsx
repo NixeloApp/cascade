@@ -5,6 +5,7 @@ import { CalendarEvent } from "../../calendar-event";
 import { CalendarBodyHeader } from "../calendar-body-header";
 import { hours } from "./calendar-body-margin-day-margin";
 
+/** Day view content showing hourly grid with events. */
 export function CalendarBodyDayContent({ date }: { date: Date }): React.ReactElement {
   const { events } = useCalendarContext();
 

@@ -1,6 +1,8 @@
 /**
  * CHECK 1: Standards (AST)
  * Typography, className concat, dark mode, raw TW colors, shorthands, font styles
+ *
+ * @strictness STRICT - Blocks CI. Zero tolerance for raw HTML tags, className concat, raw spans.
  */
 
 import fs from "node:fs";

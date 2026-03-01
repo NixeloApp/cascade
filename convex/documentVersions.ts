@@ -1,3 +1,11 @@
+/**
+ * Document Versions
+ *
+ * Version history management for documents.
+ * Lists, retrieves, and restores document versions.
+ * Enforces document access permissions per user.
+ */
+
 import { v } from "convex/values";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";

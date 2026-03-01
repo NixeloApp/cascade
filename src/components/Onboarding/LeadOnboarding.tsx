@@ -1,3 +1,11 @@
+/**
+ * Lead Onboarding
+ *
+ * Multi-step onboarding wizard for new organization leads.
+ * Guides through workspace creation, team setup, and first project.
+ * Shows feature highlights and quick-start actions.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
@@ -26,6 +34,7 @@ interface LeadOnboardingProps {
 
 type LeadStep = "features" | "project" | "project-choice" | "creating";
 
+/** Multi-step onboarding wizard for team leads creating their first workspace. */
 export function LeadOnboarding({
   onComplete,
   onCreateProject,

@@ -1,3 +1,11 @@
+/**
+ * Time Tracking Page
+ *
+ * Main time tracking dashboard with entries and analytics.
+ * Includes burn rate dashboard and user rate management.
+ * Supports project filtering and role-based tab visibility.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
@@ -24,6 +32,7 @@ interface TimeTrackingPageProps {
   isGlobalAdmin?: boolean;
 }
 
+/** Main time tracking page with entries, burn rate, and rates tabs. */
 export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTrackingPageProps) {
   const [activeTab, setActiveTab] = useState<"entries" | "burn-rate" | "rates">("entries");
   const [selectedProject, setSelectedProject] = useState<Id<"projects"> | "all">(

@@ -1,3 +1,11 @@
+/**
+ * Tabs Component
+ *
+ * Tabbed interface with content panels.
+ * Supports pill and underline style variants.
+ * Wraps Radix UI Tabs with accessible navigation.
+ */
+
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";

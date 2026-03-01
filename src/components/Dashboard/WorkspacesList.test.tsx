@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ROUTES } from "@/config/routes";
 import { render, screen } from "@/test/custom-render";
-import { WorkspacesList } from "./ProjectsList";
+import { WorkspacesList } from "./WorkspacesList";
 
 // Mock router
 const mockNavigate = vi.fn();

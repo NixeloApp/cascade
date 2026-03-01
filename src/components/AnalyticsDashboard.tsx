@@ -1,3 +1,11 @@
+/**
+ * Analytics Dashboard
+ *
+ * Project-level analytics page with charts and metrics.
+ * Shows velocity trends, burndown charts, and team performance.
+ * Provides visual insights into project health and progress.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
@@ -38,6 +46,9 @@ interface VelocityData {
   averageVelocity: number;
 }
 
+/**
+ * Project analytics dashboard with metrics, velocity charts, and activity feed.
+ */
 export function AnalyticsDashboard({ projectId }: Props) {
   const analytics = useQuery(api.analytics.getProjectAnalytics, { projectId }) as
     | AnalyticsData

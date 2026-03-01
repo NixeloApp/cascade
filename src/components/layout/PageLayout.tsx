@@ -19,6 +19,7 @@ interface PageLayoutProps {
   className?: string;
 }
 
+/** Standard page layout container with max-width and padding. */
 export function PageLayout({
   children,
   maxWidth = "full",

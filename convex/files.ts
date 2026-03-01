@@ -1,3 +1,11 @@
+/**
+ * File Attachments
+ *
+ * Issue attachment management with secure file storage.
+ * Handles upload URL generation and attachment CRUD.
+ * Validates file types and tracks upload activity.
+ */
+
 import { v } from "convex/values";
 import { authenticatedMutation, issueMutation, issueQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";

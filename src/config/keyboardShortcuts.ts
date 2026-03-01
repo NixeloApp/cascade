@@ -9,6 +9,10 @@ export interface ShortcutHandlers {
   setShowAIAssistant: (toggle: boolean) => void;
 }
 
+/**
+ * Creates keyboard shortcuts configuration for the application.
+ * Includes navigation, command palette, AI assistant, and help shortcuts.
+ */
 export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
   const { orgSlug } = handlers;
   const shortcuts = [
@@ -98,6 +102,9 @@ export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
   return shortcuts;
 }
 
+/**
+ * Creates vim-style key sequences for navigation (e.g., "gh" for home, "gw" for workspaces).
+ */
 export function createKeySequences(handlers: ShortcutHandlers): KeySequence[] {
   const { orgSlug } = handlers;
   return [

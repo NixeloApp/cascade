@@ -1,3 +1,11 @@
+/**
+ * Issue Detail Modal
+ *
+ * Full-screen modal for viewing and editing issue details.
+ * Shows description, comments, activity, attachments, and metadata.
+ * Supports copy link, priority/status editing, and issue deletion.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
@@ -6,7 +14,7 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
-import { IssueDetailLayout, useIssueDetail } from "./IssueDetailView";
+import { IssueDetailLayout, useIssueDetail } from "./IssueDetail";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Dialog } from "./ui/Dialog";
@@ -21,6 +29,7 @@ interface IssueDetailModalProps {
   canEdit?: boolean;
 }
 
+/** Modal dialog for viewing and editing issue details. */
 export function IssueDetailModal({
   issueId,
   open,

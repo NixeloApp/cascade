@@ -1,3 +1,11 @@
+/**
+ * GitHub OAuth HTTP Handlers
+ *
+ * HTTP endpoints for GitHub OAuth 2.0 authentication flow.
+ * Handles authorization redirect, callback processing, and token exchange.
+ * Integrates with GitHub API for repository and user data access.
+ */
+
 import { internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";

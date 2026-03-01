@@ -1,3 +1,11 @@
+/**
+ * Two-Factor Authentication
+ *
+ * TOTP-based 2FA implementation with setup, verification, and recovery.
+ * Supports authenticator apps (Google Authenticator, Authy, etc.).
+ * Includes rate limiting, lockout protection, and backup codes.
+ */
+
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";

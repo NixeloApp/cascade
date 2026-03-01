@@ -1,3 +1,11 @@
+/**
+ * Input Component
+ *
+ * Text input with variant styling and optional addons.
+ * Supports error states, search styling, and ghost variants.
+ * Includes InputWithLabel helper for form fields.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";

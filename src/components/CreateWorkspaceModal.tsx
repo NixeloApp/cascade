@@ -1,8 +1,15 @@
+/**
+ * Create Workspace Modal
+ *
+ * Dialog for creating new workspaces within an organization.
+ * Workspaces group related teams and projects together.
+ * Requires name and optional description for workspace setup.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
@@ -10,6 +17,7 @@ import { Label } from "@/components/ui/Label";
 import { Stack } from "@/components/ui/Stack";
 import { Textarea } from "@/components/ui/Textarea";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { showError, showSuccess } from "@/lib/toast";
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
@@ -17,6 +25,7 @@ interface CreateWorkspaceModalProps {
   onCreated?: (workspaceId: string, slug: string) => void;
 }
 
+/** Modal form for creating a new workspace in an organization. */
 export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorkspaceModalProps) {
   const { organizationId } = useOrganization();
   const createWorkspace = useMutation(api.workspaces.create);
@@ -43,13 +52,13 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
         organizationId: organizationId as Id<"organizations">,
       });
 
-      toast.success("Workspace created successfully");
+      showSuccess("Workspace created successfully");
       onCreated?.(workspaceId, slug);
       onClose();
       setName("");
       setDescription("");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create workspace");
+      showError(error, "Failed to create workspace");
     } finally {
       setIsSubmitting(false);
     }

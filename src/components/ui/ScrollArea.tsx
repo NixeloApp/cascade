@@ -1,3 +1,11 @@
+/**
+ * Scroll Area Component
+ *
+ * Custom scrollbar with cross-platform styling.
+ * Wraps Radix UI ScrollArea with themed bars.
+ * Use for scrollable content regions.
+ */
+
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import type * as React from "react";
 

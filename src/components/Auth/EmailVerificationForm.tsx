@@ -1,3 +1,11 @@
+/**
+ * Email Verification Form
+ *
+ * OTP code entry for email verification.
+ * Sent after registration to verify email address.
+ * Supports code resend for expired or lost codes.
+ */
+
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +21,9 @@ interface EmailVerificationFormProps {
   onResend: () => void;
 }
 
+/**
+ * Form for entering email verification code sent during registration.
+ */
 export function EmailVerificationForm({ email, onVerified, onResend }: EmailVerificationFormProps) {
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);

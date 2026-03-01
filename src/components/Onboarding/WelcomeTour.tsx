@@ -1,3 +1,11 @@
+/**
+ * Welcome Tour
+ *
+ * Interactive onboarding tour using Driver.js.
+ * Lazy loads the library for performance.
+ * Guides users through key app features.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import type { driver as driverFunction } from "driver.js";

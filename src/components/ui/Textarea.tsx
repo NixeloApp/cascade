@@ -1,3 +1,11 @@
+/**
+ * Textarea Component
+ *
+ * Multi-line text input with auto-resize option.
+ * Supports error state styling and character counts.
+ * Includes TextareaWithLabel helper for form fields.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";

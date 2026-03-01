@@ -1,3 +1,11 @@
+/**
+ * Advanced Search Modal
+ *
+ * Full-featured search dialog with filters for issues and documents.
+ * Supports filtering by type, priority, status, assignee, and labels.
+ * Shows results in categorized sections with navigation.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
@@ -22,6 +30,9 @@ interface AdvancedSearchModalProps {
   onSelectIssue: (issueId: Id<"issues">) => void;
 }
 
+/**
+ * Modal for advanced issue search with type, priority, and status filters.
+ */
 export function AdvancedSearchModal({
   open,
   onOpenChange,

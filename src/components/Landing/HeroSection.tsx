@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
-import { PlayIcon } from "./icons";
+import { PlayIcon } from "./Icons";
 
+/** Landing page hero section with headline and CTA buttons. */
 export function HeroSection() {
   return (
     <section className="relative px-6 pt-20 pb-32 overflow-hidden">

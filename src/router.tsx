@@ -1,7 +1,7 @@
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
-// TanStack Start expects a `getRouter` export
+/** Creates and configures the TanStack router with scroll restoration and preloading. */
 export function getRouter() {
   const router = createRouter({
     routeTree,

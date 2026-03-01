@@ -1,3 +1,11 @@
+/**
+ * SSO Settings
+ *
+ * Configuration UI for Single Sign-On (SSO) providers.
+ * Allows admins to set up SAML/OIDC identity providers for the organization.
+ * Supports metadata import, attribute mapping, and connection testing.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

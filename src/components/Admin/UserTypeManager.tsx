@@ -1,3 +1,11 @@
+/**
+ * User Type Manager
+ *
+ * Admin interface for managing user types (roles/personas) within an organization.
+ * Allows creating, editing, and deleting user type definitions with icons and descriptions.
+ * User types are assigned to organization members for RBAC and permission management.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -107,6 +115,9 @@ function extractFormStateFromProfile(profile: UserProfileWithUser) {
   };
 }
 
+/**
+ * Admin interface for managing employment types and user profile configurations.
+ */
 export function UserTypeManager() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);

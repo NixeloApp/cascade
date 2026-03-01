@@ -1,3 +1,11 @@
+/**
+ * Dashboard Queries
+ *
+ * Aggregated data queries for the main dashboard view.
+ * Returns user's issues, recent activity, project summaries, and team stats.
+ * Optimized for fast loading with pagination and caching.
+ */
+
 import { paginationOptsValidator } from "convex/server"; // Added
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";

@@ -1,3 +1,11 @@
+/**
+ * Template Form
+ *
+ * Dialog form for creating and editing issue templates.
+ * Configures template name, type, title/description patterns, and defaults.
+ * Supports default priority, labels, assignee, and story points.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
@@ -55,6 +63,7 @@ interface TemplateFormProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** Form dialog for creating or editing issue templates with pre-filled fields. */
 export function TemplateForm({ projectId, template, open, onOpenChange }: TemplateFormProps) {
   const createTemplate = useMutation(api.templates.create);
   const updateTemplate = useMutation(api.templates.update);

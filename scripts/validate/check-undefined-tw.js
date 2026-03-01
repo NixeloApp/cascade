@@ -6,6 +6,8 @@
  * no error is thrown either. Common cause: vendored shadcn/ui components
  * using shadcn naming conventions (bg-background, text-muted-foreground)
  * that don't exist in our semantic color system.
+ *
+ * @strictness MEDIUM - Reports only. Identifies undefined theme references.
  */
 
 import fs from "node:fs";

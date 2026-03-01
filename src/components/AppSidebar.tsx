@@ -1,3 +1,11 @@
+/**
+ * App Sidebar
+ *
+ * Main navigation sidebar with collapsible sections for projects, documents, and teams.
+ * Supports favorites, recent items, workspace switching, and keyboard navigation.
+ * Integrates with organization context for multi-tenant navigation.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
@@ -37,6 +45,9 @@ import { NavItem as NavItemBase } from "./ui/NavItem";
 import { Tooltip, TooltipProvider } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
+/**
+ * Main application sidebar with navigation, projects, and teams.
+ */
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();

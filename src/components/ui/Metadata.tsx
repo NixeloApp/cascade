@@ -1,3 +1,11 @@
+/**
+ * Metadata Component
+ *
+ * Display inline metadata with automatic dot separators.
+ * Compound component with MetadataItem and MetadataTimestamp.
+ * Prevents span soup by providing structured semantic containers.
+ */
+
 import * as React from "react";
 import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";

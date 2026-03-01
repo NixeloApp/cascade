@@ -1,3 +1,11 @@
+/**
+ * HTTP Router
+ *
+ * Main Convex HTTP router for REST API and webhooks.
+ * Routes external requests to appropriate handlers.
+ * Includes E2E test endpoints and OAuth callbacks.
+ */
+
 import { httpRouter } from "convex/server";
 import { handler as issuesHandler } from "./api/issues";
 import { securePasswordReset } from "./authWrapper";

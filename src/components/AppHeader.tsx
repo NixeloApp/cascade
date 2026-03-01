@@ -1,3 +1,11 @@
+/**
+ * App Header
+ *
+ * Main application header with global navigation controls.
+ * Contains search trigger, notification center, timer widget, and user menu.
+ * Responsive with mobile hamburger menu for sidebar toggle.
+ */
+
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -15,6 +23,9 @@ interface AppHeaderProps {
   onShowShortcutsHelp?: () => void;
 }
 
+/**
+ * Main application header with search, notifications, and user menu.
+ */
 export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHeaderProps) {
   const { isMobileOpen, toggleMobile } = useSidebarState();
 

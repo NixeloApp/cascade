@@ -1,3 +1,11 @@
+/**
+ * Command Palette
+ *
+ * Command menu component built on cmdk library.
+ * Provides search input, item groups, and keyboard navigation.
+ * Used in global search and command dialogs.
+ */
+
 "use client";
 
 import { Command as CommandPrimitive } from "cmdk";

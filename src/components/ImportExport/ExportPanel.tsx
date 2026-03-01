@@ -1,3 +1,11 @@
+/**
+ * Export Panel
+ *
+ * Issue export UI for CSV and JSON formats.
+ * Handles format selection and file download.
+ * Supports filtered exports by sprint or status.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";

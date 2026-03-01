@@ -1,3 +1,11 @@
+/**
+ * Hour Compliance Dashboard
+ *
+ * Admin dashboard for monitoring team time tracking compliance.
+ * Shows hours logged vs expected by user, team, and time period.
+ * Highlights compliance issues and supports generating reports.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -20,6 +28,9 @@ import { Grid } from "../ui/Grid";
 
 type ComplianceStatus = "compliant" | "under_hours" | "over_hours" | "equity_under";
 
+/**
+ * Admin dashboard for monitoring contractor hour compliance and equity requirements.
+ */
 export function HourComplianceDashboard() {
   const [selectedStatus, setSelectedStatus] = useState<ComplianceStatus | "all">("all");
   const [startDate, setStartDate] = useState("");

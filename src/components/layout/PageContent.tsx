@@ -21,6 +21,7 @@ interface PageContentProps {
   className?: string;
 }
 
+/** Page content wrapper with loading and empty state handling. */
 export function PageContent({
   children,
   isLoading,

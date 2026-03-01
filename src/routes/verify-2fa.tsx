@@ -1,3 +1,11 @@
+/**
+ * Two-Factor Verification Page
+ *
+ * Handles 2FA code entry for authenticated users.
+ * Supports both TOTP codes and backup recovery codes.
+ * Redirects to destination after successful verification.
+ */
+
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";

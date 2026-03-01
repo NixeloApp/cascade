@@ -1,3 +1,11 @@
+/**
+ * Database Schema
+ *
+ * Defines all Convex tables, indexes, and field validators.
+ * Core entities: users, organizations, projects, issues, documents, sprints.
+ * Includes auth tables, activity logs, and real-time collaboration state.
+ */
+
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";

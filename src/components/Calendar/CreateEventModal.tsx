@@ -1,3 +1,11 @@
+/**
+ * Create Event Modal
+ *
+ * Dialog form for creating calendar events with full configuration.
+ * Supports event types, attendees, recurrence, and custom colors.
+ * Integrates with Google Calendar for external event sync.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
@@ -53,6 +61,9 @@ interface CreateEventModalProps {
   issueId?: Id<"issues">;
 }
 
+/**
+ * Modal for creating calendar events with date/time pickers and project linking.
+ */
 export function CreateEventModal({
   open,
   onOpenChange,

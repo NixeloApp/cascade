@@ -11,6 +11,9 @@ interface AuthPageLayoutProps {
   children: ReactNode;
 }
 
+/**
+ * Shared layout wrapper for authentication pages (sign in, sign up, etc.).
+ */
 export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProps) {
   return (
     <Flex align="center" justify="center" className="min-h-screen w-full bg-ui-bg p-4">
@@ -42,11 +45,17 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
         variant="caption"
         className="fixed bottom-8 left-0 right-0 text-center text-ui-text-tertiary"
       >
-        <a href="/terms" className="underline hover:text-ui-text-secondary transition-colors">
+        <a
+          href={ROUTES.terms.build()}
+          className="underline hover:text-ui-text-secondary transition-colors"
+        >
           Terms of Service
         </a>
         {" · "}
-        <a href="/privacy" className="underline hover:text-ui-text-secondary transition-colors">
+        <a
+          href={ROUTES.privacy.build()}
+          className="underline hover:text-ui-text-secondary transition-colors"
+        >
           Privacy Policy
         </a>
       </Typography>

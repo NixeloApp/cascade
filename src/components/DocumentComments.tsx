@@ -1,3 +1,11 @@
+/**
+ * Document Comments
+ *
+ * Comment thread sidebar for documents.
+ * Supports nested replies, reactions, and real-time updates.
+ * Shows comment authors with avatars and relative timestamps.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

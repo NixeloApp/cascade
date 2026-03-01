@@ -1,3 +1,11 @@
+/**
+ * Webhook Form
+ *
+ * Dialog form for creating and editing webhooks.
+ * Configures URL, secret, and event subscriptions.
+ * Validates webhook configuration before saving.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
@@ -52,6 +60,7 @@ interface WebhookFormProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** Dialog form for creating or editing webhook configurations. */
 export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookFormProps) {
   // Events array (kept outside form due to checkbox array pattern)
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);

@@ -1,3 +1,11 @@
+/**
+ * Onboarding Checklist
+ *
+ * Collapsible progress checklist for new users.
+ * Tracks onboarding milestones and completion.
+ * Dismissable after all tasks are completed.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
@@ -16,6 +24,7 @@ interface ChecklistItem {
   completed: boolean;
 }
 
+/** Collapsible checklist showing onboarding progress and pending tasks. */
 export function OnboardingChecklist() {
   const [isExpanded, setIsExpanded] = useState(true);
   const onboarding = useQuery(api.onboarding.getOnboardingStatus);

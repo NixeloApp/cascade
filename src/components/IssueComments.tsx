@@ -1,3 +1,11 @@
+/**
+ * Issue Comments
+ *
+ * Comment thread for issues with pagination and reactions.
+ * Supports @mentions, editing, and deletion of comments.
+ * Shows author avatars, timestamps, and reaction counts.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
@@ -19,6 +27,7 @@ interface IssueCommentsProps {
   projectId: Id<"projects">;
 }
 
+/** Comment thread for an issue with reactions and mention support. */
 export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   const [newComment, setNewComment] = useState("");
   const [mentions, setMentions] = useState<Id<"users">[]>([]);
@@ -115,7 +124,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
                     </Flex>
 
                     {/* Comment Text with Mentions */}
-                    <CommentRenderer content={comment.content} mentions={comment.mentions} />
+                    <CommentRenderer content={comment.content} />
 
                     {/* Comment Reactions */}
                     <CommentReactions

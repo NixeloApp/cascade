@@ -1,3 +1,11 @@
+/**
+ * Comment Reactions
+ *
+ * Emoji reaction picker and display for comments.
+ * Shows reaction counts with user tooltips on hover.
+ * Supports adding/removing reactions with optimistic updates.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
@@ -19,6 +27,7 @@ interface CommentReactionsProps {
 
 const COMMON_EMOJIS = ["👍", "👎", "❤️", "🔥", "🚀", "👀", "✅", "🙌"];
 
+/** Emoji reaction buttons for issue comments with toggle functionality. */
 export function CommentReactions({ commentId, reactions, currentUserId }: CommentReactionsProps) {
   const toggleReaction = useMutation(api.reactions.toggleReaction);
   const [isOpen, setIsOpen] = useState(false);

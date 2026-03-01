@@ -1,12 +1,20 @@
+/**
+ * Filter Bar
+ *
+ * Multi-criteria filter interface for issue lists and boards.
+ * Supports filtering by type, priority, assignee, sprint, labels, and custom fields.
+ * Includes saved filter presets and quick filter toggles.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { ChevronDown, Search, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
+import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -311,6 +319,7 @@ function SaveFilterDialog({
   );
 }
 
+/** Issue filter bar with type, status, priority, label, and assignee filters. */
 export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps) {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [filterName, setFilterName] = useState("");
@@ -324,7 +333,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
   const handleSaveFilter = async () => {
     if (!filterName.trim()) {
-      toast.error("Please enter a filter name");
+      showError("Please enter a filter name");
       return;
     }
 
@@ -335,26 +344,26 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
         filters: filters,
         isPublic,
       });
-      toast.success("Filter saved");
+      showSuccess("Filter saved");
       setShowSaveDialog(false);
       setFilterName("");
       setIsPublic(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save filter");
+      showError(error, "Failed to save filter");
     }
   };
 
   const handleLoadFilter = (savedFilter: EnrichedSavedFilter) => {
     onFilterChange(savedFilter.filters as BoardFilters);
-    toast.success("Filter applied");
+    showSuccess("Filter applied");
   };
 
   const handleDeleteFilter = async (id: Id<"savedFilters">) => {
     try {
       await removeFilter({ id });
-      toast.success("Filter deleted");
+      showSuccess("Filter deleted");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete filter");
+      showError(error, "Failed to delete filter");
     }
   };
 

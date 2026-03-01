@@ -1,3 +1,11 @@
+/**
+ * Carousel
+ *
+ * Image and content carousel with navigation controls.
+ * Supports auto-play, indicator dots, and swipe gestures.
+ * Used for onboarding flows and image galleries.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";

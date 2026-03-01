@@ -7,7 +7,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { showError, showSuccess } from "@/lib/toast";
 import type { SuggestionType } from "../config";
 
 export interface UseAISuggestionsOptions {
@@ -52,9 +52,9 @@ export function useAISuggestions({ projectId }: UseAISuggestionsOptions): UseAIS
     setIsGenerating(true);
     try {
       await generateInsights({ projectId });
-      toast.success("AI insights generated successfully!");
-    } catch {
-      toast.error("Failed to generate insights. Please try again.");
+      showSuccess("AI insights generated successfully!");
+    } catch (error) {
+      showError(error, "Failed to generate insights. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -63,18 +63,18 @@ export function useAISuggestions({ projectId }: UseAISuggestionsOptions): UseAIS
   async function handleAcceptSuggestion(suggestionId: Id<"aiSuggestions">) {
     try {
       await acceptSuggestion({ suggestionId });
-      toast.success("Suggestion accepted");
-    } catch {
-      toast.error("Failed to accept suggestion");
+      showSuccess("Suggestion accepted");
+    } catch (error) {
+      showError(error, "Failed to accept suggestion");
     }
   }
 
   async function handleDismissSuggestion(suggestionId: Id<"aiSuggestions">) {
     try {
       await dismissSuggestion({ suggestionId });
-      toast.success("Suggestion dismissed");
-    } catch {
-      toast.error("Failed to dismiss suggestion");
+      showSuccess("Suggestion dismissed");
+    } catch (error) {
+      showError(error, "Failed to dismiss suggestion");
     }
   }
 

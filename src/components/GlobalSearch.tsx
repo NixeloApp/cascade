@@ -1,3 +1,11 @@
+/**
+ * Global Search
+ *
+ * Command palette for searching issues, documents, and users.
+ * Supports keyboard navigation, type filtering, and quick actions.
+ * Opens with Cmd+K shortcut and provides paginated results.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
@@ -224,6 +232,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
   );
 }
 
+/** Global command palette for searching issues and documents across the app. */
 export function GlobalSearch() {
   const { isOpen, setIsOpen } = useSearchKeyboard();
   const { query, setQuery, activeTab, setActiveTab, issueOffset, documentOffset, limit, loadMore } =

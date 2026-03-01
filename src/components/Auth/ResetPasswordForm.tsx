@@ -1,3 +1,11 @@
+/**
+ * Reset Password Form
+ *
+ * New password entry with verification code.
+ * Validates password strength using zxcvbn.
+ * Completes the password reset flow.
+ */
+
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +21,9 @@ interface ResetPasswordFormProps {
   onRetry: () => void;
 }
 
+/**
+ * Form for entering new password and verification code during password reset.
+ */
 export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFormProps) {
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);

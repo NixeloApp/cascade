@@ -1,6 +1,8 @@
 /**
  * CHECK: Type Safety
  * Flags unsafe type patterns that bypass the type system or suppress linting.
+ *
+ * @strictness STRICT - Blocks CI. ~40 files in allowlist for unavoidable patterns.
  */
 
 import fs from "node:fs";

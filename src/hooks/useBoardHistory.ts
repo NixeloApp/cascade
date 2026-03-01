@@ -1,3 +1,11 @@
+/**
+ * Board History Hook
+ *
+ * Undo/redo stack for Kanban board drag-and-drop actions.
+ * Tracks status and order changes for reversal.
+ * Syncs with backend mutations for consistency.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
@@ -16,6 +24,7 @@ export interface BoardAction {
   isTeamMode?: boolean;
 }
 
+/** Hook for undo/redo history of Kanban board drag-and-drop actions. */
 export function useBoardHistory() {
   const [historyStack, setHistoryStack] = useState<BoardAction[]>([]);
   const [redoStack, setRedoStack] = useState<BoardAction[]>([]);
@@ -38,7 +47,7 @@ export function useBoardHistory() {
 
     try {
       if (lastAction.isTeamMode) {
-        toast.error("Undo not supported in Team View yet");
+        showError("team-mode", "Undo not supported in Team View yet");
         return;
       }
 
@@ -67,7 +76,7 @@ export function useBoardHistory() {
 
     try {
       if (lastRedo.isTeamMode) {
-        toast.error("Redo not supported in Team View yet");
+        showError("team-mode", "Redo not supported in Team View yet");
         return;
       }
 

@@ -1,3 +1,11 @@
+/**
+ * Label Component
+ *
+ * Form label with required indicator option.
+ * Wraps Radix UI Label with consistent styling.
+ * Associates with form inputs via htmlFor prop.
+ */
+
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";

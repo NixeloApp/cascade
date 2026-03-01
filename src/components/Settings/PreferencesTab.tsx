@@ -1,11 +1,19 @@
+/**
+ * Preferences Tab
+ *
+ * User preferences settings for theme and regional options.
+ * Handles theme switching, timezone selection, and notifications.
+ * Persists settings to database with real-time sync.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Monitor, Moon, Sun } from "@/lib/icons";
+import { showError, showSuccess } from "@/lib/toast";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Card } from "../ui/Card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
@@ -49,9 +57,9 @@ export function PreferencesTab() {
     setSelectedTimezone(value);
     try {
       await updateSettings({ timezone: value });
-      toast.success("Timezone updated");
-    } catch (_error) {
-      toast.error("Failed to update timezone");
+      showSuccess("Timezone updated");
+    } catch (error) {
+      showError(error, "Failed to update timezone");
     }
   };
 
@@ -60,13 +68,13 @@ export function PreferencesTab() {
     if (enabled && "Notification" in window && Notification.permission !== "granted") {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        toast.error("Browser notifications blocked");
+        showError("Browser notifications blocked");
         return;
       }
     }
 
     await updateSettings({ desktopNotifications: enabled });
-    toast.success(`Desktop notifications ${enabled ? "enabled" : "disabled"}`);
+    showSuccess(`Desktop notifications ${enabled ? "enabled" : "disabled"}`);
   };
 
   // Common timezones list (simplified)

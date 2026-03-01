@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
-import { ArrowIcon } from "./icons";
+import { ArrowIcon } from "./Icons";
 
+/** Landing page section showcasing key product features. */
 export function FeaturesSection() {
   const features = [
     {

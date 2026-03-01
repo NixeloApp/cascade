@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
+/** Landing page section with animated statistics showcasing benefits. */
 export function WhyChooseSection() {
   const stats = [
     { value: 30, label: "Less time in meetings", category: "cyan" as const },

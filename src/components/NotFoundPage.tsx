@@ -1,3 +1,11 @@
+/**
+ * Not Found Page
+ *
+ * 404 error page displayed when a route doesn't exist.
+ * Shows a friendly message with navigation back to home.
+ * Uses consistent styling with the rest of the app.
+ */
+
 import { Link } from "@tanstack/react-router";
 import { FileQuestion } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -7,6 +15,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 
+/** 404 error page with link to return home. */
 export function NotFoundPage() {
   return (
     <Flex

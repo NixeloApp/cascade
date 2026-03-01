@@ -1,6 +1,8 @@
 /**
  * CHECK 4: Query issues
  * N+1 queries, unbounded .collect(), missing indexes
+ *
+ * @strictness MEDIUM - Reports only. Warns about high-severity issues but doesn't block CI.
  */
 
 import fs from "node:fs";

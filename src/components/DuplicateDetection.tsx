@@ -26,6 +26,7 @@ interface DuplicateDetectionProps {
   onIssueClick?: (issueId: Id<"issues">) => void;
 }
 
+/** Shows potential duplicate issues based on title similarity when creating issues. */
 export function DuplicateDetection({ title, projectId, onIssueClick }: DuplicateDetectionProps) {
   // Debounce the title to avoid too many queries
   const debouncedTitle = useDebounce(title, 300);

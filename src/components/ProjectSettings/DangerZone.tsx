@@ -1,3 +1,11 @@
+/**
+ * Danger Zone
+ *
+ * Destructive actions section for project settings.
+ * Requires owner role and confirmation to delete.
+ * Navigates to projects list after successful deletion.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
@@ -20,6 +28,7 @@ interface DangerZoneProps {
   orgSlug: string;
 }
 
+/** Destructive actions section with project deletion (owner-only). */
 export function DangerZone({
   projectId,
   projectName,

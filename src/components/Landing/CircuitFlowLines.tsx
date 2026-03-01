@@ -1,3 +1,4 @@
+/** Animated SVG circuit lines for landing page hero background. */
 export function CircuitFlowLines() {
   return (
     <svg

@@ -1,3 +1,11 @@
+/**
+ * Kanban Board
+ *
+ * Main Kanban board component with workflow columns and drag-and-drop.
+ * Supports swimlanes, issue grouping, keyboard navigation, and filtering.
+ * Integrates with board history for undo/redo functionality.
+ */
+
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
@@ -120,6 +128,7 @@ function applyFilters(issues: EnrichedIssue[], filters?: BoardFilters): Enriched
   );
 }
 
+/** Drag-and-drop Kanban board with swimlanes, filters, and bulk selection. */
 export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoardProps) {
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);

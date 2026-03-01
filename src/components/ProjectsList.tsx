@@ -1,3 +1,11 @@
+/**
+ * Projects List
+ *
+ * Grid of project cards with pagination support.
+ * Shows project name, key, description, and member count.
+ * Links to individual project board views.
+ */
+
 import { api } from "@convex/_generated/api";
 import { Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
@@ -21,6 +29,7 @@ interface ProjectsListProps {
   onCreateClick: () => void;
 }
 
+/** Paginated list of projects with create button and navigation. */
 export function ProjectsList({ onCreateClick }: ProjectsListProps) {
   const { organizationId, orgSlug } = useOrganization();
 

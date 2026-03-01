@@ -12,6 +12,7 @@ export const INITIAL_COUNTS: IssueCounts = {
   hidden: { todo: 0, inprogress: 0, done: 0 },
 };
 
+/** Calculates issue counts by status category (todo/inprogress/done) for visible and hidden issues. */
 export function calculateIssueCounts(
   issues: Doc<"issues">[],
   statusCategoryMap: Map<string, string> | Record<string, string>,

@@ -1,3 +1,11 @@
+/**
+ * Alert Component
+ *
+ * Semantic status alerts with icons and dismiss button.
+ * Supports info, success, warning, and error variants.
+ * Use for inline feedback and notification banners.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority";
 import { AlertCircleIcon, AlertTriangleIcon, CheckCircleIcon, InfoIcon, XIcon } from "lucide-react";
 import type * as React from "react";

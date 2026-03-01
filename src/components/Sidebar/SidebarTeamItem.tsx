@@ -1,3 +1,11 @@
+/**
+ * Sidebar Team Item
+ *
+ * Expandable sidebar item for workspace teams.
+ * Lazy loads team projects on expansion.
+ * Supports navigation to team board and settings.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link, useLocation } from "@tanstack/react-router";
@@ -22,6 +30,7 @@ interface SidebarTeamItemProps {
   onNavClick: () => void;
 }
 
+/** Expandable sidebar item for a team with board and settings links. */
 export function SidebarTeamItem({
   team,
   workspaceSlug,

@@ -1,3 +1,11 @@
+/**
+ * Meeting Recording Section
+ *
+ * UI for managing meeting recordings and transcriptions.
+ * Displays recording status, playback controls, and transcript preview.
+ * Supports downloading recordings and viewing AI-generated summaries.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -213,6 +221,7 @@ interface MeetingRecordingSectionProps {
   scheduledStartTime: number;
 }
 
+/** Section for scheduling and managing meeting bot recordings. */
 export function MeetingRecordingSection({
   calendarEventId,
   meetingUrl,

@@ -1,3 +1,11 @@
+/**
+ * Tooltip Component
+ *
+ * Informational tooltip with hover trigger.
+ * Wraps Radix UI Tooltip with accessible defaults.
+ * Supports text shortcuts and conditional rendering.
+ */
+
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as React from "react";
 import { cn } from "@/lib/utils";

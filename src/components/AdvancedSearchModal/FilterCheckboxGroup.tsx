@@ -12,6 +12,9 @@ interface FilterCheckboxGroupProps<T extends string> {
   maxHeight?: string;
 }
 
+/**
+ * Reusable checkbox group for filtering (type, priority, status, etc.).
+ */
 export function FilterCheckboxGroup<T extends string>({
   label,
   options,

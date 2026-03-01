@@ -1,3 +1,11 @@
+/**
+ * Notification Center
+ *
+ * Header popover panel for viewing and managing notifications.
+ * Groups notifications by date and supports filtering by type.
+ * Provides mark as read, archive, snooze, and delete actions.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
@@ -69,6 +77,7 @@ function groupNotificationsByDate(
   return groups;
 }
 
+/** Notification popover with grouped notifications and filtering. */
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

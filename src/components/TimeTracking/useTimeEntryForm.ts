@@ -1,3 +1,11 @@
+/**
+ * Time Entry Form Hook
+ *
+ * Form state management for time entry creation and editing.
+ * Supports timer, duration, and time range entry modes.
+ * Handles project/issue selection and billable tracking.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import { useEffect, useState } from "react";
 import { formatDateForInput, formatDurationHuman, parseDuration } from "@/lib/formatting";

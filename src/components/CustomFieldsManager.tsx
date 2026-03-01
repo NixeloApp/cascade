@@ -1,3 +1,11 @@
+/**
+ * Custom Fields Manager
+ *
+ * Admin interface for defining project-specific custom fields.
+ * Supports text, number, date, select, and multi-select field types.
+ * Fields appear on issue forms and can be used for filtering/search.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

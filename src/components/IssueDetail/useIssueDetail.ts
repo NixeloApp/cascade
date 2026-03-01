@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { showError, showSuccess } from "@/lib/toast";
 
+/** Hook for issue detail state management with edit mode and copy functionality. */
 export function useIssueDetail(issueId: Id<"issues">) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState("");

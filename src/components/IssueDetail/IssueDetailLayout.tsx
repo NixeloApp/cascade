@@ -12,6 +12,7 @@ interface IssueDetailLayoutProps {
   canEdit?: boolean;
 }
 
+/** Layout container for issue detail with content and sidebar sections. */
 export function IssueDetailLayout({
   detail,
   billingEnabled,

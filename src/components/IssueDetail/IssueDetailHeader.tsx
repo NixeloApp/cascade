@@ -18,6 +18,7 @@ interface IssueDetailHeaderProps {
   actions?: ReactNode;
 }
 
+/** Header bar for issue detail with key, type icon, and action buttons. */
 export function IssueDetailHeader({
   issueKey,
   issueType,

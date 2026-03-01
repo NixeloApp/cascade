@@ -1,3 +1,11 @@
+/**
+ * Onboarding Page
+ *
+ * New user onboarding flow with role selection.
+ * Handles invited users and fresh registrations.
+ * Guides through workspace and project creation.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";

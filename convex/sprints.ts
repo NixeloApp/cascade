@@ -1,3 +1,11 @@
+/**
+ * Sprint Management
+ *
+ * Agile sprint planning and tracking for project issues.
+ * Handles sprint creation, issue assignment, status transitions,
+ * and velocity/burndown metrics for sprint retrospectives.
+ */
+
 import { v } from "convex/values";
 import {
   projectEditorMutation,

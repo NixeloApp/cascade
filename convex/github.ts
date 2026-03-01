@@ -1,3 +1,11 @@
+/**
+ * GitHub Integration
+ *
+ * GitHub OAuth connection and repository data sync.
+ * Handles access token storage, PR/issue linking, and CI status tracking.
+ * Supports branch protection and commit association with issues.
+ */
+
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation } from "./_generated/server";

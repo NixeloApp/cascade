@@ -1,3 +1,11 @@
+/**
+ * Subtasks List
+ *
+ * Manages sub-tasks for parent issues.
+ * Includes progress tracking and inline creation.
+ * Supports completion toggling and status display.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";

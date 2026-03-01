@@ -1,3 +1,11 @@
+/**
+ * Member Onboarding
+ *
+ * Guided onboarding flow for team members joining existing workspaces.
+ * Introduces key features like projects, documents, and keyboard shortcuts.
+ * Supports optional project creation during onboarding.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { ArrowLeft, Bell, Building2, Clock, FileText, Kanban } from "lucide-react";
@@ -22,6 +30,7 @@ interface MemberOnboardingProps {
 
 type MemberStep = "project" | "features";
 
+/** Onboarding flow for team members joining existing workspaces. */
 export function MemberOnboarding({
   onComplete,
   onBack,

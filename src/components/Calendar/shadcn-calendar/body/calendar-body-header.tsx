@@ -1,6 +1,7 @@
 import { format, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
+/** Renders day header with date and optional "today" indicator. */
 export function CalendarBodyHeader({
   date,
   onlyDay = false,

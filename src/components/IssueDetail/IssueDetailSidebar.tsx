@@ -1,5 +1,14 @@
+/**
+ * Issue Detail Sidebar
+ *
+ * Right sidebar for issue detail view with metadata editing.
+ * Includes time tracking, attachments, watchers, and dependencies.
+ * Supports inline property updates with error handling.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
@@ -12,7 +21,6 @@ import { Card } from "@/components/ui/Card";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { showError } from "@/lib/toast";
-import type { LabelInfo } from "../../../convex/lib/issueHelpers";
 
 interface IssueDetailSidebarProps {
   issueId: Id<"issues">;
@@ -43,6 +51,7 @@ function SidebarSection({ title, children }: { title: string; children: ReactNod
   );
 }
 
+/** Sidebar with issue metadata fields (status, assignee, priority, labels, etc.). */
 export function IssueDetailSidebar({
   issueId,
   projectId,
@@ -155,7 +164,7 @@ export function IssueDetailSidebar({
           <IssueWatchers issueId={issueId} />
         </SidebarSection>
         <SidebarSection title="Dependencies">
-          <IssueDependencies issueId={issueId} projectId={projectId} />
+          <IssueDependencies issueId={issueId} />
         </SidebarSection>
       </Stack>
     </Card>

@@ -12,6 +12,10 @@ interface SidebarContextValue {
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
+/**
+ * Provides sidebar state context to the application.
+ * Manages collapsed state (persisted to localStorage) and mobile open state.
+ */
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -52,6 +56,10 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Hook to access sidebar state. Returns collapse/mobile state and toggle functions.
+ * Must be used within a SidebarProvider.
+ */
 export function useSidebarState() {
   const context = useContext(SidebarContext);
   if (!context) {

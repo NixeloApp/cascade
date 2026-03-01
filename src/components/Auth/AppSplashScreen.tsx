@@ -1,7 +1,10 @@
 import { Flex } from "@/components/ui/Flex";
-import { NixeloLogo } from "../Landing/icons";
+import { NixeloLogo } from "../Landing/Icons";
 import { Typography } from "../ui/Typography";
 
+/**
+ * Full-screen splash screen shown during app initialization.
+ */
 export function AppSplashScreen({ message }: { message?: string }) {
   return (
     <Flex

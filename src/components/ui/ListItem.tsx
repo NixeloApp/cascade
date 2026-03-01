@@ -1,3 +1,11 @@
+/**
+ * List Item Component
+ *
+ * Structured list item with semantic slots for icon, content, and meta.
+ * Supports props-as-slots pattern and compound component children.
+ * Used for consistent list rendering across the application.
+ */
+
 import type * as React from "react";
 import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";

@@ -1,11 +1,19 @@
+/**
+ * Issue Watchers
+ *
+ * Shows users watching an issue for updates.
+ * Allows users to start or stop watching an issue.
+ * Watchers receive notifications on issue changes.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { Eye } from "lucide-react";
-import { toast } from "sonner";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
+import { showError, showSuccess } from "@/lib/toast";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { Typography } from "./ui/Typography";
@@ -20,6 +28,7 @@ interface Watcher {
   userEmail?: string;
 }
 
+/** Issue watchers panel with watch/unwatch toggle and watcher list. */
 export function IssueWatchers({ issueId }: IssueWatchersProps) {
   const watchers = useQuery(api.watchers.getWatchers, { issueId });
   const isWatching = useQuery(api.watchers.isWatching, { issueId });
@@ -30,13 +39,13 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
     try {
       if (isWatching) {
         await unwatch({ issueId });
-        toast.success("Stopped watching this issue");
+        showSuccess("Stopped watching this issue");
       } else {
         await watch({ issueId });
-        toast.success("Now watching this issue");
+        showSuccess("Now watching this issue");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update watch status");
+      showError(error, "Failed to update watch status");
     }
   };
 

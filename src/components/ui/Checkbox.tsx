@@ -1,3 +1,11 @@
+/**
+ * Checkbox Component
+ *
+ * Accessible checkbox with label and description.
+ * Wraps Radix UI Checkbox with consistent styling.
+ * Supports indeterminate state and disabled variants.
+ */
+
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import * as React from "react";
 import { Check } from "@/lib/icons";

@@ -1,3 +1,11 @@
+/**
+ * Icon Button Component
+ *
+ * Compact button designed for icon-only interactions.
+ * Supports tooltips, reveal-on-hover, and action variants.
+ * Use for toolbar actions and inline controls.
+ */
+
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";

@@ -1,3 +1,11 @@
+/**
+ * Context Menu
+ *
+ * Right-click context menu built on Radix UI primitives.
+ * Supports nested submenus, checkboxes, and radio groups.
+ * Includes keyboard navigation and accessibility features.
+ */
+
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import * as React from "react";
 import { Check, ChevronRight, Circle } from "@/lib/icons";

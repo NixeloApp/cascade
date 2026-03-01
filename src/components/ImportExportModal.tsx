@@ -1,3 +1,11 @@
+/**
+ * Import Export Modal
+ *
+ * Dialog for importing and exporting issues in various formats.
+ * Supports CSV, JSON, and Jira-compatible formats.
+ * Handles field mapping and validation during import.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";

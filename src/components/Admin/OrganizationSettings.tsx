@@ -1,3 +1,11 @@
+/**
+ * Organization Settings
+ *
+ * Admin settings form for organization-level configuration.
+ * Manages name, time tracking limits, approval requirements, and billing.
+ * Requires admin role to access and modify settings.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
@@ -22,6 +30,9 @@ interface OrganizationSettingsFormData {
   billingEnabled: boolean;
 }
 
+/**
+ * Admin settings form for organization configuration (name, hours limits, billing).
+ */
 export function OrganizationSettings() {
   const { organizationId, organizationName } = useOrganization();
   const organization = useQuery(api.organizations.getOrganization, { id: organizationId });

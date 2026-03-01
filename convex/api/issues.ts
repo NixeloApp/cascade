@@ -1,3 +1,11 @@
+/**
+ * Issues REST API
+ *
+ * HTTP endpoints for external issue access via API keys.
+ * Handles authentication, rate limiting, and IP restrictions.
+ * Routes GET requests for listing project issues.
+ */
+
 import { MINUTE } from "@convex-dev/rate-limiter";
 import { components, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";

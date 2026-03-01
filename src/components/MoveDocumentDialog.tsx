@@ -1,3 +1,11 @@
+/**
+ * Move Document Dialog
+ *
+ * Dialog for moving documents between folders or projects.
+ * Shows a folder picker with project hierarchy navigation.
+ * Validates permissions and updates document location.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -19,6 +27,7 @@ interface MoveDocumentDialogProps {
   organizationId: Id<"organizations">;
 }
 
+/** Dialog for moving a document to a different project. */
 export function MoveDocumentDialog({
   open,
   onOpenChange,

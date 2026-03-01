@@ -1,3 +1,11 @@
+/**
+ * Google Auth Button
+ *
+ * OAuth button for Google sign in/sign up.
+ * Triggers Convex Auth Google provider flow.
+ * Displays Google logo with configurable text.
+ */
+
 import { useAuthActions } from "@convex-dev/auth/react";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Button } from "../ui/Button";
@@ -7,6 +15,9 @@ interface GoogleAuthButtonProps {
   text: string;
 }
 
+/**
+ * OAuth button for signing in/up with Google.
+ */
 export function GoogleAuthButton({ redirectTo, text }: GoogleAuthButtonProps) {
   const { signIn } = useAuthActions();
 

@@ -1,3 +1,11 @@
+/**
+ * Pumble Integration Settings
+ *
+ * Configuration UI for Pumble (team chat) integration.
+ * Allows setting up webhooks, channel mappings, and notification rules.
+ * Supports bi-directional sync between issues and Pumble messages.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
@@ -44,6 +52,7 @@ const AVAILABLE_EVENTS = [
   { value: "comment.created", label: "Comment Added" },
 ];
 
+/** Pumble webhook integration manager with add/edit/delete functionality. */
 export function PumbleIntegration() {
   const [showAddModal, setShowAddModal] = useState(false);
   const webhooks = useQuery(api.pumble.listWebhooks);

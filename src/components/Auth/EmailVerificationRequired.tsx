@@ -9,6 +9,9 @@ import { Input } from "../ui/form/Input";
 import { AuthLinkButton } from "./AuthLink";
 import { AuthPageLayout } from "./AuthPageLayout";
 
+/**
+ * Page shown when user needs to verify their email before accessing the app.
+ */
 export function EmailVerificationRequired() {
   const { signIn, signOut } = useAuthActions();
   const user = useQuery(api.auth.loggedInUser);
