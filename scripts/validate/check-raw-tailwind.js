@@ -151,7 +151,7 @@ export function run() {
   // Detects when components use className with spacing classes instead of props
   // This applies to ALL files, including allowed dirs, since it's about prop consistency
   // Gap class to prop mapping (based on Flex/Stack gapClasses)
-  // Values > 6 have no direct prop and require custom className
+  // Values > 8 have no direct prop and require custom className
   const GAP_MAP = {
     0: "none",
     1: "xs",
@@ -159,7 +159,8 @@ export function run() {
     3: "md",
     4: "lg",
     6: "xl",
-    // Values 5, 7, 8+ have no direct prop equivalent
+    8: "2xl",
+    // Values 5, 7, 9+ have no direct prop equivalent
   };
 
   const COMPONENT_PROP_PATTERNS = [
@@ -219,7 +220,7 @@ export function run() {
             replacement = `<${component} ${prop}="${propValue}">`;
           } else {
             // No direct prop equivalent - keep as className but note it
-            replacement = `gap-${num} has no prop (max: xl=gap-6)`;
+            replacement = `gap-${num} has no prop (max: 2xl=gap-8)`;
           }
           propViolations.push({
             file: rel,

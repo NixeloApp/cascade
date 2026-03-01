@@ -10,7 +10,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 type Direction = "row" | "column";
-type GapSize = "none" | "xs" | "sm" | "md" | "lg" | "xl";
+type GapSize = "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 type Align = "start" | "center" | "end" | "stretch" | "baseline";
 type Justify = "start" | "center" | "end" | "between" | "around" | "evenly";
 type FlexValue = "1" | "auto" | "initial" | "none";
@@ -28,6 +28,7 @@ const gapClasses: Record<GapSize, string> = {
   md: "gap-3",
   lg: "gap-4",
   xl: "gap-6",
+  "2xl": "gap-8",
 };
 
 const alignClasses: Record<Align, string> = {

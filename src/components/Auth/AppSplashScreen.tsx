@@ -18,7 +18,7 @@ export function AppSplashScreen({ message }: { message?: string }) {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 bg-landing-accent/10 rounded-full blur-glow" />
       </div>
 
-      <Flex direction="column" align="center" className="relative gap-8">
+      <Flex direction="column" align="center" gap="2xl" className="relative">
         {/* Animated Logo Container */}
         <div className="relative">
           <div className="absolute inset-0 bg-landing-accent/20 rounded-full blur-2xl animate-pulse" />
