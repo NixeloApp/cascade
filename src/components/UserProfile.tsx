@@ -1,3 +1,11 @@
+/**
+ * User Profile
+ *
+ * Modal dialog for viewing and editing user profile.
+ * Displays user info with options to update avatar and settings.
+ * Wraps ProfileContent component in a dialog layout.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import { ProfileContent } from "./Settings/ProfileContent";
 import { Card } from "./ui/Card";

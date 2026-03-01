@@ -1,3 +1,11 @@
+/**
+ * Section Error Fallback
+ *
+ * Inline error display for component-level failures.
+ * Shows error message with optional retry button.
+ * Used as fallback for ErrorBoundary components.
+ */
+
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";

@@ -1,3 +1,11 @@
+/**
+ * Export Button
+ *
+ * Trigger button for opening the import/export modal.
+ * Shows bidirectional arrow icon indicating data transfer capability.
+ * Supports project-level and sprint-level export scope.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import { ArrowLeftRight } from "lucide-react";
 import { useState } from "react";

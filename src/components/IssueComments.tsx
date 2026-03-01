@@ -1,3 +1,11 @@
+/**
+ * Issue Comments
+ *
+ * Comment thread for issues with pagination and reactions.
+ * Supports @mentions, editing, and deletion of comments.
+ * Shows author avatars, timestamps, and reaction counts.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";

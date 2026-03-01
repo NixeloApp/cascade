@@ -1,3 +1,11 @@
+/**
+ * Settings
+ *
+ * Main settings page with tabbed navigation.
+ * Includes profile, security, notifications, and admin tabs.
+ * Role-based visibility controls admin-only sections.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useSearch } from "@tanstack/react-router";
 import { useQuery } from "convex/react";

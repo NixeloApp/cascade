@@ -1,3 +1,11 @@
+/**
+ * Dashboard
+ *
+ * Main dashboard page showing organization overview.
+ * Displays workspaces, recent activity, and quick actions.
+ * Provides navigation to projects, issues, and documents.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";

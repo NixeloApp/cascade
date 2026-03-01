@@ -1,3 +1,11 @@
+/**
+ * Issue Watchers
+ *
+ * Shows users watching an issue for updates.
+ * Allows users to start or stop watching an issue.
+ * Watchers receive notifications on issue changes.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
