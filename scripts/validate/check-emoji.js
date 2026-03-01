@@ -1,6 +1,8 @@
 /**
  * CHECK: Emoji Usage
  * Finds emoji in source code that should be replaced with Lucide icons.
+ *
+ * @strictness STRICT - Blocks CI. ~5 files in allowlist for legitimate emoji use.
  */
 
 import fs from "node:fs";

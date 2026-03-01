@@ -7,6 +7,8 @@
  * Allowed in:
  * - src/components/ui/ (CVA components live here)
  * - Files in ALLOWED_FILES list (gradual migration)
+ *
+ * @strictness MEDIUM - Warnings only. ~230 files in migration allowlist.
  */
 
 import fs from "node:fs";

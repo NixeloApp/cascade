@@ -10,6 +10,8 @@
  * 5. Group-hover orphans - Flag group-hover: without parent group class
  * 6. Responsive breakpoint consistency - Ensure mobile-first approach
  * 7. Transition completeness - Warn when transition-* without corresponding state change
+ *
+ * @strictness MEDIUM - Warnings only. Reports inconsistencies but doesn't block CI.
  */
 
 import fs from "node:fs";

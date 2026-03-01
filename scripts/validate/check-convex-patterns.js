@@ -9,6 +9,8 @@
  * NOTE: This validator focuses on SECURITY issues first.
  * Envelope Pattern and test destructuring are documented standards but not
  * strictly enforced yet to allow gradual adoption across the codebase.
+ *
+ * @strictness STRICT - Blocks CI for security issues (org membership). Warnings for envelope pattern.
  */
 
 import fs from "node:fs";

@@ -1,6 +1,8 @@
 /**
  * CHECK 5: Arbitrary Tailwind
  * Arbitrary values like h-[50px] — these should use design tokens instead
+ *
+ * @strictness STRICT - Blocks CI. ~20 patterns in allowlist for edge cases.
  */
 
 import fs from "node:fs";

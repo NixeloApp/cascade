@@ -13,9 +13,11 @@
  *   9. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
  *  10. E2E quality          — catches broad selectors, networkidle, waitForSelector
  *  11. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
- *  12. Convex patterns       — Envelope Pattern returns, security checks, test destructuring
- *  13. Interactive Tailwind  — hover:/focus: should be in CVA components, not scattered
- *  14. Tailwind consistency  — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  12. Convex patterns      — Envelope Pattern returns, security checks, test destructuring
+ *  13. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
+ *  14. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  15. JSDoc coverage       — exported functions/components should have JSDoc documentation
+ *  16. File headers         — non-trivial files (>50 lines) should have documentation headers
  *
  * Exit code 1 if any check fails. No warning levels — everything is an error.
  *
@@ -29,7 +31,9 @@ import { run as runColorAudit } from "./validate/check-colors.js";
 import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
 import { run as runEmojiCheck } from "./validate/check-emoji.js";
+import { run as runFileHeadersCheck } from "./validate/check-file-headers.js";
 import { run as runInteractiveTwCheck } from "./validate/check-interactive-tw.js";
+import { run as runJSDocCheck } from "./validate/check-jsdoc.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
 import { run as runRawTailwindCheck } from "./validate/check-raw-tailwind.js";
 import { run as runStandardsCheck } from "./validate/check-standards.js";
@@ -56,6 +60,8 @@ const checks = [
   { name: "Convex patterns", fn: runConvexPatternsCheck },
   { name: "Interactive Tailwind", fn: runInteractiveTwCheck },
   { name: "Tailwind consistency", fn: runTailwindConsistencyCheck },
+  { name: "JSDoc coverage", fn: runJSDocCheck },
+  { name: "File headers", fn: runFileHeadersCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

@@ -7,6 +7,8 @@
  * Rules:
  * 1. In src/components: data-testid must use TEST_IDS.X.Y (not string literals)
  * 2. In e2e tests: getByTestId must use TEST_IDS.X.Y (not string literals)
+ *
+ * @strictness STRICT - Blocks CI. Test IDs must use centralized constants.
  */
 
 import fs from "node:fs";

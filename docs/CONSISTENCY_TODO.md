@@ -411,32 +411,32 @@ const RULES = [
 
 ### Phase 1: Quick Wins (This Week)
 
-- [ ] **Consolidate IssueDetail directories**
-  - Merge `IssueDetailView/` into `IssueDetail/`
-  - Update all imports
-  - ~30 minutes
+- [x] **Consolidate IssueDetail directories** ✅
+  - Merged `IssueDetailView/` into `IssueDetail/`
+  - Updated all imports (3 files)
+  - Removed from validator allowlist
 
 - [ ] **Add file headers to new files**
   - Start requiring headers for new files in PR reviews
   - Create header template (see Standards section)
   - ~10 minutes setup
 
-- [ ] **Document validator strictness levels**
-  - Add comments to each validator indicating strictness
-  - Update this document with findings
-  - ~20 minutes
+- [x] **Document validator strictness levels** ✅
+  - Added `@strictness` tag to all 16 validators
+  - STRICT (11), MEDIUM (4), INFO (1)
+  - Each tag explains CI blocking behavior
 
 ### Phase 2: Validator Updates (Next Week)
 
-- [ ] **Create `check-jsdoc.js`**
-  - Start with warnings only
-  - Gradually add to CI as coverage improves
-  - ~2 hours
+- [x] **Create `check-jsdoc.js`** ✅
+  - Reports missing JSDoc on exported functions/components
+  - Found 171 missing docs, warns but doesn't block CI
+  - Added to validate.js as check #16
 
-- [ ] **Create `check-file-headers.js`**
-  - Start with new files only
-  - Add existing files to allowlist
-  - ~1 hour
+- [x] **Create `check-file-headers.js`** ✅
+  - Reports missing headers on files >50 lines
+  - Found 319 files missing headers, warns but doesn't block CI
+  - Added to validate.js as check #17
 
 - [ ] **Update `check-raw-tailwind.js`**
   - Add detection for spacing props vs classes
@@ -547,11 +547,11 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Category | Current | Target | Status |
 |----------|---------|--------|--------|
-| Validator Coverage | 85% | 95% | 🟡 In Progress |
+| Validator Coverage | 90% | 95% | 🟡 In Progress |
 | File Headers | 10% | 80% | 🔴 Not Started |
 | JSDoc Coverage | 40% | 80% | 🔴 Not Started |
 | Naming Conventions | 80% | 95% | 🟡 In Progress |
-| File Organization | 60% | 90% | 🔴 Not Started |
+| File Organization | 65% | 90% | 🟡 In Progress |
 | Error Handling | 90% | 95% | 🟢 Good |
 | Styling Consistency | 95% | 98% | 🟢 Good |
 
@@ -562,6 +562,10 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 | 2026-02-28 | Created consistency TODO | Baseline established |
 | 2026-02-28 | Added DocumentSidebar | Following patterns |
 | 2026-02-28 | Fixed PR review comments | Improved type safety |
+| 2026-02-28 | Consolidated IssueDetail directories | Reduced component sprawl |
+| 2026-02-28 | Added @strictness tags to validators | Documented CI blocking behavior |
+| 2026-02-28 | Created check-jsdoc.js validator | 171 exports need docs |
+| 2026-02-28 | Created check-file-headers.js validator | 319 files need headers |
 
 ---
 

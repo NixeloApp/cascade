@@ -9,6 +9,8 @@
  * Flags:
  * - Local type definitions that duplicate canonical types
  * - Type annotations using string literals instead of importing the type
+ *
+ * @strictness INFO - Reports only. Does not block CI.
  */
 
 import fs from "node:fs";
