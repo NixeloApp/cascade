@@ -1,3 +1,11 @@
+/**
+ * Document Templates
+ *
+ * Reusable document templates for quick document creation.
+ * Templates store BlockNote content and metadata for duplication.
+ * Supports project-scoped and organization-wide templates.
+ */
+
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { internalMutation } from "./_generated/server";

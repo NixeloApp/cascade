@@ -1,3 +1,11 @@
+/**
+ * Organization Management
+ *
+ * Multi-tenant organization CRUD with membership and role management.
+ * Organizations are the top-level container for projects, teams, and users.
+ * Handles org settings, member roles, and cross-org user resolution.
+ */
+
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
