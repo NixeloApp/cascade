@@ -26,6 +26,7 @@ interface LeadOnboardingProps {
 
 type LeadStep = "features" | "project" | "project-choice" | "creating";
 
+/** Multi-step onboarding wizard for team leads creating their first workspace. */
 export function LeadOnboarding({
   onComplete,
   onCreateProject,

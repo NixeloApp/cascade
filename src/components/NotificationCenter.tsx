@@ -69,6 +69,7 @@ function groupNotificationsByDate(
   return groups;
 }
 
+/** Notification popover with grouped notifications and filtering. */
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

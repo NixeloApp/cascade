@@ -38,6 +38,7 @@ function FeatureCard({ icon, iconBg, title, description }: FeatureCardProps) {
   );
 }
 
+/** Grid of feature cards showcasing key product capabilities. */
 export function FeatureHighlights() {
   return (
     <Grid cols={1} colsSm={3} gap="lg">

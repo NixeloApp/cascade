@@ -7,6 +7,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 
+/** 404 error page with link to return home. */
 export function NotFoundPage() {
   return (
     <Flex

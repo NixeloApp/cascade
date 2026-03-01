@@ -86,6 +86,7 @@ function getTomorrow9am(): number {
   return tomorrow.getTime();
 }
 
+/** Individual notification card with read, archive, delete, and snooze actions. */
 export function NotificationItem({
   notification,
   onMarkAsRead,

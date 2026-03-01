@@ -19,6 +19,7 @@ interface MoveDocumentDialogProps {
   organizationId: Id<"organizations">;
 }
 
+/** Dialog for moving a document to a different project. */
 export function MoveDocumentDialog({
   open,
   onOpenChange,

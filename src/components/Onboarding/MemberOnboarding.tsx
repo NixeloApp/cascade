@@ -22,6 +22,7 @@ interface MemberOnboardingProps {
 
 type MemberStep = "project" | "features";
 
+/** Onboarding flow for team members joining existing workspaces. */
 export function MemberOnboarding({
   onComplete,
   onBack,

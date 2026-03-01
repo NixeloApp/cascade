@@ -16,6 +16,7 @@ interface ChecklistItem {
   completed: boolean;
 }
 
+/** Collapsible checklist showing onboarding progress and pending tasks. */
 export function OnboardingChecklist() {
   const [isExpanded, setIsExpanded] = useState(true);
   const onboarding = useQuery(api.onboarding.getOnboardingStatus);
