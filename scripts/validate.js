@@ -37,6 +37,7 @@ import { run as runArbitraryTailwindCheck } from "./validate/check-arbitrary-tw.
 import { run as runAsyncPatternsCheck } from "./validate/check-async-patterns.js";
 import { run as runColorAudit } from "./validate/check-colors.js";
 import { run as runComponentNamingCheck } from "./validate/check-component-naming.js";
+import { run as runComponentPropsCheck } from "./validate/check-component-props.js";
 import { run as runConvexNamingCheck } from "./validate/check-convex-naming.js";
 import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
 import { run as runDuplicateComponentsCheck } from "./validate/check-duplicate-components.js";
@@ -77,6 +78,7 @@ const checks = [
   { name: "Convex patterns", fn: runConvexPatternsCheck },
   { name: "Convex naming", fn: runConvexNamingCheck },
   { name: "Component naming", fn: runComponentNamingCheck },
+  { name: "Component props", fn: runComponentPropsCheck },
   { name: "Duplicate components", fn: runDuplicateComponentsCheck },
   { name: "Interactive Tailwind", fn: runInteractiveTwCheck },
   { name: "Tailwind consistency", fn: runTailwindConsistencyCheck },
