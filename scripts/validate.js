@@ -45,6 +45,7 @@ import { run as runEmojiCheck } from "./validate/check-emoji.js";
 import { run as runFileHeadersCheck } from "./validate/check-file-headers.js";
 import { run as runHookPatternsCheck } from "./validate/check-hook-patterns.js";
 import { run as runImportOrderCheck } from "./validate/check-import-order.js";
+import { run as runImportPathsCheck } from "./validate/check-import-paths.js";
 import { run as runInteractiveTwCheck } from "./validate/check-interactive-tw.js";
 import { run as runJSDocCheck } from "./validate/check-jsdoc.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
@@ -82,6 +83,7 @@ const checks = [
   { name: "JSDoc coverage", fn: runJSDocCheck },
   { name: "File headers", fn: runFileHeadersCheck },
   { name: "Import order", fn: runImportOrderCheck },
+  { name: "Import paths", fn: runImportPathsCheck },
   { name: "Hook patterns", fn: runHookPatternsCheck },
   { name: "Async patterns", fn: runAsyncPatternsCheck },
   { name: "Test coverage", fn: runTestCoverageCheck },
