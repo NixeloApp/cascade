@@ -113,7 +113,7 @@ grep -r "from.*ui/PageHeader" src/
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
 | check-duplicate-components.js | Flag components with same name in different dirs | Medium | [x] ✅ Created (3 duplicates) |
-| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [x] ✅ Created (3 issues - Stack gap scale) |
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [x] ✅ Created, 0 issues (Stack gap scale fixed) |
 | check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created (0 issues) |
 
 **Note:** All optional validators are now created. The raw-tailwind validator is the main enforcement.
@@ -269,9 +269,7 @@ Items intentionally not in scope for Phase 7:
 | Item | Reason | Track In |
 |------|--------|----------|
 | CVA for all existing ui/ components | Too disruptive | Future phase |
-| Standardize Flex vs Stack usage | Needs design decision | PATTERNS.md |
-| check-duplicate-components.js | Nice-to-have | Backlog |
-| check-import-paths.js | Nice-to-have | Backlog |
+| Standardize Flex vs Stack usage | ✅ Resolved - gap scales now match | N/A |
 
 ---
 
@@ -689,7 +687,7 @@ Issues detected by validators that could be addressed in future iterations:
 
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
-| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [x] ✅ Created, 3 issues (Stack gap scale inconsistency) |
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [x] ✅ Created, 0 issues (Stack gap scale fixed) |
 | check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created, 0 issues (6 fixed) |
 
 ---
