@@ -19,6 +19,7 @@ interface IssueCommentsProps {
   projectId: Id<"projects">;
 }
 
+/** Comment thread for an issue with reactions and mention support. */
 export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   const [newComment, setNewComment] = useState("");
   const [mentions, setMentions] = useState<Id<"users">[]>([]);

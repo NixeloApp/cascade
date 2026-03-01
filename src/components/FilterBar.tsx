@@ -311,6 +311,7 @@ function SaveFilterDialog({
   );
 }
 
+/** Issue filter bar with type, status, priority, label, and assignee filters. */
 export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps) {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [filterName, setFilterName] = useState("");

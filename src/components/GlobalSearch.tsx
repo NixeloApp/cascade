@@ -224,6 +224,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
   );
 }
 
+/** Global command palette for searching issues and documents across the app. */
 export function GlobalSearch() {
   const { isOpen, setIsOpen } = useSearchKeyboard();
   const { query, setQuery, activeTab, setActiveTab, issueOffset, documentOffset, limit, loadMore } =

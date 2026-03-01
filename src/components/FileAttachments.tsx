@@ -29,6 +29,7 @@ interface FileAttachmentsProps {
   issueId: Id<"issues">;
 }
 
+/** File attachment manager with drag-drop upload and file listing. */
 export function FileAttachments({ issueId }: FileAttachmentsProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);

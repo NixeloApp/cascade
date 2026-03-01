@@ -10,6 +10,7 @@ interface ExportButtonProps {
   status?: string;
 }
 
+/** Button that opens the import/export modal for issues. */
 export function ExportButton({ projectId, sprintId, status }: ExportButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 

@@ -56,6 +56,7 @@ interface IssueDependenciesProps {
   projectId: Id<"projects">;
 }
 
+/** Manages issue dependencies (blocks, relates, duplicates) with link creation. */
 export function IssueDependencies({ issueId, projectId: _workspaceId }: IssueDependenciesProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<{ id: Id<"issues">; key: string } | null>(

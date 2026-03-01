@@ -49,6 +49,7 @@ interface TreeNode {
   hasChildren: boolean;
 }
 
+/** Hierarchical tree view of documents with favorites, archived, and folder sections. */
 export function DocumentTree({
   organizationId,
   orgSlug,

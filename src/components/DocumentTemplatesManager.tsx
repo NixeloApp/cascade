@@ -41,6 +41,7 @@ interface DocumentTemplatesManagerProps {
   createRequested?: number;
 }
 
+/** Manages document templates with create, edit, and delete functionality. */
 export function DocumentTemplatesManager({
   projectId,
   onSelectTemplate,
