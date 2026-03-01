@@ -7,6 +7,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export interface UseAIChatOptions {
   projectId?: Id<"projects">;
@@ -67,8 +68,8 @@ export function useAIChat({
           setChatId(newChatId);
           onChatCreated?.(newChatId);
         })
-        .catch((_error) => {
-          // Chat creation errors are handled by the mutation
+        .catch((error) => {
+          toast.error(error instanceof Error ? error.message : "Failed to create chat");
         });
     }
   }, [chatId, createChat, onChatCreated, projectId]); // Empty deps - only run once on mount
@@ -105,9 +106,10 @@ export function useAIChat({
         message,
         projectId,
       });
-    } catch (_error) {
+    } catch (error) {
       // Restore message on error
       setInputMessage(message);
+      toast.error(error instanceof Error ? error.message : "Failed to send message");
     } finally {
       setIsSending(false);
     }
