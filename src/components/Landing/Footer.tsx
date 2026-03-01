@@ -1,3 +1,11 @@
+/**
+ * Landing Page Footer
+ *
+ * Site footer with navigation links and branding.
+ * Includes product, company, and resource sections.
+ * Contains social media links and legal pages.
+ */
+
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";

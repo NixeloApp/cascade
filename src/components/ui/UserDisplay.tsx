@@ -1,3 +1,11 @@
+/**
+ * User Display Component
+ *
+ * Displays user with avatar, name, and optional metadata.
+ * Supports size variants and horizontal/vertical layouts.
+ * Includes compact UserMention variant for inline use.
+ */
+
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, type AvatarProps } from "./Avatar";
