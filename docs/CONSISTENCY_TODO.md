@@ -476,12 +476,19 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 | File Organization | 90% | 90% | 🟢 Complete (5/5 directories done) |
 | Error Handling | 100% | 95% | 🟢 Complete (auth forms updated) |
 | Styling Consistency | 98% | 98% | 🟢 Complete |
-| Test Coverage | 58% | 80% | 🟡 In Progress (improved from 56%, adding more tests) |
+| Test Coverage | 57% | 80% | 🟡 In Progress (adding more component tests) |
 
 ### Recent Changes
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Added tests for Analytics (ChartCard: 4, RecentActivity: 10) | Test coverage +2 components |
+| 2026-03-01 | Added tests for FormLayout (21 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for SwimlanSelector (14 tests) and DevToolsTab (12 tests) | Test coverage +2 components |
+| 2026-03-01 | Added tests for ResponsiveText (8 tests) and Auth components (28 tests) | Test coverage +3 components |
+| 2026-03-01 | Added tests for UI utility components (66 tests - EntityCard, MetricCard, PaginationInfo, LoadMoreButton, Section) | Test coverage +5 components |
+| 2026-03-01 | Added tests for CreateEventModal (23 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for ApiKeysManager (20 tests) | Test coverage +1 component |
 | 2026-03-01 | Added tests for AI (ErrorFallback: 9, AssistantButton: 16) | Test coverage +2 components |
 | 2026-03-01 | Added tests for Sprints (ProgressBar: 8, Workload: 8) | Test coverage +2 components |
 | 2026-03-01 | Added tests for TemplateCard (18 tests) | Test coverage +1 component |
