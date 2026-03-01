@@ -1,3 +1,11 @@
+/**
+ * Workspace Settings Page
+ *
+ * Settings form for editing workspace name, description, and icon.
+ * Allows archiving and updating workspace configuration.
+ * Restricted to workspace admins and editors.
+ */
+
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";

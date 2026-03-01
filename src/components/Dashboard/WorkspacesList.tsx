@@ -1,3 +1,11 @@
+/**
+ * Workspaces List
+ *
+ * Dashboard widget showing user's project workspaces.
+ * Displays project cards with issue counts and role badges.
+ * Supports keyboard navigation and loading states.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { Typography } from "@/components/ui/Typography";

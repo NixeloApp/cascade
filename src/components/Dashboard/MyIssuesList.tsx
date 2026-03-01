@@ -1,3 +1,11 @@
+/**
+ * My Issues List
+ *
+ * Dashboard widget showing user's assigned and created issues.
+ * Supports filtering by assignment status with paginated results.
+ * Navigates to issue detail on selection.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { Typography } from "@/components/ui/Typography";
