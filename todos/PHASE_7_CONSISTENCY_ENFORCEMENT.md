@@ -415,9 +415,8 @@ Document which validators are STRICT (block CI) vs INFO (report only):
 | check-queries.js | MEDIUM | Reports only |
 | check-tailwind-consistency.js | MEDIUM | Warnings only |
 | check-interactive-tw.js | MEDIUM | ~230 allowlist |
-| check-undefined-tw.js | MEDIUM | Reports only |
 | check-e2e-quality.js | MEDIUM | Best practices |
-| check-types.js | INFO | Reports only |
+| check-types.js | MEDIUM | Type consistency |
 | check-jsdoc.js | MEDIUM | 171 exports missing docs |
 | check-file-headers.js | MEDIUM | 319 files missing headers |
 | check-convex-naming.js | MEDIUM | 0 warnings (2 allowlisted) |
@@ -618,6 +617,7 @@ The 78 missing test files are primarily external integrations:
 | check-ui-patterns.js | Accessibility | STRICT | ✅ |
 | check-type-safety.js | Type assertions | STRICT | ✅ |
 | check-queries.js | Query patterns | MEDIUM | ✅ |
+| check-types.js | Type consistency | MEDIUM | ✅ |
 | check-tailwind-consistency.js | TW patterns | MEDIUM | ✅ |
 | check-interactive-tw.js | Hover/focus | MEDIUM | ✅ |
 | check-e2e-quality.js | E2E patterns | MEDIUM | ✅ |
