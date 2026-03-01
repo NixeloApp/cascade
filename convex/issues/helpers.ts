@@ -1,3 +1,11 @@
+/**
+ * Issue Helper Functions
+ *
+ * Shared utilities for issue operations: key generation, search indexing,
+ * status transitions, enrichment, and batch fetching. Used by both
+ * queries and mutations to ensure consistent issue handling.
+ */
+
 import { asyncMap, pruneNull } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";

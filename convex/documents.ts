@@ -1,3 +1,11 @@
+/**
+ * Document Management
+ *
+ * CRUD operations for collaborative documents with real-time sync.
+ * Handles document creation, editing, versioning, sharing, and permissions.
+ * Integrates with workspaces/projects for organization-level access control.
+ */
+
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";

@@ -1,3 +1,11 @@
+/**
+ * User Onboarding
+ *
+ * Onboarding flow for new users and organizations.
+ * Handles role selection, sample project creation, checklist progress,
+ * and organization/workspace setup for first-time users.
+ */
+
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";

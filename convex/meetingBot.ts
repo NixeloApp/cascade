@@ -1,3 +1,11 @@
+/**
+ * Meeting Bot Integration
+ *
+ * Voice AI meeting bot for recording, transcription, and issue creation.
+ * Integrates with external bot service for Zoom/Meet/Teams recordings.
+ * Auto-generates issues from meeting discussions with AI summaries.
+ */
+
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
