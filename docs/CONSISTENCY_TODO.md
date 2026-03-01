@@ -1,7 +1,7 @@
 # Consistency TODO
 
 > **Purpose:** Recursive document for tracking consistency improvements across the codebase.
-> **Last Updated:** 2026-02-28
+> **Last Updated:** 2026-03-01
 > **Owner:** Engineering Team
 
 ---
@@ -365,12 +365,12 @@ All proposed validators have been implemented:
 
 ### Phase 3: File Reorganization (Next Sprint)
 
-- [x] **Reorganize components into feature directories** ✅ (mostly complete)
+- [x] **Reorganize components into feature directories** ✅
   - [x] Created `Sprints/` directory (SprintManager, SprintProgressBar, SprintWorkload)
   - [x] Created `Notifications/` directory (NotificationCenter, NotificationItem)
   - [x] Created `Documents/` directory (DocumentHeader, DocumentSidebar, DocumentTree, DocumentComments, DocumentTemplatesManager)
   - [x] Created `App/` directory (AppHeader, AppSidebar)
-  - [ ] Create `Issues/` directory (IssueCard, CreateIssueModal → move to existing IssueDetail/)
+  - [x] Consolidated `IssueDetail/` directory (added IssueCard, CreateIssueModal with tests)
 
 - [x] **Add JSDoc to high-traffic exports** ✅
   - Hooks, utilities, UI components now have JSDoc
@@ -472,7 +472,7 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 | File Headers | 85% | 80% | 🟢 Complete (87 files remaining) |
 | JSDoc Coverage | 100% | 80% | 🟢 Complete (0 warnings) |
 | Naming Conventions | 95% | 95% | 🟢 Complete |
-| File Organization | 80% | 90% | 🟡 In Progress (4/5 directories done) |
+| File Organization | 90% | 90% | 🟢 Complete (5/5 directories done) |
 | Error Handling | 100% | 95% | 🟢 Complete (auth forms updated) |
 | Styling Consistency | 98% | 98% | 🟢 Complete |
 | Test Coverage | 56% | 80% | 🟡 In Progress (78 files missing tests) |
@@ -481,6 +481,8 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Moved IssueCard and CreateIssueModal to IssueDetail/ | Feature directory organization |
+| 2026-03-01 | Added COLORS.DEFAULT_LABEL constant | Runtime color values centralized |
 | 2026-03-01 | Updated auth forms to use showError/showSuccess | Consistent error handling |
 | 2026-03-01 | Added 2xl gap size to Flex component | Fixed component prop misuse |
 | 2026-03-01 | Moved App components to App/ | Feature directory organization |
