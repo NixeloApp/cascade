@@ -482,6 +482,9 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Added tests for TimeTracking (TimerWidget: 9, TimeEntriesList: 16) | Test coverage +2 components |
+| 2026-03-01 | Added tests for Landing (Features: 9, WhyChoose: 7, Footer: 12, Nav: 9) | Test coverage +4 components |
+| 2026-03-01 | Added tests for HeroSection (7 tests) | Test coverage +1 component |
 | 2026-03-01 | Added tests for KeyboardShortcutsHelp (16 tests) | Test coverage +1 component |
 | 2026-03-01 | Added tests for ipRestrictions backend (13 tests) | Test coverage +1 Convex module |
 | 2026-03-01 | Added tests for DocumentTree (14 tests) | Test coverage +1 component |
