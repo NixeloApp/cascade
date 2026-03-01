@@ -15,11 +15,11 @@ describe("aiHelpers", () => {
     });
 
     it("should extract tokens when all fields are present", () => {
-      const usage: LanguageModelUsage = {
+      const usage = {
         inputTokens: 100,
         outputTokens: 50,
         totalTokens: 150,
-      };
+      } as LanguageModelUsage;
 
       const result = extractUsage(usage);
 
@@ -31,9 +31,9 @@ describe("aiHelpers", () => {
     });
 
     it("should estimate input/output when only totalTokens is present", () => {
-      const usage: LanguageModelUsage = {
+      const usage = {
         totalTokens: 100,
-      };
+      } as LanguageModelUsage;
 
       const result = extractUsage(usage);
 
@@ -45,10 +45,10 @@ describe("aiHelpers", () => {
     });
 
     it("should use inputTokens when available but outputTokens missing", () => {
-      const usage: LanguageModelUsage = {
+      const usage = {
         inputTokens: 80,
         totalTokens: 100,
-      };
+      } as LanguageModelUsage;
 
       const result = extractUsage(usage);
 
@@ -60,10 +60,10 @@ describe("aiHelpers", () => {
     });
 
     it("should use outputTokens when available but inputTokens missing", () => {
-      const usage: LanguageModelUsage = {
+      const usage = {
         outputTokens: 40,
         totalTokens: 100,
-      };
+      } as LanguageModelUsage;
 
       const result = extractUsage(usage);
 
@@ -75,9 +75,9 @@ describe("aiHelpers", () => {
     });
 
     it("should handle zero totalTokens", () => {
-      const usage: LanguageModelUsage = {
+      const usage = {
         totalTokens: 0,
-      };
+      } as LanguageModelUsage;
 
       const result = extractUsage(usage);
 
@@ -95,9 +95,9 @@ describe("aiHelpers", () => {
     });
 
     it("should return totalTokens when present", () => {
-      const usage: LanguageModelUsage = {
+      const usage = {
         totalTokens: 150,
-      };
+      } as LanguageModelUsage;
 
       expect(getTotalTokens(usage)).toBe(150);
     });

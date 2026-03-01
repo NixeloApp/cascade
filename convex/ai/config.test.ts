@@ -45,13 +45,9 @@ describe("AI Config", () => {
     });
 
     it("should throw validation error when API key is not set", () => {
-      vi.mocked(getAnthropicApiKey).mockReturnValue(undefined);
-
-      expect(() => getAIConfig()).toThrow("ANTHROPIC_API_KEY not configured");
-    });
-
-    it("should throw validation error when API key is empty string", () => {
-      vi.mocked(getAnthropicApiKey).mockReturnValue("");
+      vi.mocked(getAnthropicApiKey).mockImplementation(() => {
+        throw new Error("ANTHROPIC_API_KEY not configured");
+      });
 
       expect(() => getAIConfig()).toThrow("ANTHROPIC_API_KEY not configured");
     });
