@@ -865,40 +865,29 @@ export const getUserActivity = authenticatedQuery({
     // Get unique project IDs
     const projectIds = [...new Set([...issueMap.values()].map((i) => i.projectId))];
 
-    // Fetch viewer memberships for all these projects in parallel
+    // Fetch all memberships for viewer and target user in two queries (O(users) not O(projects))
+    const projectIdSet = new Set(projectIds);
     const [viewerMemberships, targetMemberships] = await Promise.all([
-      Promise.all(
-        projectIds.map((projectId) =>
-          ctx.db
-            .query("projectMembers")
-            .withIndex("by_project_user", (q) =>
-              q.eq("projectId", projectId).eq("userId", ctx.userId),
-            )
-            .filter(notDeleted)
-            .first(),
-        ),
-      ),
+      ctx.db
+        .query("projectMembers")
+        .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+        .filter(notDeleted)
+        .collect(),
       isOwnProfile
-        ? [] // No need to fetch target memberships if we are viewing our own profile
-        : Promise.all(
-            projectIds.map((projectId) =>
-              ctx.db
-                .query("projectMembers")
-                .withIndex("by_project_user", (q) =>
-                  q.eq("projectId", projectId).eq("userId", args.userId),
-                )
-                .filter(notDeleted)
-                .first(),
-            ),
-          ),
+        ? Promise.resolve([]) // No need to fetch target memberships if we are viewing our own profile
+        : ctx.db
+            .query("projectMembers")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .filter(notDeleted)
+            .collect(),
     ]);
 
-    // Create lookup maps for memberships
+    // Create lookup maps for memberships, filtered to relevant projects
     const viewerMembershipMap = new Set(
-      viewerMemberships.filter((m) => m !== null).map((m) => m?.projectId),
+      viewerMemberships.filter((m) => projectIdSet.has(m.projectId)).map((m) => m.projectId),
     );
     const targetMembershipMap = new Set(
-      targetMemberships.filter((m) => m !== null).map((m) => m?.projectId),
+      targetMemberships.filter((m) => projectIdSet.has(m.projectId)).map((m) => m.projectId),
     );
 
     // Fetch projects and check access
@@ -907,14 +896,10 @@ export const getUserActivity = authenticatedQuery({
 
     for (const project of fetchedProjects.values()) {
       if (!project.isDeleted) {
-        // Check access - for own profile, show all; for others, check membership
-        let hasAccess = isOwnProfile;
-        if (!hasAccess) {
-          hasAccess = viewerMembershipMap.has(project._id) && targetMembershipMap.has(project._id);
-        } else {
-          // For own profile, verify user is actually a member
-          hasAccess = viewerMembershipMap.has(project._id);
-        }
+        // Check access: own profile requires viewer membership, other profiles require both viewer and target membership
+        const hasAccess = isOwnProfile
+          ? viewerMembershipMap.has(project._id)
+          : viewerMembershipMap.has(project._id) && targetMembershipMap.has(project._id);
         projectMap.set(project._id, { key: project.key, name: project.name, hasAccess });
       }
     }
