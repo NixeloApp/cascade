@@ -1,3 +1,11 @@
+/**
+ * Service Worker
+ *
+ * Workbox-powered service worker for PWA caching.
+ * Handles offline support, asset caching, and background sync.
+ * Manages push notifications and offline mutation queue.
+ */
+
 /// <reference lib="webworker" />
 
 import { clientsClaim } from "workbox-core";
