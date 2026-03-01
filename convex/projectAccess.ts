@@ -1,3 +1,11 @@
+/**
+ * Project Access Control
+ *
+ * Authorization helpers for project-level permissions.
+ * Checks user roles (admin, editor, viewer) and enforces access boundaries.
+ * Supports caching within request context for performance.
+ */
+
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";

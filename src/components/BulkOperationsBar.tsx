@@ -1,3 +1,11 @@
+/**
+ * Bulk Operations Bar
+ *
+ * Floating action bar for multi-select issue operations.
+ * Supports bulk status change, assignee update, deletion, and archival.
+ * Shows count of selected items and available operations.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

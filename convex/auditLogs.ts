@@ -1,3 +1,11 @@
+/**
+ * Audit Logs
+ *
+ * Internal mutation for recording audit trail entries.
+ * Tracks user actions with actor, target, and metadata.
+ * Disabled in test environments to prevent transaction conflicts.
+ */
+
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { auditMetadata } from "./validators";
