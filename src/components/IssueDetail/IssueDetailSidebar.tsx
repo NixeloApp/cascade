@@ -1,3 +1,11 @@
+/**
+ * Issue Detail Sidebar
+ *
+ * Right sidebar for issue detail view with metadata editing.
+ * Includes time tracking, attachments, watchers, and dependencies.
+ * Supports inline property updates with error handling.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { LabelInfo } from "@convex/lib/issueHelpers";

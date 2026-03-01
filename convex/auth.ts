@@ -1,3 +1,11 @@
+/**
+ * Authentication Configuration
+ *
+ * Convex Auth setup with Google OAuth and password providers.
+ * Handles session verification and redirect destination logic.
+ * Includes 2FA session checks and onboarding flow support.
+ */
+
 import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";

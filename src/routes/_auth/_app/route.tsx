@@ -1,3 +1,11 @@
+/**
+ * App Layout Route
+ *
+ * Gateway route for authenticated app access.
+ * Handles onboarding redirects and organization initialization.
+ * Resolves user destination based on auth and org state.
+ */
+
 import { api } from "@convex/_generated/api";
 import { isReservedSlug } from "@convex/shared/constants";
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
