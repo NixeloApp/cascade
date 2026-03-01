@@ -18,6 +18,7 @@ interface GeneralSettingsProps {
   description: string | undefined;
 }
 
+/** Project name and description editor with save/cancel controls. */
 export function GeneralSettings({
   projectId,
   name,

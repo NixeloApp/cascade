@@ -21,6 +21,7 @@ interface ProjectsListProps {
   onCreateClick: () => void;
 }
 
+/** Paginated list of projects with create button and navigation. */
 export function ProjectsList({ onCreateClick }: ProjectsListProps) {
   const { organizationId, orgSlug } = useOrganization();
 

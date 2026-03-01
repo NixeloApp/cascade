@@ -41,6 +41,7 @@ const ROLE_BADGE_VARIANTS: Record<string, "brand" | "secondary" | "neutral"> = {
   viewer: "neutral",
 };
 
+/** Project member list with add/remove and role management. */
 export function MemberManagement({
   projectId,
   members,

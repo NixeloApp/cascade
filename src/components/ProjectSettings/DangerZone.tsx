@@ -20,6 +20,7 @@ interface DangerZoneProps {
   orgSlug: string;
 }
 
+/** Destructive actions section with project deletion (owner-only). */
 export function DangerZone({
   projectId,
   projectName,

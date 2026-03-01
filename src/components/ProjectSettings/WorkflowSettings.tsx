@@ -31,6 +31,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   done: "bg-status-success/20 text-status-success",
 };
 
+/** Workflow state editor for customizing project issue states. */
 export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettingsProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [states, setStates] = useState<WorkflowState[]>(workflowStates);

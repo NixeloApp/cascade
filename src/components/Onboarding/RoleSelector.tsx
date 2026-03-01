@@ -88,6 +88,7 @@ function RoleCard({
   );
 }
 
+/** Card selector for choosing between team lead and team member roles. */
 export function RoleSelector({ onSelect }: RoleSelectorProps) {
   const [isPending, setIsPending] = useState(false);
   const [localSelected, setLocalSelected] = useState<"team_lead" | "team_member" | null>(null);

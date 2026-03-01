@@ -26,6 +26,7 @@ interface ProjectWizardProps {
   workspaceId: Id<"workspaces">;
 }
 
+/** Multi-step wizard dialog for creating a new project with name, key, and workflow. */
 export function ProjectWizard({
   open,
   onOpenChange,

@@ -12,6 +12,7 @@ interface PresenceIndicatorProps {
   userId: string;
 }
 
+/** Real-time presence indicator showing users currently editing a document. */
 export function PresenceIndicator({ roomId, userId }: PresenceIndicatorProps) {
   const presenceState = usePresence(api.presence as PresenceApi, roomId, userId);
 
