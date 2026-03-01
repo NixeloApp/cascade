@@ -72,7 +72,7 @@ const DEPRECATED_PROPS = {
  * Extract gap scale mappings from a component file
  * Handles both object literal and CVA variants format
  */
-function extractGapScale(content, filePath) {
+function extractGapScale(content, _filePath) {
   const scale = {};
 
   // Pattern 1: Object literal (Flex, Grid)
