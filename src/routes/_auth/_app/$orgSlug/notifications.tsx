@@ -14,7 +14,7 @@ import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Archive, Bell, CheckCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
-import { NotificationItem, type NotificationWithActor } from "@/components/NotificationItem";
+import { NotificationItem, type NotificationWithActor } from "@/components/Notifications";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";

@@ -13,10 +13,15 @@ import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Bell, ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
 import { Stack } from "@/components/ui/Stack";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
@@ -24,11 +29,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
-import { Badge } from "./ui/Badge";
-import { Card } from "./ui/Card";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
-import { Tooltip } from "./ui/Tooltip";
-import { Typography } from "./ui/Typography";
 
 /** Notification filter categories */
 type NotificationFilter = "all" | "mentions" | "assigned" | "comments" | "updates";

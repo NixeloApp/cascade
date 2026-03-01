@@ -14,7 +14,7 @@ import { useSidebarState } from "@/hooks/useSidebarState";
 import { Menu } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { GlobalSearch } from "./GlobalSearch";
-import { NotificationCenter } from "./NotificationCenter";
+import { NotificationCenter } from "./Notifications";
 import { TimerWidget as NavTimerWidget } from "./TimeTracking/TimerWidget";
 import { UserMenu } from "./UserMenu";
 
