@@ -1,3 +1,11 @@
+/**
+ * Attachment List
+ *
+ * Displays file attachments for issues with download and delete actions.
+ * Shows file icons based on MIME type with size and upload info.
+ * Supports skeleton loading states and empty state messaging.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

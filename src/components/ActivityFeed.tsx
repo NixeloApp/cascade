@@ -1,3 +1,11 @@
+/**
+ * Activity Feed
+ *
+ * Timeline of activity events for issues or documents.
+ * Shows comments, status changes, assignments, and other updates.
+ * Groups events by date with relative timestamps.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";

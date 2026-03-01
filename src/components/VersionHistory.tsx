@@ -1,3 +1,11 @@
+/**
+ * Version History
+ *
+ * Document version history panel with restore functionality.
+ * Shows timestamped versions with author info and allows restoring.
+ * Displays version diffs and metadata in a timeline format.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

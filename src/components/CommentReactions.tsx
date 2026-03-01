@@ -1,3 +1,11 @@
+/**
+ * Comment Reactions
+ *
+ * Emoji reaction picker and display for comments.
+ * Shows reaction counts with user tooltips on hover.
+ * Supports adding/removing reactions with optimistic updates.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";

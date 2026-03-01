@@ -1,3 +1,11 @@
+/**
+ * Attachment Upload
+ *
+ * File upload button for adding attachments to issues.
+ * Handles file selection, upload progress, and error states.
+ * Integrates with Convex file storage for secure uploads.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";

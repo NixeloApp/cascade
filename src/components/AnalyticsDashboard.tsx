@@ -1,3 +1,11 @@
+/**
+ * Analytics Dashboard
+ *
+ * Project-level analytics page with charts and metrics.
+ * Shows velocity trends, burndown charts, and team performance.
+ * Provides visual insights into project health and progress.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
