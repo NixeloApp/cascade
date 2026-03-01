@@ -36,6 +36,7 @@ export function run() {
     /src\/components\/Settings\/CoverImageUploadModal\.tsx$/, // a11y: drop zone requires div for keyboard handling
     /convex\/users\.ts$/, // Complexity: search with filters - TODO: extract searchUsersHelper
     /src\/components\/Plate\/MentionInputElement\.tsx$/, // Intentional useEffect deps pattern for combobox reset
+    /src\/components\/IssueDetail\/IssueMetadataSection\.tsx$/, // Complexity: conditional inline editing for each field
   ];
 
   let errorCount = 0;

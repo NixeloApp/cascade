@@ -62,8 +62,7 @@ export function SprintBurnChart({ sprintId }: SprintBurnChartProps) {
       // Burndown: remaining work
       if (index <= daysElapsed) {
         // Linear interpolation of current remaining points to the elapsed day
-        const progressPerDay =
-          (totalPoints - (totalPoints - completedPoints)) / Math.max(daysElapsed, 1);
+        const progressPerDay = completedPoints / Math.max(daysElapsed, 1);
         actualValue = totalPoints - progressPerDay * index;
       } else {
         // Future days - no actual data yet

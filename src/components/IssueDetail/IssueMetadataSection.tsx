@@ -29,7 +29,7 @@ interface WorkflowState {
 
 interface IssueMetadataProps {
   status: string;
-  type: string;
+  type: IssueTypeWithSubtask;
   priority: IssuePriority;
   assignee?: { _id: string; name: string; image?: string } | null;
   reporter?: { name: string } | null;
@@ -53,6 +53,7 @@ interface IssueMetadataProps {
  * Displays issue metadata grid and labels with optional inline editing
  * Extracted from IssueDetailModal for better organization
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Metadata display with conditional inline editing per field
 export function IssueMetadataSection({
   status,
   type,
@@ -100,7 +101,7 @@ export function IssueMetadataSection({
           {/* Type */}
           <PropertyRow label="Type">
             {canEditType && onTypeChange ? (
-              <InlineTypeSelect value={type as IssueTypeWithSubtask} onChange={onTypeChange} />
+              <InlineTypeSelect value={type} onChange={onTypeChange} />
             ) : (
               <Typography variant="label" className="capitalize">
                 {type}

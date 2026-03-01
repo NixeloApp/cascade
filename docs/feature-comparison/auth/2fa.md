@@ -2,7 +2,7 @@
 
 ## Overview
 
-Two-factor authentication adds an additional layer of security beyond passwords. Users must provide something they know (password) and something they have (authenticator app or backup code) to access their account.
+Two-factor authentication provides an additional security layer beyond passwords. Users must provide something they know (password) and something they have (authenticator app or backup code) to access their account.
 
 ---
 
@@ -56,7 +56,7 @@ The plane codebase contains no evidence of two-factor authentication support.
 - Stored in `users.twoFactorSecret`
 
 **QR Code Format**:
-```
+```text
 otpauth://totp/Nixelo:user@example.com?secret=BASE32SECRET&issuer=Nixelo
 ```
 
@@ -457,7 +457,7 @@ export const check2FACompliance = query({
 - No 2FA implementation found
 
 ### Cascade
-- 2FA module: `~/Desktop/cascade/convex/twoFactor.ts`
-- Verify route: `~/Desktop/cascade/src/routes/verify-2fa.tsx`
-- Settings: `~/Desktop/cascade/src/components/Settings/TwoFactorSettings.tsx`
-- Schema: `~/Desktop/cascade/convex/schema.ts` (users 2FA fields, twoFactorSessions)
+- 2FA module: `convex/twoFactor.ts`
+- Verify route: `src/routes/verify-2fa.tsx`
+- Settings: `src/components/Settings/TwoFactorSettings.tsx`
+- Schema: `convex/schema.ts` (users 2FA fields, twoFactorSessions)

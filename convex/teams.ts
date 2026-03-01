@@ -612,7 +612,8 @@ export const getOrganizationTeams = organizationQuery({
     // Use bounded take() to get accurate counts up to reasonable limits
     const teamIds = teams.map((t) => t._id);
 
-    const [teamMembersArrays, projectCountsArray] = await Promise.all([
+    const [teamMembersArrays, projectCountsArray, userMemberships] = await Promise.all([
+      // Get members for counts (bounded)
       Promise.all(
         teamIds.map((teamId) =>
           ctx.db
@@ -622,6 +623,7 @@ export const getOrganizationTeams = organizationQuery({
             .take(MAX_TEAM_MEMBERS),
         ),
       ),
+      // Get project counts
       Promise.all(
         teamIds.map(async (teamId) => {
           const projects = await ctx.db
@@ -631,6 +633,17 @@ export const getOrganizationTeams = organizationQuery({
             .take(MAX_PROJECTS_PER_TEAM);
           return projects.length;
         }),
+      ),
+      // Get current user's membership for each team separately
+      // Uses compound index to avoid relying on capped member list
+      Promise.all(
+        teamIds.map((teamId) =>
+          ctx.db
+            .query("teamMembers")
+            .withIndex("by_team_user", (q) => q.eq("teamId", teamId).eq("userId", ctx.userId))
+            .filter(notDeleted)
+            .first(),
+        ),
       ),
     ]);
 
@@ -643,8 +656,8 @@ export const getOrganizationTeams = organizationQuery({
       const teamIdStr = teamId.toString();
       memberCountByTeam.set(teamIdStr, members.length);
 
-      // Track current user's role
-      const userMembership = members.find((m) => m.userId === ctx.userId);
+      // Track current user's role from direct lookup (not capped slice)
+      const userMembership = userMemberships[index];
       if (userMembership) {
         userRoleByTeam.set(teamIdStr, userMembership.role);
       }

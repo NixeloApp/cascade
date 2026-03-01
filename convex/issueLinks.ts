@@ -3,7 +3,7 @@ import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues } from "./lib/batchHelpers";
 import { conflict, notFound, validation } from "./lib/errors";
 import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES } from "./lib/queryLimits";
-import { assertCanEditProject } from "./projectAccess";
+import { assertCanEditProject, canAccessProject } from "./projectAccess";
 import { linkTypes } from "./validators";
 
 /**
@@ -115,6 +115,12 @@ export const getForProject = authenticatedQuery({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
+    // Verify user has access to this project
+    const hasAccess = await canAccessProject(ctx, args.projectId, ctx.userId);
+    if (!hasAccess) {
+      return { links: [] };
+    }
+
     // Get all non-deleted issues in the project (bounded for safety)
     const issues = await ctx.db
       .query("issues")

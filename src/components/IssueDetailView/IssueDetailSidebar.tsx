@@ -18,7 +18,7 @@ interface IssueDetailSidebarProps {
   issueId: Id<"issues">;
   projectId: Id<"projects">;
   status: string;
-  type: string;
+  type: IssueTypeWithSubtask;
   priority: IssuePriority;
   assignee?: { _id: string; name: string; image?: string } | null;
   reporter?: { _id: string; name: string; image?: string } | null;

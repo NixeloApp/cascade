@@ -398,15 +398,15 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
 ## Screenshots/References
 
 ### plane
-- Sign-up page: `~/Desktop/plane/apps/web/app/(all)/sign-up/page.tsx`
-- Auth forms: `~/Desktop/plane/apps/web/core/components/account/auth-forms/`
-- OAuth hooks: `~/Desktop/plane/apps/web/core/hooks/oauth/`
-- OAuth providers: `~/Desktop/plane/apps/api/plane/authentication/provider/oauth/`
-- Error codes: `~/Desktop/plane/apps/web/helpers/authentication.helper.tsx`
+- Sign-up page: `apps/web/app/(all)/sign-up/page.tsx` (in plane repo)
+- Auth forms: `apps/web/core/components/account/auth-forms/` (in plane repo)
+- OAuth hooks: `apps/web/core/hooks/oauth/` (in plane repo)
+- OAuth providers: `apps/api/plane/authentication/provider/oauth/` (in plane repo)
+- Error codes: `apps/web/helpers/authentication.helper.tsx` (in plane repo)
 
 ### Cascade
-- Sign-in: `~/Desktop/cascade/src/routes/signin.tsx`
-- Sign-up: `~/Desktop/cascade/src/routes/signup.tsx`
-- Auth components: `~/Desktop/cascade/src/components/Auth/`
-- Backend: `~/Desktop/cascade/convex/auth.ts`
-- Password reset: `~/Desktop/cascade/convex/authWrapper.ts`
+- Sign-in: `src/routes/signin.tsx`
+- Sign-up: `src/routes/signup.tsx`
+- Auth components: `src/components/Auth/`
+- Backend: `convex/auth.ts`
+- Password reset: `convex/authWrapper.ts`

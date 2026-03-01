@@ -33,6 +33,20 @@ interface MentionInputElementData {
 }
 
 /**
+ * Type guard to verify element has MentionInputElementData shape
+ */
+function isMentionInputElement(element: unknown): element is MentionInputElementData {
+  return (
+    typeof element === "object" &&
+    element !== null &&
+    "type" in element &&
+    element.type === "mention_input" &&
+    "children" in element &&
+    Array.isArray(element.children)
+  );
+}
+
+/**
  * Renders the mention input combobox when user types "@"
  */
 export function MentionInputElement({
@@ -42,16 +56,16 @@ export function MentionInputElement({
   attributes,
 }: PlateElementProps & { className?: string }) {
   const editor = useEditorRef();
-  const mentionElement = element as unknown as MentionInputElementData;
   const inputRef = useRef<HTMLSpanElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Extract search text from children
+  // Extract search text from children using type guard
   const search = useMemo(() => {
-    const childNode = mentionElement.children?.[0];
+    if (!isMentionInputElement(element)) return "";
+    const childNode = element.children?.[0];
     const text = childNode && "text" in childNode ? childNode.text : "";
     return text.toLowerCase();
-  }, [mentionElement.children]);
+  }, [element]);
 
   // Search for users - query organization members
   const searchResults = useQuery(api.users.searchUsers, {

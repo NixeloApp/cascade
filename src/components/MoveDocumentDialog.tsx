@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
@@ -30,6 +30,13 @@ export function MoveDocumentDialog({
     currentProjectId || "",
   );
   const [isMoving, setIsMoving] = useState(false);
+
+  // Reset selection when dialog opens or document changes
+  useEffect(() => {
+    if (open) {
+      setSelectedProjectId(currentProjectId || "");
+    }
+  }, [open, currentProjectId]);
 
   const projects = useQuery(api.projects.getCurrentUserProjects, { organizationId });
   const moveToProject = useMutation(api.documents.moveToProject);
