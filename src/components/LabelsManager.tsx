@@ -60,6 +60,7 @@ type LabelGroup = {
   labels: Doc<"labels">[];
 };
 
+/** Label and label group management panel with create, edit, and delete operations. */
 export function LabelsManager({ projectId }: LabelsManagerProps) {
   // Track collapsed groups
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());

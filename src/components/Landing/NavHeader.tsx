@@ -14,6 +14,7 @@ import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
 import { NixeloLogo } from "./Icons";
 
+/** Landing page navigation header with logo, links, and theme toggle. */
 export function NavHeader() {
   const { setTheme } = useTheme();
 

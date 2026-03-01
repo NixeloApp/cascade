@@ -6,6 +6,7 @@ import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 import { ArrowIcon } from "./Icons";
 
+/** Landing page section showcasing key product features. */
 export function FeaturesSection() {
   const features = [
     {

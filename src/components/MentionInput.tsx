@@ -22,6 +22,7 @@ interface MentionInputProps {
   enablePreview?: boolean;
 }
 
+/** Textarea with @mention autocomplete and markdown preview toggle. */
 export function MentionInput({
   projectId,
   value,

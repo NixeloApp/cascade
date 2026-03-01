@@ -3,6 +3,7 @@ import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 import { NixeloLogo } from "./Icons";
 
+/** Landing page footer with navigation links and branding. */
 export function Footer() {
   return (
     <footer className="px-6 py-16 border-t border-ui-border/20 bg-transparent transition-colors">

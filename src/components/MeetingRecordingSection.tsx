@@ -213,6 +213,7 @@ interface MeetingRecordingSectionProps {
   scheduledStartTime: number;
 }
 
+/** Section for scheduling and managing meeting bot recordings. */
 export function MeetingRecordingSection({
   calendarEventId,
   meetingUrl,
