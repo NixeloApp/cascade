@@ -2,8 +2,8 @@ import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
+import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
 import { AuthLinkButton } from "./AuthLink";
@@ -30,10 +30,10 @@ export function EmailVerificationRequired() {
 
     void signIn("password", formData)
       .then(() => {
-        toast.success("Email verified successfully!");
+        showSuccess("Email verified successfully!");
       })
       .catch(() => {
-        toast.error("Invalid code. Please try again.");
+        showError("Invalid code. Please try again.");
       })
       .finally(() => setSubmitting(false));
   };
@@ -47,10 +47,10 @@ export function EmailVerificationRequired() {
 
     void signIn("password", formData)
       .then(() => {
-        toast.success("Verification code sent!");
+        showSuccess("Verification code sent!");
       })
       .catch(() => {
-        toast.error("Could not resend code. Please try again.");
+        showError("Could not resend code. Please try again.");
       })
       .finally(() => setResending(false));
   };

@@ -8,8 +8,8 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { TEST_IDS } from "@/lib/test-ids";
+import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
@@ -38,10 +38,10 @@ export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormPro
     void signIn("password", formData)
       .then(() => {
         onCodeSent(email);
-        toast.success("Check your email for the reset code");
+        showSuccess("Check your email for the reset code");
       })
       .catch((_error) => {
-        toast.error("Could not send reset code. Please check your email.");
+        showError("Could not send reset code. Please check your email.");
       })
       .finally(() => setSubmitting(false));
   };

@@ -8,7 +8,7 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
@@ -39,11 +39,11 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
 
     void signIn("password", formData)
       .then(() => {
-        toast.success("Password reset successfully!");
+        showSuccess("Password reset successfully!");
         onSuccess();
       })
       .catch((_error) => {
-        toast.error("Invalid code or password. Please try again.");
+        showError("Invalid code or password. Please try again.");
       })
       .finally(() => setSubmitting(false));
   };
