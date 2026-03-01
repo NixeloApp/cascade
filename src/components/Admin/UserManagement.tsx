@@ -1,3 +1,11 @@
+/**
+ * User Management
+ *
+ * Admin panel for organization user management.
+ * Lists all users with role editing, removal, and invitation capabilities.
+ * Supports bulk actions and user search/filtering.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

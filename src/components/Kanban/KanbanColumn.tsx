@@ -1,3 +1,11 @@
+/**
+ * Kanban Column
+ *
+ * Drop target column for the Kanban board with issue cards.
+ * Supports drag-and-drop reordering, collapsing, and WIP limits.
+ * Displays workflow state color and issue count badge.
+ */
+
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import type { Id } from "@convex/_generated/dataModel";
 import type { LabelInfo } from "@convex/lib/issueHelpers";

@@ -1,3 +1,11 @@
+/**
+ * Issue Card
+ *
+ * Draggable card component for displaying issues on Kanban boards.
+ * Shows key, title, type, priority, assignee, and labels.
+ * Supports drag-and-drop with drop indicators and keyboard navigation.
+ */
+
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import {
   draggable,

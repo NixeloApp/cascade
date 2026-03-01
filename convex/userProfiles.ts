@@ -1,3 +1,11 @@
+/**
+ * User Profiles
+ *
+ * Extended user profile data beyond basic authentication.
+ * Includes employment info, skills, bio, and time tracking statistics.
+ * Supports profile visibility settings and admin user management.
+ */
+
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";

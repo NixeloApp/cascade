@@ -1,3 +1,11 @@
+/**
+ * User Statistics Helpers
+ *
+ * Utility functions for calculating user activity and productivity metrics.
+ * Includes issue counts, comment activity, and project participation stats.
+ * Optimized with query thresholds for large data sets.
+ */
+
 import type { FilterBuilder, GenericTableInfo } from "convex/server";
 import type { Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";

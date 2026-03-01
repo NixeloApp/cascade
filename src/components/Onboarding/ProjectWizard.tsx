@@ -1,3 +1,11 @@
+/**
+ * Project Wizard
+ *
+ * Multi-step wizard dialog for creating a new project.
+ * Guides users through name, key, description, and workflow setup.
+ * Supports template selection and initial team member assignment.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
