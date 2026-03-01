@@ -1,3 +1,11 @@
+/**
+ * Offline Settings Tab
+ *
+ * Displays connection status and offline sync information.
+ * Shows pending changes queue and sync controls.
+ * Lists available offline features and capabilities.
+ */
+
 import { toast } from "sonner";
 import { Check, RefreshCw, Wifi, WifiOff, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";

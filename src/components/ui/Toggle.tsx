@@ -1,3 +1,11 @@
+/**
+ * Toggle Component
+ *
+ * Boolean switch control with size variants.
+ * Supports keyboard navigation and accessibility labels.
+ * Includes ToggleField variant with built-in label.
+ */
+
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 

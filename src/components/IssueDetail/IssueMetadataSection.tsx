@@ -1,3 +1,11 @@
+/**
+ * Issue Metadata Section
+ *
+ * Displays issue properties in a structured grid layout.
+ * Supports inline editing for status, type, priority, and assignee.
+ * Shows labels with colored badges.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";

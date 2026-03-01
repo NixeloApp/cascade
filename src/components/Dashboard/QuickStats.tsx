@@ -1,3 +1,11 @@
+/**
+ * Quick Stats
+ *
+ * Dashboard metrics cards showing user productivity data.
+ * Displays assigned tasks, completed items, and high priority count.
+ * Includes progress indicators and loading skeletons.
+ */
+
 import { cn } from "@/lib/utils";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
