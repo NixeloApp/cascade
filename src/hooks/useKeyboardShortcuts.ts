@@ -66,6 +66,7 @@ function processShortcuts(
   return false;
 }
 
+/** Hook for registering global keyboard shortcuts with modifier key support. */
 export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[], enabled = true) {
   useEffect(() => {
     if (!enabled) return;

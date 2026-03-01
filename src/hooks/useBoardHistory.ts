@@ -16,6 +16,7 @@ export interface BoardAction {
   isTeamMode?: boolean;
 }
 
+/** Hook for undo/redo history of Kanban board drag-and-drop actions. */
 export function useBoardHistory() {
   const [historyStack, setHistoryStack] = useState<BoardAction[]>([]);
   const [redoStack, setRedoStack] = useState<BoardAction[]>([]);

@@ -52,6 +52,7 @@ interface WebhookFormProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** Dialog form for creating or editing webhook configurations. */
 export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookFormProps) {
   // Events array (kept outside form due to checkbox array pattern)
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);

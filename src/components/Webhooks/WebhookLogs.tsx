@@ -25,6 +25,7 @@ interface WebhookLogsProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** Dialog showing webhook execution history with retry option. */
 export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps) {
   const [selectedExecution, setSelectedExecution] = useState<string | null>(null);
 

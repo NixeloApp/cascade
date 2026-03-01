@@ -26,6 +26,7 @@ interface PageHeaderProps {
   className?: string;
 }
 
+/** Page header with title, breadcrumbs, and action buttons. */
 export function PageHeader({
   title,
   description,

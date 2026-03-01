@@ -12,6 +12,7 @@ interface PageErrorProps {
   action?: ReactNode;
 }
 
+/** Full-page error display with optional action button. */
 export function PageError({ title, message, action }: PageErrorProps): ReactNode {
   const navigate = useNavigate();
 
