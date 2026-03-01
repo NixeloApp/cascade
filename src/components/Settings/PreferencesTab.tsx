@@ -1,3 +1,11 @@
+/**
+ * Preferences Tab
+ *
+ * User preferences settings for theme and regional options.
+ * Handles theme switching, timezone selection, and notifications.
+ * Persists settings to database with real-time sync.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";

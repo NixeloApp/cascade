@@ -1,3 +1,11 @@
+/**
+ * Project Board Page
+ *
+ * Kanban board view for project issues with sprint support.
+ * Handles URL-based filtering and sprint selection.
+ * Shows sprint progress and workload indicators.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
