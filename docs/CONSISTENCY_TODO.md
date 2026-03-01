@@ -482,6 +482,8 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Added tests for KanbanColumn (26 tests) | Test coverage +1 component |
+| 2026-03-01 | Added find-missing-tests.js helper script | Developer tooling |
 | 2026-03-01 | Updated CLAUDE.md with new patterns and structure | Documentation consistency |
 | 2026-03-01 | Moved IssueCard and CreateIssueModal to IssueDetail/ | Feature directory organization |
 | 2026-03-01 | Added COLORS.DEFAULT_LABEL constant | Runtime color values centralized |
