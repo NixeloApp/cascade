@@ -16,7 +16,8 @@
  *  12. Route constants      — use ROUTES from @/config/routes instead of hardcoded paths
  *  13. Convex patterns      — Envelope Pattern returns, security checks, test destructuring
  *  14. Convex naming        — function naming conventions (get/list/create/update/delete)
- *  15. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
+ *  15. Component naming     — PascalCase components, {Component}Props interfaces
+ *  16. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
  *  16. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
  *  17. JSDoc coverage       — exported functions/components should have JSDoc documentation
  *  18. File headers         — non-trivial files (>50 lines) should have documentation headers
@@ -35,6 +36,7 @@ import { run as runApiCallsCheck } from "./validate/check-api-calls.js";
 import { run as runArbitraryTailwindCheck } from "./validate/check-arbitrary-tw.js";
 import { run as runAsyncPatternsCheck } from "./validate/check-async-patterns.js";
 import { run as runColorAudit } from "./validate/check-colors.js";
+import { run as runComponentNamingCheck } from "./validate/check-component-naming.js";
 import { run as runConvexNamingCheck } from "./validate/check-convex-naming.js";
 import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
@@ -72,6 +74,7 @@ const checks = [
   { name: "Route constants", fn: runRouteConstantsCheck },
   { name: "Convex patterns", fn: runConvexPatternsCheck },
   { name: "Convex naming", fn: runConvexNamingCheck },
+  { name: "Component naming", fn: runComponentNamingCheck },
   { name: "Interactive Tailwind", fn: runInteractiveTwCheck },
   { name: "Tailwind consistency", fn: runTailwindConsistencyCheck },
   { name: "JSDoc coverage", fn: runJSDocCheck },
