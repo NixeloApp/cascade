@@ -1,3 +1,11 @@
+/**
+ * Lazy PostHog
+ *
+ * Deferred PostHog analytics provider for improved page load.
+ * Loads PostHog SDK lazily after initial render (~150KB saved).
+ * Wraps children once analytics are ready.
+ */
+
 import type { PostHogProvider as PostHogProviderType } from "posthog-js/react";
 import { type ReactNode, useEffect, useState } from "react";
 

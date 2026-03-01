@@ -1,3 +1,11 @@
+/**
+ * Comment Renderer
+ *
+ * Renders comment content with @mentions and inline markdown.
+ * Supports bold, italic, code, strikethrough, and links.
+ * Highlights mentioned users with badges.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import { Badge } from "./ui/Badge";
 

@@ -1,11 +1,14 @@
+/**
+ * Bar Chart
+ *
+ * Horizontal bar chart visualization for analytics data.
+ * Displays labeled bars with proportional widths and values.
+ * Supports custom colors and responsive sizing.
+ */
+
 import { cn } from "@/lib/utils";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
-
-/**
- * Horizontal bar chart visualization
- * Extracted from AnalyticsDashboard for better organization and reusability
- */
 export function BarChart({
   data,
   color,

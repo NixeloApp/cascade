@@ -1,3 +1,11 @@
+/**
+ * Workflow Settings
+ *
+ * Project workflow state configuration panel.
+ * Allows admins to customize issue status workflow steps.
+ * Supports reordering, color customization, and adding new states.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
