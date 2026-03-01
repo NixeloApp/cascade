@@ -1,3 +1,11 @@
+/**
+ * Notification Item
+ *
+ * Individual notification row with type-specific icons and actions.
+ * Supports mentions, assignments, comments, and status updates.
+ * Includes snooze, archive, and delete actions.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";

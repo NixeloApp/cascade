@@ -1,3 +1,11 @@
+/**
+ * Offline Sync
+ *
+ * Queue and retry system for offline mutations.
+ * Stores failed mutations in IndexedDB and replays when online.
+ * Handles conflict resolution and retry backoff.
+ */
+
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
