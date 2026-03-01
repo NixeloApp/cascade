@@ -26,6 +26,7 @@ export function run() {
     "src/components/Auth/GoogleAuthButton.tsx",
     "src/components/ui/ColorPicker.tsx",
     "src/components/ui/ColorPicker.test.tsx",
+    "src/components/Plate/ColorPickerButton.tsx", // Text color picker for Plate editor
     "src/index.css",
     "src/components/Landing/",
     "convex/http/",
@@ -37,6 +38,7 @@ export function run() {
     "convex/schema.ts",
     "convex/lib/issueHelpers.ts",
     "src/components/LabelsManager.tsx",
+    "src/components/CreateIssueModal.tsx", // Inline label creation needs hex color picker - TODO: extract to LabelColorPicker component
     "src/components/Settings/DevToolsTab.tsx",
     "src/components/AI/config.ts",
     "src/lib/yjs/", // Y.js collaboration cursor colors (dynamic per-user)

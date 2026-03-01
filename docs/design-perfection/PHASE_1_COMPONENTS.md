@@ -389,15 +389,15 @@ Before advancing to Phase 2:
 - `src/components/ui/*.tsx` - All UI primitives
 
 ### Component Specs
-- `docs/design-system/components/button.md`
-- `docs/design-system/components/card.md`
-- `docs/design-system/components/input.md`
-- `docs/design-system/components/dialog.md`
+- `docs/design/specs/components/button.md`
+- `docs/design/specs/components/card.md`
+- `docs/design/specs/components/input.md`
+- `docs/design/specs/components/dialog.md`
 - (etc.)
 
 ### Token Reference
 - `src/index.css` - `@theme` block
-- `docs/design-system/tokens/colors.md`
+- `docs/COLORS.md`
 
 ---
 

@@ -1,16 +1,20 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { CommandPalette, useCommands } from "@/components/CommandPalette";
+import { CreateIssueModal } from "@/components/CreateIssueModal";
+import { CreateProjectFromTemplate } from "@/components/CreateProjectFromTemplate";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { createKeyboardShortcuts, createKeySequences } from "@/config/keyboardShortcuts";
+import { ROUTES } from "@/config/routes";
+import { IssueViewModeProvider } from "@/contexts/IssueViewModeContext";
 import { useKeyboardShortcutsWithSequences } from "@/hooks/useKeyboardShortcuts";
 import {
   OrgContext,
@@ -19,6 +23,7 @@ import {
   useOrganizationOptional,
 } from "@/hooks/useOrgContext";
 import { SidebarProvider } from "@/hooks/useSidebarState";
+import { showError, showSuccess } from "@/lib/toast";
 
 // Re-export hooks for backwards compatibility with existing imports
 export { useOrganization, useOrganizationOptional };
@@ -132,8 +137,47 @@ function OrganizationLayoutInner() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [_showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showCreateIssue, setShowCreateIssue] = useState(false);
+  const [showCreateProject, setShowCreateProject] = useState(false);
 
-  const { orgSlug } = useOrganization();
+  const { orgSlug, organizationId } = useOrganization();
+
+  // Document creation mutation
+  const createDocument = useMutation(api.documents.create);
+
+  const handleCreateDocument = useCallback(async () => {
+    try {
+      const { documentId } = await createDocument({
+        title: "Untitled Document",
+        isPublic: false,
+        organizationId,
+      });
+      navigate({
+        to: ROUTES.documents.detail.path,
+        params: { orgSlug, id: documentId },
+      });
+      showSuccess("Document created");
+    } catch (error) {
+      showError(error, "Failed to create document");
+    }
+  }, [createDocument, navigate, organizationId, orgSlug]);
+
+  // Listen for keyboard shortcut events
+  useEffect(() => {
+    const handleCreateIssue = () => setShowCreateIssue(true);
+    const handleCreateDoc = () => void handleCreateDocument();
+    const handleCreateProj = () => setShowCreateProject(true);
+
+    window.addEventListener("nixelo:create-issue", handleCreateIssue);
+    window.addEventListener("nixelo:create-document", handleCreateDoc);
+    window.addEventListener("nixelo:create-project", handleCreateProj);
+
+    return () => {
+      window.removeEventListener("nixelo:create-issue", handleCreateIssue);
+      window.removeEventListener("nixelo:create-document", handleCreateDoc);
+      window.removeEventListener("nixelo:create-project", handleCreateProj);
+    };
+  }, [handleCreateDocument]);
 
   // Build keyboard shortcuts (need orgSlug for navigation)
   const shortcuts = createKeyboardShortcuts({
@@ -159,51 +203,73 @@ function OrganizationLayoutInner() {
   // Enable keyboard shortcuts
   useKeyboardShortcutsWithSequences(shortcuts, sequences, true);
 
-  // Build command palette commands
-  const commands = useCommands();
+  // Build command palette commands with create callbacks
+  const commands = useCommands({
+    onCreateIssue: () => setShowCreateIssue(true),
+    onCreateDocument: handleCreateDocument,
+    onCreateProject: () => setShowCreateProject(true),
+  });
 
   return (
     <SidebarProvider>
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:bg-ui-bg focus:p-2 focus:border focus:border-ui-border focus:shadow-md focus:rounded-md focus:text-ui-text font-medium"
-      >
-        Skip to content
-      </a>
-      <Flex className="h-screen overflow-hidden bg-ui-bg-secondary">
-        {/* Unified sidebar */}
-        <AppSidebar />
+      <IssueViewModeProvider>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:bg-ui-bg focus:p-2 focus:border focus:border-ui-border focus:shadow-md focus:rounded-md focus:text-ui-text font-medium"
+        >
+          Skip to content
+        </a>
+        <Flex className="h-screen overflow-hidden bg-ui-bg-secondary">
+          {/* Unified sidebar */}
+          <AppSidebar />
 
-        {/* Main content area */}
-        <Flex direction="column" className="flex-1 min-w-0">
-          {/* Slim header */}
-          <AppHeader
-            onShowCommandPalette={() => setShowCommandPalette(true)}
-            onShowShortcutsHelp={() => setShowShortcutsHelp(true)}
+          {/* Main content area */}
+          <Flex direction="column" className="flex-1 min-w-0">
+            {/* Slim header */}
+            <AppHeader
+              onShowCommandPalette={() => setShowCommandPalette(true)}
+              onShowShortcutsHelp={() => setShowShortcutsHelp(true)}
+            />
+
+            {/* Page content */}
+            <FlexItem
+              as="main"
+              flex="1"
+              className="overflow-auto bg-ui-bg scrollbar-subtle"
+              id="main-content"
+              tabIndex={-1}
+            >
+              <Outlet />
+            </FlexItem>
+          </Flex>
+
+          {/* Command Palette Modal */}
+          <CommandPalette
+            isOpen={showCommandPalette}
+            onClose={() => setShowCommandPalette(false)}
+            commands={commands}
           />
 
-          {/* Page content */}
-          <FlexItem
-            as="main"
-            flex="1"
-            className="overflow-auto bg-ui-bg scrollbar-subtle"
-            id="main-content"
-            tabIndex={-1}
-          >
-            <Outlet />
-          </FlexItem>
+          {/* Keyboard Shortcuts Help Modal */}
+          <KeyboardShortcutsHelp open={showShortcutsHelp} onOpenChange={setShowShortcutsHelp} />
+
+          {/* Create Issue Modal */}
+          <CreateIssueModal open={showCreateIssue} onOpenChange={setShowCreateIssue} />
+
+          {/* Create Project Modal */}
+          <CreateProjectFromTemplate
+            open={showCreateProject}
+            onOpenChange={setShowCreateProject}
+            onProjectCreated={async (_projectId, projectKey) => {
+              setShowCreateProject(false);
+              await navigate({
+                to: ROUTES.projects.board.path,
+                params: { orgSlug, key: projectKey },
+              });
+            }}
+          />
         </Flex>
-
-        {/* Command Palette Modal */}
-        <CommandPalette
-          isOpen={showCommandPalette}
-          onClose={() => setShowCommandPalette(false)}
-          commands={commands}
-        />
-
-        {/* Keyboard Shortcuts Help Modal */}
-        <KeyboardShortcutsHelp open={showShortcutsHelp} onOpenChange={setShowShortcutsHelp} />
-      </Flex>
+      </IssueViewModeProvider>
     </SidebarProvider>
   );
 }

@@ -11,6 +11,7 @@ import {
   BellOff,
   Info,
   MessageSquare,
+  Moon,
   RefreshCw,
   Smartphone,
   User,
@@ -19,6 +20,7 @@ import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { Input } from "../ui/form";
 import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
@@ -324,6 +326,21 @@ export function NotificationsTab() {
     }
   };
 
+  const handleQuietHoursTimeChange = async (
+    field: "quietHoursStart" | "quietHoursEnd",
+    value: string,
+  ) => {
+    setIsSaving(true);
+    try {
+      await updatePreferences({ [field]: value });
+      toast.success("Quiet hours updated");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update quiet hours");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handlePushToggle = async (field: string, value: boolean) => {
     setIsSaving(true);
     try {
@@ -447,6 +464,61 @@ export function NotificationsTab() {
               disabled={isSaving || !preferences.emailEnabled}
             />
           </Stack>
+        </Stack>
+      </Card>
+
+      {/* Quiet Hours */}
+      <Card padding="lg">
+        <Stack gap="md">
+          <Flex align="start" justify="between">
+            <FlexItem flex="1">
+              <Flex align="center" gap="sm">
+                <Icon icon={Moon} size="lg" className="text-brand" />
+                <Typography variant="h5">Quiet Hours</Typography>
+              </Flex>
+              <Typography variant="caption" className="mt-1">
+                Pause notifications during specific hours. Notifications will be delivered when
+                quiet hours end.
+              </Typography>
+            </FlexItem>
+            <Switch
+              checked={preferences.quietHoursEnabled ?? false}
+              onCheckedChange={(value) => handleToggle("quietHoursEnabled", value)}
+              disabled={isSaving}
+              className="ml-4"
+            />
+          </Flex>
+
+          {preferences.quietHoursEnabled && (
+            <Stack gap="sm" className="pt-4 border-t border-ui-border-secondary">
+              <Flex gap="md" align="end">
+                <FlexItem flex="1">
+                  <Input
+                    label="Start time"
+                    type="time"
+                    value={preferences.quietHoursStart ?? "22:00"}
+                    onChange={(e) => handleQuietHoursTimeChange("quietHoursStart", e.target.value)}
+                    disabled={isSaving}
+                  />
+                </FlexItem>
+                <Typography variant="small" color="secondary" className="pb-2">
+                  to
+                </Typography>
+                <FlexItem flex="1">
+                  <Input
+                    label="End time"
+                    type="time"
+                    value={preferences.quietHoursEnd ?? "08:00"}
+                    onChange={(e) => handleQuietHoursTimeChange("quietHoursEnd", e.target.value)}
+                    disabled={isSaving}
+                  />
+                </FlexItem>
+              </Flex>
+              <Typography variant="caption" color="secondary">
+                Default: 10:00 PM to 8:00 AM in your local timezone
+              </Typography>
+            </Stack>
+          )}
         </Stack>
       </Card>
 

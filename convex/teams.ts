@@ -16,12 +16,7 @@ import { batchFetchTeams, batchFetchUsers, getUserName } from "./lib/batchHelper
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
-import {
-  MAX_PAGE_SIZE,
-  MAX_PROJECTS_PER_TEAM,
-  MAX_TEAM_MEMBERS,
-  MAX_TEAMS_PER_ORG,
-} from "./lib/queryLimits";
+import { MAX_PROJECTS_PER_TEAM, MAX_TEAM_MEMBERS, MAX_TEAMS_PER_ORG } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getTeamRole } from "./lib/teamAccess";
@@ -613,31 +608,42 @@ export const getOrganizationTeams = organizationQuery({
 
     const isAdmin = ctx.organizationRole === "admin" || ctx.organizationRole === "owner";
 
-    // Fetch team members and projects per team using indexes with limits
-    // Optimization: Use smaller limits for counting — we only need counts + current user's role
+    // Fetch team members and projects per team using indexes
+    // Use bounded take() to get accurate counts up to reasonable limits
     const teamIds = teams.map((t) => t._id);
 
-    const MEMBER_COUNT_LIMIT = 100; // Sufficient for counting; saves bandwidth vs MAX_TEAM_MEMBERS (500)
-
-    const [teamMembersArrays, projectCountsArray] = await Promise.all([
+    const [teamMembersArrays, projectCountsArray, userMemberships] = await Promise.all([
+      // Get members for counts (bounded)
       Promise.all(
         teamIds.map((teamId) =>
           ctx.db
             .query("teamMembers")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter(notDeleted)
-            .take(MEMBER_COUNT_LIMIT),
+            .take(MAX_TEAM_MEMBERS),
         ),
       ),
+      // Get project counts
       Promise.all(
         teamIds.map(async (teamId) => {
           const projects = await ctx.db
             .query("projects")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter(notDeleted)
-            .take(MAX_PAGE_SIZE);
+            .take(MAX_PROJECTS_PER_TEAM);
           return projects.length;
         }),
+      ),
+      // Get current user's membership for each team separately
+      // Uses compound index to avoid relying on capped member list
+      Promise.all(
+        teamIds.map((teamId) =>
+          ctx.db
+            .query("teamMembers")
+            .withIndex("by_team_user", (q) => q.eq("teamId", teamId).eq("userId", ctx.userId))
+            .filter(notDeleted)
+            .first(),
+        ),
       ),
     ]);
 
@@ -650,8 +656,8 @@ export const getOrganizationTeams = organizationQuery({
       const teamIdStr = teamId.toString();
       memberCountByTeam.set(teamIdStr, members.length);
 
-      // Track current user's role
-      const userMembership = members.find((m) => m.userId === ctx.userId);
+      // Track current user's role from direct lookup (not capped slice)
+      const userMembership = userMemberships[index];
       if (userMembership) {
         userRoleByTeam.set(teamIdStr, userMembership.role);
       }

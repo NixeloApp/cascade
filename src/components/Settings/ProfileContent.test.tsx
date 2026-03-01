@@ -21,12 +21,17 @@ const mockStats = {
 
 const mockUpdateProfile = vi.fn();
 
+// Mock activity data
+const mockActivity: unknown[] = [];
+
 // Mock convex/react with ALL required hooks
 vi.mock("convex/react", () => ({
   useQuery: vi.fn((query, args) => {
     if (args === "skip") return undefined;
     const queryStr = query?.toString() || "";
     if (queryStr.includes("getUserStats")) return mockStats;
+    if (queryStr.includes("getUserActivity")) return mockActivity;
+    if (queryStr.includes("getCoverImageUrl")) return null;
     return mockUser;
   }),
   useMutation: vi.fn(() => mockUpdateProfile),
@@ -41,7 +46,20 @@ vi.mock("../../../convex/_generated/api", () => ({
       getCurrent: "api.users.getCurrent",
       getUser: "api.users.getUser",
       getUserStats: "api.users.getUserStats",
+      getUserActivity: "api.users.getUserActivity",
       updateProfile: "api.users.updateProfile",
+      uploadAvatar: "api.users.uploadAvatar",
+      removeAvatar: "api.users.removeAvatar",
+      uploadCoverImage: "api.users.uploadCoverImage",
+      removeCoverImage: "api.users.removeCoverImage",
+      getCoverImageUrl: "api.users.getCoverImageUrl",
+    },
+    files: {
+      generateUploadUrl: "api.files.generateUploadUrl",
+    },
+    issues: {
+      listIssuesByDateRange: "api.issues.listIssuesByDateRange",
+      update: "api.issues.update",
     },
   },
 }));

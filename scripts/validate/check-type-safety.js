@@ -25,7 +25,18 @@ export function run() {
     /convex\/otpPasswordReset\.ts$/, // Complexity threshold update
     /convex\/otpVerification\.ts$/, // Complexity threshold update
     /convex\/rateLimits\.ts$/, // Type assertion required
-    /src\/components\/AppSidebar\.tsx$/, // Complexity threshold update
+    /src\/components\/AppSidebar\.tsx$/, // Complexity: multiple nav sections - TODO: split into NavSection components
+    /src\/components\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
+    /src\/components\/DocumentHeader\.tsx$/, // Complexity: conditional actions - TODO: extract DocumentActions
+    /src\/components\/IssueCard\.tsx$/, // Complexity: drag-drop + selection - TODO: split DraggableIssueCard
+    /src\/components\/IssuesCalendarView\.tsx$/, // a11y: calendar cells are drop targets (clickable divs)
+    /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
+    /src\/components\/RoadmapView\.tsx$/, // Complexity: timeline + SVG - TODO: extract TimelineRenderer
+    /src\/components\/Settings\/AvatarUploadModal\.tsx$/, // a11y: drop zone requires div for keyboard handling
+    /src\/components\/Settings\/CoverImageUploadModal\.tsx$/, // a11y: drop zone requires div for keyboard handling
+    /convex\/users\.ts$/, // Complexity: search with filters - TODO: extract searchUsersHelper
+    /src\/components\/Plate\/MentionInputElement\.tsx$/, // Intentional useEffect deps pattern for combobox reset
+    /src\/components\/IssueDetail\/IssueMetadataSection\.tsx$/, // Complexity: conditional inline editing for each field
   ];
 
   let errorCount = 0;

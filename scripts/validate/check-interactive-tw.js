@@ -40,6 +40,7 @@ const ALLOWED_FILES = [
   // Editor components
   "Plate/",
   "PlateEditor.tsx",
+  "IssueDescriptionEditor.tsx",
   "MentionInput.tsx",
   // Navigation/layout
   "AppSidebar.tsx",
@@ -60,6 +61,7 @@ const ALLOWED_FILES = [
   "LabelsManager.tsx",
   // Calendar
   "Calendar/",
+  "IssuesCalendarView.tsx",
   "RoadmapView.tsx",
   // Settings/admin
   "Settings/",

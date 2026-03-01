@@ -2,8 +2,8 @@ import { v } from "convex/values";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues } from "./lib/batchHelpers";
 import { conflict, notFound, validation } from "./lib/errors";
-import { MAX_PAGE_SIZE } from "./lib/queryLimits";
-import { assertCanEditProject } from "./projectAccess";
+import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES } from "./lib/queryLimits";
+import { assertCanEditProject, canAccessProject } from "./projectAccess";
 import { linkTypes } from "./validators";
 
 /**
@@ -103,6 +103,65 @@ export const remove = authenticatedMutation({
     });
 
     return { success: true, deleted: true } as const;
+  },
+});
+
+/**
+ * Get all links for issues in a project
+ * Used for Gantt chart dependency visualization
+ */
+export const getForProject = authenticatedQuery({
+  args: {
+    projectId: v.id("projects"),
+  },
+  handler: async (ctx, args) => {
+    // Verify user has access to this project
+    const hasAccess = await canAccessProject(ctx, args.projectId, ctx.userId);
+    if (!hasAccess) {
+      return { links: [] };
+    }
+
+    // Get all non-deleted issues in the project (bounded for safety)
+    const issues = await ctx.db
+      .query("issues")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter((q) => q.neq(q.field("isDeleted"), true))
+      .take(MAX_SPRINT_ISSUES);
+
+    const issueIds = new Set(issues.map((i) => i._id));
+
+    // Fetch links for all issues in parallel (bounded per issue)
+    const linksArrays = await Promise.all(
+      issues.map((issue) =>
+        ctx.db
+          .query("issueLinks")
+          .withIndex("by_from_issue", (q) => q.eq("fromIssueId", issue._id))
+          .filter((q) => q.neq(q.field("isDeleted"), true))
+          .take(MAX_PAGE_SIZE),
+      ),
+    );
+
+    // Filter to project-internal links and format
+    const allLinks: Array<{
+      fromIssueId: string;
+      toIssueId: string;
+      linkType: string;
+    }> = [];
+
+    for (const outgoingLinks of linksArrays) {
+      for (const link of outgoingLinks) {
+        // Only include if target is also in this project
+        if (issueIds.has(link.toIssueId)) {
+          allLinks.push({
+            fromIssueId: link.fromIssueId,
+            toIssueId: link.toIssueId,
+            linkType: link.linkType,
+          });
+        }
+      }
+    }
+
+    return { links: allLinks };
   },
 });
 

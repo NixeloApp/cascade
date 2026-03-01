@@ -1,18 +1,21 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Plus } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
-import { IssueDetailModal } from "./IssueDetailModal";
+import { CreateIssueModal } from "./CreateIssueModal";
+import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
+import { IconButton } from "./ui/IconButton";
 import { Typography } from "./ui/Typography";
 
 interface IssuesCalendarViewProps {
@@ -39,6 +42,11 @@ export function IssuesCalendarView({
 }: IssuesCalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
+  const [createForDate, setCreateForDate] = useState<number | null>(null);
+  const [draggedIssue, setDraggedIssue] = useState<Id<"issues"> | null>(null);
+  const [dragOverDay, setDragOverDay] = useState<number | null>(null);
+
+  const updateIssue = useMutation(api.issues.update);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -106,6 +114,54 @@ export function IssuesCalendarView({
     return issuesByDate[dateKey] || [];
   };
 
+  const getDayTimestamp = (day: number) => {
+    // Set to end of day (23:59:59.999) for due date
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day, 23, 59, 59, 999);
+    return date.getTime();
+  };
+
+  // Drag and drop handlers for rescheduling issues
+  const handleDragStart = (e: React.DragEvent, issueId: Id<"issues">) => {
+    if (!canEdit) return;
+    setDraggedIssue(issueId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", issueId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIssue(null);
+    setDragOverDay(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, day: number) => {
+    if (!canEdit || !draggedIssue) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverDay(day);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverDay(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, day: number) => {
+    e.preventDefault();
+    if (!canEdit || !draggedIssue) return;
+
+    const newDueDate = getDayTimestamp(day);
+    try {
+      await updateIssue({
+        issueId: draggedIssue,
+        dueDate: newDueDate,
+      });
+    } catch {
+      // Error handling - mutation will show toast on failure
+    }
+
+    setDraggedIssue(null);
+    setDragOverDay(null);
+  };
+
   // Generate calendar grid
   const calendarDays = [];
   // Add empty cells for days before first day of month
@@ -120,25 +176,45 @@ export function IssuesCalendarView({
     const isTodayDate = isToday(day);
 
     calendarDays.push(
+      // biome-ignore lint/a11y/noStaticElementInteractions: Calendar cells are drag-drop targets; interaction is via child buttons
       <div
         key={day}
         className={cn(
-          "min-h-32 md:min-h-24 border border-ui-border p-2",
+          "group min-h-32 md:min-h-24 border border-ui-border p-2 transition-colors",
           isTodayDate ? "bg-brand-indigo-track" : "bg-ui-bg",
+          dragOverDay === day && "bg-brand-subtle ring-2 ring-inset ring-brand-ring",
         )}
+        onDragOver={(e) => handleDragOver(e, day)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, day)}
       >
         <Flex align="center" justify="between" className="mb-1">
-          <Typography
-            variant="label"
-            className={cn(
-              "text-sm font-medium",
-              isTodayDate
-                ? "bg-brand text-brand-foreground w-6 h-6 rounded-full flex items-center justify-center"
-                : "text-ui-text",
+          <Flex align="center" gap="xs">
+            <Typography
+              variant="label"
+              className={cn(
+                "text-sm font-medium",
+                isTodayDate
+                  ? "bg-brand text-brand-foreground w-6 h-6 rounded-full flex items-center justify-center"
+                  : "text-ui-text",
+              )}
+            >
+              {day}
+            </Typography>
+            {canEdit && (
+              <Tooltip content="Create issue">
+                <IconButton
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => setCreateForDate(getDayTimestamp(day))}
+                  aria-label={`Create issue for ${day}`}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Plus className="w-3 h-3" />
+                </IconButton>
+              </Tooltip>
             )}
-          >
-            {day}
-          </Typography>
+          </Flex>
           {dayIssues.length > 0 && (
             <Badge size="sm" variant="neutral">
               {dayIssues.length}
@@ -148,11 +224,21 @@ export function IssuesCalendarView({
 
         <Stack gap="xs">
           {(dayIssues ?? []).slice(0, 3).map((issue: Doc<"issues">) => (
-            <Tooltip key={issue._id} content={issue.title}>
+            <Tooltip
+              key={issue._id}
+              content={canEdit ? `${issue.title} - Drag to reschedule` : issue.title}
+            >
               <Button
                 variant="ghost"
                 onClick={() => setSelectedIssue(issue._id)}
-                className="w-full justify-start text-left p-1.5 h-auto"
+                className={cn(
+                  "w-full justify-start text-left p-1.5 h-auto",
+                  canEdit && "cursor-grab active:cursor-grabbing",
+                  draggedIssue === issue._id && "opacity-50",
+                )}
+                draggable={canEdit}
+                onDragStart={(e) => handleDragStart(e, issue._id)}
+                onDragEnd={handleDragEnd}
               >
                 <Flex align="center" gap="xs" className="w-full">
                   <div
@@ -318,9 +404,9 @@ export function IssuesCalendarView({
         </Flex>
       </Flex>
 
-      {/* Issue Detail Modal */}
+      {/* Issue Detail */}
       {selectedIssue && (
-        <IssueDetailModal
+        <IssueDetailViewer
           issueId={selectedIssue}
           open={true}
           onOpenChange={(open) => {
@@ -329,6 +415,21 @@ export function IssuesCalendarView({
             }
           }}
           canEdit={canEdit}
+        />
+      )}
+
+      {/* Create Issue Modal (from calendar quick add) */}
+      {createForDate !== null && (
+        <CreateIssueModal
+          projectId={projectId}
+          sprintId={sprintId}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setCreateForDate(null);
+            }
+          }}
+          defaultDueDate={createForDate}
         />
       )}
     </FlexItem>

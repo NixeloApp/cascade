@@ -5,6 +5,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
+import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
 interface ResetPasswordFormProps {
   email: string;
@@ -15,6 +16,7 @@ interface ResetPasswordFormProps {
 export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFormProps) {
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -58,7 +60,10 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
           placeholder="New password"
           required
           minLength={8}
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
         />
+        <PasswordStrengthIndicator password={newPassword} className="-mt-2" />
         <Button type="submit" size="lg" className="w-full" disabled={submitting}>
           {submitting ? "Resetting..." : "Reset password"}
         </Button>

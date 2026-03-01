@@ -3,8 +3,10 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import {
+  Archive,
   Bell,
   Check,
+  Clock,
   FileText,
   Flag,
   MessageCircle,
@@ -14,9 +16,13 @@ import {
   Trash2,
   User,
 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -29,7 +35,9 @@ export interface NotificationWithActor extends Doc<"notifications"> {
 interface NotificationItemProps {
   notification: NotificationWithActor;
   onMarkAsRead: (id: Id<"notifications">) => void;
+  onArchive: (id: Id<"notifications">) => void;
   onDelete: (id: Id<"notifications">) => void;
+  onSnooze?: (id: Id<"notifications">, snoozedUntil: number) => void;
   orgSlug?: string;
 }
 
@@ -62,12 +70,32 @@ function getNotificationIcon(type: string) {
  * A component that renders a single notification item.
  * Supports navigation to issue/document, and actions (Mark as read, Delete).
  */
+/** Snooze duration options */
+const SNOOZE_OPTIONS = [
+  { label: "1 hour", duration: 60 * 60 * 1000 },
+  { label: "3 hours", duration: 3 * 60 * 60 * 1000 },
+  { label: "Tomorrow 9am", duration: null }, // Special handling
+  { label: "Next week", duration: 7 * 24 * 60 * 60 * 1000 },
+];
+
+/** Calculate snooze until time for "Tomorrow 9am" */
+function getTomorrow9am(): number {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(9, 0, 0, 0);
+  return tomorrow.getTime();
+}
+
 export function NotificationItem({
   notification,
   onMarkAsRead,
+  onArchive,
   onDelete,
+  onSnooze,
   orgSlug,
 }: NotificationItemProps) {
+  const [snoozePopoverOpen, setSnoozePopoverOpen] = useState(false);
+
   // Fetch issue details if present to resolve key for navigation
   const issue = useQuery(
     api.issues.getIssue,
@@ -160,6 +188,57 @@ export function NotificationItem({
             </IconButton>
           </Tooltip>
         )}
+        {onSnooze && (
+          <Popover open={snoozePopoverOpen} onOpenChange={setSnoozePopoverOpen}>
+            <Tooltip content="Snooze">
+              <PopoverTrigger asChild>
+                <IconButton
+                  variant="ghost"
+                  size="xs"
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Snooze notification"
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                </IconButton>
+              </PopoverTrigger>
+            </Tooltip>
+            <PopoverContent align="end" className="w-48">
+              <Stack gap="xs">
+                <Typography variant="label">Snooze until</Typography>
+                {SNOOZE_OPTIONS.map((option) => (
+                  <Button
+                    key={option.label}
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const snoozedUntil =
+                        option.duration === null ? getTomorrow9am() : Date.now() + option.duration;
+                      onSnooze(notification._id, snoozedUntil);
+                      setSnoozePopoverOpen(false);
+                    }}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </Stack>
+            </PopoverContent>
+          </Popover>
+        )}
+        <Tooltip content="Archive">
+          <IconButton
+            variant="ghost"
+            size="xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onArchive(notification._id);
+            }}
+            aria-label="Archive notification"
+          >
+            <Archive className="h-3.5 w-3.5" />
+          </IconButton>
+        </Tooltip>
         <Tooltip content="Delete">
           <IconButton
             variant="danger"

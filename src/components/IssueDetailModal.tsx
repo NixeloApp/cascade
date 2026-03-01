@@ -96,7 +96,7 @@ export function IssueDetailModal({
           </Button>
         )}
       </Flex>
-      <IssueDetailLayout detail={detail} billingEnabled={billingEnabled} />
+      <IssueDetailLayout detail={detail} billingEnabled={billingEnabled} canEdit={canEdit} />
     </Dialog>
   );
 }

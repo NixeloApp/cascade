@@ -1,5 +1,10 @@
 import { v } from "convex/values";
-import { projectEditorMutation, projectQuery, sprintMutation } from "./customFunctions";
+import {
+  projectEditorMutation,
+  projectQuery,
+  sprintMutation,
+  sprintQuery,
+} from "./customFunctions";
 import { efficientCount } from "./lib/boundedQueries";
 import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
@@ -183,5 +188,32 @@ export const completeSprint = sprintMutation({
       updatedAt: Date.now(),
     });
     return { success: true } as const;
+  },
+});
+
+/**
+ * Get incomplete issue IDs for a sprint
+ * Returns issue IDs that are not in "done" category workflow states
+ * Requires viewer access to project
+ */
+export const getIncompleteIssueIds = sprintQuery({
+  args: {},
+  returns: v.array(v.id("issues")),
+  handler: async (ctx) => {
+    // Get done status IDs from project workflow
+    const doneStatusIds =
+      ctx.project.workflowStates.filter((s) => s.category === "done").map((s) => s.id) || [];
+
+    // Fetch all issues in the sprint
+    const sprintIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_sprint", (q) => q.eq("sprintId", ctx.sprint._id))
+      .filter(notDeleted)
+      .take(MAX_SPRINT_ISSUES);
+
+    // Return IDs of issues that are not in done states
+    return sprintIssues
+      .filter((issue) => !doneStatusIds.includes(issue.status))
+      .map((issue) => issue._id);
   },
 });

@@ -278,6 +278,35 @@ pnpm run check         # All checks (CI)
 
 ---
 
+### Design System (`design/`)
+
+| File                         | Description                             |
+| ---------------------------- | --------------------------------------- |
+| `design/README.md`           | Design system overview                  |
+| `design/STANDARDS.md`        | Core principles, tokens, semantic HTML  |
+| `design/PATTERNS.md`         | Component usage patterns (do/don't)     |
+| `design/REFERENCE.md`        | Token values & component inventory      |
+| `design/GAPS.md`             | Actionable improvements (prioritized)   |
+| `design/specs/pages/`        | Page-by-page design specs               |
+| `design/specs/components/`   | Component deep-dives                    |
+| `design/specs/onboarding/`   | Onboarding flow specs                   |
+| `design/specs/modals/`       | Modal dialog specs                      |
+
+---
+
+### Design Perfection Protocol (`design-perfection/`)
+
+Systematic design audit phases for achieving polish.
+
+| File                          | Description                             |
+| ----------------------------- | --------------------------------------- |
+| `PHASE_1_COMPONENTS.md`       | Storybook, variants, states audit       |
+| `PHASE_2_STRUCTURE.md`        | Layout consistency across viewports     |
+| `PHASE_3_COLOR.md`            | Semantic tokens, shadows, borders       |
+| `PHASE_4_DOCS_SYNC.md`        | Docs accuracy, TODO extraction          |
+
+---
+
 ### Archive (`archive/`)
 
 Historical/deprecated documentation for reference.
@@ -300,6 +329,9 @@ docs/
 ├── archive/             # Deprecated docs
 ├── bundle/              # Bundle optimization
 ├── convex/              # Convex backend patterns
+├── design/              # Design system (specs, patterns)
+│   └── specs/           # Page & component specs
+├── design-perfection/   # Design audit protocol phases
 ├── email/               # Email system
 ├── integrations/        # GitHub, Calendar, Offline
 ├── research/            # Competitor analysis
@@ -312,10 +344,11 @@ docs/
 ## Key Links
 
 - **Main Project Guide:** [CLAUDE.md](../CLAUDE.md)
+- **Project TODOs & Roadmap:** [todos/README.md](../todos/README.md)
 - **Backend README:** [convex/README.md](../convex/README.md)
 - **E2E Tests:** [e2e/README.md](../e2e/README.md)
 - **Convex Dashboard:** https://dashboard.convex.dev/d/peaceful-salmon-964
 
 ---
 
-_Last Updated: 2026-01-28_
+_Last Updated: 2026-02-27_

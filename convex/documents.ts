@@ -606,7 +606,7 @@ export const listChildren = authenticatedQuery({
       throw forbidden(undefined, "You are not a member of this organization");
     }
 
-    // Get documents at this level (bounded)
+    // Get documents at this level (bounded), excluding deleted and archived
     const documents = await ctx.db
       .query("documents")
       .withIndex("by_organization_parent", (q) =>
@@ -615,6 +615,7 @@ export const listChildren = authenticatedQuery({
           .eq("parentId", args.parentId)
           .lt("isDeleted", true),
       )
+      .filter((q) => q.neq(q.field("isArchived"), true))
       .take(BOUNDED_RELATION_LIMIT);
 
     // Pre-build org IDs set to avoid N+1 membership queries
@@ -644,6 +645,7 @@ export const listChildren = authenticatedQuery({
               .eq("parentId", doc._id)
               .lt("isDeleted", true),
           )
+          .filter((q) => q.neq(q.field("isArchived"), true))
           .first();
 
         return {
@@ -1350,3 +1352,455 @@ async function fetchPublicDocuments(
     .filter(notDeleted)
     .take(limit);
 }
+
+// ===========================================================================
+// DOCUMENT FAVORITES
+// ===========================================================================
+
+/**
+ * Toggle favorite status for a document.
+ * If already favorited, removes it. Otherwise, adds it.
+ */
+export const toggleFavorite = authenticatedMutation({
+  args: {
+    documentId: v.id("documents"),
+  },
+  returns: v.object({ isFavorite: v.boolean() }),
+  handler: async (ctx, args) => {
+    // Check document exists and user can access it
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.isDeleted) {
+      throw notFound("document", args.documentId);
+    }
+
+    // Check access to the document
+    const canAccess = await canAccessDocument(ctx, document);
+    if (!canAccess) {
+      throw forbidden("You don't have access to this document");
+    }
+
+    // Check if already favorited
+    const existing = await ctx.db
+      .query("documentFavorites")
+      .withIndex("by_user_document", (q) =>
+        q.eq("userId", ctx.userId).eq("documentId", args.documentId),
+      )
+      .first();
+
+    if (existing) {
+      // Remove favorite
+      await ctx.db.delete(existing._id);
+      return { isFavorite: false };
+    }
+
+    // Add favorite
+    await ctx.db.insert("documentFavorites", {
+      documentId: args.documentId,
+      userId: ctx.userId,
+      createdAt: Date.now(),
+    });
+    return { isFavorite: true };
+  },
+});
+
+/**
+ * Check if a document is favorited by the current user.
+ */
+export const isFavorite = authenticatedQuery({
+  args: {
+    documentId: v.id("documents"),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const favorite = await ctx.db
+      .query("documentFavorites")
+      .withIndex("by_user_document", (q) =>
+        q.eq("userId", ctx.userId).eq("documentId", args.documentId),
+      )
+      .first();
+
+    return favorite !== null;
+  },
+});
+
+/**
+ * List all favorite documents for the current user.
+ * Returns documents the user has access to, sorted by when they were favorited.
+ */
+export const listFavorites = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("documents"),
+      _creationTime: v.number(),
+      title: v.string(),
+      isPublic: v.boolean(),
+      createdBy: v.id("users"),
+      updatedAt: v.number(),
+      organizationId: v.id("organizations"),
+      workspaceId: v.optional(v.id("workspaces")),
+      projectId: v.optional(v.id("projects")),
+      parentId: v.optional(v.id("documents")),
+      order: v.optional(v.number()),
+      favoritedAt: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const pageSize = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+
+    // Get user's favorites, most recent first
+    const favorites = await ctx.db
+      .query("documentFavorites")
+      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+      .order("desc")
+      .take(pageSize * 2); // Fetch extra to account for deleted/inaccessible docs
+
+    // Batch fetch documents
+    const documentIds = favorites.map((f) => f.documentId);
+    const documents = await Promise.all(documentIds.map((id) => ctx.db.get(id)));
+
+    // Filter and enrich
+    const result: Array<Doc<"documents"> & { favoritedAt: number }> = [];
+
+    for (let i = 0; i < favorites.length && result.length < pageSize; i++) {
+      const favorite = favorites[i];
+      const doc = documents[i];
+
+      // Skip deleted, archived, or missing documents
+      if (!doc || doc.isDeleted || doc.isArchived) continue;
+
+      // Only include docs from the requested organization
+      if (doc.organizationId !== args.organizationId) continue;
+
+      // Check access
+      const canAccess = await canAccessDocument(ctx, doc);
+      if (!canAccess) continue;
+
+      result.push({
+        ...doc,
+        favoritedAt: favorite.createdAt,
+      });
+    }
+
+    return result;
+  },
+});
+
+// ============================================================================
+// ARCHIVE/UNARCHIVE
+// ============================================================================
+
+/**
+ * Archive a document (soft hide without deleting).
+ * Archived documents are hidden from normal views but can be restored.
+ */
+export const archiveDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Only owner can archive
+    if (document.createdBy !== ctx.userId) {
+      throw forbidden("Only the document owner can archive");
+    }
+
+    await ctx.db.patch(args.id, {
+      isArchived: true,
+      archivedAt: Date.now(),
+      archivedBy: ctx.userId,
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Unarchive (restore) a document.
+ */
+export const unarchiveDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Only owner can unarchive
+    if (document.createdBy !== ctx.userId) {
+      throw forbidden("Only the document owner can unarchive");
+    }
+
+    await ctx.db.patch(args.id, {
+      isArchived: undefined,
+      archivedAt: undefined,
+      archivedBy: undefined,
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Check if a document is archived.
+ */
+export const isArchived = authenticatedQuery({
+  args: {
+    documentId: v.id("documents"),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.isDeleted) {
+      return false;
+    }
+    return document.isArchived === true;
+  },
+});
+
+/**
+ * List archived documents for the current user.
+ */
+export const listArchived = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("documents"),
+      _creationTime: v.number(),
+      title: v.string(),
+      isPublic: v.boolean(),
+      createdBy: v.id("users"),
+      updatedAt: v.number(),
+      organizationId: v.id("organizations"),
+      workspaceId: v.optional(v.id("workspaces")),
+      projectId: v.optional(v.id("projects")),
+      parentId: v.optional(v.id("documents")),
+      order: v.optional(v.number()),
+      archivedAt: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const pageSize = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+
+    // Get archived documents for the organization
+    const archivedDocs = await ctx.db
+      .query("documents")
+      .withIndex("by_organization_archived", (q) =>
+        q.eq("organizationId", args.organizationId).eq("isArchived", true),
+      )
+      .filter(notDeleted)
+      .order("desc")
+      .take(pageSize);
+
+    // Only return documents the user owns
+    return archivedDocs
+      .filter((doc) => doc.createdBy === ctx.userId && doc.archivedAt !== undefined)
+      .map((doc) => ({
+        _id: doc._id,
+        _creationTime: doc._creationTime,
+        title: doc.title,
+        isPublic: doc.isPublic,
+        createdBy: doc.createdBy,
+        updatedAt: doc.updatedAt,
+        organizationId: doc.organizationId,
+        workspaceId: doc.workspaceId,
+        projectId: doc.projectId,
+        parentId: doc.parentId,
+        order: doc.order,
+        archivedAt: doc.archivedAt as number,
+      }));
+  },
+});
+
+/**
+ * Lock a document to prevent concurrent editing.
+ * Only the document owner or org admin can lock.
+ */
+export const lockDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Only owner or org admin can lock
+    const isAdmin = await isOrganizationAdmin(ctx, document.organizationId, ctx.userId);
+    if (document.createdBy !== ctx.userId && !isAdmin) {
+      throw forbidden("Only the document owner or an admin can lock this document");
+    }
+
+    // Already locked
+    if (document.isLocked) {
+      throw conflict("Document is already locked");
+    }
+
+    await ctx.db.patch(args.id, {
+      isLocked: true,
+      lockedBy: ctx.userId,
+      lockedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Unlock a document to allow editing.
+ * Only the user who locked it or org admin can unlock.
+ */
+export const unlockDocument = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Not locked
+    if (!document.isLocked) {
+      return null; // No-op if not locked
+    }
+
+    // Only the user who locked it or org admin can unlock
+    const isAdmin = await isOrganizationAdmin(ctx, document.organizationId, ctx.userId);
+    if (document.lockedBy !== ctx.userId && !isAdmin) {
+      throw forbidden("Only the user who locked this document or an admin can unlock it");
+    }
+
+    await ctx.db.patch(args.id, {
+      isLocked: undefined,
+      lockedBy: undefined,
+      lockedAt: undefined,
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Get the lock status of a document.
+ */
+export const getLockStatus = authenticatedQuery({
+  args: {
+    documentId: v.id("documents"),
+  },
+  returns: v.union(
+    v.object({
+      isLocked: v.literal(false),
+    }),
+    v.object({
+      isLocked: v.literal(true),
+      lockedBy: v.id("users"),
+      lockedByName: v.optional(v.string()),
+      lockedAt: v.number(),
+      canUnlock: v.boolean(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.documentId);
+    if (!document || document.isDeleted) {
+      return { isLocked: false as const };
+    }
+
+    if (!document.isLocked || !document.lockedBy) {
+      return { isLocked: false as const };
+    }
+
+    // Get the name of who locked it
+    const lockedByUser = await ctx.db.get(document.lockedBy);
+    const lockedByName = getUserName(lockedByUser);
+
+    // Check if current user can unlock
+    const isAdmin = await isOrganizationAdmin(ctx, document.organizationId, ctx.userId);
+    const canUnlock = document.lockedBy === ctx.userId || isAdmin;
+
+    return {
+      isLocked: true as const,
+      lockedBy: document.lockedBy,
+      lockedByName,
+      lockedAt: document.lockedAt ?? Date.now(),
+      canUnlock,
+    };
+  },
+});
+
+/**
+ * Move a document to a different project (or remove from project).
+ * Only the document owner can move it.
+ */
+export const moveToProject = authenticatedMutation({
+  args: {
+    id: v.id("documents"),
+    projectId: v.optional(v.id("projects")),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.id);
+    if (!document) {
+      throw notFound("document", args.id);
+    }
+    if (document.isDeleted) {
+      throw notFound("document", args.id);
+    }
+
+    // Only owner can move
+    if (document.createdBy !== ctx.userId) {
+      throw forbidden("Only the document owner can move this document");
+    }
+
+    // Validate new project if provided
+    if (args.projectId) {
+      const project = await ctx.db.get(args.projectId);
+      if (!project) {
+        throw notFound("project", args.projectId);
+      }
+      // Project must be in same organization
+      if (project.organizationId !== document.organizationId) {
+        throw validation("projectId", "Project must be in the same organization");
+      }
+      // User must have access to the project
+      await assertCanAccessProject(ctx, args.projectId, ctx.userId);
+    }
+
+    // Update the document's project
+    await ctx.db.patch(args.id, {
+      projectId: args.projectId,
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});

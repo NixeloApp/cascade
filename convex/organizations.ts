@@ -526,7 +526,7 @@ export const getUserOrganizations = authenticatedQuery({
     const organizationMap = await batchFetchOrganizations(ctx, organizationIds);
 
     // Batch fetch member and project counts per organization (parallel queries)
-    // Optimization: Use bounded limits to reduce bandwidth — we only need counts
+    // Use bounded take() to get accurate counts up to reasonable limits
     const [memberCounts, projectCounts] = await Promise.all([
       Promise.all(
         organizationIds.map(async (organizationId) => {

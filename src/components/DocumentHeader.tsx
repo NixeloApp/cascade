@@ -4,14 +4,21 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
-import { Download, History, Upload } from "@/lib/icons";
+import { Archive, Download, FolderInput, History, Lock, LockOpen, Star, Upload } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { PresenceIndicator } from "./PresenceIndicator";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Input } from "./ui/form/Input";
+import { IconButton } from "./ui/IconButton";
 import { Stack } from "./ui/Stack";
+
+interface LockStatus {
+  isLocked: boolean;
+  lockedByName?: string;
+  canUnlock?: boolean;
+}
 
 interface DocumentHeaderProps {
   document: Doc<"documents"> & {
@@ -20,20 +27,35 @@ interface DocumentHeaderProps {
   };
   userId: string;
   versionCount: number | undefined;
+  isFavorite: boolean;
+  isArchived: boolean;
+  lockStatus?: LockStatus;
   onTitleEdit: (title: string) => Promise<void>;
   onTogglePublic: () => Promise<void>;
+  onToggleFavorite: () => Promise<void>;
+  onToggleArchive: () => Promise<void>;
+  onToggleLock?: () => Promise<void>;
+  onMoveToProject?: () => void;
   onImportMarkdown: () => Promise<void>;
   onExportMarkdown: () => Promise<void>;
   onShowVersionHistory: () => void;
   editorReady: boolean;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Header component with many conditional action buttons based on permissions
 export function DocumentHeader({
   document,
   userId,
   versionCount,
+  isFavorite,
+  isArchived,
+  lockStatus,
   onTitleEdit,
   onTogglePublic,
+  onToggleFavorite,
+  onToggleArchive,
+  onToggleLock,
+  onMoveToProject,
   onImportMarkdown,
   onExportMarkdown,
   onShowVersionHistory,
@@ -122,6 +144,79 @@ export function DocumentHeader({
 
           <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
             <PresenceIndicator roomId={document._id} userId={userId} />
+
+            {/* Favorite */}
+            <Tooltip content={isFavorite ? "Remove from favorites" : "Add to favorites"}>
+              <IconButton
+                variant={isFavorite ? "brand" : "ghost"}
+                size="sm"
+                onClick={() => void onToggleFavorite()}
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                aria-pressed={isFavorite}
+                className={cn(isFavorite && "text-status-warning")}
+              >
+                <Star className={cn("w-4 h-4", isFavorite && "fill-current")} aria-hidden="true" />
+              </IconButton>
+            </Tooltip>
+
+            {/* Archive (owner only) */}
+            {document.isOwner && (
+              <Tooltip content={isArchived ? "Unarchive document" : "Archive document"}>
+                <IconButton
+                  variant={isArchived ? "subtle" : "ghost"}
+                  size="sm"
+                  onClick={() => void onToggleArchive()}
+                  aria-label={isArchived ? "Unarchive document" : "Archive document"}
+                  aria-pressed={isArchived}
+                  className={cn(isArchived && "text-ui-text-secondary")}
+                >
+                  <Archive className="w-4 h-4" aria-hidden="true" />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* Lock (owner only) */}
+            {document.isOwner && onToggleLock && (
+              <Tooltip
+                content={
+                  lockStatus?.isLocked
+                    ? lockStatus.canUnlock
+                      ? "Unlock document (currently locked)"
+                      : `Locked by ${lockStatus.lockedByName || "another user"}`
+                    : "Lock document to prevent editing"
+                }
+              >
+                <IconButton
+                  variant={lockStatus?.isLocked ? "subtle" : "ghost"}
+                  size="sm"
+                  onClick={() => void onToggleLock()}
+                  disabled={lockStatus?.isLocked && !lockStatus.canUnlock}
+                  aria-label={lockStatus?.isLocked ? "Unlock document" : "Lock document"}
+                  aria-pressed={lockStatus?.isLocked}
+                  className={cn(lockStatus?.isLocked && "text-status-warning")}
+                >
+                  {lockStatus?.isLocked ? (
+                    <Lock className="w-4 h-4" aria-hidden="true" />
+                  ) : (
+                    <LockOpen className="w-4 h-4" aria-hidden="true" />
+                  )}
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* Move to Project (owner only) */}
+            {document.isOwner && onMoveToProject && (
+              <Tooltip content="Move to another project">
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={onMoveToProject}
+                  aria-label="Move to another project"
+                >
+                  <FolderInput className="w-4 h-4" aria-hidden="true" />
+                </IconButton>
+              </Tooltip>
+            )}
 
             {/* Version History */}
             <Tooltip content="View version history">

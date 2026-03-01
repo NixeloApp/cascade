@@ -28,6 +28,7 @@ export function run() {
     "src/components/Settings/", // Form-heavy with input styling
     "src/components/TimeTracking/", // Complex forms and tables
     "src/components/TimeTracker/", // Time entry components
+    "src/components/IssueDetail/", // Issue detail metadata components
     "src/components/IssueDetailView/", // Issue detail with form inputs
     "src/components/ProjectSettings/", // Settings forms
     "src/components/FuzzySearch/", // Search dropdowns with custom styling
@@ -46,6 +47,7 @@ export function run() {
     "/AppHeader.tsx", // Navigation header with internal components
     "/BulkOperationsBar.tsx", // Responsive layout patterns
     "/CommandPalette.tsx", // Keyboard shortcut styling
+    "/CreateIssueModal.tsx", // Inline label creation popover
     "/CommentReactions.tsx", // Popover overrides
     "/CommentRenderer.tsx", // Inline markdown code element styling
     "/CreateProjectFromTemplate.tsx", // Responsive button layout
@@ -57,6 +59,7 @@ export function run() {
     "/InboxList.tsx", // TabsContent styling
     "/IssueCard.tsx", // Responsive card layout
     "/IssueDependencies.tsx", // min-w-0 truncation pattern
+    "/IssueDetailSheet.tsx", // Sheet panel styling
     "/IssuesCalendarView.tsx", // Calendar grid styling
     "/KanbanBoard.tsx", // Board columns with specific widths
     "/KeyboardShortcutsHelp.tsx", // kbd element styling
@@ -68,6 +71,8 @@ export function run() {
     "/ProjectsList.tsx", // Project avatar styling
     "/RoadmapView.tsx", // Timeline/roadmap styling
     "/SprintManager.tsx", // Progress bars, responsive layout
+    "/SprintProgressBar.tsx", // Progress bar styling
+    "/SprintWorkload.tsx", // Popover with assignee breakdown
     "/TimeTracker.tsx", // Time element styling
     "/UserMenu.tsx", // Dropdown menu styling
     "/UserProfile.tsx", // Dialog overrides

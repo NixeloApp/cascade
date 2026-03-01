@@ -204,6 +204,11 @@ export const ROUTES = {
     },
   },
 
+  notifications: {
+    path: "/$orgSlug/notifications" as const,
+    build: (orgSlug: string) => `/${orgSlug}/notifications`,
+  },
+
   timeTracking: {
     path: "/$orgSlug/time-tracking" as const,
     build: (orgSlug: string) => `/${orgSlug}/time-tracking`,

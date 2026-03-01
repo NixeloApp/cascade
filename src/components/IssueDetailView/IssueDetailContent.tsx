@@ -1,12 +1,15 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { ComponentProps, ReactNode } from "react";
 import { IssueComments } from "@/components/IssueComments";
+import {
+  IssueDescriptionEditor,
+  IssueDescriptionReadOnly,
+} from "@/components/IssueDescriptionEditor";
 import { SubtasksList } from "@/components/IssueDetail/SubtasksList";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
-import { Textarea } from "@/components/ui/form/Textarea";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 
@@ -55,12 +58,11 @@ export function IssueDetailContent({
                   className="text-2xl font-bold h-auto py-2"
                   placeholder="Issue title"
                 />
-                <Textarea
+                <IssueDescriptionEditor
                   value={editDescription}
-                  onChange={(e) => onDescriptionChange(e.target.value)}
-                  rows={8}
-                  className="text-base"
+                  onChange={onDescriptionChange}
                   placeholder="Add a description..."
+                  minHeight={200}
                 />
                 <Flex gap="sm">
                   <Button onClick={onSave}>Save Changes</Button>
@@ -74,13 +76,13 @@ export function IssueDetailContent({
                 <Typography variant="h2" className="border-none">
                   {issueTitle}
                 </Typography>
-                <div className="prose max-w-none">
-                  <Typography variant="p" color="secondary">
-                    {issueDescription || (
-                      <span className="italic text-ui-text-tertiary">No description provided</span>
-                    )}
+                {issueDescription ? (
+                  <IssueDescriptionReadOnly value={issueDescription} />
+                ) : (
+                  <Typography variant="p" color="tertiary" className="italic">
+                    No description provided
                   </Typography>
-                </div>
+                )}
               </Stack>
             )}
           </Stack>

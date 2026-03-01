@@ -17,13 +17,28 @@ Project todos and improvement tracking.
 | [emoji-overhaul.md](./emoji-overhaul.md) | Active | Emoji system overhaul |
 | [uptime-monitoring.md](./uptime-monitoring.md) | Active | Uptime monitoring |
 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Active | OAuth monitoring |
+| [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | Database bandwidth fixes |
+| [bandwidth_burn_assessment.md](./bandwidth_burn_assessment.md) | Active | Bandwidth usage analysis |
+| [memoization-cleanup.md](./memoization-cleanup.md) | Active | Remove manual memoization (React Compiler) |
+
+---
+
+## Jules Tasks (Automated Issues)
+
+| File | Status | Priority |
+|------|--------|----------|
+| [jules-sentinel-2026-02-26-issue-search-security.md](./jules-sentinel-2026-02-26-issue-search-security.md) | Open | High |
+| [jules-bolt-2026-02-23-sprints-n-plus-one.md](./jules-bolt-2026-02-23-sprints-n-plus-one.md) | Open | Medium |
+| [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules-librarian-2026-02-23-lodash-vulnerability.md) | Open | Low |
+| [jules-spectra-2025-02-24-deduplicate-hashapikey.md](./jules-spectra-2025-02-24-deduplicate-hashapikey.md) | Open | Low |
+| [jules-scribe-2024-05-22-fix-cascade-delete-limit.md](./jules-scribe-2024-05-22-fix-cascade-delete-limit.md) | Open | Medium |
 
 ---
 
 ## Recursive Improvement (Completed Phases)
 
 > **Progress:** 133/278 (Phase 1-6 complete)
-> **Last Run:** 2026-02-17
+> **Last Run:** 2026-02-27
 
 | Phase | File | Status | Summary |
 |-------|------|--------|---------|

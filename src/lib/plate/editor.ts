@@ -6,7 +6,7 @@
  */
 
 import type { Value } from "platejs";
-import { initialValue, platePlugins } from "./plugins";
+import { initialValue, issueDescriptionPlugins, platePlugins } from "./plugins";
 
 /**
  * Options for creating a Plate editor
@@ -25,6 +25,14 @@ export interface CreatePlateEditorOptions {
  */
 export function getEditorPlugins() {
   return platePlugins;
+}
+
+/**
+ * Get lightweight plugins for issue descriptions
+ * Excludes tables, images, DnD - focused on text formatting
+ */
+export function getIssueDescriptionPlugins() {
+  return issueDescriptionPlugins;
 }
 
 /**
@@ -94,4 +102,47 @@ export function isEmptyValue(value: Value): boolean {
   if (!Array.isArray(value) || value.length === 0) return true;
   if (value.length > 1) return false;
   return isEmptyParagraph(value[0]);
+}
+
+/**
+ * Convert plain text to editor Value format
+ * Splits by newlines and creates paragraphs
+ */
+export function plainTextToValue(text: string | null | undefined): Value {
+  if (!text || text.trim() === "") {
+    return getInitialValue();
+  }
+
+  // Split by newlines and create paragraphs
+  const lines = text.split("\n");
+  return lines.map((line) => ({
+    type: "p",
+    children: [{ text: line }],
+  })) as Value;
+}
+
+/**
+ * Convert editor Value to plain text
+ * Extracts text content from all nodes
+ */
+export function valueToPlainText(value: Value): string {
+  if (!Array.isArray(value)) return "";
+
+  const extractText = (node: unknown): string => {
+    if (!node || typeof node !== "object") return "";
+
+    // Text node
+    if ("text" in node && typeof (node as { text: string }).text === "string") {
+      return (node as { text: string }).text;
+    }
+
+    // Element with children
+    if ("children" in node && Array.isArray((node as { children: unknown[] }).children)) {
+      return (node as { children: unknown[] }).children.map(extractText).join("");
+    }
+
+    return "";
+  };
+
+  return value.map(extractText).join("\n");
 }

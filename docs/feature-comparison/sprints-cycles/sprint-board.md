@@ -1,0 +1,374 @@
+# Sprint/Cycle Board View - Deep UX Comparison
+
+## Overview
+The sprint board is where teams visualize and manage issues within an active sprint/cycle. This includes viewing issues by status, dragging between columns, and tracking progress. This analysis compares Plane vs Cascade across views, navigation, and UX efficiency.
+
+---
+
+## Entry Points Comparison
+
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Cycles page** | `/[ws]/projects/[proj]/cycles` | `/[org]/projects/[key]/sprints` | Tie |
+| **Board view** | `/cycles/[id]` (separate view per cycle) | `/board?sprint=[id]` (selector) | Different UX |
+| **Sidebar link** | Cycles section | Sprints section | Tie |
+| **Active cycle badge** | In cycle list | In sprint card | Tie |
+| **Keyboard shortcut** | N/A | N/A | Tie |
+
+---
+
+## Layout Comparison
+
+### Plane Cycle View
+```
+Cycle List Page:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Cycles Header                                                                │
+│ 🔄 Cycles                                   [🔍] [Filters ▼] [+ Add Cycle] │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ┌─ Active Cycle ───────────────────────────────────────────────────────────┐│
+│ │ ⭕ 75%   Sprint 5          Jan 15 - Jan 29     👤👤👤+2   [⭐] [⋯]      ││
+│ │   ↑      ↑ Click to open detail page                                     ││
+│ │ Progress                                                                  ││
+│ └──────────────────────────────────────────────────────────────────────────┘│
+│                                                                             │
+│ ▼ Upcoming (3)                                                [Show/Hide] │
+│ ┌──────────────────────────────────────────────────────────────────────────┐│
+│ │ ⭕ 0%    Sprint 6          Feb 1 - Feb 14      👤👤        [⭐] [⋯]     ││
+│ │ ⭕ 0%    Sprint 7          Feb 15 - Feb 28     —           [⭐] [⋯]     ││
+│ └──────────────────────────────────────────────────────────────────────────┘│
+│                                                                             │
+│ ▼ Completed (12)                                              [Show/Hide] │
+│ │ ✓ 100%  Sprint 4          Jan 1 - Jan 14      👤👤👤      [⭐] [⋯]     ││
+│ └──────────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Cycle Detail Page:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ [← Back]  Sprint 5                                           [Analytics] [⋯]│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [📋 List] [▤ Kanban] [📅 Calendar] [⊞ Spreadsheet] [≡ Gantt]  [+ Add]     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Filters ▼] [Display ▼] [Group by ▼]                                       │
+├────────────────────────────────────────────────────────────┬────────────────┤
+│                                                            │ Analytics      │
+│ Main Content (selected view layout)                        │ Sidebar        │
+│                                                            │ (collapsible)  │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │ ┌────────────┐│
+│ │ To Do    │ │ In Prog  │ │ Review   │ │ Done     │       │ │ Progress   ││
+│ │ (3)      │ │ (4)      │ │ (2)      │ │ (6)      │       │ │ ━━━━━░ 67% ││
+│ ├──────────┤ ├──────────┤ ├──────────┤ ├──────────┤       │ │            ││
+│ │ ┌──────┐ │ │ ┌──────┐ │ │ ┌──────┐ │ │ ┌──────┐ │       │ │ [State▼]   ││
+│ │ │Card 1│ │ │ │Card 4│ │ │ │Card 8│ │ │ │Card 10│ │       │ │ [Assign▼]  ││
+│ │ └──────┘ │ │ └──────┘ │ │ └──────┘ │ │ └──────┘ │       │ │ [Labels▼]  ││
+│ │ ┌──────┐ │ │ ┌──────┐ │ │ ┌──────┐ │ │ ┌──────┐ │       │ └────────────┘│
+│ │ │Card 2│ │ │ │Card 5│ │ │ │Card 9│ │ │ │Card 11│ │       │              │
+│ │ └──────┘ │ │ └──────┘ │ │ └──────┘ │ │ └──────┘ │       │ Burndown     │
+│ │ ┌──────┐ │ │ ...      │ │          │ │ ...      │       │ ┌────────────┐│
+│ │ │Card 3│ │ │          │ │          │ │          │       │ │  📉 Chart  ││
+│ │ └──────┘ │ │          │ │          │ │          │       │ └────────────┘│
+│ └──────────┘ └──────────┘ └──────────┘ └──────────┘       │              │
+│                                                            │              │
+└────────────────────────────────────────────────────────────┴────────────────┘
+5 View Options: List, Kanban, Calendar, Spreadsheet, Gantt
+```
+
+### Cascade Sprint View
+```
+Board Page with Sprint Selector:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Project Board Header                                                         │
+│ [⟲ Undo] [⟳ Redo] │ Swimlane: [Select ▼] │ Sprint: [Sprint 5 ▼]  │ [☑]    │
+│                                                  ↑ Sprint selector           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ FilterBar:                                                                   │
+│ [Type ▼] [Priority ▼] [Assignee ▼] [Labels ▼]           [Clear] [Save]     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐                        │
+│ │ To Do    │ │ In Prog  │ │ Review   │ │ Done     │                        │
+│ │ 3 issues │ │ 2/5 WIP  │ │ 2 issues │ │ 6 (14d)  │ ← Smart done loading   │
+│ │ [+]      │ │ [+]      │ │ [+]      │ │ Hide: 12 │                        │
+│ ├──────────┤ ├──────────┤ ├──────────┤ ├──────────┤                        │
+│ │ ┌──────┐ │ │ ┌──────┐ │ │ ┌──────┐ │ │ ┌──────┐ │                        │
+│ │ │☐ 🐛  │ │ │ │☐ 🔧  │ │ │ │☐ 📖  │ │ │ │☐ ✅  │ │                        │
+│ │ │PROJ-1│ │ │ │PROJ-4│ │ │ │PROJ-8│ │ │ │PROJ-10│ │                        │
+│ │ │● High│ │ │ │● Med │ │ │ │● Low │ │ │ │      │ │                        │
+│ │ └──────┘ │ │ └──────┘ │ │ └──────┘ │ │ └──────┘ │                        │
+│ │ ┌──────┐ │ │ ┌──────┐ │ │ ┌──────┐ │ │ [Load]  │                        │
+│ │ │☐ 🔧  │ │ │ │☐ 🔧  │ │ │ │☐ 📖  │ │ │  More  │                        │
+│ │ │PROJ-2│ │ │ │PROJ-5│ │ │ │PROJ-9│ │ │         │                        │
+│ │ └──────┘ │ │ └──────┘ │ │ └──────┘ │ │         │                        │
+│ └──────────┘ └──────────┘ └──────────┘ └──────────┘                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+1 View Option: Kanban only
+
+Sprint Manager Page (separate):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Sprints                                                [+ New Sprint]       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ┌─ Sprint 5 ───────────────────────────────────────────────────────────────┐│
+│ │ 🟢 Active  •  12 issues                              Jan 15 - Jan 29    ││
+│ │ Goal: Complete payment integration                                       ││
+│ │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░  8 of 12 completed (67%)    ││
+│ │                                                     [Complete Sprint]   ││
+│ └──────────────────────────────────────────────────────────────────────────┘│
+│                                                                             │
+│ ┌─ Sprint 6 ───────────────────────────────────────────────────────────────┐│
+│ │ 🔵 Future  •  5 issues                               Feb 1 - Feb 14     ││
+│ │ Goal: Launch analytics dashboard                                         ││
+│ │                                                          [Start Sprint] ││
+│ └──────────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## View Options Comparison
+
+| View | Plane | Cascade | Notes |
+|------|-------|---------|-------|
+| **List view** | Yes | No | Plane only |
+| **Kanban board** | Yes | Yes | Both |
+| **Calendar view** | Yes | No | Plane only |
+| **Spreadsheet** | Yes | No | Plane only |
+| **Gantt chart** | Yes | No | Plane only |
+| **Sprint manager** | Cycle list | Separate page | Different UX |
+
+---
+
+## Click Analysis
+
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **View active sprint** | 1 click (cycle card) | 1 click (selector) | Tie |
+| **Switch sprints** | Navigate to different page | 2 clicks (dropdown) | **Cascade faster** |
+| **Change view mode** | 1 click (tab) | N/A | Plane only |
+| **Add issue to sprint** | 2 clicks (+ → form) | 2 clicks (+ → form) | Tie |
+| **Drag issue between columns** | 1 drag | 1 drag | Tie |
+| **Open analytics** | 1 click (sidebar toggle) | Navigate to page | **Plane inline** |
+| **Filter issues** | 2 clicks (filter dropdown) | 2 clicks (filter dropdown) | Tie |
+| **Search in sprint** | 1 click (expand) + type | N/A | Plane only |
+| **Collapse column** | 1 click | 1 click | Tie |
+| **Start sprint** | From manager | From manager | Tie |
+| **Complete sprint** | From manager | From manager | Tie |
+
+---
+
+## Sprint Selection UX
+
+### Plane (Route-based)
+```
+Navigation Flow:
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│ Cycles List  │───▶│ Click Cycle  │───▶│ Cycle Detail │
+└──────────────┘    └──────────────┘    └──────────────┘
+      │                                        │
+  See all cycles                         Work on cycle
+      │                                        │
+   (1 view)                              (5 view options)
+
+URL: /workspace/project/cycles/cycle-id
+Each cycle has its own page
+```
+
+### Cascade (Selector-based)
+```
+Navigation Flow:
+┌──────────────┐    ┌──────────────┐
+│ Board Page   │───▶│ Select Sprint│
+│ [Sprint ▼]   │    │ from dropdown│
+└──────────────┘    └──────────────┘
+       │                   │
+    Filter board       Stay on board
+       │                   │
+   (1 view only)        (no navigation)
+
+URL: /org/projects/key/board?sprint=sprint-id
+Same page, different query param
+```
+
+---
+
+## Sprint Card Components
+
+### Plane Cycle Card
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ⭕ 75%      Sprint 5           Jan 15 - Jan 29      👤👤👤+2   [⭐]  [⋯] │
+│  ↑           ↑                      ↑                  ↑        ↑     ↑    │
+│ Progress   Name (link)         Date range         Assignees  Fav   Menu   │
+│ (circular)                                         (avatars)              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Progress indicator:
+- 0%: Empty circle
+- 1-99%: Partial fill with percentage
+- 100%: Checkmark icon
+```
+
+### Cascade Sprint Card
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Sprint 5                                            Jan 15 - Jan 29        │
+│ ↑ h5 typography                                                             │
+│ 🟢 Active    12 issues                                                     │
+│  ↑ badge      ↑ badge                                                      │
+│                                                                             │
+│ Goal: Complete payment integration                                          │
+│                                                                             │
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░  8 of 12 completed (67%)       │
+│  ↑ Progress bar with percentage text                                       │
+│                                                                             │
+│                                                     [Complete Sprint]      │
+│                                                      ↑ Action button       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Status badges:
+- Future: gray
+- Active: blue/green
+- Completed: green
+```
+
+---
+
+## Analytics Sidebar (Plane Only)
+
+```
+┌────────────────────────┐
+│ Cycle Analytics    [×] │
+├────────────────────────┤
+│ Progress               │
+│ ┌────────────────────┐ │
+│ │ ━━━━━━━━━━━━░░░░  │ │
+│ │      75%           │ │
+│ └────────────────────┘ │
+│                        │
+│ Work Items             │
+│ 12/16 completed        │
+│                        │
+│ Story Points           │
+│ 42/56 completed        │
+│                        │
+├────────────────────────┤
+│ [State] [Assign] [Label]│
+├────────────────────────┤
+│ State Distribution:    │
+│ ┌────────────────────┐ │
+│ │ To Do:      3      │ │
+│ │ In Progress: 4     │ │
+│ │ Review:     2      │ │
+│ │ Done:       7      │ │
+│ └────────────────────┘ │
+├────────────────────────┤
+│ Burndown Chart         │
+│ ┌────────────────────┐ │
+│ │   📉               │ │
+│ │     ────           │ │
+│ │         ────       │ │
+│ └────────────────────┘ │
+│ [Burndown][Burnup]     │
+│ [Issues][Points]       │
+└────────────────────────┘
+```
+
+---
+
+## Keyboard Support
+
+| Shortcut | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| **Navigate cards** | Arrow keys (limited) | Arrow keys | Cascade better |
+| **Open card** | N/A | Enter | Cascade |
+| **Search** | / or click | N/A | Plane only |
+| **Toggle sidebar** | N/A | N/A | Neither |
+| **Undo/Redo** | N/A | Cmd+Z / Cmd+Shift+Z | **Cascade** |
+| **Select card** | Click checkbox | Space | Cascade |
+
+---
+
+## Performance Optimization
+
+| Feature | Plane | Cascade |
+|---------|-------|---------|
+| **Pagination** | Yes (fetchNextIssues) | Cursor-based |
+| **Virtual scrolling** | Limited | No |
+| **Smart done loading** | No | Yes (14-day window) |
+| **Memoization** | MobX reactive | React.memo |
+| **Hidden count** | No | Yes (shows hidden) |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| View variety | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane has 5 views |
+| Sprint switching | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade dropdown faster |
+| Analytics inline | ⭐⭐⭐⭐⭐ | ⭐ | Plane sidebar |
+| Progress display | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Plane circular vs bar |
+| Search in sprint | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Undo/Redo | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Smart loading | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade 14-day done |
+| Keyboard support | ⭐⭐ | ⭐⭐⭐⭐ | Cascade more |
+| Swimlanes | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Both supported |
+| Drag-drop | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Both excellent |
+| WIP limits | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade color-coded |
+| Issue transfer | ⭐⭐⭐⭐⭐ | ⭐ | Plane modal |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add List view option** - Dense tabular view for sprint issues
+   ```tsx
+   <Tabs>
+     <Tab value="board">Board</Tab>
+     <Tab value="list">List</Tab>  {/* NEW */}
+   </Tabs>
+   ```
+
+2. **Add search in sprint** - Filter issues by title/key within sprint
+   ```tsx
+   <SearchInput
+     placeholder="Search issues..."
+     onChange={(query) => setFilter({ ...filter, search: query })}
+   />
+   ```
+
+### P1 - High
+3. **Add analytics sidebar** - Inline collapsible panel instead of separate page
+4. **Add burndown chart to board** - Visual progress tracking
+5. **Add issue transfer modal** - When completing sprint
+
+### P2 - Medium
+6. **Add Calendar view** - Sprint issues by due date
+7. **Add issue peek sidebar** - Click to preview without navigation
+8. **Add Gantt view** - Timeline visualization
+
+### P3 - Nice to Have
+9. **Add Spreadsheet view** - Inline editing of multiple issues
+10. **Add circular progress indicator** - For sprint cards
+11. **Add favorites for sprints** - Quick access to frequently used
+
+---
+
+## Code References
+
+### Plane
+- Cycle list: `apps/web/core/components/cycles/list/root.tsx`
+- Cycle detail: `apps/web/app/.../cycles/(detail)/[cycleId]/page.tsx`
+- Analytics sidebar: `apps/web/core/components/cycles/analytics-sidebar/`
+- Quick actions: `apps/web/core/components/cycles/quick-actions.tsx`
+- View layouts: `apps/web/core/components/issues/issue-layouts/`
+
+### Cascade
+- Board route: `src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx`
+- Sprint manager: `src/components/SprintManager.tsx`
+- Kanban board: `src/components/KanbanBoard.tsx`
+- Sprint selector: `src/components/Kanban/BoardToolbar.tsx`
+- Kanban column: `src/components/Kanban/KanbanColumn.tsx`
+- Smart data hook: `src/hooks/useSmartBoardData.ts`

@@ -11,12 +11,14 @@ import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
 import { EmailVerificationForm } from "./EmailVerificationForm";
 import { GoogleAuthButton } from "./GoogleAuthButton";
+import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
 export function SignUpForm() {
   const { signIn } = useAuthActions();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showVerification, setShowVerification] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [formReady, setFormReady] = useState(false);
@@ -151,11 +153,17 @@ export function SignUpForm() {
               required={formReady}
               className="transition-default"
               data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
-            {/* Password hint */}
-            <Typography variant="caption" color="tertiary" className="-mt-2">
-              Must be at least 8 characters
-            </Typography>
+            {/* Password strength indicator */}
+            {password ? (
+              <PasswordStrengthIndicator password={password} className="-mt-1" />
+            ) : (
+              <Typography variant="caption" color="tertiary" className="-mt-2">
+                Must be at least 8 characters
+              </Typography>
+            )}
           </Flex>
         </div>
         <Button

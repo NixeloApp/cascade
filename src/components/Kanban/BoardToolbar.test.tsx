@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import { IssueViewModeProvider } from "@/contexts/IssueViewModeContext";
 import { render, screen } from "@/test/custom-render";
 import { BoardToolbar } from "./BoardToolbar";
 
@@ -15,9 +16,11 @@ describe("BoardToolbar", () => {
 
   it("renders undo and redo buttons", () => {
     render(
-      <TooltipProvider>
-        <BoardToolbar {...mockProps} historyStack={[1]} redoStack={[1]} />
-      </TooltipProvider>,
+      <IssueViewModeProvider>
+        <TooltipProvider>
+          <BoardToolbar {...mockProps} historyStack={[1]} redoStack={[1]} />
+        </TooltipProvider>
+      </IssueViewModeProvider>,
     );
 
     expect(screen.getByRole("button", { name: /Undo/i })).toBeInTheDocument();

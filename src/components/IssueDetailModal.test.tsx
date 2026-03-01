@@ -40,6 +40,31 @@ vi.mock("@/lib/accessibility", () => ({
   handleKeyboardClick: vi.fn((callback) => callback),
 }));
 
+// Mock IssueDescriptionEditor to use a simple textarea for testing
+vi.mock("@/components/IssueDescriptionEditor", () => ({
+  IssueDescriptionEditor: ({
+    value,
+    onChange,
+    placeholder,
+    testId,
+  }: {
+    value?: string | null;
+    onChange?: (value: string) => void;
+    placeholder?: string;
+    testId?: string;
+  }) => (
+    <textarea
+      value={value || ""}
+      onChange={(e) => onChange?.(e.target.value)}
+      placeholder={placeholder}
+      data-testid={testId || "issue-description-editor"}
+    />
+  ),
+  IssueDescriptionReadOnly: ({ value }: { value?: string | null }) => (
+    <div data-testid="issue-description-readonly">{value}</div>
+  ),
+}));
+
 // Mock issue utilities
 vi.mock("@/lib/issue-utils", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/issue-utils")>();
@@ -210,9 +235,18 @@ describe("IssueDetailModal", () => {
 
     renderModal();
 
-    const priorityBadge = screen.getByText("high");
-    expect(priorityBadge.className).toContain("bg-status-warning-bg");
-    expect(priorityBadge.className).toContain("text-status-warning-text");
+    // The priority badge is in the modal header - it's a Badge component
+    // which wraps the text. Multiple "high" texts exist now due to inline editing,
+    // so we use getAllByText and find the one that is a Badge (has the expected classes).
+    const priorityElements = screen.getAllByText("high");
+    const priorityBadge = priorityElements.find(
+      (el) =>
+        el.className.includes("bg-status-warning-bg") &&
+        el.className.includes("text-status-warning-text"),
+    );
+    expect(priorityBadge).toBeDefined();
+    expect(priorityBadge?.className).toContain("bg-status-warning-bg");
+    expect(priorityBadge?.className).toContain("text-status-warning-text");
   });
 
   it("should render TimeTracker component", () => {

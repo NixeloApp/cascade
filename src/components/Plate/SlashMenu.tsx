@@ -10,6 +10,9 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
+  Heading5,
+  Heading6,
   Image,
   List,
   ListOrdered,
@@ -76,6 +79,33 @@ const SLASH_MENU_ITEMS: SlashMenuItem[] = [
     icon: Heading3,
     action: (editor) => {
       editor.tf.setNodes({ type: NODE_TYPES.heading3 });
+    },
+  },
+  {
+    id: "h4",
+    label: "Heading 4",
+    description: "Subsection heading",
+    icon: Heading4,
+    action: (editor) => {
+      editor.tf.setNodes({ type: NODE_TYPES.heading4 });
+    },
+  },
+  {
+    id: "h5",
+    label: "Heading 5",
+    description: "Minor heading",
+    icon: Heading5,
+    action: (editor) => {
+      editor.tf.setNodes({ type: NODE_TYPES.heading5 });
+    },
+  },
+  {
+    id: "h6",
+    label: "Heading 6",
+    description: "Smallest heading",
+    icon: Heading6,
+    action: (editor) => {
+      editor.tf.setNodes({ type: NODE_TYPES.heading6 });
     },
   },
   {

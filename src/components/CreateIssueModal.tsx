@@ -3,12 +3,13 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { z } from "zod";
+import { useDraftAutoSave } from "@/hooks/useDraftAutoSave";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
-import { FormInput, FormSelectRadix, FormTextarea } from "@/lib/form";
-import { Check, Sparkles, User } from "@/lib/icons";
+import { FormInput, FormSelectRadix } from "@/lib/form";
+import { Check, Plus, Sparkles, User } from "@/lib/icons";
 import {
   getPriorityColor,
   getTypeLabel,
@@ -19,15 +20,21 @@ import {
 } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { DuplicateDetection } from "./DuplicateDetection";
+import { IssueDescriptionEditor } from "./IssueDescriptionEditor";
+import { Alert, AlertDescription } from "./ui/Alert";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
+import { ColorPicker } from "./ui/ColorPicker";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
-import { Select } from "./ui/form";
+import { Input, Select } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { SelectItem } from "./ui/Select";
 import { Stack } from "./ui/Stack";
+import { Switch } from "./ui/Switch";
 import { Typography } from "./ui/Typography";
 
 // =============================================================================
@@ -43,6 +50,17 @@ const createIssueSchema = z.object({
   storyPoints: z.string(),
 });
 
+/** Draft data structure for auto-save */
+interface IssueDraft {
+  title: string;
+  description: string;
+  type: IssueTypeWithSubtask;
+  priority: IssuePriority;
+  assigneeId: string;
+  storyPoints: string;
+  selectedLabels: Id<"labels">[];
+}
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -52,6 +70,8 @@ interface CreateIssueModalProps {
   sprintId?: Id<"sprints">;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Pre-filled due date timestamp (e.g., from calendar quick add) */
+  defaultDueDate?: number;
 }
 
 /**
@@ -68,11 +88,13 @@ interface CreateIssueModalProps {
  * @param onOpenChange - Callback invoked when the modal open state changes; receives the new open state.
  * @returns The modal's JSX element, or `null` when required project data is not yet available.
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex modal with form state, templates, labels, AI suggestions, and draft management
 export function CreateIssueModal({
   projectId,
   sprintId,
   open,
   onOpenChange,
+  defaultDueDate,
 }: CreateIssueModalProps) {
   const { organizationId } = useOrganization();
 
@@ -84,9 +106,20 @@ export function CreateIssueModal({
   const [selectedTemplate, setSelectedTemplate] = useState<Id<"issueTemplates"> | "">("");
   // Labels (array state, not simple string)
   const [selectedLabels, setSelectedLabels] = useState<Id<"labels">[]>([]);
+  // Inline label creation state
+  const [showCreateLabel, setShowCreateLabel] = useState(false);
+  const [newLabelName, setNewLabelName] = useState("");
+  const [newLabelColor, setNewLabelColor] = useState("#6366F1"); // Default to brand-ring
+  const [isCreatingLabel, setIsCreatingLabel] = useState(false);
   // AI state
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
+  // Create another toggle
+  const [createAnother, setCreateAnother] = useState(false);
+  // Editor key to force re-mount on external value changes (AI/draft)
+  const [editorKey, setEditorKey] = useState(0);
+  // Draft restore banner dismissed
+  const [draftDismissed, setDraftDismissed] = useState(false);
 
   // Queries
   const orgProjects = useQuery(
@@ -95,6 +128,16 @@ export function CreateIssueModal({
   );
 
   const effectiveProjectId = projectId || internalSelectedProjectId;
+
+  // Draft auto-save hook
+  const { hasDraft, draft, saveDraft, clearDraft, draftTimestamp } = useDraftAutoSave<IssueDraft>({
+    key: "create-issue",
+    contextKey: effectiveProjectId || undefined,
+    enabled: open,
+  });
+
+  // Show draft banner only if draft exists, not dismissed, and modal just opened
+  const showDraftBanner = hasDraft && !draftDismissed && draft?.title;
 
   const project = useQuery(
     api.projects.getProject,
@@ -111,6 +154,7 @@ export function CreateIssueModal({
 
   // Mutations
   const createIssue = useMutation(api.issues.createIssue);
+  const createLabel = useMutation(api.labels.createLabel);
   const generateSuggestions = useAction(api.ai.actions.generateIssueSuggestions);
 
   type CreateIssueForm = z.infer<typeof createIssueSchema>;
@@ -145,15 +189,80 @@ export function CreateIssueModal({
           sprintId,
           labels: selectedLabels.length > 0 ? selectedLabels : undefined,
           storyPoints: value.storyPoints ? Number.parseFloat(value.storyPoints) : undefined,
+          dueDate: defaultDueDate,
         });
 
         showSuccess("Issue created successfully");
-        onOpenChange(false);
+
+        // Clear draft on successful submit
+        clearDraft();
+        setDraftDismissed(false);
+
+        if (createAnother) {
+          // Reset form for another issue
+          form.reset();
+          setSelectedLabels([]);
+          setSelectedTemplate("");
+          setShowAISuggestions(false);
+        } else {
+          onOpenChange(false);
+        }
       } catch (error) {
         showError(error, "Failed to create issue");
       }
     },
   });
+
+  // Restore draft handler
+  const handleRestoreDraft = useCallback(() => {
+    if (!draft) return;
+    form.setFieldValue("title", draft.title);
+    form.setFieldValue("description", draft.description);
+    form.setFieldValue("type", draft.type);
+    form.setFieldValue("priority", draft.priority);
+    form.setFieldValue("assigneeId", draft.assigneeId);
+    form.setFieldValue("storyPoints", draft.storyPoints);
+    if (draft.selectedLabels) {
+      setSelectedLabels(draft.selectedLabels);
+    }
+    // Force editor re-mount with new value
+    setEditorKey((k) => k + 1);
+    setDraftDismissed(true);
+    showSuccess("Draft restored");
+  }, [draft, form]);
+
+  // Discard draft handler
+  const handleDiscardDraft = useCallback(() => {
+    clearDraft();
+    setDraftDismissed(true);
+  }, [clearDraft]);
+
+  // Save draft when form values change
+  useEffect(() => {
+    if (!open) return;
+
+    const { title, description, type, priority, assigneeId, storyPoints } = form.state.values;
+    // Only save if there's meaningful content
+    if (!title?.trim()) return;
+
+    const draftData: IssueDraft = {
+      title,
+      description,
+      type,
+      priority,
+      assigneeId,
+      storyPoints,
+      selectedLabels,
+    };
+    saveDraft(draftData);
+  }, [open, form.state.values, selectedLabels, saveDraft]);
+
+  // Reset draft dismissed state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setDraftDismissed(false);
+    }
+  }, [open]);
 
   // Auto-select default template when modal opens
   useEffect(() => {
@@ -175,6 +284,8 @@ export function CreateIssueModal({
     form.setFieldValue("priority", template.defaultPriority);
     form.setFieldValue("title", template.titleTemplate);
     form.setFieldValue("description", template.descriptionTemplate || "");
+    // Force editor re-mount with template description
+    setEditorKey((k) => k + 1);
 
     // Apply default labels if they exist
     if (template.defaultLabels && template.defaultLabels.length > 0 && labels) {
@@ -197,6 +308,30 @@ export function CreateIssueModal({
     setSelectedLabels((prev) => toggleInArray(prev, labelId));
   };
 
+  const handleCreateLabel = async () => {
+    if (!effectiveProjectId || !newLabelName.trim()) return;
+
+    setIsCreatingLabel(true);
+    try {
+      const { labelId } = await createLabel({
+        projectId: effectiveProjectId,
+        name: newLabelName.trim(),
+        color: newLabelColor,
+      });
+      // Auto-select the newly created label
+      setSelectedLabels((prev) => [...prev, labelId]);
+      // Reset the form
+      setNewLabelName("");
+      setNewLabelColor("#6366F1");
+      setShowCreateLabel(false);
+      showSuccess("Label created");
+    } catch (error) {
+      showError(error, "Failed to create label");
+    } finally {
+      setIsCreatingLabel(false);
+    }
+  };
+
   interface AISuggestions {
     description?: string;
     priority?: IssuePriority;
@@ -206,6 +341,8 @@ export function CreateIssueModal({
   const applyAISuggestions = (suggestions: AISuggestions, description: string | undefined) => {
     if (suggestions.description && !(description as string)?.trim()) {
       form.setFieldValue("description", suggestions.description as string);
+      // Force editor re-mount with new value
+      setEditorKey((k) => k + 1);
     }
     if (suggestions.priority) {
       form.setFieldValue("priority", suggestions.priority);
@@ -268,6 +405,30 @@ export function CreateIssueModal({
         }}
         gap="md"
       >
+        {/* Draft Restore Banner */}
+        {showDraftBanner && (
+          <Alert variant="info">
+            <Flex align="center" justify="between" className="w-full">
+              <AlertDescription>
+                You have an unsaved draft
+                {draftTimestamp && (
+                  <Typography as="span" variant="caption" className="ml-1">
+                    (saved {new Date(draftTimestamp).toLocaleTimeString()})
+                  </Typography>
+                )}
+              </AlertDescription>
+              <Flex gap="sm">
+                <Button type="button" variant="secondary" size="sm" onClick={handleDiscardDraft}>
+                  Discard
+                </Button>
+                <Button type="button" size="sm" onClick={handleRestoreDraft}>
+                  Restore
+                </Button>
+              </Flex>
+            </Flex>
+          </Alert>
+        )}
+
         {/* Project Selector (if no projectId passed) */}
         {!projectId && orgProjects && (
           <Select
@@ -310,6 +471,24 @@ export function CreateIssueModal({
           )}
         </form.Field>
 
+        {/* Duplicate Detection */}
+        <form.Subscribe selector={(state) => state.values.title}>
+          {(title) =>
+            effectiveProjectId && title ? (
+              <DuplicateDetection
+                title={title}
+                projectId={effectiveProjectId}
+                onIssueClick={(issueId) => {
+                  // Close modal and let user view the existing issue
+                  // The user can navigate to the issue from the main UI
+                  onOpenChange(false);
+                  showSuccess(`Opening ${issueId.slice(0, 8)}... You can find it in the board.`);
+                }}
+              />
+            ) : null
+          }
+        </form.Subscribe>
+
         {/* AI Suggestions Button */}
         <Flex align="center" gap="sm" className="pb-2">
           <Button
@@ -332,12 +511,18 @@ export function CreateIssueModal({
         {/* Description */}
         <form.Field name="description">
           {(field) => (
-            <FormTextarea
-              field={field}
-              label="Description"
-              placeholder="Enter issue description..."
-              rows={6}
-            />
+            <Stack gap="xs">
+              <Typography as="label" variant="label" className="block text-ui-text">
+                Description
+              </Typography>
+              <IssueDescriptionEditor
+                key={editorKey}
+                value={field.state.value}
+                onChange={(value) => field.handleChange(value)}
+                placeholder="Enter issue description..."
+                minHeight={150}
+              />
+            </Stack>
           )}
         </form.Field>
 
@@ -421,13 +606,13 @@ export function CreateIssueModal({
         </form.Field>
 
         {/* Labels (outside form - array state) */}
-        {labels && labels.length > 0 && (
+        {effectiveProjectId && (
           <Stack as="fieldset" gap="xs">
             <Typography as="legend" variant="label" className="block text-ui-text">
               Labels
             </Typography>
-            <Flex wrap gap="sm">
-              {labels.map((label: Doc<"labels">) => (
+            <Flex wrap gap="sm" align="center">
+              {labels?.map((label: Doc<"labels">) => (
                 <Button
                   key={label._id}
                   variant="unstyled"
@@ -447,6 +632,58 @@ export function CreateIssueModal({
                   {label.name}
                 </Button>
               ))}
+              {/* Inline label creation */}
+              <Popover open={showCreateLabel} onOpenChange={setShowCreateLabel}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2"
+                    aria-label="Create new label"
+                  >
+                    <Icon icon={Plus} size="sm" />
+                    <span className="ml-1">New</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-64">
+                  <Stack gap="sm">
+                    <Typography variant="label">Create Label</Typography>
+                    <Input
+                      placeholder="Label name"
+                      value={newLabelName}
+                      onChange={(e) => setNewLabelName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleCreateLabel();
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <ColorPicker value={newLabelColor} onChange={setNewLabelColor} label="Color" />
+                    <Flex justify="end" gap="sm">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setShowCreateLabel(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleCreateLabel}
+                        disabled={!newLabelName.trim()}
+                        isLoading={isCreatingLabel}
+                      >
+                        Create
+                      </Button>
+                    </Flex>
+                  </Stack>
+                </PopoverContent>
+              </Popover>
             </Flex>
           </Stack>
         )}
@@ -454,18 +691,26 @@ export function CreateIssueModal({
         {/* Footer - form.Subscribe needs to stay inside the form */}
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <Flex gap="sm" justify="end" className="pt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" isLoading={isSubmitting}>
-                Create Issue
-              </Button>
+            <Flex align="center" justify="between" className="pt-4">
+              <Switch
+                id="create-another"
+                checked={createAnother}
+                onCheckedChange={setCreateAnother}
+                label="Create another"
+              />
+              <Flex gap="sm">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" isLoading={isSubmitting}>
+                  Create Issue
+                </Button>
+              </Flex>
             </Flex>
           )}
         </form.Subscribe>

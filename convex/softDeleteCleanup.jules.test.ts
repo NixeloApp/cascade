@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { internal } from "./_generated/api";
+import { MONTH } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -11,8 +12,6 @@ import {
 } from "./testUtils";
 
 describe("Soft Delete Cleanup", () => {
-  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-
   it("should permanently delete issues soft-deleted more than 30 days ago", async () => {
     const t = convexTest(schema, modules);
     const userId = await createTestUser(t);
@@ -23,7 +22,7 @@ describe("Soft Delete Cleanup", () => {
     const issueId = await createTestIssue(t, projectId, userId);
 
     // Soft delete it with a date > 30 days ago
-    const oldDate = Date.now() - THIRTY_DAYS_MS - 1000; // 30 days + 1 second ago
+    const oldDate = Date.now() - MONTH - 1000; // 30 days + 1 second ago
     await t.run(async (ctx) => {
       await ctx.db.patch(issueId, {
         isDeleted: true,
@@ -56,7 +55,7 @@ describe("Soft Delete Cleanup", () => {
     const issueId = await createTestIssue(t, projectId, userId);
 
     // Soft delete it with a date < 30 days ago
-    const recentDate = Date.now() - THIRTY_DAYS_MS + 10000; // 30 days - 10 seconds ago
+    const recentDate = Date.now() - MONTH + 10000; // 30 days - 10 seconds ago
     await t.run(async (ctx) => {
       await ctx.db.patch(issueId, {
         isDeleted: true,
@@ -107,7 +106,7 @@ describe("Soft Delete Cleanup", () => {
     expect(logsBefore.length).toBe(1);
 
     // Soft delete issue (old enough)
-    const oldDate = Date.now() - THIRTY_DAYS_MS - 1000;
+    const oldDate = Date.now() - MONTH - 1000;
     await t.run(async (ctx) => {
       await ctx.db.patch(issueId, {
         isDeleted: true,

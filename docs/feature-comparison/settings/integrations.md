@@ -1,0 +1,633 @@
+# Integrations - Deep UX Comparison
+
+## Overview
+Integrations connect the project management platform with external services like GitHub, Slack, calendar apps, and custom webhooks. This analysis compares Plane vs Cascade across OAuth flows, available integrations, and configuration UX.
+
+---
+
+## Entry Points Comparison
+
+| Entry Point | Plane | Cascade | Winner |
+|-------------|-------|---------|--------|
+| **Settings location** | Workspace settings → Integrations | User settings → Integrations tab | Different approach |
+| **URL direct** | `/:workspace/settings/integrations` | `/:org/settings` (Integrations tab) | Tie |
+| **Scope level** | Workspace + Project | User + Organization | Different |
+| **Admin-only integrations** | Some | SSO only | Cascade |
+| **Tab/section** | Dedicated page | Tab in settings | Cascade more accessible |
+
+---
+
+## Available Integrations
+
+| Integration | Plane | Cascade | Notes |
+|-------------|-------|---------|-------|
+| **GitHub** | Yes (OAuth) | Yes (OAuth) | Tie |
+| **Slack** | Yes (OAuth) | No | Plane |
+| **Google Calendar** | No | Yes (OAuth) | Cascade |
+| **Pumble** | No | Yes (webhook) | Cascade |
+| **SSO (SAML)** | Instance-level | Per-org | Cascade |
+| **SSO (OIDC)** | Instance-level | Per-org | Cascade |
+| **Custom Webhooks** | Yes | Yes (Pumble) | Plane more flexible |
+| **API Keys** | User-level | User + project scoped | Cascade |
+
+---
+
+## Layout Comparison
+
+### Plane Integrations Page
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Workspace Settings → Integrations                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Available Integrations                                                       │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ ┌─────────────────────────────────────────────────────────────────┐   │   │
+│ │ │                                                                 │   │   │
+│ │ │  🐙 GitHub                                          [Installed ✓]   │   │
+│ │ │  Connect your GitHub repositories to sync                      │   │   │
+│ │ │  issues, PRs, and commits automatically.                       │   │   │
+│ │ │                                                                 │   │   │
+│ │ │  Author: Plane                           [Configure →]          │   │   │
+│ │ └─────────────────────────────────────────────────────────────────┘   │   │
+│ │                                                                       │   │
+│ │ ┌─────────────────────────────────────────────────────────────────┐   │   │
+│ │ │                                                                 │   │   │
+│ │ │  💬 Slack                                              [Install]    │   │
+│ │ │  Get notifications and create issues directly                   │   │   │
+│ │ │  from your Slack channels.                                      │   │   │
+│ │ │                                                                 │   │   │
+│ │ │  Author: Plane                                                  │   │   │
+│ │ └─────────────────────────────────────────────────────────────────┘   │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Installed Integrations                                                       │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ 🐙 GitHub    Connected to: my-org           [Configure] [Uninstall]   │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GitHub Configuration:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GitHub Integration                                               [← Back]   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Connected Account: my-org                                     [Disconnect]  │
+│                                                                             │
+│ Linked Repositories                                                         │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ Project: PROJ → my-org/frontend                        [Unlink]       │   │
+│ │ Project: API  → my-org/backend                         [Unlink]       │   │
+│ │                                                                       │   │
+│ │ [+ Link Repository]                                                   │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Settings                                                                    │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ ☑ Sync issue status with PR status                                   │   │
+│ │ ☑ Auto-close issues on merge                                         │   │
+│ │ ☐ Create issues from GitHub issues                                   │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade Integrations Tab
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Settings                                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Profile] [Security] [Preferences] [Notifications] [Integrations] [API Keys]│
+│                                                            ↑                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Connected Services                                                          │
+│                                                                             │
+│ ┌─ GitHub ──────────────────────────────────────────────────────────────┐   │
+│ │                                                                       │   │
+│ │ 🐙 GitHub                                          [Connected ✓]     │   │
+│ │    Connected as: johndoe                                              │   │
+│ │    Repositories linked: 3                                             │   │
+│ │                                                                       │   │
+│ │ ┌─────────────────────────────────────────────────────────────────┐   │   │
+│ │ │ Linked Repositories                                             │   │   │
+│ │ │ • my-org/frontend → PROJ                             [Unlink]   │   │   │
+│ │ │ • my-org/backend → API                               [Unlink]   │   │   │
+│ │ │ • my-org/docs → DOCS                                 [Unlink]   │   │   │
+│ │ │                                                                 │   │   │
+│ │ │ [+ Link Repository]                                             │   │   │
+│ │ └─────────────────────────────────────────────────────────────────┘   │   │
+│ │                                                                       │   │
+│ │                                                    [Disconnect]       │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ ┌─ Google Calendar ─────────────────────────────────────────────────────┐   │
+│ │                                                                       │   │
+│ │ 📅 Google Calendar                                 [Connected ✓]     │   │
+│ │    Connected as: john@example.com                                     │   │
+│ │    Last sync: 5 minutes ago                                           │   │
+│ │                                                                       │   │
+│ │ Sync Direction                                                        │   │
+│ │ ○ Both ways        ● To Cascade only     ○ From Cascade only         │   │
+│ │                                                                       │   │
+│ │                                  [Sync Now] [Disconnect]              │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ ┌─ Pumble ──────────────────────────────────────────────────────────────┐   │
+│ │                                                                       │   │
+│ │ 💬 Pumble                                              [Configure]    │   │
+│ │    Webhook notifications to Pumble channels                           │   │
+│ │                                                                       │   │
+│ │ Active Webhooks: 2                                                    │   │
+│ │ ┌─────────────────────────────────────────────────────────────────┐   │   │
+│ │ │ #engineering                    ✓ Enabled       [Edit] [Delete]│   │   │
+│ │ │ Events: issue.created, issue.completed                         │   │   │
+│ │ ├─────────────────────────────────────────────────────────────────┤   │   │
+│ │ │ #product                        ✓ Enabled       [Edit] [Delete]│   │   │
+│ │ │ Events: all                                                    │   │   │
+│ │ └─────────────────────────────────────────────────────────────────┘   │   │
+│ │                                                                       │   │
+│ │ [+ Add Webhook]                                                       │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Not Connected                                                               │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ 🐙 GitHub                                          [Connect GitHub]  │   │
+│ │ Connect your GitHub account to link repositories                      │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+SSO Settings (Admin Tab):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SSO Configuration (Admin Only)                                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Single Sign-On Connections                                                   │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ ┌─────────────────────────────────────────────────────────────────┐   │   │
+│ │ │ 🔐 Okta SAML                              ✓ Enabled             │   │   │
+│ │ │ Type: SAML 2.0                                                  │   │   │
+│ │ │ Created: Jan 15, 2026                                           │   │   │
+│ │ │                                                                 │   │   │
+│ │ │                              [Configure] [Disable] [Delete]     │   │   │
+│ │ └─────────────────────────────────────────────────────────────────┘   │   │
+│ │                                                                       │   │
+│ │ ┌─────────────────────────────────────────────────────────────────┐   │   │
+│ │ │ 🔐 Google OIDC                            ○ Disabled            │   │   │
+│ │ │ Type: OpenID Connect                                            │   │   │
+│ │ │ Created: Feb 1, 2026                                            │   │   │
+│ │ │                                                                 │   │   │
+│ │ │                              [Configure] [Enable] [Delete]      │   │   │
+│ │ └─────────────────────────────────────────────────────────────────┘   │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ [+ Add SAML Connection] [+ Add OIDC Connection]                             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## OAuth Flow Comparison
+
+### Plane OAuth Flow
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ OAuth Flow (GitHub Example)                                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Step 1: Click "Install"                                                     │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ 🐙 GitHub                                              [Install]        │ │
+│ │     ↓ useIntegrationPopup hook                                          │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ Step 2: OAuth Popup Opens                                                   │
+│ ┌──────────────────────────────────────────┐                                │
+│ │ github.com/login/oauth/authorize         │                                │
+│ ├──────────────────────────────────────────┤                                │
+│ │                                          │                                │
+│ │  Authorize Plane?                        │                                │
+│ │                                          │                                │
+│ │  Plane wants to access:                  │                                │
+│ │  • Read org and team membership          │                                │
+│ │  • Read/write repository access          │                                │
+│ │  • Read/write issues                     │                                │
+│ │                                          │                                │
+│ │  [Authorize plane-app]                   │                                │
+│ │                                          │                                │
+│ └──────────────────────────────────────────┘                                │
+│                                                                             │
+│ Step 3: Callback & Token Exchange                                           │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ → /api/integrations/github/callback?code=abc123                         │ │
+│ │ → Exchange code for token                                               │ │
+│ │ → Store workspace integration                                           │ │
+│ │ → Close popup                                                           │ │
+│ │ → Refresh integrations list                                             │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ Implementation:                                                             │
+│ - useIntegrationPopup hook                                                  │
+│ - Opens popup window (600x700)                                              │
+│ - Listens for postMessage callback                                          │
+│ - Token stored per workspace                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade OAuth Flow
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ OAuth Flow (GitHub Example)                                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Step 1: Click "Connect GitHub"                                              │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ 🐙 GitHub                                      [Connect GitHub]         │ │
+│ │     ↓ Opens popup via window.open()                                     │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ Step 2: OAuth Popup Opens                                                   │
+│ ┌──────────────────────────────────────────┐                                │
+│ │ github.com/login/oauth/authorize         │                                │
+│ ├──────────────────────────────────────────┤                                │
+│ │                                          │                                │
+│ │  Authorize Cascade?                      │                                │
+│ │                                          │                                │
+│ │  Cascade wants to access:                │                                │
+│ │  • Read user profile                     │                                │
+│ │  • Read/write repository access          │                                │
+│ │                                          │                                │
+│ │  [Authorize cascade-app]                 │                                │
+│ │                                          │                                │
+│ └──────────────────────────────────────────┘                                │
+│                                                                             │
+│ Step 3: Callback & Token Storage                                            │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ → Callback page receives code                                           │ │
+│ │ → window.postMessage({ type: "GITHUB_OAUTH_SUCCESS", code })            │ │
+│ │ → Parent window receives message                                        │ │
+│ │ → Convex action exchanges code for token                                │ │
+│ │ → Token encrypted and stored                                            │ │
+│ │ → UI refreshes                                                          │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ Implementation:                                                             │
+│ - window.open() for popup                                                   │
+│ - window.postMessage() for callback                                         │
+│ - Convex action for token exchange                                          │
+│ - Token encrypted at rest                                                   │
+│ - Stored per user (not workspace)                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Feature Comparison
+
+### GitHub Integration
+
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **OAuth connect** | Yes | Yes | Tie |
+| **Scope level** | Workspace | User | Different |
+| **Link repositories** | Yes | Yes | Tie |
+| **Multiple repos** | Yes | Yes | Tie |
+| **PR tracking** | Yes | Yes | Tie |
+| **Commit tracking** | Yes | Yes | Tie |
+| **Issue sync** | Yes (status) | Limited | Plane |
+| **Auto-close on merge** | Yes | No | Plane |
+| **Token encryption** | Unknown | Yes | Cascade |
+| **Token refresh** | Unknown | Yes | Cascade |
+
+### Google Calendar (Cascade Only)
+
+| Feature | Description |
+|---------|-------------|
+| **OAuth connect** | Standard Google OAuth flow |
+| **Sync directions** | Both / To Cascade / From Cascade |
+| **Event sync** | Calendar events ↔ Cascade events |
+| **Due date sync** | Issue due dates → calendar |
+| **Manual sync** | "Sync Now" button |
+| **Token encryption** | Yes |
+| **Token refresh** | Automatic |
+
+### Pumble/Webhooks
+
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **Webhook support** | Yes (generic) | Yes (Pumble-specific) | Plane more flexible |
+| **URL validation** | Any URL | Must be pumble.com | Cascade restricted |
+| **Event selection** | 5 events | 6 events | Cascade |
+| **Secret key** | Yes (HMAC) | No | Plane more secure |
+| **Enable/disable** | Yes | Yes | Tie |
+| **Project scope** | N/A | Optional | Cascade |
+
+### SSO
+
+| Feature | Plane | Cascade | Notes |
+|---------|-------|---------|-------|
+| **SAML 2.0** | Instance-level | Per-org | Cascade more flexible |
+| **OIDC** | Instance-level | Per-org | Cascade more flexible |
+| **Multiple connections** | N/A | Yes | Cascade |
+| **Enable/disable** | Instance admin | Org admin | Cascade easier |
+| **Self-service** | No | Yes | Cascade |
+
+---
+
+## Click Analysis
+
+| Action | Plane | Cascade | Notes |
+|--------|-------|---------|-------|
+| **Open integrations** | 2 clicks (settings → integrations) | 2 clicks (settings → tab) | Tie |
+| **Connect GitHub** | 3 clicks (install → authorize → close) | 3 clicks (connect → authorize → close) | Tie |
+| **Link repository** | 2 clicks (add → select) | 2 clicks (add → select) | Tie |
+| **Unlink repository** | 1 click (unlink) | 1 click (unlink) | Tie |
+| **Disconnect integration** | 2 clicks (uninstall → confirm) | 2 clicks (disconnect → confirm) | Tie |
+| **Connect Google Calendar** | N/A | 3 clicks (connect → authorize → close) | Cascade only |
+| **Change sync direction** | N/A | 1 click (radio) | Cascade only |
+| **Add Pumble webhook** | N/A | 3 clicks (add → config → save) | Cascade only |
+| **Configure SSO** | Instance admin access | 2 clicks (admin → configure) | Cascade easier |
+| **Create webhook** | 3 clicks | 3 clicks | Tie |
+| **Copy webhook secret** | 1 click | N/A | Plane only |
+
+---
+
+## Webhook Event Comparison
+
+### Plane Events (5)
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│ Available Webhook Events                                               │
+├───────────────────────────────────────────────────────────────────────┤
+│ ☐ project        - Project created, updated, deleted                  │
+│ ☐ cycle          - Cycle started, completed                           │
+│ ☐ module         - Module changes                                      │
+│ ☑ issue          - Issue created, updated, deleted, status changed    │
+│ ☑ issue_comment  - Comment added, edited, deleted                     │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade Events (6)
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│ Available Webhook Events                                               │
+├───────────────────────────────────────────────────────────────────────┤
+│ ☑ issue.created    - New issue created                                │
+│ ☑ issue.updated    - Issue fields modified                            │
+│ ☑ issue.assigned   - Issue assigned to user                           │
+│ ☑ issue.completed  - Issue moved to done                              │
+│ ☐ issue.deleted    - Issue deleted                                    │
+│ ☐ comment.created  - Comment added                                    │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## API Keys Comparison
+
+### Plane API Tokens
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ API Tokens                                                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Your API Tokens                                           [+ Create Token]  │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ Token Name: CI Pipeline                                               │   │
+│ │ Created: Jan 15, 2026                                                 │   │
+│ │ Last used: 2 hours ago                                                │   │
+│ │                                                                       │   │
+│ │                                                      [Revoke]         │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Features:                                                                   │
+│ • User-scoped (access all user's workspaces)                                │
+│ • No granular permissions                                                   │
+│ • No expiration                                                             │
+│ • No rate limiting                                                          │
+│ • No usage tracking                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade API Keys
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ API Keys                                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Your API Keys                                           [+ Generate Key]    │
+│ ┌───────────────────────────────────────────────────────────────────────┐   │
+│ │ CI Pipeline Key                              sk_casc_abc1...          │   │
+│ │ ├─ Project: PROJ                                                      │   │
+│ │ ├─ Scopes: issues:read, issues:write                                  │   │
+│ │ ├─ Rate limit: 1000/hour                                              │   │
+│ │ ├─ Expires: Mar 15, 2026                                              │   │
+│ │ └─ Usage: 1,247 requests │ Last: 5 min ago                            │   │
+│ │                                                                       │   │
+│ │                              [Rotate] [Usage] [Revoke]                │   │
+│ └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│ Features:                                                                   │
+│ • Project-scoped or global                                                  │
+│ • Granular permissions (9 scopes)                                           │
+│ • Configurable expiration                                                   │
+│ • Rate limiting                                                             │
+│ • Usage tracking                                                            │
+│ • Key rotation                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Available Scopes:
+┌───────────────────────────────────────────────────────────────────────┐
+│ ☑ issues:read      ☑ issues:write     ☑ issues:delete               │
+│ ☑ projects:read    ☑ projects:write                                 │
+│ ☑ comments:read    ☑ comments:write                                 │
+│ ☑ documents:read   ☑ documents:write                                │
+│ ☑ search:read                                                       │
+└───────────────────────────────────────────────────────────────────────┘
+
+Role-Based Scope Restrictions:
+┌───────────────────────────────────────────────────────────────────────┐
+│ Role          │ Available Scopes                                      │
+├───────────────┼───────────────────────────────────────────────────────┤
+│ Admin         │ All scopes                                            │
+│ Editor        │ All except :delete                                    │
+│ Viewer        │ :read scopes only                                     │
+│ Global        │ :read scopes only                                     │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Data Models
+
+### Plane Integration Data
+```typescript
+// IAppIntegration (available integrations)
+{
+  id: string
+  provider: "github" | "slack"
+  title: string
+  author: string
+  description: any
+  avatar_url: string | null
+  webhook_url: string
+  webhook_secret: string
+  verified: boolean
+}
+
+// IWorkspaceIntegration (installed)
+{
+  id: string
+  integration: string
+  integration_detail: IAppIntegration
+  api_token: string
+  config: any
+  workspace: string
+}
+```
+
+### Cascade Integration Data
+```typescript
+// githubConnections
+{
+  userId: v.id("users"),
+  githubUserId: string,
+  githubUsername: string,
+  accessToken: string,      // Encrypted
+  refreshToken?: string,    // Encrypted
+  expiresAt?: number,
+  updatedAt: number,
+}
+
+// googleCalendarConnections
+{
+  userId: v.id("users"),
+  providerAccountId: string,
+  accessToken: string,      // Encrypted
+  refreshToken: string,     // Encrypted
+  expiresAt: number,
+  syncDirection: "both" | "to_cascade" | "from_cascade",
+}
+
+// pumbleWebhooks
+{
+  userId: v.id("users"),
+  projectId?: v.id("projects"),
+  name: string,
+  webhookUrl: string,       // Validated: pumble.com
+  events: string[],
+  isEnabled: boolean,
+}
+
+// ssoConnections
+{
+  organizationId: v.id("organizations"),
+  type: "saml" | "oidc",
+  name: string,
+  config: {...},            // Provider-specific
+  isEnabled: boolean,
+}
+
+// apiKeys
+{
+  userId: v.id("users"),
+  name: string,
+  keyHash: string,          // Only hash stored
+  keyPrefix: string,        // For display
+  scopes: string[],
+  projectId?: v.id("projects"),
+  rateLimit: number,
+  isActive: boolean,
+  lastUsedAt?: number,
+  usageCount: number,
+  expiresAt?: number,
+  rotatedFromId?: v.id("apiKeys"),
+}
+```
+
+---
+
+## Keyboard Support
+
+| Shortcut | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| **Tab between fields** | Yes | Yes | Both |
+| **Enter to submit** | Yes | Yes | Both |
+| **Escape to cancel** | Yes | Yes | Both |
+| **Focus search** | N/A | N/A | Neither |
+
+---
+
+## Summary Scorecard
+
+| Category | Plane | Cascade | Notes |
+|----------|-------|---------|-------|
+| Integration variety | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Different strengths |
+| GitHub integration | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Plane more features |
+| Slack integration | ⭐⭐⭐⭐⭐ | ⭐ | Plane only |
+| Google Calendar | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Pumble/Chat | ⭐⭐ | ⭐⭐⭐⭐ | Cascade native |
+| SSO flexibility | ⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade per-org |
+| Webhook security | ⭐⭐⭐⭐⭐ | ⭐⭐ | Plane has secrets |
+| Webhook events | ⭐⭐⭐ | ⭐⭐⭐⭐ | Cascade more events |
+| API key scopes | ⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade granular |
+| Key rotation | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Usage tracking | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Rate limiting | ⭐ | ⭐⭐⭐⭐⭐ | Cascade only |
+| Token encryption | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Cascade documented |
+| OAuth UX | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Both popup-based |
+
+---
+
+## Priority Recommendations for Cascade
+
+### P0 - Critical
+1. **Add Slack integration** - Most requested team chat platform
+   ```typescript
+   // OAuth flow similar to GitHub
+   const SLACK_SCOPES = [
+     "channels:read",
+     "chat:write",
+     "commands",
+     "incoming-webhook",
+   ];
+   ```
+
+### P1 - High
+2. **Add webhook secret keys** - HMAC signature for secure delivery
+3. **Add generic webhook support** - Allow any URL, not just Pumble
+4. **Add GitHub auto-close on merge** - Close linked issues automatically
+
+### P2 - Medium
+5. **Add more webhook events** - document.*, sprint.*, project.*
+6. **Add integration marketplace** - Browse/discover integrations
+7. **Add Jira import** - Migration from Jira
+
+### P3 - Nice to Have
+8. **Add Linear integration** - Sync with Linear
+9. **Add Notion integration** - Import/export documents
+10. **Add Zapier integration** - Connect to 5000+ apps
+
+---
+
+## Code References
+
+### Plane
+- Integrations page: `apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/integrations/page.tsx`
+- Integration card: `apps/web/core/components/integration/single-integration-card.tsx`
+- Integration popup: `packages/hooks/src/use-integration-popup.tsx`
+- GitHub integration: `apps/web/core/components/integration/github/`
+- Slack integration: `apps/web/core/components/integration/slack/`
+- Webhooks: `apps/web/app/[workspaceSlug]/(settings)/settings/(workspace)/webhooks/`
+
+### Cascade
+- Integrations tab: `src/components/Settings/IntegrationsTab.tsx`
+- GitHub integration: `src/components/Settings/GitHubIntegration.tsx`
+- Google Calendar: `src/components/Settings/GoogleCalendarIntegration.tsx`
+- Pumble integration: `src/components/Settings/PumbleIntegration.tsx`
+- SSO settings: `src/components/Settings/SSOSettings.tsx`
+- API keys: `src/components/Settings/ApiKeysManager.tsx`
+- Backend GitHub: `convex/github.ts`
+- Backend Google Calendar: `convex/googleCalendar.ts`
+- Backend API keys: `convex/apiKeys.ts`

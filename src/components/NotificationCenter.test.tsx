@@ -5,7 +5,8 @@ import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@/test/custom-render";
+import { TEST_IDS } from "@/lib/test-ids";
+import { render, screen, waitFor, within } from "@/test/custom-render";
 import { NotificationCenter } from "./NotificationCenter";
 
 // Mock Convex hooks
@@ -27,6 +28,12 @@ describe("NotificationCenter", () => {
   const mockMarkAllAsRead = Object.assign(vi.fn(), {
     withOptimisticUpdate: vi.fn().mockReturnThis(),
   }) as Mock & ReactMutation<FunctionReference<"mutation">>;
+  const mockArchive = Object.assign(vi.fn(), {
+    withOptimisticUpdate: vi.fn().mockReturnThis(),
+  }) as Mock & ReactMutation<FunctionReference<"mutation">>;
+  const mockSnooze = Object.assign(vi.fn(), {
+    withOptimisticUpdate: vi.fn().mockReturnThis(),
+  }) as Mock & ReactMutation<FunctionReference<"mutation">>;
   const mockRemove = Object.assign(vi.fn(), {
     withOptimisticUpdate: vi.fn().mockReturnThis(),
   }) as Mock & ReactMutation<FunctionReference<"mutation">>;
@@ -38,14 +45,20 @@ describe("NotificationCenter", () => {
     mutationCallCount = 0;
     mockMarkAsRead.mockReset();
     mockMarkAllAsRead.mockReset();
+    mockArchive.mockReset();
+    mockSnooze.mockReset();
     mockRemove.mockReset();
 
     // Set up mutation mocks to persist across re-renders
+    // Order matches component: markAsRead, markAllAsRead, archiveNotification, snoozeNotification, removeNotification
     vi.mocked(useMutation).mockImplementation(() => {
       mutationCallCount++;
-      if (mutationCallCount % 3 === 1) return mockMarkAsRead; // 1st, 4th, 7th calls
-      if (mutationCallCount % 3 === 2) return mockMarkAllAsRead; // 2nd, 5th, 8th calls
-      return mockRemove; // 3rd, 6th, 9th calls
+      const idx = ((mutationCallCount - 1) % 5) + 1;
+      if (idx === 1) return mockMarkAsRead;
+      if (idx === 2) return mockMarkAllAsRead;
+      if (idx === 3) return mockArchive;
+      if (idx === 4) return mockSnooze;
+      return mockRemove; // 5th
     });
 
     // Default mock for useQuery
@@ -431,13 +444,19 @@ describe("NotificationCenter", () => {
     });
     vi.mocked(useQuery).mockReturnValue(2); // Unread count
 
-    const { container } = render(<NotificationCenter />);
+    render(<NotificationCenter />);
 
-    const button = screen.getByRole("button");
-    await user.click(button);
+    // Click the notification bell button (has aria-label "Notifications, 2 unread")
+    const bellButton = screen.getByRole("button", { name: /notifications/i });
+    await user.click(bellButton);
 
+    // Wait for notification panel to appear and show the notification title "Assigned"
+    // Note: There's also a filter tab called "Assigned", so we look specifically within the notifications
     await waitFor(() => {
-      expect(screen.getByText("Assigned")).toBeInTheDocument();
+      // The notification's title "Assigned" should appear as a label/heading in the notification item
+      const panel = screen.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
+      // Find the notification content, not the filter button
+      expect(within(panel).getAllByText("Assigned").length).toBeGreaterThanOrEqual(1);
     });
 
     // Check that Lucide icons are rendered by looking for their SVG class names
