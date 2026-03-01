@@ -3,7 +3,7 @@
 > **Status:** ✅ Complete (Phase 7-10)
 > **Goal:** All styling lives in CVA components. No raw Tailwind in app code.
 > **Last Updated:** 2026-03-01
-> **Progress:** 25 validators, all passing, 0 errors
+> **Progress:** 26 validators, all passing, 0 errors
 
 ---
 
@@ -279,7 +279,7 @@ Items intentionally not in scope for Phase 7:
 
 **Last Run:** 2026-03-01
 **Files Migrated:** 220+
-**Validators:** 25 (all passing)
+**Validators:** 26 (all passing)
 **Violations Remaining:** 170 (down from 1145)
 
 **Note:** Remaining 170 violations are edge cases that don't warrant migration:
@@ -631,6 +631,7 @@ The 78 missing test files are primarily external integrations:
 | check-hook-patterns.js | React hook patterns | MEDIUM | ✅ |
 | check-async-patterns.js | Error handling | MEDIUM | ✅ |
 | check-test-coverage.js | Test coverage | MEDIUM | ✅ |
+| check-import-paths.js | Import path consistency | INFO | ✅ |
 | check-component-naming.js | PascalCase naming | INFO | ✅ |
 | check-duplicate-components.js | Duplicate names | INFO | ✅ |
 
@@ -648,7 +649,7 @@ The 78 missing test files are primarily external integrations:
 | Phase 10 | Issue Resolution | ✅ Complete |
 
 **Key Achievements:**
-- 25 validators covering all aspects of code quality
+- 26 validators covering all aspects of code quality
 - 0 blocking errors across all validators
 - 220+ files migrated to CVA components
 - Raw Tailwind reduced from 1145 to 170 edge cases
@@ -683,12 +684,12 @@ Issues detected by validators that could be addressed in future iterations:
 
 **Note:** Intentional duplicates added to `check-duplicate-components.js` allowlist.
 
-### 11.3 Optional Validators (Not Yet Created)
+### 11.3 Optional Validators
 
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
 | check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] Optional |
-| check-import-paths.js | Flag imports from wrong locations | Medium | [ ] Optional |
+| check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created (6 deep-relative imports) |
 
 ---
 
