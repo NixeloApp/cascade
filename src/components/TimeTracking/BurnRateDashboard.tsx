@@ -1,3 +1,11 @@
+/**
+ * Burn Rate Dashboard
+ *
+ * Project financial dashboard showing burn rate and budget metrics.
+ * Displays weekly/monthly spend, team utilization, and cost projections.
+ * Supports date range filtering and per-user cost breakdown.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";

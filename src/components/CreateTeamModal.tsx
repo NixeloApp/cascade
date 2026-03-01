@@ -1,3 +1,11 @@
+/**
+ * Create Team Modal
+ *
+ * Dialog form for creating new teams within a workspace.
+ * Collects team name, description, and visibility settings.
+ * Navigates to team settings after successful creation.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";

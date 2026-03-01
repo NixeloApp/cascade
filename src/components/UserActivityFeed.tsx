@@ -1,3 +1,11 @@
+/**
+ * User Activity Feed
+ *
+ * Profile activity timeline showing recent user actions.
+ * Displays issue changes, comments, assignments, and status updates.
+ * Groups activities by date with relative timestamps.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
