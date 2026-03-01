@@ -243,7 +243,7 @@ export const updateProfile = authenticatedMutation({
     emailNotifications: v.optional(v.boolean()),
     desktopNotifications: v.optional(v.boolean()),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const updates: {
       name?: string;
@@ -303,7 +303,7 @@ export const updateProfile = authenticatedMutation({
 
     await ctx.db.patch(ctx.userId, updates);
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -336,7 +336,7 @@ export const uploadAvatar = authenticatedMutation({
     const metadata = await ctx.storage.getMetadata(args.storageId);
 
     if (!metadata) {
-      return { success: false, error: "File not found in storage" };
+      return { success: false, error: "File not found in storage" } as const;
     }
 
     // Check MIME type
@@ -388,7 +388,7 @@ export const uploadAvatar = authenticatedMutation({
  */
 export const removeAvatar = authenticatedMutation({
   args: {},
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx) => {
     const user = await ctx.db.get(ctx.userId);
 
@@ -407,7 +407,7 @@ export const removeAvatar = authenticatedMutation({
       avatarStorageId: undefined,
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -431,7 +431,7 @@ export const uploadCoverImage = authenticatedMutation({
     const metadata = await ctx.storage.getMetadata(args.storageId);
 
     if (!metadata) {
-      return { success: false, error: "File not found in storage" };
+      return { success: false, error: "File not found in storage" } as const;
     }
 
     // Check MIME type (same as avatar)
@@ -482,7 +482,7 @@ export const uploadCoverImage = authenticatedMutation({
  */
 export const removeCoverImage = authenticatedMutation({
   args: {},
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx) => {
     const user = await ctx.db.get(ctx.userId);
 
@@ -500,7 +500,7 @@ export const removeCoverImage = authenticatedMutation({
       coverImageStorageId: undefined,
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -637,7 +637,7 @@ export const sendVerificationEmailAction = internalAction({
  */
 export const verifyEmailChange = authenticatedMutation({
   args: { token: v.string() },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Rate limit verification attempts to prevent brute-forcing
     await rateLimit(ctx, "emailChange", { key: ctx.userId });
@@ -688,7 +688,7 @@ export const verifyEmailChange = authenticatedMutation({
     // Sync to auth accounts
     await syncEmailToAuthAccounts(ctx, ctx.userId, newEmail);
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 

@@ -521,7 +521,7 @@ export const setProviderConfigured = internalMutation({
     provider: v.string(),
     isConfigured: v.boolean(),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("serviceProviders")
@@ -537,6 +537,6 @@ export const setProviderConfigured = internalMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
