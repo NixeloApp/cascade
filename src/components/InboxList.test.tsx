@@ -32,19 +32,28 @@ function createMockCounts(overrides = {}) {
   };
 }
 
-// Mock data storage - use object to allow module-level mutation from within mock
+/**
+ * MOCK LIMITATION: InboxList calls useQuery twice (api.inbox.list and api.inbox.getCounts).
+ * The current mock uses call-order tracking (odd/even) to return different values,
+ * but React re-renders cause unpredictable call counts across tests.
+ *
+ * Tests that depend on BOTH queries returning correct values are skipped.
+ * Tests that only need loading state (undefined) or don't care about counts work fine.
+ *
+ * Proper fix would require:
+ * - Mocking at the Convex API level (api.inbox.list vs api.inbox.getCounts)
+ * - Using convex-test utilities for proper query mocking
+ * - Or restructuring the component to use a single combined query
+ */
 const mockData = {
   inboxIssues: undefined as InboxIssueWithDetails[] | undefined,
   counts: undefined as ReturnType<typeof createMockCounts> | undefined,
 };
 
-// Track which query is being called - Convex queries have a unique reference
 let queryCallIndex = 0;
 
-// Mock Convex - alternate between list and counts based on call order
 vi.mock("convex/react", () => ({
   useQuery: vi.fn(() => {
-    // Component calls list first, then counts - use modulo to handle re-renders
     const index = queryCallIndex++;
     return index % 2 === 0 ? mockData.inboxIssues : mockData.counts;
   }),
@@ -120,7 +129,8 @@ describe("InboxList", () => {
   });
 
   describe("Empty State", () => {
-    // TODO: Fix mock strategy for multiple useQuery calls - counts mock interferes with issues mock
+    // SKIPPED: Requires both queries to return correct values (issues=[], counts={...})
+    // but call-order mock is unreliable due to React re-renders
     it.skip("should render empty state when no inbox issues", () => {
       setupMocks([], createMockCounts());
 
@@ -141,7 +151,7 @@ describe("InboxList", () => {
       expect(screen.getByRole("tab", { name: /closed/i })).toBeInTheDocument();
     });
 
-    // TODO: Fix mock strategy for multiple useQuery calls
+    // SKIPPED: Requires counts query to return specific values for tab badges
     it.skip("should show counts in tab labels", () => {
       setupMocks([], createMockCounts({ pending: 5, snoozed: 2, accepted: 10 }));
 
@@ -167,7 +177,7 @@ describe("InboxList", () => {
   });
 
   describe("Issue Display", () => {
-    // TODO: Fix mock strategy for multiple useQuery calls
+    // SKIPPED: Requires issues query to return specific issue data
     it.skip("should render pending inbox issues", () => {
       const issues = [
         createMockInboxIssue({
@@ -192,7 +202,7 @@ describe("InboxList", () => {
       expect(screen.getByText("Pending")).toBeInTheDocument();
     });
 
-    // TODO: Fix mock strategy for multiple useQuery calls
+    // SKIPPED: Requires issues query to return snoozed issue data
     it.skip("should render snoozed issues with snooze badge", () => {
       const issues = [
         createMockInboxIssue({
@@ -233,7 +243,7 @@ describe("InboxList", () => {
   });
 
   describe("Selection", () => {
-    // TODO: Fix mock strategy for multiple useQuery calls
+    // SKIPPED: Requires issues to render for checkbox to appear
     it.skip("should show checkboxes for pending issues", () => {
       const issues = [createMockInboxIssue({ status: "pending" })];
       setupMocks(issues, createMockCounts({ pending: 1 }));
@@ -243,7 +253,7 @@ describe("InboxList", () => {
       expect(screen.getByRole("checkbox")).toBeInTheDocument();
     });
 
-    // TODO: Fix mock strategy for multiple useQuery calls
+    // SKIPPED: Requires issues to render for checkbox interaction
     it.skip("should toggle selection when checkbox is clicked", async () => {
       const user = userEvent.setup();
       const issues = [createMockInboxIssue({ status: "pending" })];
@@ -259,7 +269,7 @@ describe("InboxList", () => {
   });
 
   describe("Bulk Actions", () => {
-    // TODO: Fix mock strategy for multiple useQuery calls
+    // SKIPPED: Requires issues to render for selection and bulk actions
     it.skip("should show bulk action buttons when items are selected", async () => {
       const user = userEvent.setup();
       const issues = [createMockInboxIssue({ status: "pending" })];
@@ -277,7 +287,7 @@ describe("InboxList", () => {
       expect(screen.getByRole("button", { name: /snooze/i })).toBeInTheDocument();
     });
 
-    // TODO: Fix mock strategy for multiple useQuery calls
+    // SKIPPED: Requires issues to render for bulk accept flow
     it.skip("should call bulkAccept when Accept button is clicked", async () => {
       const user = userEvent.setup();
       const mockBulkAccept = vi.fn().mockResolvedValue({ accepted: 1 });
@@ -300,7 +310,7 @@ describe("InboxList", () => {
   });
 
   describe("Select All", () => {
-    // TODO: Fix mock strategy for multiple useQuery calls
+    // SKIPPED: Requires multiple issues to render for select-all behavior
     it.skip("should select all triageable items when Select All is clicked", async () => {
       const user = userEvent.setup();
       const issues = [
