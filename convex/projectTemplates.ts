@@ -1,3 +1,11 @@
+/**
+ * Project Templates
+ *
+ * Built-in project templates for quick project setup.
+ * Templates include workflow states, default labels, and board configuration.
+ * Supports creating projects from templates with customization options.
+ */
+
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, query } from "./_generated/server";

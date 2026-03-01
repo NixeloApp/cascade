@@ -1,3 +1,11 @@
+/**
+ * Invite Token Page
+ *
+ * Landing page for organization/workspace invite links.
+ * Validates invite token and allows users to accept invitations.
+ * Handles both authenticated and unauthenticated user flows.
+ */
+
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Authenticated, Unauthenticated, useMutation, useQuery } from "convex/react";
