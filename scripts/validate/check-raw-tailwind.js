@@ -52,6 +52,7 @@ export function run() {
     "/CommentRenderer.tsx", // Inline markdown code element styling
     "/CreateProjectFromTemplate.tsx", // Responsive button layout
     "/DocumentHeader.tsx", // Header with breadcrumbs
+    "/DocumentSidebar.tsx", // Sidebar with TOC and info sections
     "/DocumentTemplatesManager.tsx", // Template cards with gradients
     "/FilterBar.tsx", // Filter dropdowns
     "/GlobalSearch.tsx", // Search modal
@@ -68,6 +69,7 @@ export function run() {
     "/MentionInput.tsx", // Dropdown positioning
     "/NotificationCenter.tsx", // Popover with badge positioning
     "/NotificationItem.tsx", // Link with flex styling
+    "/PlateEditor.tsx", // Document editor with sidebar layout
     "/ProjectsList.tsx", // Project avatar styling
     "/RoadmapView.tsx", // Timeline/roadmap styling
     "/SprintManager.tsx", // Progress bars, responsive layout

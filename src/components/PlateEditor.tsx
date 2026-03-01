@@ -14,7 +14,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -27,6 +27,7 @@ import { getEditorPlugins, getInitialValue } from "@/lib/plate/editor";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { DocumentHeader } from "./DocumentHeader";
+import { DocumentSidebar } from "./DocumentSidebar";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { MoveDocumentDialog } from "./MoveDocumentDialog";
 import { FloatingToolbar } from "./Plate/FloatingToolbar";
@@ -58,6 +59,8 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
 
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
 
   // Create editor with plugins
   const editor = usePlateEditor({
@@ -127,11 +130,17 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   };
 
   // Handle content change (debounced save would go here)
-  const handleChange = ({ value }: { value: Value }) => {
+  const handleChange = useCallback(({ value }: { value: Value }) => {
+    // Track editor value for sidebar TOC
+    setEditorValue(value);
     // TODO: Implement Y.js sync or direct Convex save
-    // For now, just log changes
     console.debug("Editor content changed", value.length, "nodes");
-  };
+  }, []);
+
+  // Toggle sidebar visibility
+  const toggleSidebar = useCallback(() => {
+    setShowSidebar((prev) => !prev);
+  }, []);
 
   // Handle version restore
   const handleRestoreVersion = async (snapshot: unknown, _version: number, title: string) => {
@@ -256,37 +265,54 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
         </Alert>
       )}
 
-      {/* Editor - Clean Mintlify-inspired layout */}
-      <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
-        <Card padding="lg" variant="ghost" className="max-w-3xl mx-auto">
-          <ErrorBoundary
-            fallback={
-              <Card
-                padding="lg"
-                className="border-status-error/20 bg-status-error-bg text-status-error text-center"
-              >
-                <Stack gap="sm">
-                  <Typography variant="label">Editor failed to load</Typography>
-                  <Typography variant="muted" className="opacity-80">
-                    There was an issue initializing the rich text editor.
-                  </Typography>
-                </Stack>
-              </Card>
-            }
-          >
-            <Plate editor={editor} onChange={handleChange} readOnly={lockStatus?.isLocked}>
-              {!lockStatus?.isLocked && <SlashMenu />}
-              {!lockStatus?.isLocked && <FloatingToolbar />}
-              <PlateContent
-                className="min-h-96 prose prose-sm max-w-none focus-visible:outline-none text-ui-text leading-relaxed"
-                data-testid={TEST_IDS.EDITOR.PLATE}
-                placeholder="Start writing..."
-                readOnly={lockStatus?.isLocked}
-              />
-            </Plate>
-          </ErrorBoundary>
-        </Card>
-      </FlexItem>
+      {/* Editor and Sidebar - Two column layout */}
+      <Flex className="flex-1 overflow-hidden">
+        {/* Editor - Clean Mintlify-inspired layout */}
+        <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
+          <Card padding="lg" variant="ghost" className="max-w-3xl mx-auto">
+            <ErrorBoundary
+              fallback={
+                <Card
+                  padding="lg"
+                  className="border-status-error/20 bg-status-error-bg text-status-error text-center"
+                >
+                  <Stack gap="sm">
+                    <Typography variant="label">Editor failed to load</Typography>
+                    <Typography variant="muted" className="opacity-80">
+                      There was an issue initializing the rich text editor.
+                    </Typography>
+                  </Stack>
+                </Card>
+              }
+            >
+              <Plate editor={editor} onChange={handleChange} readOnly={lockStatus?.isLocked}>
+                {!lockStatus?.isLocked && <SlashMenu />}
+                {!lockStatus?.isLocked && <FloatingToolbar />}
+                <PlateContent
+                  className="min-h-96 prose prose-sm max-w-none focus-visible:outline-none text-ui-text leading-relaxed"
+                  data-testid={TEST_IDS.EDITOR.PLATE}
+                  placeholder="Start writing..."
+                  readOnly={lockStatus?.isLocked}
+                />
+              </Plate>
+            </ErrorBoundary>
+          </Card>
+        </FlexItem>
+
+        {/* Document Sidebar */}
+        <DocumentSidebar
+          editorValue={editorValue}
+          documentInfo={{
+            creatorName: document.creatorName,
+            createdAt: document._creationTime,
+            updatedAt: document.updatedAt,
+            isPublic: document.isPublic,
+            isArchived: isArchived ?? false,
+          }}
+          isOpen={showSidebar}
+          onToggle={toggleSidebar}
+        />
+      </Flex>
 
       {/* Version History Modal */}
       <VersionHistory
