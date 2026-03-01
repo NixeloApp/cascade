@@ -123,6 +123,10 @@ export const update = authenticatedMutation({
         emailDigest: args.emailDigest ?? DEFAULT_PREFERENCES.emailDigest,
         digestDay: args.digestDay,
         digestTime: args.digestTime,
+        quietHoursEnabled: args.quietHoursEnabled ?? DEFAULT_PREFERENCES.quietHoursEnabled,
+        quietHoursStart: args.quietHoursStart ?? DEFAULT_PREFERENCES.quietHoursStart,
+        quietHoursEnd: args.quietHoursEnd ?? DEFAULT_PREFERENCES.quietHoursEnd,
+        quietHoursTimezone: args.quietHoursTimezone ?? DEFAULT_PREFERENCES.quietHoursTimezone,
         updatedAt: Date.now(),
       });
     }

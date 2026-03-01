@@ -78,6 +78,7 @@ export const getUnreadCount = authenticatedQuery({
   handler: async (ctx) => {
     // Cap at 100 - UI typically shows "99+" anyway
     const MAX_UNREAD_COUNT = 100;
+    const now = Date.now();
 
     // Use boundedCount to stop scanning after 100 items
     // efficientCount() uses .count() which scans all items (O(N)), which is wasteful here
@@ -87,7 +88,13 @@ export const getUnreadCount = authenticatedQuery({
         .withIndex("by_user_read", (q) =>
           q.eq("userId", ctx.userId).eq("isRead", false).lt("isDeleted", true),
         )
-        .filter((q) => q.neq(q.field("isArchived"), true)),
+        .filter((q) =>
+          q.and(
+            q.neq(q.field("isArchived"), true),
+            // Filter out currently snoozed notifications (same as list query)
+            q.or(q.eq(q.field("snoozedUntil"), undefined), q.lt(q.field("snoozedUntil"), now)),
+          ),
+        ),
       { limit: MAX_UNREAD_COUNT },
     );
 

@@ -16,12 +16,7 @@ import { batchFetchTeams, batchFetchUsers, getUserName } from "./lib/batchHelper
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
-import {
-  MAX_PROJECTS_PER_TEAM,
-  MAX_TEAM_MEMBERS,
-  MAX_TEAMS_PER_ORG,
-  SIDEBAR_DISPLAY_LIMIT,
-} from "./lib/queryLimits";
+import { MAX_PROJECTS_PER_TEAM, MAX_TEAM_MEMBERS, MAX_TEAMS_PER_ORG } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { getTeamRole } from "./lib/teamAccess";
@@ -613,8 +608,8 @@ export const getOrganizationTeams = organizationQuery({
 
     const isAdmin = ctx.organizationRole === "admin" || ctx.organizationRole === "owner";
 
-    // Fetch team members and projects per team using indexes with limits
-    // Optimization: Use SIDEBAR_DISPLAY_LIMIT - no pagination/search in sidebar
+    // Fetch team members and projects per team using indexes
+    // Use bounded take() to get accurate counts up to reasonable limits
     const teamIds = teams.map((t) => t._id);
 
     const [teamMembersArrays, projectCountsArray] = await Promise.all([
@@ -624,7 +619,7 @@ export const getOrganizationTeams = organizationQuery({
             .query("teamMembers")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter(notDeleted)
-            .take(SIDEBAR_DISPLAY_LIMIT),
+            .take(MAX_TEAM_MEMBERS),
         ),
       ),
       Promise.all(
@@ -633,7 +628,7 @@ export const getOrganizationTeams = organizationQuery({
             .query("projects")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter(notDeleted)
-            .take(SIDEBAR_DISPLAY_LIMIT);
+            .take(MAX_PROJECTS_PER_TEAM);
           return projects.length;
         }),
       ),

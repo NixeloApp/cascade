@@ -10,7 +10,7 @@ import { getMentionOnSelectItem, type TMentionItemBase } from "@platejs/mention"
 import { useQuery } from "convex/react";
 import type { PlateElementProps } from "platejs/react";
 import { useEditorRef } from "platejs/react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -59,16 +59,8 @@ export function MentionInputElement({
     limit: 5,
   });
 
-  // Track previous search results to detect changes
-  const prevSearchResultsRef = useRef(searchResults);
-
   // Convert search results to mention items
   const items: MentionUser[] = useMemo(() => {
-    // Reset selection when search results change
-    if (prevSearchResultsRef.current !== searchResults) {
-      prevSearchResultsRef.current = searchResults;
-      setSelectedIndex(0);
-    }
     if (!searchResults) return [];
     return searchResults.map((user) => ({
       id: user._id,
@@ -77,6 +69,12 @@ export function MentionInputElement({
       email: user.email,
       image: user.image,
     }));
+  }, [searchResults]);
+
+  // Reset selection when search results change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to reset on searchResults change
+  useEffect(() => {
+    setSelectedIndex(0);
   }, [searchResults]);
 
   // Combobox input handling

@@ -45,7 +45,6 @@ export function MentionElement({
     >
       {value?.image && <Avatar name={value.text} src={value.image} size="xs" />}@
       {value?.text || children}
-      {children}
     </span>
   );
 }

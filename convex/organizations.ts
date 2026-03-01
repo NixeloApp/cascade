@@ -7,7 +7,7 @@ import { logAudit } from "./lib/audit";
 import { batchFetchOrganizations, batchFetchUsers } from "./lib/batchHelpers";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole, isOrganizationAdmin } from "./lib/organizationAccess";
-import { MAX_ORG_MEMBERS, SIDEBAR_DISPLAY_LIMIT } from "./lib/queryLimits";
+import { MAX_ORG_MEMBERS, MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { isReservedSlug } from "./shared/constants";
 import {
@@ -526,14 +526,14 @@ export const getUserOrganizations = authenticatedQuery({
     const organizationMap = await batchFetchOrganizations(ctx, organizationIds);
 
     // Batch fetch member and project counts per organization (parallel queries)
-    // Optimization: Use SIDEBAR_DISPLAY_LIMIT - no pagination/search in sidebar
+    // Use bounded take() to get accurate counts up to reasonable limits
     const [memberCounts, projectCounts] = await Promise.all([
       Promise.all(
         organizationIds.map(async (organizationId) => {
           const members = await ctx.db
             .query("organizationMembers")
             .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-            .take(SIDEBAR_DISPLAY_LIMIT);
+            .take(MAX_ORG_MEMBERS);
           return members.length;
         }),
       ),
@@ -542,7 +542,7 @@ export const getUserOrganizations = authenticatedQuery({
           const projects = await ctx.db
             .query("projects")
             .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-            .take(SIDEBAR_DISPLAY_LIMIT);
+            .take(MAX_PAGE_SIZE);
           return projects.length;
         }),
       ),

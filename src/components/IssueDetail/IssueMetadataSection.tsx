@@ -86,7 +86,7 @@ export function IssueMetadataSection({
         <Stack gap="xs">
           {/* Status */}
           <PropertyRow label="Status">
-            {canEditStatus ? (
+            {canEditStatus && onStatusChange ? (
               <InlineStatusSelect
                 value={status}
                 workflowStates={workflowStates}
@@ -99,7 +99,7 @@ export function IssueMetadataSection({
 
           {/* Type */}
           <PropertyRow label="Type">
-            {canEditType ? (
+            {canEditType && onTypeChange ? (
               <InlineTypeSelect value={type as IssueTypeWithSubtask} onChange={onTypeChange} />
             ) : (
               <Typography variant="label" className="capitalize">
@@ -110,7 +110,7 @@ export function IssueMetadataSection({
 
           {/* Priority */}
           <PropertyRow label="Priority">
-            {canEditPriority ? (
+            {canEditPriority && onPriorityChange ? (
               <InlinePrioritySelect value={priority} onChange={onPriorityChange} />
             ) : (
               <Typography variant="label" className="capitalize">
@@ -121,7 +121,7 @@ export function IssueMetadataSection({
 
           {/* Assignee */}
           <PropertyRow label="Assignee">
-            {canEditAssignee ? (
+            {canEditAssignee && onAssigneeChange ? (
               <InlineAssigneeSelect
                 value={assignee?._id}
                 members={members}
@@ -139,7 +139,7 @@ export function IssueMetadataSection({
 
           {/* Story Points */}
           <PropertyRow label="Story Points">
-            {canEditStoryPoints ? (
+            {canEditStoryPoints && onStoryPointsChange ? (
               <InlineStoryPointsInput value={storyPoints} onChange={onStoryPointsChange} />
             ) : (
               <Typography variant="label">{storyPoints ?? "Not set"}</Typography>

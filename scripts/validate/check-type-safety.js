@@ -35,6 +35,7 @@ export function run() {
     /src\/components\/Settings\/AvatarUploadModal\.tsx$/, // Drop zone requires div (a11y)
     /src\/components\/Settings\/CoverImageUploadModal\.tsx$/, // Drop zone requires div (a11y)
     /convex\/users\.ts$/, // Search logic with membership checks (complexity)
+    /src\/components\/Plate\/MentionInputElement\.tsx$/, // useEffect deps ignore for intentional reset pattern
   ];
 
   let errorCount = 0;

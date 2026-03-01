@@ -95,6 +95,7 @@ export function sanitizeUserForCurrent(user: Doc<"users"> | null | undefined) {
     inviteId: user.inviteId,
     isTestUser: user.isTestUser,
     testUserCreatedAt: user.testUserCreatedAt,
+    avatarStorageId: user.avatarStorageId,
     coverImageStorageId: user.coverImageStorageId,
   };
 }

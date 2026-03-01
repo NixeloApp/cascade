@@ -98,6 +98,22 @@ function areIssuePropsEqual(prev: IssueCardProps, next: IssueCardProps) {
     return false;
   }
 
+  // Check displayOptions (shallow comparison)
+  const prevOpts = prev.displayOptions;
+  const nextOpts = next.displayOptions;
+  if (prevOpts !== nextOpts) {
+    if (!prevOpts || !nextOpts) return false;
+    if (
+      prevOpts.assignee !== nextOpts.assignee ||
+      prevOpts.priority !== nextOpts.priority ||
+      prevOpts.labels !== nextOpts.labels ||
+      prevOpts.storyPoints !== nextOpts.storyPoints ||
+      prevOpts.issueType !== nextOpts.issueType
+    ) {
+      return false;
+    }
+  }
+
   // Check issue object equality
   return areIssuesEqual(prev.issue, next.issue);
 }

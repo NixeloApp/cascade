@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues } from "./lib/batchHelpers";
 import { conflict, notFound, validation } from "./lib/errors";
-import { MAX_PAGE_SIZE } from "./lib/queryLimits";
+import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES } from "./lib/queryLimits";
 import { assertCanEditProject } from "./projectAccess";
 import { linkTypes } from "./validators";
 
@@ -115,16 +115,16 @@ export const getForProject = authenticatedQuery({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    // Get all non-deleted issues in the project with dates (for Gantt relevance)
+    // Get all non-deleted issues in the project (bounded for safety)
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .filter((q) => q.neq(q.field("isDeleted"), true))
-      .take(MAX_PAGE_SIZE);
+      .take(MAX_SPRINT_ISSUES);
 
     const issueIds = new Set(issues.map((i) => i._id));
 
-    // Fetch links for all issues in parallel
+    // Fetch links for all issues in parallel (bounded per issue)
     const linksArrays = await Promise.all(
       issues.map((issue) =>
         ctx.db

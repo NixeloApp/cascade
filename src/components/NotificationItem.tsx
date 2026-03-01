@@ -16,6 +16,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
@@ -93,6 +94,8 @@ export function NotificationItem({
   onSnooze,
   orgSlug,
 }: NotificationItemProps) {
+  const [snoozePopoverOpen, setSnoozePopoverOpen] = useState(false);
+
   // Fetch issue details if present to resolve key for navigation
   const issue = useQuery(
     api.issues.getIssue,
@@ -186,7 +189,7 @@ export function NotificationItem({
           </Tooltip>
         )}
         {onSnooze && (
-          <Popover>
+          <Popover open={snoozePopoverOpen} onOpenChange={setSnoozePopoverOpen}>
             <Tooltip content="Snooze">
               <PopoverTrigger asChild>
                 <IconButton
@@ -213,6 +216,7 @@ export function NotificationItem({
                       const snoozedUntil =
                         option.duration === null ? getTomorrow9am() : Date.now() + option.duration;
                       onSnooze(notification._id, snoozedUntil);
+                      setSnoozePopoverOpen(false);
                     }}
                   >
                     {option.label}

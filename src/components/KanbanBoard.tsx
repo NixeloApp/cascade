@@ -76,7 +76,9 @@ function matchesSearchQuery(issue: EnrichedIssue, query?: string): boolean {
 
 /** Convert ISO date string to start-of-day timestamp */
 function dateStringToTimestamp(dateStr: string, endOfDay = false): number {
-  const date = new Date(dateStr);
+  // Parse date parts manually to avoid timezone issues with new Date("YYYY-MM-DD")
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
   if (endOfDay) {
     date.setHours(23, 59, 59, 999);
   } else {

@@ -434,11 +434,12 @@ export const check2FACompliance = query({
         };
       }
 
+      const daysRemaining = Math.ceil((gracePeriodEnd - Date.now()) / (24 * 60 * 60 * 1000));
       return {
         required: false,
         warning: true,
         organizationName: org.name,
-        daysRemaining: Math.ceil((gracePeriodEnd - Date.now()) / (24 * 60 * 60 * 1000)),
+        daysRemaining,
         message: `2FA will be required in ${daysRemaining} days.`,
       };
     }

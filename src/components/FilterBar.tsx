@@ -382,9 +382,10 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    // Store the raw value but treat whitespace-only as empty
     onFilterChange({
       ...filters,
-      query: value || undefined,
+      query: value.trim() ? value : undefined,
     });
   };
 
