@@ -1,3 +1,11 @@
+/**
+ * Google Calendar Integration
+ *
+ * OAuth-based Google Calendar connection and sync.
+ * Handles token encryption, event synchronization, and calendar management.
+ * Supports bidirectional sync with internal calendar events.
+ */
+
 import { v } from "convex/values";
 import { internalMutation, mutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";

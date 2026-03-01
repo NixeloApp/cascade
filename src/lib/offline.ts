@@ -1,4 +1,10 @@
-// Offline state management and IndexedDB wrapper
+/**
+ * Offline State Management
+ *
+ * IndexedDB wrapper for offline mutation queuing and data caching.
+ * Stores pending mutations for sync when connection is restored.
+ * Supports automatic retry with exponential backoff.
+ */
 
 import { DAY, WEEK } from "@convex/lib/timeUtils";
 

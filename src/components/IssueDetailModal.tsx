@@ -1,3 +1,11 @@
+/**
+ * Issue Detail Modal
+ *
+ * Full-screen modal for viewing and editing issue details.
+ * Shows description, comments, activity, attachments, and metadata.
+ * Supports copy link, priority/status editing, and issue deletion.
+ */
+
 import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";

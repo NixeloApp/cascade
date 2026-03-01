@@ -1,3 +1,11 @@
+/**
+ * Custom Field Values
+ *
+ * UI for displaying and editing custom field values on issues.
+ * Renders appropriate input controls based on field type.
+ * Supports inline editing with optimistic updates.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
