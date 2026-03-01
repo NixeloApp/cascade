@@ -1,3 +1,11 @@
+/**
+ * Command Palette
+ *
+ * Global command palette for quick navigation and actions.
+ * Accessible via keyboard shortcut (⌘K / Ctrl+K).
+ * Supports searching issues, documents, and executing commands.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";

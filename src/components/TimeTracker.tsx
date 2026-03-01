@@ -1,3 +1,11 @@
+/**
+ * Time Tracker
+ *
+ * Issue-level time tracking component with timer and entry management.
+ * Shows active timer, logged hours, and time progress against estimates.
+ * Supports manual entry creation and billing rate calculations.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
