@@ -27,11 +27,17 @@
 nixelo/
 ├── src/
 │   ├── routes/           # TanStack Router file-based routes
-│   ├── components/       # React components (ui/, AI/)
-│   │   └── ui/           # shadcn/ui primitives (Radix wrappers)
+│   ├── components/       # React components organized by feature
+│   │   ├── ui/           # shadcn/ui primitives (Radix wrappers)
+│   │   ├── App/          # AppHeader, AppSidebar
+│   │   ├── Documents/    # DocumentHeader, DocumentSidebar, DocumentTree
+│   │   ├── IssueDetail/  # IssueCard, CreateIssueModal, IssueDetailContent
+│   │   ├── Notifications/# NotificationCenter, NotificationItem
+│   │   ├── Sprints/      # SprintManager, SprintProgressBar, SprintWorkload
+│   │   └── AI/           # AI chat and assistant components
 │   ├── lib/
 │   │   ├── utils.ts      # cn() utility
-│   │   └── constants.ts  # App-wide constants (ANIMATION, DISPLAY_LIMITS, etc.)
+│   │   └── constants.ts  # App-wide constants (ANIMATION, DISPLAY_LIMITS, COLORS)
 │   ├── config/routes.ts  # ROUTES object - always use this!
 │   └── index.css         # Design tokens (@theme block) + global styles
 ├── convex/               # Backend functions, schema.ts
@@ -40,6 +46,8 @@ nixelo/
 ├── scripts/validate/     # Custom validation checks (run with: node scripts/validate.js)
 └── docs/                 # Feature documentation
 ```
+
+**Component organization:** Related components are grouped into feature directories. When adding new components, place them in the appropriate feature directory or create a new one if needed.
 
 ## Database Schema (Core Tables)
 
@@ -69,6 +77,7 @@ Use components from `src/components/ui/` instead of raw HTML:
 
 **Key rules:**
 - Use `<Flex>` instead of `<div className="flex">` for layout containers. The validator flags raw flex divs.
+- Use `<Flex gap="sm">` instead of `className="gap-2"`. Available sizes: `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`.
 - Use `<Typography>` instead of raw `<p>`, `<h1>`–`<h6>` tags.
 - Use `cn()` from `@/lib/utils` for conditional class merging. Never use template literals or string concatenation for className.
 
@@ -148,13 +157,15 @@ Run `pnpm fixme` after completing a significant chunk of work (new feature, mult
 
 ### AI: Custom validator
 
-Run `node scripts/validate.js` to check for:
-1. **Standards** — raw HTML tags, flex divs, className concat, raw TW colors, shorthands
+Run `node scripts/validate.js` to check 28 validators including:
+1. **Standards** — raw HTML tags, flex divs, className concat, raw TW colors
 2. **Color audit** — hardcoded hex/rgb, non-semantic color usage
 3. **API calls** — validates api.X.Y calls match Convex exports
 4. **Query issues** — N+1 queries, unbounded `.collect()`, missing indexes
 5. **Arbitrary Tailwind** — flags bracket syntax; allowlist in `ALLOWED_PATTERNS`
-6. **Undefined TW colors** — classes referencing colors not in the theme
+6. **Type safety** — `as any`, `@ts-ignore`, `biome-ignore` usage
+7. **Raw Tailwind** — detects gap classes in className when gap prop should be used
+8. **Convex patterns** — envelope pattern, RBAC checks, membership validation
 
 Run this after UI changes. Target: 0 errors.
 
@@ -168,7 +179,8 @@ Run this after UI changes. Target: 0 errors.
 
 - **Real-time:** ProseMirror Sync for docs, Convex Presence for users
 - **Queries:** Always use indexes (`.withIndex()`), reactive with `useQuery`
-- **Errors:** Use `showError(error, "Context")`, `ErrorBoundary` components
+- **Errors:** Use `showError(error, "Context")` for mutations, `ErrorBoundary` for component-level errors. Never use raw `toast.error()`.
+- **Success toasts:** Use `showSuccess("Message")` from `@/lib/toast` for user feedback after mutations.
 
 ## E2E Testing Rules
 
