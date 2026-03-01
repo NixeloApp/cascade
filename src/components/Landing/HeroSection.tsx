@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
-import { PlayIcon } from "./icons";
+import { PlayIcon } from "./Icons";
 
 export function HeroSection() {
   return (

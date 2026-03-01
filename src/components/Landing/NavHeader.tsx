@@ -12,7 +12,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
-import { NixeloLogo } from "./icons";
+import { NixeloLogo } from "./Icons";
 
 export function NavHeader() {
   const { setTheme } = useTheme();

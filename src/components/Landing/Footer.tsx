@@ -1,7 +1,7 @@
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
-import { NixeloLogo } from "./icons";
+import { NixeloLogo } from "./Icons";
 
 export function Footer() {
   return (
