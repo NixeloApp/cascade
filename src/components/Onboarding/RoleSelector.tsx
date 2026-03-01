@@ -1,3 +1,11 @@
+/**
+ * Role Selector
+ *
+ * Card-based role selection for onboarding.
+ * Offers team lead and team member paths.
+ * Routes to appropriate onboarding flow.
+ */
+
 import { Check, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";

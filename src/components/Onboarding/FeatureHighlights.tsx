@@ -1,3 +1,11 @@
+/**
+ * Feature Highlights
+ *
+ * Grid of feature cards for onboarding pages.
+ * Highlights key product capabilities with icons.
+ * Used in lead and member onboarding flows.
+ */
+
 import { FileText, Kanban, Zap } from "lucide-react";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";

@@ -1,3 +1,11 @@
+/**
+ * Issue Templates
+ *
+ * CRUD operations for issue templates.
+ * Templates define default values for new issues.
+ * Supports project-scoped templates with access control.
+ */
+
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import {

@@ -1,3 +1,11 @@
+/**
+ * Custom Field Form
+ *
+ * Dialog for creating and editing custom fields.
+ * Supports text, number, select, date, and user types.
+ * Handles field options and validation rules.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
