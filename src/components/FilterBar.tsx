@@ -1,3 +1,11 @@
+/**
+ * Filter Bar
+ *
+ * Multi-criteria filter interface for issue lists and boards.
+ * Supports filtering by type, priority, assignee, sprint, labels, and custom fields.
+ * Includes saved filter presets and quick filter toggles.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";

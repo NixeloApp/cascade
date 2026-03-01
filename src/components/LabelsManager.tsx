@@ -1,3 +1,11 @@
+/**
+ * Labels Manager
+ *
+ * UI for managing issue labels and label groups at the project level.
+ * Supports hierarchical label groups, color customization, and drag-and-drop.
+ * Labels can be applied to issues for categorization and filtering.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

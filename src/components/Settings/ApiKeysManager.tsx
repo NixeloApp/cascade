@@ -1,3 +1,11 @@
+/**
+ * API Keys Manager
+ *
+ * UI for managing project API keys with create, rotate, and revoke operations.
+ * Displays key metadata, usage statistics, and expiration status.
+ * Supports scoped permissions and rate limit configuration.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

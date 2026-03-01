@@ -1,3 +1,11 @@
+/**
+ * API Key Management
+ *
+ * Project-scoped API keys for external integrations and REST API access.
+ * Handles key generation, rotation, revocation, and usage tracking.
+ * Supports rate limiting and permission scopes per key.
+ */
+
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";

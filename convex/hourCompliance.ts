@@ -1,3 +1,11 @@
+/**
+ * Hour Compliance
+ *
+ * Time tracking compliance monitoring for required work hours.
+ * Tracks weekly/monthly hour requirements and alerts for deficits.
+ * Supports admin dashboard views and compliance reporting.
+ */
+
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";

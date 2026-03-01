@@ -1,3 +1,11 @@
+/**
+ * Notifications Settings Tab
+ *
+ * User notification preferences management interface.
+ * Controls email, push, and in-app notification settings per event type.
+ * Supports digest frequency, quiet hours, and channel-specific toggles.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";

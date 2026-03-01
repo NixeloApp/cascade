@@ -1,3 +1,11 @@
+/**
+ * Time Entry Modal
+ *
+ * Dialog for viewing and editing existing time entries.
+ * Displays entry details with duration, activity type, and notes.
+ * Supports editing and continuation of previous time entries.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
