@@ -482,6 +482,7 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Added tests for LabelsManager (15 tests) and InboxList (5 passing + 9 skipped) | Test coverage +2 components |
 | 2026-03-01 | Added tests for KanbanColumn (26 tests) | Test coverage +1 component |
 | 2026-03-01 | Added find-missing-tests.js helper script | Developer tooling |
 | 2026-03-01 | Updated CLAUDE.md with new patterns and structure | Documentation consistency |
