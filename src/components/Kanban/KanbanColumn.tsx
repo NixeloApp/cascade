@@ -23,7 +23,7 @@ import { getWorkflowCategoryColor } from "@/lib/issue-utils";
 import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kanban-dnd";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
-import { IssueCard } from "../IssueCard";
+import { IssueCard } from "../IssueDetail";
 import { Badge } from "../ui/Badge";
 import { LoadMoreButton } from "../ui/LoadMoreButton";
 import { PaginationInfo } from "../ui/PaginationInfo";

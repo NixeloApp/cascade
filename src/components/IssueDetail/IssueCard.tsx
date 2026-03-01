@@ -19,7 +19,12 @@ import {
 import type { Id } from "@convex/_generated/dataModel";
 import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
 import { type CardDisplayOptions, DEFAULT_CARD_DISPLAY } from "@/lib/card-display-utils";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import {
@@ -32,11 +37,6 @@ import {
 import { createIssueCardData, isIssueCardData } from "@/lib/kanban-dnd";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
-import { Badge } from "./ui/Badge";
-import { Button } from "./ui/Button";
-import { Icon } from "./ui/Icon";
-import { Tooltip } from "./ui/Tooltip";
-import { Typography } from "./ui/Typography";
 
 interface Issue {
   _id: Id<"issues">;

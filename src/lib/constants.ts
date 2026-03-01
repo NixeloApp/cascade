@@ -102,6 +102,16 @@ export const ICON_SIZES = {
 } as const;
 
 /**
+ * Runtime color values (hex strings for database storage)
+ * These are intentionally hex strings, not CSS variables, because they are
+ * stored in the database and need to work independently of the CSS theme.
+ */
+export const COLORS = {
+  /** Default label color (brand indigo) */
+  DEFAULT_LABEL: "#6366F1",
+} as const;
+
+/**
  * API and query limits
  */
 export const API_LIMITS = {

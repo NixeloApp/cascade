@@ -13,9 +13,26 @@ import { useForm } from "@tanstack/react-form";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { z } from "zod";
+import { DuplicateDetection } from "@/components/DuplicateDetection";
+import { IssueDescriptionEditor } from "@/components/IssueDescriptionEditor";
+import { Alert, AlertDescription } from "@/components/ui/Alert";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
+import { ColorPicker } from "@/components/ui/ColorPicker";
+import { Dialog } from "@/components/ui/Dialog";
+import { Flex } from "@/components/ui/Flex";
+import { Input, Select } from "@/components/ui/form";
+import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { SelectItem } from "@/components/ui/Select";
+import { Stack } from "@/components/ui/Stack";
+import { Switch } from "@/components/ui/Switch";
+import { Typography } from "@/components/ui/Typography";
 import { useDraftAutoSave } from "@/hooks/useDraftAutoSave";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
+import { COLORS } from "@/lib/constants";
 import { FormInput, FormSelectRadix } from "@/lib/form";
 import { Check, Plus, Sparkles, User } from "@/lib/icons";
 import {
@@ -28,22 +45,6 @@ import {
 } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { DuplicateDetection } from "./DuplicateDetection";
-import { IssueDescriptionEditor } from "./IssueDescriptionEditor";
-import { Alert, AlertDescription } from "./ui/Alert";
-import { Avatar } from "./ui/Avatar";
-import { Button } from "./ui/Button";
-import { ColorPicker } from "./ui/ColorPicker";
-import { Dialog } from "./ui/Dialog";
-import { Flex } from "./ui/Flex";
-import { Input, Select } from "./ui/form";
-import { Grid } from "./ui/Grid";
-import { Icon } from "./ui/Icon";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
-import { SelectItem } from "./ui/Select";
-import { Stack } from "./ui/Stack";
-import { Switch } from "./ui/Switch";
-import { Typography } from "./ui/Typography";
 
 // =============================================================================
 // Schema
@@ -117,7 +118,7 @@ export function CreateIssueModal({
   // Inline label creation state
   const [showCreateLabel, setShowCreateLabel] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
-  const [newLabelColor, setNewLabelColor] = useState("#6366F1"); // Default to brand-ring
+  const [newLabelColor, setNewLabelColor] = useState<string>(COLORS.DEFAULT_LABEL);
   const [isCreatingLabel, setIsCreatingLabel] = useState(false);
   // AI state
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -330,7 +331,7 @@ export function CreateIssueModal({
       setSelectedLabels((prev) => [...prev, labelId]);
       // Reset the form
       setNewLabelName("");
-      setNewLabelColor("#6366F1");
+      setNewLabelColor(COLORS.DEFAULT_LABEL);
       setShowCreateLabel(false);
       showSuccess("Label created");
     } catch (error) {

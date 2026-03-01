@@ -28,9 +28,9 @@ export function run() {
     /convex\/otpVerification\.ts$/, // Complexity threshold update
     /convex\/rateLimits\.ts$/, // Type assertion required
     /src\/components\/App\/AppSidebar\.tsx$/, // Complexity: multiple nav sections - TODO: split into NavSection components
-    /src\/components\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
+    /src\/components\/IssueDetail\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
     /src\/components\/Documents\/DocumentHeader\.tsx$/, // Complexity: conditional actions - TODO: extract DocumentActions
-    /src\/components\/IssueCard\.tsx$/, // Complexity: drag-drop + selection - TODO: split DraggableIssueCard
+    /src\/components\/IssueDetail\/IssueCard\.tsx$/, // Complexity: drag-drop + selection - TODO: split DraggableIssueCard
     /src\/components\/IssuesCalendarView\.tsx$/, // a11y: calendar cells are drop targets (clickable divs)
     /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
     /src\/components\/RoadmapView\.tsx$/, // Complexity: timeline + SVG - TODO: extract TimelineRenderer
