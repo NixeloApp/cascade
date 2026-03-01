@@ -15,6 +15,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedQuery, projectEditorMutation, projectQuery } from "./customFunctions";
+import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
 import { inboxIssueSources, inboxIssueStatuses } from "./validators";
@@ -80,24 +81,22 @@ export const list = projectQuery({
     ] as Id<"users">[];
     const duplicateIds = filtered.map((i) => i.duplicateOfId).filter(Boolean) as Id<"issues">[];
 
-    const [issues, users, duplicates] = await Promise.all([
-      Promise.all(issueIds.map((id) => ctx.db.get(id))),
-      Promise.all(userIds.map((id) => ctx.db.get(id))),
-      Promise.all(duplicateIds.map((id) => ctx.db.get(id))),
+    const [issueMap, userMapRaw, duplicateMapRaw] = await Promise.all([
+      batchFetchIssues(ctx, issueIds),
+      batchFetchUsers(ctx, userIds),
+      batchFetchIssues(ctx, duplicateIds),
     ]);
 
-    // Create lookup maps - use type-safe filtering
-    const validIssues = issues.filter((i): i is NonNullable<typeof i> => i !== null);
-    const validUsers = users.filter((u): u is NonNullable<typeof u> => u !== null);
-    const validDuplicates = duplicates.filter((i): i is NonNullable<typeof i> => i !== null);
+    // Format user and duplicate maps for specific partial returns
+    const userMap = new Map<Id<"users">, Pick<Doc<"users">, "_id" | "name" | "image">>();
+    for (const [id, user] of userMapRaw) {
+      userMap.set(id, { _id: user._id, name: user.name, image: user.image });
+    }
 
-    const issueMap = new Map(validIssues.map((i) => [i._id, i]));
-    const userMap = new Map(
-      validUsers.map((u) => [u._id, { _id: u._id, name: u.name, image: u.image }]),
-    );
-    const duplicateMap = new Map(
-      validDuplicates.map((i) => [i._id, { _id: i._id, key: i.key, title: i.title }]),
-    );
+    const duplicateMap = new Map<Id<"issues">, Pick<Doc<"issues">, "_id" | "key" | "title">>();
+    for (const [id, issue] of duplicateMapRaw) {
+      duplicateMap.set(id, { _id: issue._id, key: issue.key, title: issue.title });
+    }
 
     // Assemble results
     return filtered
