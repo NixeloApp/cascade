@@ -1,7 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
-import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { CustomFieldValues } from "./CustomFieldValues";
@@ -12,10 +11,9 @@ vi.mock("convex/react", () => ({
   useMutation: vi.fn(),
 }));
 
-vi.mock("sonner", () => ({
-  toast: {
-    error: vi.fn(),
-  },
+const mockShowError = vi.fn();
+vi.mock("@/lib/toast", () => ({
+  showError: (...args: unknown[]) => mockShowError(...args),
 }));
 
 describe("CustomFieldValues - Component Behavior", () => {
@@ -41,6 +39,7 @@ describe("CustomFieldValues - Component Behavior", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockShowError.mockClear();
 
     // Setup mutations to return in sequence for the 2 useMutation calls
     // Component creates: setValue, removeValue
@@ -782,7 +781,10 @@ describe("CustomFieldValues - Component Behavior", () => {
       await user.click(screen.getByRole("button", { name: /Save/i }));
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Network error");
+        expect(mockShowError).toHaveBeenCalledWith(
+          expect.objectContaining({ message: "Network error" }),
+          "Failed to update field",
+        );
       });
     });
 
@@ -807,7 +809,7 @@ describe("CustomFieldValues - Component Behavior", () => {
       await user.click(screen.getByRole("button", { name: /Save/i }));
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Failed to update field");
+        expect(mockShowError).toHaveBeenCalledWith("Unknown error", "Failed to update field");
       });
     });
   });

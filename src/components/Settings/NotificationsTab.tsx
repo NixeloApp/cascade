@@ -2,7 +2,6 @@ import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import {
@@ -16,6 +15,7 @@ import {
   Smartphone,
   User,
 } from "@/lib/icons";
+import { showError, showSuccess } from "@/lib/toast";
 import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -306,9 +306,9 @@ export function NotificationsTab() {
     setIsSaving(true);
     try {
       await updatePreferences({ [field]: value });
-      toast.success("Preferences updated");
+      showSuccess("Preferences updated");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update preferences");
+      showError(error, "Failed to update preferences");
     } finally {
       setIsSaving(false);
     }
@@ -318,9 +318,9 @@ export function NotificationsTab() {
     setIsSaving(true);
     try {
       await updatePreferences({ emailDigest: digest });
-      toast.success("Digest preference updated");
+      showSuccess("Digest preference updated");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update preferences");
+      showError(error, "Failed to update preferences");
     } finally {
       setIsSaving(false);
     }
@@ -333,9 +333,9 @@ export function NotificationsTab() {
     setIsSaving(true);
     try {
       await updatePreferences({ [field]: value });
-      toast.success("Quiet hours updated");
+      showSuccess("Quiet hours updated");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update quiet hours");
+      showError(error, "Failed to update quiet hours");
     } finally {
       setIsSaving(false);
     }
@@ -345,9 +345,9 @@ export function NotificationsTab() {
     setIsSaving(true);
     try {
       await updatePushPreferences({ [field]: value });
-      toast.success("Push preferences updated");
+      showSuccess("Push preferences updated");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update preferences");
+      showError(error, "Failed to update preferences");
     } finally {
       setIsSaving(false);
     }

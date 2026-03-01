@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
 import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/form/Input";
 import { ROUTES } from "@/config/routes";
 import { getConvexSiteUrl } from "@/lib/convex";
 import { TEST_IDS } from "@/lib/test-ids";
+import { showSuccess } from "@/lib/toast";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordRoute,
@@ -46,7 +46,7 @@ function ForgotPasswordPage() {
 
     setEmail(formEmail);
     setShowReset(true);
-    toast.success("If an account exists, you'll receive a reset code");
+    showSuccess("If an account exists, you'll receive a reset code");
     setSubmitting(false);
   };
 

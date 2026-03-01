@@ -44,8 +44,8 @@ function AppLayout() {
   useEffect(() => {
     if (redirectPath && redirectPath !== ROUTES.app.path) {
       const isGateway = pathname === "/app" || pathname === "/app/";
-      const isOnboardingTarget = redirectPath.includes("/onboarding");
-      const isOnboardingCurrent = pathname.includes("/onboarding");
+      const isOnboardingTarget = redirectPath.includes(ROUTES.onboarding.path);
+      const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
 
       if (isOnboardingTarget && !isOnboardingCurrent) {
         navigate({ to: redirectPath, replace: true });
@@ -67,8 +67,8 @@ function AppLayout() {
   // If we have a redirect path that's not /app, potentially show loading if we are about to redirect
   if (redirectPath && redirectPath !== ROUTES.app.path) {
     const isGateway = pathname === "/app" || pathname === "/app/";
-    const isOnboardingTarget = redirectPath.includes("/onboarding");
-    const isOnboardingCurrent = pathname.includes("/onboarding");
+    const isOnboardingTarget = redirectPath.includes(ROUTES.onboarding.path);
+    const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
 
     const willRedirect = (isOnboardingTarget && !isOnboardingCurrent) || isGateway;
 

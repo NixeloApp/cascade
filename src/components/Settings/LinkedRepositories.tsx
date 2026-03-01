@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Github, Trash2 } from "@/lib/icons";
+import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -32,9 +33,9 @@ export function LinkedRepositories() {
 
     try {
       await unlinkRepo({ repositoryId: repoId });
-      toast.success("Repository unlinked");
-    } catch (_error) {
-      toast.error("Failed to unlink repository");
+      showSuccess("Repository unlinked");
+    } catch (error) {
+      showError(error, "Failed to unlink repository");
     }
   };
 

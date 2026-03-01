@@ -13,11 +13,17 @@
  *   9. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
  *  10. E2E quality          — catches broad selectors, networkidle, waitForSelector
  *  11. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
- *  12. Convex patterns      — Envelope Pattern returns, security checks, test destructuring
- *  13. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
- *  14. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
- *  15. JSDoc coverage       — exported functions/components should have JSDoc documentation
- *  16. File headers         — non-trivial files (>50 lines) should have documentation headers
+ *  12. Route constants      — use ROUTES from @/config/routes instead of hardcoded paths
+ *  13. Convex patterns      — Envelope Pattern returns, security checks, test destructuring
+ *  14. Convex naming        — function naming conventions (get/list/create/update/delete)
+ *  15. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
+ *  16. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  17. JSDoc coverage       — exported functions/components should have JSDoc documentation
+ *  18. File headers         — non-trivial files (>50 lines) should have documentation headers
+ *  19. Import order         — imports should follow standard grouping order
+ *  20. Hook patterns        — custom hooks should follow consistent patterns
+ *  21. Async patterns       — consistent error handling in async operations
+ *  22. Test coverage        — critical files should have corresponding tests
  *
  * Exit code 1 if any check fails. No warning levels — everything is an error.
  *
@@ -27,17 +33,23 @@
 
 import { run as runApiCallsCheck } from "./validate/check-api-calls.js";
 import { run as runArbitraryTailwindCheck } from "./validate/check-arbitrary-tw.js";
+import { run as runAsyncPatternsCheck } from "./validate/check-async-patterns.js";
 import { run as runColorAudit } from "./validate/check-colors.js";
+import { run as runConvexNamingCheck } from "./validate/check-convex-naming.js";
 import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
 import { run as runEmojiCheck } from "./validate/check-emoji.js";
 import { run as runFileHeadersCheck } from "./validate/check-file-headers.js";
+import { run as runHookPatternsCheck } from "./validate/check-hook-patterns.js";
+import { run as runImportOrderCheck } from "./validate/check-import-order.js";
 import { run as runInteractiveTwCheck } from "./validate/check-interactive-tw.js";
 import { run as runJSDocCheck } from "./validate/check-jsdoc.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
 import { run as runRawTailwindCheck } from "./validate/check-raw-tailwind.js";
+import { run as runRouteConstantsCheck } from "./validate/check-route-constants.js";
 import { run as runStandardsCheck } from "./validate/check-standards.js";
 import { run as runTailwindConsistencyCheck } from "./validate/check-tailwind-consistency.js";
+import { run as runTestCoverageCheck } from "./validate/check-test-coverage.js";
 import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
 import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
 import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
@@ -57,11 +69,17 @@ const checks = [
   { name: "Test ID constants", fn: runTestIdsCheck },
   { name: "E2E quality", fn: runE2EQualityCheck },
   { name: "UI patterns", fn: runUIPatternsCheck },
+  { name: "Route constants", fn: runRouteConstantsCheck },
   { name: "Convex patterns", fn: runConvexPatternsCheck },
+  { name: "Convex naming", fn: runConvexNamingCheck },
   { name: "Interactive Tailwind", fn: runInteractiveTwCheck },
   { name: "Tailwind consistency", fn: runTailwindConsistencyCheck },
   { name: "JSDoc coverage", fn: runJSDocCheck },
   { name: "File headers", fn: runFileHeadersCheck },
+  { name: "Import order", fn: runImportOrderCheck },
+  { name: "Hook patterns", fn: runHookPatternsCheck },
+  { name: "Async patterns", fn: runAsyncPatternsCheck },
+  { name: "Test coverage", fn: runTestCoverageCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

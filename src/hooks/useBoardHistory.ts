@@ -38,7 +38,7 @@ export function useBoardHistory() {
 
     try {
       if (lastAction.isTeamMode) {
-        toast.error("Undo not supported in Team View yet");
+        showError("team-mode", "Undo not supported in Team View yet");
         return;
       }
 
@@ -67,7 +67,7 @@ export function useBoardHistory() {
 
     try {
       if (lastRedo.isTeamMode) {
-        toast.error("Redo not supported in Team View yet");
+        showError("team-mode", "Redo not supported in Team View yet");
         return;
       }
 

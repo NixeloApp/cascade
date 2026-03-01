@@ -3,7 +3,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
-import { toast } from "sonner";
 import { AlertTriangle, BookOpen, Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -171,7 +170,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
 
   const copyKeyPrefix = () => {
     navigator.clipboard.writeText(apiKey.keyPrefix);
-    toast.success("Key prefix copied to clipboard");
+    showSuccess("Key prefix copied to clipboard");
   };
 
   return (

@@ -1,10 +1,10 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
 import { ROUTES } from "@/config/routes";
 import { TEST_IDS } from "@/lib/test-ids";
+import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
@@ -52,13 +52,12 @@ export function SignUpForm() {
 
     void signIn("password", formData)
       .then(() => {
-        toast.success("Check your email for a verification code");
+        showSuccess("Check your email for a verification code");
         setEmail(formEmail);
         setShowVerification(true);
       })
       .catch((err) => {
-        const message = err instanceof Error ? err.message : "Could not create account";
-        toast.error(message);
+        showError(err, "Could not create account");
         setSubmitting(false);
       });
   };
