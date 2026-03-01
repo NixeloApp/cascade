@@ -438,10 +438,11 @@ const RULES = [
   - Found 319 files missing headers, warns but doesn't block CI
   - Added to validate.js as check #17
 
-- [ ] **Update `check-raw-tailwind.js`**
-  - Add detection for spacing props vs classes
-  - Suggest `gap="md"` instead of `className="gap-4"`
-  - ~1 hour
+- [x] **Update `check-raw-tailwind.js`** ✅
+  - Added detection for spacing props vs classes on Flex/Stack components
+  - Detects gap-N and space-x/y-N in className when gap prop should be used
+  - Skips responsive variants (sm:gap-4) and decimal values (gap-0.5)
+  - Fixed KanbanColumn to use gap="sm" prop
 
 ### Phase 3: File Reorganization (Next Sprint)
 
