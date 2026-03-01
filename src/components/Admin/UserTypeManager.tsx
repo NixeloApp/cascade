@@ -1,3 +1,11 @@
+/**
+ * User Type Manager
+ *
+ * Admin interface for managing user types (roles/personas) within an organization.
+ * Allows creating, editing, and deleting user type definitions with icons and descriptions.
+ * User types are assigned to organization members for RBAC and permission management.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

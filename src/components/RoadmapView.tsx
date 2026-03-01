@@ -1,3 +1,11 @@
+/**
+ * Roadmap View
+ *
+ * Gantt-style timeline view for issue planning and dependency visualization.
+ * Supports drag-and-drop date editing, dependency lines, and virtualized scrolling.
+ * Provides sprint filtering and keyboard navigation for roadmap planning.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

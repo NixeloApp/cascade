@@ -1,3 +1,11 @@
+/**
+ * Issue Export/Import
+ *
+ * Export issues to CSV/JSON formats and import from external sources.
+ * Supports bulk operations, field mapping, and data validation.
+ * Handles attachments and maintains referential integrity on import.
+ */
+
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";

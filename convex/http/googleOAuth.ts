@@ -1,3 +1,11 @@
+/**
+ * Google OAuth HTTP Handlers
+ *
+ * HTTP endpoints for Google OAuth 2.0 authentication flow.
+ * Handles authorization redirect, callback processing, and token exchange.
+ * Integrates with Google Calendar API for calendar sync functionality.
+ */
+
 import { ConvexError } from "convex/values";
 import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
