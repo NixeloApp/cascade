@@ -139,7 +139,7 @@ export function SprintBurnChart({ sprintId }: SprintBurnChartProps) {
             </Typography>
           </Stack>
           <Stack gap="none" align="center">
-            <Typography variant="h4">{totalPoints - completedPoints}</Typography>
+            <Typography variant="h4">{Math.max(0, totalPoints - completedPoints)}</Typography>
             <Typography variant="caption" color="secondary">
               Remaining
             </Typography>

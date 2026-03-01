@@ -31,7 +31,7 @@ interface IssueMetadataProps {
   status: string;
   type: IssueTypeWithSubtask;
   priority: IssuePriority;
-  assignee?: { _id: string; name: string; image?: string } | null;
+  assignee?: { _id: Id<"users">; name: string; image?: string } | null;
   reporter?: { name: string } | null;
   storyPoints?: number | null;
   labels: LabelInfo[];

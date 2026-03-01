@@ -20,8 +20,8 @@ interface IssueDetailSidebarProps {
   status: string;
   type: IssueTypeWithSubtask;
   priority: IssuePriority;
-  assignee?: { _id: string; name: string; image?: string } | null;
-  reporter?: { _id: string; name: string; image?: string } | null;
+  assignee?: { _id: Id<"users">; name: string; image?: string } | null;
+  reporter?: { _id: Id<"users">; name: string; image?: string } | null;
   storyPoints?: number;
   labels: LabelInfo[];
   estimatedHours?: number;
