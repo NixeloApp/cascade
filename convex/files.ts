@@ -4,7 +4,14 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { notFound } from "./lib/errors";
 import { validateAttachment } from "./lib/fileValidators";
 
-// Generate upload URL for files
+/**
+ * Generates a short-lived URL for uploading files to Convex storage.
+ *
+ * Used primarily for handling user uploads (e.g. avatars, issue attachments).
+ * The returned URL is meant to be used by the frontend to POST the file content.
+ *
+ * @returns An object containing the secure `uploadUrl`.
+ */
 export const generateUploadUrl = authenticatedMutation({
   args: {},
   returns: v.object({ uploadUrl: v.string() }),
@@ -14,7 +21,19 @@ export const generateUploadUrl = authenticatedMutation({
   },
 });
 
-// Add attachment to an issue
+/**
+ * Links a previously uploaded file to an issue as an attachment.
+ *
+ * Performs file validation (size, type) using `validateAttachment` before linking.
+ * If successful, it appends the `storageId` to the issue's `attachments` array and logs
+ * the action in the `issueActivity` log for auditing and display purposes.
+ *
+ * @param storageId - The unique storage identifier obtained after uploading the file.
+ * @param filename - The original name of the uploaded file.
+ * @param contentType - The MIME type of the file.
+ * @param size - The size of the file in bytes.
+ * @returns A success status containing the `storageId` on success, or an error message if validation fails.
+ */
 export const addAttachment = issueMutation({
   args: {
     storageId: v.id("_storage"),
@@ -56,7 +75,17 @@ export const addAttachment = issueMutation({
   },
 });
 
-// Remove attachment from an issue
+/**
+ * Removes an attachment link from a specific issue.
+ *
+ * Note: This deliberately unlinks the file from the issue's `attachments` array but
+ * **does NOT** delete the actual file from Convex storage. This is to prevent cross-project
+ * reference hijacking if the same file is linked elsewhere.
+ *
+ * @param storageId - The unique storage identifier of the attachment to remove.
+ * @throws `notFound` if the specified attachment does not belong to the issue.
+ * @returns A status object indicating success and whether storage was deleted (always false).
+ */
 export const removeAttachment = issueMutation({
   args: {
     storageId: v.id("_storage"),
@@ -100,7 +129,15 @@ export const removeAttachment = issueMutation({
   },
 });
 
-// Get all attachments for an issue with metadata
+/**
+ * Retrieves all attachments for a specific issue along with their metadata.
+ *
+ * Optimizes retrieval by executing a single bounded query against `issueActivity`
+ * to gather metadata (like uploader and filename) instead of causing N+1 query issues.
+ * Generates signed temporary download URLs for all attachments in parallel.
+ *
+ * @returns An array of attachment objects containing URL, filename, uploader, and timestamp.
+ */
 export const getIssueAttachments = issueQuery({
   args: {},
   handler: async (ctx, _args) => {

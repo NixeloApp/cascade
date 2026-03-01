@@ -32,3 +32,4 @@
 ## Log
 
 - [x] Initialized journal
+- [x] Added detailed JSDoc to `generateUploadUrl`, `addAttachment`, `removeAttachment`, and `getIssueAttachments` in `convex/files.ts` to improve developer understanding.
