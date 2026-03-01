@@ -41,6 +41,8 @@ const SKIP_PATTERNS = [
   /\.d\.ts$/,
   /\.example\.tsx?$/, // Example files
   /shadcn-calendar/, // Vendored component with own conventions
+  /Icons\.tsx$/, // Icon bundles export multiple icons
+  /InlinePropertyEdit\.tsx$/, // Co-located inline edit components
 ];
 
 // Valid non-PascalCase file names (utilities, hooks, etc.)

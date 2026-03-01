@@ -46,6 +46,9 @@ const ALLOWED_DUPLICATES = new Set([
   "ui/Input.tsx:ui/form/Input.tsx",
   "ui/Select.tsx:ui/form/Select.tsx",
   "ui/Textarea.tsx:ui/form/Textarea.tsx",
+  // Different implementations for different contexts
+  "Analytics/RecentActivity.tsx:Dashboard/RecentActivity.tsx",
+  "Calendar/RoadmapView.tsx:RoadmapView.tsx",
 ]);
 
 /**
