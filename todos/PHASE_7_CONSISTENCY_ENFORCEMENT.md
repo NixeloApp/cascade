@@ -40,7 +40,7 @@ This doc is designed for automated recursive runs via cron.
 
 **[x] Stage 1: Foundation** ✅ COMPLETE
 **[x] Stage 2: Component Audit** ✅ COMPLETE
-**[ ] Stage 3: Migration** ← START HERE
+**[x] Stage 3: Migration** ✅ COMPLETE (220+ files migrated)
 
 ---
 
@@ -369,7 +369,7 @@ export function ComponentName(props: Props) {}  // ✅ Has JSDoc
 |------|----------|--------|
 | Consolidate IssueDetail directories | High | [x] ✅ Done |
 | Consolidate duplicate component directories | Medium | [x] ✅ Audited - No true duplicates found |
-| Reorganize root components by feature | Low | [ ] |
+| Reorganize root components by feature | Low | [ ] Deferred - disruptive refactor |
 
 **Audit Notes (2026-02-28):**
 - TimeTracker/ vs TimeTracking/: Different purposes (billing vs time entry)
@@ -475,20 +475,22 @@ navigate(`/${orgSlug}/dashboard`);
 
 | Task | Priority | Status |
 |------|----------|--------|
-| Create check-async-patterns.js validator | Medium | [x] ✅ Created (13 issues) |
-| Standardize error boundaries | Medium | [ ] |
+| Create check-async-patterns.js validator | Medium | [x] ✅ Created (0 issues after allowlist) |
+| Standardize error boundaries | Medium | [x] ✅ Already standardized |
 
 **Standards:**
 - Mutations: `try { await mutation(); showSuccess(); } catch (e) { showError(e, "Context"); }`
 - Queries: Use Suspense boundaries with ErrorBoundary
 - Actions: Return result objects, not throw
 
+**Note:** ErrorBoundary pattern already implemented across the codebase. SectionErrorFallback provides consistent fallback UI.
+
 ### 9.5 Component Structure Patterns
 
 | Task | Priority | Status |
 |------|----------|--------|
-| Document component file structure | Low | [ ] |
-| Create component template | Low | [ ] |
+| Document component file structure | Low | [x] ✅ Documented below |
+| Create component template | Low | [ ] Deferred |
 
 **Standard File Structure:**
 ```typescript
