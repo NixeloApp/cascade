@@ -19,6 +19,7 @@ interface CommentReactionsProps {
 
 const COMMON_EMOJIS = ["👍", "👎", "❤️", "🔥", "🚀", "👀", "✅", "🙌"];
 
+/** Emoji reaction buttons for issue comments with toggle functionality. */
 export function CommentReactions({ commentId, reactions, currentUserId }: CommentReactionsProps) {
   const toggleReaction = useMutation(api.reactions.toggleReaction);
   const [isOpen, setIsOpen] = useState(false);

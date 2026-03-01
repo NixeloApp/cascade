@@ -20,6 +20,7 @@ import { Typography } from "./ui/Typography";
 
 type IssueFilter = "assigned" | "created" | "all";
 
+/** Main dashboard page with focus task, stats, issues, and activity. */
 export function Dashboard() {
   const navigate = useNavigate();
   const { orgSlug } = useOrganization();

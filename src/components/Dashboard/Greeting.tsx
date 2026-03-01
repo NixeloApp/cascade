@@ -6,6 +6,7 @@ interface GreetingProps {
   completedCount?: number;
 }
 
+/** Time-based greeting message with weekly completion stats. */
 export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
   const hour = new Date().getHours();
   let greeting = "Good evening";

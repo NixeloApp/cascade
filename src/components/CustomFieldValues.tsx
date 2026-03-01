@@ -21,6 +21,7 @@ interface CustomFieldValuesProps {
   projectId: Id<"projects">;
 }
 
+/** Displays and allows editing of custom field values on an issue. */
 export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps) {
   const [editingFieldId, setEditingFieldId] = useState<Id<"customFields"> | null>(null);
   const [editValue, setEditValue] = useState("");

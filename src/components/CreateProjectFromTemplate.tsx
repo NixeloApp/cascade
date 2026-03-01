@@ -25,6 +25,7 @@ interface CreateProjectFromTemplateProps {
   onProjectCreated?: (projectId: Id<"projects">, projectKey: string) => void;
 }
 
+/** Modal wizard for creating projects from pre-configured templates. */
 export function CreateProjectFromTemplate({
   open,
   onOpenChange,

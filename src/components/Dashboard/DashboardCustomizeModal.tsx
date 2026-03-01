@@ -11,6 +11,7 @@ import { Label } from "../ui/Label";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
 
+/** Modal for customizing dashboard widget visibility preferences. */
 export function DashboardCustomizeModal() {
   const userSettings = useQuery(api.userSettings.get);
   const updateSettings = useMutation(api.userSettings.update);

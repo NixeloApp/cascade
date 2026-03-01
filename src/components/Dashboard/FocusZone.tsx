@@ -23,6 +23,7 @@ interface FocusZoneProps {
   task: FocusTask | null | undefined;
 }
 
+/** Highlighted card displaying the user's highest-priority focus task. */
 export function FocusZone({ task }: FocusZoneProps) {
   const navigate = useNavigate();
   const { orgSlug } = useOrganization();

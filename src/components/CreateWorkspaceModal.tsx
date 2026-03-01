@@ -17,6 +17,7 @@ interface CreateWorkspaceModalProps {
   onCreated?: (workspaceId: string, slug: string) => void;
 }
 
+/** Modal form for creating a new workspace in an organization. */
 export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorkspaceModalProps) {
   const { organizationId } = useOrganization();
   const createWorkspace = useMutation(api.workspaces.create);

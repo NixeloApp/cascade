@@ -22,6 +22,7 @@ interface CreateTeamModalProps {
   workspaceSlug?: string;
 }
 
+/** Modal form for creating a new team within a workspace. */
 export function CreateTeamModal({
   isOpen,
   onClose,
