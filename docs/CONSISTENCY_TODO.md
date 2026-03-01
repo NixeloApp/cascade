@@ -476,12 +476,14 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 | File Organization | 90% | 90% | 🟢 Complete (5/5 directories done) |
 | Error Handling | 100% | 95% | 🟢 Complete (auth forms updated) |
 | Styling Consistency | 98% | 98% | 🟢 Complete |
-| Test Coverage | 56% | 80% | 🟡 In Progress (78 files missing tests) |
+| Test Coverage | 57% | 80% | 🟡 In Progress (77 files missing tests) |
 
 ### Recent Changes
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Added tests for KeyboardShortcutsHelp (16 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for ipRestrictions backend (13 tests) | Test coverage +1 Convex module |
 | 2026-03-01 | Added tests for DocumentTree (14 tests) | Test coverage +1 component |
 | 2026-03-01 | Created docs/design/COMPONENTS.md with component usage standards | Documentation complete |
 | 2026-03-01 | Added tests for LabelsManager (15 tests) and InboxList (5 passing + 9 skipped) | Test coverage +2 components |
