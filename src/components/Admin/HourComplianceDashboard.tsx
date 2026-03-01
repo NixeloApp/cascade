@@ -1,3 +1,11 @@
+/**
+ * Hour Compliance Dashboard
+ *
+ * Admin dashboard for monitoring team time tracking compliance.
+ * Shows hours logged vs expected by user, team, and time period.
+ * Highlights compliance issues and supports generating reports.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

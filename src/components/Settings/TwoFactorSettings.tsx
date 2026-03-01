@@ -1,3 +1,11 @@
+/**
+ * Two-Factor Authentication Settings
+ *
+ * Setup and management UI for TOTP-based 2FA.
+ * Guides users through QR code scanning, verification, and backup codes.
+ * Allows disabling 2FA with proper re-authentication.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { QRCodeSVG } from "qrcode.react";

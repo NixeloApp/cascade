@@ -1,3 +1,11 @@
+/**
+ * Roadmap View
+ *
+ * Timeline visualization of issues with due dates for sprint planning.
+ * Supports week, month, and quarter time scales with horizontal scrolling.
+ * Issues are displayed as bars positioned by start and end dates.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
