@@ -1,3 +1,11 @@
+/**
+ * Keyboard Shortcuts Hook
+ *
+ * Global keyboard shortcut handler with modifier support.
+ * Supports single keys and key sequences (e.g., 'g+h').
+ * Automatically ignores shortcuts when user is typing.
+ */
+
 import { useCallback, useEffect } from "react";
 
 export interface KeyboardShortcut {

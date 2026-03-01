@@ -1,10 +1,15 @@
+/**
+ * Current User Hook
+ *
+ * Retrieves and caches the authenticated user.
+ * Returns loading and authentication states.
+ * Used throughout the app for user context.
+ */
+
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 
-/**
- * Hook to get the current authenticated user
- * @returns Object with user data (or undefined if loading/not authenticated)
- */
+/** Returns current user with loading and auth states. */
 export function useCurrentUser() {
   const user = useQuery(api.users.getCurrent);
 

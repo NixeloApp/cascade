@@ -1,3 +1,11 @@
+/**
+ * Board History Hook
+ *
+ * Undo/redo stack for Kanban board drag-and-drop actions.
+ * Tracks status and order changes for reversal.
+ * Syncs with backend mutations for consistency.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";

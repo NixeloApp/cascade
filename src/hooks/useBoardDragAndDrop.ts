@@ -1,3 +1,11 @@
+/**
+ * Board Drag and Drop Hook
+ *
+ * Handles drag-and-drop logic for Kanban board columns.
+ * Calculates reorder positions using fractional ordering.
+ * Integrates with optimistic updates and history tracking.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
