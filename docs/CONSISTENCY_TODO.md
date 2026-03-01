@@ -365,11 +365,11 @@ All proposed validators have been implemented:
 
 ### Phase 3: File Reorganization (Next Sprint)
 
-- [x] **Reorganize components into feature directories** ✅ (partial)
+- [x] **Reorganize components into feature directories** ✅ (mostly complete)
   - [x] Created `Sprints/` directory (SprintManager, SprintProgressBar, SprintWorkload)
   - [x] Created `Notifications/` directory (NotificationCenter, NotificationItem)
   - [x] Created `Documents/` directory (DocumentHeader, DocumentSidebar, DocumentTree, DocumentComments, DocumentTemplatesManager)
-  - [ ] Create `App/` directory (AppHeader, AppSidebar)
+  - [x] Created `App/` directory (AppHeader, AppSidebar)
   - [ ] Create `Issues/` directory (IssueCard, CreateIssueModal → move to existing IssueDetail/)
 
 - [x] **Add JSDoc to high-traffic exports** ✅
@@ -472,7 +472,7 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 | File Headers | 85% | 80% | 🟢 Complete (87 files remaining) |
 | JSDoc Coverage | 100% | 80% | 🟢 Complete (0 warnings) |
 | Naming Conventions | 95% | 95% | 🟢 Complete |
-| File Organization | 75% | 90% | 🟡 In Progress (3/5 directories done) |
+| File Organization | 80% | 90% | 🟡 In Progress (4/5 directories done) |
 | Error Handling | 95% | 95% | 🟢 Complete |
 | Styling Consistency | 98% | 98% | 🟢 Complete |
 | Test Coverage | 56% | 80% | 🟡 In Progress (78 files missing tests) |
@@ -481,6 +481,7 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Moved App components to App/ | Feature directory organization |
 | 2026-03-01 | Moved Document components to Documents/ | Feature directory organization |
 | 2026-03-01 | Moved Notification components to Notifications/ | Feature directory organization |
 | 2026-03-01 | Moved Sprint components to Sprints/ | Feature directory organization |
