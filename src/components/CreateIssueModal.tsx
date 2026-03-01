@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useDraftAutoSave } from "@/hooks/useDraftAutoSave";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
-import { FormInput, FormSelectRadix, FormTextarea } from "@/lib/form";
+import { FormInput, FormSelectRadix } from "@/lib/form";
 import { Check, Plus, Sparkles, User } from "@/lib/icons";
 import {
   getPriorityColor,
@@ -21,6 +21,7 @@ import {
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { DuplicateDetection } from "./DuplicateDetection";
+import { IssueDescriptionEditor } from "./IssueDescriptionEditor";
 import { Alert, AlertDescription } from "./ui/Alert";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
@@ -115,6 +116,8 @@ export function CreateIssueModal({
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   // Create another toggle
   const [createAnother, setCreateAnother] = useState(false);
+  // Editor key to force re-mount on external value changes (AI/draft)
+  const [editorKey, setEditorKey] = useState(0);
   // Draft restore banner dismissed
   const [draftDismissed, setDraftDismissed] = useState(false);
 
@@ -222,6 +225,8 @@ export function CreateIssueModal({
     if (draft.selectedLabels) {
       setSelectedLabels(draft.selectedLabels);
     }
+    // Force editor re-mount with new value
+    setEditorKey((k) => k + 1);
     setDraftDismissed(true);
     showSuccess("Draft restored");
   }, [draft, form]);
@@ -279,6 +284,8 @@ export function CreateIssueModal({
     form.setFieldValue("priority", template.defaultPriority);
     form.setFieldValue("title", template.titleTemplate);
     form.setFieldValue("description", template.descriptionTemplate || "");
+    // Force editor re-mount with template description
+    setEditorKey((k) => k + 1);
 
     // Apply default labels if they exist
     if (template.defaultLabels && template.defaultLabels.length > 0 && labels) {
@@ -334,6 +341,8 @@ export function CreateIssueModal({
   const applyAISuggestions = (suggestions: AISuggestions, description: string | undefined) => {
     if (suggestions.description && !(description as string)?.trim()) {
       form.setFieldValue("description", suggestions.description as string);
+      // Force editor re-mount with new value
+      setEditorKey((k) => k + 1);
     }
     if (suggestions.priority) {
       form.setFieldValue("priority", suggestions.priority);
@@ -502,12 +511,18 @@ export function CreateIssueModal({
         {/* Description */}
         <form.Field name="description">
           {(field) => (
-            <FormTextarea
-              field={field}
-              label="Description"
-              placeholder="Enter issue description..."
-              rows={6}
-            />
+            <Stack gap="xs">
+              <Typography as="label" variant="label" className="block text-ui-text">
+                Description
+              </Typography>
+              <IssueDescriptionEditor
+                key={editorKey}
+                value={field.state.value}
+                onChange={(value) => field.handleChange(value)}
+                placeholder="Enter issue description..."
+                minHeight={150}
+              />
+            </Stack>
           )}
         </form.Field>
 

@@ -40,6 +40,7 @@ const ALLOWED_FILES = [
   // Editor components
   "Plate/",
   "PlateEditor.tsx",
+  "IssueDescriptionEditor.tsx",
   "MentionInput.tsx",
   // Navigation/layout
   "AppSidebar.tsx",

@@ -184,3 +184,60 @@ export const NODE_TYPES = {
 } as const;
 
 export type NodeType = (typeof NODE_TYPES)[keyof typeof NODE_TYPES];
+
+/**
+ * Lightweight plugins for issue descriptions
+ * Excludes: tables, images, DnD, slash commands, most headings
+ * Includes: formatting, lists, code blocks, blockquotes, mentions
+ */
+export const issueDescriptionPlugins = [
+  // Core
+  BaseParagraphPlugin,
+
+  // Basic formatting marks
+  BoldPlugin,
+  ItalicPlugin,
+  UnderlinePlugin,
+  StrikethroughPlugin,
+  CodePlugin,
+  HighlightPlugin,
+
+  // Custom color marks
+  createSlatePlugin({
+    key: "fontColor",
+    node: {
+      isLeaf: true,
+    },
+  }),
+  createSlatePlugin({
+    key: "backgroundColor",
+    node: {
+      isLeaf: true,
+    },
+  }),
+
+  // Block elements (limited headings for structure)
+  BlockquotePlugin,
+  H3Plugin,
+
+  // Lists
+  ListPlugin,
+
+  // Code blocks
+  CodeBlockPlugin,
+  CodeLinePlugin,
+  CodeSyntaxPlugin,
+
+  // Mentions (@user)
+  MentionPlugin.configure({
+    render: { node: MentionElement },
+    options: {
+      trigger: "@",
+      triggerPreviousCharPattern: /^$|^[\s"']$/,
+      insertSpaceAfterMention: true,
+    },
+  }),
+  MentionInputPlugin.configure({
+    render: { node: MentionInputElement },
+  }),
+];
