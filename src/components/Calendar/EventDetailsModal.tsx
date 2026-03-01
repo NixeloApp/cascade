@@ -1,3 +1,11 @@
+/**
+ * Event Details Modal
+ *
+ * Dialog for viewing and managing calendar event details.
+ * Shows date/time, organizer, location, description, and meeting links.
+ * Supports attendance tracking for required events and event deletion.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

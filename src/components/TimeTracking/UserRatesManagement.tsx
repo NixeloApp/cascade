@@ -1,3 +1,11 @@
+/**
+ * User Rates Management
+ *
+ * Admin panel for managing user hourly rates for billing calculations.
+ * Supports internal cost vs billable rates with project-specific overrides.
+ * Used for time tracking cost calculations and burn rate analysis.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";

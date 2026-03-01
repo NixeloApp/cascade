@@ -1,3 +1,11 @@
+/**
+ * Label Groups
+ *
+ * CRUD operations for organizing labels into groups.
+ * Groups help categorize and organize labels within a project.
+ * Enforces project-level permissions and unique group names.
+ */
+
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
