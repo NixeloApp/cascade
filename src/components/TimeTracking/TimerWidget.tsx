@@ -83,7 +83,7 @@ export function TimerWidget() {
                 <Typography
                   as="span"
                   variant="caption"
-                  className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate cursor-help focus-visible:outline-2 focus-visible:outline-brand-indigo-text focus-visible:outline-offset-1 focus:outline-none focus:underline"
+                  className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate cursor-help outline-none focus-visible:outline-2 focus-visible:outline-brand-indigo-text focus-visible:outline-offset-1"
                   tabIndex={0}
                 >
                   {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
