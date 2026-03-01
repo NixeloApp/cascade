@@ -420,8 +420,8 @@ Document which validators are STRICT (block CI) vs INFO (report only):
 | check-jsdoc.js | MEDIUM | 171 exports missing docs |
 | check-file-headers.js | MEDIUM | 319 files missing headers |
 | check-convex-naming.js | MEDIUM | 0 warnings (2 allowlisted) |
-| check-component-naming.js | INFO | 4 naming issues (file/component mismatches) |
-| check-duplicate-components.js | INFO | 3 duplicate names (ui/form allowed) |
+| check-component-naming.js | INFO | 0 issues (allowlists for intentional patterns) |
+| check-duplicate-components.js | INFO | 0 issues (allowlists for intentional duplicates) |
 
 ---
 
@@ -664,24 +664,24 @@ The 78 missing test files are primarily external integrations:
 
 Issues detected by validators that could be addressed in future iterations:
 
-### 11.1 Component Naming Issues (4 issues)
+### 11.1 Component Naming Issues (0 issues - RESOLVED)
 
-| File | Issue | Suggested Fix |
-|------|-------|---------------|
-| `Dashboard/ProjectsList.tsx` | Exports `WorkspacesList` | Rename file to `WorkspacesList.tsx` |
-| `IssueDetail/InlinePropertyEdit.tsx` | Exports multiple components | Split or rename to `InlinePropertySelects.tsx` |
-| `Landing/icons.tsx` | Lowercase filename | Rename to `Icons.tsx` |
-| `Onboarding/Checklist.tsx` | Exports `OnboardingChecklist` | Rename to `OnboardingChecklist.tsx` |
+| File | Issue | Resolution |
+|------|-------|------------|
+| `Dashboard/ProjectsList.tsx` | Exports `WorkspacesList` | ✅ Renamed to `WorkspacesList.tsx` |
+| `IssueDetail/InlinePropertyEdit.tsx` | Exports multiple components | ✅ Added to allowlist (co-located pattern) |
+| `Landing/icons.tsx` | Lowercase filename | ✅ Renamed to `Icons.tsx`, added to allowlist (icon bundle) |
+| `Onboarding/Checklist.tsx` | Exports `OnboardingChecklist` | ✅ Renamed to `OnboardingChecklist.tsx` |
 
-### 11.2 Duplicate Component Names (3 issues)
+### 11.2 Duplicate Component Names (0 issues - RESOLVED)
 
-| Component | Locations | Analysis |
-|-----------|-----------|----------|
-| `RecentActivity` | Analytics/, Dashboard/ | Different purposes - consider renaming to `AnalyticsActivity`/`DashboardActivity` |
-| `RoadmapView` | Calendar/, root | Calendar version is embedded gantt, root is standalone page |
-| `ProjectsList` | Dashboard/, root | Dashboard version is dashboard-specific widget |
+| Component | Locations | Resolution |
+|-----------|-----------|------------|
+| `RecentActivity` | Analytics/, Dashboard/ | ✅ Added to allowlist (different implementations for different contexts) |
+| `RoadmapView` | Calendar/, root | ✅ Added to allowlist (embedded gantt vs standalone page) |
+| `ProjectsList` | Dashboard/, root | ✅ Dashboard version renamed to `WorkspacesList.tsx` |
 
-**Note:** These duplicates may be intentional (different implementations for different contexts). Review before renaming.
+**Note:** Intentional duplicates added to `check-duplicate-components.js` allowlist.
 
 ### 11.3 Optional Validators (Not Yet Created)
 
