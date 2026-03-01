@@ -173,8 +173,9 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
-    // Track if file has `group` class for group-hover check
+    // Track if file has `group` or `peer` class for group-hover/peer-hover check
     const hasGroupClass = /\bgroup\b/.test(content) || /className.*group/.test(content);
+    const hasPeerClass = /\bpeer\b/.test(content) || /className.*peer/.test(content);
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -259,24 +260,47 @@ export function run() {
 
       // ---- 5. Group-Hover Orphans Check ----
       if (GROUP_VARIANT_PATTERN.test(line)) {
-        // Check if this file or this component has a group class
-        // Simple heuristic: check if 'group' appears in the file
+        // Check if line uses peer-* variant
+        const usesPeerVariant = /\bpeer-(hover|focus|active):/.test(line);
+        // Check if line uses group-* variant
+        const usesGroupVariant = /\bgroup-(hover|focus|active):/.test(line);
+
+        // For peer variants, check if file has peer class
+        // For group variants, check if file has group class
+        const hasRequiredClass = usesPeerVariant
+          ? hasPeerClass
+          : usesGroupVariant
+            ? hasGroupClass
+            : false;
+
         if (
-          !hasGroupClass &&
+          !hasRequiredClass &&
           !line.includes("group ") &&
           !line.includes('group"') &&
-          !line.includes("group'")
+          !line.includes("group'") &&
+          !line.includes("peer ") &&
+          !line.includes('peer"') &&
+          !line.includes("peer'")
         ) {
           // Check in a small window around this line
           const windowStart = Math.max(0, i - 20);
           const windowEnd = Math.min(lines.length, i + 20);
           const window = lines.slice(windowStart, windowEnd).join("\n");
 
-          if (!/\bgroup\b/.test(window) && !/className=.*group/.test(window)) {
+          const hasGroupInWindow = /\bgroup\b/.test(window) || /className=.*group/.test(window);
+          const hasPeerInWindow = /\bpeer\b/.test(window) || /className=.*peer/.test(window);
+
+          const windowHasRequiredClass = usesPeerVariant
+            ? hasPeerInWindow
+            : usesGroupVariant
+              ? hasGroupInWindow
+              : false;
+
+          if (!windowHasRequiredClass) {
             counts.groupHover++;
-            // This is more of a warning - the group might be in a parent component
+            // This is more of a warning - the group/peer might be in a parent component
             errors.push(
-              `  ${c.dim}INFO${c.reset} ${rel}:${lineNum} - group-hover/peer-hover without visible group class. Ensure parent has 'group'.`,
+              `  ${c.dim}INFO${c.reset} ${rel}:${lineNum} - group-hover/peer-hover without visible group/peer class. Ensure parent has 'group' or sibling has 'peer'.`,
             );
           }
         }
