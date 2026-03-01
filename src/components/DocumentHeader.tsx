@@ -42,8 +42,8 @@ interface DocumentHeaderProps {
   editorReady: boolean;
 }
 
-/** Document header with title, metadata, and action buttons (favorite, archive, lock, export). */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Header component with many conditional action buttons based on permissions
+/** Document header with title, metadata, and action buttons (favorite, archive, lock, export). */
 export function DocumentHeader({
   document,
   userId,
