@@ -232,7 +232,7 @@ const ColumnHeader = memo(
       className="p-3 sm:p-4 border-b border-ui-border/50 bg-transparent rounded-t-container"
     >
       <Flex align="center" justify="between" gap="sm">
-        <Flex align="center" className="space-x-2 min-w-0">
+        <Flex align="center" gap="sm" className="min-w-0">
           <Typography
             variant="h3"
             className="font-medium text-ui-text-secondary truncate tracking-tight text-sm"
