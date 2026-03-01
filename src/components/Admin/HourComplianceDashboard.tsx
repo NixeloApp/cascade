@@ -20,6 +20,9 @@ import { Grid } from "../ui/Grid";
 
 type ComplianceStatus = "compliant" | "under_hours" | "over_hours" | "equity_under";
 
+/**
+ * Admin dashboard for monitoring contractor hour compliance and equity requirements.
+ */
 export function HourComplianceDashboard() {
   const [selectedStatus, setSelectedStatus] = useState<ComplianceStatus | "all">("all");
   const [startDate, setStartDate] = useState("");

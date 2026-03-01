@@ -39,6 +39,9 @@ interface ActivityFeedProps {
   compact?: boolean;
 }
 
+/**
+ * Displays a timeline of recent project activity (issue creation, updates, comments).
+ */
 export function ActivityFeed({ projectId, limit = 50, compact = false }: ActivityFeedProps) {
   const activities = useQuery(api.analytics.getRecentActivity, { projectId, limit });
 

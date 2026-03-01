@@ -22,6 +22,9 @@ interface AdvancedSearchModalProps {
   onSelectIssue: (issueId: Id<"issues">) => void;
 }
 
+/**
+ * Modal for advanced issue search with type, priority, and status filters.
+ */
 export function AdvancedSearchModal({
   open,
   onOpenChange,

@@ -15,6 +15,9 @@ interface AppHeaderProps {
   onShowShortcutsHelp?: () => void;
 }
 
+/**
+ * Main application header with search, notifications, and user menu.
+ */
 export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHeaderProps) {
   const { isMobileOpen, toggleMobile } = useSidebarState();
 

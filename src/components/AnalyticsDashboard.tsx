@@ -38,6 +38,9 @@ interface VelocityData {
   averageVelocity: number;
 }
 
+/**
+ * Project analytics dashboard with metrics, velocity charts, and activity feed.
+ */
 export function AnalyticsDashboard({ projectId }: Props) {
   const analytics = useQuery(api.analytics.getProjectAnalytics, { projectId }) as
     | AnalyticsData

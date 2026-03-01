@@ -37,6 +37,9 @@ import { NavItem as NavItemBase } from "./ui/NavItem";
 import { Tooltip, TooltipProvider } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
+/**
+ * Main application sidebar with navigation, projects, and teams.
+ */
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();

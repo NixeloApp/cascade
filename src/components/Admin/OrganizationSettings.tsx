@@ -22,6 +22,9 @@ interface OrganizationSettingsFormData {
   billingEnabled: boolean;
 }
 
+/**
+ * Admin settings form for organization configuration (name, hours limits, billing).
+ */
 export function OrganizationSettings() {
   const { organizationId, organizationName } = useOrganization();
   const organization = useQuery(api.organizations.getOrganization, { id: organizationId });

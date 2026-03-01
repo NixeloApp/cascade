@@ -107,6 +107,9 @@ function extractFormStateFromProfile(profile: UserProfileWithUser) {
   };
 }
 
+/**
+ * Admin interface for managing employment types and user profile configurations.
+ */
 export function UserTypeManager() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
