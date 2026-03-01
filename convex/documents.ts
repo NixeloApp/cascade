@@ -190,7 +190,7 @@ export const updateTitle = authenticatedMutation({
     id: v.id("documents"),
     title: v.string(),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await getAccessibleDocument(ctx, args.id);
 
@@ -203,13 +203,13 @@ export const updateTitle = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
 export const togglePublic = authenticatedMutation({
   args: { id: v.id("documents") },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -233,7 +233,7 @@ export const togglePublic = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -803,7 +803,7 @@ export const moveDocument = authenticatedMutation({
     newParentId: v.optional(v.id("documents")),
     newOrder: v.optional(v.number()),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await getAccessibleDocument(ctx, args.id);
 
@@ -833,7 +833,7 @@ export const moveDocument = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -843,7 +843,7 @@ export const reorderDocuments = authenticatedMutation({
     documentIds: v.array(v.id("documents")),
     parentId: v.optional(v.id("documents")),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     // Batch fetch all documents at once to avoid N+1
     const docs = await Promise.all(args.documentIds.map((id) => ctx.db.get(id)));
@@ -872,7 +872,7 @@ export const reorderDocuments = authenticatedMutation({
       args.documentIds.map((id, index) => ctx.db.patch(id, { order: index, updatedAt: now })),
     );
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -1015,7 +1015,7 @@ export const updateComment = authenticatedMutation({
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1035,7 +1035,7 @@ export const updateComment = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -1070,7 +1070,7 @@ export const addCommentReaction = authenticatedMutation({
     commentId: v.id("documentComments"),
     emoji: v.string(),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1098,7 +1098,7 @@ export const addCommentReaction = authenticatedMutation({
       createdAt: Date.now(),
     });
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
@@ -1108,7 +1108,7 @@ export const removeCommentReaction = authenticatedMutation({
     commentId: v.id("documentComments"),
     emoji: v.string(),
   },
-  returns: v.object({ success: v.boolean() }),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment || comment.isDeleted) {
@@ -1130,7 +1130,7 @@ export const removeCommentReaction = authenticatedMutation({
 
     await ctx.db.delete(reaction._id);
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
