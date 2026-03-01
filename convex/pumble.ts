@@ -1,3 +1,11 @@
+/**
+ * Pumble Integration
+ *
+ * Webhook-based integration with Pumble team messaging.
+ * Sends issue notifications and custom messages to channels.
+ * Supports event filtering and webhook management per user.
+ */
+
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";

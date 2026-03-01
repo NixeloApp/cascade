@@ -1,3 +1,11 @@
+/**
+ * Calendar Events
+ *
+ * CRUD operations for internal calendar system.
+ * Supports meetings, deadlines, time blocks, and personal events.
+ * Handles attendee management and date range queries.
+ */
+
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalQuery, type QueryCtx } from "./_generated/server";

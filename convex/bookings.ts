@@ -1,3 +1,11 @@
+/**
+ * Bookings Management
+ *
+ * Meeting booking system with availability validation.
+ * Handles booking creation, confirmation, and cancellation.
+ * Integrates with calendar events and rate limiting.
+ */
+
 import { v } from "convex/values";
 import { components } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";

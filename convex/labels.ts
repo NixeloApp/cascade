@@ -1,3 +1,11 @@
+/**
+ * Labels Management
+ *
+ * CRUD operations for project labels and label groups.
+ * Supports label assignment to issues with duplicate detection.
+ * Enforces project membership for all operations.
+ */
+
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";

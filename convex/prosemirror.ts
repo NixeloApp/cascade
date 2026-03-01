@@ -1,3 +1,11 @@
+/**
+ * ProseMirror Sync
+ *
+ * Real-time document collaboration using ProseMirror.
+ * Handles snapshot storage, step submission, and version history.
+ * Enforces document read/write permissions per user.
+ */
+
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ProsemirrorSync } from "@convex-dev/prosemirror-sync";
 import type { GenericMutationCtx, GenericQueryCtx } from "convex/server";
