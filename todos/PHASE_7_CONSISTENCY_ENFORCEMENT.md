@@ -3,7 +3,7 @@
 > **Status:** ✅ Complete (Phase 7-10)
 > **Goal:** All styling lives in CVA components. No raw Tailwind in app code.
 > **Last Updated:** 2026-03-01
-> **Progress:** 26 validators, all passing, 0 errors
+> **Progress:** 27 validators, all passing, 0 errors
 
 ---
 
@@ -113,10 +113,10 @@ grep -r "from.*ui/PageHeader" src/
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
 | check-duplicate-components.js | Flag components with same name in different dirs | Medium | [x] ✅ Created (3 duplicates) |
-| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] |
-| check-import-paths.js | Flag imports from wrong locations | Medium | [ ] |
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [x] ✅ Created (3 issues - Stack gap scale) |
+| check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created (0 issues) |
 
-**Note:** These are optional. The raw-tailwind validator is the main enforcement.
+**Note:** All optional validators are now created. The raw-tailwind validator is the main enforcement.
 
 ---
 
@@ -279,7 +279,7 @@ Items intentionally not in scope for Phase 7:
 
 **Last Run:** 2026-03-01
 **Files Migrated:** 220+
-**Validators:** 26 (all passing)
+**Validators:** 27 (all passing)
 **Violations Remaining:** 170 (down from 1145)
 
 **Note:** Remaining 170 violations are edge cases that don't warrant migration:
@@ -632,6 +632,7 @@ The 78 missing test files are primarily external integrations:
 | check-async-patterns.js | Error handling | MEDIUM | ✅ |
 | check-test-coverage.js | Test coverage | MEDIUM | ✅ |
 | check-import-paths.js | Import path consistency | INFO | ✅ |
+| check-component-props.js | Gap scale consistency | INFO | ✅ |
 | check-component-naming.js | PascalCase naming | INFO | ✅ |
 | check-duplicate-components.js | Duplicate names | INFO | ✅ |
 
@@ -649,7 +650,7 @@ The 78 missing test files are primarily external integrations:
 | Phase 10 | Issue Resolution | ✅ Complete |
 
 **Key Achievements:**
-- 26 validators covering all aspects of code quality
+- 27 validators covering all aspects of code quality
 - 0 blocking errors across all validators
 - 220+ files migrated to CVA components
 - Raw Tailwind reduced from 1145 to 170 edge cases
@@ -688,7 +689,7 @@ Issues detected by validators that could be addressed in future iterations:
 
 | Validator | Purpose | Priority | Status |
 |-----------|---------|----------|--------|
-| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [ ] Optional |
+| check-component-props.js | Ensure consistent prop naming (gap vs spacing) | Low | [x] ✅ Created, 3 issues (Stack gap scale inconsistency) |
 | check-import-paths.js | Flag imports from wrong locations | Medium | [x] ✅ Created, 0 issues (6 fixed) |
 
 ---
