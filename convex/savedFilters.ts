@@ -1,3 +1,11 @@
+/**
+ * Saved Filters
+ *
+ * Persisted issue filter presets per project.
+ * Supports personal and public (shared) filters.
+ * Includes CRUD operations with owner-only updates.
+ */
+
 import { v } from "convex/values";
 import { authenticatedMutation, projectQuery, projectViewerMutation } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";

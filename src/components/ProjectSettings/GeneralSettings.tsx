@@ -1,3 +1,11 @@
+/**
+ * General Settings
+ *
+ * Project name and description editor component.
+ * Includes edit/view modes with save/cancel controls.
+ * Shows read-only project key display.
+ */
+
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
