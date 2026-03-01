@@ -13,9 +13,9 @@ import { useListNavigation } from "../hooks/useListNavigation";
 import { FocusZone } from "./Dashboard/FocusZone";
 import { Greeting } from "./Dashboard/Greeting";
 import { MyIssuesList } from "./Dashboard/MyIssuesList";
-import { WorkspacesList } from "./Dashboard/ProjectsList";
 import { QuickStats } from "./Dashboard/QuickStats";
 import { RecentActivity } from "./Dashboard/RecentActivity";
+import { WorkspacesList } from "./Dashboard/WorkspacesList";
 import { Typography } from "./ui/Typography";
 
 type IssueFilter = "assigned" | "created" | "all";
