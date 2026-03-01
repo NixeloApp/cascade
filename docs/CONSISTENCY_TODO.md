@@ -560,6 +560,10 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Added Convex hook allowlist to check-hook-patterns.js | Reduced false positives |
+| 2026-03-01 | Fixed useAIChat toast.error → showError | Better error handling |
+| 2026-03-01 | Updated check-raw-tailwind.js with prop detection | Detects component prop misuse |
+| 2026-03-01 | Fixed KanbanColumn space-x-2 → gap="sm" | Consistent component prop usage |
 | 2026-02-28 | Created consistency TODO | Baseline established |
 | 2026-02-28 | Added DocumentSidebar | Following patterns |
 | 2026-02-28 | Fixed PR review comments | Improved type safety |
