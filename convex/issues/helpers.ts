@@ -10,6 +10,7 @@ import { asyncMap, pruneNull } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { conflict, notFound, validation } from "../lib/errors";
+import { getPlainTextFromDescription } from "../lib/richText";
 import { notDeleted } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, canAccessProject } from "../projectAccess";
 
@@ -24,7 +25,10 @@ export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
  * @returns A single string containing both fields.
  */
 export function getSearchContent(title: string, description?: string) {
-  return `${title} ${description || ""}`.trim();
+  const normalizedDescription = getPlainTextFromDescription(description)
+    .replace(/\s+/g, " ")
+    .trim();
+  return `${title} ${normalizedDescription}`.trim();
 }
 
 /**

@@ -13,6 +13,7 @@ import { projectEditorMutation, projectQuery } from "./customFunctions";
 import { batchFetchSprints, batchFetchUsers } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, safeCollect } from "./lib/boundedQueries";
 import { validation } from "./lib/errors";
+import { getPlainTextFromDescription } from "./lib/richText";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
 /**
@@ -344,6 +345,7 @@ export const exportIssuesCSV = projectQuery({
       return {
         key: issue.key,
         title: issue.title,
+        description: getPlainTextFromDescription(issue.description),
         type: issue.type,
         status: statusState?.name ?? issue.status,
         priority: issue.priority,
@@ -362,6 +364,7 @@ export const exportIssuesCSV = projectQuery({
     const headers = [
       "Key",
       "Title",
+      "Description",
       "Type",
       "Status",
       "Priority",
@@ -378,6 +381,7 @@ export const exportIssuesCSV = projectQuery({
     const rows = enrichedIssues.map((issue) => [
       issue.key,
       `"${issue.title.replace(/"/g, '""')}"`, // Escape quotes
+      `"${issue.description.replace(/"/g, '""')}"`,
       issue.type,
       issue.status,
       issue.priority,
@@ -526,6 +530,7 @@ export const exportIssuesJSON = projectQuery({
 
       return {
         ...issue,
+        description: getPlainTextFromDescription(issue.description),
         statusName: statusState?.name ?? issue.status,
         assigneeName: assignee?.name,
         reporterName: reporter?.name,

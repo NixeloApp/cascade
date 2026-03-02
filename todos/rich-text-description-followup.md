@@ -52,9 +52,9 @@ Add backend helper to extract plain text from rich text JSON descriptions for in
 
 ### Milestones
 
-- [ ] `S1` Add backend plain-text extraction helper for description JSON
-- [ ] `S1` Integrate helper into Pumble, AI chat embeddings, and CSV export
-- [ ] `S1` Add helper-level tests for JSON and legacy plain text inputs
+- [x] `S1` Add backend plain-text extraction helper for description JSON
+- [x] `S1` Integrate helper into Pumble, AI chat embeddings, and CSV export/JSON export output
+- [x] `S1` Add helper-level tests for JSON and legacy plain text inputs
 
 ### Dependencies
 
@@ -63,3 +63,40 @@ Add backend helper to extract plain text from rich text JSON descriptions for in
 ### Definition of Done
 
 - External integrations no longer receive raw rich-text JSON blobs where plain text is expected.
+
+---
+
+## Progress Updates
+
+### 2026-03-02 (Priority 12, batch A)
+
+**Completed**
+- Added backend helper `convex/lib/richText.ts` with `getPlainTextFromDescription(...)`:
+  - Parses Plate/Slate JSON and recursively extracts text content.
+  - Preserves legacy plain text values.
+  - Handles invalid JSON via safe fallback.
+- Integrated helper into:
+  - `convex/pumble.ts` (`sendIssueNotification`) so webhook messages send plain text.
+  - `convex/ai/chat.ts` (`generateIssueEmbedding`) so embedding input uses plain text description.
+  - `convex/export.ts`:
+    - `exportIssuesCSV` now includes a `Description` column with plain text output.
+    - `exportIssuesJSON` now emits plain-text `issue.description` values instead of raw JSON blobs.
+  - `convex/issues/helpers.ts` (`getSearchContent`) to normalize rich-text descriptions into plain-text search content.
+- Added/updated tests:
+  - New helper tests: `convex/lib/richText.test.ts`.
+  - Rich-text conversion assertions in `convex/pumble.test.ts`, `convex/export.test.ts`, and `convex/issues/helpers.test.ts`.
+
+**Validation**
+- `pnpm exec biome check --write convex/issues/helpers.ts convex/lib/richText.ts convex/lib/richText.test.ts convex/pumble.ts convex/pumble.test.ts convex/export.ts convex/export.test.ts convex/issues/helpers.test.ts convex/ai/chat.ts`
+- `pnpm test convex/lib/richText.test.ts convex/issues/helpers.test.ts convex/export.test.ts convex/pumble.test.ts` (`86 passed`)
+- `pnpm run typecheck` (pass)
+
+**Decisions**
+- Kept extraction fallback behavior conservative: invalid JSON returns original description to avoid data loss.
+- Included JSON export cleanup in scope so both machine-readable exports and chat integrations avoid raw rich-text blobs.
+
+**Blockers**
+- None.
+
+**Next step (strict order)**
+- Move to Priority `13`: `todos/sidebar-display-limits.md`.

@@ -268,5 +268,42 @@ describe("Pumble Integration", () => {
         }),
       );
     });
+
+    it("should convert rich-text description JSON to plain text in notification body", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const { organizationId } = await createOrganizationAdmin(t, userId);
+      const projectId = await createProjectInOrganization(t, userId, organizationId);
+
+      const richDescription = JSON.stringify([
+        { type: "p", children: [{ text: "First line" }] },
+        { type: "p", children: [{ text: "Second line" }] },
+      ]);
+
+      const issueId = await createTestIssue(t, projectId, userId, {
+        title: "Rich Description Issue",
+        description: richDescription,
+      });
+
+      const asUser = asAuthenticatedUser(t, userId);
+      await asUser.mutation(api.pumble.addWebhook, {
+        name: "Notify Rich Text",
+        webhookUrl: "https://hooks.pumble.com/notify-rich",
+        projectId,
+        events: ["issue.created"],
+      });
+
+      mockSafeFetch.mockResolvedValue(new Response("OK", { status: 200 }));
+
+      await asUser.action(api.pumble.sendIssueNotification, {
+        issueId,
+        event: "issue.created",
+        userId,
+      });
+
+      const payload = JSON.parse(String(mockSafeFetch.mock.calls.at(-1)?.[1]?.body));
+      expect(payload.attachments[0].text).toBe("First line\nSecond line");
+      expect(payload.attachments[0].text).not.toContain('"type":"p"');
+    });
   });
 });

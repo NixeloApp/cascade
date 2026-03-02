@@ -14,6 +14,7 @@ import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
+import { getPlainTextFromDescription } from "./lib/richText";
 import { safeFetch } from "./lib/safeFetch";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
@@ -342,7 +343,7 @@ export const sendIssueNotification = action({
 
         await ctx.runAction(api.pumble.sendMessage, {
           webhookId: webhook._id,
-          text: issue.description || "No description",
+          text: getPlainTextFromDescription(issue.description) || "No description",
           title,
           color,
           fields: [

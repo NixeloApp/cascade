@@ -14,6 +14,7 @@ import { action, internalAction } from "../_generated/server";
 import { extractUsage } from "../lib/aiHelpers";
 import { notFound, unauthenticated } from "../lib/errors";
 import { logger } from "../lib/logger";
+import { getPlainTextFromDescription } from "../lib/richText";
 import { rateLimit } from "../rateLimits";
 
 // Claude model (using alias - auto-points to latest snapshot)
@@ -52,7 +53,8 @@ export const generateIssueEmbedding = internalAction({
     }
 
     // Combine title and description for embedding
-    const text = `${issue.title}\n\n${issue.description || ""}`.trim();
+    const plainDescription = getPlainTextFromDescription(issue.description);
+    const text = `${issue.title}\n\n${plainDescription}`.trim();
 
     // Generate embedding
     const embedding = await ctx.runAction(internal.internal.ai.generateEmbedding, {
