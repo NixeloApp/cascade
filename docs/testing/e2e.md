@@ -18,6 +18,20 @@ pnpm e2e:headed
 pnpm e2e:debug
 ```
 
+## PR Review Checklist (E2E Reliability)
+
+Use this checklist for any PR that modifies `e2e/` specs, fixtures, page objects, or E2E utilities:
+
+- No `waitForTimeout` introduced in active E2E test flows
+- Wait strategy is state-based (`expect(...).toBeVisible`, `toHaveURL`, `toHaveCount`, `expect.poll`)
+- Shared helper contracts are reused where applicable:
+  - `waitForDashboardReady`
+  - `waitForBoardLoaded`
+  - `waitForIssueCreateSuccess`
+  - `waitForOAuthRedirectComplete`
+- Selectors prioritize semantic roles and test ids over brittle text/CSS-only locators
+- PR includes exact E2E command(s) run and pass/fail/skip outcomes
+
 ## Configuration
 
 **File:** `playwright.config.ts`

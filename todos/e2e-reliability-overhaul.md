@@ -502,10 +502,26 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - still requires one real PR CI execution to confirm Actions API calls and rendered summary in `history-derived` mode.
 
+### 2026-03-02 - Batch T (completed E2E review-checklist enforcement surfaces)
+
+- Decision: enforce helper-contract adoption and anti-flake rules in PR workflow by adding explicit review checklist surfaces in-repo.
+- Change:
+  - added PR template:
+    - `.github/PULL_REQUEST_TEMPLATE.md`
+    - includes dedicated `E2E Reliability Checklist` section (no `waitForTimeout`, state-based waits, helper reuse, selector quality, command/result reporting)
+  - updated docs:
+    - `docs/testing/e2e.md` now includes `PR Review Checklist (E2E Reliability)` with the same contract requirements
+- Validation:
+  - checklist surfaces are committed artifacts and automatically apply to new PRs
+  - no runtime behavior changes; no additional test execution required for this docs/process-only batch
+- Blockers:
+  - automated enforcement remains human-review based; no static CI rule yet for helper-use policy.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
   - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + script execution + summary rendering in `history-derived` mode)
   - if needed after first PR validation, tune `E2E_STREAK_SCAN_LIMIT` from observed branch run density
   - keep CI per-spec heatmap summary as single source of truth for streak/heatmap visibility
+  - evaluate adding a lightweight CI guard for banned E2E patterns (for example direct `waitForTimeout` in specs) to reduce reliance on manual checklist compliance
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement
