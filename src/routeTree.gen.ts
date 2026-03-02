@@ -42,6 +42,7 @@ import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteImport } from '
 import { Route as AuthAppOrgSlugProjectsKeyRouteRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/route'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/index'
 import { Route as AuthAppOrgSlugProjectsKeyIndexRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/index'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
@@ -59,6 +60,7 @@ import { Route as AuthAppOrgSlugProjectsKeyActivityRouteImport } from './routes/
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/index'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/route'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/index'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
@@ -241,6 +243,12 @@ const AuthAppOrgSlugProjectsKeyIndexRoute =
     path: '/',
     getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
   } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRouteImport.update({
+    id: '/wiki',
+    path: '/wiki',
+    getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute =
   AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport.update({
     id: '/sprints',
@@ -344,6 +352,13 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute =
     getParentRoute: () =>
       AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute,
   } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRouteImport.update({
+    id: '/wiki',
+    path: '/wiki',
+    getParentRoute: () =>
+      AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute =
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRouteImport.update({
     id: '/settings',
@@ -410,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
   '/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
   '/$orgSlug/projects/$key/': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
@@ -417,6 +433,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute
 }
 export interface FileRoutesByTo {
@@ -460,12 +477,14 @@ export interface FileRoutesByTo {
   '/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
   '/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
   '/$orgSlug/projects/$key': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute
 }
 export interface FileRoutesById {
@@ -515,6 +534,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
   '/_auth/_app/$orgSlug/projects/$key/': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
@@ -522,6 +542,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute
 }
 export interface FileRouteTypes {
@@ -570,6 +591,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
     | '/$orgSlug/workspaces/$workspaceSlug/sprints'
+    | '/$orgSlug/workspaces/$workspaceSlug/wiki'
     | '/$orgSlug/projects/$key/'
     | '/$orgSlug/workspaces/$workspaceSlug/'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug'
@@ -577,6 +599,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
+    | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -620,12 +643,14 @@ export interface FileRouteTypes {
     | '/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
     | '/$orgSlug/workspaces/$workspaceSlug/sprints'
+    | '/$orgSlug/workspaces/$workspaceSlug/wiki'
     | '/$orgSlug/projects/$key'
     | '/$orgSlug/workspaces/$workspaceSlug'
     | '/$orgSlug/workspaces/$workspaceSlug/teams'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
+    | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug'
   id:
     | '__root__'
@@ -674,6 +699,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki'
     | '/_auth/_app/$orgSlug/projects/$key/'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug'
@@ -681,6 +707,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/'
   fileRoutesById: FileRoutesById
 }
@@ -927,6 +954,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
     }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki'
+      path: '/wiki'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/wiki'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints': {
       id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
       path: '/sprints'
@@ -1046,6 +1080,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute
     }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
+      path: '/wiki'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings': {
       id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
       path: '/settings'
@@ -1119,6 +1160,7 @@ interface AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteChildren {
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute
 }
 
@@ -1130,6 +1172,8 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteChildren: Auth
       AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute,
   }
@@ -1143,6 +1187,7 @@ interface AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren {
   AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute
@@ -1156,6 +1201,8 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren: AuthAppOrgSlugWor
       AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute:

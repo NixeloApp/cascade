@@ -66,17 +66,17 @@ Route: `/:orgSlug/my-issues`
 
 Route: `/:orgSlug/workspaces/:workspaceSlug/wiki`
 
-- [ ] Create route file (constant already defined)
-- [ ] Filter documents by workspaceId
-- [ ] Add sidebar link
+- [x] Create route file (constant already defined)
+- [x] Filter documents by workspaceId
+- [x] Add sidebar link
 
 ### 6. Team Wiki
 
 Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/wiki`
 
-- [ ] Add `teamId` to documents schema (blocker)
-- [ ] Create route file
-- [ ] Create team documents view
+- [x] Add `teamId` to documents schema (blocker)
+- [x] Create route file
+- [x] Create team documents view
 
 ---
 
@@ -129,7 +129,7 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 
 - [x] `S1` Resolve schema blockers (`organizationId/workspaceId/teamId` + indexes)
 - [x] `S2` Ship workspace backlog + workspace sprints routes with real queries
-- [ ] `S3` Ship workspace wiki + team wiki data model/route support
+- [x] `S3` Ship workspace wiki + team wiki data model/route support
 - [ ] `S4` Replace team calendar stub with real data
 - [ ] `S5` Add org/workspace/team calendar aggregation + filters
 
@@ -217,3 +217,28 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - none for `S3`.
 - Next Step:
   - start `S3`: implement workspace wiki route/data filter, then team wiki route backed by `documents.teamId`.
+
+### 2026-03-02 - Batch D (completed workspace/team wiki slice and closed S3)
+
+- Decision:
+  - close `S3` by shipping both workspace and team wiki routes on top of server-side scoped document queries.
+- Change:
+  - updated `convex/documents.ts`:
+    - added `listByWorkspace` (workspace-scoped documents query).
+    - added `listByTeam` (team-scoped documents query).
+  - updated shared routes:
+    - added `ROUTES.workspaces.teams.wiki` in `convex/shared/routes.ts`.
+  - added routes:
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki.tsx`
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx`
+  - updated navigation tabs:
+    - workspace tabs now include `Wiki`.
+    - team tabs now include `Wiki`.
+- Validation:
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/documents.test.ts convex/workspaces.test.ts` => pass (`62 passed`)
+  - `pnpm exec biome check convex/shared/routes.ts convex/documents.ts src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/route.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx` => pass (non-blocking complexity warning in existing `canAccessDocument`)
+- Blockers:
+  - none for `S4`.
+- Next Step:
+  - implement real team calendar route data (replace stub) and then progress org/workspace/team calendar aggregation.

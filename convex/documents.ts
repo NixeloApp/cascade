@@ -10,7 +10,12 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
-import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
+import {
+  authenticatedMutation,
+  authenticatedQuery,
+  teamQuery,
+  workspaceQuery,
+} from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT, BOUNDED_RELATION_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
@@ -164,6 +169,66 @@ export const list = authenticatedQuery({
     });
 
     return { documents, nextCursor, hasMore };
+  },
+});
+
+export const listByWorkspace = workspaceQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+    const docs = await ctx.db
+      .query("documents")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+      .filter(notDeleted)
+      .take(limit);
+
+    const visibleDocs = docs
+      .filter((doc) => !doc.isArchived)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+
+    const creatorIds = [...new Set(visibleDocs.map((doc) => doc.createdBy))];
+    const creatorMap = await batchFetchUsers(ctx, creatorIds);
+
+    return {
+      documents: visibleDocs.map((doc) => ({
+        ...doc,
+        creatorName:
+          creatorMap.get(doc.createdBy)?.name || creatorMap.get(doc.createdBy)?.email || "Unknown",
+        isOwner: doc.createdBy === ctx.userId,
+      })),
+    };
+  },
+});
+
+export const listByTeam = teamQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+    const docs = await ctx.db
+      .query("documents")
+      .withIndex("by_team", (q) => q.eq("teamId", ctx.teamId))
+      .filter(notDeleted)
+      .take(limit);
+
+    const visibleDocs = docs
+      .filter((doc) => !doc.isArchived)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+
+    const creatorIds = [...new Set(visibleDocs.map((doc) => doc.createdBy))];
+    const creatorMap = await batchFetchUsers(ctx, creatorIds);
+
+    return {
+      documents: visibleDocs.map((doc) => ({
+        ...doc,
+        creatorName:
+          creatorMap.get(doc.createdBy)?.name || creatorMap.get(doc.createdBy)?.email || "Unknown",
+        isOwner: doc.createdBy === ctx.userId,
+      })),
+    };
   },
 });
 

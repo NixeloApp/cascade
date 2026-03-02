@@ -79,6 +79,13 @@ function TeamLayout() {
             Calendar
           </Link>
           <Link
+            to={ROUTES.workspaces.teams.wiki.path}
+            params={{ orgSlug, workspaceSlug, teamSlug }}
+            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+          >
+            Wiki
+          </Link>
+          <Link
             to={ROUTES.workspaces.teams.settings.path}
             params={{ orgSlug, workspaceSlug, teamSlug }}
             className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"

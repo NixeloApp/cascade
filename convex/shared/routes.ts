@@ -137,6 +137,11 @@ export const ROUTES = {
         build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
           `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/calendar`,
       },
+      wiki: {
+        path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki" as const,
+        build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
+          `/${orgSlug}/workspaces/${workspaceSlug}/teams/${teamSlug}/wiki`,
+      },
       settings: {
         path: "/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings" as const,
         build: (orgSlug: string, workspaceSlug: string, teamSlug: string) =>
