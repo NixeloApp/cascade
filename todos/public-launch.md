@@ -124,3 +124,21 @@ Unblock by providing:
 - Published links for at least one launch channel post and demo video.
 - Confirmation that GitHub Discussions is enabled and Discord is set up.
 - Confirmation that `good first issue` labels were applied to starter issues.
+
+### 2026-03-02 (Batch C)
+
+**Progress**
+
+- Reconfirmed Priority `16` remains blocked with no additional in-repo implementation remaining.
+
+**Decisions**
+
+- Kept all externally executed launch tasks unchecked until real published links/settings confirmations are provided.
+
+**Blockers**
+
+- Unchanged: external platform posting + repository-admin/community setup tasks.
+
+**Next step**
+
+- Continue strict order to Priority `17` while waiting for launch operation confirmations listed in the blocker gate.
