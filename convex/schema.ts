@@ -1499,6 +1499,28 @@ const applicationTables = {
     .index("by_number", ["organizationId", "number"])
     .index("by_organization_client", ["organizationId", "clientId"]),
 
+  clientPortalTokens: defineTable({
+    organizationId: v.id("organizations"),
+    clientId: v.id("clients"),
+    token: v.string(),
+    projectIds: v.array(v.id("projects")),
+    permissions: v.object({
+      viewIssues: v.boolean(),
+      viewDocuments: v.boolean(),
+      viewTimeline: v.boolean(),
+      addComments: v.boolean(),
+    }),
+    expiresAt: v.optional(v.number()),
+    lastAccessedAt: v.optional(v.number()),
+    isRevoked: v.boolean(),
+    revokedAt: v.optional(v.number()),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_client", ["clientId"])
+    .index("by_organization", ["organizationId"]),
+
   // ===========================================================================
   // TIME TRACKING
   // Time entries, rates, profiles, compliance

@@ -51,6 +51,7 @@ export const TABLES: TableNames[] = [
   "slackConnections",
   "clients",
   "invoices",
+  "clientPortalTokens",
   "githubRepositories",
   "githubPullRequests",
   "githubCommits",

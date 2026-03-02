@@ -15,12 +15,14 @@ import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthOnboardingRouteImport } from './routes/_auth/onboarding'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/_app/route'
 import { Route as AuthAppAppRouteImport } from './routes/_auth/_app/app'
 import { Route as AuthAppOrgSlugRouteRouteImport } from './routes/_auth/_app/$orgSlug/route'
 import { Route as AuthAppOrgSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/index'
+import { Route as PortalTokenProjectsProjectIdRouteImport } from './routes/portal.$token.projects.$projectId'
 import { Route as AuthAppOrgSlugTimeTrackingRouteImport } from './routes/_auth/_app/$orgSlug/time-tracking'
 import { Route as AuthAppOrgSlugNotificationsRouteImport } from './routes/_auth/_app/$orgSlug/notifications'
 import { Route as AuthAppOrgSlugMyIssuesRouteImport } from './routes/_auth/_app/$orgSlug/my-issues'
@@ -101,6 +103,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalTokenRoute = PortalTokenRouteImport.update({
+  id: '/portal/$token',
+  path: '/portal/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -130,6 +137,12 @@ const AuthAppOrgSlugIndexRoute = AuthAppOrgSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthAppOrgSlugRouteRoute,
 } as any)
+const PortalTokenProjectsProjectIdRoute =
+  PortalTokenProjectsProjectIdRouteImport.update({
+    id: '/projects/$projectId',
+    path: '/projects/$projectId',
+    getParentRoute: () => PortalTokenRoute,
+  } as any)
 const AuthAppOrgSlugTimeTrackingRoute =
   AuthAppOrgSlugTimeTrackingRouteImport.update({
     id: '/time-tracking',
@@ -436,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/verify-2fa': typeof Verify2faRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/portal/$token': typeof PortalTokenRouteWithChildren
   '/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
   '/app': typeof AuthAppAppRoute
   '/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
@@ -448,6 +462,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
+  '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/$orgSlug/': typeof AuthAppOrgSlugIndexRoute
   '/$orgSlug/projects/$key': typeof AuthAppOrgSlugProjectsKeyRouteRouteWithChildren
   '/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren
@@ -498,6 +513,7 @@ export interface FileRoutesByTo {
   '/verify-2fa': typeof Verify2faRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/portal/$token': typeof PortalTokenRouteWithChildren
   '/app': typeof AuthAppAppRoute
   '/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
   '/$orgSlug/analytics': typeof AuthAppOrgSlugAnalyticsRoute
@@ -509,6 +525,7 @@ export interface FileRoutesByTo {
   '/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
+  '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/$orgSlug': typeof AuthAppOrgSlugIndexRoute
   '/$orgSlug/documents/$id': typeof AuthAppOrgSlugDocumentsIdRoute
   '/$orgSlug/documents/templates': typeof AuthAppOrgSlugDocumentsTemplatesRoute
@@ -559,6 +576,7 @@ export interface FileRoutesById {
   '/_auth/_app': typeof AuthAppRouteRouteWithChildren
   '/_auth/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/portal/$token': typeof PortalTokenRouteWithChildren
   '/_auth/_app/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
   '/_auth/_app/app': typeof AuthAppAppRoute
   '/_auth/_app/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
@@ -571,6 +589,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/_auth/_app/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/_auth/_app/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
+  '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/_auth/_app/$orgSlug/': typeof AuthAppOrgSlugIndexRoute
   '/_auth/_app/$orgSlug/projects/$key': typeof AuthAppOrgSlugProjectsKeyRouteRouteWithChildren
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren
@@ -623,6 +642,7 @@ export interface FileRouteTypes {
     | '/verify-2fa'
     | '/onboarding'
     | '/invite/$token'
+    | '/portal/$token'
     | '/$orgSlug'
     | '/app'
     | '/$orgSlug/add-ons'
@@ -635,6 +655,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/my-issues'
     | '/$orgSlug/notifications'
     | '/$orgSlug/time-tracking'
+    | '/portal/$token/projects/$projectId'
     | '/$orgSlug/'
     | '/$orgSlug/projects/$key'
     | '/$orgSlug/workspaces/$workspaceSlug'
@@ -685,6 +706,7 @@ export interface FileRouteTypes {
     | '/verify-2fa'
     | '/onboarding'
     | '/invite/$token'
+    | '/portal/$token'
     | '/app'
     | '/$orgSlug/add-ons'
     | '/$orgSlug/analytics'
@@ -696,6 +718,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/my-issues'
     | '/$orgSlug/notifications'
     | '/$orgSlug/time-tracking'
+    | '/portal/$token/projects/$projectId'
     | '/$orgSlug'
     | '/$orgSlug/documents/$id'
     | '/$orgSlug/documents/templates'
@@ -745,6 +768,7 @@ export interface FileRouteTypes {
     | '/_auth/_app'
     | '/_auth/onboarding'
     | '/invite/$token'
+    | '/portal/$token'
     | '/_auth/_app/$orgSlug'
     | '/_auth/_app/app'
     | '/_auth/_app/$orgSlug/add-ons'
@@ -757,6 +781,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/my-issues'
     | '/_auth/_app/$orgSlug/notifications'
     | '/_auth/_app/$orgSlug/time-tracking'
+    | '/portal/$token/projects/$projectId'
     | '/_auth/_app/$orgSlug/'
     | '/_auth/_app/$orgSlug/projects/$key'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug'
@@ -808,6 +833,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   Verify2faRoute: typeof Verify2faRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  PortalTokenRoute: typeof PortalTokenRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -854,6 +880,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portal/$token': {
+      id: '/portal/$token'
+      path: '/portal/$token'
+      fullPath: '/portal/$token'
+      preLoaderRoute: typeof PortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
@@ -895,6 +928,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$orgSlug/'
       preLoaderRoute: typeof AuthAppOrgSlugIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/portal/$token/projects/$projectId': {
+      id: '/portal/$token/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/portal/$token/projects/$projectId'
+      preLoaderRoute: typeof PortalTokenProjectsProjectIdRouteImport
+      parentRoute: typeof PortalTokenRoute
     }
     '/_auth/_app/$orgSlug/time-tracking': {
       id: '/_auth/_app/$orgSlug/time-tracking'
@@ -1449,6 +1489,18 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
   AuthRouteRouteChildren,
 )
 
+interface PortalTokenRouteChildren {
+  PortalTokenProjectsProjectIdRoute: typeof PortalTokenProjectsProjectIdRoute
+}
+
+const PortalTokenRouteChildren: PortalTokenRouteChildren = {
+  PortalTokenProjectsProjectIdRoute: PortalTokenProjectsProjectIdRoute,
+}
+
+const PortalTokenRouteWithChildren = PortalTokenRoute._addFileChildren(
+  PortalTokenRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
@@ -1457,6 +1509,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   Verify2faRoute: Verify2faRoute,
   InviteTokenRoute: InviteTokenRoute,
+  PortalTokenRoute: PortalTokenRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -41,6 +41,9 @@ const rateLimitConfig = {
   // API Endpoints: General rate limit
   apiEndpoint: { kind: "fixed window", rate: 100, period: MINUTE }, // 100/min
 
+  // Client portal token validation: limit brute-force token probing
+  clientPortalValidation: { kind: "fixed window", rate: 30, period: MINUTE },
+
   // Password Reset (IP-based): Strict limit to prevent spam/DoS
   // Increased capacity/rate significantly for test/CI environments where all traffic may share one IP (localhost/runner)
   passwordReset: {

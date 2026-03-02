@@ -127,21 +127,21 @@ clientPortalTokens: defineTable({
 **Implementation:**
 
 #### Backend
-- [ ] Add `clientPortalTokens` table
+- [x] Add `clientPortalTokens` table
 - [ ] Create `convex/clientPortal.ts` with:
-  - `generateToken` - Create access token for client
-  - `validateToken` - Check token validity
-  - `getProjectsForToken` - Get accessible projects
-  - `getIssuesForToken` - Get issues client can see
-  - `revokeToken` - Invalidate token
+  - [x] `generateToken` - Create access token for client
+  - [x] `validateToken` - Check token validity
+  - [x] `getProjectsForToken` - Get accessible projects
+  - [x] `getIssuesForToken` - Get issues client can see
+  - [x] `revokeToken` - Invalidate token
 
 #### Frontend
-- [ ] Create `src/routes/portal/$token.tsx` - Client portal entry
-- [ ] Create `src/routes/portal/$token/projects/$projectId.tsx` - Project view
-- [ ] Create `src/components/ClientPortal/` - Portal-specific components
-  - `PortalHeader.tsx` - Minimal header without full nav
-  - `PortalProjectView.tsx` - Read-only project view
-  - `PortalTimeline.tsx` - Activity timeline
+- [x] Create `src/routes/portal/$token.tsx` - Client portal entry
+- [x] Create `src/routes/portal/$token/projects/$projectId.tsx` - Project view
+- [x] Create `src/components/ClientPortal/` - Portal-specific components
+  - [x] `PortalHeader.tsx` - Minimal header without full nav
+  - [x] `PortalProjectView.tsx` - Read-only project view
+  - [x] `PortalTimeline.tsx` - Activity timeline
 - [ ] Create token management UI in client settings
 
 **Security considerations:**
@@ -237,3 +237,11 @@ clientPortalTokens: defineTable({
 - **Decisions:** Kept S3 scope focused on management/list/detail/edit flows with existing backend contracts and minimal UI complexity; no new frontend state-management layer introduced.
 - **Blockers:** S4 client-portal token model and portal routes are still unimplemented; UI polish and branded invoice PDF templates can be iterated after portal baseline.
 - **Next Step:** Start `S4` by adding `clientPortalTokens` schema + `convex/clientPortal.ts` token lifecycle (generate/validate/revoke) with tests.
+
+### 2026-03-02 (Priority 11, batch E)
+
+- **Completed:** Implemented S4 backend/token foundation and initial public portal scaffolding. Added `clientPortalTokens` table in `convex/schema.ts` plus purge coverage and a new `convex/clientPortal.ts` module (`generateToken`, `validateToken`, `getProjectsForToken`, `getIssuesForToken`, `revokeToken`, `listTokensByClient`) with org/client/project scoping, revocation/expiry handling, and token-access timestamp updates. Added `convex/clientPortal.test.ts` regression coverage (admin lifecycle, member rejection, scoped issue visibility). Added initial portal routes `src/routes/portal.$token.tsx` and `src/routes/portal.$token.projects.$projectId.tsx` and portal UI components in `src/components/ClientPortal/`.
+- **Validation:** `pnpm run generate:routes` (pass), `pnpm run typecheck` (pass), `pnpm test convex/clientPortal.test.ts` (pass, 3/3), `pnpm test src/config/routes.test.ts` (pass, 40/40).
+- **Decisions:** Used a public mutation for `validateToken` so `lastAccessedAt` can be updated atomically during validation; rate limiting for token validation is enabled outside test env.
+- **Blockers:** Client settings token-management UI is still pending, and current portal routes use placeholder content until frontend wiring to `clientPortal` APIs is completed.
+- **Next Step:** Finish remaining S4 frontend work: wire token validation + scoped project/issues rendering in portal routes and add token-management controls under client settings.
