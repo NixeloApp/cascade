@@ -226,3 +226,4 @@ Central index for active roadmap and issue todos.
 - Priority `02` update (2026-03-02, batch E): revalidated sentinel search-security closure with `pnpm test convex/issues.test.ts` (`28 passed`) and confirmed no remaining blocker.
 - Priority `03` update (2026-03-02, batch E): revalidated scribe cascade-overflow closure with `pnpm test convex/lib/relationships.test.ts convex/lib/relationships_overflow.test.ts` (`7 passed`) and confirmed no remaining blocker.
 - Priority `04` update (2026-03-02, batch E): retried lodash remediation and reconfirmed blocker. `pnpm why lodash` still reports `@boxyhq/saml-jackson@1.52.2 -> lodash@4.17.21`, and upgrade retry still fails with `ERR_PNPM_META_FETCH_FAIL` / `EAI_AGAIN registry.npmjs.org`; no repo changes applied.
+- Priority `05` update (2026-03-02, batch E): revalidated spectra API-key hash dedup closure with `pnpm test convex/apiKeys.test.ts` (`13 passed`) and confirmed no remaining blocker.

@@ -81,3 +81,15 @@ Refactor `convex/apiKeys.test.ts` to use `hashApiKey` from `convex/lib/apiAuth.t
   - none.
 - Next Step:
   - continue strict order with Priority `06` (`multi-level-views.md`).
+
+### 2026-03-02 - Batch E (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep this item resolved; no code changes required.
+- Validation:
+  - `pnpm test convex/apiKeys.test.ts` => pass (`13 passed`)
+  - confirmed tests still reuse production `hashApiKey` without duplicate local hashing logic.
+- Blockers:
+  - none.
+- Next Step:
+  - continue strict order with Priority `06` (`multi-level-views.md`).
