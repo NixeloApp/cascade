@@ -181,6 +181,51 @@ describe("GlobalSearch", () => {
     });
   });
 
+  it("should parse shortcuts and pass issue filters to search query", async () => {
+    const user = userEvent.setup();
+    (useQuery as any).mockReturnValue({ page: [], results: [], total: 0, hasMore: false });
+
+    render(<GlobalSearch />);
+
+    await user.click(screen.getByRole("button"));
+    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
+    await user.type(searchInput, "type:bug status:done @me auth");
+
+    await waitFor(() => {
+      const calls = (useQuery as any).mock.calls as unknown[][];
+      const hasShortcutIssueCall = calls.some((call) => {
+        const args = call[1] as Record<string, unknown> | "skip" | undefined;
+        return (
+          args !== "skip" &&
+          args?.query === "auth" &&
+          args?.assigneeId === "me" &&
+          Array.isArray(args?.type) &&
+          args.type.includes("bug") &&
+          Array.isArray(args?.status) &&
+          args.status.includes("done")
+        );
+      });
+      expect(hasShortcutIssueCall).toBe(true);
+    });
+  });
+
+  it("should prompt for non-shortcut text when query only has shortcuts", async () => {
+    const user = userEvent.setup();
+    (useQuery as any).mockReturnValue({ page: [], results: [], total: 0, hasMore: false });
+
+    render(<GlobalSearch />);
+
+    await user.click(screen.getByRole("button"));
+    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
+    await user.type(searchInput, "type:bug @me");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Add at least 2 non-shortcut characters to search/i),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("should show empty state when no results found", async () => {
     const user = userEvent.setup();
     (useQuery as any).mockReturnValue([]);

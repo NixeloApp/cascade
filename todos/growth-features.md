@@ -12,9 +12,9 @@
 ### Calendar & Slack Sync
 
 - [ ] **Outlook Calendar integration** - Sync events with Microsoft 365
-- [ ] **Post issue updates to Slack** - Webhook notifications
-- [ ] **Create issues from Slack** - `/nixelo create "Bug title"` command
-- [ ] **Unfurl issue links** - Paste URL → shows preview card
+- [x] **Post issue updates to Slack** - Webhook notifications ✅ (`convex/slack.ts`, `convex/issues/mutations.ts`, `convex/slack.test.ts`)
+- [x] **Create issues from Slack** - `/nixelo create "Bug title"` command ✅ (`convex/slackCommandsCore.ts`, `convex/http/slackCommands.ts`, `convex/slackCommands.test.ts`)
+- [x] **Unfurl issue links** - Paste URL → shows preview card ✅ (`convex/slackUnfurl.ts`, `convex/http/slackUnfurl.ts`, `convex/slackUnfurl.test.ts`)
 
 ### Enhanced Search
 
@@ -54,7 +54,7 @@
 
 - [ ] `S3` Implement search shortcuts/query syntax (`type:`, `status:`, `@me`)
 - [ ] `S4` Add advanced search modal with query-builder UX
-- [ ] `S4` Ship one integration growth lever (Slack create/unfurl or Outlook sync)
+- [x] `S4` Ship one integration growth lever (Slack create/unfurl or Outlook sync)
 - [ ] `S5` Prioritize remaining board/document enhancements based on usage data
 
 ### Dependencies
@@ -65,3 +65,34 @@
 ### Definition of Done
 
 - At least two growth items ship with measurable adoption.
+
+---
+
+## Progress Log
+
+### 2026-03-02 (Batch A)
+
+**Progress**
+
+- Audited Growth tasks against current code and marked shipped Slack growth items complete:
+  - Slack issue event delivery
+  - Slack slash-command issue creation
+  - Slack issue-link unfurling
+- Implemented first `S3` slice for search shortcuts in `GlobalSearch`:
+  - `type:<value>`
+  - `status:<value>`
+  - `@me` / `assignee:me`
+
+**Decisions**
+
+- Focused this batch on high-confidence already-shipped Slack closures plus a minimal, deterministic shortcut parser for global search.
+- Kept shortcuts parser intentionally strict and token-based to avoid introducing ambiguous query-language behavior before full parser work.
+
+**Blockers**
+
+- Outlook integration remains open pending Microsoft OAuth app setup and backend sync design.
+- Advanced search modal and full query language remain open design/implementation work.
+
+**Next step**
+
+- Continue `S3` by extending shortcuts beyond `type/status/@me` (for example `priority:` and label tokens) and wiring user-facing shortcut hints in the search UI.
