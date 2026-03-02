@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: JSON heatmap snapshot complete (`29` spec files, `0` failing files); latest suite remains clean (`151 passed / 0 failed / 4 skipped`) |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI now merges shard blob reports into per-spec heatmap summary + run-local trend checkpoint; latest full-suite baseline remains clean (`151/0/4`) |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): per-spec heatmap was generated from fresh full-suite JSON artifact (`29` files analyzed, `0` files with failures/timeouts/flaky; skips only in `e2e/sprints.spec.ts` and one skip in `e2e/oauth-mocked.spec.ts`). Current streak checkpoint toward acceptance is `1/5` consecutive clean runs (latest full suite: `151 passed`, `0 failed`, `4 skipped`, `~6.1m`). Next is CI summary trend checkpointing so streak state persists across runs.
+- Priority `01` update (2026-03-02): CI workflow now includes an `e2e-summary` job that merges shard blob reports into `e2e-merged.json`, publishes per-spec heatmap metrics to GitHub step summary, and uploads the merged artifact. Latest baseline remains `151 passed`, `0 failed`, `4 skipped` (`155 total`). Remaining gap is persistent cross-run clean-streak state (current checkpoint is run-local only).

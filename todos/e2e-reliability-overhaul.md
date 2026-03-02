@@ -424,9 +424,26 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - No functional blocker; remaining gap is CI-level consecutive clean-run tracking across future runs.
 
+### 2026-03-02 - Batch P (completed CI heatmap/trend summary job wiring)
+
+- Decision: make CI emit a single merged E2E heatmap/trend checkpoint from sharded runs using Playwright blob reports.
+- Change: `.github/workflows/ci.yml`
+  - `e2e-tests` now runs with `--reporter=blob` and uploads `blob-report/` artifacts per shard (`playwright-blob-shard-*`)
+  - added new `e2e-summary` job (`if: always()`, needs `e2e-tests`) to:
+    - download shard blob artifacts
+    - run `pnpm exec playwright merge-reports --reporter=json blob-reports > e2e-merged.json`
+    - parse merged JSON into per-spec pass/fail/skip/flaky/timedOut heatmap
+    - append metrics + heatmap + clean-run checkpoint to `$GITHUB_STEP_SUMMARY`
+    - upload merged JSON artifact (`e2e-merged-json`)
+- Validation:
+  - command sanity: `pnpm exec playwright merge-reports --help` (passes; command available)
+  - repo check pass with known unrelated warnings: `pnpm run biome:check -- .github/workflows/ci.yml`
+- Blockers:
+  - Cross-run streak persistence is still pending (current summary exposes run-local checkpoint `0/5` or `1/5` only).
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
-  - add CI trend checkpointing for consecutive clean runs toward acceptance criteria (`<2%` for 5 consecutive CI runs)
-  - publish the per-spec heatmap/trend summary directly in CI summary output (single source of truth for streak state)
+  - persist clean-run streak state across CI runs (artifact/cache/external store) so checkpoint reflects true consecutive history
+  - keep CI per-spec heatmap summary as single source of truth and verify merged job behavior on next PR run
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement
