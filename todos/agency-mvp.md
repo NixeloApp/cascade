@@ -176,3 +176,29 @@ clientPortalTokens: defineTable({
 - `convex/timeTracking.ts` - Existing time tracking
 - `src/routes/$orgSlug/time-tracking/` - Time tracking UI
 - `convex/schema.ts` - Database schema
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S1-S4`  
+**Effort:** Large
+
+### Milestones
+
+- [ ] `S1` Schema + backend foundation (`clients`, `invoices`, base CRUD)
+- [ ] `S2` Invoice generation flow (from time entries + PDF + status lifecycle)
+- [ ] `S3` In-app invoice/client UI (list/detail/editor routes)
+- [ ] `S4` Client portal token model + read-only portal views + revocation
+
+### Dependencies
+
+- `convex/schema.ts` migrations
+- Email provider path for invoice send events
+- Auth/permission checks for client-token access
+
+### Definition of Done
+
+- Agencies can create clients, generate invoices from tracked time, and mark payment status.
+- Client magic-link portal works with scoped permissions and auditability.

@@ -83,3 +83,26 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
 - `src/components/CustomFieldValues.tsx` - Custom field rendering
 - `src/components/MentionInput.tsx` - Mention autocomplete
 - `src/components/CommentRenderer.tsx` - Comment display
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S1-S3`  
+**Effort:** Medium
+
+### Milestones
+
+- [ ] `S1` Complete rich-text comment parity (emoji picker + inline attachments)
+- [ ] `S2` Slack outbound notifications MVP (workspace connect + event delivery)
+- [ ] `S3` Slash command + link unfurling follow-up
+
+### Dependencies
+
+- OAuth app setup and secrets provisioning for Slack
+- Attachment storage constraints and moderation/security policy
+
+### Definition of Done
+
+- Comment experience and Slack integration meet baseline production usability.

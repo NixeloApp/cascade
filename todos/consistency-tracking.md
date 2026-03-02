@@ -541,3 +541,25 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 - [RULES.md](../RULES.md) - Development rules
 - [docs/design/PATTERNS.md](./design/PATTERNS.md) - UI patterns
 - [docs/CONVEX_BEST_PRACTICES.md](./CONVEX_BEST_PRACTICES.md) - Backend patterns
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S1`  
+**Effort:** Small-Medium
+
+### Milestones
+
+- [ ] `S1` Close remaining unchecked action item(s)
+- [ ] `S1` Add monthly consistency snapshot cadence (score + deltas)
+- [ ] `S1` Keep validator inventory and strictness levels in sync with code
+
+### Dependencies
+
+- Current validator outputs from `node scripts/validate.js`
+
+### Definition of Done
+
+- No unresolved baseline items; doc transitions to operational tracking mode.

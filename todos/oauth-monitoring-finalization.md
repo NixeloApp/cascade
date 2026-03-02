@@ -76,3 +76,33 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
 - [ ] Admin can view OAuth health stats
 - [ ] Feature flag can disable Google auth gracefully
 - [ ] Alerts fire on failures (already working via Slack)
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S1-S2`  
+**Effort:** Medium
+
+### Milestones
+
+- [ ] `S1` Admin health query + dashboard view (7d/30d success rate, p95 latency, recent failures)
+- [ ] `S1` Incident-oriented health summary fields (`firstFailAt`, `lastFailAt`, `recoveredAt`)
+- [ ] `S2` Feature flag table + admin toggle + GoogleAuthButton fallback UX
+- [ ] `S2` Runbook hardening: emergency disable/re-enable checklist + verification steps
+
+### Alerting Details
+
+- Warning threshold: `2` consecutive failures
+- Critical threshold: `4` consecutive failures
+- Add one immediate retry before alert emission to reduce false positives
+
+### Dependencies
+
+- Admin settings surface for operations controls
+- Slack webhook reliability and alert destination ownership
+
+### Definition of Done
+
+- On-call can detect degraded OAuth health, disable Google auth quickly, and verify recovery.

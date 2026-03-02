@@ -39,3 +39,15 @@ Implement a safe way to cascade delete/soft-delete large numbers of children, li
 - `convex/lib/relationships.ts` still enforces `BOUNDED_DELETE_BATCH` and throws when child count exceeds the batch limit.
 - The large-fanout cascade behavior is still unimplemented.
 - Status: Open.
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Sprint Tag:** `S1`  
+**Effort:** Medium
+
+### Steps
+
+- [ ] Replace single-batch traversal with looped/paginated traversal in cascade operations
+- [ ] Ensure soft-delete/restore paths avoid reprocessing already-handled rows
+- [ ] Add tests for fanout >100 on delete, soft-delete, and restore

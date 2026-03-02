@@ -47,3 +47,27 @@
 
 - `convex/auth.ts` - Authentication
 - `src/routes/` - Routes for new features
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S4+`  
+**Effort:** Large
+
+### Milestones
+
+- [ ] `S4` Define first enterprise wedge (recommended: one SSO provider + admin controls)
+- [ ] `S4` Implement identity-provider integration + org policy UI
+- [ ] `S5` Add billing substrate (plans/entitlements) only for shipped enterprise features
+- [ ] `S5+` Expand provider matrix + advanced enterprise controls
+
+### Dependencies
+
+- Product packaging decisions (feature tiers and entitlement model)
+- Security/legal requirements for enterprise auth flows
+
+### Definition of Done
+
+- At least one enterprise-tier capability is production deployable and supportable.

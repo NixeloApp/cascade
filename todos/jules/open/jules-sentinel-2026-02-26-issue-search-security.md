@@ -25,3 +25,15 @@ High
 - `convex/issues/queries.ts` now returns empty results when no `query`, `projectId`, or `organizationId` is provided.
 - Search with free-text query still does not explicitly enforce per-project access checks in this query path.
 - Keep this item open until search results are guaranteed to be scoped by membership/organization at query time.
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Sprint Tag:** `S1`  
+**Effort:** Medium
+
+### Steps
+
+- [ ] Enforce tenant/project scope in search query path before returning any issue docs
+- [ ] Add explicit membership authorization checks for global/free-text search
+- [ ] Add regression tests proving cross-project/org leakage is impossible

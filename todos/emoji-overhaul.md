@@ -72,3 +72,27 @@ Users must manually type emoji without visual feedback.
 - `src/lib/icons.ts` - Lucide icon exports (80+)
 - `src/components/DocumentTemplatesManager.tsx` - Template manager
 - `convex/documentTemplates.ts` - Template backend
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S2-S3`  
+**Effort:** Medium
+
+### Milestones
+
+- [ ] `S2` Build reusable `IconPicker` with keyboard navigation + search
+- [ ] `S2` Replace template icon input usage and keep emoji backward compatibility
+- [ ] `S3` Execute schema migration for structured icon type
+- [ ] `S3` Complete accessibility audit for icon-only controls
+
+### Dependencies
+
+- Final schema decision for icon field representation
+- Migration script for existing template rows
+
+### Definition of Done
+
+- Template icon UX is visual-first, keyboard accessible, and migration-safe.

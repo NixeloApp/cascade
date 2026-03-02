@@ -147,3 +147,32 @@ Option B: External worker (Cloudflare Worker, Vercel Edge) that calls Convex
 - Existing notification system: `convex/notifications.ts`
 - Issue creation: `convex/issues.ts`
 - Project settings: `src/components/settings/`
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S4-S7`  
+**Effort:** Large
+
+### MVP Boundary
+
+- Include: monitor CRUD, periodic checks, incident creation, basic public status page
+- Exclude: multi-region checks, synthetic browser tests, advanced escalation rules
+
+### Milestones
+
+- [ ] `S4` Schema + monitor CRUD + check execution architecture decision
+- [ ] `S5` Cron/worker checks + persisted results + alert pipeline integration
+- [ ] `S6` Incident linkage with issues + status page v1
+- [ ] `S7` Dashboard analytics (uptime %, response trends, downtime calendar)
+
+### Dependencies
+
+- Decide check runner model (`Convex action` vs external worker)
+- Domain/public routing strategy for status pages
+
+### Definition of Done
+
+- A monitor failure can trigger an incident and reflect on a public status page with historical data.

@@ -41,3 +41,25 @@ Add backend helper to extract plain text from rich text JSON descriptions for in
 - Frontend already has `valueToPlainText()` in `src/lib/plate/editor.ts`
 - Backend needs equivalent since Convex functions can't import frontend code
 - Legacy plain text descriptions are handled gracefully (try/catch)
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S1`  
+**Effort:** Small-Medium
+
+### Milestones
+
+- [ ] `S1` Add backend plain-text extraction helper for description JSON
+- [ ] `S1` Integrate helper into Pumble, AI chat embeddings, and CSV export
+- [ ] `S1` Add helper-level tests for JSON and legacy plain text inputs
+
+### Dependencies
+
+- Stable Plate/Slate node structure assumptions for extraction logic
+
+### Definition of Done
+
+- External integrations no longer receive raw rich-text JSON blobs where plain text is expected.

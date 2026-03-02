@@ -45,3 +45,27 @@ The primary bandwidth drains were identified as:
 2. **Always search for an index.** Before using `.filter()`, check `schema.ts` for an existing index.
 3. **Sidebar is Sensitive.** Any query called in `AppSidebar.tsx` will be your #1 bandwidth consumer. Keep it extremely light.
 4. **Project fields.** If you only need 2 fields out of 20, fetch only those if possible (especially for tables with large description fields).
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S1-S2`  
+**Effort:** Medium
+
+### Milestones
+
+- [ ] `S1` Finish dashboard/activity query scoping and payload minimization
+- [ ] `S1` Add query-level payload telemetry for top bandwidth endpoints
+- [ ] `S2` Introduce counters/stats table for high-frequency counts
+- [ ] `S2` Publish before/after bandwidth report from Convex dashboard metrics
+
+### Dependencies
+
+- Query index coverage in `convex/schema.ts`
+- Agreement on acceptable precision for cached counts
+
+### Definition of Done
+
+- Top recurring bandwidth offenders are reduced and documented with measured deltas.

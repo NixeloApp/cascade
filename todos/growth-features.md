@@ -41,3 +41,27 @@
 
 - `convex/documents.ts` - Document queries
 - `src/components/GlobalSearch.tsx` - Search UI
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S3-S5`  
+**Effort:** Medium-Large
+
+### Milestones
+
+- [ ] `S3` Implement search shortcuts/query syntax (`type:`, `status:`, `@me`)
+- [ ] `S4` Add advanced search modal with query-builder UX
+- [ ] `S4` Ship one integration growth lever (Slack create/unfurl or Outlook sync)
+- [ ] `S5` Prioritize remaining board/document enhancements based on usage data
+
+### Dependencies
+
+- Query parser design and search API contracts
+- OAuth/integration app approvals (Slack/Outlook)
+
+### Definition of Done
+
+- At least two growth items ship with measurable adoption.

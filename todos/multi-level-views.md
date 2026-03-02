@@ -116,3 +116,28 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 - `convex/documents.ts` - Document queries
 - `convex/calendarEvents.ts` - Calendar queries
 - `convex/schema.ts` - Database schema
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S1-S5`  
+**Effort:** Large
+
+### Milestones
+
+- [ ] `S1` Resolve schema blockers (`organizationId/workspaceId/teamId` + indexes)
+- [ ] `S2` Ship workspace backlog + workspace sprints routes with real queries
+- [ ] `S3` Ship workspace wiki + team wiki data model/route support
+- [ ] `S4` Replace team calendar stub with real data
+- [ ] `S5` Add org/workspace/team calendar aggregation + filters
+
+### Dependencies
+
+- Non-breaking data migration for existing `documents`/`calendarEvents`
+- Sidebar/nav information architecture for new scope levels
+
+### Definition of Done
+
+- Users can manage backlog/wiki/calendar at workspace/team/org scope with production data.

@@ -35,3 +35,27 @@ Top targets:
 - React Compiler auto-memoizes at build time
 - Existing manual memoization is harmless but adds noise
 - Cleanup improves readability and reduces bundle size slightly
+
+---
+
+## Execution Plan (Updated 2026-03-02)
+
+**Owner:** `@unassigned`  
+**Target Window:** Sprint `S2-S4`  
+**Effort:** Medium
+
+### Milestones
+
+- [ ] `S2` Convert scope list to tracked batches (10-12 files per batch)
+- [ ] `S2-S3` Remove safe memoization in compiler-covered files
+- [ ] `S3` Keep explicit memoization only where identity is correctness-critical
+- [ ] `S4` Publish cleanup report with before/after instance counts
+
+### Dependencies
+
+- Reliable compiler-healthcheck output for target files
+- Regression test coverage in heavily interactive components
+
+### Definition of Done
+
+- Manual memoization reduced substantially with no correctness regressions.
