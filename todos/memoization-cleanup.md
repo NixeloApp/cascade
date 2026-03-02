@@ -174,3 +174,44 @@ Top targets:
   - classify remaining `useCallback`/`memo` into `remove` vs `keep-for-correctness`,
   - remove low-risk callbacks where no identity-sensitive side effect exists,
   - publish before/after callback/memo delta report.
+
+### 2026-03-02 (Priority 15, batch D)
+
+**Completed**
+- Removed additional low-risk `useCallback` wrappers from UI event handlers:
+  - `src/components/Settings/CoverImageUploadModal.tsx` (5 callbacks)
+  - `src/components/Settings/AvatarUploadModal.tsx` (5 callbacks)
+  - `src/components/IssueDescriptionEditor.tsx` (1 callback)
+  - `src/components/Documents/DocumentSidebar.tsx` (1 callback)
+  - `src/components/IssueDetail/CreateIssueModal.tsx` (2 callbacks)
+  - `src/components/PlateEditor.tsx` (2 callbacks)
+- Classified remaining memoization usage as keep-for-now:
+  - `useMemo`:
+    - `src/hooks/useFuzzySearch.ts` (stable Fuse index / non-React library integration).
+  - `useCallback`/`memo`:
+    - drag/drop, history, keyboard, offline/draft hooks (stable function identity used by consuming effects/handlers),
+    - `RoadmapView` date-position callback (shared with effect/mouse handlers),
+    - `Plate` mention/color handlers (editor integration event semantics),
+    - `Carousel` imperative API callbacks,
+    - `Kanban`/`IssueCard`/`SwimlanRow` memo wrappers (high-frequency lists with custom prop-compare behavior).
+
+**Validation**
+- `pnpm exec biome check --write src/components/Settings/CoverImageUploadModal.tsx src/components/Settings/AvatarUploadModal.tsx src/components/IssueDescriptionEditor.tsx src/components/Documents/DocumentSidebar.tsx src/components/IssueDetail/CreateIssueModal.tsx src/components/PlateEditor.tsx`
+- `pnpm test src/config/routes.test.ts src/components/Notifications/NotificationCenter.test.tsx` (`54 passed`)
+- `pnpm run typecheck` (pass)
+
+**Updated counts**
+- Total (`useMemo` + `useCallback` + `memo`) in `src/`: `30`
+- `useMemo`: `1`
+- `useCallback`: `22`
+- `memo`/`React.memo`: `7`
+
+**Decisions**
+- Kept remaining callback/memo cases where stable identity and render-frequency behavior are tied to correctness or user-interaction stability.
+- Deferred further aggressive `memo` removals until compiler-healthcheck can run.
+
+**Blockers**
+- Compiler healthcheck remains blocked by network (`EAI_AGAIN registry.npmjs.org`), preventing full coverage verification for final cleanup closure.
+
+**Next step (strict order)**
+- Continue Priority `15` with final classification/report closeout once healthcheck is available, or keep item marked blocked at current optimized baseline.

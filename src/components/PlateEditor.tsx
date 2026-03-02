@@ -14,7 +14,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -129,17 +129,17 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   };
 
   // Handle content change (debounced save would go here)
-  const handleChange = useCallback(({ value }: { value: Value }) => {
+  const handleChange = ({ value }: { value: Value }) => {
     // Track editor value for sidebar TOC
     setEditorValue(value);
     // TODO: Implement Y.js sync or direct Convex save
     console.debug("Editor content changed", value.length, "nodes");
-  }, []);
+  };
 
   // Toggle sidebar visibility
-  const toggleSidebar = useCallback(() => {
+  const toggleSidebar = () => {
     setShowSidebar((prev) => !prev);
-  }, []);
+  };
 
   // Handle version restore
   const handleRestoreVersion = async (snapshot: unknown, _version: number, title: string) => {

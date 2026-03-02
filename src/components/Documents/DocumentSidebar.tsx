@@ -11,7 +11,7 @@
 import { ChevronDown, FileText, Hash, Info, List, User } from "lucide-react";
 import type { Value } from "platejs";
 import type { ReactNode } from "react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -227,17 +227,14 @@ export function DocumentSidebar({
   const headings = extractHeadings(editorValue);
 
   // Handle heading click - scroll to element
-  const handleHeadingClick = useCallback(
-    (headingId: string) => {
-      onHeadingClick?.(headingId);
-      // Try to scroll to the heading element
-      const element = document.querySelector(`[data-block-id="${headingId}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    },
-    [onHeadingClick],
-  );
+  const handleHeadingClick = (headingId: string) => {
+    onHeadingClick?.(headingId);
+    // Try to scroll to the heading element
+    const element = document.querySelector(`[data-block-id="${headingId}"]`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
 
   if (!isOpen) {
     return (

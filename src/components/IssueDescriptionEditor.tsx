@@ -8,7 +8,6 @@
 
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
-import { useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import {
   getInitialValue,
@@ -101,20 +100,17 @@ export function IssueDescriptionEditor({
   });
 
   // Handle content changes
-  const handleChange = useCallback(
-    ({ value: newValue }: { value: Value }) => {
-      if (onChange) {
-        // Serialize to JSON for storage
-        // If empty, send empty string to allow clearing
-        if (isEmptyValue(newValue)) {
-          onChange("");
-        } else {
-          onChange(serializeValue(newValue));
-        }
+  const handleChange = ({ value: newValue }: { value: Value }) => {
+    if (onChange) {
+      // Serialize to JSON for storage
+      // If empty, send empty string to allow clearing
+      if (isEmptyValue(newValue)) {
+        onChange("");
+      } else {
+        onChange(serializeValue(newValue));
       }
-    },
-    [onChange],
-  );
+    }
+  };
 
   return (
     <Card

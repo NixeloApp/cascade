@@ -7,7 +7,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { Camera, Trash2, Upload } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -46,7 +46,7 @@ export function AvatarUploadModal({
   const uploadAvatar = useMutation(api.users.uploadAvatar);
   const removeAvatar = useMutation(api.users.removeAvatar);
 
-  const handleFileSelect = useCallback((file: File) => {
+  const handleFileSelect = (file: File) => {
     // Validate file type
     if (!ACCEPTED_TYPES.includes(file.type)) {
       showError("Please select a JPG, PNG, GIF, or WebP image");
@@ -66,40 +66,34 @@ export function AvatarUploadModal({
     };
     reader.readAsDataURL(file);
     setSelectedFile(file);
-  }, []);
+  };
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        handleFileSelect(file);
-      }
-    },
-    [handleFileSelect],
-  );
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-
-      const file = e.dataTransfer.files?.[0];
-      if (file) {
-        handleFileSelect(file);
-      }
-    },
-    [handleFileSelect],
-  );
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-  }, []);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
 
   const handleUpload = async () => {
     if (!selectedFile) return;
