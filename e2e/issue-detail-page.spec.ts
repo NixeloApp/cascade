@@ -66,13 +66,10 @@ test.describe("Issue Detail Page", () => {
     const issueCard = projectsPage.getIssueCard(issueTitle);
     await expect(issueCard).toBeVisible();
 
-    // Find the issue key by looking for the pattern XXXX-N in the issue card area
-    // The key is displayed near the issue title
-    const issueKeyElement = page.locator(`text=${projectKey}-`).first();
-    const issueKeyText = await issueKeyElement.textContent();
-
-    // Extract the full issue key (e.g., "PROJ-1")
-    const issueKeyMatch = issueKeyText?.match(new RegExp(`${projectKey}-\\d+`));
+    // Extract issue key from the card's accessible label, e.g.:
+    // "Task PROJ-1: Direct URL Test Issue, Medium priority, unassigned"
+    const issueAriaLabel = await issueCard.getAttribute("aria-label");
+    const issueKeyMatch = issueAriaLabel?.match(new RegExp(`${projectKey}-\\d+`));
     expect(issueKeyMatch).toBeTruthy();
     const issueKey = issueKeyMatch?.[0];
 
@@ -112,10 +109,10 @@ test.describe("Issue Detail Page", () => {
     // Switch to backlog to find the issue
     await projectsPage.switchToTab("backlog");
 
-    // Get issue key
-    const issueKeyElement = page.locator(`text=${projectKey}-`).first();
-    const issueKeyText = await issueKeyElement.textContent();
-    const issueKeyMatch = issueKeyText?.match(new RegExp(`${projectKey}-\\d+`));
+    const issueCard = projectsPage.getIssueCard(issueTitle);
+    await expect(issueCard).toBeVisible();
+    const issueAriaLabel = await issueCard.getAttribute("aria-label");
+    const issueKeyMatch = issueAriaLabel?.match(new RegExp(`${projectKey}-\\d+`));
     const issueKey = issueKeyMatch?.[0];
 
     // Navigate to issue detail page

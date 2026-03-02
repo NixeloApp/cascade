@@ -559,11 +559,33 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - baseline entries remain technical debt until migrated to semantic selectors.
 
+### 2026-03-02 - Batch W (completed selector baseline debt burn-down to zero)
+
+- Decision: immediately pay down known selector debt instead of carrying baseline exceptions.
+- Change:
+  - `e2e/issue-detail-page.spec.ts`
+    - replaced `locator(\`text=${projectKey}-\`)` key discovery with issue-card `aria-label` extraction + regex match
+  - `e2e/analytics.spec.ts`
+    - replaced `locator("text=Total Issues").locator("..")...` chain with stable test-id metric selector:
+      - `TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES`
+    - parsed count from metric card text content deterministically
+  - `scripts/ci/e2e-hard-rules-baseline.json`
+    - reduced selector anti-pattern baseline from `4` entries to `0`
+- Validation:
+  - hard-rule guard:
+    - `pnpm run e2e:hard-rules`
+    - result: `29` spec files scanned, `0` timeout violations, `0` baseline selector entries, `0` new selector regressions
+  - targeted specs:
+    - `pnpm exec playwright test e2e/analytics.spec.ts e2e/issue-detail-page.spec.ts --reporter=line`
+    - result: `8 passed`, `0 failed` (`2.7m`)
+- Blockers:
+  - no remaining local selector-baseline debt; remaining blocker is external PR CI validation for `history-derived` streak mode.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
   - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + script execution + summary rendering in `history-derived` mode)
   - if needed after first PR validation, tune `E2E_STREAK_SCAN_LIMIT` from observed branch run density
   - keep CI per-spec heatmap summary as single source of truth for streak/heatmap visibility
-  - burn down selector baseline debt (`4` entries) by migrating to semantic selectors and shrinking `e2e-hard-rules-baseline.json`
+  - keep selector baseline at `0` by blocking new regressions through `e2e:hard-rules`
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement

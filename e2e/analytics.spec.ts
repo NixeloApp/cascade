@@ -138,15 +138,11 @@ test.describe("Analytics Dashboard", () => {
     // Wait for loading to complete — target analytics heading instead of generic skeleton class
     await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
 
-    // Find the Total Issues metric card and verify count is at least 3
-    // The card shows a number value next to "Total Issues"
-    const totalIssuesCard = page.locator("text=Total Issues").locator("..").locator("..");
-    const totalIssuesValue = totalIssuesCard.locator("text=/\\d+/").first();
-    await expect(totalIssuesValue).toBeVisible();
-
-    // Get the text and verify it's >= 3
-    const valueText = await totalIssuesValue.textContent();
-    const issueCount = Number.parseInt(valueText || "0", 10);
+    // Find the Total Issues metric by stable test id and parse the displayed number.
+    const totalIssuesCard = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES);
+    await expect(totalIssuesCard).toBeVisible();
+    const valueText = (await totalIssuesCard.textContent()) ?? "";
+    const issueCount = Number.parseInt(valueText.match(/\d+/)?.[0] ?? "0", 10);
     expect(issueCount).toBeGreaterThanOrEqual(3);
     console.log(`✓ Total Issues count (${issueCount}) reflects created issues`);
   });
