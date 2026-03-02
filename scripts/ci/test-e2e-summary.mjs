@@ -375,6 +375,32 @@ async function runStepSummaryWriteCase() {
   }
 }
 
+async function runStdoutSummaryWriteCase() {
+  const lines = [];
+  const originalLog = console.log;
+  console.log = (line) => {
+    lines.push(String(line));
+  };
+
+  try {
+    await runSummary(
+      reportFixturePath,
+      makeEnv({
+        GITHUB_STEP_SUMMARY: "",
+        E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+        E2E_STREAK_SCAN_LIMIT: "250",
+      }),
+    );
+  } finally {
+    console.log = originalLog;
+  }
+
+  const output = lines.join("\n");
+  assert.match(output, /^## E2E Heatmap/m);
+  assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
+  assert.match(output, /Streak Scan Window: `3\/250` completed CI runs/);
+}
+
 await runFallbackCase();
 await runFallbackDirtyCase();
 await runHistoryDerivedCase();
@@ -396,4 +422,5 @@ await runMissingReportFileCase();
 await runInvalidReportFileCase();
 await runUnreadableReportFileCase();
 await runStepSummaryWriteCase();
+await runStdoutSummaryWriteCase();
 console.log("e2e-summary self-test passed");
