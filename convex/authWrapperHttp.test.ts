@@ -3,13 +3,14 @@ import { internal } from "./_generated/api";
 import { securePasswordResetHandler } from "./authWrapper";
 import { logger } from "./lib/logger";
 
-// Mock internal mutations
+// Mock internal mutations and actions
 vi.mock("./_generated/api", () => ({
   internal: {
     authWrapper: {
       checkPasswordResetRateLimit: "internal.authWrapper.checkPasswordResetRateLimit",
       checkPasswordResetRateLimitByEmail: "internal.authWrapper.checkPasswordResetRateLimitByEmail",
       schedulePasswordReset: "internal.authWrapper.schedulePasswordReset",
+      performPasswordReset: "internal.authWrapper.performPasswordReset",
     },
   },
   components: {
@@ -27,12 +28,15 @@ vi.mock("./lib/logger", () => ({
 describe("securePasswordResetHandler", () => {
   let mockCtx: any;
   let runMutationMock: any;
+  let runActionMock: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
     runMutationMock = vi.fn();
+    runActionMock = vi.fn();
     mockCtx = {
       runMutation: runMutationMock,
+      runAction: runActionMock,
     };
   });
 
@@ -53,6 +57,7 @@ describe("securePasswordResetHandler", () => {
 
     // Success scenario
     runMutationMock.mockResolvedValue(undefined);
+    runActionMock.mockResolvedValue(undefined);
 
     const response = await securePasswordResetHandler(mockCtx, request);
 
@@ -60,8 +65,7 @@ describe("securePasswordResetHandler", () => {
     const json = await response.json();
     expect(json).toEqual({ success: true });
 
-    // Verify calls
-    expect(runMutationMock).toHaveBeenCalledTimes(3);
+    // Verify rate limit checks always happen
     expect(runMutationMock).toHaveBeenCalledWith(
       internal.authWrapper.checkPasswordResetRateLimit,
       expect.objectContaining({ ip: expect.any(String) }),
@@ -70,9 +74,24 @@ describe("securePasswordResetHandler", () => {
       internal.authWrapper.checkPasswordResetRateLimitByEmail,
       { email },
     );
-    expect(runMutationMock).toHaveBeenCalledWith(internal.authWrapper.schedulePasswordReset, {
-      email,
-    });
+
+    // In CI/E2E mode, uses runAction(performPasswordReset) inline
+    // In production mode, uses runMutation(schedulePasswordReset) async
+    const isE2ENonProductionMode =
+      process.env.NODE_ENV !== "production" &&
+      (!!process.env.E2E_TEST_MODE || !!process.env.E2E_API_KEY || !!process.env.CI);
+
+    if (isE2ENonProductionMode) {
+      expect(runMutationMock).toHaveBeenCalledTimes(2);
+      expect(runActionMock).toHaveBeenCalledWith(internal.authWrapper.performPasswordReset, {
+        email,
+      });
+    } else {
+      expect(runMutationMock).toHaveBeenCalledTimes(3);
+      expect(runMutationMock).toHaveBeenCalledWith(internal.authWrapper.schedulePasswordReset, {
+        email,
+      });
+    }
   });
 
   it("should return 429 if IP rate limit exceeded", async () => {
@@ -176,9 +195,17 @@ describe("securePasswordResetHandler", () => {
     const email = "test@example.com";
     const request = createRequest({ email });
 
-    // Fail third mutation (Schedule)
+    // Fail the final step - either:
+    // - schedulePasswordReset mutation (production mode)
+    // - performPasswordReset action (CI/E2E mode)
     runMutationMock.mockImplementation((mutation: any) => {
       if (mutation === internal.authWrapper.schedulePasswordReset) {
+        throw new Error("Database error");
+      }
+      return Promise.resolve();
+    });
+    runActionMock.mockImplementation((action: any) => {
+      if (action === internal.authWrapper.performPasswordReset) {
         throw new Error("Database error");
       }
       return Promise.resolve();
