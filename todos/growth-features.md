@@ -307,3 +307,25 @@ Unblock requirements:
 **Next step**
 
 - Continue strict-order execution to Priority `18` while waiting for Outlook unblock inputs.
+
+### 2026-03-02 (Batch K)
+
+**Progress**
+
+- Revalidated shipped growth features and regression coverage in strict-order flow; no in-repo changes were needed.
+
+**Validation**
+
+- `pnpm test src/lib/search-shortcuts.test.ts src/components/GlobalSearch.test.tsx src/lib/board-query-language.test.ts convex/sprints.test.ts convex/labels.test.ts src/components/IssueDetail/IssueCard.test.tsx src/components/VersionHistory.test.tsx` (`75 passed`)
+
+**Decisions**
+
+- Keep Priority `17` blocked solely on Outlook integration prerequisites.
+
+**Blockers**
+
+- Unchanged external requirements: Microsoft app registration, scope approval, redirect/env setup, and test tenant provisioning.
+
+**Next step**
+
+- Continue strict-order execution to Priority `18` while waiting for Outlook unblock inputs.
