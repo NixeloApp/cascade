@@ -2,7 +2,7 @@
 
 > **Priority:** P4 (Post-Launch)
 > **Effort:** Large
-> **Status:** Not started
+> **Status:** In progress
 
 ---
 
@@ -12,7 +12,7 @@
 
 - [ ] **Stripe integration** - Payment processing for subscriptions
 - [ ] **Subscription management** - Plans, billing portal, usage tracking
-- [ ] **Pricing page** - Tier comparison, feature matrix
+- [x] **Pricing page** - Tier comparison, feature matrix ✅ (`src/components/Landing/PricingSection.tsx`, `src/routes/index.tsx`)
 
 ### SSO/SAML
 
@@ -71,3 +71,31 @@
 ### Definition of Done
 
 - At least one enterprise-tier capability is production deployable and supportable.
+
+---
+
+## Progress Log
+
+### 2026-03-02 (Batch A)
+
+**Progress**
+
+- Added production-ready landing pricing section with tier comparison cards:
+  - `Starter`
+  - `Team`
+  - `Enterprise`
+- Integrated pricing section into home route and exports.
+- Added component test coverage for pricing section rendering.
+
+**Decisions**
+
+- Shipped pricing as a first concrete enterprise-facing artifact while billing substrate remains pending.
+- Kept pricing CTA copy sales/contact oriented until Stripe/subscription plumbing is implemented.
+
+**Blockers**
+
+- Stripe integration and subscription management remain blocked by billing architecture + provider setup decisions.
+
+**Next step**
+
+- Audit current SSO implementation depth and close or split enterprise SSO tasks based on actual runtime support (configuration-only vs full sign-in flow).
