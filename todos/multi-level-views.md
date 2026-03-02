@@ -2,7 +2,7 @@
 
 > **Priority:** P1 (Core MVP)
 > **Effort:** Large
-> **Status:** In Progress (foundation routes partial)
+> **Status:** Blocked (external package install required for final dependency graph)
 > **Last Audited:** 2026-03-02
 
 ---
@@ -391,3 +391,19 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - blocker is environment/network-level; `react-flow` cannot be added until registry access is restored and/or store config is aligned.
 - Next Step:
   - retry `@xyflow/react` install with aligned store dir once DNS/registry connectivity is restored, then implement graph visualization.
+
+### 2026-03-02 - Batch K (retry with aligned store; still blocked)
+
+- Decision:
+  - keep this todo blocked; do not replace the `react-flow` requirement with a different visualization library.
+- Change:
+  - retried install with explicit store alignment:
+    - `pnpm --store-dir /home/mikhail/.local/share/pnpm/store/v10 add @xyflow/react`
+  - no source-code changes landed because dependency installation did not complete.
+- Validation / Blocker:
+  - install attempt still failed with npm registry DNS errors:
+    - `ERR_PNPM_META_FETCH_FAIL`
+    - `getaddrinfo EAI_AGAIN registry.npmjs.org`
+  - repository state unchanged (`git status` clean).
+- Next Step:
+  - once DNS connectivity is restored, install `@xyflow/react`, implement the dependencies graph view, run typecheck + affected tests, and then close this todo.
