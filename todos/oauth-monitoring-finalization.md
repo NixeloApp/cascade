@@ -195,3 +195,16 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
   - no configured external destination (DataDog/Grafana endpoint/API key/project owner) in current environment.
 - Next Step:
   - once destination is chosen, implement HTTP push action + delivery validation; until then, proceed to next priority using existing Convex + Slack monitoring path.
+
+### 2026-03-02 - Batch E (blocked-state checkpoint)
+
+- Decision:
+  - keep Priority `08` blocked; no in-repo work remains without an external monitoring destination decision.
+- Change:
+  - no code changes; status and blocker rationale reconfirmed.
+- Validation:
+  - current implemented scope remains complete: Convex health checks + admin dashboard + Google auth kill-switch + Slack alerts + runbook.
+- Blockers:
+  - missing external destination contract (DataDog/Grafana endpoint, credentials, and owner).
+- Next Step:
+  - once destination is provided, implement push action and delivery verification; otherwise continue strict order to Priority `09`.
