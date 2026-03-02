@@ -69,6 +69,30 @@ async function runHistoryDerivedCase() {
   assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
+async function runHistoryDerivedDirtyReportCase() {
+  const dirtyReport = {
+    ...reportFixture,
+    stats: {
+      ...reportFixture.stats,
+      expected: 2,
+      unexpected: 1,
+      skipped: 1,
+      flaky: 0,
+    },
+  };
+  const lines = await buildSummaryLines(
+    dirtyReport,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "250",
+    }),
+  );
+  const output = lines.join("\n");
+
+  assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
+  assert.match(output, /Error Rate: `33.33%`/);
+}
+
 async function runScanLimitTruncationCase() {
   const lines = await buildSummaryLines(
     reportFixture,
@@ -87,5 +111,6 @@ async function runScanLimitTruncationCase() {
 await runFallbackCase();
 await runFallbackDirtyCase();
 await runHistoryDerivedCase();
+await runHistoryDerivedDirtyReportCase();
 await runScanLimitTruncationCase();
 console.log("e2e-summary self-test passed");
