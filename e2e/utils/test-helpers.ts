@@ -10,7 +10,7 @@ import type { Page } from "@playwright/test";
  * @deprecated Use explicit element waits (e.g., expect(element).toBeVisible()) instead
  */
 export async function waitForNetworkIdle(page: Page, _timeout = 5000): Promise<void> {
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(() => document.readyState === "complete");
 }
 
 /**
