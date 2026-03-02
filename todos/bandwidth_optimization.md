@@ -31,7 +31,7 @@ The primary bandwidth drains were identified as:
 
 ### 1. Dashboard & Analytics
 - [x] **`dashboard.getMyRecentActivity`**: Refactored to avoid global `issueActivity` scan by sampling recent issues only from member projects, then querying `issueActivity` via `by_issue` for those scoped issue IDs.
-- [ ] **`analytics.getProjectAnalytics`**: Projecting fields or using pre-aggregated status counts to avoid fetching 1000 full issue documents.
+- [x] **`analytics.getProjectAnalytics`**: Replaced full issue fetch with index-backed bounded counts for status/type/priority/assignee and unassigned totals.
 - [x] **`dashboard.getMyIssues`**: Ensure pagination is strictly enforced and only necessary fields are transferred if issues have large descriptions.
 
 ### 2. General Infrastructure
@@ -114,3 +114,28 @@ The primary bandwidth drains were identified as:
   - none for this subtask.
 - Next Step:
   - continue Priority `07` with analytics payload slimming (`analytics.getProjectAnalytics`) and/or query-level telemetry (`S1` telemetry milestone).
+
+### 2026-03-02 - Batch C (`analytics.getProjectAnalytics` index-backed counts)
+
+- Decision:
+  - avoid returning/fetching large issue document arrays for analytics aggregates; switch to bounded index count queries per dimension.
+- Change:
+  - updated `convex/analytics.ts` (`getProjectAnalytics`):
+    - replaced full `issues.by_project_deleted.take(1000)` fetch + in-memory grouping with `efficientCount` queries over existing indexes for:
+      - total issue count,
+      - status buckets (`by_project_status_deleted`),
+      - type buckets (`by_project_type_deleted`),
+      - priority buckets (`by_project_priority_deleted`, newly added),
+      - unassigned + per-assignee buckets (`by_project_assignee`).
+    - kept output contract unchanged (`totalIssues`, `issuesByStatus`, `issuesByType`, `issuesByPriority`, `issuesByAssignee`, `unassignedCount`).
+  - updated `convex/schema.ts`:
+    - added `issues` index `by_project_priority_deleted` to support priority counting without full document scans.
+  - updated `convex/analytics.test.ts`:
+    - ensured secondary assignee in `getProjectAnalytics` test is an actual project member so assignee-count behavior matches access model.
+- Validation:
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/analytics.test.ts` => pass (`26 passed`)
+- Blockers:
+  - none for this subtask.
+- Next Step:
+  - continue Priority `07` with query-level payload telemetry for top bandwidth endpoints (`S1` telemetry milestone).

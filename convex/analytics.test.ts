@@ -4,7 +4,12 @@ import { api } from "./_generated/api";
 import { WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
+import {
+  addProjectMember,
+  asAuthenticatedUser,
+  createTestProject,
+  createTestUser,
+} from "./testUtils";
 
 describe("Analytics", () => {
   describe("getProjectAnalytics", () => {
@@ -15,6 +20,7 @@ describe("Analytics", () => {
       const projectId = await createTestProject(t, userId);
 
       const asUser = asAuthenticatedUser(t, userId);
+      await addProjectMember(t, projectId, otherUserId, "editor", userId);
 
       // Get workflow states to use correct IDs
       const project = await asUser.query(api.projects.getProject, { id: projectId });

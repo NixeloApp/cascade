@@ -6,7 +6,8 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
-import { MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
+import { efficientCount } from "./lib/boundedQueries";
+import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY } from "./lib/timeUtils";
 
@@ -51,44 +52,94 @@ function buildIssuesByPriority(priorityCounts: Record<string, number>) {
 export const getProjectAnalytics = projectQuery({
   args: {},
   handler: async (ctx) => {
-    // Fetch all project issues (bounded query)
-    // Optimization: Use by_project_deleted to skip deleted issues efficiently in the index scan
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
-      .filter(notDeleted)
-      .take(MAX_SPRINT_ISSUES);
+    const issueTypes = ["task", "bug", "story", "epic", "subtask"] as const;
+    const priorities = ["lowest", "low", "medium", "high", "highest"] as const;
 
-    // Count by status
-    const statusCounts: Record<string, number> = {};
-    for (const issue of issues) {
-      statusCounts[issue.status] = (statusCounts[issue.status] || 0) + 1;
-    }
+    const [totalIssues, statusEntries, typeEntries, priorityEntries, unassignedCount, members] =
+      await Promise.all([
+        efficientCount(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_deleted", (q) =>
+              q.eq("projectId", ctx.projectId).lt("isDeleted", true),
+            ),
+          MAX_SPRINT_ISSUES,
+        ),
+        Promise.all(
+          ctx.project.workflowStates.map(async (state) => [
+            state.id,
+            await efficientCount(
+              ctx.db
+                .query("issues")
+                .withIndex("by_project_status_deleted", (q) =>
+                  q.eq("projectId", ctx.projectId).eq("status", state.id).lt("isDeleted", true),
+                ),
+              MAX_SPRINT_ISSUES,
+            ),
+          ]),
+        ),
+        Promise.all(
+          issueTypes.map(async (type) => [
+            type,
+            await efficientCount(
+              ctx.db
+                .query("issues")
+                .withIndex("by_project_type_deleted", (q) =>
+                  q.eq("projectId", ctx.projectId).eq("type", type).lt("isDeleted", true),
+                ),
+              MAX_SPRINT_ISSUES,
+            ),
+          ]),
+        ),
+        Promise.all(
+          priorities.map(async (priority) => [
+            priority,
+            await efficientCount(
+              ctx.db
+                .query("issues")
+                .withIndex("by_project_priority_deleted", (q) =>
+                  q.eq("projectId", ctx.projectId).eq("priority", priority).lt("isDeleted", true),
+                ),
+              MAX_SPRINT_ISSUES,
+            ),
+          ]),
+        ),
+        efficientCount(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_assignee", (q) =>
+              q.eq("projectId", ctx.projectId).eq("assigneeId", undefined).lt("isDeleted", true),
+            ),
+          MAX_SPRINT_ISSUES,
+        ),
+        ctx.db
+          .query("projectMembers")
+          .withIndex("by_project", (q) => q.eq("projectId", ctx.projectId))
+          .filter(notDeleted)
+          .take(MAX_PAGE_SIZE),
+      ]);
 
-    // Count by type
-    const typeCounts: Record<string, number> = {};
-    for (const issue of issues) {
-      typeCounts[issue.type] = (typeCounts[issue.type] || 0) + 1;
-    }
+    const statusCounts = Object.fromEntries(statusEntries);
+    const typeCounts = Object.fromEntries(typeEntries);
+    const priorityCounts = Object.fromEntries(priorityEntries);
 
-    // Count by priority
-    const priorityCounts: Record<string, number> = {};
-    for (const issue of issues) {
-      if (issue.priority) {
-        priorityCounts[issue.priority] = (priorityCounts[issue.priority] || 0) + 1;
-      }
-    }
-
-    // Count by assignee
-    const assigneeCounts: Record<string, number> = {};
-    let unassignedCount = 0;
-    for (const issue of issues) {
-      if (issue.assigneeId) {
-        assigneeCounts[issue.assigneeId] = (assigneeCounts[issue.assigneeId] || 0) + 1;
-      } else {
-        unassignedCount++;
-      }
-    }
+    const assigneeIds = [...new Set(members.map((member) => member.userId))];
+    const assigneeCountEntries: Array<[Id<"users">, number]> = await Promise.all(
+      assigneeIds.map(async (assigneeId) => [
+        assigneeId,
+        await efficientCount(
+          ctx.db
+            .query("issues")
+            .withIndex("by_project_assignee", (q) =>
+              q.eq("projectId", ctx.projectId).eq("assigneeId", assigneeId).lt("isDeleted", true),
+            ),
+          MAX_SPRINT_ISSUES,
+        ),
+      ]),
+    );
+    const assigneeCounts = Object.fromEntries(
+      assigneeCountEntries.filter(([, count]) => count > 0),
+    ) as Record<string, number>;
 
     // Build structured data using helpers
     const issuesByStatus = buildIssuesByStatus(ctx.project.workflowStates, statusCounts);
@@ -96,8 +147,8 @@ export const getProjectAnalytics = projectQuery({
     const issuesByPriority = buildIssuesByPriority(priorityCounts);
 
     // Batch fetch assignee users and build assignee map
-    const assigneeIds = Object.keys(assigneeCounts).map((id) => id as Id<"users">);
-    const userMap = await batchFetchUsers(ctx, assigneeIds);
+    const countedAssigneeIds = Object.keys(assigneeCounts).map((id) => id as Id<"users">);
+    const userMap = await batchFetchUsers(ctx, countedAssigneeIds);
 
     const issuesByAssignee: Record<string, { count: number; name: string }> = {};
     for (const [assigneeId, count] of Object.entries(assigneeCounts)) {
@@ -107,8 +158,18 @@ export const getProjectAnalytics = projectQuery({
       };
     }
 
+    const assignedKnownCount = Object.values(assigneeCounts).reduce((sum, count) => sum + count, 0);
+    const totalAssignedCount = Math.max(0, totalIssues - unassignedCount);
+    const unknownAssignedCount = Math.max(0, totalAssignedCount - assignedKnownCount);
+    if (unknownAssignedCount > 0) {
+      issuesByAssignee.unknown = {
+        count: unknownAssignedCount,
+        name: "Unknown",
+      };
+    }
+
     return {
-      totalIssues: issues.length,
+      totalIssues,
       issuesByStatus,
       issuesByType,
       issuesByPriority,
