@@ -44,8 +44,19 @@ function ensure(byFile, file) {
 }
 
 export function parseScanLimit(env = process.env) {
-  const scanLimitRaw = Number.parseInt(env.E2E_STREAK_SCAN_LIMIT || "", 10);
-  return Number.isFinite(scanLimitRaw) && scanLimitRaw > 0 ? scanLimitRaw : DEFAULT_RUN_SCAN_LIMIT;
+  const rawValue = String(env.E2E_STREAK_SCAN_LIMIT ?? "").trim();
+  if (!rawValue) {
+    return DEFAULT_RUN_SCAN_LIMIT;
+  }
+
+  // Accept only canonical positive integer values to avoid ambiguous parsing
+  // of inputs like "250abc" or "3.5".
+  if (!/^[1-9]\d*$/.test(rawValue)) {
+    return DEFAULT_RUN_SCAN_LIMIT;
+  }
+
+  const parsed = Number(rawValue);
+  return Number.isSafeInteger(parsed) ? parsed : DEFAULT_RUN_SCAN_LIMIT;
 }
 
 export function accumulateBySpec(report) {

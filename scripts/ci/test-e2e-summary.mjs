@@ -166,6 +166,30 @@ async function runNonPositiveScanLimitFallbackCase() {
   assert.match(negativeLimitOutput, /Streak Scan Window: `3\/100` completed CI runs/);
 }
 
+async function runMixedTokenScanLimitFallbackCase() {
+  const lines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "250abc",
+    }),
+  );
+  const output = lines.join("\n");
+  assert.match(output, /Streak Scan Window: `3\/100` completed CI runs/);
+}
+
+async function runTrimmedValidScanLimitCase() {
+  const lines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: " 250 ",
+    }),
+  );
+  const output = lines.join("\n");
+  assert.match(output, /Streak Scan Window: `3\/250` completed CI runs/);
+}
+
 async function runMissingMockHistoryFileCase() {
   await assert.rejects(
     () =>
@@ -304,6 +328,8 @@ await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
 await runInvalidScanLimitFallbackCase();
 await runNonPositiveScanLimitFallbackCase();
+await runMixedTokenScanLimitFallbackCase();
+await runTrimmedValidScanLimitCase();
 await runMissingMockHistoryFileCase();
 await runInvalidMockHistoryFileCase();
 await runUnreadableMockHistoryFileCase();

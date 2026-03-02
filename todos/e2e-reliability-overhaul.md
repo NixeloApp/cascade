@@ -1013,3 +1013,31 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
+### 2026-03-02 - Batch AN (completed strict scan-limit parsing)
+
+- Decision: remove ambiguous env parsing by accepting only canonical positive integers for `E2E_STREAK_SCAN_LIMIT`.
+- Change:
+  - updated `scripts/ci/e2e-summary.mjs`:
+    - `parseScanLimit(...)` now trims input and accepts only `^[1-9]\d*$`
+    - rejects mixed/partial values (for example `250abc`, `3.5`) and falls back to default `100`
+    - preserves support for whitespace-padded valid values (for example `" 250 "`)
+  - updated `scripts/ci/test-e2e-summary.mjs`:
+    - added `runMixedTokenScanLimitFallbackCase()` (`250abc` -> `3/100`)
+    - added `runTrimmedValidScanLimitCase()` (`" 250 "` -> `3/250`)
+- Validation:
+  - `pnpm run e2e:summary:self-test` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle violations: `0`; selector baseline remains `0`)
+  - `pnpm exec biome check scripts/ci/e2e-summary.mjs scripts/ci/test-e2e-summary.mjs` => pass
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
