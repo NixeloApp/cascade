@@ -24,14 +24,13 @@
  */
 
 import { expect, test } from "@playwright/test";
+import { CONVEX_SITE_URL } from "./config";
 import {
   clearGoogleOAuthMock,
   setupGoogleOAuthMock,
   verifyOAuthError,
 } from "./utils/google-oauth-mock";
 import { waitForOAuthRedirectComplete } from "./utils/wait-helpers";
-
-const CONVEX_SITE_URL = process.env.VITE_CONVEX_URL?.replace(".cloud", ".site") || "";
 
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
