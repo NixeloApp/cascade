@@ -8,6 +8,12 @@ const ROOT = process.cwd();
 const E2E_DIR = path.join(ROOT, "e2e");
 const BASELINE_PATH = path.join(ROOT, "scripts", "ci", "e2e-hard-rules-baseline.json");
 const TARGET_EXTENSIONS = new Set([".ts", ".tsx"]);
+const PROMISE_SLEEP_PATTERN =
+  /new\s+Promise\s*\(\s*(?:\(\s*[_$a-zA-Z][\w$]*\s*\)|[_$a-zA-Z][\w$]*|\(\s*\))\s*=>\s*setTimeout\s*\(/gms;
+
+function lineFromIndex(source, index) {
+  return source.slice(0, index).split("\n").length;
+}
 
 export function collectFiles(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -41,6 +47,7 @@ export function analyzeE2EHardRules({
 
   const specFiles = collectFiles(e2eDir);
   const timeoutViolations = [];
+  const promiseSleepViolations = [];
   const networkIdleViolations = [];
   const selectorAntiPatterns = [];
 
@@ -93,6 +100,15 @@ export function analyzeE2EHardRules({
         });
       }
     });
+
+    for (const match of source.matchAll(PROMISE_SLEEP_PATTERN)) {
+      const matchIndex = match.index ?? 0;
+      promiseSleepViolations.push({
+        file: path.relative(root, filePath),
+        line: lineFromIndex(source, matchIndex),
+        text: match[0].replace(/\s+/g, " ").trim(),
+      });
+    }
   }
 
   const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
@@ -108,6 +124,7 @@ export function analyzeE2EHardRules({
   return {
     specFileCount: specFiles.length,
     timeoutViolations,
+    promiseSleepViolations,
     networkIdleViolations,
     selectorAntiPatterns,
     newlyIntroduced,
@@ -126,6 +143,14 @@ function main() {
   if (result.timeoutViolations.length > 0) {
     console.error("E2E hard rule violation: waitForTimeout(...) found in spec files.");
     for (const violation of result.timeoutViolations) {
+      console.error(`- ${violation.file}:${violation.line} -> ${violation.text}`);
+    }
+    process.exit(1);
+  }
+
+  if (result.promiseSleepViolations.length > 0) {
+    console.error("E2E hard rule violation: Promise-wrapped setTimeout sleep found in spec files.");
+    for (const violation of result.promiseSleepViolations) {
       console.error(`- ${violation.file}:${violation.line} -> ${violation.text}`);
     }
     process.exit(1);
@@ -154,6 +179,7 @@ function main() {
 
   console.log(`E2E hard-rule check passed: scanned ${result.specFileCount} spec files.`);
   console.log(`- waitForTimeout violations: ${result.timeoutViolations.length}`);
+  console.log(`- Promise setTimeout sleep violations: ${result.promiseSleepViolations.length}`);
   console.log(`- networkidle wait violations: ${result.networkIdleViolations.length}`);
   console.log(`- selector anti-patterns (baseline-allowed): ${result.selectorAntiPatterns.length}`);
   console.log(`- new selector anti-patterns: ${result.newlyIntroduced.length}`);

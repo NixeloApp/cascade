@@ -49,6 +49,7 @@ function runCleanCase() {
 
     assert.equal(result.specFileCount, 1);
     assert.equal(result.timeoutViolations.length, 0);
+    assert.equal(result.promiseSleepViolations.length, 0);
     assert.equal(result.networkIdleViolations.length, 0);
     assert.equal(result.selectorAntiPatterns.length, 0);
     assert.equal(result.newlyIntroduced.length, 0);
@@ -83,6 +84,7 @@ function runBaselineAllowedSelectorCase() {
     });
 
     assert.equal(result.timeoutViolations.length, 0);
+    assert.equal(result.promiseSleepViolations.length, 0);
     assert.equal(result.networkIdleViolations.length, 0);
     assert.equal(result.selectorAntiPatterns.length, 2);
     assert.equal(result.newlyIntroduced.length, 0);
@@ -98,6 +100,7 @@ function runViolationCase() {
         "import { test } from '@playwright/test';",
         "test('violations', async ({ page }) => {",
         "  await page.waitForTimeout(1000);",
+        "  await new Promise((resolve) => setTimeout(resolve, 250));",
         "  await page.waitForLoadState('networkidle');",
         '  await page.locator("text=New").click();',
         "});",
@@ -114,6 +117,7 @@ function runViolationCase() {
     });
 
     assert.equal(result.timeoutViolations.length, 1);
+    assert.equal(result.promiseSleepViolations.length, 1);
     assert.equal(result.networkIdleViolations.length, 1);
     assert.equal(result.selectorAntiPatterns.length, 1);
     assert.equal(result.newlyIntroduced.length, 1);
