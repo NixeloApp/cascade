@@ -12,10 +12,8 @@
  */
 
 import { expect, test } from "@playwright/test";
+import { CONVEX_SITE_URL } from "./config";
 import { waitForOAuthRedirectComplete } from "./utils/wait-helpers";
-
-// Convex site URL for HTTP actions
-const CONVEX_SITE_URL = process.env.VITE_CONVEX_URL?.replace(".cloud", ".site") || "";
 
 test.describe("OAuth Security", () => {
   test.describe("Endpoint Availability", () => {
