@@ -223,3 +223,24 @@ Users must manually type emoji without visual feedback.
 
 **Next step (strict order)**
 - Continue to Priority `15` while waiting for manual accessibility QA results to close this todo.
+
+### 2026-03-02 (Priority 14, batch E)
+
+**Completed**
+- Revalidated this blocked todo status in strict-order flow; no additional code changes were required.
+
+**Validation**
+- `pnpm test src/components/ui/IconPicker.test.tsx src/components/CommentReactions.test.tsx` (`7 passed`)
+- Note: non-blocking React test warning (`act(...)`) was emitted from `IconPicker` tooltip updates; test run remained green.
+
+**Decisions**
+- Keep Priority `14` blocked until manual accessibility QA evidence is provided.
+
+**Blockers**
+- Unchanged manual QA requirements:
+  - WCAG contrast verification
+  - screen-reader testing
+  - rendered icon semantics review
+
+**Next step (strict order)**
+- Continue to Priority `15`.
