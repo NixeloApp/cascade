@@ -229,6 +229,7 @@ export async function buildSummaryLines(report, env = process.env) {
   const failed = Number(stats.unexpected || 0);
   const skipped = Number(stats.skipped || 0);
   const flaky = Number(stats.flaky || 0);
+  const interrupted = Number(stats.interrupted || 0);
   const executed = passed + failed;
   const errorRate = executed > 0 ? ((failed / executed) * 100).toFixed(2) : "0.00";
 
@@ -245,7 +246,7 @@ export async function buildSummaryLines(report, env = process.env) {
   lines.push("## E2E Heatmap");
   lines.push("");
   lines.push(
-    `- Totals: \`${passed} passed\`, \`${failed} failed\`, \`${skipped} skipped\`, \`${flaky} flaky\``,
+    `- Totals: \`${passed} passed\`, \`${failed} failed\`, \`${skipped} skipped\`, \`${flaky} flaky\`, \`${interrupted} interrupted\``,
   );
   lines.push(`- Executed: \`${executed}\` (pass + fail)`);
   lines.push(`- Error Rate: \`${errorRate}%\``);
@@ -257,11 +258,11 @@ export async function buildSummaryLines(report, env = process.env) {
     );
   }
   lines.push("");
-  lines.push("| Spec | Passed | Failed | Skipped | Flaky | TimedOut |");
-  lines.push("|------|--------|--------|---------|-------|----------|");
+  lines.push("| Spec | Passed | Failed | Skipped | Flaky | TimedOut | Interrupted |");
+  lines.push("|------|--------|--------|---------|-------|----------|-------------|");
   for (const row of rows) {
     lines.push(
-      `| \`${row.file}\` | ${row.passed} | ${row.failed} | ${row.skipped} | ${row.flaky} | ${row.timedOut} |`,
+      `| \`${row.file}\` | ${row.passed} | ${row.failed} | ${row.skipped} | ${row.flaky} | ${row.timedOut} | ${row.interrupted} |`,
     );
   }
   lines.push("");

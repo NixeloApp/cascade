@@ -42,6 +42,10 @@ async function runFallbackCase() {
 
   assert.match(output, /Clean-Run Checkpoint: `1\/5` \(fallback-local\)/);
   assert.match(output, /Streak Scan Window: `0\/100` completed CI runs/);
+  assert.match(
+    output,
+    /\| Spec \| Passed \| Failed \| Skipped \| Flaky \| TimedOut \| Interrupted \|/,
+  );
   assert.match(output, /\| `e2e\/auth\.spec\.ts` \| 2 \| 0 \| 1 \| 0 \| 0 \|/);
   assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
@@ -80,7 +84,7 @@ async function runFallbackFlakyCase() {
   const output = lines.join("\n");
 
   assert.match(output, /Clean-Run Checkpoint: `0\/5` \(fallback-local\)/);
-  assert.match(output, /- Totals: `2 passed`, `0 failed`, `1 skipped`, `1 flaky`/);
+  assert.match(output, /- Totals: `2 passed`, `0 failed`, `1 skipped`, `1 flaky`, `0 interrupted`/);
   assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
@@ -144,7 +148,26 @@ async function runHistoryDerivedFlakyReportCase() {
   const output = lines.join("\n");
 
   assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
-  assert.match(output, /- Totals: `2 passed`, `0 failed`, `1 skipped`, `1 flaky`/);
+  assert.match(output, /- Totals: `2 passed`, `0 failed`, `1 skipped`, `1 flaky`, `0 interrupted`/);
+}
+
+async function runInterruptedResultCase() {
+  const interruptedReport = JSON.parse(JSON.stringify(reportFixture));
+  interruptedReport.stats = {
+    ...interruptedReport.stats,
+    expected: 2,
+    unexpected: 0,
+    skipped: 1,
+    flaky: 0,
+    interrupted: 1,
+  };
+  interruptedReport.suites[0].specs[1].tests[0].results = [{ status: "interrupted" }];
+
+  const lines = await buildSummaryLines(interruptedReport, makeEnv());
+  const output = lines.join("\n");
+
+  assert.match(output, /- Totals: `2 passed`, `0 failed`, `1 skipped`, `0 flaky`, `1 interrupted`/);
+  assert.match(output, /\| `e2e\/issues\.spec\.ts` \| 0 \| 0 \| 0 \| 0 \| 0 \| 1 \|/);
 }
 
 async function runHistoryDerivedFailingFirstCase() {
@@ -450,6 +473,7 @@ await runFallbackFlakyCase();
 await runHistoryDerivedCase();
 await runHistoryDerivedDirtyReportCase();
 await runHistoryDerivedFlakyReportCase();
+await runInterruptedResultCase();
 await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
 await runInvalidScanLimitFallbackCase();

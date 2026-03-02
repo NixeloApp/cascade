@@ -1201,3 +1201,34 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
+### 2026-03-02 - Batch AU (completed interrupted-result heatmap visibility)
+
+- Decision: surface interrupted outcomes explicitly in summary output and lock the contract with deterministic tests.
+- Change:
+  - updated `scripts/ci/e2e-summary.mjs`:
+    - totals line now includes `interrupted` count from report stats
+    - per-spec heatmap table now includes `Interrupted` column
+  - updated `scripts/ci/test-e2e-summary.mjs`:
+    - header assertion updated for `Interrupted` column
+    - flaky totals assertions updated to include `0 interrupted`
+    - added `runInterruptedResultCase()`:
+      - injects interrupted status into fixture data
+      - validates totals include `1 interrupted`
+      - validates per-spec row reports interrupted count
+- Validation:
+  - `pnpm run e2e:summary:self-test` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle violations: `0`; selector baseline remains `0`)
+  - `pnpm exec biome check scripts/ci/e2e-summary.mjs scripts/ci/test-e2e-summary.mjs` => pass
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
