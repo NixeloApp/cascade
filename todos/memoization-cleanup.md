@@ -258,3 +258,29 @@ Top targets:
 
 **Next step (strict order)**
 - Proceed to Priority `16`: `todos/public-launch.md`.
+
+### 2026-03-02 (Priority 15, checkpoint refresh B)
+
+**Completed**
+- Re-ran memoization census during strict-order execution and captured post-closeout drift.
+
+**Validation**
+- Count snapshot from `src/`:
+  - total (`useMemo` + `useCallback` + `memo`): `45`
+  - `useMemo`: `2`
+  - `useCallback`: `33`
+  - `memo`: `10`
+- Highest concentration currently appears in:
+  - `src/components/Kanban/KanbanColumn.tsx` (`6`)
+  - `src/hooks/useDraftAutoSave.ts` (`4`)
+  - `src/hooks/useBoardHistory.ts` (`4`)
+  - `src/components/ui/Carousel.tsx` (`4`)
+
+**Decisions**
+- Keep Priority `15` operationally closed for the original cleanup pass, but record this as baseline drift requiring a future follow-up cleanup batch.
+
+**Blockers**
+- Unchanged: compiler-healthcheck remains externally network-blocked (`EAI_AGAIN`) for deeper confidence-driven removals.
+
+**Next step (strict order)**
+- Continue to Priority `16`: `todos/public-launch.md`.
