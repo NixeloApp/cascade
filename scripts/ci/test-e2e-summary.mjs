@@ -65,6 +65,25 @@ async function runFallbackDirtyCase() {
   assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
+async function runFallbackFlakyCase() {
+  const flakyReport = {
+    ...reportFixture,
+    stats: {
+      ...reportFixture.stats,
+      expected: 2,
+      unexpected: 0,
+      skipped: 1,
+      flaky: 1,
+    },
+  };
+  const lines = await buildSummaryLines(flakyReport, makeEnv());
+  const output = lines.join("\n");
+
+  assert.match(output, /Clean-Run Checkpoint: `0\/5` \(fallback-local\)/);
+  assert.match(output, /- Totals: `2 passed`, `0 failed`, `1 skipped`, `1 flaky`/);
+  assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
+}
+
 async function runHistoryDerivedCase() {
   const lines = await buildSummaryLines(
     reportFixture,
@@ -403,6 +422,7 @@ async function runStdoutSummaryWriteCase() {
 
 await runFallbackCase();
 await runFallbackDirtyCase();
+await runFallbackFlakyCase();
 await runHistoryDerivedCase();
 await runHistoryDerivedDirtyReportCase();
 await runHistoryDerivedFailingFirstCase();
