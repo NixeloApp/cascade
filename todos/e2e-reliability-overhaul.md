@@ -674,6 +674,32 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BN (completed RBAC fixture re-auth wait hardening)
+
+- Decision: remove shared fixture-level `domcontentloaded` waits in RBAC role setup and gate re-auth recovery on explicit dashboard route/app-shell readiness.
+- Change:
+  - updated `e2e/fixtures/rbac.fixture.ts`:
+    - replaced `waitForLoadState("domcontentloaded")` in admin/editor/viewer `*ProjectsPage` fixture setup
+    - after re-auth redirect to `/${orgSlug}/dashboard`, fixtures now assert:
+      - dashboard route (`expect(page).toHaveURL(/\/dashboard/)`)
+      - visible navigation landmark (`expect(page.getByRole("navigation")).toBeVisible()`)
+- Validation:
+  - `pnpm exec biome check e2e/fixtures/rbac.fixture.ts` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/force/xpath/selector-baseline violations: `0`)
+  - `pnpm exec playwright test e2e/rbac.spec.ts --reporter=line` => pass (`3 passed`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BL (completed RBAC role-flow domcontentloaded wait removal)
 
 - Decision: remove remaining `domcontentloaded` document-load waits from RBAC role-flow specs and rely on explicit route/UI outcome assertions.
