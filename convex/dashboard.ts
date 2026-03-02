@@ -11,12 +11,7 @@ import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedQuery } from "./customFunctions";
-import {
-  batchFetchIssues,
-  batchFetchProjects,
-  batchFetchUsers,
-  getUserName,
-} from "./lib/batchHelpers";
+import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import {
   DEFAULT_SEARCH_PAGE_SIZE,
@@ -294,36 +289,68 @@ export const getMyRecentActivity = authenticatedQuery({
       .filter(notDeleted)
       .take(MAX_PAGE_SIZE);
 
-    const projectIdSet = new Set(memberships.map((m) => m.projectId.toString()));
+    if (memberships.length === 0) {
+      return [];
+    }
 
-    // Get recent activity
-    const allActivity = await ctx.db.query("issueActivity").order("desc").take(MAX_ACTIVITY_ITEMS);
+    const projectIds = [...new Set(memberships.map((m) => m.projectId))];
 
-    // Batch fetch all issues referenced by activity
-    const issueIds = allActivity.map((a) => a.issueId);
-    const issueMap = await batchFetchIssues(ctx, issueIds);
+    const sampledIssuesPerProject = Math.min(
+      10,
+      Math.max(3, Math.ceil((limit * 3) / Math.max(projectIds.length, 1))),
+    );
 
-    // Filter to only activities for accessible issues
-    const accessibleActivity = allActivity.filter((activity) => {
-      const issue = issueMap.get(activity.issueId);
-      return issue?.projectId && projectIdSet.has(issue.projectId.toString());
-    });
+    // Scope issue sampling to member projects instead of scanning global activity.
+    const projectIssues = await Promise.all(
+      projectIds.map((projectId) =>
+        ctx.db
+          .query("issues")
+          .withIndex("by_project_deleted", (q) =>
+            q.eq("projectId", projectId).lt("isDeleted", true),
+          )
+          .order("desc")
+          .take(sampledIssuesPerProject),
+      ),
+    );
 
-    // Batch fetch projects and users for accessible activities
-    // Filter out undefined projectIds to prevent batch fetch failures
-    const projectIdsToFetch = accessibleActivity
-      .map((a) => issueMap.get(a.issueId)?.projectId)
-      .filter((id): id is Id<"projects"> => id !== undefined);
-    const userIds = accessibleActivity.map((a) => a.userId);
+    const candidateIssues = [
+      ...new Map(projectIssues.flat().map((issue) => [issue._id, issue])).values(),
+    ]
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, MAX_ACTIVITY_ITEMS);
 
+    if (candidateIssues.length === 0) {
+      return [];
+    }
+
+    const issueMap = new Map(candidateIssues.map((issue) => [issue._id, issue]));
+    const activityPerIssue = 5;
+
+    const activityByIssue = await Promise.all(
+      candidateIssues.map((issue) =>
+        ctx.db
+          .query("issueActivity")
+          .withIndex("by_issue", (q) => q.eq("issueId", issue._id))
+          .filter((q) => q.neq(q.field("isDeleted"), true))
+          .order("desc")
+          .take(activityPerIssue),
+      ),
+    );
+
+    const scopedActivity = activityByIssue
+      .flat()
+      .sort((a, b) => b._creationTime - a._creationTime)
+      .slice(0, MAX_ACTIVITY_ITEMS);
+
+    const userIds = scopedActivity.map((activity) => activity.userId);
     const [projectMap, userMap] = await Promise.all([
-      batchFetchProjects(ctx, projectIdsToFetch),
+      batchFetchProjects(ctx, projectIds),
       batchFetchUsers(ctx, userIds),
     ]);
 
     // Enrich activities
     const enrichedActivity = pruneNull(
-      accessibleActivity.map((activity) => {
+      scopedActivity.map((activity) => {
         const issue = issueMap.get(activity.issueId);
         if (!issue?.projectId) return null;
         const project = projectMap.get(issue.projectId);

@@ -545,5 +545,55 @@ describe("Dashboard", () => {
       expect(result.length).toBeLessThanOrEqual(5);
       await t.finishInProgressScheduledFunctions();
     });
+
+    it("should exclude activity from projects where user is not a member", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+      const otherUserId = await createTestUser(t, { name: "Other User" });
+
+      await asUser.mutation(api.organizations.addMember, {
+        organizationId,
+        userId: otherUserId,
+        role: "member",
+      });
+
+      const memberProjectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Member Project",
+        key: "MP",
+      });
+      const otherProjectId = await createProjectInOrganization(t, otherUserId, organizationId, {
+        name: "Other Project",
+        key: "OP",
+      });
+
+      const memberIssueId = await createTestIssue(t, memberProjectId, userId, {
+        title: "Visible activity issue",
+      });
+      const otherIssueId = await createTestIssue(t, otherProjectId, otherUserId, {
+        title: "Hidden activity issue",
+      });
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert("issueActivity", {
+          issueId: memberIssueId,
+          userId,
+          action: "commented",
+          newValue: "Visible comment",
+        });
+        await ctx.db.insert("issueActivity", {
+          issueId: otherIssueId,
+          userId: otherUserId,
+          action: "commented",
+          newValue: "Hidden comment",
+        });
+      });
+
+      const result = await asUser.query(api.dashboard.getMyRecentActivity, {});
+      const issueTitles = result.map((activity) => activity.issueTitle);
+
+      expect(issueTitles).toContain("Visible activity issue");
+      expect(issueTitles).not.toContain("Hidden activity issue");
+      await t.finishInProgressScheduledFunctions();
+    });
   });
 });

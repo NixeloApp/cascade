@@ -30,7 +30,7 @@ The primary bandwidth drains were identified as:
 ## ⏳ Pending Optimizations
 
 ### 1. Dashboard & Analytics
-- [ ] **`dashboard.getMyRecentActivity`**: Currently scans the global `issueActivity` table. Needs to be refactored to query only projects the user is a member of (requires adding a `projectId` index to `issueActivity` or indexing by project membership).
+- [x] **`dashboard.getMyRecentActivity`**: Refactored to avoid global `issueActivity` scan by sampling recent issues only from member projects, then querying `issueActivity` via `by_issue` for those scoped issue IDs.
 - [ ] **`analytics.getProjectAnalytics`**: Projecting fields or using pre-aggregated status counts to avoid fetching 1000 full issue documents.
 - [x] **`dashboard.getMyIssues`**: Ensure pagination is strictly enforced and only necessary fields are transferred if issues have large descriptions.
 
@@ -56,7 +56,7 @@ The primary bandwidth drains were identified as:
 
 ### Milestones
 
-- [ ] `S1` Finish dashboard/activity query scoping and payload minimization
+- [x] `S1` Finish dashboard/activity query scoping and payload minimization
 - [ ] `S1` Add query-level payload telemetry for top bandwidth endpoints
 - [ ] `S2` Introduce counters/stats table for high-frequency counts
 - [ ] `S2` Publish before/after bandwidth report from Convex dashboard metrics
@@ -92,3 +92,25 @@ The primary bandwidth drains were identified as:
   - none for this subtask.
 - Next Step:
   - tackle `dashboard.getMyRecentActivity` query scoping (remove global activity scan pattern) and/or analytics payload slimming.
+
+### 2026-03-02 - Batch B (`dashboard.getMyRecentActivity` membership-scoped activity pipeline)
+
+- Decision:
+  - avoid schema-wide churn by implementing project-membership-scoped activity retrieval using existing indexes (`issues.by_project_deleted`, `issueActivity.by_issue`) instead of global table scan.
+- Change:
+  - updated `convex/dashboard.ts` (`getMyRecentActivity`):
+    - removed global `ctx.db.query("issueActivity").order("desc").take(...)` scan.
+    - now:
+      - loads member projects from `projectMembers.by_user`,
+      - samples recent issues per member project via `issues.by_project_deleted`,
+      - queries activity per sampled issue via `issueActivity.by_issue`,
+      - merges/sorts/slices results and enriches with project/user metadata.
+  - updated `convex/dashboard.test.ts`:
+    - added regression proving activity from non-member projects is excluded.
+- Validation:
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/dashboard.test.ts` => pass (`30 passed`)
+- Blockers:
+  - none for this subtask.
+- Next Step:
+  - continue Priority `07` with analytics payload slimming (`analytics.getProjectAnalytics`) and/or query-level telemetry (`S1` telemetry milestone).
