@@ -644,6 +644,31 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BF (completed domcontentloaded wait removal in invite flow)
+
+- Decision: remove document-load gating from invite error-flow tests and rely on user-visible route state signals.
+- Change:
+  - updated `e2e/invite.spec.ts`:
+    - removed all `waitForLoadState("domcontentloaded")` usage in this spec (`3` call sites)
+    - converted loading/invalid transitional check to `expect.poll(...)` with explicit visible-state conditions
+    - preserved navigation assertion for "Go to Home" behavior
+- Validation:
+  - `pnpm exec biome check e2e/invite.spec.ts` => pass
+  - `pnpm exec playwright test e2e/invite.spec.ts --reporter=line` => pass (`4 passed`)
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force/xpath violations: `0`; selector baseline remains `0`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BE (completed domcontentloaded wait removal in error scenarios)
 
 - Decision: reduce load-state-driven flake surface in error-path coverage by replacing `waitForLoadState("domcontentloaded")` gates with explicit route-outcome assertions.
