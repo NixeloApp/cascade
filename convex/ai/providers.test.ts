@@ -89,8 +89,9 @@ describe("AI Providers", () => {
 
       await callAI(mockConfig, mockMessages);
 
-      const call = vi.mocked(fetchWithTimeout).mock.calls[0];
-      const body = JSON.parse(call[1]?.body as string);
+      expect(fetchWithTimeout).toHaveBeenCalledTimes(1);
+      const [url, options] = vi.mocked(fetchWithTimeout).mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(options.body as string);
 
       expect(body.system).toBe("You are a helpful assistant.");
       // System message should be filtered out of messages array
@@ -138,8 +139,9 @@ describe("AI Providers", () => {
 
       await callAI(configWithoutDefaults, mockMessages);
 
-      const call = vi.mocked(fetchWithTimeout).mock.calls[0];
-      const body = JSON.parse(call[1]?.body as string);
+      expect(fetchWithTimeout).toHaveBeenCalledTimes(1);
+      const [url, options] = vi.mocked(fetchWithTimeout).mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(options.body as string);
 
       expect(body.max_tokens).toBe(4096);
       expect(body.temperature).toBe(0.7);
