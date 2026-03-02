@@ -644,6 +644,30 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BG (completed domcontentloaded wait removal in issue-detail flow)
+
+- Decision: remove remaining document-load waits from direct issue-detail navigation coverage and trust deterministic page state assertions.
+- Change:
+  - updated `e2e/issue-detail-page.spec.ts`:
+    - removed all `waitForLoadState("domcontentloaded")` usage in this spec (`2` call sites)
+    - kept/relied on explicit UI assertions for issue key visibility, edit controls, and breadcrumb navigation outcomes
+- Validation:
+  - `pnpm exec biome check e2e/issue-detail-page.spec.ts` => pass
+  - `pnpm exec playwright test e2e/issue-detail-page.spec.ts --reporter=line` => pass (`3 passed`)
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force/xpath violations: `0`; selector baseline remains `0`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BF (completed domcontentloaded wait removal in invite flow)
 
 - Decision: remove document-load gating from invite error-flow tests and rely on user-visible route state signals.

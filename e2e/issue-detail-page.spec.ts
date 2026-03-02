@@ -78,9 +78,6 @@ test.describe("Issue Detail Page", () => {
     // Navigate directly to the issue detail page via URL
     await page.goto(`/${orgSlug}/issues/${issueKey}`);
 
-    // Wait for the page to load
-    await page.waitForLoadState("domcontentloaded");
-
     // Should show the issue detail layout
     // Look for issue key in the header
     await expect(page.getByText(issueKey)).toBeVisible();
@@ -117,7 +114,6 @@ test.describe("Issue Detail Page", () => {
 
     // Navigate to issue detail page
     await page.goto(`/${orgSlug}/issues/${issueKey}`);
-    await page.waitForLoadState("domcontentloaded");
 
     // Should have breadcrumb link back to project
     const breadcrumbLink = page.getByRole("link", { name: new RegExp(projectKey, "i") });
