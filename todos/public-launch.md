@@ -90,3 +90,27 @@
 **Next step**
 
 - Execute the first external launch-op batch: enable Discussions, create starter categories, and apply `good first issue` + `help wanted` labels to an initial triage set.
+
+### 2026-03-02 (Batch B)
+
+**Progress**
+
+- Added demo-video production script and recording checklist:
+  - `docs/launch/DEMO_VIDEO_SCRIPT.md`
+- Added channel-ready copy drafts and launch-blog outline:
+  - `docs/launch/CHANNEL_POST_DRAFTS.md`
+- Updated `README.md` links to include launch prep assets.
+
+**Decisions**
+
+- Kept channel tasks unchecked until posts are actually published, but prepared exact copy in-repo so launch execution is operationally simple.
+- Kept demo-video task unchecked until a recorded and published artifact exists.
+
+**Blockers**
+
+- Recording/publishing the demo video requires manual capture/edit/upload.
+- Channel posting requires manual account actions and moderation review windows.
+
+**Next step**
+
+- Run the first manual launch wave: record the demo, publish one channel post (HN or Reddit), then feed outcomes back into this todo with links and engagement notes.
