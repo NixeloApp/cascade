@@ -2,7 +2,7 @@
 
 > **Priority:** P0 (Highest)
 > **Effort:** Large
-> **Status:** Active
+> **Status:** Blocked (external PR CI run required)
 > **Last Audited:** 2026-03-02
 
 ---
@@ -1926,3 +1926,24 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
+### 2026-03-02 - Batch AX (blocked-state reconciliation + local revalidation)
+
+- Decision: classify Priority `01` as blocked until one real PR CI run is available, because the only remaining acceptance gap is `history-derived` behavior against live Actions history.
+- Change:
+  - updated todo status from `Active` to `Blocked (external PR CI run required)` to match actual remaining dependency.
+  - revalidated local E2E reliability guardrails before blocking:
+    - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; all hard-rule violations `0`; selector baseline `0`)
+    - `pnpm run e2e:hard-rules:self-test` => pass
+    - `pnpm run e2e:summary:self-test` => pass
+  - performed regex safety scan for banned patterns in `e2e/`, `scripts/ci`, and workflow glue; no active violations in spec/runtime paths (matches only in checker/self-test fixtures).
+- Blockers:
+  - one live PR CI run with artifact merge + step summary output is still required to prove `history-derived` checkpoint behavior against real GitHub Actions data.
+
+### Next Step (strictly next)
+
+- Trigger one PR CI run and capture evidence from `E2E Summary` job:
+  - checkpoint line reports `history-derived`
+  - streak/checkpoint value matches expected recent clean-run history
+  - scan-window accounting and truncation note behavior are correct
+  - merged heatmap table renders in step summary from blob artifacts
