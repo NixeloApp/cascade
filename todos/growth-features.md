@@ -267,3 +267,21 @@ Unblock requirements:
 **Next step**
 
 - Proceed to Priority `18` while waiting for Outlook integration prerequisites.
+
+### 2026-03-02 (Batch I)
+
+**Progress**
+
+- Reconfirmed Priority `17` remains externally blocked with Outlook integration as the only open item.
+
+**Decisions**
+
+- Kept this todo blocked without additional in-repo changes until Microsoft prerequisites are provided.
+
+**Blockers**
+
+- Unchanged external Microsoft OAuth app setup and credential provisioning requirements.
+
+**Next step**
+
+- Continue strict-order execution to Priority `18` while waiting for Outlook unblock inputs.
