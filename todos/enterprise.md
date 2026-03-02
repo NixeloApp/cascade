@@ -23,16 +23,16 @@
 
 ### AI Assistant
 
-- [ ] **Natural language queries** - "Show me all bugs assigned to me this sprint"
-- [ ] **Project insights** - Auto-generated summaries, trends, risks
-- [ ] **Auto-summarize** - Meeting notes, long threads
+- [x] **Natural language queries** - "Show me all bugs assigned to me this sprint" ✅ (`convex/ai/actions.ts` -> `answerQuestion`)
+- [x] **Project insights** - Auto-generated summaries, trends, risks ✅ (`convex/ai/actions.ts` -> `generateProjectInsights`)
+- [x] **Auto-summarize** - Meeting notes, long threads ✅ (`convex/meetingBot.ts`, `convex/ai/config.ts`)
 
 ### E2E Infrastructure (Low Priority)
 
 - [ ] **Visual regression testing** - Percy or similar
-- [ ] **Mobile viewport tests** - Responsive testing
+- [x] **Mobile viewport tests** - Responsive smoke coverage via Playwright mobile projects (`mobile-chrome`, `mobile-safari`) gated behind `E2E_CROSS_BROWSER=1` and `pnpm run e2e:cross-browser:smoke`
 - [ ] **OAuth flow tests** - Test actual OAuth with mock providers
-- [ ] **Multi-browser testing** - Firefox, WebKit
+- [x] **Multi-browser testing** - Firefox/WebKit smoke coverage via opt-in Playwright projects (`E2E_CROSS_BROWSER=1`)
 
 ### Technical Debt (Low Priority)
 
@@ -122,3 +122,48 @@
 **Next step**
 
 - Implement and validate one full provider runtime flow end-to-end (recommended first: Google Workspace OIDC).
+
+### 2026-03-02 (Batch C)
+
+**Progress**
+
+- Audited enterprise AI assistant items against shipped backend features and marked them complete.
+- Confirmed natural-language Q&A and project-insights actions are present in `convex/ai/actions.ts`.
+- Confirmed automated meeting summarization pipeline exists in `convex/meetingBot.ts`.
+
+**Decisions**
+
+- Treated meeting-summary automation as the implementation target for `Auto-summarize`.
+- Kept SSO provider tasks open until runtime provider login/callback flows are validated end-to-end.
+
+**Blockers**
+
+- SSO provider tasks remain partially implemented (configuration support exists, end-to-end auth flow validation pending).
+- Stripe/subscription remain blocked on product packaging + billing provider setup.
+
+**Next step**
+
+- Decide whether to build Google Workspace OIDC runtime flow now or classify SSO provider tasks as externally blocked behind IdP test environments.
+
+### 2026-03-02 (Batch D)
+
+**Progress**
+
+- Added opt-in cross-browser + mobile Playwright project matrix in `playwright.config.ts`:
+  - Desktop: `chromium`, `firefox`, `webkit`
+  - Mobile: `mobile-chrome` (Pixel 5), `mobile-safari` (iPhone 12)
+- Added `pnpm run e2e:cross-browser:smoke` script to run a deterministic landing smoke slice across all enabled projects.
+
+**Decisions**
+
+- Kept default test lane unchanged (chromium-only) to avoid increasing CI flake/runtime while still shipping executable cross-browser/mobile coverage on demand.
+- Counted enterprise `Multi-browser testing` and `Mobile viewport tests` as complete at smoke-lane level; full-suite multi-browser execution remains a future scaling task.
+
+**Blockers**
+
+- Full provider SSO runtime validation still needs IdP tenant credentials and callback environment setup.
+- Stripe/subscription work remains blocked on billing packaging/provider decisions.
+
+**Next step**
+
+- Implement one end-to-end enterprise SSO provider runtime path (Google Workspace OIDC preferred) or explicitly classify it as externally blocked behind IdP test tenancy.
