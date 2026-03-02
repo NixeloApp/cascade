@@ -5,5 +5,5 @@ All feature specifications and roadmap items are in [`/todos/`](./todos/README.m
 ## Quick Links
 
 - [Current Focus](./todos/README.md#current-focus)
-- [Active MVP Tasks](./todos/README.md#active-mvp)
-- [Post-MVP Roadmap](./todos/README.md#deferred-post-mvp)
+- [Active Todos](./todos/README.md#active-todos)
+- [Open Jules Issues](./todos/README.md#jules-issues-open)
