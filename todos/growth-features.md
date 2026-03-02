@@ -47,7 +47,7 @@
 ## Execution Plan (Updated 2026-03-02)
 
 **Owner:** `@unassigned`  
-**Target Window:** Sprint `S3-S5`  
+**Target Window:** Sprint `S6-S8` (post-launch growth track)  
 **Effort:** Medium-Large
 
 ### Milestones

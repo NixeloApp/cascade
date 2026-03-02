@@ -19,6 +19,14 @@ Central index for active roadmap and issue todos.
 
 ---
 
+## Priority Lanes
+
+- `Now (P0/P1 security + core):` Jules open issues, `multi-level-views`, `bandwidth_optimization`, `oauth-monitoring-finalization`, `feature-gaps`, `consistency-tracking`
+- `Next (P2):` `agency-mvp`, `rich-text-description-followup`, `sidebar-display-limits`, `emoji-overhaul`, `memoization-cleanup`
+- `Later (P3/P4):` `public-launch`, `growth-features`, `enterprise`, `uptime-monitoring`
+
+---
+
 ## Active Todos
 
 | File | Status | Focus |

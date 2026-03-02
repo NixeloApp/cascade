@@ -41,7 +41,7 @@ Top targets:
 ## Execution Plan (Updated 2026-03-02)
 
 **Owner:** `@unassigned`  
-**Target Window:** Sprint `S2-S4`  
+**Target Window:** Sprint `S5-S6`  
 **Effort:** Medium
 
 ### Milestones

@@ -153,7 +153,7 @@ Option B: External worker (Cloudflare Worker, Vercel Edge) that calls Convex
 ## Execution Plan (Updated 2026-03-02)
 
 **Owner:** `@unassigned`  
-**Target Window:** Sprint `S4-S7`  
+**Target Window:** Sprint `S9+` (future feature)  
 **Effort:** Large
 
 ### MVP Boundary

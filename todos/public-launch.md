@@ -40,7 +40,7 @@
 ## Execution Plan (Updated 2026-03-02)
 
 **Owner:** `@unassigned`  
-**Target Window:** Sprint `S3-S4`  
+**Target Window:** Sprint `S7+` (post-MVP launch phase)  
 **Effort:** Medium
 
 ### Milestones

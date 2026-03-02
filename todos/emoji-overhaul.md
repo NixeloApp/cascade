@@ -78,7 +78,7 @@ Users must manually type emoji without visual feedback.
 ## Execution Plan (Updated 2026-03-02)
 
 **Owner:** `@unassigned`  
-**Target Window:** Sprint `S2-S3`  
+**Target Window:** Sprint `S4-S5`  
 **Effort:** Medium
 
 ### Milestones

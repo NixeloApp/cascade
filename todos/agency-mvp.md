@@ -182,7 +182,7 @@ clientPortalTokens: defineTable({
 ## Execution Plan (Updated 2026-03-02)
 
 **Owner:** `@unassigned`  
-**Target Window:** Sprint `S1-S4`  
+**Target Window:** Sprint `S2-S5`  
 **Effort:** Large
 
 ### Milestones
