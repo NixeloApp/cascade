@@ -14,7 +14,7 @@ Improve comment editor to match document editor quality.
 
 - [x] Add Markdown preview toggle to comment textarea ✅ 2026-02-24
 - [x] Improve `CommentRenderer.tsx` Markdown rendering ✅ 2026-02-24
-- [ ] Add emoji picker to comments (can reuse from emoji-overhaul)
+- [x] Add emoji picker to comments (can reuse from emoji-overhaul)
 - [ ] Add file attachment support inline with comments
 
 ### Current State
@@ -22,7 +22,7 @@ Improve comment editor to match document editor quality.
 - Mentions with `@[name](id)` syntax work ✅
 - Preview toggle in MentionInput ✅
 - Inline markdown: **bold**, *italic*, `code`, ~~strikethrough~~, [links](url) ✅
-- No emoji picker (pending)
+- Emoji picker in comment input toolbar ✅
 - No inline attachments (pending)
 
 ---
@@ -106,3 +106,25 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
 ### Definition of Done
 
 - Comment experience and Slack integration meet baseline production usability.
+
+---
+
+## Progress Log
+
+### 2026-03-02 - Batch A (comment emoji picker)
+
+- Decision:
+  - complete the first `S1` rich-text parity gap by adding an inline emoji picker directly in `MentionInput` (comment composer), reusing lightweight existing UI primitives.
+- Change:
+  - updated `src/components/MentionInput.tsx`:
+    - added emoji popover trigger in the write/preview toolbar.
+    - added common emoji palette (`😀`, `👍`, `❤️`, `🔥`, `🎉`, `✅`, `🚀`, `👀`).
+    - implemented cursor-aware emoji insertion into textarea content with focus/caret restoration.
+    - kept mention parsing behavior intact after emoji insertion.
+- Validation:
+  - `pnpm run typecheck` => pass
+  - `pnpm test src/components/CommentReactions.test.tsx` => pass (`2 passed`)
+- Blockers:
+  - none for this subtask.
+- Next Step:
+  - finish `S1` by adding inline file attachment support in comments.
