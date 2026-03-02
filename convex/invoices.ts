@@ -4,7 +4,6 @@
  * Base CRUD for organization-scoped invoices.
  */
 
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -79,39 +78,6 @@ function calculateTotals(lineItems: NormalizedLineItem[], tax?: number) {
 
 function formatCurrency(amount: number): string {
   return `$${amount.toFixed(2)}`;
-}
-
-function buildInvoiceSummaryText(invoice: {
-  number: string;
-  issueDate: number;
-  dueDate: number;
-  lineItems: Array<{ description: string; quantity: number; rate: number; amount: number }>;
-  subtotal: number;
-  tax?: number;
-  total: number;
-  notes?: string;
-}) {
-  const lines = [
-    `Invoice ${invoice.number}`,
-    `Issued: ${new Date(invoice.issueDate).toISOString().slice(0, 10)}`,
-    `Due: ${new Date(invoice.dueDate).toISOString().slice(0, 10)}`,
-    "",
-    "Line Items:",
-    ...invoice.lineItems.map(
-      (line, index) =>
-        `${index + 1}. ${line.description} - ${line.quantity.toFixed(2)}h x ${formatCurrency(line.rate)} = ${formatCurrency(line.amount)}`,
-    ),
-    "",
-    `Subtotal: ${formatCurrency(invoice.subtotal)}`,
-    `Tax: ${formatCurrency(invoice.tax ?? 0)}`,
-    `Total: ${formatCurrency(invoice.total)}`,
-  ];
-
-  if (invoice.notes) {
-    lines.push("", `Notes: ${invoice.notes}`);
-  }
-
-  return lines.join("\n");
 }
 
 type InvoiceSummary = Pick<
