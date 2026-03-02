@@ -35,6 +35,7 @@ interface LabelsManagerProps {
 
 interface LabelFormData {
   name: string;
+  description: string;
   color: string;
   groupId: Id<"labelGroups"> | null;
   [key: string]: unknown;
@@ -51,6 +52,7 @@ const DEFAULT_LABEL_COLOR = "#6366F1"; // matches --color-brand-ring
 
 const DEFAULT_LABEL_FORM: LabelFormData = {
   name: "",
+  description: "",
   color: DEFAULT_LABEL_COLOR,
   groupId: null,
 };
@@ -103,6 +105,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         await updateLabel({
           id: labelForm.editingId as Id<"labels">,
           name: labelForm.formData.name.trim(),
+          description: labelForm.formData.description.trim() || null,
           color: labelForm.formData.color,
           groupId: labelForm.formData.groupId,
         });
@@ -111,6 +114,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         await createLabel({
           projectId,
           name: labelForm.formData.name.trim(),
+          description: labelForm.formData.description.trim() || undefined,
           color: labelForm.formData.color,
           groupId: labelForm.formData.groupId ?? undefined,
         });
@@ -180,6 +184,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
     labelForm.loadForEdit({
       _id: label._id,
       name: label.name,
+      description: label.description ?? "",
       color: label.color,
       groupId: label.groupId ?? null,
     });
@@ -381,6 +386,11 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                                 <Typography variant="inlineCode" color="tertiary">
                                   {label.color}
                                 </Typography>
+                                {label.description && (
+                                  <Typography variant="small" color="secondary">
+                                    {label.description}
+                                  </Typography>
+                                )}
                               </Flex>
 
                               <Flex gap="sm">
@@ -468,6 +478,13 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
               value={labelForm.formData.color}
               onChange={(color) => labelForm.updateField("color", color)}
               label="Color"
+            />
+
+            <Input
+              label="Description (optional)"
+              value={labelForm.formData.description}
+              onChange={(e) => labelForm.updateField("description", e.target.value)}
+              placeholder="Shown on board label hover"
             />
 
             {realGroups.length > 0 && (

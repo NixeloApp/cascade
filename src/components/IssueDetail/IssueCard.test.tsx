@@ -136,6 +136,25 @@ describe("IssueCard", () => {
     expect(tooltipText).toBeInTheDocument();
   });
 
+  it("should display label description on hover", async () => {
+    const user = userEvent.setup();
+    const issueWithDescriptions = {
+      ...mockIssue,
+      labels: [
+        { name: "backend", color: "#3B82F6", description: "Backend/API related work" },
+        { name: "urgent", color: "#EF4444" },
+      ],
+    };
+
+    render(<IssueCard issue={issueWithDescriptions} status="todo" />);
+
+    const label = screen.getByText("backend");
+    await user.hover(label);
+
+    const tooltipText = await screen.findByRole("tooltip", { name: "Backend/API related work" });
+    expect(tooltipText).toBeInTheDocument();
+  });
+
   it("should render metadata icons but hide them from accessibility tree (no redundant tab stops)", () => {
     render(<IssueCard issue={mockIssue} status="todo" />);
 

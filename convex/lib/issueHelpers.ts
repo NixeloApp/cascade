@@ -51,6 +51,7 @@ export interface EpicInfo {
 export interface LabelInfo {
   name: string;
   color: string;
+  description?: string;
 }
 
 /**
@@ -184,15 +185,22 @@ export async function enrichIssue(ctx: QueryCtx, issue: Doc<"issues">): Promise<
     const neededLabels = new Set(issue.labels);
     const labels = await fetchLabelsForProject(ctx, issue.projectId, neededLabels);
 
-    const labelMap = new Map<string, string>();
+    const labelMap = new Map<string, { color: string; description?: string }>();
     for (const label of labels) {
-      labelMap.set(label.name, label.color);
+      labelMap.set(label.name, {
+        color: label.color,
+        description: label.description,
+      });
     }
 
-    labelInfos = issue.labels.map((name) => ({
-      name,
-      color: labelMap.get(name) ?? "#6b7280", // Default gray if not found
-    }));
+    labelInfos = issue.labels.map((name) => {
+      const info = labelMap.get(name);
+      return {
+        name,
+        color: info?.color ?? "#6b7280", // Default gray if not found
+        description: info?.description,
+      };
+    });
   }
 
   return {

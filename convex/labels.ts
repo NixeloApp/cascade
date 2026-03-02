@@ -20,6 +20,7 @@ async function createLabelImpl(
   args: {
     name: string;
     color: string;
+    description?: string;
     groupId?: Id<"labelGroups">;
   },
 ) {
@@ -52,6 +53,7 @@ async function createLabelImpl(
     projectId: ctx.projectId,
     name: args.name,
     color: args.color,
+    description: args.description,
     groupId: args.groupId,
     displayOrder: maxOrder + 1,
     createdBy: ctx.userId,
@@ -67,6 +69,7 @@ export const create = projectEditorMutation({
   args: {
     name: v.string(),
     color: v.string(),
+    description: v.optional(v.string()),
     groupId: v.optional(v.id("labelGroups")),
   },
   returns: v.object({ labelId: v.id("labels") }),
@@ -79,6 +82,7 @@ export const createLabel = projectEditorMutation({
   args: {
     name: v.string(),
     color: v.string(),
+    description: v.optional(v.string()),
     groupId: v.optional(v.id("labelGroups")),
   },
   returns: v.object({
@@ -114,6 +118,7 @@ export const update = authenticatedMutation({
     id: v.id("labels"),
     name: v.optional(v.string()),
     color: v.optional(v.string()),
+    description: v.optional(v.union(v.string(), v.null())),
     groupId: v.optional(v.union(v.id("labelGroups"), v.null())),
   },
   returns: v.object({ success: v.literal(true) }),
@@ -152,6 +157,7 @@ export const update = authenticatedMutation({
     const updates: Partial<typeof label> = {};
     if (args.name !== undefined) updates.name = args.name;
     if (args.color !== undefined) updates.color = args.color;
+    if (args.description !== undefined) updates.description = args.description ?? undefined;
     if (args.groupId !== undefined) updates.groupId = args.groupId ?? undefined;
 
     await ctx.db.patch(args.id, updates);

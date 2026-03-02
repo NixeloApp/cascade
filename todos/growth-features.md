@@ -29,7 +29,7 @@
 
 ### Board Enhancements (P3)
 
-- [ ] **Label descriptions** - Show description on hover
+- [x] **Label descriptions** - Show description on hover ✅ (`convex/labels.ts`, `src/components/LabelsManager.tsx`, `src/components/IssueDetail/IssueCard.tsx`)
 - [x] **Query language** - Simple `status:done priority:high` syntax ✅ (`src/lib/board-query-language.ts`, `src/components/KanbanBoard.tsx`, `src/components/FilterBar.tsx`)
 - [x] **Swimlanes** - Group board rows by assignee/epic ✅ (`src/components/Kanban/SwimlanSelector.tsx`, `src/lib/swimlane-utils.ts`)
 - [x] **WIP limits** - Warn when column exceeds limit ✅ (`src/components/Kanban/KanbanColumn.tsx`, `convex/schema.ts`)
@@ -168,3 +168,26 @@
 **Next step**
 
 - Implement `Label descriptions` hover UX on board cards/chips (next unfinished board enhancement).
+
+### 2026-03-02 (Batch E)
+
+**Progress**
+
+- Added optional `description` support to labels in backend schema and mutations.
+- Extended label management UI to create/edit descriptions.
+- Added hover tooltips for visible board-card labels, using description text when present.
+- Added backend and component test coverage for label description behavior.
+
+**Decisions**
+
+- Implemented descriptions as an optional label field rather than a separate metadata table.
+- Used existing tooltip primitives on board cards to keep UX consistent with current issue metadata hover affordances.
+
+**Blockers**
+
+- Outlook integration remains not started.
+- Remaining growth items: `Diff view` and `Auto-cycles`.
+
+**Next step**
+
+- Continue with `Documents / Diff view` as the next unfinished growth feature.

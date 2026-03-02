@@ -680,6 +680,7 @@ const applicationTables = {
     projectId: v.id("projects"),
     groupId: v.optional(v.id("labelGroups")),
     name: v.string(),
+    description: v.optional(v.string()),
     color: v.string(), // Hex: "#3B82F6"
     displayOrder: v.optional(v.number()),
     createdBy: v.id("users"),
