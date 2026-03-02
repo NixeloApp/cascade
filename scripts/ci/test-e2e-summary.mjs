@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildSummaryLines } from "./e2e-summary.mjs";
+import { buildSummaryLines, run as runSummary } from "./e2e-summary.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const reportFixturePath = path.join(__dirname, "fixtures", "e2e-summary-report-mock.json");
@@ -163,6 +163,28 @@ async function runInvalidMockHistoryFileCase() {
   }
 }
 
+async function runMissingReportFileCase() {
+  await assert.rejects(
+    () => runSummary(path.join(__dirname, "fixtures", "does-not-exist-report.json"), makeEnv()),
+    /E2E summary report file not found/,
+  );
+}
+
+async function runInvalidReportFileCase() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-summary-invalid-report-"));
+  const invalidPath = path.join(tempDir, "invalid-report.json");
+  fs.writeFileSync(invalidPath, "{not-json");
+
+  try {
+    await assert.rejects(
+      () => runSummary(invalidPath, makeEnv()),
+      /E2E summary report file is not valid JSON/,
+    );
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
 await runFallbackCase();
 await runFallbackDirtyCase();
 await runHistoryDerivedCase();
@@ -171,4 +193,6 @@ await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
 await runMissingMockHistoryFileCase();
 await runInvalidMockHistoryFileCase();
+await runMissingReportFileCase();
+await runInvalidReportFileCase();
 console.log("e2e-summary self-test passed");
