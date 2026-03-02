@@ -16,7 +16,7 @@ import {
   projectEditorMutation,
 } from "../customFunctions";
 import { validate } from "../lib/constrainedValidators";
-import { conflict, validation } from "../lib/errors";
+import { conflict, forbidden, validation } from "../lib/errors";
 import { syncProjectIssueStats } from "../lib/projectIssueStats";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
@@ -353,18 +353,30 @@ export const addComment = issueViewerMutation({
   args: {
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
+    attachments: v.optional(v.array(v.id("_storage"))),
   },
   returns: v.object({ commentId: v.id("issueComments") }),
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
     const now = Date.now();
     const mentions = args.mentions || [];
+    const attachments = args.attachments || [];
+
+    if (attachments.length > 0) {
+      const issueAttachments = new Set((ctx.issue.attachments || []).map((id) => id.toString()));
+      for (const storageId of attachments) {
+        if (!issueAttachments.has(storageId.toString())) {
+          throw forbidden("Attachment does not belong to this issue");
+        }
+      }
+    }
 
     const commentId = await ctx.db.insert("issueComments", {
       issueId: ctx.issue._id,
       authorId: ctx.userId,
       content: args.content,
       mentions,
+      attachments,
       updatedAt: now,
     });
 

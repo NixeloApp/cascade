@@ -9,7 +9,8 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import { useState } from "react";
+import { Loader2, Paperclip, X } from "lucide-react";
+import { useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
@@ -27,11 +28,32 @@ interface IssueCommentsProps {
   projectId: Id<"projects">;
 }
 
+interface PendingAttachment {
+  storageId: Id<"_storage">;
+  filename: string;
+}
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+  "text/plain",
+  "text/csv",
+  "application/zip",
+  "application/json",
+];
+
 /** Comment thread for an issue with reactions and mention support. */
 export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   const [newComment, setNewComment] = useState("");
   const [mentions, setMentions] = useState<Id<"users">[]>([]);
+  const [commentAttachments, setCommentAttachments] = useState<PendingAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const currentUser = useQuery(api.users.getCurrent);
 
   const {
@@ -41,6 +63,80 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   } = usePaginatedQuery(api.issues.listComments, { issueId }, { initialNumItems: 50 });
 
   const addComment = useMutation(api.issues.addComment);
+  const generateUploadUrl = useMutation(api.attachments.generateUploadUrl);
+  const attachToIssue = useMutation(api.attachments.attachToIssue);
+  const removeAttachment = useMutation(api.attachments.removeAttachment);
+
+  const handleAttachmentUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setIsUploadingAttachment(true);
+    try {
+      const uploadedAttachments: PendingAttachment[] = [];
+
+      for (const file of Array.from(files)) {
+        if (file.size > MAX_FILE_SIZE) {
+          throw new Error(`"${file.name}" is too large (max 10MB).`);
+        }
+
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          throw new Error(`"${file.name}" has an unsupported file type.`);
+        }
+
+        const uploadUrl = await generateUploadUrl();
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Upload failed for "${file.name}".`);
+        }
+
+        const { storageId } = (await uploadResponse.json()) as { storageId: Id<"_storage"> };
+        const attachResult = await attachToIssue({
+          issueId,
+          storageId,
+          filename: file.name,
+          contentType: file.type,
+          size: file.size,
+        });
+
+        if (!attachResult.success) {
+          throw new Error(attachResult.error);
+        }
+
+        uploadedAttachments.push({ storageId, filename: file.name });
+      }
+
+      setCommentAttachments((prev) => [...prev, ...uploadedAttachments]);
+      showSuccess(
+        uploadedAttachments.length === 1
+          ? `Attached "${uploadedAttachments[0].filename}".`
+          : `${uploadedAttachments.length} files attached.`,
+      );
+    } catch (error) {
+      showError(error, "Failed to attach file");
+    } finally {
+      setIsUploadingAttachment(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemovePendingAttachment = async (storageId: Id<"_storage">) => {
+    try {
+      await removeAttachment({ issueId, storageId });
+      setCommentAttachments((prev) =>
+        prev.filter((attachment) => attachment.storageId !== storageId),
+      );
+      showSuccess("Attachment removed");
+    } catch (error) {
+      showError(error, "Failed to remove attachment");
+    }
+  };
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
@@ -51,10 +147,15 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
         issueId,
         content: newComment,
         mentions: mentions.length > 0 ? mentions : undefined,
+        attachments:
+          commentAttachments.length > 0
+            ? commentAttachments.map((attachment) => attachment.storageId)
+            : undefined,
       });
 
       setNewComment("");
       setMentions([]);
+      setCommentAttachments([]);
       showSuccess("Comment added");
     } catch (error) {
       showError(error, "Failed to add comment");
@@ -125,6 +226,22 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
 
                     {/* Comment Text with Mentions */}
                     <CommentRenderer content={comment.content} />
+                    {(comment.attachments?.length || 0) > 0 && (
+                      <Stack gap="xs" className="mt-3">
+                        <Typography variant="caption" color="tertiary">
+                          Attachments
+                        </Typography>
+                        <Stack gap="xs">
+                          {comment.attachments?.map((storageId) => (
+                            <CommentAttachmentLink
+                              key={storageId}
+                              issueId={issueId}
+                              storageId={storageId}
+                            />
+                          ))}
+                        </Stack>
+                      </Stack>
+                    )}
 
                     {/* Comment Reactions */}
                     <CommentReactions
@@ -163,12 +280,107 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
           onMentionsChange={setMentions}
           placeholder="Add a comment... Type @ to mention someone"
         />
-        <Flex justify="end">
-          <Button onClick={handleSubmit} isLoading={isSubmitting} disabled={!newComment.trim()}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ALLOWED_TYPES.join(",")}
+          multiple
+          className="hidden"
+          onChange={(event) => handleAttachmentUpload(event.target.files)}
+          disabled={isUploadingAttachment}
+        />
+        {commentAttachments.length > 0 && (
+          <Stack gap="xs">
+            {commentAttachments.map((attachment) => (
+              <Card
+                key={attachment.storageId}
+                padding="sm"
+                className="bg-ui-bg-soft border border-ui-border"
+              >
+                <Flex align="center" justify="between" gap="sm">
+                  <Flex align="center" gap="sm" className="min-w-0">
+                    <Paperclip className="w-4 h-4 text-ui-text-secondary shrink-0" />
+                    <Typography variant="small" className="truncate">
+                      {attachment.filename}
+                    </Typography>
+                  </Flex>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemovePendingAttachment(attachment.storageId)}
+                    aria-label={`Remove ${attachment.filename}`}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </Flex>
+              </Card>
+            ))}
+          </Stack>
+        )}
+        <Flex justify="between" align="center" gap="sm">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingAttachment}
+          >
+            {isUploadingAttachment ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Paperclip className="w-4 h-4 mr-2" />
+                Attach File
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            isLoading={isSubmitting}
+            disabled={!newComment.trim() || isUploadingAttachment}
+          >
             Add Comment
           </Button>
         </Flex>
       </Stack>
     </Stack>
   );
+}
+
+function CommentAttachmentLink({
+  storageId,
+  issueId,
+}: {
+  storageId: Id<"_storage">;
+  issueId: Id<"issues">;
+}) {
+  const url = useQuery(api.attachments.getAttachment, { storageId, issueId });
+
+  if (url === undefined || url === null) {
+    return null;
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 text-sm text-ui-text-secondary hover:text-brand hover:underline"
+    >
+      <Paperclip className="w-3.5 h-3.5" />
+      {getFilenameFromUrl(url)}
+    </a>
+  );
+}
+
+function getFilenameFromUrl(url: string): string {
+  try {
+    const urlObject = new URL(url);
+    const parts = urlObject.pathname.split("/");
+    return decodeURIComponent(parts[parts.length - 1] || "file");
+  } catch {
+    return "file";
+  }
 }

@@ -561,6 +561,7 @@ const applicationTables = {
     authorId: v.id("users"),
     content: v.string(),
     mentions: v.array(v.id("users")),
+    attachments: v.optional(v.array(v.id("_storage"))),
     updatedAt: v.number(),
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),

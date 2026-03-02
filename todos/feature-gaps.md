@@ -15,7 +15,7 @@ Improve comment editor to match document editor quality.
 - [x] Add Markdown preview toggle to comment textarea ✅ 2026-02-24
 - [x] Improve `CommentRenderer.tsx` Markdown rendering ✅ 2026-02-24
 - [x] Add emoji picker to comments (can reuse from emoji-overhaul)
-- [ ] Add file attachment support inline with comments
+- [x] Add file attachment support inline with comments ✅ 2026-03-02
 
 ### Current State
 
@@ -23,7 +23,7 @@ Improve comment editor to match document editor quality.
 - Preview toggle in MentionInput ✅
 - Inline markdown: **bold**, *italic*, `code`, ~~strikethrough~~, [links](url) ✅
 - Emoji picker in comment input toolbar ✅
-- No inline attachments (pending)
+- Inline comment attachments (upload + per-comment render) ✅
 
 ---
 
@@ -94,7 +94,7 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
 
 ### Milestones
 
-- [ ] `S1` Complete rich-text comment parity (emoji picker + inline attachments)
+- [x] `S1` Complete rich-text comment parity (emoji picker + inline attachments) ✅ 2026-03-02
 - [ ] `S2` Slack outbound notifications MVP (workspace connect + event delivery)
 - [ ] `S3` Slash command + link unfurling follow-up
 
@@ -128,3 +128,28 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
   - none for this subtask.
 - Next Step:
   - finish `S1` by adding inline file attachment support in comments.
+
+### 2026-03-02 - Batch B (inline comment attachments)
+
+- Decision:
+  - complete the second `S1` rich-text parity gap by allowing comment-scoped file uploads directly in the comment composer and rendering attachments inline for each comment.
+- Change:
+  - updated `convex/schema.ts`:
+    - added optional `attachments: Id<"_storage">[]` on `issueComments`.
+  - updated `convex/issues/mutations.ts`:
+    - extended `api.issues.addComment` with optional `attachments`.
+    - added guard that rejects attachment IDs not already linked to the issue (`Attachment does not belong to this issue`).
+    - persisted attachment IDs on comment records.
+  - updated `src/components/IssueComments.tsx`:
+    - added inline file upload action in comment composer via `api.attachments.generateUploadUrl` + `api.attachments.attachToIssue`.
+    - added pending attachment list with per-file removal before submit.
+    - submitted comment now includes attachment IDs.
+    - rendered per-comment attachment links inline under comment content.
+- Validation:
+  - `pnpm exec biome check --write convex/schema.ts convex/issues/mutations.ts convex/issues/mutations.test.ts src/components/IssueComments.tsx` => pass (non-blocking complexity warning in `IssueComments` upload helper)
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/issues/mutations.test.ts` => pass (`24 passed`)
+- Blockers:
+  - `convex-test` cannot currently generate valid `_storage` IDs for direct unit tests of comment-attachment ID membership checks; backend guard remains covered by runtime logic and type validation but lacks a dedicated storage-backed unit test.
+- Next Step:
+  - start `S2` Slack outbound notifications MVP with OAuth app setup + callback handler scope definition.
