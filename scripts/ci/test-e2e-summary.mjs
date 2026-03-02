@@ -2,6 +2,7 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -128,10 +129,46 @@ async function runScanLimitTruncationCase() {
   assert.match(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
+async function runMissingMockHistoryFileCase() {
+  await assert.rejects(
+    () =>
+      buildSummaryLines(
+        reportFixture,
+        makeEnv({
+          E2E_SUMMARY_MOCK_HISTORY_FILE: path.join(__dirname, "fixtures", "does-not-exist.json"),
+        }),
+      ),
+    /E2E summary mock history file not found/,
+  );
+}
+
+async function runInvalidMockHistoryFileCase() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-summary-invalid-"));
+  const invalidPath = path.join(tempDir, "invalid.json");
+  fs.writeFileSync(invalidPath, "{not-json");
+
+  try {
+    await assert.rejects(
+      () =>
+        buildSummaryLines(
+          reportFixture,
+          makeEnv({
+            E2E_SUMMARY_MOCK_HISTORY_FILE: invalidPath,
+          }),
+        ),
+      /E2E summary mock history file is not valid JSON/,
+    );
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
 await runFallbackCase();
 await runFallbackDirtyCase();
 await runHistoryDerivedCase();
 await runHistoryDerivedDirtyReportCase();
 await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
+await runMissingMockHistoryFileCase();
+await runInvalidMockHistoryFileCase();
 console.log("e2e-summary self-test passed");

@@ -11,6 +11,24 @@ function usage() {
   console.error("Usage: node scripts/ci/e2e-summary.mjs <merged-report.json>");
 }
 
+function readJsonFile(filePath, label) {
+  let raw;
+  try {
+    raw = fs.readFileSync(filePath, "utf8");
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      throw new Error(`${label} not found: ${filePath}`);
+    }
+    throw new Error(`${label} unreadable: ${filePath}`);
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error(`${label} is not valid JSON: ${filePath}`);
+  }
+}
+
 function ensure(byFile, file) {
   if (!byFile.has(file)) {
     byFile.set(file, {
@@ -79,7 +97,7 @@ export async function computeConsecutiveCleanRuns(env = process.env) {
   const scanLimit = parseScanLimit(env);
   const mockHistoryPath = env.E2E_SUMMARY_MOCK_HISTORY_FILE;
   if (mockHistoryPath) {
-    const mock = JSON.parse(fs.readFileSync(mockHistoryPath, "utf8"));
+    const mock = readJsonFile(mockHistoryPath, "E2E summary mock history file");
     const runs = (mock.workflow_runs || []).slice(0, scanLimit);
     const jobsByRun = mock.jobs_by_run || {};
     let streak = 0;
@@ -236,7 +254,7 @@ export async function buildSummaryLines(report, env = process.env) {
 }
 
 export async function run(reportPath, env = process.env) {
-  const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+  const report = readJsonFile(reportPath, "E2E summary report file");
   const lines = await buildSummaryLines(report, env);
   appendSummary(lines, env);
 }
