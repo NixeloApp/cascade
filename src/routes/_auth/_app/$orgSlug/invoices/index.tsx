@@ -60,6 +60,7 @@ function InvoicesListPage() {
               value={status}
               onChange={(event) => setStatus(event.target.value as InvoiceStatusFilter)}
               className="h-10 rounded-lg border border-ui-border bg-ui-bg px-3 text-sm"
+              aria-label="Invoice status filter"
             >
               <option value="all">All statuses</option>
               <option value="draft">Draft</option>

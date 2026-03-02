@@ -91,7 +91,7 @@ function NotificationsPage() {
     {},
     { initialNumItems: 100 },
   );
-  const allNotifications = notificationsRaw as NotificationWithActor[];
+  const allNotifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
   // Archived notifications
   const archivedNotifications = useQuery(api.notifications.listArchived, {});

@@ -198,10 +198,12 @@ async function generateInvoiceNumber(
   ctx: Pick<QueryCtx, "db">,
   organizationId: Id<"organizations">,
 ) {
+  // Use bounded query to count invoices - cap at reasonable limit for sequence calculation
+  const MAX_INVOICE_COUNT = 10000;
   const invoices = await ctx.db
     .query("invoices")
     .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-    .collect();
+    .take(MAX_INVOICE_COUNT);
 
   const sequence = invoices.length + 1;
   const year = new Date().getUTCFullYear();
@@ -693,6 +695,21 @@ export const remove = organizationAdminMutation({
     const invoice = await ctx.db.get(args.invoiceId);
     if (!invoice || invoice.organizationId !== ctx.organizationId) {
       throw notFound("invoice", args.invoiceId);
+    }
+
+    // Clear linked time entries before deleting invoice
+    const allTimeEntryIds = invoice.lineItems.flatMap((item) => item.timeEntryIds ?? []);
+    if (allTimeEntryIds.length > 0) {
+      const now = Date.now();
+      await Promise.all(
+        allTimeEntryIds.map((entryId) =>
+          ctx.db.patch(entryId, {
+            billed: false,
+            invoiceId: undefined,
+            updatedAt: now,
+          }),
+        ),
+      );
     }
 
     await ctx.db.delete(args.invoiceId);

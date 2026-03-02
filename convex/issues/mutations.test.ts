@@ -462,7 +462,6 @@ describe("Issue Mutations", () => {
       expect(commentId).toBeDefined();
       await t.finishInProgressScheduledFunctions();
     });
-
   });
 
   describe("bulk operations", () => {

@@ -299,15 +299,21 @@ export const getBacklogIssues = workspaceQuery({
     const rawLimit = args.limit ?? 200;
     const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
 
+    // Fetch more issues than the limit to account for filtering
+    // This ensures we return enough backlog items even after filtering
+    const FETCH_MULTIPLIER = 3;
+    const fetchLimit = Math.min(limit * FETCH_MULTIPLIER, BOUNDED_LIST_LIMIT * 10);
+
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
       .filter(notDeleted)
-      .take(limit);
+      .take(fetchLimit);
 
     return issues
       .filter((issue) => issue.sprintId === undefined && issue.status !== "done")
-      .sort((a, b) => b.updatedAt - a.updatedAt);
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, limit);
   },
 });
 
@@ -436,11 +442,13 @@ export const getCrossTeamDependencies = workspaceQuery({
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .slice(0, limit);
 
+    // Batch load teams - they're already unique IDs from the Set
     const teamIds = [
       ...new Set(
         dependencies.flatMap((dependency) => [dependency.fromTeamId, dependency.toTeamId]),
       ),
     ];
+    // Batch fetch all teams in parallel (already deduped)
     const teams = await Promise.all(teamIds.map((teamId) => ctx.db.get(teamId)));
     const teamNameById = new Map(
       teams
@@ -607,23 +615,27 @@ export const getWorkspaceMembers = workspaceQuery({
       .filter(notDeleted)
       .take(MAX_PAGE_SIZE);
 
-    // Fetch user details for each membership
-    const members = await Promise.all(
-      memberships.map(async (membership) => {
-        const user = await ctx.db.get(membership.userId);
-        return {
-          ...membership,
-          user: user
-            ? {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                image: user.image,
-              }
-            : null,
-        };
-      }),
+    // Batch fetch user details to avoid N+1 queries
+    const userIds = [...new Set(memberships.map((m) => m.userId))];
+    const users = await Promise.all(userIds.map((userId) => ctx.db.get(userId)));
+    const userMap = new Map(
+      users.filter((u): u is NonNullable<typeof u> => u !== null).map((u) => [u._id, u]),
     );
+
+    const members = memberships.map((membership) => {
+      const user = userMap.get(membership.userId);
+      return {
+        ...membership,
+        user: user
+          ? {
+              _id: user._id,
+              name: user.name,
+              email: user.email,
+              image: user.image,
+            }
+          : null,
+      };
+    });
 
     return members;
   },

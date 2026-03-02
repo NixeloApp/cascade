@@ -89,7 +89,7 @@ export function NotificationCenter() {
     {},
     { initialNumItems: 50 }, // Fetch more to allow client-side filtering
   );
-  const allNotifications = notificationsRaw as NotificationWithActor[];
+  const allNotifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
   // Filter notifications based on selected filter
   const typeFilter = FILTER_TYPE_MAP[filter];

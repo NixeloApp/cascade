@@ -52,11 +52,12 @@ export const create = organizationAdminMutation({
 export const list = organizationQuery({
   args: {},
   handler: async (ctx) => {
+    const MAX_CLIENTS = 1000;
     return await ctx.db
       .query("clients")
       .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
       .order("desc")
-      .collect();
+      .take(MAX_CLIENTS);
   },
 });
 

@@ -167,7 +167,7 @@ export function MentionInput({
   };
 
   const insertEmoji = (emoji: string) => {
-    const selectionStart = textareaRef.current?.selectionStart ?? cursorPosition ?? value.length;
+    const selectionStart = textareaRef.current?.selectionStart ?? value.length;
     const selectionEnd = textareaRef.current?.selectionEnd ?? selectionStart;
     const newValue = value.slice(0, selectionStart) + emoji + value.slice(selectionEnd);
 

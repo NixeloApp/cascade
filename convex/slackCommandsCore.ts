@@ -240,11 +240,20 @@ async function assignIssueFromCommand(
     return { ok: false, message: "You do not have permission to assign this issue." };
   }
 
-  const users = await ctx.db.query("users").take(BOUNDED_LIST_LIMIT);
+  // Restrict assignee lookup to project members only (security fix)
+  const projectMembers = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_project", (q) => q.eq("projectId", issue.projectId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  const memberUserIds = new Set(projectMembers.map((m) => m.userId));
+  const users = await Promise.all(Array.from(memberUserIds).map((userId) => ctx.db.get(userId)));
+
   const targetName = assigneeName.toLowerCase();
-  const assignee = users.find((user) => user.name?.toLowerCase() === targetName);
+  const assignee = users.find((user) => user?.name?.toLowerCase() === targetName);
   if (!assignee) {
-    return { ok: false, message: `User "${assigneeName}" not found.` };
+    return { ok: false, message: `User "${assigneeName}" not found in project members.` };
   }
 
   await ctx.db.patch(issue._id, {

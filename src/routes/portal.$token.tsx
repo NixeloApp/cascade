@@ -25,10 +25,24 @@ function ClientPortalEntryPage() {
     | undefined;
 
   useEffect(() => {
+    let isMounted = true;
+
     void (async () => {
-      const validated = await validateToken({ token });
-      setValidatedClientName(validated?.clientName ?? null);
+      try {
+        const validated = await validateToken({ token });
+        if (isMounted) {
+          setValidatedClientName(validated?.clientName ?? null);
+        }
+      } catch {
+        if (isMounted) {
+          setValidatedClientName(null);
+        }
+      }
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [token, validateToken]);
 
   return (

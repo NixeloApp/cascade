@@ -1,14 +1,16 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { efficientCount } from "./boundedQueries";
-import { MAX_SPRINT_ISSUES } from "./queryLimits";
+
+// Larger limit for project-level issue counts (distinct from sprint limits)
+const MAX_PROJECT_ISSUES = 50000;
 
 async function computeProjectIssueCount(ctx: QueryCtx | MutationCtx, projectId: Id<"projects">) {
   return await efficientCount(
     ctx.db
       .query("issues")
       .withIndex("by_project_deleted", (q) => q.eq("projectId", projectId).lt("isDeleted", true)),
-    MAX_SPRINT_ISSUES,
+    MAX_PROJECT_ISSUES,
   );
 }
 

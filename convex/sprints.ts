@@ -26,7 +26,8 @@ function getNextSprintName(currentName: string): string {
   }
   const currentNumber = Number.parseInt(match[1], 10);
   const nextNumber = Number.isNaN(currentNumber) ? 2 : currentNumber + 1;
-  return `${currentName.slice(0, match.index)}${nextNumber}${currentName.slice((match.index ?? 0) + match[1].length)}`.trim();
+  const index = match.index ?? currentName.lastIndexOf(match[1]);
+  return `${currentName.slice(0, index)}${nextNumber}${currentName.slice(index + match[1].length)}`.trim();
 }
 
 /**

@@ -146,11 +146,13 @@ export async function setupGoogleOAuthMock(
 }
 
 /**
- * Clears all Google OAuth route mocks
+ * Clears Google OAuth route mocks specifically (not all routes)
  */
 export async function clearGoogleOAuthMock(page: Page): Promise<void> {
-  await page.context().unrouteAll({ behavior: "wait" });
-  await page.unrouteAll({ behavior: "wait" });
+  const context = page.context();
+  // Unroute only the Google OAuth patterns we registered
+  await context.unroute("**/google/callback**");
+  await context.unroute("**/*", (route) => route.request().url().includes(GOOGLE_OAUTH_HOST));
 }
 
 /**

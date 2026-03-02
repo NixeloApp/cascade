@@ -231,10 +231,11 @@ export const getIssuesForToken = query({
       return [];
     }
 
+    const MAX_PORTAL_ISSUES = 1000;
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .collect();
+      .take(MAX_PORTAL_ISSUES);
 
     return issues
       .filter((issue) => issue.isDeleted !== true)
@@ -294,10 +295,11 @@ export const listTokensByClient = organizationAdminMutation({
   handler: async (ctx, args) => {
     await assertClientForOrganization(ctx.db, ctx.organizationId, args.clientId);
 
+    const MAX_PORTAL_TOKENS = 100;
     const tokens = await ctx.db
       .query("clientPortalTokens")
       .withIndex("by_client", (q) => q.eq("clientId", args.clientId))
-      .collect();
+      .take(MAX_PORTAL_TOKENS);
 
     return tokens
       .filter((token) => token.organizationId === ctx.organizationId)

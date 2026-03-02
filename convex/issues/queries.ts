@@ -786,13 +786,17 @@ export const search = authenticatedQuery({
     }
 
     // Enforce per-project access across all search paths before applying search filters.
+    // Parallelize access checks for better performance with many projects.
     const projectIds = [...new Set(issues.map((issue) => issue.projectId))];
-    const accessibleProjects = new Set<Id<"projects">>();
-    for (const projectId of projectIds) {
-      if (await canAccessProject(ctx, projectId as Id<"projects">, ctx.userId)) {
-        accessibleProjects.add(projectId as Id<"projects">);
-      }
-    }
+    const accessResults = await Promise.all(
+      projectIds.map(async (projectId) => ({
+        projectId: projectId as Id<"projects">,
+        canAccess: await canAccessProject(ctx, projectId as Id<"projects">, ctx.userId),
+      })),
+    );
+    const accessibleProjects = new Set<Id<"projects">>(
+      accessResults.filter((result) => result.canAccess).map((result) => result.projectId),
+    );
 
     // Apply advanced filters in memory after access scoping.
     let filteredIssues = issues.filter(
