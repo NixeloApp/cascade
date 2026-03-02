@@ -461,10 +461,33 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - Streak fidelity depends on Actions API visibility/permissions and completed run history depth (`per_page=20`).
 
+### 2026-03-02 - Batch R (completed CI summary script extraction + local validation)
+
+- Decision: move workflow-inline E2E summary logic into a versioned script for local verification, easier review, and lower CI YAML complexity.
+- Change:
+  - added `scripts/ci/e2e-summary.mjs`
+    - reads merged Playwright JSON report
+    - computes per-spec heatmap (pass/fail/skip/flaky/timedOut)
+    - computes clean-run streak from CI history when API context is available
+    - emits checkpoint mode (`history-derived` or `fallback-local`)
+    - writes to `$GITHUB_STEP_SUMMARY` when present, else stdout for local runs
+  - updated `.github/workflows/ci.yml`:
+    - `Publish E2E Heatmap And Trend Checkpoint` now calls:
+      - `node scripts/ci/e2e-summary.mjs e2e-merged.json`
+    - removed large inline heredoc Node script from workflow
+- Validation:
+  - local script run:
+    - `node scripts/ci/e2e-summary.mjs /tmp/playwright-e2e.clean.json`
+    - output: `151 passed`, `0 failed`, `4 skipped`, `0 flaky`, checkpoint `1/5 (fallback-local)` and full per-spec table
+  - workflow lint check:
+    - `pnpm run biome:check -- .github/workflows/ci.yml` (passes with existing unrelated repo warnings only)
+- Blockers:
+  - history-derived mode still requires a real CI context to verify end-to-end behavior against Actions API and step summary rendering.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
-  - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + summary rendering)
+  - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + script execution + summary rendering)
   - adjust history window/query strategy if streak truncation is observed on high-frequency branches
   - keep CI per-spec heatmap summary as single source of truth for streak/heatmap visibility
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement

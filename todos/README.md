@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI now merges shard blob reports and computes history-derived clean-run checkpoint (with local fallback) in summary output; latest full-suite baseline remains clean (`151/0/4`) |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI summary logic is now extracted to `scripts/ci/e2e-summary.mjs` and locally validated against merged JSON artifacts; latest baseline remains clean (`151/0/4`) |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): CI workflow now includes an `e2e-summary` job that merges shard blob reports into `e2e-merged.json`, publishes per-spec heatmap metrics to GitHub step summary, and computes clean-run streak from recent `ci.yml` run history via Actions API (`history-derived`, with `fallback-local` mode when API is unavailable). Latest baseline remains `151 passed`, `0 failed`, `4 skipped` (`155 total`). Next is live PR validation of summary/merge behavior.
+- Priority `01` update (2026-03-02): `e2e-summary` now calls versioned script `scripts/ci/e2e-summary.mjs` (instead of inline workflow code), preserving merged heatmap + streak checkpoint behavior and enabling local validation (`node scripts/ci/e2e-summary.mjs /tmp/playwright-e2e.clean.json`). Latest baseline remains `151 passed`, `0 failed`, `4 skipped` (`155 total`). Next is live PR validation of artifact merge + summary rendering in CI context.
