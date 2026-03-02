@@ -87,17 +87,17 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/wiki`
 Route: `/:orgSlug/calendar`
 
 - [x] Add `organizationId` to calendarEvents (blocker)
-- [ ] Aggregate events from all workspaces
+- [x] Aggregate events from all workspaces
 - [ ] Color-code by workspace/team
-- [ ] Add filtering controls
+- [x] Add filtering controls
 
 ### 8. Workspace Calendar
 
 Route: `/:orgSlug/workspaces/:workspaceSlug/calendar`
 
 - [x] Add `workspaceId` to calendarEvents (blocker)
-- [ ] Filter events by workspaceId
-- [ ] Add to workspace sidebar
+- [x] Filter events by workspaceId
+- [x] Add to workspace sidebar
 
 ### 9. Team Calendar
 
@@ -268,3 +268,33 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - none for starting `S5`.
 - Next Step:
   - start `S5` by adding org/workspace-scoped calendar queries + routes with filter controls.
+
+### 2026-03-02 - Batch F (partial S5: org/workspace calendar scope + filters)
+
+- Decision:
+  - implement scoped calendar aggregation with explicit backend queries first, then wire route-level filters for organization/workspace views.
+- Change:
+  - updated `convex/calendarEvents.ts`:
+    - added `listByWorkspaceDateRange` (workspace scope, workspace-member/org-admin access, optional team filter).
+    - added `listByOrganizationDateRange` (organization scope, organization-member access, optional workspace/team filters).
+  - updated `src/components/Calendar/CalendarView.tsx`:
+    - added scope props (`organizationId`, `workspaceId`, `teamId`, `projectId`) and query-source switching so calendar data is scope-driven.
+  - added routes:
+    - `src/routes/_auth/_app/$orgSlug/calendar.tsx` (organization calendar with workspace/team filters).
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar.tsx` (workspace calendar with team filter).
+  - updated navigation:
+    - added `ROUTES.calendar` and `ROUTES.workspaces.calendar` in `convex/shared/routes.ts`.
+    - switched sidebar “General” nav to organization calendar.
+    - added workspace `Calendar` tab in workspace layout.
+  - updated tests:
+    - `convex/calendarEvents.test.ts` now covers workspace-scope visibility and organization workspace/team filters.
+    - `src/config/routes.test.ts` now covers org/workspace calendar route constants.
+- Validation:
+  - `pnpm run generate:routes` => pass
+  - `pnpm exec biome check convex/calendarEvents.ts convex/calendarEvents.test.ts convex/shared/routes.ts src/config/routes.test.ts src/components/App/AppSidebar.tsx src/components/Calendar/CalendarView.tsx src/routes/_auth/_app/$orgSlug/calendar.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route.tsx src/routeTree.gen.ts` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/calendarEvents.test.ts src/config/routes.test.ts` => pass (`63 passed`)
+- Blockers:
+  - `S5` is not fully complete yet: workspace/team color-coding in organization calendar is still pending.
+- Next Step:
+  - finish `S5` by implementing deterministic workspace/team color-coding in org/workspace calendar rendering.

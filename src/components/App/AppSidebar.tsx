@@ -75,8 +75,6 @@ export function AppSidebar() {
   const documents = documentsResult?.documents;
   const workspaces = useQuery(api.workspaces.list, { organizationId });
   const teams = useQuery(api.teams.getOrganizationTeams, { organizationId });
-  const myProjects = useQuery(api.dashboard.getMyProjects);
-  const defaultProject = myProjects?.[0];
 
   // Group teams by workspace
   const teamsByWorkspace = (() => {
@@ -264,19 +262,16 @@ export function AppSidebar() {
                 onClick={handleNavClick}
                 data-tour="nav-issues"
               />
-              {/* Calendar - Links to first project's calendar */}
-              {defaultProject && (
-                <NavItem
-                  to={ROUTES.projects.calendar.path}
-                  params={{ orgSlug, key: defaultProject.key }}
-                  icon={Calendar}
-                  label="General"
-                  isActive={isActive("/calendar")}
-                  isCollapsed={showCollapsed}
-                  onClick={handleNavClick}
-                  data-tour="nav-calendar"
-                />
-              )}
+              <NavItem
+                to={ROUTES.calendar.path}
+                params={{ orgSlug }}
+                icon={Calendar}
+                label="General"
+                isActive={isActive("/calendar")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+                data-tour="nav-calendar"
+              />
 
               {/* Products Section */}
               {!showCollapsed && (

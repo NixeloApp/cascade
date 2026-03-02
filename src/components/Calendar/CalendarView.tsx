@@ -38,6 +38,8 @@ function getDateRange(date: Date, mode: Mode): { startDate: number; endDate: num
  * Main calendar view with day/week/month modes and event management.
  */
 interface CalendarViewProps {
+  organizationId?: Id<"organizations">;
+  workspaceId?: Id<"workspaces">;
   projectId?: Id<"projects">;
   teamId?: Id<"teams">;
 }
@@ -45,7 +47,12 @@ interface CalendarViewProps {
 /**
  * Main calendar view with day/week/month modes and event management.
  */
-export function CalendarView({ projectId, teamId }: CalendarViewProps): React.ReactElement {
+export function CalendarView({
+  organizationId,
+  workspaceId,
+  projectId,
+  teamId,
+}: CalendarViewProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>("week");
   const [date, setDate] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -55,13 +62,33 @@ export function CalendarView({ projectId, teamId }: CalendarViewProps): React.Re
 
   const userScopedEvents = useQuery(
     api.calendarEvents.listByDateRange,
-    teamId
+    teamId || workspaceId || organizationId
       ? "skip"
       : {
           startDate,
           endDate,
           projectId,
         },
+  );
+  const organizationScopedEvents = useQuery(
+    api.calendarEvents.listByOrganizationDateRange,
+    organizationId && !workspaceId && !teamId
+      ? {
+          organizationId,
+          startDate,
+          endDate,
+        }
+      : "skip",
+  );
+  const workspaceScopedEvents = useQuery(
+    api.calendarEvents.listByWorkspaceDateRange,
+    workspaceId && !teamId
+      ? {
+          workspaceId,
+          startDate,
+          endDate,
+        }
+      : "skip",
   );
   const teamScopedEvents = useQuery(
     api.calendarEvents.listByTeamDateRange,
@@ -74,7 +101,13 @@ export function CalendarView({ projectId, teamId }: CalendarViewProps): React.Re
       : "skip",
   );
 
-  const rawEvents = teamId ? teamScopedEvents : userScopedEvents;
+  const rawEvents = teamId
+    ? teamScopedEvents
+    : workspaceId
+      ? workspaceScopedEvents
+      : organizationId
+        ? organizationScopedEvents
+        : userScopedEvents;
   const events: CalendarEvent[] = (rawEvents ?? []).map(toCalendarEvent);
 
   function handleEventClick(event: CalendarEvent): void {

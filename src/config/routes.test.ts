@@ -50,6 +50,11 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.dashboard.build("acme")).toBe("/acme/dashboard");
     });
 
+    it("should build organization calendar route with orgSlug", () => {
+      expect(ROUTES.calendar.path).toBe("/$orgSlug/calendar");
+      expect(ROUTES.calendar.build("acme")).toBe("/acme/calendar");
+    });
+
     it("should build time tracking route with orgSlug", () => {
       expect(ROUTES.timeTracking.path).toBe("/$orgSlug/time-tracking");
       expect(ROUTES.timeTracking.build("acme")).toBe("/acme/time-tracking");
@@ -129,6 +134,13 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.workspaces.board.path).toBe("/$orgSlug/workspaces/$workspaceSlug/board");
       expect(ROUTES.workspaces.board.build("acme", "engineering")).toBe(
         "/acme/workspaces/engineering/board",
+      );
+    });
+
+    it("should have correct workspace calendar route", () => {
+      expect(ROUTES.workspaces.calendar.path).toBe("/$orgSlug/workspaces/$workspaceSlug/calendar");
+      expect(ROUTES.workspaces.calendar.build("acme", "engineering")).toBe(
+        "/acme/workspaces/engineering/calendar",
       );
     });
 

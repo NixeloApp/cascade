@@ -449,6 +449,131 @@ describe("calendarEvents", () => {
     });
   });
 
+  describe("organization/workspace scoped calendar queries", () => {
+    it("should return workspace events for workspace members", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t, { name: "Owner" });
+      const memberId = await createTestUser(t, { name: "Member" });
+      const asOwner = asAuthenticatedUser(t, ownerId);
+      const asMember = asAuthenticatedUser(t, memberId);
+
+      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, ownerId);
+      await addUserToOrganization(t, organizationId, memberId, ownerId);
+      await asOwner.mutation(api.workspaces.addMember, {
+        workspaceId,
+        userId: memberId,
+        role: "member",
+      });
+
+      const now = Date.now();
+      await t.run(async (ctx) => {
+        await ctx.db.insert("calendarEvents", {
+          title: "Workspace Sync",
+          startTime: now + DAY,
+          endTime: now + DAY + HOUR,
+          allDay: false,
+          eventType: "meeting",
+          organizerId: ownerId,
+          attendeeIds: [],
+          organizationId,
+          workspaceId,
+          teamId,
+          status: "confirmed",
+          isRecurring: false,
+          updatedAt: now,
+        });
+      });
+
+      const events = await asMember.query(api.calendarEvents.listByWorkspaceDateRange, {
+        workspaceId,
+        startDate: now,
+        endDate: now + 3 * DAY,
+      });
+
+      expect(events).toHaveLength(1);
+      expect(events[0].title).toBe("Workspace Sync");
+      expect(events[0].workspaceId).toBe(workspaceId);
+    });
+
+    it("should apply organization filters for workspace and team", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t, { name: "Owner" });
+      const memberId = await createTestUser(t, { name: "Member" });
+      const asOwner = asAuthenticatedUser(t, ownerId);
+      const asMember = asAuthenticatedUser(t, memberId);
+
+      const { organizationId, workspaceId, teamId } = await createOrganizationAdmin(t, ownerId);
+      await addUserToOrganization(t, organizationId, memberId, ownerId);
+
+      const { workspaceId: secondWorkspaceId } = await asOwner.mutation(api.workspaces.create, {
+        organizationId,
+        name: "Second Workspace",
+        slug: "second-workspace",
+      });
+      const { teamId: secondTeamId } = await asOwner.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId: secondWorkspaceId,
+        name: "Second Team",
+        isPrivate: false,
+      });
+
+      const now = Date.now();
+      await t.run(async (ctx) => {
+        await ctx.db.insert("calendarEvents", {
+          title: "Primary Workspace Event",
+          startTime: now + DAY,
+          endTime: now + DAY + HOUR,
+          allDay: false,
+          eventType: "meeting",
+          organizerId: ownerId,
+          attendeeIds: [],
+          organizationId,
+          workspaceId,
+          teamId,
+          status: "confirmed",
+          isRecurring: false,
+          updatedAt: now,
+        });
+        await ctx.db.insert("calendarEvents", {
+          title: "Secondary Workspace Event",
+          startTime: now + DAY,
+          endTime: now + DAY + HOUR,
+          allDay: false,
+          eventType: "meeting",
+          organizerId: ownerId,
+          attendeeIds: [],
+          organizationId,
+          workspaceId: secondWorkspaceId,
+          teamId: secondTeamId,
+          status: "confirmed",
+          isRecurring: false,
+          updatedAt: now,
+        });
+      });
+
+      const filteredByWorkspace = await asMember.query(
+        api.calendarEvents.listByOrganizationDateRange,
+        {
+          organizationId,
+          startDate: now,
+          endDate: now + 3 * DAY,
+          workspaceId,
+        },
+      );
+      expect(filteredByWorkspace).toHaveLength(1);
+      expect(filteredByWorkspace[0].title).toBe("Primary Workspace Event");
+
+      const filteredByTeam = await asMember.query(api.calendarEvents.listByOrganizationDateRange, {
+        organizationId,
+        startDate: now,
+        endDate: now + 3 * DAY,
+        teamId: secondTeamId,
+      });
+      expect(filteredByTeam).toHaveLength(1);
+      expect(filteredByTeam[0].title).toBe("Secondary Workspace Event");
+    });
+  });
+
   describe("listMine", () => {
     it("should return user's events with default date range", async () => {
       const t = convexTest(schema, modules);

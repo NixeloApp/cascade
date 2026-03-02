@@ -12,10 +12,11 @@ import { internalQuery, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { forbidden, notFound, validation } from "./lib/errors";
-import { isOrganizationAdmin } from "./lib/organizationAccess";
+import { isOrganizationAdmin, isOrganizationMember } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { getTeamRole } from "./lib/teamAccess";
 import { DAY, WEEK } from "./lib/timeUtils";
+import { isWorkspaceMember } from "./lib/workspaceAccess";
 import { type CalendarEventColor, calendarEventColors, calendarStatuses } from "./validators";
 
 /**
@@ -352,6 +353,85 @@ export const listByTeamDateRange = authenticatedQuery({
       .take(MAX_PAGE_SIZE);
 
     const sortedEvents = events.sort((a, b) => a.startTime - b.startTime);
+    return await enrichEventsWithOrganizers(ctx, sortedEvents);
+  },
+});
+
+// List workspace events for a date range (workspace members + org admins)
+export const listByWorkspaceDateRange = authenticatedQuery({
+  args: {
+    workspaceId: v.id("workspaces"),
+    startDate: v.number(),
+    endDate: v.number(),
+    teamId: v.optional(v.id("teams")),
+  },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db.get(args.workspaceId);
+    if (!workspace) {
+      return [];
+    }
+
+    const [workspaceMember, orgAdmin] = await Promise.all([
+      isWorkspaceMember(ctx, args.workspaceId, ctx.userId),
+      isOrganizationAdmin(ctx, workspace.organizationId, ctx.userId),
+    ]);
+
+    if (!(workspaceMember || orgAdmin)) {
+      return [];
+    }
+
+    const events = await ctx.db
+      .query("calendarEvents")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("startTime"), args.startDate),
+          q.lte(q.field("startTime"), args.endDate),
+        ),
+      )
+      .take(MAX_PAGE_SIZE);
+
+    const filteredEvents = args.teamId
+      ? events.filter((event) => event.teamId === args.teamId)
+      : events;
+    const sortedEvents = filteredEvents.sort((a, b) => a.startTime - b.startTime);
+    return await enrichEventsWithOrganizers(ctx, sortedEvents);
+  },
+});
+
+// List organization events for a date range (organization members)
+export const listByOrganizationDateRange = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    startDate: v.number(),
+    endDate: v.number(),
+    workspaceId: v.optional(v.id("workspaces")),
+    teamId: v.optional(v.id("teams")),
+  },
+  handler: async (ctx, args) => {
+    const member = await isOrganizationMember(ctx, args.organizationId, ctx.userId);
+    if (!member) {
+      return [];
+    }
+
+    const events = await ctx.db
+      .query("calendarEvents")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("startTime"), args.startDate),
+          q.lte(q.field("startTime"), args.endDate),
+        ),
+      )
+      .take(MAX_PAGE_SIZE);
+
+    const filteredByWorkspace = args.workspaceId
+      ? events.filter((event) => event.workspaceId === args.workspaceId)
+      : events;
+    const filteredEvents = args.teamId
+      ? filteredByWorkspace.filter((event) => event.teamId === args.teamId)
+      : filteredByWorkspace;
+    const sortedEvents = filteredEvents.sort((a, b) => a.startTime - b.startTime);
     return await enrichEventsWithOrganizers(ctx, sortedEvents);
   },
 });

@@ -56,6 +56,10 @@ export const ROUTES = {
     path: "/$orgSlug/analytics" as const,
     build: (orgSlug: string) => `/${orgSlug}/analytics`,
   },
+  calendar: {
+    path: "/$orgSlug/calendar" as const,
+    build: (orgSlug: string) => `/${orgSlug}/calendar`,
+  },
   team: {
     path: "/$orgSlug/team" as const,
     build: (orgSlug: string) => `/${orgSlug}/team`,
@@ -89,6 +93,11 @@ export const ROUTES = {
       path: "/$orgSlug/workspaces/$workspaceSlug/board" as const,
       build: (orgSlug: string, workspaceSlug: string) =>
         `/${orgSlug}/workspaces/${workspaceSlug}/board`,
+    },
+    calendar: {
+      path: "/$orgSlug/workspaces/$workspaceSlug/calendar" as const,
+      build: (orgSlug: string, workspaceSlug: string) =>
+        `/${orgSlug}/workspaces/${workspaceSlug}/calendar`,
     },
     backlog: {
       path: "/$orgSlug/workspaces/$workspaceSlug/backlog" as const,
