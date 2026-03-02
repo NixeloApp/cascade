@@ -160,6 +160,11 @@ pnpm test             # Run tests
 
 Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
+Community intake is standardized via GitHub templates:
+
+- [Bug report template](./.github/ISSUE_TEMPLATE/bug-report.yml)
+- [Feature request template](./.github/ISSUE_TEMPLATE/feature-request.yml)
+
 ### Development
 
 ```bash
@@ -193,6 +198,7 @@ MIT License - see [LICENSE](./LICENSE)
 
 - [Documentation](./docs/)
 - [Setup Guide](./SETUP.md)
+- [Community Launch Runbook](./docs/launch/COMMUNITY_LAUNCH_RUNBOOK.md)
 - [Research Inventory](./docs/research/INVENTORY.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Convex Dashboard](https://dashboard.convex.dev)
