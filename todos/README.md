@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: latest full-suite baseline is clean (`151 passed / 0 failed / 4 skipped`, `155 total`); next is deterministic-wait hardening across passing specs |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full suite stays clean (`151 passed / 0 failed / 4 skipped`, `155 total`), plus deterministic-wait helper slice validated (`22 passed / 0 failed`) |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): full-suite rerun after OAuth redirect/callback contract refactor is now `151 passed`, `0 failed`, `4 skipped` (`155 total`, `151 executed`, `0.00%` error rate). Next execution step is suite-wide deterministic-wait hardening (reduce/justify `waitForTimeout`, add shared state wait helpers, and re-validate with targeted + full-suite runs).
+- Priority `01` update (2026-03-02): post-baseline hardening slice landed shared readiness helpers (`waitForDashboardReady`, `waitForBoardLoaded`) and migrated dashboard/project page objects; validation on `dashboard + integration-workflow + search` is `22 passed`, `0 failed` (`2.4m`). Full-suite baseline remains `151 passed`, `0 failed`, `4 skipped` (`155 total`); next is helper slice 2 (`waitForIssueCreateSuccess` + `waitForOAuthRedirectComplete`) and fixed-sleep classification for `e2e/screenshot-pages.ts`.

@@ -330,9 +330,25 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - No active failing-spec blocker on current local baseline.
   - Remaining work is standards hardening (eliminating weak waits and formalizing deterministic wait helpers across currently passing specs).
 
+### 2026-03-02 - Batch K (completed deterministic wait helper adoption, slice 1)
+
+- Decision: begin standards hardening on passing specs by centralizing app/board readiness into shared deterministic helpers rather than page-local ad hoc waits.
+- Change: `e2e/utils/wait-helpers.ts`
+  - added `waitForDashboardReady(page)` (app shell + command button + spinner-clear readiness contract)
+  - added `waitForBoardLoaded(page)` (board URL + board visibility + create-issue actionability contract)
+- Change: `e2e/pages/dashboard.page.ts`
+  - migrated `goto`, `navigateTo`, `openCommandPalette`, `openGlobalSearch`, and `pressCommandPaletteShortcut` to use shared `waitForDashboardReady(...)`.
+- Change: `e2e/pages/projects.page.ts`
+  - migrated `waitForBoardInteractive()` to shared `waitForBoardLoaded(...)`.
+- Validation command: `pnpm exec playwright test e2e/dashboard.spec.ts e2e/integration-workflow.spec.ts e2e/search.spec.ts --reporter=line`
+- Validation outcome: `22 passed`, `0 failed` (`2.4m`).
+- Blockers:
+  - No functional blocker in this slice.
+  - Remaining hard rule audit found fixed sleeps only in `e2e/screenshot-pages.ts` (capture utility path, not active CI spec flow).
+
 ### Next Step (strictly next)
 
-- Start deterministic-wait hardening on currently passing specs:
-  - inventory remaining `waitForTimeout` usage and classify justified vs unjustified
-  - land first shared state-wait helpers (`waitForDashboardReady`, `waitForBoardLoaded`) and migrate high-churn specs
-  - rerun touched specs + one full-suite pass to confirm regression-free behavior
+- Continue deterministic-wait hardening on currently passing specs:
+  - implement and adopt remaining planned helpers (`waitForIssueCreateSuccess`, `waitForOAuthRedirectComplete`) where contracts are still inline
+  - classify `e2e/screenshot-pages.ts` fixed sleeps as justified capture-settling waits vs refactor candidates
+  - rerun touched slices, then run one full suite to reconfirm global baseline remains green

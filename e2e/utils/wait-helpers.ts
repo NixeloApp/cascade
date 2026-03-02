@@ -5,7 +5,7 @@
  * meaningful waits for specific conditions.
  */
 
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 /**
  * Wait timeouts used across tests.
@@ -150,4 +150,30 @@ export async function waitForClickable(
   } catch {
     return false;
   }
+}
+
+/**
+ * Wait for authenticated dashboard app shell to be interactive.
+ * This is the shared readiness contract for dashboard-adjacent specs.
+ */
+export async function waitForDashboardReady(page: Page): Promise<void> {
+  await page.waitForLoadState("domcontentloaded");
+  await expect(page.getByRole("main").last()).toBeVisible();
+  await expect(page.getByRole("button", { name: /open command palette/i })).toBeVisible();
+  const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
+  await expect(loadingSpinner).not.toBeVisible();
+}
+
+/**
+ * Wait for project board route and board controls to become interactive.
+ */
+export async function waitForBoardLoaded(page: Page): Promise<void> {
+  await expect(page).toHaveURL(/\/projects\/[A-Z0-9-]+\/board/);
+  const projectBoard = page
+    .locator("[data-project-board]")
+    .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
+  const createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
+  await expect(projectBoard).toBeVisible();
+  await expect(createIssueButton).toBeVisible();
+  await expect(createIssueButton).toBeEnabled();
 }

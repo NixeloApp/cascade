@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -266,7 +267,7 @@ export class DashboardPage extends BasePage {
     }
 
     await this.expectLoaded();
-    await this.waitForLoad();
+    await waitForDashboardReady(this.page);
     await expect(this.myIssuesSection).toBeVisible();
   }
 
@@ -293,7 +294,7 @@ export class DashboardPage extends BasePage {
       await this.page.waitForLoadState("domcontentloaded");
     }
 
-    await this.waitForLoad();
+    await waitForDashboardReady(this.page);
   }
 
   // ===================
@@ -301,9 +302,7 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async openCommandPalette() {
-    await this.waitForLoad();
-    // Wait for command palette button to be actionable (indicates React hydration complete)
-    await this.commandPaletteButton.waitFor({ state: "visible" });
+    await waitForDashboardReady(this.page);
 
     // Use retry pattern - button click may not trigger event handler immediately after hydration
     await expect(async () => {
@@ -390,11 +389,7 @@ export class DashboardPage extends BasePage {
   }
 
   async openGlobalSearch() {
-    // Ensure page is hydrated first
-    await this.waitForLoad();
-
-    // Wait for search button to be ready
-    await this.globalSearchButton.waitFor({ state: "visible" });
+    await waitForDashboardReady(this.page);
 
     // Use retry pattern - click may not register immediately after page load
     await expect(async () => {
@@ -474,9 +469,7 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async pressCommandPaletteShortcut() {
-    await this.waitForLoad();
-    // Wait for command palette button to be actionable (indicates React hydration complete)
-    await this.commandPaletteButton.waitFor({ state: "visible" });
+    await waitForDashboardReady(this.page);
     // Use retry logic - keyboard events may not be captured immediately after hydration
     await expect(async () => {
       await this.page.keyboard.press("ControlOrMeta+k");

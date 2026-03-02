@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { waitForBoardLoaded } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -429,8 +430,7 @@ export class ProjectsPage extends BasePage {
 
   /** Wait for board to be fully interactive */
   async waitForBoardInteractive() {
-    await expect(this.projectBoard).toBeVisible();
-    await expect(this.createIssueButton).toBeEnabled();
+    await waitForBoardLoaded(this.page);
   }
 
   async expectProjectCount(count: number) {
