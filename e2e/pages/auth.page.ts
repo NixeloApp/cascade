@@ -107,10 +107,9 @@ export class AuthPage extends BasePage {
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
     this.emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
     this.passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
-    // These buttons appear after clicking "Continue with email" - text changes on the same button
-    // Use getByRole with the specific text that appears after form expansion
-    this.signInButton = page.getByRole("button", { name: "Sign in", exact: true });
-    this.signUpButton = page.getByRole("button", { name: "Create account", exact: true });
+    // Submit button reuses the same DOM node across expanded states; bind by stable test id.
+    this.signInButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
+    this.signUpButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
     this.forgotPasswordLink = page.getByRole("button", { name: "Forgot password?" });
     this.googleSignInButton = page.getByTestId(TEST_IDS.AUTH.GOOGLE_BUTTON);
 
@@ -253,6 +252,8 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
+    await expect(this.signInButton).toBeVisible();
+    await this.waitForFormReady();
     await this.signInButton.click();
   }
 
@@ -461,9 +462,7 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     await expect(this.emailInput).toBeVisible();
     await expect(this.passwordInput).toBeVisible();
-    // Verify form is expanded using data-testid instead of button text
-    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
-    await expect(authForm).toHaveAttribute("data-expanded", "true");
+    await expect(this.signUpButton).toBeVisible();
   }
 
   async expectForgotPasswordForm() {

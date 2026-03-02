@@ -22,6 +22,14 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Failures: `23`
 - Error rate: `20.35%`
 
+### Focused Validation Snapshot (2026-03-02, targeted suite)
+
+- Command: `pnpm exec playwright test e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/issues.spec.ts e2e/auth.spec.ts --reporter=line`
+- Executed: `28` (of `32`, `4` not run after failures)
+- Passed: `25`
+- Failed: `3`
+- Current targeted error rate: `10.71%`
+
 ---
 
 ## Hard Rules (New Standard)
@@ -38,9 +46,9 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 
 ### 1) Failure Triage + Categorization
 
-- [ ] Bucket current failures into: selector drift, async race, data setup instability, auth/session, backend latency.
+- [x] Bucket current failures into: selector drift, async race, data setup instability, auth/session, backend latency.
 - [ ] Create per-spec failure heatmap from latest run artifacts.
-- [ ] Prioritize top 15 most-failing specs first.
+- [x] Prioritize top 15 most-failing specs first.
 
 ### 2) Waiting Strategy Refactor
 
@@ -117,3 +125,33 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - `e2e/utils/`
 - `.github/workflows/ci.yml`
 - `docs/testing/e2e.md`
+
+---
+
+## Execution Log
+
+### 2026-03-02 - Batch A (completed)
+
+- Decision: Remove brittle template-name coupling from project creation flow.
+- Change: `e2e/pages/projects.page.ts` now selects the first available template option in the create-project modal instead of hardcoding `/Software Development/i`.
+- Change: `e2e/auth.spec.ts` removed fixed sleeps (`waitForTimeout`) and replaced with `expect.poll` + deterministic fallback navigation.
+- Change: `e2e/pages/auth.page.ts` stabilized submit button binding via `TEST_IDS.AUTH.SUBMIT_BUTTON` and waits for form readiness before sign-in submit.
+- Change: `e2e/pages/projects.page.ts` narrowed create-issue submit selector to explicit create-issue submit path (avoids strict-mode collisions with "Create new label").
+
+### 2026-03-02 - Batch A Retest Outcomes
+
+- Initial targeted rerun after first patch set: `20` passed / `5` failed (`32` total, `7` not run after failures).
+- Second targeted rerun after additional selector/wait updates: `25` passed / `3` failed (`28` executed, `4` not run).
+
+### Remaining Blockers (current)
+
+- `e2e/auth.spec.ts` - `Integration › can sign in with existing user and lands on dashboard` still intermittently fails to reach authenticated app shell after UI login (auth/session redirect race).
+- `e2e/analytics.spec.ts` - `analytics shows correct issue count after creating issues` still times out in issue creation path under load (submit actionability/race remains).
+- `e2e/issues.spec.ts` - `Issue Detail › can open issue detail dialog` still assumes a `Time tracking` heading appears deterministically (UI content timing drift).
+
+### Next Step (strictly next)
+
+- Introduce deterministic helper trio and migrate affected specs first:
+  - `waitForIssueCreateSuccess` (await modal close + new card/key signal)
+  - `waitForIssueDetailReady` (await detail modal + stable key/timer-control signal, not heading text)
+  - `waitForOAuthRedirectComplete`/auth-shell-ready guard for post-login stabilization
