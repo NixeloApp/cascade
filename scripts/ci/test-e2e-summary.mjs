@@ -35,6 +35,25 @@ async function runFallbackCase() {
   assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
+async function runFallbackDirtyCase() {
+  const dirtyReport = {
+    ...reportFixture,
+    stats: {
+      ...reportFixture.stats,
+      expected: 2,
+      unexpected: 1,
+      skipped: 1,
+      flaky: 0,
+    },
+  };
+  const lines = await buildSummaryLines(dirtyReport, makeEnv());
+  const output = lines.join("\n");
+
+  assert.match(output, /Clean-Run Checkpoint: `0\/5` \(fallback-local\)/);
+  assert.match(output, /Error Rate: `33.33%`/);
+  assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
+}
+
 async function runHistoryDerivedCase() {
   const lines = await buildSummaryLines(
     reportFixture,
@@ -66,6 +85,7 @@ async function runScanLimitTruncationCase() {
 }
 
 await runFallbackCase();
+await runFallbackDirtyCase();
 await runHistoryDerivedCase();
 await runScanLimitTruncationCase();
 console.log("e2e-summary self-test passed");
