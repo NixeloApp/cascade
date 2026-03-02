@@ -90,6 +90,7 @@ import type * as lib_logger from "../lib/logger.js";
 import type * as lib_organizationAccess from "../lib/organizationAccess.js";
 import type * as lib_pagination from "../lib/pagination.js";
 import type * as lib_payloadTelemetry from "../lib/payloadTelemetry.js";
+import type * as lib_projectIssueStats from "../lib/projectIssueStats.js";
 import type * as lib_queryHelpers from "../lib/queryHelpers.js";
 import type * as lib_queryLimits from "../lib/queryLimits.js";
 import type * as lib_rateLimiter from "../lib/rateLimiter.js";
@@ -244,6 +245,7 @@ declare const fullApi: ApiFromModules<{
   "lib/organizationAccess": typeof lib_organizationAccess;
   "lib/pagination": typeof lib_pagination;
   "lib/payloadTelemetry": typeof lib_payloadTelemetry;
+  "lib/projectIssueStats": typeof lib_projectIssueStats;
   "lib/queryHelpers": typeof lib_queryHelpers;
   "lib/queryLimits": typeof lib_queryLimits;
   "lib/rateLimiter": typeof lib_rateLimiter;

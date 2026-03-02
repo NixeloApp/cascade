@@ -257,6 +257,36 @@ describe("Dashboard", () => {
       const result = await asUser.query(api.dashboard.getMyProjects, {});
 
       expect(result[0].myIssues).toBe(3);
+      expect(result[0].totalIssues).toBe(3);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should keep totalIssues in sync after soft delete", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Issue Sync Project",
+        key: "SYNC",
+      });
+
+      const issue1 = await createTestIssue(t, projectId, userId, {
+        title: "Issue 1",
+        assigneeId: userId,
+      });
+      const issue2 = await createTestIssue(t, projectId, userId, {
+        title: "Issue 2",
+        assigneeId: userId,
+      });
+      await createTestIssue(t, projectId, userId, { title: "Issue 3", assigneeId: userId });
+
+      await asUser.mutation(api.issues.bulkDelete, {
+        issueIds: [issue1, issue2],
+      });
+
+      const result = await asUser.query(api.dashboard.getMyProjects, {});
+      expect(result[0].totalIssues).toBe(1);
+      expect(result[0].myIssues).toBe(1);
       await t.finishInProgressScheduledFunctions();
     });
 

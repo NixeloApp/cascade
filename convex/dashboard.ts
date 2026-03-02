@@ -13,6 +13,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedQuery } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { logQueryPayloadTelemetry } from "./lib/payloadTelemetry";
+import { getProjectIssueCounts } from "./lib/projectIssueStats";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import {
   DEFAULT_SEARCH_PAGE_SIZE,
@@ -242,9 +243,7 @@ export const getMyProjects = authenticatedQuery({
       }
     }
 
-    // Note: We removed "totalQuestions" / "totalIssues" calculation because fetching ALL issues
-    // for every project is a performance killer and OOM risk (loading 10k+ items).
-    // If total counts are needed, they should be pre-aggregated in a stats table.
+    const totalIssuesByProject = await getProjectIssueCounts(ctx, projectIds);
 
     // Enrich memberships with project data and counts
     const projects = pruneNull(
@@ -257,7 +256,7 @@ export const getMyProjects = authenticatedQuery({
           ...project,
           _id: membership.projectId,
           role: membership.role,
-          totalIssues: 0, // Disabled for performance
+          totalIssues: totalIssuesByProject.get(projId) ?? 0,
           myIssues: myIssuesByProject.get(projId) ?? 0,
         };
       }),

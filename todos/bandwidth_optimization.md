@@ -36,7 +36,7 @@ The primary bandwidth drains were identified as:
 
 ### 2. General Infrastructure
 - [ ] **Field Projection**: Review all queries that return arrays of documents. If only a few fields are used (e.g., only `_id` and `name` in a picker), use helper patterns to avoid fetching full `Doc<"table">` objects.
-- [ ] **Stats Table**: Implement a `counters` or `stats` table for high-frequency counts (e.g., total issues in a project) to eliminate the need for `.take(1000).length` queries.
+- [x] **Stats Table**: Added `projectIssueStats` counters table for project issue totals and wired sync/update paths in issue mutations.
 
 ---
 
@@ -58,7 +58,7 @@ The primary bandwidth drains were identified as:
 
 - [x] `S1` Finish dashboard/activity query scoping and payload minimization
 - [x] `S1` Add query-level payload telemetry for top bandwidth endpoints
-- [ ] `S2` Introduce counters/stats table for high-frequency counts
+- [x] `S2` Introduce counters/stats table for high-frequency counts
 - [ ] `S2` Publish before/after bandwidth report from Convex dashboard metrics
 
 ### Dependencies
@@ -163,3 +163,27 @@ The primary bandwidth drains were identified as:
   - none for this subtask.
 - Next Step:
   - continue Priority `07` with `S2` stats/counters-table design for high-frequency counts, or prepare before/after metrics collection path.
+
+### 2026-03-02 - Batch E (`S2` counters table: `projectIssueStats`)
+
+- Decision:
+  - implement a focused counters table for the highest-frequency missing count (`dashboard.getMyProjects.totalIssues`) before broader counter expansion.
+- Change:
+  - added `projectIssueStats` table in `convex/schema.ts` with `by_project` index (`projectId`, `totalIssues`, `updatedAt`).
+  - added `convex/lib/projectIssueStats.ts`:
+    - `syncProjectIssueStats(ctx, projectId)` recomputes and upserts active issue count (`by_project_deleted` + bounded count).
+    - `getProjectIssueCounts(ctx, projectIds)` reads cached counts with bounded fallback when cache row is missing.
+  - updated `convex/issues/mutations.ts`:
+    - create flow now syncs project stats after issue creation.
+    - `bulkDelete` now tracks touched projects and resyncs each after soft-delete updates.
+  - updated `convex/dashboard.ts`:
+    - `getMyProjects` now returns `totalIssues` from `projectIssueStats`/fallback counts instead of hardcoded `0`.
+  - added regression coverage in `convex/dashboard.test.ts`:
+    - verifies `totalIssues` reflects created issues and stays correct after `bulkDelete`.
+- Validation:
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/dashboard.test.ts convex/issues/mutations.test.ts` => pass (`55 passed`)
+- Blockers:
+  - none for this subtask.
+- Next Step:
+  - finish Priority `07` by collecting/publishing before-vs-after bandwidth metrics from Convex dashboard for these optimized endpoints.

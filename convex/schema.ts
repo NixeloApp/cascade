@@ -539,6 +539,12 @@ const applicationTables = {
     .index("by_project_type", ["projectId", "type"])
     .index("by_project_type_deleted", ["projectId", "type", "isDeleted"]),
 
+  projectIssueStats: defineTable({
+    projectId: v.id("projects"),
+    totalIssues: v.number(),
+    updatedAt: v.number(),
+  }).index("by_project", ["projectId"]),
+
   issueComments: defineTable({
     issueId: v.id("issues"),
     authorId: v.id("users"),

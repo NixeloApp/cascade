@@ -17,6 +17,7 @@ import {
 } from "../customFunctions";
 import { validate } from "../lib/constrainedValidators";
 import { conflict, validation } from "../lib/errors";
+import { syncProjectIssueStats } from "../lib/projectIssueStats";
 import { softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { enforceRateLimit } from "../rateLimits";
@@ -169,6 +170,7 @@ async function createIssueImpl(
     userId: ctx.userId,
     action: "created",
   });
+  await syncProjectIssueStats(ctx, ctx.projectId);
 
   return { issueId, key: issueKey };
 }
@@ -563,10 +565,12 @@ export const bulkDelete = authenticatedMutation({
   },
   returns: v.object({ deleted: v.number() }),
   handler: async (ctx, args) => {
+    const touchedProjectIds = new Set<Id<"projects">>();
     const result = await performBulkUpdate(
       ctx,
       args.issueIds,
-      async () => {
+      async (issue) => {
+        touchedProjectIds.add(issue.projectId);
         return {
           patch: softDeleteFields(ctx.userId),
           activity: {
@@ -575,6 +579,10 @@ export const bulkDelete = authenticatedMutation({
         };
       },
       assertIsProjectAdmin,
+    );
+
+    await Promise.all(
+      Array.from(touchedProjectIds).map((projectId) => syncProjectIssueStats(ctx, projectId)),
     );
 
     return { deleted: result.updated };

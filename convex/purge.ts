@@ -15,6 +15,7 @@ export const TABLES: TableNames[] = [
   "projects",
   "projectMembers",
   "issues",
+  "projectIssueStats",
   "issueComments",
   "issueCommentReactions",
   "documentComments",
