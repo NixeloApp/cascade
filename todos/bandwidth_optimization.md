@@ -229,3 +229,14 @@ The primary bandwidth drains were identified as:
   - final `S2` closeout still depends on manual before/after bandwidth capture from Convex dashboard UI.
 - Next Step:
   - operator captures dashboard bandwidth deltas for optimized endpoints and appends values here to complete report publication.
+
+### 2026-03-02 - Batch I (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep Priority `07` blocked; no further repository-side optimization tasks remain.
+- Validation:
+  - `pnpm test convex/dashboard.test.ts convex/analytics.test.ts convex/lib/payloadTelemetry.test.ts` => pass (`60 passed`)
+- Blockers:
+  - final publication still depends on manual Convex dashboard before/after bandwidth captures.
+- Next Step:
+  - operator captures and records dashboard bandwidth deltas in this todo to close `S2`.
