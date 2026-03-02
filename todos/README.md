@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full suite reconfirmed clean (`151 passed / 0 failed / 4 skipped`, `155 total`, `5.8m`); wait-helper hardening + fixed-sleep elimination completed |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: JSON heatmap snapshot complete (`29` spec files, `0` failing files); latest suite remains clean (`151 passed / 0 failed / 4 skipped`) |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): fixed-sleep removal is now complete across `e2e/` (including `screenshot-pages.ts`), and auth reset flake was hardened via poll-based post-reset login verification in `e2e/auth.spec.ts`. Full-suite reconfirmation after these changes: `151 passed`, `0 failed`, `4 skipped` (`155 total`, `151 executed`, `0.00%` error rate, `5.8m`). Next is heatmap/trend checkpoint updates for consecutive clean-run tracking.
+- Priority `01` update (2026-03-02): per-spec heatmap was generated from fresh full-suite JSON artifact (`29` files analyzed, `0` files with failures/timeouts/flaky; skips only in `e2e/sprints.spec.ts` and one skip in `e2e/oauth-mocked.spec.ts`). Current streak checkpoint toward acceptance is `1/5` consecutive clean runs (latest full suite: `151 passed`, `0 failed`, `4 skipped`, `~6.1m`). Next is CI summary trend checkpointing so streak state persists across runs.

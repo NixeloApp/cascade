@@ -95,7 +95,7 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 ### 1) Failure Triage + Categorization
 
 - [x] Bucket current failures into: selector drift, async race, data setup instability, auth/session, backend latency.
-- [ ] Create per-spec failure heatmap from latest run artifacts.
+- [x] Create per-spec failure heatmap from latest run artifacts.
 - [x] Prioritize top 15 most-failing specs first.
 
 ### 2) Waiting Strategy Refactor
@@ -400,9 +400,33 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - No active failing-spec blocker on current local baseline.
 
+### 2026-03-02 - Batch O (completed per-spec heatmap snapshot + clean-run trend checkpoint)
+
+- Decision: generate a machine-readable full-suite artifact and derive an explicit per-spec failure heatmap plus clean-run trend checkpoint.
+- Validation artifact generation:
+  - command: `/run/current-system/sw/bin/bash -lc 'pnpm exec playwright test --reporter=json > /tmp/playwright-e2e.json'`
+  - note: stripped non-JSON preamble lines and parsed `/tmp/playwright-e2e.clean.json` for deterministic aggregation
+- Full-suite stats from JSON artifact:
+  - `151 expected/passed`, `0 unexpected/failed`, `4 skipped`, `0 flaky`
+  - duration: `365878ms` (`~6.1m`), start time: `2026-03-02T05:55:23.626Z`
+- Per-spec heatmap snapshot (latest artifact):
+  - Spec files analyzed: `29`
+  - Files with failures/timeouts/flaky: `0`
+  - Skipped-only specs:
+    - `e2e/sprints.spec.ts`: `3 skipped`, `0 passed`, `0 failed`
+    - `e2e/oauth-mocked.spec.ts`: `1 skipped`, `10 passed`, `0 failed`
+  - All other spec files: `0 failed`, `0 flaky`, `0 timedOut`
+- Trend checkpoint:
+  - Last two full-suite runs in sequence:
+    - `150 passed`, `1 failed`, `4 skipped` (pre-fix)
+    - `151 passed`, `0 failed`, `4 skipped` (post-fix)
+  - Current local clean-run streak toward acceptance target (`5` clean runs): `1/5`
+- Blockers:
+  - No functional blocker; remaining gap is CI-level consecutive clean-run tracking across future runs.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
-  - create and commit the latest per-spec heatmap snapshot from current full-suite output (explicitly recording `0` failures)
   - add CI trend checkpointing for consecutive clean runs toward acceptance criteria (`<2%` for 5 consecutive CI runs)
+  - publish the per-spec heatmap/trend summary directly in CI summary output (single source of truth for streak state)
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement
