@@ -151,65 +151,69 @@ export async function computeConsecutiveCleanRuns(env = process.env) {
     "User-Agent": "nixelo-e2e-summary",
   };
 
-  const runs = [];
-  let page = 1;
+  try {
+    const runs = [];
+    let page = 1;
 
-  while (runs.length < scanLimit) {
-    const runsResponse = await fetch(
-      `https://api.github.com/repos/${repo}/actions/workflows/ci.yml/runs?branch=${encodeURIComponent(
-        branch,
-      )}&status=completed&per_page=${RUNS_PAGE_SIZE}&page=${page}`,
-      { headers },
-    );
-    if (!runsResponse.ok) {
-      return null;
+    while (runs.length < scanLimit) {
+      const runsResponse = await fetch(
+        `https://api.github.com/repos/${repo}/actions/workflows/ci.yml/runs?branch=${encodeURIComponent(
+          branch,
+        )}&status=completed&per_page=${RUNS_PAGE_SIZE}&page=${page}`,
+        { headers },
+      );
+      if (!runsResponse.ok) {
+        return null;
+      }
+
+      const runsPayload = await runsResponse.json();
+      const pageRuns = runsPayload.workflow_runs || [];
+      if (pageRuns.length === 0) {
+        break;
+      }
+
+      runs.push(...pageRuns);
+      if (pageRuns.length < RUNS_PAGE_SIZE) {
+        break;
+      }
+      page += 1;
     }
 
-    const runsPayload = await runsResponse.json();
-    const pageRuns = runsPayload.workflow_runs || [];
-    if (pageRuns.length === 0) {
-      break;
+    if (runs.length > scanLimit) {
+      runs.length = scanLimit;
     }
 
-    runs.push(...pageRuns);
-    if (pageRuns.length < RUNS_PAGE_SIZE) {
-      break;
+    let streak = 0;
+    let scannedRuns = 0;
+
+    for (const run of runs) {
+      scannedRuns += 1;
+      const jobsResponse = await fetch(
+        `https://api.github.com/repos/${repo}/actions/runs/${run.id}/jobs?per_page=100`,
+        { headers },
+      );
+      if (!jobsResponse.ok) {
+        return null;
+      }
+
+      const jobsPayload = await jobsResponse.json();
+      const e2eJobs = (jobsPayload.jobs || []).filter((job) => job.name.startsWith("E2E Tests"));
+      if (e2eJobs.length === 0) {
+        continue;
+      }
+
+      const isCleanRun = e2eJobs.every((job) => job.conclusion === "success");
+      if (!isCleanRun) {
+        break;
+      }
+
+      streak += 1;
     }
-    page += 1;
+
+    return { streak, scannedRuns };
+  } catch {
+    return null;
   }
-
-  if (runs.length > scanLimit) {
-    runs.length = scanLimit;
-  }
-
-  let streak = 0;
-  let scannedRuns = 0;
-
-  for (const run of runs) {
-    scannedRuns += 1;
-    const jobsResponse = await fetch(
-      `https://api.github.com/repos/${repo}/actions/runs/${run.id}/jobs?per_page=100`,
-      { headers },
-    );
-    if (!jobsResponse.ok) {
-      break;
-    }
-
-    const jobsPayload = await jobsResponse.json();
-    const e2eJobs = (jobsPayload.jobs || []).filter((job) => job.name.startsWith("E2E Tests"));
-    if (e2eJobs.length === 0) {
-      continue;
-    }
-
-    const isCleanRun = e2eJobs.every((job) => job.conclusion === "success");
-    if (!isCleanRun) {
-      break;
-    }
-
-    streak += 1;
-  }
-
-  return { streak, scannedRuns };
 }
 
 function appendSummary(lines, env = process.env) {

@@ -36,6 +36,30 @@ function makeEnv(overrides = {}) {
   };
 }
 
+function makeFetchResponse(ok, jsonPayload) {
+  return {
+    ok,
+    async json() {
+      return jsonPayload;
+    },
+  };
+}
+
+async function withMockFetch(mockFetch, run) {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = mockFetch;
+  try {
+    return await run();
+  } finally {
+    if (originalFetch) {
+      globalThis.fetch = originalFetch;
+    } else {
+      // Keep global shape clean for runtimes without native fetch.
+      delete globalThis.fetch;
+    }
+  }
+}
+
 async function runFallbackCase() {
   const lines = await buildSummaryLines(reportFixture, makeEnv());
   const output = lines.join("\n");
@@ -346,6 +370,108 @@ async function runHistoryDerivedNoE2EJobsCase() {
   assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
+async function runHistoryDerivedGitHubApiCase() {
+  await withMockFetch(
+    async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.includes("/actions/workflows/ci.yml/runs?")) {
+        return makeFetchResponse(true, {
+          workflow_runs: [{ id: 101 }, { id: 102 }, { id: 103 }],
+        });
+      }
+
+      if (requestUrl.includes("/actions/runs/101/jobs?")) {
+        return makeFetchResponse(true, {
+          jobs: [{ name: "E2E Tests (chromium)", conclusion: "success" }],
+        });
+      }
+      if (requestUrl.includes("/actions/runs/102/jobs?")) {
+        return makeFetchResponse(true, {
+          jobs: [{ name: "E2E Tests (webkit)", conclusion: "success" }],
+        });
+      }
+      if (requestUrl.includes("/actions/runs/103/jobs?")) {
+        return makeFetchResponse(true, {
+          jobs: [{ name: "E2E Tests (chromium)", conclusion: "failure" }],
+        });
+      }
+
+      return makeFetchResponse(false, {});
+    },
+    async () => {
+      const lines = await buildSummaryLines(
+        reportFixture,
+        makeEnv({
+          GITHUB_TOKEN: "test-token",
+          GITHUB_REPOSITORY: "acme/repo",
+          GITHUB_REF_NAME: "main",
+          E2E_STREAK_SCAN_LIMIT: "250",
+        }),
+      );
+      const output = lines.join("\n");
+
+      assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
+      assert.match(output, /Streak Scan Window: `3\/250` completed CI runs/);
+      assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
+    },
+  );
+}
+
+async function runHistoryDerivedGitHubApiJobsFailureFallbackCase() {
+  await withMockFetch(
+    async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.includes("/actions/workflows/ci.yml/runs?")) {
+        return makeFetchResponse(true, {
+          workflow_runs: [{ id: 201 }],
+        });
+      }
+      if (requestUrl.includes("/actions/runs/201/jobs?")) {
+        return makeFetchResponse(false, {});
+      }
+      return makeFetchResponse(false, {});
+    },
+    async () => {
+      const lines = await buildSummaryLines(
+        reportFixture,
+        makeEnv({
+          GITHUB_TOKEN: "test-token",
+          GITHUB_REPOSITORY: "acme/repo",
+          GITHUB_REF_NAME: "main",
+          E2E_STREAK_SCAN_LIMIT: "250",
+        }),
+      );
+      const output = lines.join("\n");
+
+      assert.match(output, /Clean-Run Checkpoint: `1\/5` \(fallback-local\)/);
+      assert.match(output, /Streak Scan Window: `0\/250` completed CI runs/);
+    },
+  );
+}
+
+async function runHistoryDerivedGitHubApiThrowFallbackCase() {
+  await withMockFetch(
+    async () => {
+      throw new Error("network down");
+    },
+    async () => {
+      const lines = await buildSummaryLines(
+        reportFixture,
+        makeEnv({
+          GITHUB_TOKEN: "test-token",
+          GITHUB_REPOSITORY: "acme/repo",
+          GITHUB_REF_NAME: "main",
+          E2E_STREAK_SCAN_LIMIT: "250",
+        }),
+      );
+      const output = lines.join("\n");
+
+      assert.match(output, /Clean-Run Checkpoint: `1\/5` \(fallback-local\)/);
+      assert.match(output, /Streak Scan Window: `0\/250` completed CI runs/);
+    },
+  );
+}
+
 async function runMissingMockHistoryFileCase() {
   await assert.rejects(
     () =>
@@ -520,6 +646,9 @@ await runOversizedScanLimitFallbackCase();
 await runLeadingZeroScanLimitFallbackCase();
 await runExcessiveSafeScanLimitCapCase();
 await runHistoryDerivedNoE2EJobsCase();
+await runHistoryDerivedGitHubApiCase();
+await runHistoryDerivedGitHubApiJobsFailureFallbackCase();
+await runHistoryDerivedGitHubApiThrowFallbackCase();
 await runMissingMockHistoryFileCase();
 await runInvalidMockHistoryFileCase();
 await runUnreadableMockHistoryFileCase();
