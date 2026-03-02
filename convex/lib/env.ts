@@ -80,6 +80,22 @@ export function isGitHubOAuthConfigured(): boolean {
 }
 
 // ===========================================
+// Slack OAuth
+// ===========================================
+
+export function getSlackClientId(): string {
+  return requireEnv("SLACK_CLIENT_ID");
+}
+
+export function getSlackClientSecret(): string {
+  return requireEnv("SLACK_CLIENT_SECRET");
+}
+
+export function isSlackOAuthConfigured(): boolean {
+  return !!process.env.SLACK_CLIENT_ID && !!process.env.SLACK_CLIENT_SECRET;
+}
+
+// ===========================================
 // Bot Service
 // ===========================================
 

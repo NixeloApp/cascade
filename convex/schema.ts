@@ -1135,6 +1135,21 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_github_user", ["githubUserId"]),
 
+  slackConnections: defineTable({
+    userId: v.id("users"),
+    teamId: v.string(),
+    teamName: v.string(),
+    accessToken: v.string(),
+    botUserId: v.optional(v.string()),
+    scope: v.optional(v.string()),
+    incomingWebhookUrl: v.optional(v.string()),
+    incomingWebhookChannel: v.optional(v.string()),
+    isActive: v.boolean(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_team", ["teamId"]),
+
   githubRepositories: defineTable({
     projectId: v.id("projects"),
     repoOwner: v.string(),

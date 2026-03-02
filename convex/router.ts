@@ -38,6 +38,10 @@ import {
   listRepos as listGitHubRepos,
 } from "./http/githubOAuth";
 import { handleCallback, initiateAuth, triggerSync } from "./http/googleOAuth";
+import {
+  handleCallback as handleSlackCallback,
+  initiateAuth as initiateSlackAuth,
+} from "./http/slackOAuth";
 
 const http = httpRouter();
 
@@ -84,6 +88,19 @@ http.route({
   path: "/github/repos",
   method: "GET",
   handler: listGitHubRepos,
+});
+
+// Slack OAuth routes (for workspace notifications integration)
+http.route({
+  path: "/slack/auth",
+  method: "GET",
+  handler: initiateSlackAuth,
+});
+
+http.route({
+  path: "/slack/callback",
+  method: "GET",
+  handler: handleSlackCallback,
 });
 
 // Auth wrapper routes (security)

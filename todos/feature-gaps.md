@@ -60,9 +60,9 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
 ### Phase 1: Outbound Notifications
 
 - [ ] Create Slack OAuth app in Slack API dashboard
-- [ ] Implement OAuth callback handler
-- [ ] Create `convex/slack.ts` adapting Pumble patterns
-- [ ] Add Slack workspace connection UI in settings
+- [x] Implement OAuth callback handler ✅ 2026-03-02
+- [x] Create `convex/slack.ts` adapting Pumble patterns ✅ 2026-03-02
+- [x] Add Slack workspace connection UI in settings ✅ 2026-03-02
 
 ### Phase 2: Slash Commands
 
@@ -153,3 +153,31 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
   - `convex-test` cannot currently generate valid `_storage` IDs for direct unit tests of comment-attachment ID membership checks; backend guard remains covered by runtime logic and type validation but lacks a dedicated storage-backed unit test.
 - Next Step:
   - start `S2` Slack outbound notifications MVP with OAuth app setup + callback handler scope definition.
+
+### 2026-03-02 - Batch C (Slack OAuth + connection MVP)
+
+- Decision:
+  - ship the local product/code pieces for Slack `S2` first (OAuth callback, connection persistence, settings UI), and keep external Slack dashboard app provisioning as an explicit operator blocker.
+- Change:
+  - added backend connection module `convex/slack.ts`:
+    - `connectSlack` (encrypted token upsert per user).
+    - `getConnection` (sanitized metadata for UI, no token exposure).
+    - `disconnectSlack`.
+  - added schema table `slackConnections` with `by_user` / `by_team` indexes (`convex/schema.ts`).
+  - added Slack OAuth HTTP handlers (`convex/http/slackOAuth.ts`):
+    - `/slack/auth` stateful OAuth initiation.
+    - `/slack/callback` code exchange + popup `postMessage` payload (`slack-connected`).
+  - wired Slack routes in `convex/router.ts`.
+  - added env helpers in `convex/lib/env.ts` for `SLACK_CLIENT_ID`/`SLACK_CLIENT_SECRET`.
+  - added Settings integration UI `src/components/Settings/SlackIntegration.tsx` and mounted it in `src/components/Settings.tsx`.
+  - added purge coverage for `slackConnections` in `convex/purge.ts`.
+  - added backend tests in `convex/slack.test.ts` for connect/get/upsert/disconnect.
+- Validation:
+  - `pnpm exec biome check --write convex/slack.ts convex/slack.test.ts convex/http/slackOAuth.ts convex/router.ts convex/schema.ts convex/lib/env.ts convex/purge.ts src/components/Settings.tsx src/components/Settings/SlackIntegration.tsx` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/slack.test.ts` => pass (`3 passed`)
+- Blockers:
+  - Slack app creation/configuration in Slack API dashboard is still manual and not possible from this repository-only workflow.
+  - Outbound event delivery to Slack channels is not fully wired yet (connection is now available; delivery path remains pending).
+- Next Step:
+  - implement Slack outbound delivery path (`sendMessage`/`sendIssueNotification`) using stored webhook/token and wire issue-event triggers.
