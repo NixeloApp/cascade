@@ -209,9 +209,56 @@ export async function trySignInUser(
   user: TestUser,
   autoCompleteOnboarding = true,
 ): Promise<boolean> {
+  const injectAuthTokens = async (token: string, refreshToken?: string): Promise<void> => {
+    await page.evaluate(
+      ({ token: jwt, refreshToken: refresh, convexUrl }) => {
+        // Legacy keys (for ConvexReactClient direct usage)
+        localStorage.setItem("convexAuthToken", jwt);
+        if (refresh) {
+          localStorage.setItem("convexAuthRefreshToken", refresh);
+        }
+
+        // @convex-dev/auth keys (namespaced by convex URL)
+        if (convexUrl) {
+          const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
+          const jwtKey = `__convexAuthJWT_${namespace}`;
+          const refreshKey = `__convexAuthRefreshToken_${namespace}`;
+
+          localStorage.setItem(jwtKey, jwt);
+          if (refresh) {
+            localStorage.setItem(refreshKey, refresh);
+          }
+        }
+      },
+      {
+        token,
+        refreshToken,
+        convexUrl: process.env.VITE_CONVEX_URL,
+      },
+    );
+  };
+
+  const tryNavigateToAppGateway = async (): Promise<boolean> => {
+    await page.goto(`${baseURL}${ROUTES.app.build()}`, { waitUntil: "load" });
+
+    // Wait to confirm we are logged in - app gateway will redirect to /:orgSlug/dashboard or /onboarding
+    await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 });
+
+    if (await isOnDashboard(page)) {
+      console.log("  ✓ Automatically redirected to dashboard");
+      return true;
+    }
+    // For users with incomplete onboarding, landing on /onboarding is success
+    if (!autoCompleteOnboarding && urlPatterns.onboarding.test(page.url())) {
+      console.log("  ✓ Automatically redirected to onboarding (as expected)");
+      return true;
+    }
+    return false;
+  };
+
   try {
     console.log(`  🔐 Attempting sign-in for ${user.email}...`);
-    await page.goto(`${baseURL}/signin`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${baseURL}/signin`, { waitUntil: "load" });
 
     // Check if already authenticated (redirected to dashboard)
     if (await isOnDashboard(page)) {
@@ -226,49 +273,27 @@ export async function trySignInUser(
 
     // --- API FAST LOGIN ---
     console.log("  ⚡ Attempting API login...");
-    const loginResult = await testUserService.loginTestUser(user.email, user.password);
+    let loginResult = await testUserService.loginTestUser(user.email, user.password);
+
+    // Repair known transient auth state drift for seeded users, then retry once.
+    if (!loginResult.success && loginResult.error?.includes("InvalidAccountId")) {
+      console.log("  ⚠️ API login returned InvalidAccountId. Attempting account repair...");
+      const repairResult = await testUserService.createTestUser(
+        user.email,
+        user.password,
+        autoCompleteOnboarding,
+      );
+      if (repairResult.success || repairResult.existing) {
+        loginResult = await testUserService.loginTestUser(user.email, user.password);
+      }
+    }
+
     if (loginResult.success && loginResult.token) {
       console.log("  ✓ API login successful. Injecting tokens...");
-      await page.evaluate(
-        ({ token, refreshToken, convexUrl }) => {
-          // Legacy keys (for ConvexReactClient direct usage)
-          localStorage.setItem("convexAuthToken", token);
-          if (refreshToken) {
-            localStorage.setItem("convexAuthRefreshToken", refreshToken);
-          }
+      await injectAuthTokens(loginResult.token, loginResult.refreshToken);
 
-          // @convex-dev/auth keys (namespaced by convex URL)
-          if (convexUrl) {
-            const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
-            const jwtKey = `__convexAuthJWT_${namespace}`;
-            const refreshKey = `__convexAuthRefreshToken_${namespace}`;
-
-            localStorage.setItem(jwtKey, token);
-            if (refreshToken) {
-              localStorage.setItem(refreshKey, refreshToken);
-            }
-          }
-        },
-        {
-          token: loginResult.token,
-          refreshToken: loginResult.refreshToken ?? undefined,
-          convexUrl: process.env.VITE_CONVEX_URL,
-        },
-      );
-
-      // Navigate to app gateway which handles auth routing to the correct org dashboard
-      await page.goto(`${baseURL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
-
-      // Wait to confirm we are logged in - app gateway will redirect to /:orgSlug/dashboard or /onboarding
       try {
-        await page.waitForURL(urlPatterns.dashboardOrOnboarding);
-        if (await isOnDashboard(page)) {
-          console.log("  ✓ Automatically redirected to dashboard");
-          return true;
-        }
-        // For users with incomplete onboarding, landing on /onboarding is success
-        if (!autoCompleteOnboarding && urlPatterns.onboarding.test(page.url())) {
-          console.log("  ✓ Automatically redirected to onboarding (as expected)");
+        if (await tryNavigateToAppGateway()) {
           return true;
         }
       } catch {
@@ -458,9 +483,7 @@ export async function trySignInUser(
 
     try {
       // Wait for redirect - handles both old (/dashboard) and new (/:orgSlug/dashboard) patterns
-      await page.waitForURL(urlPatterns.dashboardOrOnboarding, {
-        waitUntil: "domcontentloaded",
-      });
+      await page.waitForURL(urlPatterns.dashboardOrOnboarding);
       console.log("  ✓ Redirected to:", page.url());
     } catch {
       // Timeout or error - check for specific failures
@@ -494,6 +517,18 @@ export async function trySignInUser(
       } else {
         console.log("  ⚠️ Redirect timeout after 90s");
         console.log("  📄 Page content:", pageText.slice(0, 300));
+
+        // Recovery path: app shell can land on "/" or remain at "/signin" before token hydration settles.
+        if (/\/signin(?:[/?#]|$)/.test(page.url()) || page.url().endsWith("/")) {
+          console.log("  🔁 Attempting app-gateway recovery after redirect timeout...");
+          try {
+            if (await tryNavigateToAppGateway()) {
+              return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
+            }
+          } catch {
+            // Continue to fail below if recovery didn't resolve authentication.
+          }
+        }
       }
 
       return false; // Let global-setup retry handle this

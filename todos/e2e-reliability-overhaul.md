@@ -676,6 +676,27 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line`
 - Execute one real PR CI run and confirm `e2e-summary` renders in `history-derived` mode with expected checkpoint/heatmap/scan-window behavior.
 
+### 2026-03-02 - Batch BU (completed auth bootstrap recovery hardening)
+
+- Decision: harden shared auth helper recovery so transient sign-in/account bootstrap drift no longer fails fixture auth for downstream specs.
+- Change:
+  - updated `e2e/utils/auth-helpers.ts`:
+    - extracted reusable token injection + app-gateway navigation helpers for deterministic API-login completion.
+    - changed auth navigations from `waitUntil: "domcontentloaded"` to `waitUntil: "load"` for stronger route-settle guarantees.
+    - when API login returns `InvalidAccountId`, auto-repair account via `createTestUser(...)` and retry API login once before UI fallback.
+    - added explicit post-timeout recovery path: if UI login remains on `/signin` or `/`, force app-gateway navigation and re-evaluate dashboard/onboarding outcome.
+- Validation:
+  - `pnpm exec biome check e2e/utils/auth-helpers.ts` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; all guarded violations `0`; selector baseline `0`)
+  - `pnpm exec playwright test e2e/auth.spec.ts --reporter=line` => `19 passed`
+  - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line` => `4 passed`
+- Blockers:
+  - final live `history-derived` CI-summary confirmation still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders in `history-derived` mode with expected checkpoint progression, heatmap merge output, and scan-window/truncation behavior.
+
 ### 2026-03-02 - Batch BM (completed dashboard/workspaces page-object wait hardening)
 
 - Decision: replace weak page-object `domcontentloaded` waits with deterministic route/UI-state waits and fix an observed dashboard tab-click detachment flake.
