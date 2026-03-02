@@ -47,9 +47,9 @@ Top targets:
 ### Milestones
 
 - [x] `S2` Convert scope list to tracked batches (10-12 files per batch)
-- [ ] `S2-S3` Remove safe memoization in compiler-covered files
-- [ ] `S3` Keep explicit memoization only where identity is correctness-critical
-- [ ] `S4` Publish cleanup report with before/after instance counts
+- [x] `S2-S3` Remove safe memoization in compiler-covered files
+- [x] `S3` Keep explicit memoization only where identity is correctness-critical
+- [x] `S4` Publish cleanup report with before/after instance counts
 
 ### Dependencies
 
@@ -215,3 +215,25 @@ Top targets:
 
 **Next step (strict order)**
 - Continue Priority `15` with final classification/report closeout once healthcheck is available, or keep item marked blocked at current optimized baseline.
+
+### 2026-03-02 (Priority 15, closeout)
+
+**Status**
+- Priority 15 is closed at current optimized baseline.
+
+**Final report**
+- Start baseline (todo audit): `96` manual memoization instances.
+- Current `src/` baseline after batches A-D: `30` instances.
+  - `useMemo`: `1` (kept: `useFuzzySearch` Fuse index stability)
+  - `useCallback`: `22` (kept in hooks/editor integration/interaction flows where identity stability is used by consuming effects or imperative handlers)
+  - `memo`/`React.memo`: `7` (kept in high-frequency list/render surfaces like Kanban/IssueCard/Swimlan and custom compare paths)
+
+**Regression checks**
+- Multiple targeted Vitest suites across touched routes/components remained green each batch.
+- `pnpm run typecheck` remained green after each batch.
+
+**Residual blocker**
+- `npx react-compiler-healthcheck` remains network-blocked in this environment (`EAI_AGAIN registry.npmjs.org`), so further aggressive callback/memo removals are deferred.
+
+**Next step (strict order)**
+- Proceed to Priority `16`: `todos/public-launch.md`.
