@@ -23,6 +23,7 @@ import {
   nukeAllE2EWorkspacesEndpoint,
   nukeAllTestUsersEndpoint,
   nukeTimersEndpoint,
+  requestPasswordResetEndpoint,
   resetOnboardingEndpoint,
   resetTestWorkspaceEndpoint,
   seedScreenshotDataEndpoint,
@@ -112,6 +113,13 @@ http.route({
   path: "/e2e/login-test-user",
   method: "POST",
   handler: loginTestUserEndpoint,
+});
+
+// Trigger password reset dispatch for a test user
+http.route({
+  path: "/e2e/request-password-reset",
+  method: "POST",
+  handler: requestPasswordResetEndpoint,
 });
 
 // Get latest OTP for a test user

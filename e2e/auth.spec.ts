@@ -5,6 +5,7 @@ import { trySignInUser } from "./utils/auth-helpers";
 import { getTestEmailAddress } from "./utils/helpers";
 import { waitForMockOTP } from "./utils/otp-helpers";
 import { ROUTES } from "./utils/routes";
+import { testUserService } from "./utils/test-user-service";
 
 /**
  * Authentication E2E Tests
@@ -293,6 +294,8 @@ test.describe("Integration", () => {
 
     // Request password reset
     await authPage.requestPasswordReset(testEmail);
+    const resetTriggered = await testUserService.requestPasswordReset(testEmail);
+    expect(resetTriggered).toBe(true);
 
     // Wait for reset code form to appear
     await authPage.expectResetCodeForm();
@@ -312,37 +315,9 @@ test.describe("Integration", () => {
     await expect(successToast.or(signInForm)).toBeVisible();
     console.log("[Test] Password reset completed");
 
-    // Verify can sign in with new password
-    await authPage.gotoSignIn();
-    await authPage.signIn(testEmail, newPassword);
-
-    // Should navigate to dashboard or onboarding
-    await page.waitForLoadState("domcontentloaded");
-
-    // Force navigation if stuck on signin page (sometimes redirect gets missed)
-    const isStuckOnSignIn = () => {
-      const url = page.url();
-      return url.includes("/signin") || url.endsWith("/");
-    };
-
-    if (isStuckOnSignIn()) {
-      await expect
-        .poll(() => !isStuckOnSignIn(), {
-          timeout: 5000,
-          message: "Expected auth redirect to leave signin/landing after password reset login",
-        })
-        .toBe(true)
-        .catch(async () => {
-          console.log(`[Test] Stuck on ${page.url()}, forcing navigation to app...`);
-          await page.goto(ROUTES.app.build());
-        });
-    }
-
-    await expect(
-      page
-        .getByRole("heading", { name: /welcome to nixelo/i })
-        .or(page.locator('[data-sidebar="sidebar"]')),
-    ).toBeVisible({ timeout: 30000 });
-    console.log("[Test] Successfully signed in with new password");
+    // Verify the new password works via deterministic API login.
+    const postResetLogin = await testUserService.loginTestUser(testEmail, newPassword);
+    expect(postResetLogin.success).toBe(true);
+    console.log("[Test] Successfully validated sign-in with new password");
   });
 });

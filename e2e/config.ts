@@ -225,6 +225,8 @@ export const E2E_ENDPOINTS = {
   getOTP: `${CONVEX_SITE_URL}/e2e/otp`,
   // Login test user via API (POST)
   loginTestUser: `${CONVEX_SITE_URL}/e2e/login-test-user`,
+  // Trigger password reset OTP for test email (POST)
+  requestPasswordReset: `${CONVEX_SITE_URL}/e2e/request-password-reset`,
   // Get latest OTP for test email (GET ?email=...)
   getLatestOTP: `${CONVEX_SITE_URL}/e2e/get-latest-otp`,
   // Reset onboarding state (POST)

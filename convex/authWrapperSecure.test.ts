@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "./_generated/api";
 import { performPasswordResetHandler } from "./authWrapper";
 import { logger } from "./lib/logger";
 
@@ -9,25 +10,15 @@ vi.mock("./lib/logger", () => ({
   },
 }));
 
-// Mock getConvexSiteUrl
-vi.mock("./lib/env", () => ({
-  getConvexSiteUrl: () => "https://example.com",
-}));
-
 describe("performPasswordResetHandler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should log error if fetch returns non-200 status", async () => {
-    // Mock global fetch
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      text: () => Promise.resolve("Internal Server Error"),
-    });
-
-    const mockCtx = {} as any;
+  it("should log error if signIn action throws", async () => {
+    const mockCtx = {
+      runAction: vi.fn().mockRejectedValue(new Error("signIn failed")),
+    } as any;
     const args = { email: "test@example.com" };
 
     await performPasswordResetHandler(mockCtx, args);
@@ -36,23 +27,24 @@ describe("performPasswordResetHandler", () => {
       "Password reset request failed",
       expect.objectContaining({
         error: expect.objectContaining({
-          message: "Auth endpoint returned 500: Internal Server Error",
+          message: "signIn failed",
         }),
       }),
     );
   });
 
-  it("should succeed if fetch returns 200", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-    });
-
-    const mockCtx = {} as any;
+  it("should call auth signIn reset flow and not log on success", async () => {
+    const mockCtx = {
+      runAction: vi.fn().mockResolvedValue(undefined),
+    } as any;
     const args = { email: "test@example.com" };
 
     await performPasswordResetHandler(mockCtx, args);
 
+    expect(mockCtx.runAction).toHaveBeenCalledWith(api.auth.signIn, {
+      provider: "password",
+      params: { email: args.email, flow: "reset" },
+    });
     expect(logger.error).not.toHaveBeenCalled();
   });
 });

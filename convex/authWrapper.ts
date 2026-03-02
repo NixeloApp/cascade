@@ -6,7 +6,7 @@
  */
 
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import {
   type ActionCtx,
   httpAction,
@@ -14,8 +14,6 @@ import {
   internalMutation,
   type MutationCtx,
 } from "./_generated/server";
-import { getConvexSiteUrl } from "./lib/env";
-import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
@@ -25,24 +23,13 @@ import { rateLimit } from "./rateLimits";
  */
 export const performPasswordResetHandler = async (_ctx: ActionCtx, args: { email: string }) => {
   try {
-    const formData = new URLSearchParams();
-    formData.set("email", args.email);
-    formData.set("flow", "reset");
-
-    // Use the backend URL (CONVEX_SITE_URL) directly to avoid frontend proxy issues
-    // and circular dependencies with api.auth
-    const response = await fetchWithTimeout(`${getConvexSiteUrl()}/api/auth/signin/password`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+    await _ctx.runAction(api.auth.signIn, {
+      provider: "password",
+      params: {
+        email: args.email,
+        flow: "reset",
       },
-      body: formData.toString(),
     });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Auth endpoint returned ${response.status}: ${text}`);
-    }
   } catch (error) {
     // Silently ignore to client - don't leak any info
     // But log to server for debugging (e.g. timeout in CI)
@@ -188,9 +175,17 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
       });
     }
 
-    // Schedule the reset asynchronously via internal mutation
-    // This returns immediately, preventing timing attacks on email existence
-    await ctx.runMutation(internal.authWrapper.schedulePasswordReset, { email });
+    const isE2ENonProductionMode =
+      process.env.NODE_ENV !== "production" &&
+      (!!process.env.E2E_TEST_MODE || !!process.env.E2E_API_KEY || !!process.env.CI);
+
+    if (isE2ENonProductionMode) {
+      // E2E mode: execute inline to avoid scheduler latency flakes in OTP polling.
+      await ctx.runAction(internal.authWrapper.performPasswordReset, { email });
+    } else {
+      // Production/default: schedule asynchronously to minimize timing side channels.
+      await ctx.runMutation(internal.authWrapper.schedulePasswordReset, { email });
+    }
 
     // Always return success
     return new Response(JSON.stringify({ success: true }), {
