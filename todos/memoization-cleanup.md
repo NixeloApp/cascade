@@ -237,3 +237,24 @@ Top targets:
 
 **Next step (strict order)**
 - Proceed to Priority `16`: `todos/public-launch.md`.
+
+### 2026-03-02 (Priority 15, checkpoint refresh)
+
+**Completed**
+- Revalidated post-closeout memoization counts to ensure no drift after subsequent priority work.
+
+**Validation**
+- Count snapshot from `src/`:
+  - total (`useMemo` + `useCallback` + `memo`): `30`
+  - `useMemo`: `1`
+  - `useCallback`: `22`
+  - `memo`: `7`
+
+**Decisions**
+- Keep Priority `15` closed at the established optimized baseline.
+
+**Blockers**
+- Unchanged: compiler-healthcheck command remains externally network-blocked (`EAI_AGAIN`) for deeper optional cleanup.
+
+**Next step (strict order)**
+- Proceed to Priority `16`: `todos/public-launch.md`.
