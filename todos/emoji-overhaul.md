@@ -2,7 +2,7 @@
 
 > **Priority:** P2
 > **Effort:** Medium
-> **Status:** Phase 2 Complete, Phase 3 Pending
+> **Status:** Blocked (manual accessibility QA pending)
 
 ---
 
@@ -201,3 +201,25 @@ Users must manually type emoji without visual feedback.
 
 **Next step (strict order)**
 - Finish remaining Phase 4 checklist with manual accessibility verification and close Priority `14`.
+
+### 2026-03-02 (Priority 14, batch D)
+
+**Completed**
+- Reconciled this priority to blocked state: all code-deliverable migration/audit work is complete; only manual accessibility QA checklist items remain.
+
+**Validation**
+- Prior implementation validations remain green:
+  - `pnpm test convex/documentTemplates.test.ts src/components/ui/IconPicker.test.tsx` (`29 passed`)
+  - `pnpm run typecheck` (pass)
+
+**Decisions**
+- Did not mark Phase 4 checklist done without actual manual verification evidence from assistive-tech/browser passes.
+
+**Blockers**
+- Remaining scope requires manual execution outside CLI-only automation:
+  - WCAG contrast verification.
+  - Screen-reader testing.
+  - End-to-end decorative/icon-only semantics review in rendered UI.
+
+**Next step (strict order)**
+- Continue to Priority `15` while waiting for manual accessibility QA results to close this todo.
