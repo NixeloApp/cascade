@@ -240,3 +240,14 @@ The primary bandwidth drains were identified as:
   - final publication still depends on manual Convex dashboard before/after bandwidth captures.
 - Next Step:
   - operator captures and records dashboard bandwidth deltas in this todo to close `S2`.
+
+### 2026-03-02 - Batch J (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep Priority `07` blocked; no additional repository-side optimization tasks remain.
+- Validation:
+  - `pnpm test convex/dashboard.test.ts convex/analytics.test.ts convex/lib/payloadTelemetry.test.ts` => pass (`60 passed`)
+- Blockers:
+  - final publication still depends on manual Convex dashboard before/after bandwidth captures.
+- Next Step:
+  - operator captures and records dashboard bandwidth deltas in this todo to close `S2`.
