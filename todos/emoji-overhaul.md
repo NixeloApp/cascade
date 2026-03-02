@@ -52,9 +52,9 @@ Users must manually type emoji without visual feedback.
 
 ## Phase 3: Emoji Usage Audit
 
-- [ ] Audit project/team/workspace icons for emoji usage
-- [ ] Audit custom field options
-- [ ] Audit user status fields
+- [x] Audit project/team/workspace icons for emoji usage
+- [x] Audit custom field options
+- [x] Audit user status fields
 
 ---
 
@@ -172,3 +172,32 @@ Users must manually type emoji without visual feedback.
 - Continue Priority `14` with remaining scope:
   - Phase 3 emoji usage audits (project/team/workspace/custom-fields/user-status).
   - Phase 4 accessibility audit (icon-only labels, decorative aria-hidden, contrast + screen reader checks).
+
+### 2026-03-02 (Priority 14, batch C)
+
+**Completed**
+- Executed Phase 3 emoji usage audit across current code paths:
+  - Project/team/workspace icons:
+    - `workspaces.icon` and `teams.icon` remain optional emoji/string fields in `convex/schema.ts`.
+    - Workspace settings UI uses curated emoji selector (`src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings.tsx`).
+    - Project templates continue to use string/emoji icons (`projectTemplates.icon`).
+  - Custom fields:
+    - No emoji-icon storage field requiring migration was found in custom-field option schema/components.
+  - User status fields:
+    - No dedicated emoji status-icon data model requiring migration was found in current settings/user-management surfaces.
+- Accessibility hardening for current icon-overhaul surface:
+  - Added explicit `aria-label` values for icon-only edit/delete template controls in `src/components/Documents/DocumentTemplatesManager.tsx`.
+
+**Validation**
+- `pnpm test convex/documentTemplates.test.ts src/components/ui/IconPicker.test.tsx` (`29 passed`)
+- `pnpm run typecheck` (pass)
+
+**Decisions**
+- Scoped structured icon migration to `documentTemplates` first to reduce rollout risk.
+- Deferred workspace/team/project-template icon schema migrations to a separate follow-up once product-level icon language is finalized.
+
+**Blockers**
+- Full WCAG contrast and screen-reader verification requires manual browser/assistive-tech QA passes.
+
+**Next step (strict order)**
+- Finish remaining Phase 4 checklist with manual accessibility verification and close Priority `14`.

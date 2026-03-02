@@ -330,6 +330,7 @@ export function DocumentTemplatesManager({
                             variant="ghost"
                             size="sm"
                             onClick={() => startEdit(template)}
+                            aria-label={`Edit template ${template.name}`}
                             leftIcon={
                               <svg
                                 aria-hidden="true"
@@ -351,6 +352,7 @@ export function DocumentTemplatesManager({
                             variant="ghost"
                             size="sm"
                             onClick={() => setDeleteConfirm(template._id)}
+                            aria-label={`Delete template ${template.name}`}
                             leftIcon={
                               <svg
                                 aria-hidden="true"
