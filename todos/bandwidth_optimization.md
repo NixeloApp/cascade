@@ -187,3 +187,20 @@ The primary bandwidth drains were identified as:
   - none for this subtask.
 - Next Step:
   - finish Priority `07` by collecting/publishing before-vs-after bandwidth metrics from Convex dashboard for these optimized endpoints.
+
+### 2026-03-02 - Batch F (bandwidth report publication attempt - blocked)
+
+- Decision:
+  - attempt to complete the last Priority `07` item by collecting Convex dashboard bandwidth deltas directly from CLI-accessible tooling.
+- Change:
+  - validated available Convex CLI capabilities in this environment (`pnpm exec convex --help`): no metrics/bandwidth export command is available (dashboard is browser-only via `convex dashboard`).
+  - ran full validation path after the counters-table changes to ensure the optimized endpoints are stable before report publication:
+    - `pnpm run test:run` => pass (`348` files, `3459` tests passed)
+    - `pnpm run test:all` => pass
+- Validation:
+  - local code/test validation is complete; no runtime regressions detected in optimized query paths.
+- Blockers:
+  - Convex bandwidth metrics are only accessible in the hosted dashboard UI for this project; this headless CLI environment cannot read/export those dashboard charts directly.
+  - no documented Convex CLI command exists here for bandwidth-history extraction.
+- Next Step:
+  - operator action required: open Convex dashboard metrics UI, capture before/after bandwidth values for optimized endpoints, then paste values into this todo so final report can be marked complete.
