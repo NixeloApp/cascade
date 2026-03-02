@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   BarChart3,
   Bell,
@@ -153,17 +153,14 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
   const [hoveredValue, setHoveredValue] = useState<string | null>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  const filteredOptions = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return ICON_OPTIONS;
-    }
-    const query = searchQuery.trim().toLowerCase();
-    return ICON_OPTIONS.filter((option) => {
-      const label = formatOptionLabel(option).toLowerCase();
-      const keywordMatch = option.keywords.some((keyword) => keyword.includes(query));
-      return label.includes(query) || option.name.toLowerCase().includes(query) || keywordMatch;
-    });
-  }, [searchQuery]);
+  const filteredOptions = !searchQuery.trim()
+    ? ICON_OPTIONS
+    : ICON_OPTIONS.filter((option) => {
+        const query = searchQuery.trim().toLowerCase();
+        const label = formatOptionLabel(option).toLowerCase();
+        const keywordMatch = option.keywords.some((keyword) => keyword.includes(query));
+        return label.includes(query) || option.name.toLowerCase().includes(query) || keywordMatch;
+      });
 
   const selectedOption = getSelectedOption(value);
   const selectedLabel = selectedOption ? formatOptionLabel(selectedOption) : value;

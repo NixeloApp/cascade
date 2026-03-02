@@ -46,7 +46,7 @@ Top targets:
 
 ### Milestones
 
-- [ ] `S2` Convert scope list to tracked batches (10-12 files per batch)
+- [x] `S2` Convert scope list to tracked batches (10-12 files per batch)
 - [ ] `S2-S3` Remove safe memoization in compiler-covered files
 - [ ] `S3` Keep explicit memoization only where identity is correctness-critical
 - [ ] `S4` Publish cleanup report with before/after instance counts
@@ -59,3 +59,48 @@ Top targets:
 ### Definition of Done
 
 - Manual memoization reduced substantially with no correctness regressions.
+
+---
+
+## Progress Updates
+
+### 2026-03-02 (Priority 15, batch A)
+
+**Completed**
+- Began memoization cleanup with a conservative low-risk batch (pure computed-value paths only):
+  - `src/components/Invoices/InvoiceEditor.tsx`:
+    - removed `useMemo` around subtotal calculation.
+  - `src/components/Sprints/SprintProgressBar.tsx`:
+    - removed `useMemo` around progress aggregation logic.
+  - `src/components/Analytics/LineChart.tsx`:
+    - removed `useMemo` around chart projection/path generation.
+  - `src/routes/_auth/_app/$orgSlug/my-issues.tsx`:
+    - removed grouped-list `useMemo`.
+  - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies.tsx`:
+    - removed `workspaceTeams`, `statusOptions`, and `priorityOptions` `useMemo`.
+  - `src/components/ui/IconPicker.tsx`:
+    - removed `filteredOptions` `useMemo`.
+- Updated baseline counts after batch:
+  - Combined manual memoization instances in `src/` (`useMemo`, `useCallback`, `memo`): `59`
+  - `useMemo`: `14`
+  - `useCallback`: `38`
+  - `memo`/`React.memo`: `7`
+
+**Validation**
+- `pnpm exec biome check --write src/components/Invoices/InvoiceEditor.tsx src/components/Sprints/SprintProgressBar.tsx src/components/Analytics/LineChart.tsx src/routes/_auth/_app/$orgSlug/my-issues.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies.tsx src/components/ui/IconPicker.tsx`
+- `pnpm test src/components/ui/IconPicker.test.tsx src/config/routes.test.ts` (`45 passed`)
+- `pnpm run typecheck` (pass)
+
+**Decisions**
+- Did not remove `useCallback`/`memo` in this first batch where callback identity might affect side-effect behavior.
+- Prioritized deterministic, purely derived computations for first-pass cleanup.
+
+**Blockers**
+- Compiler coverage check command is currently blocked by network/DNS:
+  - `npx react-compiler-healthcheck ...` fails with `EAI_AGAIN registry.npmjs.org`.
+
+**Next step (strict order)**
+- Continue Priority `15` with batch B:
+  - remove additional safe `useMemo` sites,
+  - classify `useCallback`/`memo` instances into `remove` vs `keep-for-correctness`,
+  - publish ongoing before/after counts.

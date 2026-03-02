@@ -3,7 +3,6 @@
  * Uses SVG for simple, responsive line charts without external dependencies
  */
 
-import { useMemo } from "react";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 
@@ -28,9 +27,16 @@ export function LineChart({
   height = 200,
   showIdealLine = true,
 }: LineChartProps) {
-  const chartData = useMemo(() => {
-    if (data.length === 0) return null;
-
+  let chartData: {
+    actualPath: string;
+    idealPath: string;
+    actualPoints: Array<{ x: number; y: number; label: string; value: number }>;
+    yLabels: number[];
+    padding: { top: number; right: number; bottom: number; left: number };
+    chartHeight: number;
+    maxValue: number;
+  } | null = null;
+  if (data.length > 0) {
     const padding = { top: 20, right: 20, bottom: 30, left: 40 };
     const maxValue = Math.max(...data.map((d) => Math.max(d.value, d.idealValue ?? 0)), 1);
 
@@ -72,7 +78,7 @@ export function LineChart({
     // Y-axis labels
     const yLabels = [0, Math.round(maxValue / 2), maxValue];
 
-    return {
+    chartData = {
       actualPath,
       idealPath,
       actualPoints,
@@ -81,7 +87,7 @@ export function LineChart({
       chartHeight,
       maxValue,
     };
-  }, [data, height]);
+  }
 
   if (!chartData || data.length === 0) {
     return (

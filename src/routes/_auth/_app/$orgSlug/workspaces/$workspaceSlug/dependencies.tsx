@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -48,30 +48,18 @@ function WorkspaceDependenciesPage() {
       : "skip",
   );
 
-  const workspaceTeams = useMemo(() => {
-    if (!(workspace && teams)) {
-      return [];
-    }
-    return teams.filter((team) => team.workspaceId === workspace._id);
-  }, [workspace, teams]);
+  const workspaceTeams =
+    workspace && teams ? teams.filter((team) => team.workspaceId === workspace._id) : [];
 
-  const statusOptions = useMemo(() => {
-    if (!dependencies) {
-      return [];
-    }
-    return [
-      ...new Set(dependencies.flatMap((dep) => [dep.fromIssue.status, dep.toIssue.status])),
-    ].sort();
-  }, [dependencies]);
+  const statusOptions = dependencies
+    ? [...new Set(dependencies.flatMap((dep) => [dep.fromIssue.status, dep.toIssue.status]))].sort()
+    : [];
 
-  const priorityOptions = useMemo(() => {
-    if (!dependencies) {
-      return [];
-    }
-    return [
-      ...new Set(dependencies.flatMap((dep) => [dep.fromIssue.priority, dep.toIssue.priority])),
-    ].sort();
-  }, [dependencies]);
+  const priorityOptions = dependencies
+    ? [
+        ...new Set(dependencies.flatMap((dep) => [dep.fromIssue.priority, dep.toIssue.priority])),
+      ].sort()
+    : [];
 
   if (workspace === undefined || teams === undefined || dependencies === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -32,10 +32,7 @@ export function InvoiceEditor({ initialLineItems, onSave, isSaving = false }: In
     })),
   );
 
-  const subtotal = useMemo(
-    () => lineItems.reduce((sum, line) => sum + line.quantity * line.rate, 0),
-    [lineItems],
-  );
+  const subtotal = lineItems.reduce((sum, line) => sum + line.quantity * line.rate, 0);
 
   const updateLineItem = (index: number, next: Partial<InvoiceLineItem>) => {
     setLineItems((previous) =>

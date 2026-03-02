@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PageContent } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -25,20 +25,17 @@ function MyIssuesBoardPage() {
     { initialNumItems: 100 },
   );
 
-  const groups = useMemo(() => {
-    const grouped = new Map<string, typeof results>();
-    for (const issue of results) {
-      const key = groupBy === "status" ? issue.status : issue.projectKey;
-      const existing = grouped.get(key);
-      if (existing) {
-        existing.push(issue);
-      } else {
-        grouped.set(key, [issue]);
-      }
+  const grouped = new Map<string, typeof results>();
+  for (const issue of results) {
+    const key = groupBy === "status" ? issue.status : issue.projectKey;
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.push(issue);
+    } else {
+      grouped.set(key, [issue]);
     }
-
-    return [...grouped.entries()].sort((a, b) => b[1].length - a[1].length);
-  }, [groupBy, results]);
+  }
+  const groups = [...grouped.entries()].sort((a, b) => b[1].length - a[1].length);
 
   if (status === "LoadingFirstPage") {
     return <PageContent isLoading>{null}</PageContent>;

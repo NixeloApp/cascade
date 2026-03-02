@@ -8,7 +8,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useMemo } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
@@ -27,9 +26,8 @@ export function SprintProgressBar({ projectId, sprintId, className }: SprintProg
 
   const project = useQuery(api.projects.getProject, { id: projectId });
 
-  const progress = useMemo(() => {
-    if (!counts || !project?.workflowStates) return null;
-
+  let progress: { percent: number; done: number; total: number } | null = null;
+  if (counts && project?.workflowStates) {
     // Group workflow states by category
     const doneStates = project.workflowStates.filter((s) => s.category === "done").map((s) => s.id);
 
@@ -47,14 +45,16 @@ export function SprintProgressBar({ projectId, sprintId, className }: SprintProg
       }
     }
 
-    if (total === 0) return { percent: 0, done: 0, total: 0 };
-
-    return {
-      percent: Math.round((done / total) * 100),
-      done,
-      total,
-    };
-  }, [counts, project?.workflowStates]);
+    if (total === 0) {
+      progress = { percent: 0, done: 0, total: 0 };
+    } else {
+      progress = {
+        percent: Math.round((done / total) * 100),
+        done,
+        total,
+      };
+    }
+  }
 
   if (!progress || progress.total === 0) {
     return null;
