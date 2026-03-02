@@ -636,3 +636,18 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
   - remaining strict debt spans cross-feature refactors outside this checkpoint batch.
 - Next Step:
   - continue strict order to Priority `11`; handle strict-validator debt in dedicated follow-up refactor lane.
+
+### 2026-03-02 - Batch D (strict-order snapshot revalidation)
+
+- Decision:
+  - keep this todo in operational tracking mode with no code refactors in this checkpoint.
+- Validation:
+  - `node scripts/validate.js` => fail (`41` errors), unchanged profile:
+    - standards: `14`
+    - query issues: `9` (`7 high`, `2 medium`)
+    - raw-tailwind: `14`
+    - emoji: `4`
+- Blockers:
+  - strict debt still requires cross-feature refactor batches outside this checkpoint lane.
+- Next Step:
+  - continue strict order to Priority `11`; treat validator-debt reduction as dedicated follow-up work.
