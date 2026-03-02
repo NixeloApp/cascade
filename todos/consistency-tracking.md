@@ -620,3 +620,19 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
   - remaining strict-validator failures require cross-feature refactors (layout primitive migration, query bounding, emoji policy alignment) spanning multiple priorities/files.
 - Next Step:
   - proceed to Priority `11`, and schedule a dedicated strict-validator debt reduction batch after higher-priority feature blockers are cleared.
+
+### 2026-03-02 - Batch C (strict-order snapshot revalidation)
+
+- Decision:
+  - keep this todo in operational tracking mode; no incremental refactor work is taken in this strict-order pass.
+- Validation:
+  - `node scripts/validate.js` => fail (`41` errors), unchanged strict debt profile:
+    - standards violations: `14`
+    - query issues: `9` (`7 high`, `2 medium`)
+    - raw-tailwind violations: `14`
+    - emoji-rule violations: `4`
+  - validator inventory/cadence assumptions remain consistent with current output.
+- Blockers:
+  - remaining strict debt spans cross-feature refactors outside this checkpoint batch.
+- Next Step:
+  - continue strict order to Priority `11`; handle strict-validator debt in dedicated follow-up refactor lane.
