@@ -31,6 +31,8 @@ import {
   verifyOAuthSuccess,
 } from "./utils/google-oauth-mock";
 
+const GOOGLE_OAUTH_HOST = "accounts.google.com";
+
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
     await clearGoogleOAuthMock(page);
@@ -176,8 +178,13 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       let capturedOAuthUrl: string | null = null;
 
       // Intercept the redirect to capture the OAuth URL
-      await page.route("**/accounts.google.com/**", async (route) => {
-        capturedOAuthUrl = route.request().url();
+      await page.context().route("**/*", async (route) => {
+        const requestUrl = route.request().url();
+        if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
+          await route.continue();
+          return;
+        }
+        capturedOAuthUrl = requestUrl;
         await route.abort("failed");
       });
 
@@ -202,8 +209,13 @@ test.describe("Google OAuth Flow (Mocked)", () => {
     test("should request correct OAuth scopes", async ({ page, baseURL }) => {
       let capturedOAuthUrl: string | null = null;
 
-      await page.route("**/accounts.google.com/**", async (route) => {
-        capturedOAuthUrl = route.request().url();
+      await page.context().route("**/*", async (route) => {
+        const requestUrl = route.request().url();
+        if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
+          await route.continue();
+          return;
+        }
+        capturedOAuthUrl = requestUrl;
         await route.abort("failed");
       });
 
@@ -228,8 +240,13 @@ test.describe("Google OAuth Flow (Mocked)", () => {
     test("should use correct redirect URI", async ({ page, baseURL }) => {
       let capturedOAuthUrl: string | null = null;
 
-      await page.route("**/accounts.google.com/**", async (route) => {
-        capturedOAuthUrl = route.request().url();
+      await page.context().route("**/*", async (route) => {
+        const requestUrl = route.request().url();
+        if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
+          await route.continue();
+          return;
+        }
+        capturedOAuthUrl = requestUrl;
         await route.abort("failed");
       });
 

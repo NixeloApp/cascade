@@ -265,6 +265,31 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - Current full suite: `11` failures / `151` executed (`7.28%`)
   - Net: `-12` failures while increasing executed volume.
 
+### 2026-03-02 - Batch H (partial, in progress)
+
+- Decision: address OAuth suite failures incrementally by first fixing stale assertion contracts and then attempting broader redirect-capture hardening.
+- Change: `e2e/oauth-security.spec.ts` callback security assertions now match current server responses:
+  - missing-code case checks `/missing authorization code/i`
+  - access-denied case checks `"declined the Google Calendar permission request"`
+- Change: OAuth route capture logic was hardened in:
+  - `e2e/utils/google-oauth-mock.ts`
+  - `e2e/oauth-mocked.spec.ts`
+  - `e2e/oauth-security.spec.ts`
+  using context-level interception and broader host-based matching attempts.
+- Targeted validation command: `pnpm exec playwright test e2e/oauth-mocked.spec.ts e2e/oauth-security.spec.ts --reporter=line`
+- Targeted outcome (latest): `11 passed`, `9 failed`, `1 skipped` (`21 total`).
+- Progress inside OAuth cluster:
+  - Previous targeted OAuth failures: `11`
+  - Current targeted OAuth failures: `9`
+  - Net: `-2` (callback text/assertion drift resolved)
+- Remaining failing tests (all OAuth-related):
+  - `e2e/oauth-mocked.spec.ts`: `7` failures
+    - successful login/sign-up/returning-user URL completion waits
+    - OAuth URL capture assertions (`state`, `scope`, `redirect_uri`)
+  - `e2e/oauth-security.spec.ts`: `2` failures
+    - browser OAuth URL capture assertions (`state`, redirect safety)
+- Additional check: attempted full-suite rerun was interrupted after unrelated auth fixture instability (`InvalidAccountId` / fallback sign-in timeouts) contaminated signal; no new full-suite baseline recorded from that run.
+
 ### Next Step (strictly next)
 
-- Execute OAuth reliability batch: harden redirect capture/state propagation in `oauth-mocked` and `oauth-security`, rerun those two specs, then rerun full suite.
+- Complete OAuth batch by replacing brittle browser redirect-capture assertions with deterministic endpoint-level contract checks where possible, and isolating true UI OAuth initiation checks behind a stable harness; then rerun `oauth-mocked` + `oauth-security` and only then rerun full suite.

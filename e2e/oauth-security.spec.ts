@@ -13,6 +13,8 @@
 
 import { expect, test } from "@playwright/test";
 
+const GOOGLE_OAUTH_HOST = "accounts.google.com";
+
 // Convex site URL for HTTP actions
 const CONVEX_SITE_URL = process.env.VITE_CONVEX_URL?.replace(".cloud", ".site") || "";
 
@@ -95,7 +97,7 @@ test.describe("OAuth Security", () => {
       expect(response.status()).toBe(400);
 
       const text = await response.text();
-      expect(text).toContain("Missing authorization code");
+      expect(text).toMatch(/missing authorization code/i);
     });
 
     test("should handle callback with error parameter (user denied access)", async ({
@@ -113,7 +115,7 @@ test.describe("OAuth Security", () => {
 
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("access_denied");
+      expect(text).toContain("declined the Google Calendar permission request");
     });
 
     test("should handle callback with invalid code gracefully", async ({ request }) => {
@@ -202,8 +204,13 @@ test.describe("OAuth Flow Security (Browser)", () => {
     let capturedOAuthUrl: string | null = null;
 
     // Intercept the redirect to capture the OAuth URL
-    await page.route("**/accounts.google.com/**", async (route) => {
-      capturedOAuthUrl = route.request().url();
+    await page.context().route("**/*", async (route) => {
+      const requestUrl = route.request().url();
+      if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
+        await route.continue();
+        return;
+      }
+      capturedOAuthUrl = requestUrl;
       await route.abort("failed");
     });
 
@@ -236,8 +243,13 @@ test.describe("OAuth Flow Security (Browser)", () => {
   test("OAuth redirect should not allow open redirects", async ({ page, baseURL }) => {
     let capturedOAuthUrl: string | null = null;
 
-    await page.route("**/accounts.google.com/**", async (route) => {
-      capturedOAuthUrl = route.request().url();
+    await page.context().route("**/*", async (route) => {
+      const requestUrl = route.request().url();
+      if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
+        await route.continue();
+        return;
+      }
+      capturedOAuthUrl = requestUrl;
       await route.abort("failed");
     });
 
