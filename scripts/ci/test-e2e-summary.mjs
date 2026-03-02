@@ -10,6 +10,11 @@ import { buildSummaryLines } from "./e2e-summary.mjs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const reportFixturePath = path.join(__dirname, "fixtures", "e2e-summary-report-mock.json");
 const historyFixturePath = path.join(__dirname, "fixtures", "e2e-summary-history-mock.json");
+const failingFirstHistoryFixturePath = path.join(
+  __dirname,
+  "fixtures",
+  "e2e-summary-history-failing-first.json",
+);
 const reportFixture = JSON.parse(fs.readFileSync(reportFixturePath, "utf8"));
 
 function makeEnv(overrides = {}) {
@@ -93,6 +98,21 @@ async function runHistoryDerivedDirtyReportCase() {
   assert.match(output, /Error Rate: `33.33%`/);
 }
 
+async function runHistoryDerivedFailingFirstCase() {
+  const lines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: failingFirstHistoryFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "250",
+    }),
+  );
+  const output = lines.join("\n");
+
+  assert.match(output, /Clean-Run Checkpoint: `0\/5` \(history-derived\)/);
+  assert.match(output, /Streak Scan Window: `1\/250` completed CI runs/);
+  assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
+}
+
 async function runScanLimitTruncationCase() {
   const lines = await buildSummaryLines(
     reportFixture,
@@ -112,5 +132,6 @@ await runFallbackCase();
 await runFallbackDirtyCase();
 await runHistoryDerivedCase();
 await runHistoryDerivedDirtyReportCase();
+await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
 console.log("e2e-summary self-test passed");
