@@ -41,9 +41,15 @@ export const getMyIssues = authenticatedQuery({
   returns: v.object({
     page: v.array(
       v.object({
-        ...issuesFields,
         _id: v.id("issues"),
         _creationTime: v.number(),
+        projectId: v.id("projects"),
+        key: v.string(),
+        title: v.string(),
+        type: v.string(),
+        status: v.string(),
+        priority: v.string(),
+        updatedAt: v.number(),
         projectName: v.string(),
         projectKey: v.string(),
         reporterName: v.string(),
@@ -89,19 +95,33 @@ export const getMyIssues = authenticatedQuery({
     ]);
 
     // Enrich with pre-fetched data
-    const enrichedIssues = results.page.map((issue) => {
-      const project = issue.projectId ? projectMap.get(issue.projectId) : null;
-      const reporter = issue.reporterId ? userMap.get(issue.reporterId) : null;
-      const assignee = issue.assigneeId ? userMap.get(issue.assigneeId) : null;
+    const enrichedIssues = pruneNull(
+      results.page.map((issue) => {
+        if (!issue.projectId) {
+          return null;
+        }
 
-      return {
-        ...issue,
-        projectName: project?.name || "Unknown",
-        projectKey: project?.key || "???",
-        reporterName: reporter?.name || reporter?.email || "Unknown",
-        assigneeName: assignee?.name || assignee?.email || "Unassigned",
-      };
-    });
+        const project = projectMap.get(issue.projectId);
+        const reporter = issue.reporterId ? userMap.get(issue.reporterId) : null;
+        const assignee = issue.assigneeId ? userMap.get(issue.assigneeId) : null;
+
+        return {
+          _id: issue._id,
+          _creationTime: issue._creationTime,
+          projectId: issue.projectId,
+          key: issue.key,
+          title: issue.title,
+          type: issue.type,
+          status: issue.status,
+          priority: issue.priority,
+          updatedAt: issue.updatedAt,
+          projectName: project?.name || "Unknown",
+          projectKey: project?.key || "???",
+          reporterName: reporter?.name || reporter?.email || "Unknown",
+          assigneeName: assignee?.name || assignee?.email || "Unassigned",
+        };
+      }),
+    );
 
     return {
       ...results,
@@ -126,6 +146,7 @@ export const getMyCreatedIssues = authenticatedQuery({
       _creationTime: v.number(),
       projectName: v.string(),
       projectKey: v.string(),
+      reporterName: v.string(),
       assigneeName: v.string(),
     }),
   ),
@@ -161,6 +182,7 @@ export const getMyCreatedIssues = authenticatedQuery({
         ...issue,
         projectName: project?.name || "Unknown",
         projectKey: project?.key || "???",
+        reporterName: "You",
         assigneeName: assignee?.name || assignee?.email || "Unassigned",
       };
     });

@@ -32,7 +32,7 @@ The primary bandwidth drains were identified as:
 ### 1. Dashboard & Analytics
 - [ ] **`dashboard.getMyRecentActivity`**: Currently scans the global `issueActivity` table. Needs to be refactored to query only projects the user is a member of (requires adding a `projectId` index to `issueActivity` or indexing by project membership).
 - [ ] **`analytics.getProjectAnalytics`**: Projecting fields or using pre-aggregated status counts to avoid fetching 1000 full issue documents.
-- [ ] **`dashboard.getMyIssues`**: Ensure pagination is strictly enforced and only necessary fields are transferred if issues have large descriptions.
+- [x] **`dashboard.getMyIssues`**: Ensure pagination is strictly enforced and only necessary fields are transferred if issues have large descriptions.
 
 ### 2. General Infrastructure
 - [ ] **Field Projection**: Review all queries that return arrays of documents. If only a few fields are used (e.g., only `_id` and `name` in a picker), use helper patterns to avoid fetching full `Doc<"table">` objects.
@@ -69,3 +69,26 @@ The primary bandwidth drains were identified as:
 ### Definition of Done
 
 - Top recurring bandwidth offenders are reduced and documented with measured deltas.
+
+---
+
+## Progress Log
+
+### 2026-03-02 - Batch A (`dashboard.getMyIssues` payload minimization)
+
+- Decision:
+  - start Priority `07` with the lowest-risk high-impact item: reduce `dashboard.getMyIssues` payload shape instead of returning full issue documents.
+- Change:
+  - updated `convex/dashboard.ts`:
+    - `getMyIssues` now returns a minimal issue shape needed by dashboard/command palette (`_id`, `_creationTime`, `projectId`, `key`, `title`, `type`, `status`, `priority`, `updatedAt`, `projectName`, `projectKey`, `reporterName`, `assigneeName`) instead of full `issuesFields`.
+    - filtered out malformed entries missing `projectId` in enriched result mapping.
+    - aligned `getMyCreatedIssues` output with `reporterName` to keep dashboard feed merge typing consistent.
+  - updated `src/components/CommandPalette.tsx`:
+    - removed over-strict `Doc<"issues">` callback annotation for recent-issues mapping so it matches the new lightweight query payload contract.
+- Validation:
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/dashboard.test.ts` => pass (`29 passed`)
+- Blockers:
+  - none for this subtask.
+- Next Step:
+  - tackle `dashboard.getMyRecentActivity` query scoping (remove global activity scan pattern) and/or analytics payload slimming.

@@ -258,22 +258,20 @@ export function useCommands({
       : []),
 
     // Quick access to recent issues
-    ...(myIssues?.page
-      ?.slice(0, 5)
-      ?.map((issue: Doc<"issues"> & { projectName?: string; projectKey: string }) => ({
-        id: `issue-${issue._id}`,
-        label: issue.title,
-        icon: ISSUE_TYPE_ICONS[issue.type as IssueType],
-        description: `${issue.key} • ${issue.projectName}`,
-        keywords: [issue.projectKey, issue.projectName || ""],
-        action: () => {
-          navigate({
-            to: ROUTES.projects.board.path,
-            params: { orgSlug, key: issue.projectKey },
-          });
-        },
-        group: "Recent Issues",
-      })) ?? []),
+    ...(myIssues?.page?.slice(0, 5)?.map((issue) => ({
+      id: `issue-${issue._id}`,
+      label: issue.title,
+      icon: ISSUE_TYPE_ICONS[issue.type as IssueType],
+      description: `${issue.key} • ${issue.projectName}`,
+      keywords: [issue.projectKey, issue.projectName || ""],
+      action: () => {
+        navigate({
+          to: ROUTES.projects.board.path,
+          params: { orgSlug, key: issue.projectKey },
+        });
+      },
+      group: "Recent Issues",
+    })) ?? []),
   ];
 
   return commands;
