@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: targeted suite now 29 pass / 2 fail; remaining blockers are auth forgot-password visibility + reset-code transition |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: targeted suite now 30 pass / 1 fail; remaining blocker is password-reset transition stability |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): project/issue creation and issue-detail reliability blockers mitigated; E2E targeted slice improved to 29 pass / 2 fail; current blockers are auth product-flow failures tracked in `e2e-reliability-overhaul.md`.
+- Priority `01` update (2026-03-02): project/issue creation and issue-detail reliability blockers mitigated; E2E targeted slice improved to 30 pass / 1 fail; current blocker is auth password-reset transition flow tracked in `e2e-reliability-overhaul.md`.

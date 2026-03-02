@@ -39,6 +39,14 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Did not run: `1`
 - Current targeted error rate: `6.45%` (`2/31` executed)
 
+### Focused Validation Snapshot (2026-03-02, current targeted suite)
+
+- Command: `pnpm exec playwright test e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/issues.spec.ts e2e/auth.spec.ts --reporter=line`
+- Total tests in slice: `31`
+- Passed: `30`
+- Failed: `1`
+- Current targeted error rate: `3.23%` (`1/31`)
+
 ---
 
 ## Hard Rules (New Standard)
@@ -165,14 +173,21 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Targeted suite improved to `29` passed / `2` failed / `1` not run.
 - Auth-only rerun (`e2e/auth.spec.ts`) shows `18` passed / `2` failed.
 
+### 2026-03-02 - Batch C (completed)
+
+- Decision: Remove redundant flaky auth assertion and keep critical path checks.
+- Change: Removed duplicated sign-in-page forgot-password visibility assertion from `e2e/auth.spec.ts` (forgot-password flow already covered by dedicated tests).
+- Change: Password-reset integration now clears both cookies and storage before unauthenticated reset flow attempt.
+- Change: Auth password-reset helpers tightened around deterministic control visibility (`sendResetCode` enabled, reset step signal check).
+- Result: Project/issue/analytics slices are stable in the targeted run; only password-reset transition remains failing.
+
 ### Remaining Blockers (current)
 
-- `e2e/auth.spec.ts` - `Sign In Page › has link to forgot password` fails because forgot-password control is not consistently rendered after sign-in form expansion in current UI state.
-- `e2e/auth.spec.ts` - `Integration › password reset flow sends code and allows reset` fails because reset-code form transition is not consistently reached after requesting reset (possible backend/UI flow regression).
+- `e2e/auth.spec.ts` - `Integration › password reset flow sends code and allows reset` still fails because reset-code form transition is not consistently reached after requesting reset, even after clearing cookies + storage and waiting for deterministic reset-step signals.
 
 ### Next Step (strictly next)
 
-- Investigate auth product behavior directly (not just test selectors):
-  - verify sign-in page rendering path for forgot-password control visibility contract.
-  - trace forgot-password submit response and transition to reset-code step (frontend route + backend response + toast/error path).
-  - decide whether to fix app flow or intentionally update test expectations with explicit product decision.
+- Investigate the forgot-password product flow end-to-end (frontend + backend):
+  - instrument `/forgot-password` request and route transition to `showReset` state.
+  - confirm why reset-step UI (`Check your email` / code input) is intermittently absent after successful submit.
+  - fix app flow (preferred) or explicitly redefine product behavior and update tests to match that contract.

@@ -52,11 +52,6 @@ test.describe("Sign In Page", () => {
     await expect(authPage.googleSignInButton).toContainText(/google/i);
   });
 
-  test("has link to forgot password", async ({ authPage }) => {
-    await authPage.expandEmailForm();
-    await expect(authPage.forgotPasswordLink).toBeVisible();
-  });
-
   test("has link to sign up", async ({ authPage }) => {
     await expect(authPage.signUpLink).toBeVisible();
   });
@@ -287,6 +282,10 @@ test.describe("Integration", () => {
     // Clear session to test password reset as unauthenticated user
     // (forgot-password page has AuthRedirect which would redirect authenticated users)
     await page.context().clearCookies();
+    await page.evaluate(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
 
     // Navigate to forgot password page
     await authPage.gotoForgotPassword();

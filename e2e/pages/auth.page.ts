@@ -370,8 +370,11 @@ export class AuthPage extends BasePage {
   }
 
   async requestPasswordReset(email: string) {
+    await expect(this.emailInput).toBeVisible({ timeout: 30000 });
     await this.emailInput.fill(email);
+    await expect(this.sendResetCodeButton).toBeEnabled();
     await this.sendResetCodeButton.click();
+    await expect(this.codeInput.or(this.checkEmailHeading)).toBeVisible({ timeout: 30000 });
   }
 
   async completePasswordReset(code: string, newPassword: string) {
@@ -474,7 +477,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectResetCodeForm() {
-    await expect(this.resetPasswordHeading.or(this.codeInput)).toBeVisible({ timeout: 30000 });
+    await expect(this.codeInput).toBeVisible({ timeout: 30000 });
     await expect(this.codeInput).toBeVisible();
     await expect(this.newPasswordInput).toBeVisible();
     await expect(this.resetPasswordButton).toBeVisible();
