@@ -407,3 +407,18 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - repository state unchanged (`git status` clean).
 - Next Step:
   - once DNS connectivity is restored, install `@xyflow/react`, implement the dependencies graph view, run typecheck + affected tests, and then close this todo.
+
+### 2026-03-02 - Batch L (strict-order retry; blocker unchanged)
+
+- Decision:
+  - keep Priority `06` blocked; do not move off the `react-flow` dependency-graph requirement.
+- Validation:
+  - `pnpm test convex/workspaces.test.ts convex/calendarEvents.test.ts convex/documents.test.ts` => pass (`91 passed`)
+  - retry install with aligned store still failed:
+    - `pnpm --store-dir /home/mikhail/.local/share/pnpm/store/v10 add @xyflow/react`
+    - `ERR_PNPM_META_FETCH_FAIL` / `getaddrinfo EAI_AGAIN registry.npmjs.org`
+  - repository state remained unchanged after the failed install attempt.
+- Blockers:
+  - external npm registry DNS connectivity remains unavailable.
+- Next Step:
+  - once DNS connectivity is restored, install `@xyflow/react`, implement graph visualization for cross-team dependencies, run typecheck + affected tests, and close Priority `06`.
