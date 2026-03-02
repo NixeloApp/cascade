@@ -33,6 +33,9 @@ const samlConfigValidator = v.object({
 });
 
 const oidcConfigValidator = v.object({
+  provider: v.optional(
+    v.union(v.literal("google-workspace"), v.literal("microsoft-entra"), v.literal("okta")),
+  ),
   issuer: v.optional(v.string()),
   clientId: v.optional(v.string()),
   clientSecret: v.optional(v.string()),
@@ -174,6 +177,9 @@ export const get = query({
       samlConfig: v.optional(samlConfigValidator),
       oidcConfig: v.optional(
         v.object({
+          provider: v.optional(
+            v.union(v.literal("google-workspace"), v.literal("microsoft-entra"), v.literal("okta")),
+          ),
           issuer: v.optional(v.string()),
           clientId: v.optional(v.string()),
           // Note: clientSecret is not returned for security
@@ -216,6 +222,7 @@ export const get = query({
       samlConfig: connection.samlConfig,
       oidcConfig: connection.oidcConfig
         ? {
+            provider: connection.oidcConfig.provider,
             issuer: connection.oidcConfig.issuer,
             clientId: connection.oidcConfig.clientId,
             scopes: connection.oidcConfig.scopes,
@@ -542,6 +549,9 @@ export const getForDomain = query({
       organizationName: v.string(),
       type: ssoTypeValidator,
       name: v.string(),
+      oidcProvider: v.optional(
+        v.union(v.literal("google-workspace"), v.literal("microsoft-entra"), v.literal("okta")),
+      ),
     }),
     v.null(),
   ),
@@ -565,6 +575,7 @@ export const getForDomain = query({
             organizationName: org.name,
             type: connection.type,
             name: connection.name,
+            oidcProvider: connection.oidcConfig?.provider,
           };
         }
       }
@@ -599,6 +610,7 @@ export const getForDomain = query({
       organizationName: org.name,
       type: matchingConn.type,
       name: matchingConn.name,
+      oidcProvider: matchingConn.oidcConfig?.provider,
     };
   },
 });

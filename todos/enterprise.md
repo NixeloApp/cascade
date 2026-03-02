@@ -16,7 +16,7 @@
 
 ### SSO/SAML
 
-- [ ] **Google Workspace SSO** - OIDC integration
+- [ ] **Google Workspace SSO** - OIDC integration (partial: runtime sign-in discovery/routing guard shipped; full IdP callback validation pending)
 - [ ] **Microsoft Entra ID** - SAML integration
 - [ ] **Okta** - SAML/OIDC integration
 - [ ] **Generic SAML** - Support any SAML provider
@@ -167,3 +167,35 @@
 **Next step**
 
 - Implement one end-to-end enterprise SSO provider runtime path (Google Workspace OIDC preferred) or explicitly classify it as externally blocked behind IdP test tenancy.
+
+### 2026-03-02 (Batch E)
+
+**Progress**
+
+- Added runtime SSO domain discovery in sign-in flow (`src/components/Auth/SignInForm.tsx`) using `api.sso.getForDomain`:
+  - Detects the typed email domain.
+  - Switches Google CTA copy to organization-aware text for Google Workspace domains.
+  - Blocks password submit path with explicit guidance when Google Workspace SSO is detected.
+- Added OIDC provider metadata persistence (`google-workspace`, `microsoft-entra`, `okta`) in SSO config schema/backend:
+  - `convex/schema.ts`
+  - `convex/sso.ts`
+  - `src/components/Settings/SSOSettings.tsx`
+  - `src/lib/sso-oidc-presets.ts`
+- Added regression tests:
+  - `src/lib/sso-discovery.test.ts`
+  - `src/lib/sso-oidc-presets.test.ts`
+  - `convex/sso.test.ts` (provider metadata update + domain resolution)
+
+**Decisions**
+
+- Implemented runtime guidance/routing guard first, without replacing the existing Convex Auth Google provider flow, to keep auth risk low and preserve existing login behavior.
+- Used explicit provider metadata in OIDC config for deterministic runtime detection instead of relying only on connection-name matching.
+
+**Blockers**
+
+- Full enterprise SSO completion still requires real IdP callback/tenant validation for Google Workspace and other providers.
+- Billing substrate tasks remain blocked on packaging/provider decisions.
+
+**Next step**
+
+- Execute end-to-end Google Workspace IdP tenant validation (auth callback + org membership provisioning assertions) and decide if remaining provider tasks are implement-now or external-blocked.

@@ -6,11 +6,14 @@
  * Provides forgot password and sign up links.
  */
 
+import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { ROUTES } from "@/config/routes";
+import { getEmailDomain, isGoogleWorkspaceSsoConnection } from "@/lib/sso-discovery";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -30,6 +33,18 @@ export function SignInForm() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [formReady, setFormReady] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [email, setEmail] = useState("");
+
+  const emailDomain = getEmailDomain(email);
+  const ssoConnection = useQuery(
+    api.sso.getForDomain,
+    emailDomain
+      ? {
+          domain: emailDomain,
+        }
+      : "skip",
+  );
+  const hasGoogleWorkspaceSso = isGoogleWorkspaceSsoConnection(ssoConnection);
 
   // Set hydrated on mount
   useEffect(() => {
@@ -51,6 +66,11 @@ export function SignInForm() {
     }
 
     if (!formReady) return;
+    if (hasGoogleWorkspaceSso) {
+      showError("Your organization uses Google Workspace SSO. Use Google sign-in to continue.");
+      return;
+    }
+
     setSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
@@ -72,7 +92,14 @@ export function SignInForm() {
 
   return (
     <div className="w-full">
-      <GoogleAuthButton redirectTo={ROUTES.app.path} text="Sign in with Google" />
+      <GoogleAuthButton
+        redirectTo={ROUTES.app.path}
+        text={
+          hasGoogleWorkspaceSso && emailDomain
+            ? `Continue with Google Workspace (${emailDomain})`
+            : "Sign in with Google"
+        }
+      />
       <Flex align="center" justify="center" className="my-4">
         <hr className="grow border-ui-border" />
         <Typography variant="small" color="tertiary" as="span" className="mx-4">
@@ -98,6 +125,8 @@ export function SignInForm() {
             <Input
               type="email"
               name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               required={formReady}
               className="transition-default"

@@ -1,6 +1,7 @@
 export type OidcProviderPreset = "google-workspace" | "microsoft-entra" | "okta";
 
 export interface OidcPresetConfig {
+  provider: OidcProviderPreset;
   issuer: string;
   authorizationUrl: string;
   tokenUrl: string;
@@ -11,6 +12,7 @@ export interface OidcPresetConfig {
 export function getOidcPresetConfig(preset: OidcProviderPreset): OidcPresetConfig {
   if (preset === "google-workspace") {
     return {
+      provider: "google-workspace",
       issuer: "https://accounts.google.com",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
@@ -21,6 +23,7 @@ export function getOidcPresetConfig(preset: OidcProviderPreset): OidcPresetConfi
 
   if (preset === "microsoft-entra") {
     return {
+      provider: "microsoft-entra",
       issuer: "https://login.microsoftonline.com/common/v2.0",
       authorizationUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
       tokenUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
@@ -30,6 +33,7 @@ export function getOidcPresetConfig(preset: OidcProviderPreset): OidcPresetConfi
   }
 
   return {
+    provider: "okta",
     issuer: "https://your-org.okta.com/oauth2/default",
     authorizationUrl: "https://your-org.okta.com/oauth2/default/v1/authorize",
     tokenUrl: "https://your-org.okta.com/oauth2/default/v1/token",

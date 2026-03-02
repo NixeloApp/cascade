@@ -129,6 +129,9 @@ const applicationTables = {
     ),
     oidcConfig: v.optional(
       v.object({
+        provider: v.optional(
+          v.union(v.literal("google-workspace"), v.literal("microsoft-entra"), v.literal("okta")),
+        ),
         issuer: v.optional(v.string()),
         clientId: v.optional(v.string()),
         clientSecret: v.optional(v.string()),

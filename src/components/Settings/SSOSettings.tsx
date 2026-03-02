@@ -300,6 +300,9 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   const [tokenUrl, setTokenUrl] = useState("");
   const [userInfoUrl, setUserInfoUrl] = useState("");
   const [scopes, setScopes] = useState("");
+  const [oidcProvider, setOidcProvider] = useState<
+    "google-workspace" | "microsoft-entra" | "okta" | undefined
+  >(undefined);
 
   // Common fields
   const [domains, setDomains] = useState("");
@@ -315,6 +318,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
       setIdpCertificate(connection.samlConfig.idpCertificate || "");
     }
     if (connection.type === "oidc" && connection.oidcConfig) {
+      setOidcProvider(connection.oidcConfig.provider);
       setIssuer(connection.oidcConfig.issuer || "");
       setClientId(connection.oidcConfig.clientId || "");
       setAuthorizationUrl(connection.oidcConfig.authorizationUrl || "");
@@ -335,6 +339,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
 
   const applyOidcPreset = (preset: OidcProviderPreset) => {
     const config = getOidcPresetConfig(preset);
+    setOidcProvider(config.provider);
     setIssuer(config.issuer);
     setAuthorizationUrl(config.authorizationUrl);
     setTokenUrl(config.tokenUrl);
@@ -364,6 +369,7 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
     updateOidcConfig({
       connectionId,
       config: {
+        provider: oidcProvider,
         // Keep empty scopes as undefined to avoid storing noise.
         scopes: (() => {
           const parsed = parseScopes();
@@ -475,6 +481,11 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
                   Okta
                 </Button>
               </Flex>
+              {oidcProvider && (
+                <Typography variant="caption" color="secondary">
+                  Active provider profile: {oidcProvider}
+                </Typography>
+              )}
             </Stack>
             <Input
               label="Issuer URL"
