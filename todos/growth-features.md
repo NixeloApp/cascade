@@ -19,7 +19,7 @@
 ### Enhanced Search
 
 - [x] **Fuzzy matching** - Tolerate typos in search ✅ (`src/hooks/useFuzzySearch.ts`, `src/components/FuzzySearch/`)
-- [ ] **Search shortcuts** - `type:bug`, `@me`, `status:done`
+- [x] **Search shortcuts** - `type:bug`, `@me`, `status:done` ✅ (`src/lib/search-shortcuts.ts`, `src/components/GlobalSearch.tsx`)
 - [ ] **Advanced search modal** - Visual query builder
 
 ### Documents
@@ -52,7 +52,7 @@
 
 ### Milestones
 
-- [ ] `S3` Implement search shortcuts/query syntax (`type:`, `status:`, `@me`)
+- [x] `S3` Implement search shortcuts/query syntax (`type:`, `status:`, `@me`)
 - [ ] `S4` Add advanced search modal with query-builder UX
 - [x] `S4` Ship one integration growth lever (Slack create/unfurl or Outlook sync)
 - [ ] `S5` Prioritize remaining board/document enhancements based on usage data
@@ -96,3 +96,27 @@
 **Next step**
 
 - Continue `S3` by extending shortcuts beyond `type/status/@me` (for example `priority:` and label tokens) and wiring user-facing shortcut hints in the search UI.
+
+### 2026-03-02 (Batch B)
+
+**Progress**
+
+- Extended shortcuts parser with additional filters:
+  - `priority:<value>`
+  - `label:<value>` / `labels:<value>`
+- Added user-facing shortcut hint strip in global search modal.
+- Expanded tests to cover priority/label parsing and query argument propagation.
+
+**Decisions**
+
+- Delivered parser extensions inside the same `GlobalSearch` shortcut architecture instead of adding a separate query-language parser layer.
+- Kept advanced visual query builder as a separate future step (`Advanced search modal`).
+
+**Blockers**
+
+- Advanced search modal still requires UX design + component architecture work.
+- Outlook integration remains external-integration-heavy and not started.
+
+**Next step**
+
+- Start `Advanced search modal` scope (first pass: modal shell + structured filter controls wired to current search backend args).

@@ -365,6 +365,14 @@ export function GlobalSearch() {
             />
           </CommandList>
 
+          <Typography
+            variant="meta"
+            className="px-3 py-2 border-t border-ui-border text-ui-text-tertiary"
+          >
+            Shortcuts: <code>type:bug</code> <code>status:done</code> <code>priority:high</code>{" "}
+            <code>label:frontend</code> <code>@me</code>
+          </Typography>
+
           {/* Footer */}
           <Flex align="center" justify="between" className="border-t border-ui-border">
             <Flex align="center" gap="lg">

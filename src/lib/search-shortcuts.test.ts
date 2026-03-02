@@ -11,11 +11,12 @@ describe("parseIssueSearchShortcuts", () => {
   });
 
   it("extracts type/status and @me filters", () => {
-    expect(parseIssueSearchShortcuts("type:bug status:done @me auth")).toEqual({
+    expect(parseIssueSearchShortcuts("type:bug status:done priority:high @me auth")).toEqual({
       textQuery: "auth",
       filters: {
         type: ["bug"],
         status: ["done"],
+        priority: ["high"],
         assigneeId: "me",
       },
       hasShortcuts: true,
@@ -28,6 +29,16 @@ describe("parseIssueSearchShortcuts", () => {
       filters: {
         type: ["bug"],
         status: ["todo"],
+      },
+      hasShortcuts: true,
+    });
+  });
+
+  it("extracts label shortcuts", () => {
+    expect(parseIssueSearchShortcuts("label:frontend labels:api incident")).toEqual({
+      textQuery: "incident",
+      filters: {
+        labels: ["frontend", "api"],
       },
       hasShortcuts: true,
     });

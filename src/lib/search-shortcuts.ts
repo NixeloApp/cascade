@@ -9,6 +9,8 @@
 export interface IssueShortcutFilters {
   type?: string[];
   status?: string[];
+  priority?: string[];
+  labels?: string[];
   assigneeId?: "me";
 }
 
@@ -29,8 +31,19 @@ export function parseIssueSearchShortcuts(rawQuery: string): ParsedSearchShortcu
   const textTokens: string[] = [];
   const typeTokens: string[] = [];
   const statusTokens: string[] = [];
+  const priorityTokens: string[] = [];
+  const labelTokens: string[] = [];
   let assigneeId: "me" | undefined;
   let hasShortcuts = false;
+
+  const pushFromPrefix = (token: string, prefix: string, values: string[]) => {
+    if (!token.startsWith(prefix)) return false;
+    const value = token.slice(prefix.length).trim();
+    if (value.length === 0) return false;
+    pushUnique(values, value);
+    hasShortcuts = true;
+    return true;
+  };
 
   for (const token of tokens) {
     const lower = token.toLowerCase();
@@ -40,22 +53,14 @@ export function parseIssueSearchShortcuts(rawQuery: string): ParsedSearchShortcu
       continue;
     }
 
-    if (lower.startsWith("type:")) {
-      const value = lower.slice("type:".length).trim();
-      if (value.length > 0) {
-        pushUnique(typeTokens, value);
-        hasShortcuts = true;
-        continue;
-      }
-    }
-
-    if (lower.startsWith("status:")) {
-      const value = lower.slice("status:".length).trim();
-      if (value.length > 0) {
-        pushUnique(statusTokens, value);
-        hasShortcuts = true;
-        continue;
-      }
+    if (
+      pushFromPrefix(lower, "type:", typeTokens) ||
+      pushFromPrefix(lower, "status:", statusTokens) ||
+      pushFromPrefix(lower, "priority:", priorityTokens) ||
+      pushFromPrefix(lower, "label:", labelTokens) ||
+      pushFromPrefix(lower, "labels:", labelTokens)
+    ) {
+      continue;
     }
 
     textTokens.push(token);
@@ -66,6 +71,8 @@ export function parseIssueSearchShortcuts(rawQuery: string): ParsedSearchShortcu
     filters: {
       type: typeTokens.length > 0 ? typeTokens : undefined,
       status: statusTokens.length > 0 ? statusTokens : undefined,
+      priority: priorityTokens.length > 0 ? priorityTokens : undefined,
+      labels: labelTokens.length > 0 ? labelTokens : undefined,
       assigneeId,
     },
     hasShortcuts,

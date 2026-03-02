@@ -100,6 +100,7 @@ describe("GlobalSearch", () => {
     expect(screen.getByText("All")).toBeInTheDocument();
     expect(screen.getByText("Issues")).toBeInTheDocument();
     expect(screen.getByText("Documents")).toBeInTheDocument();
+    expect(screen.getByText(/Shortcuts:/i)).toBeInTheDocument();
   });
 
   it("should filter by tab selection", async () => {
@@ -189,7 +190,7 @@ describe("GlobalSearch", () => {
 
     await user.click(screen.getByRole("button"));
     const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-    await user.type(searchInput, "type:bug status:done @me auth");
+    await user.type(searchInput, "type:bug status:done priority:high label:frontend @me auth");
 
     await waitFor(() => {
       const calls = (useQuery as any).mock.calls as unknown[][];
@@ -202,7 +203,11 @@ describe("GlobalSearch", () => {
           Array.isArray(args?.type) &&
           args.type.includes("bug") &&
           Array.isArray(args?.status) &&
-          args.status.includes("done")
+          args.status.includes("done") &&
+          Array.isArray(args?.priority) &&
+          args.priority.includes("high") &&
+          Array.isArray(args?.labels) &&
+          args.labels.includes("frontend")
         );
       });
       expect(hasShortcutIssueCall).toBe(true);
