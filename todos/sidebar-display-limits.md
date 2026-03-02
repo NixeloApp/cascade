@@ -118,3 +118,20 @@ Add `SIDEBAR_DISPLAY_LIMIT` constant (25) and use it for sidebar count queries.
 
 **Next step (strict order)**
 - Continue to Priority `14`: `todos/emoji-overhaul.md`.
+
+### 2026-03-02 (Priority 13, batch D)
+
+**Completed**
+- Revalidated this completed scope in strict-order flow; no implementation changes required.
+
+**Validation**
+- `pnpm test src/components/App/AppSidebar.test.ts src/config/routes.test.ts` (`50 passed`)
+
+**Decisions**
+- Keep Priority `13` closed with current search/show-all sidebar behavior as final scoped outcome.
+
+**Blockers**
+- None.
+
+**Next step (strict order)**
+- Continue to Priority `14`: `todos/emoji-overhaul.md`.
