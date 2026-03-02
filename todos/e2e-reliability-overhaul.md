@@ -536,11 +536,34 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - guard currently covers hard timeout bans in spec files; helper-contract usage quality remains checklist/review-driven.
 
+### 2026-03-02 - Batch V (completed baseline-aware selector anti-pattern guard)
+
+- Decision: add a low-noise selector-quality regression guard by baselining existing brittle selectors and failing only on newly introduced anti-patterns.
+- Change:
+  - updated `scripts/ci/check-e2e-hard-rules.mjs`:
+    - still hard-fails on `waitForTimeout(` in spec files
+    - now detects selector anti-patterns:
+      - `locator("text=...")` / ``locator(`text=...`)``
+      - `:nth-child(...)` / `:nth-of-type(...)`
+    - compares detections against baseline and fails only on new entries
+  - added baseline file:
+    - `scripts/ci/e2e-hard-rules-baseline.json` (current known debt entries)
+  - updated docs:
+    - `docs/testing/e2e.md` now documents both hard timeout ban and baseline-aware selector regression guard
+- Validation:
+  - `pnpm run e2e:hard-rules` => pass
+    - scanned `29` spec files
+    - timeout violations: `0`
+    - selector anti-patterns (baseline-allowed): `4`
+    - new selector anti-patterns: `0`
+- Blockers:
+  - baseline entries remain technical debt until migrated to semantic selectors.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
   - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + script execution + summary rendering in `history-derived` mode)
   - if needed after first PR validation, tune `E2E_STREAK_SCAN_LIMIT` from observed branch run density
   - keep CI per-spec heatmap summary as single source of truth for streak/heatmap visibility
-  - evaluate whether additional static guards should be added beyond timeout bans (for example selector anti-pattern detection) without introducing noise
+  - burn down selector baseline debt (`4` entries) by migrating to semantic selectors and shrinking `e2e-hard-rules-baseline.json`
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement

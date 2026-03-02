@@ -38,6 +38,14 @@ Automated guard command (same rule enforced in CI shard jobs):
 pnpm run e2e:hard-rules
 ```
 
+Current automated checks:
+- hard fail on `waitForTimeout(` in `*.spec.ts(x)` files
+- baseline-aware regression check for brittle selector anti-patterns:
+  - `locator("text=...")` / `locator(\`text=...\`)`
+  - `:nth-child(...)` / `:nth-of-type(...)`
+
+Baseline file (temporary debt register): `scripts/ci/e2e-hard-rules-baseline.json`
+
 ## Configuration
 
 **File:** `playwright.config.ts`

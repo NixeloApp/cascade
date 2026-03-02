@@ -1,0 +1,24 @@
+{
+  "selectorAntiPatterns": [
+    {
+      "file": "e2e/analytics.spec.ts",
+      "line": 143,
+      "type": "locator-text-engine"
+    },
+    {
+      "file": "e2e/analytics.spec.ts",
+      "line": 144,
+      "type": "locator-text-engine"
+    },
+    {
+      "file": "e2e/issue-detail-page.spec.ts",
+      "line": 71,
+      "type": "locator-text-engine"
+    },
+    {
+      "file": "e2e/issue-detail-page.spec.ts",
+      "line": 116,
+      "type": "locator-text-engine"
+    }
+  ]
+}

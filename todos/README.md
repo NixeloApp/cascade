@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI now enforces a hard timeout-ban guard (`pnpm run e2e:hard-rules`) before shard execution, plus summary/streak reporting remains active |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI hard-rule guard now includes baseline-aware selector anti-pattern regression checks (no new brittle selectors allowed) |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): automated hard-rule enforcement was added via `scripts/ci/check-e2e-hard-rules.mjs` + `pnpm run e2e:hard-rules`, and wired into CI before Playwright shard execution to block `waitForTimeout` regressions in spec files. CI heatmap/streak summary via `scripts/ci/e2e-summary.mjs` remains active; remaining blocker is real PR CI validation of `history-derived` checkpoint mode.
+- Priority `01` update (2026-03-02): `scripts/ci/check-e2e-hard-rules.mjs` now enforces both hard timeout bans and baseline-aware selector anti-pattern regression checks (tracked in `scripts/ci/e2e-hard-rules-baseline.json`). Current guard status: `29` spec files scanned, `0` timeout violations, `4` baseline selector entries, `0` new selector regressions. Remaining blocker is real PR CI validation of `history-derived` checkpoint mode.
