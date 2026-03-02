@@ -217,3 +217,15 @@ The primary bandwidth drains were identified as:
   - dashboard-only bandwidth charts are not exportable via available CLI in this environment.
 - Next Step:
   - capture before/after endpoint bandwidth values in Convex dashboard and append them here to close `S2` report publication.
+
+### 2026-03-02 - Batch H (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep Priority `07` blocked; no additional in-repo optimization work is pending.
+- Validation:
+  - `pnpm test convex/dashboard.test.ts convex/analytics.test.ts convex/lib/payloadTelemetry.test.ts` => pass (`60 passed`)
+  - optimized dashboard/analytics/telemetry paths remain stable under current test coverage.
+- Blockers:
+  - final `S2` closeout still depends on manual before/after bandwidth capture from Convex dashboard UI.
+- Next Step:
+  - operator captures dashboard bandwidth deltas for optimized endpoints and appends values here to complete report publication.
