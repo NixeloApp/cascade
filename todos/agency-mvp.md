@@ -2,7 +2,7 @@
 
 > **Priority:** P2
 > **Effort:** Large
-> **Status:** Core MVP shipped, polish follow-ups pending
+> **Status:** Complete (MVP scope) - polish follow-ups deferred
 
 ---
 
@@ -253,3 +253,14 @@ clientPortalTokens: defineTable({
 - **Decisions:** Implemented token management in the client-management surface instead of nested settings sub-tab to keep portal controls close to client records and avoid duplicative navigation.
 - **Blockers:** None for core Agency MVP scope; remaining work is polish (branded PDF templates, deeper client-portal presentation, optional comment controls).
 - **Next Step:** Mark Priority 11 complete and continue strict order with Priority 12 (`rich-text-description-followup.md`).
+
+### 2026-03-02 (Priority 11, batch G)
+
+- **Completed:** Reconciled Priority `11` status to complete for declared MVP scope; all checklist items and acceptance criteria in this file are already satisfied.
+- **Validation:** Prior batch validations remain green for the complete MVP surface:
+  - `pnpm run generate:routes` (pass)
+  - `pnpm run typecheck` (pass)
+  - `pnpm test convex/clientPortal.test.ts src/config/routes.test.ts` (pass, 43 tests)
+- **Decisions:** Kept non-MVP polish (branded invoice PDF styling, richer portal presentation, optional comment controls) explicitly deferred rather than expanding scope in this priority lane.
+- **Blockers:** None for MVP closure.
+- **Next Step:** Continue strict-priority execution at Priority `12` (`rich-text-description-followup.md`).
