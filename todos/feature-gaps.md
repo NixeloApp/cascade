@@ -308,3 +308,15 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
   - manual Slack app dashboard actions (`/nixelo` registration, unfurl URL patterns, prod env vars/secrets) are still pending.
 - Next Step:
   - proceed to Priority `10` while waiting on operator Slack dashboard setup.
+
+### 2026-03-02 - Batch I (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep Priority `09` blocked; repository-side Slack work remains complete and only external dashboard setup is pending.
+- Validation:
+  - `pnpm test convex/slack.test.ts convex/slackCommands.test.ts convex/slackUnfurl.test.ts convex/issues/mutations.test.ts` => pass (`35 passed`)
+  - Slack outbound, slash-command, unfurl, and issue-trigger paths remain regression-covered.
+- Blockers:
+  - unchanged manual Slack dashboard steps: OAuth app provisioning, `/nixelo` command registration, URL unfurl pattern registration, and production secret provisioning.
+- Next Step:
+  - continue strict order to Priority `10` until operator completes Slack dashboard prerequisites.
