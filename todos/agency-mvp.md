@@ -264,3 +264,10 @@ clientPortalTokens: defineTable({
 - **Decisions:** Kept non-MVP polish (branded invoice PDF styling, richer portal presentation, optional comment controls) explicitly deferred rather than expanding scope in this priority lane.
 - **Blockers:** None for MVP closure.
 - **Next Step:** Continue strict-priority execution at Priority `12` (`rich-text-description-followup.md`).
+
+### 2026-03-02 (Priority 11, batch H)
+
+- **Decision:** Keep Priority `11` closed as complete for MVP scope; no additional implementation changes required in this strict-order checkpoint.
+- **Validation:** `pnpm test convex/clients.test.ts convex/invoices.test.ts` (pass, `9` tests).
+- **Blockers:** None for MVP scope.
+- **Next Step:** Continue strict-priority execution at Priority `12` (`rich-text-description-followup.md`).
