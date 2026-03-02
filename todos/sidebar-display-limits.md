@@ -1,6 +1,6 @@
 # Sidebar Display Limits
 
-**Status**: Active
+**Status**: Complete (current scope)
 **Priority**: Medium (bandwidth optimization)
 **Last Audited**: 2026-03-02
 
@@ -82,3 +82,22 @@ Add `SIDEBAR_DISPLAY_LIMIT` constant (25) and use it for sidebar count queries.
 
 **Next step (strict order)**
 - Move to Priority `14`: `todos/emoji-overhaul.md`.
+
+### 2026-03-02 (Priority 13, batch B)
+
+**Completed**
+- Reconciled Priority `13` status as complete for current scoped milestones (`S1` search trigger + show-all affordance).
+
+**Validation**
+- Prior batch validation remains the authoritative check set:
+  - sidebar tests + route tests (`50 passed`)
+  - typecheck pass.
+
+**Decisions**
+- Left broader future ideas (additional sidebar list expansions beyond current docs/workspace flows) as non-blocking future work, not open scope for this priority.
+
+**Blockers**
+- None.
+
+**Next step (strict order)**
+- Continue to Priority `14`: `todos/emoji-overhaul.md`.
