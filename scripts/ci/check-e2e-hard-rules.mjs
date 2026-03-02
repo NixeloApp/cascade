@@ -50,6 +50,7 @@ export function analyzeE2EHardRules({
   const promiseSleepViolations = [];
   const networkIdleViolations = [];
   const querySelectorViolations = [];
+  const forcedActionViolations = [];
   const selectorAntiPatterns = [];
 
   for (const filePath of specFiles) {
@@ -77,6 +78,14 @@ export function analyzeE2EHardRules({
 
       if (/\.\$\$?\(/.test(line)) {
         querySelectorViolations.push({
+          file: path.relative(root, filePath),
+          line: index + 1,
+          text: line.trim(),
+        });
+      }
+
+      if (/force\s*:\s*true/.test(line)) {
+        forcedActionViolations.push({
           file: path.relative(root, filePath),
           line: index + 1,
           text: line.trim(),
@@ -136,6 +145,7 @@ export function analyzeE2EHardRules({
     promiseSleepViolations,
     networkIdleViolations,
     querySelectorViolations,
+    forcedActionViolations,
     selectorAntiPatterns,
     newlyIntroduced,
   };
@@ -182,6 +192,14 @@ function main() {
     process.exit(1);
   }
 
+  if (result.forcedActionViolations.length > 0) {
+    console.error("E2E hard rule violation: force:true action override found in spec files.");
+    for (const violation of result.forcedActionViolations) {
+      console.error(`- ${violation.file}:${violation.line} -> ${violation.text}`);
+    }
+    process.exit(1);
+  }
+
   if (result.newlyIntroduced.length > 0) {
     console.error("E2E selector anti-pattern regression: new brittle selector usage detected.");
     for (const violation of result.newlyIntroduced) {
@@ -200,6 +218,7 @@ function main() {
   console.log(`- Promise setTimeout sleep violations: ${result.promiseSleepViolations.length}`);
   console.log(`- networkidle wait violations: ${result.networkIdleViolations.length}`);
   console.log(`- page.$ / page.$$ selector violations: ${result.querySelectorViolations.length}`);
+  console.log(`- force:true action violations: ${result.forcedActionViolations.length}`);
   console.log(`- selector anti-patterns (baseline-allowed): ${result.selectorAntiPatterns.length}`);
   console.log(`- new selector anti-patterns: ${result.newlyIntroduced.length}`);
 }

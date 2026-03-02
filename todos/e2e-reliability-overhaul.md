@@ -644,6 +644,34 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BA (completed force:true action override hard-rule enforcement)
+
+- Decision: ban `force: true` action overrides in E2E spec interactions to prevent masking actionability/state readiness regressions.
+- Change:
+  - updated `scripts/ci/check-e2e-hard-rules.mjs`:
+    - added `force: true` detection in spec files
+    - emits dedicated hard-rule violations with file/line output
+    - includes the new metric in pass summaries
+  - updated `scripts/ci/test-e2e-hard-rules.mjs`:
+    - added zero-violation assertions for clean/baseline cases
+    - extended violation fixture to include a forced click and assert detection
+- Validation:
+  - `pnpm run e2e:hard-rules:self-test` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force violations: `0`; selector baseline remains `0`)
+  - `pnpm exec biome check scripts/ci/check-e2e-hard-rules.mjs scripts/ci/test-e2e-hard-rules.mjs` => pass
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch AZ (completed page.$ / page.$$ hard-rule enforcement)
 
 - Decision: tighten selector robustness by banning Playwright `page.$` / `page.$$` APIs in E2E specs and requiring locator-based patterns.

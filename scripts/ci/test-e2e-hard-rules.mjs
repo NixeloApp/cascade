@@ -52,6 +52,7 @@ function runCleanCase() {
     assert.equal(result.promiseSleepViolations.length, 0);
     assert.equal(result.networkIdleViolations.length, 0);
     assert.equal(result.querySelectorViolations.length, 0);
+    assert.equal(result.forcedActionViolations.length, 0);
     assert.equal(result.selectorAntiPatterns.length, 0);
     assert.equal(result.newlyIntroduced.length, 0);
   });
@@ -88,6 +89,7 @@ function runBaselineAllowedSelectorCase() {
     assert.equal(result.promiseSleepViolations.length, 0);
     assert.equal(result.networkIdleViolations.length, 0);
     assert.equal(result.querySelectorViolations.length, 0);
+    assert.equal(result.forcedActionViolations.length, 0);
     assert.equal(result.selectorAntiPatterns.length, 2);
     assert.equal(result.newlyIntroduced.length, 0);
   });
@@ -106,6 +108,7 @@ function runViolationCase() {
         "  await page.waitForLoadState('networkidle');",
         "  const el = await page.$('[data-testid=\"foo\"]');",
         "  await el?.click();",
+        "  await page.getByRole('button', { name: 'Save' }).click({ force: true });",
         '  await page.locator("text=New").click();',
         "});",
         "",
@@ -124,6 +127,7 @@ function runViolationCase() {
     assert.equal(result.promiseSleepViolations.length, 1);
     assert.equal(result.networkIdleViolations.length, 1);
     assert.equal(result.querySelectorViolations.length, 1);
+    assert.equal(result.forcedActionViolations.length, 1);
     assert.equal(result.selectorAntiPatterns.length, 1);
     assert.equal(result.newlyIntroduced.length, 1);
     assert.equal(result.newlyIntroduced[0]?.type, "locator-text-engine");
