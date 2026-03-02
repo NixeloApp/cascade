@@ -3,6 +3,7 @@
 > **Priority:** P3 (Future Feature)
 > **Effort:** Medium (~1-2 weeks)
 > **Value:** High differentiator - competitors charge $29+/mo for status pages
+> **Status:** Blocked (architecture + infra prerequisites)
 
 ## Overview
 
@@ -176,3 +177,33 @@ Option B: External worker (Cloudflare Worker, Vercel Edge) that calls Convex
 ### Definition of Done
 
 - A monitor failure can trigger an incident and reflect on a public status page with historical data.
+
+---
+
+## Progress Log
+
+### 2026-03-02 (Batch A)
+
+**Progress**
+
+- Audited repository state for uptime/status-page implementation:
+  - No monitor/status-page schema or runtime check pipeline is currently implemented.
+  - Existing OAuth health monitoring is separate and not reusable as a full generic uptime feature without architecture work.
+- Reconciled this todo with strict-priority execution and added explicit block status.
+
+**Decisions**
+
+- Marked this track as `Blocked (architecture + infra prerequisites)` instead of starting partial implementation without a runner/routing decision.
+- Recommended default architecture direction for unblock:
+  - Check execution via external worker calling Convex APIs (avoids Convex action execution ceilings for large monitor fleets).
+  - Public status page hosted under explicit route/domain strategy before implementing data model.
+
+**Blockers**
+
+- Runner-model decision (`Convex action` vs external worker) and associated operational ownership.
+- Public status-page routing/domain strategy (custom domains vs subpath/subdomain).
+- Alerting policy baseline (notification channels, threshold/escalation defaults) to avoid churn in monitor/incident schema.
+
+**Next step**
+
+- When prerequisites are provided, start `S4` by implementing schema + monitor CRUD with runner contract chosen up front.
