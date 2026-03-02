@@ -803,6 +803,31 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BS (completed base page-object domcontentloaded wait removal)
+
+- Decision: remove shared `domcontentloaded` waits from `BasePage` utilities and keep navigation readiness deterministic via full-document readiness and existing hydration checks.
+- Change:
+  - updated `e2e/pages/base.page.ts`:
+    - `waitForLoad()` removed explicit `waitForLoadState("domcontentloaded")` (retains `load` + React hydration probe)
+    - `waitForNavigation()` fallback now waits for `document.readyState === "complete"` instead of `waitForLoadState("domcontentloaded")`
+    - updated helper comment to reflect networkidle avoidance without domcontentloaded dependency
+- Validation:
+  - `pnpm exec biome check e2e/pages/base.page.ts` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/force/xpath/selector-baseline violations: `0`)
+  - `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line` => pass (`11 passed`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BL (completed RBAC role-flow domcontentloaded wait removal)
 
 - Decision: remove remaining `domcontentloaded` document-load waits from RBAC role-flow specs and rely on explicit route/UI outcome assertions.
