@@ -745,6 +745,13 @@ export const search = authenticatedQuery({
 
     let issues: Doc<"issues">[] = [];
 
+    if (args.projectId) {
+      const hasAccess = await canAccessProject(ctx, args.projectId, ctx.userId);
+      if (!hasAccess) {
+        return { page: [], total: 0 };
+      }
+    }
+
     // If query is provided, use search index
     if (args.query) {
       // Bounded: search results limited to prevent huge result sets
@@ -778,9 +785,20 @@ export const search = authenticatedQuery({
       return { page: [], total: 0 };
     }
 
-    // Apply advanced filters in memory
-    let filteredIssues = issues.filter((issue: Doc<"issues">) =>
-      matchesSearchFilters(issue, args, ctx.userId),
+    // Enforce per-project access across all search paths before applying search filters.
+    const projectIds = [...new Set(issues.map((issue) => issue.projectId))];
+    const accessibleProjects = new Set<Id<"projects">>();
+    for (const projectId of projectIds) {
+      if (await canAccessProject(ctx, projectId as Id<"projects">, ctx.userId)) {
+        accessibleProjects.add(projectId as Id<"projects">);
+      }
+    }
+
+    // Apply advanced filters in memory after access scoping.
+    let filteredIssues = issues.filter(
+      (issue: Doc<"issues">) =>
+        accessibleProjects.has(issue.projectId as Id<"projects">) &&
+        matchesSearchFilters(issue, args, ctx.userId),
     );
 
     // Exclude specific issue if requested (for dependencies)

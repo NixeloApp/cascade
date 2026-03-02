@@ -34,6 +34,27 @@ High
 
 ### Steps
 
-- [ ] Enforce tenant/project scope in search query path before returning any issue docs
-- [ ] Add explicit membership authorization checks for global/free-text search
-- [ ] Add regression tests proving cross-project/org leakage is impossible
+- [x] Enforce tenant/project scope in search query path before returning any issue docs
+- [x] Add explicit membership authorization checks for global/free-text search
+- [x] Add regression tests proving cross-project/org leakage is impossible
+
+## Progress Log
+
+### 2026-03-02 - Batch A (scope enforcement + regression coverage complete)
+
+- Decision:
+  - close the IDOR gap by enforcing project access in `issues.search` for all query paths (query-text, project-scoped, org-scoped), not only caller-provided filters.
+- Change:
+  - updated `convex/issues/queries.ts`:
+    - added early deny path for unauthorized `projectId` search (`{ page: [], total: 0 }`).
+    - added per-project access scoping for all fetched search candidates using `canAccessProject(...)` before applying `matchesSearchFilters(...)`.
+  - updated `convex/issues.test.ts`:
+    - added regression test that global search cannot return issues from inaccessible projects.
+    - added regression test that `projectId`-scoped and `organizationId`-scoped search return empty for unauthorized tenant scope.
+- Validation:
+  - `pnpm exec biome check convex/issues/queries.ts convex/issues.test.ts` => pass
+  - `pnpm test convex/issues.test.ts` => pass (`28 passed`)
+- Blockers:
+  - none in code path; follow-up is optional performance tuning if access checks become expensive at higher search limits.
+- Next Step:
+  - if desired, optimize access-scoping with a single membership-derived project set to avoid repeated `canAccessProject(...)` checks at larger result windows.

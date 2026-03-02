@@ -708,6 +708,92 @@ describe("Issues", () => {
       expect(searchResult.page[0].title).toBe("Update Test");
       await t.finishInProgressScheduledFunctions();
     });
+
+    it("should not leak issues from inaccessible projects in global search", async () => {
+      const t = convexTest(schema, modules);
+      const ownerAId = await createTestUser(t, { email: "owner-a@test.com", name: "Owner A" });
+      const ownerBId = await createTestUser(t, { email: "owner-b@test.com", name: "Owner B" });
+      const projectAId = await createTestProject(t, ownerAId, { key: "AORG" });
+      const projectBId = await createTestProject(t, ownerBId, { key: "BORG" });
+
+      const asOwnerA = asAuthenticatedUser(t, ownerAId);
+      const asOwnerB = asAuthenticatedUser(t, ownerBId);
+
+      await asOwnerA.mutation(api.issues.createIssue, {
+        projectId: projectAId,
+        title: "Owner A Visible Issue",
+        description: "tenant-leak-check",
+        type: "task",
+        priority: "medium",
+      });
+
+      await asOwnerB.mutation(api.issues.createIssue, {
+        projectId: projectBId,
+        title: "Owner B Hidden Issue",
+        description: "tenant-leak-check",
+        type: "task",
+        priority: "medium",
+      });
+
+      const searchResult = await asOwnerA.query(api.issues.search, {
+        query: "tenant-leak-check",
+      });
+
+      expect(searchResult.page.map((issue) => issue.title)).toContain("Owner A Visible Issue");
+      expect(searchResult.page.map((issue) => issue.title)).not.toContain("Owner B Hidden Issue");
+      expect(searchResult.page.every((issue) => issue.projectId === projectAId)).toBe(true);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should return empty results for unauthorized project/org scoped search", async () => {
+      const t = convexTest(schema, modules);
+      const ownerAId = await createTestUser(t, {
+        email: "owner-a-scope@test.com",
+        name: "Owner A",
+      });
+      const ownerBId = await createTestUser(t, {
+        email: "owner-b-scope@test.com",
+        name: "Owner B",
+      });
+      const projectAId = await createTestProject(t, ownerAId, { key: "ASCP" });
+      const projectBId = await createTestProject(t, ownerBId, { key: "BSCP" });
+
+      const asOwnerA = asAuthenticatedUser(t, ownerAId);
+      const asOwnerB = asAuthenticatedUser(t, ownerBId);
+
+      await asOwnerA.mutation(api.issues.createIssue, {
+        projectId: projectAId,
+        title: "A Scoped Issue",
+        description: "scope-check-token",
+        type: "task",
+        priority: "medium",
+      });
+      await asOwnerB.mutation(api.issues.createIssue, {
+        projectId: projectBId,
+        title: "B Scoped Issue",
+        description: "scope-check-token",
+        type: "task",
+        priority: "medium",
+      });
+
+      const projectB = await t.run(async (ctx) => ctx.db.get(projectBId));
+      if (!projectB) throw new Error("Project B not found");
+
+      const byProjectResult = await asOwnerA.query(api.issues.search, {
+        query: "scope-check-token",
+        projectId: projectBId,
+      });
+      expect(byProjectResult.page).toHaveLength(0);
+      expect(byProjectResult.total).toBe(0);
+
+      const byOrganizationResult = await asOwnerA.query(api.issues.search, {
+        query: "scope-check-token",
+        organizationId: projectB.organizationId,
+      });
+      expect(byOrganizationResult.page).toHaveLength(0);
+      expect(byOrganizationResult.total).toBe(0);
+      await t.finishInProgressScheduledFunctions();
+    });
   });
 
   describe("roadmap", () => {
