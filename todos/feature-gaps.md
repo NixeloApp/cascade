@@ -295,3 +295,16 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
   - unchanged external Slack setup tasks listed above.
 - Next Step:
   - once Slack dashboard tasks are completed by operator, run live end-to-end Slack smoke checks (`/slack/commands`, `/slack/unfurl`, outbound issue event delivery), then mark `S2/S3` complete.
+
+### 2026-03-02 - Batch H (blocked-state checkpoint)
+
+- Decision:
+  - keep Priority `09` blocked; no additional repository work can complete the remaining Slack dashboard registration tasks.
+- Change:
+  - no code changes; blocker list reconfirmed.
+- Validation:
+  - existing in-repo Slack implementation remains covered by tests in `convex/slack*.test.ts` and `convex/slackCommands.test.ts`.
+- Blockers:
+  - manual Slack app dashboard actions (`/nixelo` registration, unfurl URL patterns, prod env vars/secrets) are still pending.
+- Next Step:
+  - proceed to Priority `10` while waiting on operator Slack dashboard setup.
