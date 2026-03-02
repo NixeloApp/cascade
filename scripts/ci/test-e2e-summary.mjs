@@ -225,6 +225,40 @@ async function runUnreadableReportFileCase() {
   }
 }
 
+async function runStepSummaryWriteCase() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-summary-step-summary-"));
+  const summaryPath = path.join(tempDir, "step-summary.md");
+
+  try {
+    await runSummary(
+      reportFixturePath,
+      makeEnv({
+        GITHUB_STEP_SUMMARY: summaryPath,
+        E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+        E2E_STREAK_SCAN_LIMIT: "250",
+      }),
+    );
+
+    await runSummary(
+      reportFixturePath,
+      makeEnv({
+        GITHUB_STEP_SUMMARY: summaryPath,
+        E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+        E2E_STREAK_SCAN_LIMIT: "250",
+      }),
+    );
+
+    const output = fs.readFileSync(summaryPath, "utf8");
+    const heatmapHeaderCount = (output.match(/^## E2E Heatmap$/gm) || []).length;
+
+    assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
+    assert.match(output, /Streak Scan Window: `3\/250` completed CI runs/);
+    assert.equal(heatmapHeaderCount, 2);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
 await runFallbackCase();
 await runFallbackDirtyCase();
 await runHistoryDerivedCase();
@@ -237,4 +271,5 @@ await runUnreadableMockHistoryFileCase();
 await runMissingReportFileCase();
 await runInvalidReportFileCase();
 await runUnreadableReportFileCase();
+await runStepSummaryWriteCase();
 console.log("e2e-summary self-test passed");
