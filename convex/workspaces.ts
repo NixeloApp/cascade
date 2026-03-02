@@ -362,6 +362,117 @@ export const getActiveSprints = workspaceQuery({
   },
 });
 
+/**
+ * List cross-team blocking dependencies for issues in a workspace.
+ */
+export const getCrossTeamDependencies = workspaceQuery({
+  args: {
+    teamId: v.optional(v.id("teams")),
+    status: v.optional(v.string()),
+    priority: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const rawLimit = args.limit ?? 200;
+    const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
+
+    const workspaceIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+      .filter(notDeleted)
+      .take(limit);
+
+    const issueMap = new Map(workspaceIssues.map((issue) => [issue._id, issue]));
+
+    const outgoingLinksArrays = await Promise.all(
+      workspaceIssues.map((issue) =>
+        ctx.db
+          .query("issueLinks")
+          .withIndex("by_from_issue", (q) => q.eq("fromIssueId", issue._id))
+          .filter((q) => q.eq(q.field("linkType"), "blocks"))
+          .take(BOUNDED_LIST_LIMIT),
+      ),
+    );
+
+    const dependencies = outgoingLinksArrays
+      .flat()
+      .map((link) => {
+        const fromIssue = issueMap.get(link.fromIssueId);
+        const toIssue = issueMap.get(link.toIssueId);
+        if (!(fromIssue && toIssue)) {
+          return null;
+        }
+
+        if (!fromIssue.teamId || !toIssue.teamId || fromIssue.teamId === toIssue.teamId) {
+          return null;
+        }
+        const fromTeamId = fromIssue.teamId;
+        const toTeamId = toIssue.teamId;
+
+        if (args.teamId && fromTeamId !== args.teamId && toTeamId !== args.teamId) {
+          return null;
+        }
+        if (args.status && fromIssue.status !== args.status && toIssue.status !== args.status) {
+          return null;
+        }
+        if (
+          args.priority &&
+          fromIssue.priority !== args.priority &&
+          toIssue.priority !== args.priority
+        ) {
+          return null;
+        }
+
+        return {
+          linkId: link._id,
+          fromIssue,
+          toIssue,
+          fromTeamId,
+          toTeamId,
+          updatedAt: Math.max(fromIssue.updatedAt, toIssue.updatedAt),
+        };
+      })
+      .filter((dependency): dependency is NonNullable<typeof dependency> => dependency !== null)
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, limit);
+
+    const teamIds = [
+      ...new Set(
+        dependencies.flatMap((dependency) => [dependency.fromTeamId, dependency.toTeamId]),
+      ),
+    ];
+    const teams = await Promise.all(teamIds.map((teamId) => ctx.db.get(teamId)));
+    const teamNameById = new Map(
+      teams
+        .filter((team): team is NonNullable<typeof team> => team !== null)
+        .map((team) => [team._id, team.name]),
+    );
+
+    return dependencies.map((dependency) => ({
+      linkId: dependency.linkId,
+      fromIssue: {
+        _id: dependency.fromIssue._id,
+        key: dependency.fromIssue.key,
+        title: dependency.fromIssue.title,
+        status: dependency.fromIssue.status,
+        priority: dependency.fromIssue.priority,
+        teamId: dependency.fromTeamId,
+        teamName: teamNameById.get(dependency.fromTeamId) ?? "Unknown Team",
+      },
+      toIssue: {
+        _id: dependency.toIssue._id,
+        key: dependency.toIssue.key,
+        title: dependency.toIssue.title,
+        status: dependency.toIssue.status,
+        priority: dependency.toIssue.priority,
+        teamId: dependency.toTeamId,
+        teamName: teamNameById.get(dependency.toTeamId) ?? "Unknown Team",
+      },
+      updatedAt: dependency.updatedAt,
+    }));
+  },
+});
+
 // =============================================================================
 // Workspace Members
 // =============================================================================

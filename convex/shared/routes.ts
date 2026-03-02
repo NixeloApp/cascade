@@ -109,6 +109,11 @@ export const ROUTES = {
       build: (orgSlug: string, workspaceSlug: string) =>
         `/${orgSlug}/workspaces/${workspaceSlug}/sprints`,
     },
+    dependencies: {
+      path: "/$orgSlug/workspaces/$workspaceSlug/dependencies" as const,
+      build: (orgSlug: string, workspaceSlug: string) =>
+        `/${orgSlug}/workspaces/${workspaceSlug}/dependencies`,
+    },
     wiki: {
       path: "/$orgSlug/workspaces/$workspaceSlug/wiki" as const,
       build: (orgSlug: string, workspaceSlug: string) =>

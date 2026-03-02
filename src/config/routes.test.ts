@@ -151,6 +151,15 @@ describe("ROUTES configuration", () => {
       );
     });
 
+    it("should have correct workspace dependencies route", () => {
+      expect(ROUTES.workspaces.dependencies.path).toBe(
+        "/$orgSlug/workspaces/$workspaceSlug/dependencies",
+      );
+      expect(ROUTES.workspaces.dependencies.build("acme", "engineering")).toBe(
+        "/acme/workspaces/engineering/dependencies",
+      );
+    });
+
     it("should have correct workspace settings route", () => {
       expect(ROUTES.workspaces.settings.path).toBe("/$orgSlug/workspaces/$workspaceSlug/settings");
       expect(ROUTES.workspaces.settings.build("acme", "engineering")).toBe(

@@ -46,6 +46,7 @@ import { Route as AuthAppOrgSlugProjectsKeyIndexRouteImport } from './routes/_au
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
 import { Route as AuthAppOrgSlugProjectsKeyTimesheetRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/timesheet'
@@ -268,6 +269,12 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
   } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRouteImport.update({
+    id: '/dependencies',
+    path: '/dependencies',
+    getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute =
   AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRouteImport.update({
     id: '/calendar',
@@ -438,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/$orgSlug/workspaces/$workspaceSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute
+  '/$orgSlug/workspaces/$workspaceSlug/dependencies': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
   '/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
   '/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
@@ -492,6 +500,7 @@ export interface FileRoutesByTo {
   '/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/$orgSlug/workspaces/$workspaceSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute
+  '/$orgSlug/workspaces/$workspaceSlug/dependencies': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
   '/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
   '/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
@@ -551,6 +560,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
@@ -610,6 +620,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/timesheet'
     | '/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/$orgSlug/workspaces/$workspaceSlug/calendar'
+    | '/$orgSlug/workspaces/$workspaceSlug/dependencies'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
     | '/$orgSlug/workspaces/$workspaceSlug/sprints'
     | '/$orgSlug/workspaces/$workspaceSlug/wiki'
@@ -664,6 +675,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/timesheet'
     | '/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/$orgSlug/workspaces/$workspaceSlug/calendar'
+    | '/$orgSlug/workspaces/$workspaceSlug/dependencies'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
     | '/$orgSlug/workspaces/$workspaceSlug/sprints'
     | '/$orgSlug/workspaces/$workspaceSlug/wiki'
@@ -722,6 +734,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/projects/$key/timesheet'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki'
@@ -1007,6 +1020,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport
       parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
     }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies'
+      path: '/dependencies'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/dependencies'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar': {
       id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar'
       path: '/calendar'
@@ -1225,6 +1245,7 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren =
 interface AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren {
   AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
@@ -1239,6 +1260,8 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren: AuthAppOrgSlugWor
       AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute:

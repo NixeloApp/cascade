@@ -47,9 +47,9 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/sprints`
 
 Route: `/:orgSlug/workspaces/:workspaceSlug/dependencies`
 
-- [ ] Query issues with cross-team blockedBy/blocks
+- [x] Query issues with cross-team blockedBy/blocks
 - [ ] Create dependency visualization (react-flow)
-- [ ] Add filtering by team/status/priority
+- [x] Add filtering by team/status/priority
 
 ### 4. Personal Board (@me)
 
@@ -321,3 +321,30 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - none for calendar milestones; `S5` is complete.
 - Next Step:
   - continue remaining `multi-level-views` scope: cross-team dependencies route (`/:orgSlug/workspaces/:workspaceSlug/dependencies`) and personal board (`/:orgSlug/my-issues`).
+
+### 2026-03-02 - Batch H (cross-team dependencies route + filters)
+
+- Decision:
+  - ship the dependencies route with real workspace data and filters first, using a list-based visualization as an intermediate step before a full `react-flow` graph.
+- Change:
+  - updated backend:
+    - `convex/workspaces.ts` added `getCrossTeamDependencies` (workspace-scoped `blocks` links where source/target issues are in different teams), with optional filters: `teamId`, `status`, `priority`.
+  - updated routing/navigation:
+    - added `ROUTES.workspaces.dependencies` in `convex/shared/routes.ts`.
+    - added route `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies.tsx`.
+    - added `Dependencies` tab in workspace layout (`src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route.tsx`).
+  - updated tests:
+    - `convex/workspaces.test.ts` now covers:
+      - cross-team-only dependency extraction (same-team links excluded),
+      - team/status/priority filtering behavior.
+    - `src/config/routes.test.ts` now covers workspace dependencies route constant/build.
+  - regenerated route tree:
+    - `pnpm run generate:routes` updated `src/routeTree.gen.ts`.
+- Validation:
+  - `pnpm run generate:routes` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/workspaces.test.ts src/config/routes.test.ts` => pass (`73 passed`)
+- Blockers:
+  - `react-flow` graph visualization for dependencies is still pending (current UI is a filtered dependency list).
+- Next Step:
+  - complete the dependencies visualization requirement with a graph-based view, then implement Personal Board (`/:orgSlug/my-issues`).
