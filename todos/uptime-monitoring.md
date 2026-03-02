@@ -251,3 +251,29 @@ Option B: External worker (Cloudflare Worker, Vercel Edge) that calls Convex
 **Next step**
 
 - Continue next strict-order cycle from Priority `01` until architecture prerequisites are provided.
+
+### 2026-03-02 (Batch D)
+
+**Progress**
+
+- Revalidated this blocked lane in strict-order cycle; no generic uptime/status-page implementation has been added.
+
+**Validation**
+
+- `pnpm run typecheck` (pass)
+- repository scan confirms only docs/research/OAuth-monitoring references, with no monitor/status-page product implementation paths.
+
+**Decisions**
+
+- Keep Priority `19` blocked and avoid partial schema/route scaffolding before architecture prerequisites are settled.
+
+**Blockers**
+
+- Unchanged:
+  - check runner model decision (`Convex action` vs external worker),
+  - public status-page routing/domain strategy,
+  - alerting baseline and operational ownership.
+
+**Next step**
+
+- Continue next strict-order cycle from Priority `01` until architecture prerequisites are provided.
