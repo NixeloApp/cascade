@@ -225,3 +225,29 @@ Option B: External worker (Cloudflare Worker, Vercel Edge) that calls Convex
 **Next step**
 
 - Start `S4` immediately once prerequisites are provided; until then continue next strict-order cycle from Priority `01`.
+
+### 2026-03-02 (Batch C)
+
+**Progress**
+
+- Revalidated this track in strict-order flow: no monitor/status-page feature implementation has been added since prior audit, and blocker assumptions remain intact.
+
+**Validation**
+
+- `pnpm run typecheck` (pass)
+- repository scan for uptime/status-page implementation confirms only TODO/research/runbook references and existing OAuth-monitoring paths, not a generic monitor/status-page product implementation.
+
+**Decisions**
+
+- Keep Priority `19` blocked and avoid partial schema/runtime scaffolding before architecture and ownership prerequisites are finalized.
+
+**Blockers**
+
+- Unchanged:
+  - check runner model decision (`Convex action` vs external worker),
+  - public status-page routing/domain strategy,
+  - alerting baseline and operational ownership.
+
+**Next step**
+
+- Continue next strict-order cycle from Priority `01` until architecture prerequisites are provided.
