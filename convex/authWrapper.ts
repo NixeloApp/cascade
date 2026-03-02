@@ -14,6 +14,7 @@ import {
   internalMutation,
   type MutationCtx,
 } from "./_generated/server";
+import { shouldRunInlineForE2E, shouldUseFallbacks } from "./lib/envDetection";
 import { logger } from "./lib/logger";
 import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
@@ -121,13 +122,7 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
     if (!clientIp) {
       // In test/dev environments (especially CI), we might not have a proxy setting headers
       // so we fallback to a safe default to allow the test to proceed.
-      const isTestOrDev =
-        process.env.NODE_ENV === "test" ||
-        process.env.NODE_ENV === "development" ||
-        process.env.E2E_TEST_MODE ||
-        process.env.CI;
-
-      if (isTestOrDev) {
+      if (shouldUseFallbacks()) {
         clientIp = "127.0.0.1";
       } else {
         // If we can't determine IP in production, we can't safely rate limit.
@@ -175,11 +170,7 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
       });
     }
 
-    const isE2ENonProductionMode =
-      process.env.NODE_ENV !== "production" &&
-      (!!process.env.E2E_TEST_MODE || !!process.env.E2E_API_KEY || !!process.env.CI);
-
-    if (isE2ENonProductionMode) {
+    if (shouldRunInlineForE2E()) {
       // E2E mode: execute inline to avoid scheduler latency flakes in OTP polling.
       await ctx.runAction(internal.authWrapper.performPasswordReset, { email });
     } else {

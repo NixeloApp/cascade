@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
 import { securePasswordResetHandler } from "./authWrapper";
+import { shouldRunInlineForE2E } from "./lib/envDetection";
 
 // Mock logger
 vi.mock("./lib/logger", () => ({
@@ -116,11 +117,7 @@ describe("securePasswordResetHandler", () => {
 
     // In CI/E2E mode, uses runAction(performPasswordReset) inline
     // In production mode, uses runMutation(schedulePasswordReset) async
-    const isE2ENonProductionMode =
-      process.env.NODE_ENV !== "production" &&
-      (!!process.env.E2E_TEST_MODE || !!process.env.E2E_API_KEY || !!process.env.CI);
-
-    if (isE2ENonProductionMode) {
+    if (shouldRunInlineForE2E()) {
       expect(mockCtx.runAction).toHaveBeenCalledWith(internal.authWrapper.performPasswordReset, {
         email: "test@example.com",
       });

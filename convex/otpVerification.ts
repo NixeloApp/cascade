@@ -16,6 +16,7 @@ import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
 import type { ConvexAuthContext } from "./lib/authTypes";
 import { generateOTP } from "./lib/crypto";
+import { isE2ESafeEnvironment } from "./lib/envDetection";
 import { isAppError } from "./lib/errors";
 import { logger } from "./lib/logger";
 
@@ -25,18 +26,10 @@ import { logger } from "./lib/logger";
 async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string) {
   const isTestEmail = email.endsWith("@inbox.mailtrap.io");
 
-  // Only allow storing test OTPs if environment is configured for testing/dev OR if E2E API key is present
-  const isSafeEnvironment =
-    process.env.NODE_ENV === "development" ||
-    process.env.NODE_ENV === "test" ||
-    !!process.env.CI ||
-    !!process.env.E2E_TEST_MODE ||
-    !!process.env.E2E_API_KEY;
-
   // Store OTPs for test emails ONLY if environment permits it.
   // This allows E2E tests to run against preview/prod environments where NODE_ENV might be "production"
   // and process.env.CI might be missing, BUT explicitly requires E2E_API_KEY to be set.
-  if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
+  if (isTestEmail && isE2ESafeEnvironment() && ctx?.runMutation) {
     await ctx.runMutation(internal.e2e.storeTestOtp, {
       email,
       code: token,
