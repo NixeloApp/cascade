@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: selector anti-pattern baseline debt is now zero; hard-rule guard enforces no new timeout/selector regressions |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: selector baseline is zero and `e2e-summary` now has local mock-history validation for `history-derived` streak logic |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): selector baseline debt was burned down to zero by migrating brittle selectors in `e2e/analytics.spec.ts` and `e2e/issue-detail-page.spec.ts`; `scripts/ci/e2e-hard-rules-baseline.json` is now empty. Current guard status: `29` spec files scanned, `0` timeout violations, `0` baseline selector entries, `0` new selector regressions; targeted validation for changed specs is `8 passed`, `0 failed` (`2.7m`). Remaining blocker is real PR CI validation of `history-derived` checkpoint mode.
+- Priority `01` update (2026-03-02): `scripts/ci/e2e-summary.mjs` now supports `E2E_SUMMARY_MOCK_HISTORY_FILE` to locally simulate `history-derived` streak logic; fixture validation confirms expected mode/count behavior (`fallback-local: 1/5`, mock `history-derived: 2/5`). Selector baseline debt remains zero. Remaining blocker is live PR CI validation against real Actions API + step summary output.

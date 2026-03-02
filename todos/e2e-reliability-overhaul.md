@@ -581,6 +581,26 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - no remaining local selector-baseline debt; remaining blocker is external PR CI validation for `history-derived` streak mode.
 
+### 2026-03-02 - Batch X (completed local simulation path for history-derived summary mode)
+
+- Decision: reduce risk before real PR CI validation by adding deterministic local simulation for the `history-derived` streak path.
+- Change:
+  - updated `scripts/ci/e2e-summary.mjs`:
+    - added optional env input `E2E_SUMMARY_MOCK_HISTORY_FILE`
+    - when present, streak is computed from fixture workflow/job payload instead of GitHub API calls
+  - added fixture:
+    - `scripts/ci/fixtures/e2e-summary-history-mock.json`
+    - models two clean runs followed by one failing run (expected streak = `2`)
+- Validation:
+  - fallback path (no CI context):
+    - `node scripts/ci/e2e-summary.mjs /tmp/playwright-e2e.clean.json`
+    - result includes `Clean-Run Checkpoint: 1/5 (fallback-local)`
+  - simulated history-derived path:
+    - `E2E_SUMMARY_MOCK_HISTORY_FILE=scripts/ci/fixtures/e2e-summary-history-mock.json node scripts/ci/e2e-summary.mjs /tmp/playwright-e2e.clean.json`
+    - result includes `Clean-Run Checkpoint: 2/5 (history-derived)`
+- Blockers:
+  - final end-to-end confirmation still requires actual PR CI execution context (`GITHUB_TOKEN`, workflow run/job APIs, step summary rendering).
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:

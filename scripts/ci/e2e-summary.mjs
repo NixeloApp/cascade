@@ -70,6 +70,31 @@ function accumulateBySpec(report) {
 }
 
 async function computeConsecutiveCleanRuns() {
+  const mockHistoryPath = process.env.E2E_SUMMARY_MOCK_HISTORY_FILE;
+  if (mockHistoryPath) {
+    const mock = JSON.parse(fs.readFileSync(mockHistoryPath, "utf8"));
+    const runs = mock.workflow_runs || [];
+    const jobsByRun = mock.jobs_by_run || {};
+    let streak = 0;
+
+    for (const run of runs) {
+      const jobsPayload = jobsByRun[String(run.id)] || { jobs: [] };
+      const e2eJobs = (jobsPayload.jobs || []).filter((job) => job.name.startsWith("E2E Tests"));
+      if (e2eJobs.length === 0) {
+        continue;
+      }
+
+      const isCleanRun = e2eJobs.every((job) => job.conclusion === "success");
+      if (!isCleanRun) {
+        break;
+      }
+
+      streak += 1;
+    }
+
+    return streak;
+  }
+
   const token = process.env.GITHUB_TOKEN;
   const repo = process.env.GITHUB_REPOSITORY;
   const branch = process.env.GITHUB_REF_NAME;
