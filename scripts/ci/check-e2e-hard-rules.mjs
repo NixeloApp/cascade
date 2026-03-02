@@ -37,6 +37,7 @@ function main() {
 
   const specFiles = collectFiles(E2E_DIR);
   const timeoutViolations = [];
+  const networkIdleViolations = [];
   const selectorAntiPatterns = [];
 
   for (const filePath of specFiles) {
@@ -45,6 +46,17 @@ function main() {
     lines.forEach((line, index) => {
       if (line.includes("waitForTimeout(")) {
         timeoutViolations.push({
+          file: path.relative(ROOT, filePath),
+          line: index + 1,
+          text: line.trim(),
+        });
+      }
+
+      if (
+        line.includes('waitForLoadState("networkidle"') ||
+        line.includes("waitForLoadState('networkidle'")
+      ) {
+        networkIdleViolations.push({
           file: path.relative(ROOT, filePath),
           line: index + 1,
           text: line.trim(),
@@ -87,6 +99,14 @@ function main() {
     process.exit(1);
   }
 
+  if (networkIdleViolations.length > 0) {
+    console.error('E2E hard rule violation: waitForLoadState("networkidle") found in spec files.');
+    for (const violation of networkIdleViolations) {
+      console.error(`- ${violation.file}:${violation.line} -> ${violation.text}`);
+    }
+    process.exit(1);
+  }
+
   const baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
   const known = new Set(
     (baseline.selectorAntiPatterns ?? []).map(
@@ -112,6 +132,7 @@ function main() {
 
   console.log(`E2E hard-rule check passed: scanned ${specFiles.length} spec files.`);
   console.log(`- waitForTimeout violations: ${timeoutViolations.length}`);
+  console.log(`- networkidle wait violations: ${networkIdleViolations.length}`);
   console.log(`- selector anti-patterns (baseline-allowed): ${selectorAntiPatterns.length}`);
   console.log(`- new selector anti-patterns: ${newlyIntroduced.length}`);
 }

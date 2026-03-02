@@ -41,6 +41,7 @@ pnpm run e2e:summary:self-test
 
 Current automated checks:
 - hard fail on `waitForTimeout(` in `*.spec.ts(x)` files
+- hard fail on `waitForLoadState("networkidle")` in `*.spec.ts(x)` files
 - baseline-aware regression check for brittle selector anti-patterns:
   - `locator("text=...")` / `locator(\`text=...\`)`
   - `:nth-child(...)` / `:nth-of-type(...)`
