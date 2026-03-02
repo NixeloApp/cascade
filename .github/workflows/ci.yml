@@ -298,6 +298,7 @@ jobs:
           # CI/E2E flags
           npx convex env set CI "true"
           npx convex env set E2E_TEST_MODE "${{ secrets.E2E_TEST_MODE }}"
+          npx convex env set E2E_API_KEY "${{ secrets.E2E_API_KEY }}"
 
           # Email (Mailtrap)
           npx convex env set MAILTRAP_API_TOKEN "${{ secrets.MAILTRAP_API_TOKEN }}"
