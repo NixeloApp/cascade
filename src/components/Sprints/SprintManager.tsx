@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Checkbox } from "@/components/ui/form/Checkbox";
 import { Input } from "@/components/ui/form/Input";
 import { Textarea } from "@/components/ui/form/Textarea";
 import { Grid } from "@/components/ui/Grid";
@@ -189,6 +190,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
   const [completingSprintId, setCompletingSprintId] = useState<Id<"sprints"> | null>(null);
   const [transferOption, setTransferOption] = useState<"backlog" | "sprint" | "keep">("backlog");
   const [targetSprintId, setTargetSprintId] = useState<Id<"sprints"> | null>(null);
+  const [autoCreateNextSprint, setAutoCreateNextSprint] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
   const sprints = useQuery(api.sprints.listByProject, { projectId });
@@ -336,12 +338,14 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
     setCompletingSprintId(sprintId);
     setTransferOption("backlog");
     setTargetSprintId(null);
+    setAutoCreateNextSprint(false);
   };
 
   const closeCompleteSprintModal = () => {
     setCompletingSprintId(null);
     setTransferOption("backlog");
     setTargetSprintId(null);
+    setAutoCreateNextSprint(false);
     setIsCompleting(false);
   };
 
@@ -361,7 +365,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
       }
 
       // Complete the sprint
-      await completeSprint({ sprintId: completingSprintId });
+      await completeSprint({ sprintId: completingSprintId, autoCreateNext: autoCreateNextSprint });
       showSuccess("Sprint completed successfully");
       closeCompleteSprintModal();
     } catch (error) {
@@ -643,6 +647,13 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                       All issues in this sprint are completed. Ready to mark the sprint as done.
                     </Typography>
                   )}
+
+                  <Checkbox
+                    checked={autoCreateNextSprint}
+                    onChange={(e) => setAutoCreateNextSprint(e.target.checked)}
+                    label="Auto-create next sprint"
+                    helperText="Creates a new future sprint with the same duration and incremented name."
+                  />
 
                   <Flex gap="sm" justify="end">
                     <Button

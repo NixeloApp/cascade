@@ -2,7 +2,7 @@
 
 > **Priority:** P4 (Post-Launch)
 > **Effort:** Medium-Large
-> **Status:** In Progress (partially shipped)
+> **Status:** Blocked (external Outlook integration setup required)
 > **Last Audited:** 2026-03-02
 
 ---
@@ -33,7 +33,7 @@
 - [x] **Query language** - Simple `status:done priority:high` syntax ✅ (`src/lib/board-query-language.ts`, `src/components/KanbanBoard.tsx`, `src/components/FilterBar.tsx`)
 - [x] **Swimlanes** - Group board rows by assignee/epic ✅ (`src/components/Kanban/SwimlanSelector.tsx`, `src/lib/swimlane-utils.ts`)
 - [x] **WIP limits** - Warn when column exceeds limit ✅ (`src/components/Kanban/KanbanColumn.tsx`, `convex/schema.ts`)
-- [ ] **Auto-cycles** - Auto-create next sprint like Linear
+- [x] **Auto-cycles** - Auto-create next sprint like Linear ✅ (`convex/sprints.ts`, `src/components/Sprints/SprintManager.tsx`, `convex/sprints.test.ts`)
 
 ---
 
@@ -65,6 +65,17 @@
 ### Definition of Done
 
 - At least two growth items ship with measurable adoption.
+
+## Blocker Gate
+
+Only remaining unchecked item is `Outlook Calendar integration`, which depends on external Microsoft 365 app provisioning and OAuth credential setup.
+
+Unblock requirements:
+
+- Microsoft Entra app registration complete.
+- Calendar scopes approved (`Calendars.ReadWrite` + required identity scopes).
+- Redirect URIs and environment variables configured for local + production.
+- Integration test tenant/account available.
 
 ---
 
@@ -215,3 +226,44 @@
 **Next step**
 
 - Implement `Auto-cycles` (automatic next sprint creation) or classify it with concrete rollout dependencies if blocked.
+
+### 2026-03-02 (Batch G)
+
+**Progress**
+
+- Added optional sprint completion auto-cycle path in backend:
+  - `api.sprints.completeSprint` now supports `autoCreateNext`.
+  - Auto-generated next sprint copies duration, increments name, and schedules as future sprint.
+- Wired complete-sprint modal with `Auto-create next sprint` checkbox in UI.
+- Added backend regression test for auto-cycle behavior.
+
+**Decisions**
+
+- Implemented auto-cycle as explicit opt-in during sprint completion rather than always-on behavior.
+- Name progression uses numeric suffix increment when present, otherwise appends ` 2`.
+
+**Blockers**
+
+- Outlook integration remains the only unchecked item in this todo.
+
+**Next step**
+
+- Classify `Outlook Calendar integration` as blocked until Microsoft app credentials + OAuth scopes are provisioned, then proceed to Priority `18`.
+
+### 2026-03-02 (Batch H)
+
+**Progress**
+
+- Classified Priority 17 as externally blocked after completing all in-repo growth items except Outlook integration.
+
+**Decisions**
+
+- Did not start partial Outlook code scaffolding without confirmed Microsoft app credentials/scope constraints to avoid speculative implementation churn.
+
+**Blockers**
+
+- Missing external Microsoft OAuth app setup and credentials.
+
+**Next step**
+
+- Proceed to Priority `18` while waiting for Outlook integration prerequisites.
