@@ -7,6 +7,7 @@
 - [ ] `pnpm run typecheck`
 - [ ] `pnpm run biome:check`
 - [ ] Relevant tests were run and results are included
+- [ ] New/updated non-trivial files (>50 lines) include a top-of-file documentation header (`/** ... */`)
 
 ## E2E Reliability Checklist
 

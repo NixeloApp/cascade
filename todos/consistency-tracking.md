@@ -1,7 +1,7 @@
 # Consistency TODO
 
 > **Purpose:** Recursive document for tracking consistency improvements across the codebase.
-> **Last Updated:** 2026-03-01
+> **Last Updated:** 2026-03-02
 > **Owner:** Engineering Team
 
 ---
@@ -335,7 +335,7 @@ All proposed validators have been implemented:
   - Updated all imports (3 files)
   - Removed from validator allowlist
 
-- [ ] **Add file headers to new files**
+- [x] **Add file headers to new files** ✅ 2026-03-02
   - Start requiring headers for new files in PR reviews
   - Create header template (see Standards section)
   - ~10 minutes setup
@@ -516,6 +516,7 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 | 2026-03-01 | Fixed useAIChat toast.error → showError | Better error handling |
 | 2026-03-01 | Updated check-raw-tailwind.js with prop detection | Detects component prop misuse |
 | 2026-03-01 | Fixed KanbanColumn space-x-2 → gap="sm" | Consistent component prop usage |
+| 2026-03-02 | Added PR checklist requirement for non-trivial file headers (`.github/PULL_REQUEST_TEMPLATE.md`) | Closed remaining Phase 1 process item |
 | 2026-02-28 | Created consistency TODO | Baseline established |
 | 2026-02-28 | Added DocumentSidebar | Following patterns |
 | 2026-02-28 | Fixed PR review comments | Improved type safety |
@@ -552,9 +553,9 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 ### Milestones
 
-- [ ] `S1` Close remaining unchecked action item(s)
-- [ ] `S1` Add monthly consistency snapshot cadence (score + deltas)
-- [ ] `S1` Keep validator inventory and strictness levels in sync with code
+- [x] `S1` Close remaining unchecked action item(s) ✅ 2026-03-02
+- [x] `S1` Add monthly consistency snapshot cadence (score + deltas) ✅ 2026-03-02
+- [x] `S1` Keep validator inventory and strictness levels in sync with code ✅ 2026-03-02
 
 ### Dependencies
 
@@ -563,3 +564,28 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 ### Definition of Done
 
 - No unresolved baseline items; doc transitions to operational tracking mode.
+
+### Monthly Snapshot Cadence
+
+- **Schedule:** first Monday of each month.
+- **Owner action:**
+  - run `node scripts/validate.js`;
+  - update **Consistency Score** table with current values;
+  - append a delta row in **Recent Changes** summarizing score movement and notable regressions/fixes.
+- **Tracking rule:** if validator count or strictness changes in `scripts/validate.js`, update **Current Validator Inventory** in the same change.
+
+### 2026-03-02 - Batch A (process closure + operational cadence)
+
+- Decision:
+  - close remaining process-only inconsistency work by formalizing PR-level header expectations and shifting this todo to operational tracking.
+- Change:
+  - updated `.github/PULL_REQUEST_TEMPLATE.md` with mandatory header checklist for new/updated non-trivial files.
+  - closed the last unchecked Phase 1 action item.
+  - added explicit monthly snapshot cadence and inventory-sync rule.
+  - marked all `S1` execution-plan milestones complete.
+- Validation:
+  - docs/process-only update; no runtime code paths changed.
+- Blockers:
+  - none for this todo baseline scope.
+- Next Step:
+  - continue strict-priority execution at Priority `11` (`agency-mvp.md`).
