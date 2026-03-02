@@ -644,6 +644,32 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BH (completed domcontentloaded wait removal in integration tab workflow)
+
+- Decision: replace residual project-tab `domcontentloaded` waits with explicit navigation-state assertions tied to user-visible tab outcomes.
+- Change:
+  - updated `e2e/integration-workflow.spec.ts`:
+    - removed `waitForLoadState("domcontentloaded")` after Calendar and Timesheet tab clicks (`2` call sites)
+    - added deterministic post-click checks:
+      - active tab state (`aria-current="page"`) for Calendar and Timesheet tabs
+      - Timesheet content readiness via visible `Time Entries` tab
+- Validation:
+  - `pnpm exec biome check e2e/integration-workflow.spec.ts` => pass
+  - `pnpm exec playwright test e2e/integration-workflow.spec.ts --reporter=line` => pass (`4 passed`)
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force/xpath violations: `0`; selector baseline remains `0`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BG (completed domcontentloaded wait removal in issue-detail flow)
 
 - Decision: remove remaining document-load waits from direct issue-detail navigation coverage and trust deterministic page state assertions.
