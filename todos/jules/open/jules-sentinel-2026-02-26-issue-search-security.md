@@ -70,3 +70,15 @@ High
   - none.
 - Next Step:
   - move to Priority `03` (`jules-scribe-2024-05-22-fix-cascade-delete-limit.md`).
+
+### 2026-03-02 - Batch C (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep this item resolved; no code changes required after fresh regression revalidation.
+- Validation:
+  - `pnpm test convex/issues.test.ts` => pass (`28 passed`)
+  - confirmed `issues.search` remains access-scoped with per-project authorization checks and unauthorized scope denial behavior.
+- Blockers:
+  - none.
+- Next Step:
+  - continue strict order with Priority `03` (`jules-scribe-2024-05-22-fix-cascade-delete-limit.md`).
