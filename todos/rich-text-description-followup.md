@@ -121,3 +121,20 @@ Add backend helper to extract plain text from rich text JSON descriptions for in
 
 **Next step (strict order)**
 - Continue to Priority `13`: `todos/sidebar-display-limits.md`.
+
+### 2026-03-02 (Priority 12, batch C)
+
+**Completed**
+- Revalidated this completed scope with the original helper/integration test set; no new code changes required.
+
+**Validation**
+- `pnpm test convex/lib/richText.test.ts convex/issues/helpers.test.ts convex/export.test.ts convex/pumble.test.ts` (`86 passed`)
+
+**Decisions**
+- Keep Priority `12` closed; backend plain-text extraction and integration coverage remain intact.
+
+**Blockers**
+- None.
+
+**Next step (strict order)**
+- Continue to Priority `13`: `todos/sidebar-display-limits.md`.
