@@ -374,3 +374,20 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - none for Personal Board scope.
 - Next Step:
   - remaining `multi-level-views` blocker is the dependencies graph visualization requirement (`react-flow`) for cross-team dependencies.
+
+### 2026-03-02 - Batch J (react-flow dependency visualization blocked)
+
+- Decision:
+  - attempt to unblock the remaining dependencies visualization task by installing `@xyflow/react` and replacing list-only view with graph rendering.
+- Change:
+  - attempted install command:
+    - `pnpm add @xyflow/react`
+  - no source-code visualization changes landed yet due package-install failure.
+  - kept `my-issues` layout standards-compliant (`Flex`/`FlexItem`) after pre-commit restore.
+- Validation / Blocker:
+  - install failed with:
+    - `ERR_PNPM_UNEXPECTED_STORE` (current repo links to `/home/mikhail/.local/share/pnpm/store/v10`, pnpm attempted `/home/mikhail/Desktop/cascade/.pnpm-store/v10`)
+    - `ERR_PNPM_META_FETCH_FAIL` with DNS error `getaddrinfo EAI_AGAIN registry.npmjs.org`
+  - blocker is environment/network-level; `react-flow` cannot be added until registry access is restored and/or store config is aligned.
+- Next Step:
+  - retry `@xyflow/react` install with aligned store dir once DNS/registry connectivity is restored, then implement graph visualization.

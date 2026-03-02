@@ -4,7 +4,7 @@ import { usePaginatedQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { PageContent } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -59,9 +59,9 @@ function MyIssuesBoardPage() {
         </ToggleGroup>
       </Flex>
 
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      <Flex gap="md" className="overflow-x-auto pb-2">
         {groups.map(([groupKey, issues]) => (
-          <div
+          <FlexItem
             key={groupKey}
             className="min-w-72 max-w-80 shrink-0 rounded-xl border border-ui-border bg-ui-bg-secondary p-3"
           >
@@ -92,9 +92,9 @@ function MyIssuesBoardPage() {
                 </Link>
               ))}
             </Flex>
-          </div>
+          </FlexItem>
         ))}
-      </div>
+      </Flex>
 
       {status === "CanLoadMore" && (
         <Flex justify="center">
