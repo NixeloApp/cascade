@@ -75,9 +75,6 @@ export class WorkspacesPage extends BasePage {
   }
 
   async createWorkspace(name: string, description?: string) {
-    // Wait for page to be stable first
-    await this.page.waitForLoadState("domcontentloaded");
-
     // Wait for button to be ready - use first() to get the header button (not empty state)
     const createButton = this.newWorkspaceButton.first();
     await createButton.waitFor({ state: "visible" });

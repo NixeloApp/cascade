@@ -644,6 +644,36 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BM (completed dashboard/workspaces page-object wait hardening)
+
+- Decision: replace weak page-object `domcontentloaded` waits with deterministic route/UI-state waits and fix an observed dashboard tab-click detachment flake.
+- Change:
+  - updated `e2e/pages/dashboard.page.ts`:
+    - in auth-retry path, replaced `waitForLoadState("domcontentloaded")` with `waitForLoadState("load")` before retry navigation
+    - `navigateTo(...)` now waits on tab-specific URL assertions instead of `waitForLoadState("domcontentloaded")`
+    - hardened `filterIssues(...)` with retry (`expect(...).toPass()`) and active-state assertion (`aria-selected`/`data-state`) to prevent detached-tab click flakes
+  - updated `e2e/pages/workspaces.page.ts`:
+    - removed pre-click `waitForLoadState("domcontentloaded")` from `createWorkspace(...)`; relies on explicit button/modal readiness checks already present
+- Validation:
+  - `pnpm exec biome check e2e/pages/dashboard.page.ts e2e/pages/workspaces.page.ts` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/force/xpath/selector-baseline violations: `0`)
+  - `pnpm exec playwright test e2e/teams.spec.ts --reporter=line` => pass (`3 passed`)
+  - `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line`:
+    - initial run exposed tab detachment flake in `filterIssues(...)` (`1 failed`, `3 passed`, `7 did not run`)
+    - rerun after helper hardening => pass (`11 passed`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BL (completed RBAC role-flow domcontentloaded wait removal)
 
 - Decision: remove remaining `domcontentloaded` document-load waits from RBAC role-flow specs and rely on explicit route/UI outcome assertions.

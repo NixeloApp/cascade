@@ -230,8 +230,8 @@ export class DashboardPage extends BasePage {
         finalUrl,
         ". Retrying navigation once...",
       );
-      // Wait for auth state to settle by waiting for load state
-      await this.page.waitForLoadState("domcontentloaded");
+      // Wait for auth redirect chain to settle before retrying navigation
+      await this.page.waitForLoadState("load");
       await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
       await this.waitForLoad();
       finalUrl = this.page.url(); // Update finalUrl after retry
@@ -286,13 +286,18 @@ export class DashboardPage extends BasePage {
     await tabs[tab].waitFor({ state: "visible" });
 
     // Click and wait for navigation if it's a link-based tab
-    const urlBefore = this.page.url();
     await tabs[tab].click();
 
-    // If it's a navigation tab, wait for URL to actually change or for load to complete
-    if (tab !== "dashboard" || !urlBefore.includes("/dashboard")) {
-      await this.page.waitForLoadState("domcontentloaded");
-    }
+    // Wait for the expected route segment rather than document-load state.
+    const tabPaths = {
+      dashboard: /\/dashboard/,
+      documents: /\/documents/,
+      workspaces: /\/workspaces/,
+      timesheet: /\/timesheet/,
+      calendar: /\/calendar/,
+      settings: /\/settings/,
+    };
+    await expect(this.page).toHaveURL(tabPaths[tab]);
 
     await waitForDashboardReady(this.page);
   }
@@ -439,9 +444,15 @@ export class DashboardPage extends BasePage {
       assigned: this.assignedTab,
       created: this.createdTab,
     };
-    await expect(tabs[filter]).toBeVisible();
-    await expect(tabs[filter]).toBeEnabled();
-    await tabs[filter].click();
+    await expect(async () => {
+      await expect(tabs[filter]).toBeVisible();
+      await expect(tabs[filter]).toBeEnabled();
+      await tabs[filter].click();
+
+      const ariaSelected = await tabs[filter].getAttribute("aria-selected");
+      const dataState = await tabs[filter].getAttribute("data-state");
+      expect(ariaSelected === "true" || dataState === "active").toBe(true);
+    }).toPass();
   }
 
   // ===================
