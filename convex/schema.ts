@@ -298,6 +298,7 @@ const applicationTables = {
     // Hierarchy - every doc belongs to an org, optionally scoped to workspace/project
     organizationId: v.id("organizations"),
     workspaceId: v.optional(v.id("workspaces")),
+    teamId: v.optional(v.id("teams")),
     projectId: v.optional(v.id("projects")),
     // Nested pages - parent document and sibling order
     parentId: v.optional(v.id("documents")),
@@ -320,6 +321,7 @@ const applicationTables = {
     .index("by_public", ["isPublic"])
     .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"])
+    .index("by_team", ["teamId"])
     .index("by_project", ["projectId"])
     .index("by_creator_public_updated", ["createdBy", "isPublic", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
@@ -335,7 +337,14 @@ const applicationTables = {
     ])
     .searchIndex("search_title", {
       searchField: "title",
-      filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId", "projectId"],
+      filterFields: [
+        "isPublic",
+        "createdBy",
+        "organizationId",
+        "workspaceId",
+        "teamId",
+        "projectId",
+      ],
     }),
 
   documentVersions: defineTable({
@@ -920,6 +929,9 @@ const applicationTables = {
     organizerId: v.id("users"),
     attendeeIds: v.array(v.id("users")),
     externalAttendees: v.optional(v.array(v.string())),
+    organizationId: v.optional(v.id("organizations")),
+    workspaceId: v.optional(v.id("workspaces")),
+    teamId: v.optional(v.id("teams")),
     projectId: v.optional(v.id("projects")),
     issueId: v.optional(v.id("issues")),
     status: calendarStatuses,
@@ -933,6 +945,9 @@ const applicationTables = {
   })
     .index("by_organizer", ["organizerId", "startTime"])
     .index("by_attendee_start", ["attendeeIds", "startTime"])
+    .index("by_organization", ["organizationId"])
+    .index("by_workspace", ["workspaceId"])
+    .index("by_team", ["teamId"])
     .index("by_project", ["projectId"])
     .index("by_issue", ["issueId"])
     .index("by_start_time", ["startTime"])
@@ -940,7 +955,14 @@ const applicationTables = {
     .index("by_required", ["isRequired"])
     .searchIndex("search_title", {
       searchField: "title",
-      filterFields: ["organizerId", "projectId", "status"],
+      filterFields: [
+        "organizerId",
+        "organizationId",
+        "workspaceId",
+        "teamId",
+        "projectId",
+        "status",
+      ],
     }),
 
   meetingAttendance: defineTable({

@@ -17,11 +17,11 @@ Views (boards, wikis, calendars) only exist at Project level. Users need org/wor
 
 Before implementing calendar views, the schema needs updates:
 
-- [ ] Add `organizationId` to `calendarEvents` table
-- [ ] Add `workspaceId` to `calendarEvents` table
-- [ ] Add `teamId` to `calendarEvents` table
-- [ ] Add `teamId` to `documents` table (for team wiki)
-- [ ] Add indexes for new fields
+- [x] Add `organizationId` to `calendarEvents` table
+- [x] Add `workspaceId` to `calendarEvents` table
+- [x] Add `teamId` to `calendarEvents` table
+- [x] Add `teamId` to `documents` table (for team wiki)
+- [x] Add indexes for new fields
 
 ---
 
@@ -127,7 +127,7 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 
 ### Milestones
 
-- [ ] `S1` Resolve schema blockers (`organizationId/workspaceId/teamId` + indexes)
+- [x] `S1` Resolve schema blockers (`organizationId/workspaceId/teamId` + indexes)
 - [ ] `S2` Ship workspace backlog + workspace sprints routes with real queries
 - [ ] `S3` Ship workspace wiki + team wiki data model/route support
 - [ ] `S4` Replace team calendar stub with real data
@@ -141,3 +141,33 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 ### Definition of Done
 
 - Users can manage backlog/wiki/calendar at workspace/team/org scope with production data.
+
+---
+
+## Progress Log
+
+### 2026-03-02 - Batch A (completed S1 schema blockers)
+
+- Decision:
+  - complete the first unblocked milestone by adding scope fields + indexes before any route/UI work.
+- Change:
+  - updated `convex/schema.ts`:
+    - `documents` now includes optional `teamId` and new `by_team` index.
+    - `documents.search_title` now includes `teamId` in filter fields.
+    - `calendarEvents` now includes optional `organizationId`, `workspaceId`, `teamId`.
+    - added calendar indexes: `by_organization`, `by_workspace`, `by_team`.
+    - `calendarEvents.search_title` now includes `organizationId/workspaceId/teamId` filter fields.
+  - updated `convex/documents.ts`:
+    - `create` mutation now accepts/persists optional `teamId`.
+    - added team integrity validation (`organization/workspace consistency + membership/admin check`).
+    - document access checks now enforce team membership for team-scoped docs (unless org admin).
+  - updated `convex/calendarEvents.ts`:
+    - create/update now derive and persist `organizationId/workspaceId/teamId` scope fields from project/issue context.
+    - issue/project mismatch now fails validation for event create/update.
+- Validation:
+  - `pnpm test convex/calendarEvents.test.ts convex/documents.test.ts` => pass (`51 passed`)
+  - `pnpm exec biome check convex/schema.ts convex/documents.ts convex/calendarEvents.ts` => pass (non-blocking complexity warning only in `canAccessDocument`)
+- Blockers:
+  - no hard blocker for `S2`; one non-blocking lint warning remains (`canAccessDocument` complexity 16 > 15).
+- Next Step:
+  - start `S2`: implement workspace backlog route/query (`workspaces.getBacklogIssues`) and wire the workspace navigation entry.

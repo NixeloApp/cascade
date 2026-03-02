@@ -24,6 +24,7 @@ import {
 } from "./lib/queryLimits";
 import { cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
+import { isTeamMember } from "./lib/teamAccess";
 import { isWorkspaceEditor } from "./lib/workspaceAccess";
 import { assertCanAccessProject, assertCanEditProject, canAccessProject } from "./projectAccess";
 import { enforceRateLimit } from "./rateLimits";
@@ -50,6 +51,7 @@ export const create = authenticatedMutation({
     isPublic: v.boolean(),
     organizationId: v.id("organizations"),
     workspaceId: v.optional(v.id("workspaces")),
+    teamId: v.optional(v.id("teams")),
     projectId: v.optional(v.id("projects")),
     parentId: v.optional(v.id("documents")),
   },
@@ -59,6 +61,7 @@ export const create = authenticatedMutation({
     await validateOrganizationMembership(ctx, args.organizationId);
     await validateProjectIntegrity(ctx, args.projectId, args.organizationId, args.isPublic);
     await validateWorkspaceIntegrity(ctx, args.workspaceId, args.organizationId);
+    await validateTeamIntegrity(ctx, args.teamId, args.workspaceId, args.organizationId);
 
     // Validate parent document if provided
     let order = 0;
@@ -90,6 +93,7 @@ export const create = authenticatedMutation({
       updatedAt: now,
       organizationId: args.organizationId,
       workspaceId: args.workspaceId,
+      teamId: args.teamId,
       projectId: args.projectId,
       parentId: args.parentId,
       order,
@@ -346,6 +350,7 @@ async function canAccessDocument(
     isPublic: boolean;
     createdBy: Id<"users">;
     organizationId: Id<"organizations">;
+    teamId?: Id<"teams">;
     projectId?: Id<"projects">;
   },
   myOrgIds?: Set<string>,
@@ -358,6 +363,16 @@ async function canAccessDocument(
     const canProject = await canAccessProject(ctx, doc.projectId, ctx.userId);
     if (!canProject) return false;
   }
+
+  // Team-scoped documents require team membership (or org admin).
+  if (doc.teamId) {
+    const isOrgAdmin = await isOrganizationAdmin(ctx, doc.organizationId, ctx.userId);
+    if (!isOrgAdmin) {
+      const hasTeamAccess = await isTeamMember(ctx, doc.teamId, ctx.userId);
+      if (!hasTeamAccess) return false;
+    }
+  }
+
   // 2. Check Organization Access (if NOT linked to a project)
   // Note: canAccessProject already handles org admin checks, so we only need explicit org check here
   else {
@@ -446,6 +461,34 @@ async function validateWorkspaceIntegrity(
     if (!isEditor) {
       throw forbidden(undefined, "You must be a workspace member to perform this action");
     }
+  }
+}
+
+async function validateTeamIntegrity(
+  ctx: MutationCtx & { userId: Id<"users"> },
+  teamId: Id<"teams"> | undefined,
+  workspaceId: Id<"workspaces"> | undefined,
+  organizationId: Id<"organizations">,
+) {
+  if (!teamId) return;
+
+  const team = await ctx.db.get(teamId);
+  if (!team) throw notFound("team", teamId);
+
+  if (team.organizationId !== organizationId) {
+    throw validation("teamId", "Team does not belong to the specified organization");
+  }
+
+  if (workspaceId && team.workspaceId !== workspaceId) {
+    throw validation("teamId", "Team does not belong to the specified workspace");
+  }
+
+  const isOrgAdmin = await isOrganizationAdmin(ctx, organizationId, ctx.userId);
+  if (isOrgAdmin) return;
+
+  const hasTeamAccess = await isTeamMember(ctx, teamId, ctx.userId);
+  if (!hasTeamAccess) {
+    throw forbidden(undefined, "You must be a team member to perform this action");
   }
 }
 

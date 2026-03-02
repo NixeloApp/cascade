@@ -46,6 +46,9 @@ function buildEventUpdateObject(args: {
   eventType?: "meeting" | "deadline" | "timeblock" | "personal";
   attendeeIds?: Id<"users">[];
   externalAttendees?: string[];
+  organizationId?: Id<"organizations">;
+  workspaceId?: Id<"workspaces">;
+  teamId?: Id<"teams">;
   projectId?: Id<"projects">;
   issueId?: Id<"issues">;
   status?: "confirmed" | "tentative" | "cancelled";
@@ -70,6 +73,9 @@ function buildEventUpdateObject(args: {
   addFieldIfDefined(updates, "allDay", args.allDay);
   addFieldIfDefined(updates, "location", args.location);
   addFieldIfDefined(updates, "externalAttendees", args.externalAttendees);
+  addFieldIfDefined(updates, "organizationId", args.organizationId);
+  addFieldIfDefined(updates, "workspaceId", args.workspaceId);
+  addFieldIfDefined(updates, "teamId", args.teamId);
   addFieldIfDefined(updates, "projectId", args.projectId);
   addFieldIfDefined(updates, "issueId", args.issueId);
   addFieldIfDefined(updates, "isRecurring", args.isRecurring);
@@ -79,6 +85,49 @@ function buildEventUpdateObject(args: {
   addFieldIfDefined(updates, "color", args.color);
 
   return updates;
+}
+
+async function resolveScopeFromProjectOrIssue(
+  ctx: QueryCtx,
+  projectId?: Id<"projects">,
+  issueId?: Id<"issues">,
+): Promise<{
+  projectId?: Id<"projects">;
+  issueId?: Id<"issues">;
+  organizationId?: Id<"organizations">;
+  workspaceId?: Id<"workspaces">;
+  teamId?: Id<"teams">;
+}> {
+  let resolvedProjectId = projectId;
+
+  if (issueId) {
+    const issue = await ctx.db.get(issueId);
+    if (!issue) throw notFound("issue", issueId);
+
+    if (projectId && issue.projectId !== projectId) {
+      throw validation("issueId", "Issue does not belong to the provided project");
+    }
+
+    resolvedProjectId = issue.projectId;
+  }
+
+  if (!resolvedProjectId) {
+    return {
+      projectId: resolvedProjectId,
+      issueId,
+    };
+  }
+
+  const project = await ctx.db.get(resolvedProjectId);
+  if (!project) throw notFound("project", resolvedProjectId);
+
+  return {
+    projectId: resolvedProjectId,
+    issueId,
+    organizationId: project.organizationId,
+    workspaceId: project.workspaceId,
+    teamId: project.teamId,
+  };
 }
 
 // Helper: Get events where user is organizer or attendee in a date range
@@ -173,6 +222,7 @@ export const create = authenticatedMutation({
     }
 
     const now = Date.now();
+    const scope = await resolveScopeFromProjectOrIssue(ctx, args.projectId, args.issueId);
 
     const eventId = await ctx.db.insert("calendarEvents", {
       title: args.title,
@@ -185,8 +235,11 @@ export const create = authenticatedMutation({
       organizerId: ctx.userId,
       attendeeIds: args.attendeeIds || [],
       externalAttendees: args.externalAttendees,
-      projectId: args.projectId,
-      issueId: args.issueId,
+      organizationId: scope.organizationId,
+      workspaceId: scope.workspaceId,
+      teamId: scope.teamId,
+      projectId: scope.projectId,
+      issueId: scope.issueId,
       status: args.status || "confirmed",
       isRecurring: args.isRecurring ?? false,
       recurrenceRule: args.recurrenceRule,
@@ -348,7 +401,22 @@ export const update = authenticatedMutation({
     }
 
     // Build update object using helper
-    const updates = buildEventUpdateObject(args);
+    let updates = buildEventUpdateObject(args);
+    if (args.projectId !== undefined || args.issueId !== undefined) {
+      const scope = await resolveScopeFromProjectOrIssue(
+        ctx,
+        args.projectId ?? event.projectId,
+        args.issueId ?? event.issueId,
+      );
+      updates = {
+        ...updates,
+        organizationId: scope.organizationId,
+        workspaceId: scope.workspaceId,
+        teamId: scope.teamId,
+        projectId: scope.projectId,
+        issueId: scope.issueId,
+      };
+    }
     await ctx.db.patch(args.id, updates);
 
     return { success: true, eventId: args.id } as const;
