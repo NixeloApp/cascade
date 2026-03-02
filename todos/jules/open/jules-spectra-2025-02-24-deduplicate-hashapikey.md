@@ -23,6 +23,25 @@ Refactor `convex/apiKeys.test.ts` to use `hashApiKey` from `convex/lib/apiAuth.t
 
 ### Steps
 
-- [ ] Import and reuse production `hashApiKey` in `convex/apiKeys.test.ts`
-- [ ] Remove local duplicate hash implementation from tests
-- [ ] Verify API key tests remain deterministic and passing
+- [x] Import and reuse production `hashApiKey` in `convex/apiKeys.test.ts`
+- [x] Remove local duplicate hash implementation from tests
+- [x] Verify API key tests remain deterministic and passing
+
+## Progress Log
+
+### 2026-03-02 - Batch A (hash helper dedup complete)
+
+- Decision:
+  - make test hashing source-of-truth identical to production by importing `hashApiKey` from `convex/lib/apiAuth.ts`.
+- Change:
+  - updated `convex/apiKeys.test.ts`:
+    - removed local `node:crypto` hash helper.
+    - imported `hashApiKey` from `convex/lib/apiAuth.ts`.
+    - updated API-key validation assertions to await async `hashApiKey(...)` calls.
+- Validation:
+  - `pnpm exec biome check convex/apiKeys.test.ts` => pass
+  - `pnpm test convex/apiKeys.test.ts` => pass (`13 passed`)
+- Blockers:
+  - none.
+- Next Step:
+  - no follow-up required for this issue; keep API key hashing behavior aligned through shared helper usage.
