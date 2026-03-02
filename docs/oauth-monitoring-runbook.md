@@ -147,6 +147,46 @@ Check the Convex logs:
 
 ---
 
+## Emergency Google Auth Kill Switch
+
+Use this when Google OAuth login is actively failing for users and you need a fast fallback to email/password auth.
+
+### Disable Google Auth (Emergency)
+
+1. Sign in as an organization `owner` or `admin`.
+2. Open `Settings` -> `Admin`.
+3. In `Google Auth Emergency Toggle`, click `Disable Google Auth`.
+4. Enter a reason (recommended): incident ID, timestamp, and owner.
+5. Confirm the status badge changes to `Disabled`.
+
+### Verification After Disable
+
+1. Open sign-in page in an incognito session.
+2. Confirm Google auth button is disabled and shows fallback guidance text.
+3. Confirm email/password sign-in still works.
+4. Confirm OAuth health panel still updates (do not disable monitoring unless necessary).
+5. Post incident update in Slack with disable time + owner.
+
+### Re-enable Google Auth
+
+1. Validate provider recovery:
+   - latest OAuth health checks are passing,
+   - consecutive failures are `0`,
+   - no fresh user reports of Google auth errors.
+2. Open `Settings` -> `Admin`.
+3. In `Google Auth Emergency Toggle`, click `Re-enable Google Auth`.
+4. Add reason with recovery evidence and timestamp.
+5. Verify status badge changes to `Enabled`.
+
+### Verification After Re-enable
+
+1. In incognito, verify Google auth button is active.
+2. Complete one end-to-end Google sign-in.
+3. Confirm no new OAuth health failures for at least one check interval (15 minutes).
+4. Post recovery update in Slack with verification evidence.
+
+---
+
 ## Refresh Token Lifecycle
 
 | Event | Token Status |

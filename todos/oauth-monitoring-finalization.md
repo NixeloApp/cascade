@@ -25,7 +25,6 @@ OAuth synthetic monitoring is implemented. This task covers finalizing the remai
 
 - [x] Store health check results in DB ✅ (`oauthHealthChecks` table)
   - `recordHealthCheck` persists `success`, `latencyMs`, `error`, `errorCode`, `timestamp`
-- [ ] Create admin dashboard query
 - [x] Create admin dashboard query
   ```typescript
   export const getOAuthHealthStats = query({
@@ -55,7 +54,7 @@ OAuth synthetic monitoring is implemented. This task covers finalizing the remai
   ```
 - [x] Update `GoogleAuthButton.tsx` to check flag
 - [x] Create admin UI to toggle flag in emergencies
-- [ ] Document runbook for disabling Google auth
+- [x] Document runbook for disabling Google auth
 
 ## Environment Variables Required
 
@@ -73,9 +72,9 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
 
 ## Acceptance Criteria
 
-- [ ] Health check logs persisted to DB
-- [ ] Admin can view OAuth health stats
-- [ ] Feature flag can disable Google auth gracefully
+- [x] Health check logs persisted to DB
+- [x] Admin can view OAuth health stats
+- [x] Feature flag can disable Google auth gracefully
 - [ ] Alerts fire on failures (already working via Slack)
 
 ---
@@ -88,11 +87,10 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
 
 ### Milestones
 
-- [ ] `S1` Admin health query + dashboard view (7d/30d success rate, p95 latency, recent failures)
 - [x] `S1` Admin health query + dashboard view (7d/30d success rate, p95 latency, recent failures)
 - [x] `S1` Incident-oriented health summary fields (`firstFailAt`, `lastFailAt`, `recoveredAt`)
 - [x] `S2` Feature flag table + admin toggle + GoogleAuthButton fallback UX
-- [ ] `S2` Runbook hardening: emergency disable/re-enable checklist + verification steps
+- [x] `S2` Runbook hardening: emergency disable/re-enable checklist + verification steps
 
 ### Alerting Details
 
@@ -164,3 +162,21 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
   - none for this subtask.
 - Next Step:
   - complete remaining Priority `08` item: runbook hardening for emergency disable/re-enable checklist + verification steps.
+
+### 2026-03-02 - Batch C (runbook hardening for emergency controls)
+
+- Decision:
+  - document explicit operator playbooks directly in `docs/oauth-monitoring-runbook.md` so on-call can execute disable/re-enable actions without relying on tribal context.
+- Change:
+  - updated `docs/oauth-monitoring-runbook.md` with a dedicated `Emergency Google Auth Kill Switch` section:
+    - disable checklist (admin-only toggle flow + reason logging),
+    - post-disable verification checklist (incognito button state, email auth fallback, monitoring continuity),
+    - re-enable checklist (health preconditions + evidence capture),
+    - post-recovery verification checklist (real Google sign-in + 15m health stability + Slack update).
+  - aligned this todo’s Phase 5 checklist and S2 runbook milestone to done.
+- Validation:
+  - docs-only update; no code execution required.
+- Blockers:
+  - none for this subtask.
+- Next Step:
+  - decide whether to complete the remaining optional integration track (`external monitoring`) or close Priority `08` as done for current Convex+Slack scope.
