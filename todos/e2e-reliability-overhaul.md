@@ -22,6 +22,17 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Failures: `23`
 - Error rate: `20.35%`
 
+### Full Baseline Refresh (2026-03-02, latest full suite)
+
+- Command: `pnpm exec playwright test --reporter=line`
+- Total tests: `155`
+- Passed: `124`
+- Failed: `15`
+- Skipped: `4`
+- Did not run: `12`
+- Executed tests (`pass + fail`): `139`
+- Current full-suite error rate: `10.79%` (`15/139`)
+
 ### Focused Validation Snapshot (2026-03-02, targeted suite)
 
 - Command: `pnpm exec playwright test e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/issues.spec.ts e2e/auth.spec.ts --reporter=line`
@@ -203,6 +214,26 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - Targeted P0 slice: `31 passed / 0 failed` (`pnpm exec playwright test e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/issues.spec.ts e2e/auth.spec.ts --reporter=line`)
   - Unit coverage for wrapper changes: `convex/authWrapperSecure.test.ts`, `convex/authWrapperHandler.test.ts`, `convex/authWrapperHttp.test.ts` all passing.
 
+### 2026-03-02 - Batch F (completed)
+
+- Decision: refresh full-suite baseline before additional refactors and re-bucket failures by root cause.
+- Validation command: `pnpm exec playwright test --reporter=line`
+- Outcome: `124 passed`, `15 failed`, `4 skipped`, `12 did not run` (`155 total`).
+- Failure heatmap (latest run):
+  - `e2e/oauth-mocked.spec.ts`: `7` failures (OAuth redirect capture and post-click navigation state)
+  - `e2e/oauth-security.spec.ts`: `4` failures (stale assertion text + OAuth URL capture not set)
+  - `e2e/auth.spec.ts`: `1` failure (sign-in integration fallback path visibility race)
+  - `e2e/dashboard.spec.ts`: `1` failure (dashboard filter tabs not visible on load)
+  - `e2e/integration-workflow.spec.ts`: `1` failure (dashboard filter click timeout, same tab readiness issue)
+  - `e2e/search.spec.ts`: `1` failure (search tab visibility race)
+- Root-cause buckets (latest run):
+  - `OAuth instrumentation/routing mismatch`: `11/15`
+  - `UI readiness race (dashboard/auth/search tabs)`: `4/15`
+- Progress vs original baseline:
+  - Original: `23` failures / `113` executed (`20.35%`)
+  - Latest full suite: `15` failures / `139` executed (`10.79%`)
+  - Net: `-8` failures while increasing executed volume.
+
 ### Next Step (strictly next)
 
-- Continue Priority `01` by executing a full-suite baseline refresh (`pnpm exec playwright test`) and re-bucketing remaining flakes by root-cause category to drive Phase 1 `<10%` gate with updated data.
+- Fix the shared tab-readiness race affecting `auth`, `dashboard`, `integration-workflow`, and `search` (introduce/standardize deterministic tab readiness helper), rerun those four specs, then re-run full suite to cross the Phase 1 `<10%` failure gate.
