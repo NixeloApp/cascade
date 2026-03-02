@@ -208,3 +208,15 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
   - missing external destination contract (DataDog/Grafana endpoint, credentials, and owner).
 - Next Step:
   - once destination is provided, implement push action and delivery verification; otherwise continue strict order to Priority `09`.
+
+### 2026-03-02 - Batch F (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep Priority `08` blocked; no additional in-repo implementation remains without an external monitoring destination contract.
+- Validation:
+  - `pnpm test convex/oauthHealthCheck.test.ts convex/featureFlags.test.ts` => pass (`17 passed`)
+  - implemented stack remains intact: health checks, admin stats view, emergency Google-auth kill switch, Slack alerting, and runbook procedures.
+- Blockers:
+  - external monitoring destination is still undefined (DataDog/Grafana endpoint, credentials, owner).
+- Next Step:
+  - when destination is provided, implement push integration + delivery validation; until then continue strict order at Priority `09`.
