@@ -129,6 +129,21 @@ async function runScanLimitTruncationCase() {
   assert.match(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
+async function runInvalidScanLimitFallbackCase() {
+  const lines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "not-a-number",
+    }),
+  );
+  const output = lines.join("\n");
+
+  assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
+  assert.match(output, /Streak Scan Window: `3\/100` completed CI runs/);
+  assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
+}
+
 async function runMissingMockHistoryFileCase() {
   await assert.rejects(
     () =>
@@ -265,6 +280,7 @@ await runHistoryDerivedCase();
 await runHistoryDerivedDirtyReportCase();
 await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
+await runInvalidScanLimitFallbackCase();
 await runMissingMockHistoryFileCase();
 await runInvalidMockHistoryFileCase();
 await runUnreadableMockHistoryFileCase();
