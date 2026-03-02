@@ -76,3 +76,15 @@ Implement a safe way to cascade delete/soft-delete large numbers of children, li
   - none.
 - Next Step:
   - optional follow-up: split `handleDeleteRelation` into smaller helpers to eliminate the complexity warning.
+
+### 2026-03-02 - Batch B (resolution confirmation)
+
+- Decision:
+  - close as resolved; fanout overflow safety is implemented and regression-covered.
+- Validation:
+  - `pnpm test convex/lib/relationships.test.ts convex/lib/relationships_overflow.test.ts` => pass (`7 passed`)
+  - verified overflow regression tests still assert `BOUNDED_DELETE_BATCH + 1` fanout behavior for hard delete, soft delete, and restore.
+- Blockers:
+  - none.
+- Next Step:
+  - move to Priority `04` (`jules-librarian-2026-02-23-lodash-vulnerability.md`).

@@ -76,7 +76,7 @@ Central index for active roadmap and issue todos.
 | File | Priority | Status |
 |------|----------|--------|
 | [jules/open/jules-sentinel-2026-02-26-issue-search-security.md](./jules/open/jules-sentinel-2026-02-26-issue-search-security.md) | High | Resolved (access-scoped search enforcement + regression coverage validated) |
-| [jules/open/jules-scribe-2024-05-22-fix-cascade-delete-limit.md](./jules/open/jules-scribe-2024-05-22-fix-cascade-delete-limit.md) | Medium | Open |
+| [jules/open/jules-scribe-2024-05-22-fix-cascade-delete-limit.md](./jules/open/jules-scribe-2024-05-22-fix-cascade-delete-limit.md) | Medium | Resolved (fanout-safe cascade traversal + overflow regressions validated) |
 | [jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) | Medium | Open |
 | [jules/open/jules-spectra-2025-02-24-deduplicate-hashapikey.md](./jules/open/jules-spectra-2025-02-24-deduplicate-hashapikey.md) | Low | Open |
 
@@ -167,3 +167,4 @@ Central index for active roadmap and issue todos.
 - Priority `19` update (2026-03-02, batch A): audited `uptime-monitoring.md` and repository implementation status, then classified the track as blocked on architecture/infra prerequisites (check runner model, public status-page routing/domain strategy, and alert policy baseline). Added explicit unblock criteria and recommended default direction (external worker + Convex API contract) before starting schema/CRUD implementation.
 - Priority `01` update (2026-03-02, batch AX): reconciled `e2e-reliability-overhaul.md` status to `Blocked (external PR CI run required)` and revalidated local reliability guardrails (`pnpm run e2e:hard-rules`, `pnpm run e2e:hard-rules:self-test`, `pnpm run e2e:summary:self-test` all passing; selector baseline remains `0`). Remaining gap is unchanged: one live PR CI run proving `history-derived` summary behavior against real Actions history/step-summary output.
 - Priority `02` update (2026-03-02, batch B): revalidated `issues.search` IDOR hardening and marked sentinel issue resolved. Validation: `pnpm test convex/issues.test.ts` => `28 passed`; query path still enforces per-project access checks and unauthorized scope denial.
+- Priority `03` update (2026-03-02, batch B): revalidated cascade overflow hardening and marked scribe issue resolved. Validation: `pnpm test convex/lib/relationships.test.ts convex/lib/relationships_overflow.test.ts` => `7 passed`; overflow coverage still enforces safe behavior at `BOUNDED_DELETE_BATCH + 1` fanout.
