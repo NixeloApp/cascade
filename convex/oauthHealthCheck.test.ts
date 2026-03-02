@@ -1,10 +1,11 @@
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import * as fetchWithTimeoutModule from "./lib/fetchWithTimeout";
 import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
+import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
 
 // Mock fetchWithTimeout
 vi.mock("./lib/fetchWithTimeout", () => ({
@@ -166,6 +167,66 @@ describe("OAuth Health Check", () => {
       expect(status.isHealthy).toBe(false);
       expect(status.consecutiveFailures).toBe(1);
       expect(status.lastError).toBe("Error");
+    });
+  });
+
+  describe("getOAuthHealthStats", () => {
+    it("should return aggregated stats for organization admins", async () => {
+      const t = convexTest(schema, modules);
+      const { organizationId, asUser } = await createTestContext(t);
+
+      await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {
+        success: true,
+        latencyMs: 100,
+      });
+      vi.advanceTimersByTime(SECOND);
+      await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {
+        success: false,
+        latencyMs: 250,
+        error: "Token refresh failed",
+      });
+      vi.advanceTimersByTime(SECOND);
+      await t.mutation(internal.oauthHealthCheck.recordHealthCheck, {
+        success: true,
+        latencyMs: 90,
+      });
+
+      const stats = await asUser.query(api.oauthHealthCheck.getOAuthHealthStats, {
+        organizationId,
+        days: 7,
+      });
+
+      expect(stats.totalChecks).toBe(3);
+      expect(stats.successCount).toBe(2);
+      expect(stats.failureCount).toBe(1);
+      expect(stats.successRate).toBeCloseTo(66.7, 1);
+      expect(stats.avgLatencyMs).toBeGreaterThan(0);
+      expect(stats.p95LatencyMs).toBeGreaterThan(0);
+      expect(stats.recentFailures).toHaveLength(1);
+      expect(stats.lastCheckAt).not.toBeNull();
+      expect(stats.lastFailAt).not.toBeNull();
+    });
+
+    it("should reject non-admin organization members", async () => {
+      const t = convexTest(schema, modules);
+      const { userId: ownerId, organizationId } = await createTestContext(t);
+      const memberId = await createTestUser(t, { name: "Org Member" });
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert("organizationMembers", {
+          organizationId,
+          userId: memberId,
+          role: "member",
+          addedBy: ownerId,
+          joinedAt: Date.now(),
+        });
+      });
+
+      const asMember = asAuthenticatedUser(t, memberId);
+
+      await expect(
+        asMember.query(api.oauthHealthCheck.getOAuthHealthStats, { organizationId, days: 7 }),
+      ).rejects.toThrow(/admin/i);
     });
   });
 

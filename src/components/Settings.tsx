@@ -12,6 +12,7 @@ import { useQuery } from "convex/react";
 import { useState } from "react";
 import { HourComplianceDashboard } from "./Admin/HourComplianceDashboard";
 import { IpRestrictionsSettings } from "./Admin/IpRestrictionsSettings";
+import { OAuthHealthDashboard } from "./Admin/OAuthHealthDashboard";
 import { OrganizationSettings } from "./Admin/OrganizationSettings";
 import { UserManagement } from "./Admin/UserManagement";
 import { UserTypeManager } from "./Admin/UserTypeManager";
@@ -123,6 +124,7 @@ function AdminTab() {
   return (
     <Stack gap="xl">
       <OrganizationSettings />
+      <OAuthHealthDashboard />
       <IpRestrictionsSettings />
       <UserManagement />
       <UserTypeManager />

@@ -17,6 +17,8 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { organizationQuery } from "./customFunctions";
+import { forbidden } from "./lib/errors";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import {
@@ -24,6 +26,7 @@ import {
   FETCH_BUFFER_MULTIPLIER,
   MAX_HEALTH_CHECK_RECORDS,
 } from "./lib/queryLimits";
+import { DAY } from "./lib/timeUtils";
 
 // Store health check results for monitoring dashboard
 export const recordHealthCheck = internalMutation({
@@ -124,6 +127,119 @@ export const getHealthStatus = internalQuery({
       isHealthy: latestCheck.success,
       consecutiveFailures: failureCount,
       lastError: latestCheck.error,
+    };
+  },
+});
+
+export const getOAuthHealthStats = organizationQuery({
+  args: {
+    days: v.optional(v.number()),
+  },
+  returns: v.object({
+    days: v.number(),
+    totalChecks: v.number(),
+    successCount: v.number(),
+    failureCount: v.number(),
+    successRate: v.number(),
+    avgLatencyMs: v.union(v.number(), v.null()),
+    p95LatencyMs: v.union(v.number(), v.null()),
+    consecutiveFailures: v.number(),
+    firstFailAt: v.union(v.number(), v.null()),
+    lastFailAt: v.union(v.number(), v.null()),
+    recoveredAt: v.union(v.number(), v.null()),
+    lastCheckAt: v.union(v.number(), v.null()),
+    recentFailures: v.array(
+      v.object({
+        timestamp: v.number(),
+        latencyMs: v.number(),
+        error: v.string(),
+        errorCode: v.optional(v.string()),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const isOrgAdmin = ctx.organizationRole === "admin" || ctx.organizationRole === "owner";
+    if (!isOrgAdmin) {
+      throw forbidden("admin", "Only organization admins can view OAuth health metrics");
+    }
+
+    const days = Math.min(30, Math.max(1, Math.floor(args.days ?? 7)));
+    const since = Date.now() - days * DAY;
+
+    const checks = await ctx.db
+      .query("oauthHealthChecks")
+      .withIndex("by_timestamp", (q) => q.gte("timestamp", since))
+      .order("desc")
+      .take(MAX_HEALTH_CHECK_RECORDS);
+
+    if (checks.length === 0) {
+      return {
+        days,
+        totalChecks: 0,
+        successCount: 0,
+        failureCount: 0,
+        successRate: 100,
+        avgLatencyMs: null,
+        p95LatencyMs: null,
+        consecutiveFailures: 0,
+        firstFailAt: null,
+        lastFailAt: null,
+        recoveredAt: null,
+        lastCheckAt: null,
+        recentFailures: [],
+      };
+    }
+
+    const failures = checks.filter((check) => !check.success);
+    const successCount = checks.length - failures.length;
+    const failureCount = failures.length;
+    const successRate = Math.round((successCount / checks.length) * 1000) / 10;
+    const latencyValues = checks.map((check) => check.latencyMs).sort((a, b) => a - b);
+    const avgLatencyMs = Math.round(
+      latencyValues.reduce((total, value) => total + value, 0) / latencyValues.length,
+    );
+    const p95Index = Math.max(0, Math.ceil(latencyValues.length * 0.95) - 1);
+    const p95LatencyMs = latencyValues[p95Index] ?? null;
+
+    let consecutiveFailures = 0;
+    for (const check of checks) {
+      if (!check.success) {
+        consecutiveFailures++;
+      } else {
+        break;
+      }
+    }
+
+    const firstFailAt =
+      failures.length > 0
+        ? failures.reduce((min, check) => Math.min(min, check.timestamp), Infinity)
+        : null;
+    const lastFailAt = failures[0]?.timestamp ?? null;
+    const recoveredAt =
+      lastFailAt === null
+        ? null
+        : (checks.find((check) => check.success && check.timestamp > lastFailAt)?.timestamp ??
+          null);
+
+    return {
+      days,
+      totalChecks: checks.length,
+      successCount,
+      failureCount,
+      successRate,
+      avgLatencyMs,
+      p95LatencyMs,
+      consecutiveFailures,
+      firstFailAt: firstFailAt === Infinity ? null : firstFailAt,
+      lastFailAt,
+      recoveredAt,
+      lastCheckAt: checks[0]?.timestamp ?? null,
+      recentFailures: failures.slice(0, 10).map((check) => ({
+        timestamp: check.timestamp,
+        latencyMs: check.latencyMs,
+        error: check.error ?? "Unknown error",
+        errorCode: check.errorCode,
+      })),
     };
   },
 });
