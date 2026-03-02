@@ -739,3 +739,40 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
+### 2026-03-02 - Batch AD (completed hard-rules checker self-test harness)
+
+- Decision: harden CI rule enforcement itself by adding deterministic self-tests for `check-e2e-hard-rules` behavior (clean, baseline-allowed, and violation paths).
+- Change:
+  - refactored `scripts/ci/check-e2e-hard-rules.mjs`:
+    - exports `analyzeE2EHardRules(...)` and `collectFiles(...)` for direct test invocation
+    - added CLI import guard (`main()` only when executed as script)
+    - preserved existing CLI fail/pass behavior and output contract
+  - added `scripts/ci/test-e2e-hard-rules.mjs`:
+    - builds temp fixture trees and validates:
+      - clean scan path
+      - selector baseline-allowed path
+      - violation detection path (`waitForTimeout`, `waitForLoadState("networkidle")`, new selector anti-pattern)
+  - added npm script:
+    - `e2e:hard-rules:self-test` in `package.json`
+  - updated CI workflow:
+    - `.github/workflows/ci.yml` now runs `pnpm run e2e:hard-rules:self-test` before Playwright shard execution
+  - updated docs:
+    - `docs/testing/e2e.md` now includes `pnpm run e2e:hard-rules:self-test` in automated guard commands
+- Validation:
+  - `pnpm run e2e:hard-rules:self-test` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle violations: `0`; selector baseline remains `0`)
+  - `pnpm run e2e:summary:self-test` => pass
+  - `pnpm exec biome check scripts/ci/check-e2e-hard-rules.mjs scripts/ci/test-e2e-hard-rules.mjs .github/workflows/ci.yml docs/testing/e2e.md package.json` => pass
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.

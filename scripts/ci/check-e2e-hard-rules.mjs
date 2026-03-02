@@ -2,13 +2,14 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const ROOT = process.cwd();
 const E2E_DIR = path.join(ROOT, "e2e");
 const BASELINE_PATH = path.join(ROOT, "scripts", "ci", "e2e-hard-rules-baseline.json");
 const TARGET_EXTENSIONS = new Set([".ts", ".tsx"]);
 
-function collectFiles(dir, files = []) {
+export function collectFiles(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -29,13 +30,16 @@ function collectFiles(dir, files = []) {
   return files;
 }
 
-function main() {
-  if (!fs.existsSync(E2E_DIR)) {
-    console.error("E2E directory not found:", E2E_DIR);
-    process.exit(1);
+export function analyzeE2EHardRules({
+  root = ROOT,
+  e2eDir = E2E_DIR,
+  baselinePath = BASELINE_PATH,
+} = {}) {
+  if (!fs.existsSync(e2eDir)) {
+    throw new Error(`E2E directory not found: ${e2eDir}`);
   }
 
-  const specFiles = collectFiles(E2E_DIR);
+  const specFiles = collectFiles(e2eDir);
   const timeoutViolations = [];
   const networkIdleViolations = [];
   const selectorAntiPatterns = [];
@@ -46,7 +50,7 @@ function main() {
     lines.forEach((line, index) => {
       if (line.includes("waitForTimeout(")) {
         timeoutViolations.push({
-          file: path.relative(ROOT, filePath),
+          file: path.relative(root, filePath),
           line: index + 1,
           text: line.trim(),
         });
@@ -57,14 +61,14 @@ function main() {
         line.includes("waitForLoadState('networkidle'")
       ) {
         networkIdleViolations.push({
-          file: path.relative(ROOT, filePath),
+          file: path.relative(root, filePath),
           line: index + 1,
           text: line.trim(),
         });
       }
 
       const trimmed = line.trim();
-      const file = path.relative(ROOT, filePath);
+      const file = path.relative(root, filePath);
       const lineNumber = index + 1;
       const hasTextEngineLocator =
         trimmed.includes('locator("text=') ||
@@ -91,23 +95,7 @@ function main() {
     });
   }
 
-  if (timeoutViolations.length > 0) {
-    console.error("E2E hard rule violation: waitForTimeout(...) found in spec files.");
-    for (const violation of timeoutViolations) {
-      console.error(`- ${violation.file}:${violation.line} -> ${violation.text}`);
-    }
-    process.exit(1);
-  }
-
-  if (networkIdleViolations.length > 0) {
-    console.error('E2E hard rule violation: waitForLoadState("networkidle") found in spec files.');
-    for (const violation of networkIdleViolations) {
-      console.error(`- ${violation.file}:${violation.line} -> ${violation.text}`);
-    }
-    process.exit(1);
-  }
-
-  const baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
+  const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
   const known = new Set(
     (baseline.selectorAntiPatterns ?? []).map(
       (entry) => `${entry.file}:${entry.line}:${entry.type}`,
@@ -117,9 +105,43 @@ function main() {
     (entry) => !known.has(`${entry.file}:${entry.line}:${entry.type}`),
   );
 
-  if (newlyIntroduced.length > 0) {
+  return {
+    specFileCount: specFiles.length,
+    timeoutViolations,
+    networkIdleViolations,
+    selectorAntiPatterns,
+    newlyIntroduced,
+  };
+}
+
+function main() {
+  let result;
+  try {
+    result = analyzeE2EHardRules();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+
+  if (result.timeoutViolations.length > 0) {
+    console.error("E2E hard rule violation: waitForTimeout(...) found in spec files.");
+    for (const violation of result.timeoutViolations) {
+      console.error(`- ${violation.file}:${violation.line} -> ${violation.text}`);
+    }
+    process.exit(1);
+  }
+
+  if (result.networkIdleViolations.length > 0) {
+    console.error('E2E hard rule violation: waitForLoadState("networkidle") found in spec files.');
+    for (const violation of result.networkIdleViolations) {
+      console.error(`- ${violation.file}:${violation.line} -> ${violation.text}`);
+    }
+    process.exit(1);
+  }
+
+  if (result.newlyIntroduced.length > 0) {
     console.error("E2E selector anti-pattern regression: new brittle selector usage detected.");
-    for (const violation of newlyIntroduced) {
+    for (const violation of result.newlyIntroduced) {
       console.error(
         `- [${violation.type}] ${violation.file}:${violation.line} -> ${violation.text}`,
       );
@@ -130,11 +152,14 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`E2E hard-rule check passed: scanned ${specFiles.length} spec files.`);
-  console.log(`- waitForTimeout violations: ${timeoutViolations.length}`);
-  console.log(`- networkidle wait violations: ${networkIdleViolations.length}`);
-  console.log(`- selector anti-patterns (baseline-allowed): ${selectorAntiPatterns.length}`);
-  console.log(`- new selector anti-patterns: ${newlyIntroduced.length}`);
+  console.log(`E2E hard-rule check passed: scanned ${result.specFileCount} spec files.`);
+  console.log(`- waitForTimeout violations: ${result.timeoutViolations.length}`);
+  console.log(`- networkidle wait violations: ${result.networkIdleViolations.length}`);
+  console.log(`- selector anti-patterns (baseline-allowed): ${result.selectorAntiPatterns.length}`);
+  console.log(`- new selector anti-patterns: ${result.newlyIntroduced.length}`);
 }
 
-main();
+const invokedPath = process.argv[1] ? pathToFileURL(process.argv[1]).href : "";
+if (import.meta.url === invokedPath) {
+  main();
+}
