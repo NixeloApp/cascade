@@ -10,7 +10,7 @@ import { getMentionOnSelectItem, type TMentionItemBase } from "@platejs/mention"
 import { useQuery } from "convex/react";
 import type { PlateElementProps } from "platejs/react";
 import { useEditorRef } from "platejs/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -60,12 +60,12 @@ export function MentionInputElement({
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Extract search text from children using type guard
-  const search = useMemo(() => {
-    if (!isMentionInputElement(element)) return "";
+  let search = "";
+  if (isMentionInputElement(element)) {
     const childNode = element.children?.[0];
     const text = childNode && "text" in childNode ? childNode.text : "";
-    return text.toLowerCase();
-  }, [element]);
+    search = text.toLowerCase();
+  }
 
   // Search for users - query organization members
   const searchResults = useQuery(api.users.searchUsers, {
@@ -74,16 +74,15 @@ export function MentionInputElement({
   });
 
   // Convert search results to mention items
-  const items: MentionUser[] = useMemo(() => {
-    if (!searchResults) return [];
-    return searchResults.map((user) => ({
-      id: user._id,
-      key: user._id,
-      text: user.name || user.email || "Unknown",
-      email: user.email,
-      image: user.image,
-    }));
-  }, [searchResults]);
+  const items: MentionUser[] = !searchResults
+    ? []
+    : searchResults.map((user) => ({
+        id: user._id,
+        key: user._id,
+        text: user.name || user.email || "Unknown",
+        email: user.email,
+        image: user.image,
+      }));
 
   // Reset selection when search results change
   // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to reset on searchResults change

@@ -12,7 +12,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Bell, ExternalLink } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -92,17 +92,13 @@ export function NotificationCenter() {
   const allNotifications = notificationsRaw as NotificationWithActor[];
 
   // Filter notifications based on selected filter
-  const notifications = useMemo(() => {
-    if (!allNotifications) return [];
-    const typeFilter = FILTER_TYPE_MAP[filter];
-    if (!typeFilter) return allNotifications;
-    return allNotifications.filter((n) => typeFilter.includes(n.type));
-  }, [allNotifications, filter]);
+  const typeFilter = FILTER_TYPE_MAP[filter];
+  const notifications = !typeFilter
+    ? allNotifications
+    : allNotifications.filter((notification) => typeFilter.includes(notification.type));
 
   // Group notifications by date
-  const groupedNotifications = useMemo(() => {
-    return groupNotificationsByDate(notifications);
-  }, [notifications]);
+  const groupedNotifications = groupNotificationsByDate(notifications);
 
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];

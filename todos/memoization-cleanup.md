@@ -104,3 +104,38 @@ Top targets:
   - remove additional safe `useMemo` sites,
   - classify `useCallback`/`memo` instances into `remove` vs `keep-for-correctness`,
   - publish ongoing before/after counts.
+
+### 2026-03-02 (Priority 15, batch B)
+
+**Completed**
+- Removed additional low-risk `useMemo` usage in notification and mention-input paths:
+  - `src/routes/_auth/_app/$orgSlug/notifications.tsx`:
+    - removed filtered notifications `useMemo`.
+  - `src/components/Notifications/NotificationCenter.tsx`:
+    - removed filtered notifications `useMemo`.
+    - removed grouped notification map `useMemo`.
+  - `src/components/Plate/MentionInputElement.tsx`:
+    - removed `search` derivation `useMemo`.
+    - removed mention-item mapping `useMemo`.
+- Updated baseline counts after batch B:
+  - Combined manual memoization instances in `src/`: `54`
+  - `useMemo`: `9`
+  - `useCallback`: `38`
+  - `memo`/`React.memo`: `7`
+
+**Validation**
+- `pnpm exec biome check --write src/routes/_auth/_app/$orgSlug/notifications.tsx src/components/Notifications/NotificationCenter.tsx src/components/Plate/MentionInputElement.tsx`
+- `pnpm test src/components/Notifications/NotificationCenter.test.tsx src/config/routes.test.ts` (`54 passed`)
+- `pnpm run typecheck` (pass)
+
+**Decisions**
+- Kept `useCallback` instances unchanged in this batch pending identity-correctness classification.
+- Prioritized heavily used notification views first because they had direct test coverage.
+
+**Blockers**
+- Compiler healthcheck remains blocked by network (`EAI_AGAIN`).
+
+**Next step (strict order)**
+- Continue Priority `15` with batch C:
+  - reduce remaining `useMemo` in board/roadmap/sprint surfaces,
+  - begin `useCallback`/`memo` keep-vs-remove classification report.
