@@ -163,7 +163,7 @@ export const softDeleteNotification = authenticatedMutation({
 /** Archive a notification. Archived notifications are hidden but can be restored. */
 export const archiveNotification = authenticatedMutation({
   args: { id: v.id("notifications") },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     requireOwned(notification, ctx.userId, "notification");
@@ -173,14 +173,14 @@ export const archiveNotification = authenticatedMutation({
       archivedAt: Date.now(),
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
 
 /** Unarchive a notification. */
 export const unarchiveNotification = authenticatedMutation({
   args: { id: v.id("notifications") },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     requireOwned(notification, ctx.userId, "notification");
@@ -190,7 +190,7 @@ export const unarchiveNotification = authenticatedMutation({
       archivedAt: undefined,
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
 
@@ -200,7 +200,7 @@ export const snoozeNotification = authenticatedMutation({
     id: v.id("notifications"),
     snoozedUntil: v.number(), // Timestamp when notification should reappear
   },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     requireOwned(notification, ctx.userId, "notification");
@@ -214,14 +214,14 @@ export const snoozeNotification = authenticatedMutation({
       snoozedUntil: args.snoozedUntil,
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
 
 /** Unsnooze a notification (make it visible immediately). */
 export const unsnoozeNotification = authenticatedMutation({
   args: { id: v.id("notifications") },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     requireOwned(notification, ctx.userId, "notification");
@@ -230,7 +230,7 @@ export const unsnoozeNotification = authenticatedMutation({
       snoozedUntil: undefined,
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
 
