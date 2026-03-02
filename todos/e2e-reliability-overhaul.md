@@ -441,9 +441,30 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - Cross-run streak persistence is still pending (current summary exposes run-local checkpoint `0/5` or `1/5` only).
 
+### 2026-03-02 - Batch Q (completed history-derived clean-run checkpoint in CI summary)
+
+- Decision: upgrade CI checkpoint from run-local fallback to history-derived consecutive clean-run streak using GitHub Actions API.
+- Change: `.github/workflows/ci.yml`
+  - added workflow-level permissions:
+    - `contents: read`
+    - `actions: read`
+  - updated `Publish E2E Heatmap And Trend Checkpoint` step:
+    - injects `GITHUB_TOKEN: ${{ github.token }}`
+    - fetches recent `ci.yml` workflow runs on current branch
+    - inspects run jobs and computes consecutive streak where all `E2E Tests*` shard jobs conclude `success`
+    - emits checkpoint mode in summary:
+      - `history-derived` when API fetch succeeds
+      - `fallback-local` when API is unavailable
+- Validation:
+  - `pnpm exec playwright merge-reports --help` confirms merge command availability for summary pipeline
+  - `pnpm run biome:check -- .github/workflows/ci.yml` passes with existing unrelated repo warnings only
+- Blockers:
+  - Streak fidelity depends on Actions API visibility/permissions and completed run history depth (`per_page=20`).
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
-  - persist clean-run streak state across CI runs (artifact/cache/external store) so checkpoint reflects true consecutive history
-  - keep CI per-spec heatmap summary as single source of truth and verify merged job behavior on next PR run
+  - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + summary rendering)
+  - adjust history window/query strategy if streak truncation is observed on high-frequency branches
+  - keep CI per-spec heatmap summary as single source of truth for streak/heatmap visibility
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement
