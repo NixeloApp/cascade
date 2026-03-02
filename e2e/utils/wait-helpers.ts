@@ -5,7 +5,7 @@
  * meaningful waits for specific conditions.
  */
 
-import { expect, type Page } from "@playwright/test";
+import { type APIRequestContext, expect, type Page } from "@playwright/test";
 
 /**
  * Wait timeouts used across tests.
@@ -176,4 +176,56 @@ export async function waitForBoardLoaded(page: Page): Promise<void> {
   await expect(projectBoard).toBeVisible();
   await expect(createIssueButton).toBeVisible();
   await expect(createIssueButton).toBeEnabled();
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Wait for issue creation completion signal.
+ * The primary signal is modal dismissal; optional title assertion verifies board visibility.
+ */
+export async function waitForIssueCreateSuccess(
+  page: Page,
+  options?: { issueTitle?: string },
+): Promise<void> {
+  const createIssueModal = page
+    .getByRole("dialog")
+    .filter({ hasText: /create.*issue|new.*issue/i });
+  await expect(createIssueModal).not.toBeVisible();
+
+  if (options?.issueTitle) {
+    const titlePattern = new RegExp(escapeRegex(options.issueTitle), "i");
+    const issueCard = page
+      .getByRole("button", { name: titlePattern })
+      .or(page.getByText(options.issueTitle).first())
+      .first();
+    await expect(issueCard).toBeVisible();
+  }
+}
+
+/**
+ * Wait for OAuth auth endpoint redirect and return parsed contract fields.
+ */
+export async function waitForOAuthRedirectComplete(
+  request: APIRequestContext,
+  convexSiteUrl: string,
+): Promise<{ state: string; redirectUri: string; redirectUrl: URL }> {
+  const response = await request.get(`${convexSiteUrl}/google/auth`, {
+    maxRedirects: 0,
+  });
+  expect(response.status()).toBe(302);
+
+  const location = response.headers().location;
+  expect(location).toBeTruthy();
+
+  const redirectUrl = new URL(location as string);
+  const state = redirectUrl.searchParams.get("state");
+  const redirectUri = redirectUrl.searchParams.get("redirect_uri");
+
+  expect(state).toBeTruthy();
+  expect(redirectUri).toBeTruthy();
+
+  return { state: state as string, redirectUri: redirectUri as string, redirectUrl };
 }

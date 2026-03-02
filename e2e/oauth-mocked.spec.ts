@@ -23,34 +23,15 @@
  * Coverage: 100% of OAuth callback code
  */
 
-import type { APIRequestContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import {
   clearGoogleOAuthMock,
   setupGoogleOAuthMock,
   verifyOAuthError,
 } from "./utils/google-oauth-mock";
+import { waitForOAuthRedirectComplete } from "./utils/wait-helpers";
 
 const CONVEX_SITE_URL = process.env.VITE_CONVEX_URL?.replace(".cloud", ".site") || "";
-
-async function getGoogleAuthRedirect(request: APIRequestContext) {
-  const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-    maxRedirects: 0,
-  });
-  expect(response.status()).toBe(302);
-
-  const location = response.headers().location;
-  expect(location).toBeTruthy();
-
-  const redirectUrl = new URL(location);
-  const state = redirectUrl.searchParams.get("state");
-  const redirectUri = redirectUrl.searchParams.get("redirect_uri");
-
-  expect(state).toBeTruthy();
-  expect(redirectUri).toBeTruthy();
-
-  return { state: state as string, redirectUri: redirectUri as string, redirectUrl };
-}
 
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
@@ -64,7 +45,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
         return;
       }
 
-      const { state } = await getGoogleAuthRedirect(request);
+      const { state } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const response = await request.get(
         `${CONVEX_SITE_URL}/google/callback?code=TEST_signin_user&state=${state}`,
         {
@@ -87,7 +68,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
         return;
       }
 
-      const { state } = await getGoogleAuthRedirect(request);
+      const { state } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const response = await request.get(
         `${CONVEX_SITE_URL}/google/callback?code=TEST_signup_user&state=${state}`,
         {
@@ -110,7 +91,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
         return;
       }
 
-      const { state } = await getGoogleAuthRedirect(request);
+      const { state } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const response = await request.get(
         `${CONVEX_SITE_URL}/google/callback?code=TEST_workspace_user&state=${state}`,
         {
@@ -216,7 +197,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
         return;
       }
 
-      const { redirectUrl } = await getGoogleAuthRedirect(request);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const url = new URL(redirectUrl.toString());
       const state = url.searchParams.get("state");
       if (!state) {
@@ -231,7 +212,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
         return;
       }
 
-      const { redirectUrl } = await getGoogleAuthRedirect(request);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const url = new URL(redirectUrl.toString());
       const scope = url.searchParams.get("scope");
 
@@ -246,7 +227,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
         return;
       }
 
-      const { redirectUrl } = await getGoogleAuthRedirect(request);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const url = new URL(redirectUrl.toString());
       const redirectUri = url.searchParams.get("redirect_uri");
 
@@ -263,7 +244,7 @@ test.describe("Google OAuth Flow (Mocked)", () => {
         return;
       }
 
-      const { state } = await getGoogleAuthRedirect(request);
+      const { state } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const response = await request.get(
         `${CONVEX_SITE_URL}/google/callback?code=TEST_returning_user&state=${state}`,
         {

@@ -346,9 +346,29 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - No functional blocker in this slice.
   - Remaining hard rule audit found fixed sleeps only in `e2e/screenshot-pages.ts` (capture utility path, not active CI spec flow).
 
+### 2026-03-02 - Batch L (completed deterministic wait helper adoption, slice 2)
+
+- Decision: finish planned helper set by extracting issue-create and OAuth redirect completion contracts into shared utilities and replacing inline implementations.
+- Change: `e2e/utils/wait-helpers.ts`
+  - added `waitForIssueCreateSuccess(page, { issueTitle })`
+  - added `waitForOAuthRedirectComplete(request, convexSiteUrl)`
+- Change: `e2e/pages/projects.page.ts`
+  - `createIssue(...)` now uses shared issue-create completion helper after submit flow.
+- Change: OAuth specs now use shared OAuth redirect helper:
+  - `e2e/oauth-mocked.spec.ts` removed local redirect parser and migrated all `/google/auth` redirect contract setup to shared helper
+  - `e2e/oauth-security.spec.ts` migrated auth-redirect contract checks to shared helper
+- Validation:
+  - first run exposed strict-mode locator union regression in `waitForIssueCreateSuccess` (`2 failed`, `20 passed`, `1 skipped`, `8 did not run`)
+  - fix applied: narrowed helper visibility assertion to `.first()` for deterministic single-target assertion
+  - rerun command: `pnpm exec playwright test e2e/issues.spec.ts e2e/search.spec.ts e2e/oauth-mocked.spec.ts e2e/oauth-security.spec.ts --reporter=line`
+  - rerun outcome: `30 passed`, `0 failed`, `1 skipped` (`2.2m`)
+- Blockers:
+  - No active blocker in helper slice 2 after fix.
+  - Remaining fixed-sleep inventory is still isolated to `e2e/screenshot-pages.ts`.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
-  - implement and adopt remaining planned helpers (`waitForIssueCreateSuccess`, `waitForOAuthRedirectComplete`) where contracts are still inline
-  - classify `e2e/screenshot-pages.ts` fixed sleeps as justified capture-settling waits vs refactor candidates
-  - rerun touched slices, then run one full suite to reconfirm global baseline remains green
+  - classify `e2e/screenshot-pages.ts` fixed sleeps as justified capture-settling waits vs refactor candidates, then either document rationale or refactor
+  - rerun one full suite (`pnpm exec playwright test --reporter=line`) to reconfirm global baseline after helper slice 2
+  - update failure heatmap section from latest full-suite artifact even when failures are `0`, so trend tracking remains explicit

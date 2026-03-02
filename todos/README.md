@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full suite stays clean (`151 passed / 0 failed / 4 skipped`, `155 total`), plus deterministic-wait helper slice validated (`22 passed / 0 failed`) |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full suite stays clean (`151 passed / 0 failed / 4 skipped`, `155 total`); helper slices 1+2 validated (`22 passed / 0 failed`, then `30 passed / 0 failed / 1 skipped`) |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): post-baseline hardening slice landed shared readiness helpers (`waitForDashboardReady`, `waitForBoardLoaded`) and migrated dashboard/project page objects; validation on `dashboard + integration-workflow + search` is `22 passed`, `0 failed` (`2.4m`). Full-suite baseline remains `151 passed`, `0 failed`, `4 skipped` (`155 total`); next is helper slice 2 (`waitForIssueCreateSuccess` + `waitForOAuthRedirectComplete`) and fixed-sleep classification for `e2e/screenshot-pages.ts`.
+- Priority `01` update (2026-03-02): helper slice 2 landed shared `waitForIssueCreateSuccess` and `waitForOAuthRedirectComplete`, with project+OAuth spec migration complete. One strict-locator regression was caught and fixed in the same batch; latest validation (`issues + search + oauth-mocked + oauth-security`) is `30 passed`, `0 failed`, `1 skipped` (`2.2m`). Next is `e2e/screenshot-pages.ts` fixed-sleep classification/refactor and then a fresh full-suite reconfirmation run.

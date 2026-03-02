@@ -12,6 +12,7 @@
  */
 
 import { expect, test } from "@playwright/test";
+import { waitForOAuthRedirectComplete } from "./utils/wait-helpers";
 
 // Convex site URL for HTTP actions
 const CONVEX_SITE_URL = process.env.VITE_CONVEX_URL?.replace(".cloud", ".site") || "";
@@ -25,16 +26,8 @@ test.describe("OAuth Security", () => {
         return;
       }
 
-      const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-        maxRedirects: 0, // Don't follow redirects
-      });
-
-      // Should redirect (302) to Google OAuth
-      expect(response.status()).toBe(302);
-
-      const location = response.headers().location;
-      expect(location).toBeTruthy();
-      expect(location).toContain("accounts.google.com");
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
+      expect(redirectUrl.toString()).toContain("accounts.google.com");
     });
 
     test("should include required OAuth parameters in redirect", async ({ request }) => {
@@ -43,14 +36,7 @@ test.describe("OAuth Security", () => {
         return;
       }
 
-      const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-        maxRedirects: 0,
-      });
-
-      const location = response.headers().location;
-      expect(location).toBeTruthy();
-
-      const redirectUrl = new URL(location);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
 
       // Required OAuth parameters
       expect(redirectUrl.searchParams.get("client_id")).toBeTruthy();
@@ -68,12 +54,7 @@ test.describe("OAuth Security", () => {
         return;
       }
 
-      const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-        maxRedirects: 0,
-      });
-
-      const location = response.headers().location;
-      const redirectUrl = new URL(location);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const scope = redirectUrl.searchParams.get("scope") || "";
 
       // Should include calendar scopes
@@ -149,12 +130,7 @@ test.describe("OAuth Security", () => {
         return;
       }
 
-      const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-        maxRedirects: 0,
-      });
-
-      const location = response.headers().location;
-      const redirectUrl = new URL(location);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const callbackUri = redirectUrl.searchParams.get("redirect_uri");
 
       expect(callbackUri).toBeTruthy();
@@ -201,14 +177,7 @@ test.describe("OAuth Flow Security (Redirect Contract)", () => {
       return;
     }
 
-    const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-      maxRedirects: 0,
-    });
-    expect(response.status()).toBe(302);
-
-    const location = response.headers().location;
-    expect(location).toBeTruthy();
-    const redirectUrl = new URL(location);
+    const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
 
     const state = redirectUrl.searchParams.get("state");
     expect(state).toBeTruthy();
@@ -221,14 +190,7 @@ test.describe("OAuth Flow Security (Redirect Contract)", () => {
       return;
     }
 
-    const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-      maxRedirects: 0,
-    });
-    expect(response.status()).toBe(302);
-
-    const location = response.headers().location;
-    expect(location).toBeTruthy();
-    const redirectUrl = new URL(location);
+    const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
     const redirectUri = redirectUrl.searchParams.get("redirect_uri");
 
     expect(redirectUri).toBeTruthy();
