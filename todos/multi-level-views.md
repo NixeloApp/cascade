@@ -86,7 +86,7 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/wiki`
 
 Route: `/:orgSlug/calendar`
 
-- [ ] Add `organizationId` to calendarEvents (blocker)
+- [x] Add `organizationId` to calendarEvents (blocker)
 - [ ] Aggregate events from all workspaces
 - [ ] Color-code by workspace/team
 - [ ] Add filtering controls
@@ -95,7 +95,7 @@ Route: `/:orgSlug/calendar`
 
 Route: `/:orgSlug/workspaces/:workspaceSlug/calendar`
 
-- [ ] Add `workspaceId` to calendarEvents (blocker)
+- [x] Add `workspaceId` to calendarEvents (blocker)
 - [ ] Filter events by workspaceId
 - [ ] Add to workspace sidebar
 
@@ -103,9 +103,9 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/calendar`
 
 Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 
-- [ ] Add `teamId` to calendarEvents (blocker)
-- [ ] Implement actual calendar (currently stub route exists: `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar.tsx`)
-- [ ] Include project-level events
+- [x] Add `teamId` to calendarEvents (blocker)
+- [x] Implement actual calendar (currently stub route exists: `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar.tsx`)
+- [x] Include project-level events
 
 ---
 
@@ -130,7 +130,7 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 - [x] `S1` Resolve schema blockers (`organizationId/workspaceId/teamId` + indexes)
 - [x] `S2` Ship workspace backlog + workspace sprints routes with real queries
 - [x] `S3` Ship workspace wiki + team wiki data model/route support
-- [ ] `S4` Replace team calendar stub with real data
+- [x] `S4` Replace team calendar stub with real data
 - [ ] `S5` Add org/workspace/team calendar aggregation + filters
 
 ### Dependencies
@@ -242,3 +242,29 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - none for `S4`.
 - Next Step:
   - implement real team calendar route data (replace stub) and then progress org/workspace/team calendar aggregation.
+
+### 2026-03-02 - Batch E (completed S4 team calendar route with real scoped data)
+
+- Decision:
+  - implement team calendar with a dedicated backend query (team-member/org-admin authorized), rather than a client-only filter over personal events.
+- Change:
+  - updated `convex/calendarEvents.ts`:
+    - added `listByTeamDateRange` query (team-scoped date-range events for team members and org admins).
+    - deduplicated organizer enrichment via shared `enrichEventsWithOrganizers` helper.
+  - updated `convex/calendarEvents.test.ts`:
+    - added regression coverage for `listByTeamDateRange`:
+      - team members can see team project calendar events.
+      - non-team-members receive no events.
+  - updated calendar UI wiring:
+    - `src/components/Calendar/CalendarView.tsx` now supports `projectId` and `teamId` scope props and calls `listByTeamDateRange` for team scope.
+    - `src/components/Calendar/ProjectCalendar.tsx` now passes `projectId` through to `CalendarView`.
+  - replaced team calendar stub route:
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar.tsx` now resolves workspace/team and renders the real `CalendarView` with `teamId`.
+- Validation:
+  - `pnpm exec biome check convex/calendarEvents.ts convex/calendarEvents.test.ts src/components/Calendar/CalendarView.tsx src/components/Calendar/ProjectCalendar.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar.tsx` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/calendarEvents.test.ts` => pass
+- Blockers:
+  - none for starting `S5`.
+- Next Step:
+  - start `S5` by adding org/workspace-scoped calendar queries + routes with filter controls.

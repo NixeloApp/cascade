@@ -7,9 +7,8 @@ interface ProjectCalendarProps {
 
 /**
  * Project-specific calendar view
- * Wraps the unified CalendarView.
- * TODO: Pass projectId filter to CalendarView once supported by backend
+ * Wraps the unified CalendarView with project scoping.
  */
-export function ProjectCalendar({ projectId: _projectId }: ProjectCalendarProps) {
-  return <CalendarView />;
+export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
+  return <CalendarView projectId={projectId} />;
 }

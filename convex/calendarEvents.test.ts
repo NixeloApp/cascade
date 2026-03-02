@@ -4,7 +4,13 @@ import { api } from "./_generated/api";
 import { DAY, HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestUser } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createProjectInOrganization,
+  createTestUser,
+} from "./testUtils";
 
 describe("calendarEvents", () => {
   describe("create", () => {
@@ -346,6 +352,100 @@ describe("calendarEvents", () => {
 
       expect(user1Events.length).toBe(1);
       expect(user1Events[0].title).toBe("User 1 Event");
+    });
+  });
+
+  describe("listByTeamDateRange", () => {
+    it("should return team events for team members, including project-level events", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t, { name: "Owner" });
+      const memberId = await createTestUser(t, { name: "Member" });
+      const asOwner = asAuthenticatedUser(t, ownerId);
+      const asMember = asAuthenticatedUser(t, memberId);
+
+      const { organizationId } = await createOrganizationAdmin(t, ownerId);
+      await addUserToOrganization(t, organizationId, memberId, ownerId);
+
+      const projectId = await createProjectInOrganization(t, ownerId, organizationId, {
+        name: "Team Calendar Project",
+        key: "TCP",
+      });
+      const project = await t.run(async (ctx) => {
+        const currentProject = await ctx.db.get(projectId);
+        if (!currentProject) {
+          throw new Error("Project should exist");
+        }
+
+        await ctx.db.insert("teamMembers", {
+          teamId: currentProject.teamId,
+          userId: memberId,
+          role: "member",
+          addedBy: ownerId,
+        });
+
+        return currentProject;
+      });
+
+      const now = Date.now();
+      await asOwner.mutation(api.calendarEvents.create, {
+        title: "Project Planning",
+        startTime: now + DAY,
+        endTime: now + DAY + HOUR,
+        allDay: false,
+        eventType: "meeting",
+        projectId,
+      });
+
+      const events = await asMember.query(api.calendarEvents.listByTeamDateRange, {
+        teamId: project.teamId,
+        startDate: now,
+        endDate: now + 3 * DAY,
+      });
+
+      expect(events.map((event) => event.title)).toContain("Project Planning");
+      expect(events[0].teamId).toBe(project.teamId);
+      expect(events[0].projectId).toBe(projectId);
+    });
+
+    it("should return no team events for non-members", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t, { name: "Owner" });
+      const outsiderId = await createTestUser(t, { name: "Outsider" });
+      const asOwner = asAuthenticatedUser(t, ownerId);
+      const asOutsider = asAuthenticatedUser(t, outsiderId);
+
+      const { organizationId } = await createOrganizationAdmin(t, ownerId);
+      await addUserToOrganization(t, organizationId, outsiderId, ownerId);
+
+      const projectId = await createProjectInOrganization(t, ownerId, organizationId, {
+        name: "Restricted Team Project",
+        key: "RTP",
+      });
+      const project = await t.run(async (ctx) => {
+        const currentProject = await ctx.db.get(projectId);
+        if (!currentProject) {
+          throw new Error("Project should exist");
+        }
+        return currentProject;
+      });
+
+      const now = Date.now();
+      await asOwner.mutation(api.calendarEvents.create, {
+        title: "Restricted Team Event",
+        startTime: now + DAY,
+        endTime: now + DAY + HOUR,
+        allDay: false,
+        eventType: "meeting",
+        projectId,
+      });
+
+      const events = await asOutsider.query(api.calendarEvents.listByTeamDateRange, {
+        teamId: project.teamId,
+        startDate: now,
+        endDate: now + 3 * DAY,
+      });
+
+      expect(events).toHaveLength(0);
     });
   });
 

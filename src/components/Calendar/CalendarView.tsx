@@ -37,7 +37,15 @@ function getDateRange(date: Date, mode: Mode): { startDate: number; endDate: num
 /**
  * Main calendar view with day/week/month modes and event management.
  */
-export function CalendarView(): React.ReactElement {
+interface CalendarViewProps {
+  projectId?: Id<"projects">;
+  teamId?: Id<"teams">;
+}
+
+/**
+ * Main calendar view with day/week/month modes and event management.
+ */
+export function CalendarView({ projectId, teamId }: CalendarViewProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>("week");
   const [date, setDate] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -45,11 +53,28 @@ export function CalendarView(): React.ReactElement {
 
   const { startDate, endDate } = getDateRange(date, mode);
 
-  const rawEvents = useQuery(api.calendarEvents.listByDateRange, {
-    startDate,
-    endDate,
-  });
+  const userScopedEvents = useQuery(
+    api.calendarEvents.listByDateRange,
+    teamId
+      ? "skip"
+      : {
+          startDate,
+          endDate,
+          projectId,
+        },
+  );
+  const teamScopedEvents = useQuery(
+    api.calendarEvents.listByTeamDateRange,
+    teamId
+      ? {
+          teamId,
+          startDate,
+          endDate,
+        }
+      : "skip",
+  );
 
+  const rawEvents = teamId ? teamScopedEvents : userScopedEvents;
   const events: CalendarEvent[] = (rawEvents ?? []).map(toCalendarEvent);
 
   function handleEventClick(event: CalendarEvent): void {
@@ -72,6 +97,7 @@ export function CalendarView(): React.ReactElement {
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
         defaultDate={date}
+        projectId={projectId}
       />
 
       {selectedEventId && (

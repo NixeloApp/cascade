@@ -12,7 +12,9 @@ import { internalQuery, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { forbidden, notFound, validation } from "./lib/errors";
+import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
+import { getTeamRole } from "./lib/teamAccess";
 import { DAY, WEEK } from "./lib/timeUtils";
 import { type CalendarEventColor, calendarEventColors, calendarStatuses } from "./validators";
 
@@ -187,6 +189,23 @@ async function getUserEventsInRange(
   return uniqueEvents.sort((a, b) => a.startTime - b.startTime);
 }
 
+async function enrichEventsWithOrganizers(
+  ctx: QueryCtx,
+  events: Awaited<ReturnType<typeof getUserEventsInRange>>,
+) {
+  const organizerIds = [...new Set(events.map((event) => event.organizerId))];
+  const organizerMap = await batchFetchUsers(ctx, organizerIds);
+
+  return events.map((event) => {
+    const organizer = organizerMap.get(event.organizerId);
+    return {
+      ...event,
+      organizerName: organizer?.name,
+      organizerEmail: organizer?.email,
+    };
+  });
+}
+
 // Create a new calendar event
 export const create = authenticatedMutation({
   args: {
@@ -295,21 +314,45 @@ export const listByDateRange = authenticatedQuery({
       ? events.filter((event) => event.projectId === args.projectId)
       : events;
 
-    // Batch fetch organizers to avoid N+1
-    const organizerIds = [...new Set(filteredEvents.map((e) => e.organizerId))];
-    const organizerMap = await batchFetchUsers(ctx, organizerIds);
+    return await enrichEventsWithOrganizers(ctx, filteredEvents);
+  },
+});
 
-    // Enrich with organizer details
-    const enrichedEvents = filteredEvents.map((event) => {
-      const organizer = organizerMap.get(event.organizerId);
-      return {
-        ...event,
-        organizerName: organizer?.name,
-        organizerEmail: organizer?.email,
-      };
-    });
+// List team events for a date range (team members + org admins)
+export const listByTeamDateRange = authenticatedQuery({
+  args: {
+    teamId: v.id("teams"),
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const team = await ctx.db.get(args.teamId);
+    if (!team || team.isDeleted) {
+      return [];
+    }
 
-    return enrichedEvents;
+    const [teamRole, orgAdmin] = await Promise.all([
+      getTeamRole(ctx, args.teamId, ctx.userId),
+      isOrganizationAdmin(ctx, team.organizationId, ctx.userId),
+    ]);
+
+    if (!(teamRole || orgAdmin)) {
+      return [];
+    }
+
+    const events = await ctx.db
+      .query("calendarEvents")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("startTime"), args.startDate),
+          q.lte(q.field("startTime"), args.endDate),
+        ),
+      )
+      .take(MAX_PAGE_SIZE);
+
+    const sortedEvents = events.sort((a, b) => a.startTime - b.startTime);
+    return await enrichEventsWithOrganizers(ctx, sortedEvents);
   },
 });
 
@@ -336,21 +379,7 @@ export const listMine = authenticatedQuery({
       ? events
       : events.filter((event) => event.status !== "cancelled");
 
-    // Batch fetch organizers to avoid N+1
-    const organizerIds = [...new Set(filteredEvents.map((e) => e.organizerId))];
-    const organizerMap = await batchFetchUsers(ctx, organizerIds);
-
-    // Enrich with organizer details
-    const enrichedEvents = filteredEvents.map((event) => {
-      const organizer = organizerMap.get(event.organizerId);
-      return {
-        ...event,
-        organizerName: organizer?.name,
-        organizerEmail: organizer?.email,
-      };
-    });
-
-    return enrichedEvents;
+    return await enrichEventsWithOrganizers(ctx, filteredEvents);
   },
 });
 
@@ -459,21 +488,7 @@ export const getUpcoming = authenticatedQuery({
     // Limit results
     const limitedEvents = args.limit ? visibleEvents.slice(0, args.limit) : visibleEvents;
 
-    // Batch fetch organizers to avoid N+1
-    const organizerIds = [...new Set(limitedEvents.map((e) => e.organizerId))];
-    const organizerMap = await batchFetchUsers(ctx, organizerIds);
-
-    // Enrich with organizer details
-    const enrichedEvents = limitedEvents.map((event) => {
-      const organizer = organizerMap.get(event.organizerId);
-      return {
-        ...event,
-        organizerName: organizer?.name,
-        organizerEmail: organizer?.email,
-      };
-    });
-
-    return enrichedEvents;
+    return await enrichEventsWithOrganizers(ctx, limitedEvents);
   },
 });
 
