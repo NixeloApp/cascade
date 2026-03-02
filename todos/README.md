@@ -182,3 +182,4 @@ Central index for active roadmap and issue todos.
 - Priority `15` update (2026-03-02, checkpoint refresh): revalidated memoization baseline with a fresh `rg` count snapshot; totals remain stable at `30` (`useMemo: 1`, `useCallback: 22`, `memo: 7`), so Priority `15` stays closed at optimized baseline.
 - Priority `16` update (2026-03-02, batch C): reconfirmed `public-launch.md` external blocker gate remains unchanged; no further in-repo actions are possible until published channel links and admin/community setup confirmations are provided.
 - Priority `17` update (2026-03-02, batch I): reconfirmed `growth-features.md` remains externally blocked with Outlook Calendar integration as the sole open item pending Microsoft app/scopes/credential provisioning.
+- Priority `18` update (2026-03-02, batch G): reconfirmed `enterprise.md` external blocker set remains unchanged; no further in-repo work is actionable until billing/IdP/tooling prerequisites are supplied.

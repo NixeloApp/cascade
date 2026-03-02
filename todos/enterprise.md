@@ -227,3 +227,21 @@
 **Next step**
 
 - Move to Priority `19` (`uptime-monitoring.md`) while waiting for enterprise unblock inputs.
+
+### 2026-03-02 (Batch G)
+
+**Progress**
+
+- Reconfirmed Priority `18` blocker state and unblock requirements remain accurate; no additional repository-side work is currently actionable.
+
+**Decisions**
+
+- Kept enterprise lane blocked instead of introducing speculative billing/IdP scaffolding without external tenancy and packaging inputs.
+
+**Blockers**
+
+- Unchanged external prerequisites from Batch F (billing decisions/credentials, IdP tenant validation environments, tooling procurement/infra ownership items).
+
+**Next step**
+
+- Continue strict-order execution to Priority `19` while waiting for enterprise unblock inputs.
