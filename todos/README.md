@@ -78,7 +78,7 @@ Central index for active roadmap and issue todos.
 | [jules/open/jules-sentinel-2026-02-26-issue-search-security.md](./jules/open/jules-sentinel-2026-02-26-issue-search-security.md) | High | Resolved (access-scoped search enforcement + regression coverage validated) |
 | [jules/open/jules-scribe-2024-05-22-fix-cascade-delete-limit.md](./jules/open/jules-scribe-2024-05-22-fix-cascade-delete-limit.md) | Medium | Resolved (fanout-safe cascade traversal + overflow regressions validated) |
 | [jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) | Medium | Open |
-| [jules/open/jules-spectra-2025-02-24-deduplicate-hashapikey.md](./jules/open/jules-spectra-2025-02-24-deduplicate-hashapikey.md) | Low | Open |
+| [jules/open/jules-spectra-2025-02-24-deduplicate-hashapikey.md](./jules/open/jules-spectra-2025-02-24-deduplicate-hashapikey.md) | Low | Resolved (test hash helper deduplicated to production) |
 
 ---
 
@@ -169,3 +169,4 @@ Central index for active roadmap and issue todos.
 - Priority `02` update (2026-03-02, batch B): revalidated `issues.search` IDOR hardening and marked sentinel issue resolved. Validation: `pnpm test convex/issues.test.ts` => `28 passed`; query path still enforces per-project access checks and unauthorized scope denial.
 - Priority `03` update (2026-03-02, batch B): revalidated cascade overflow hardening and marked scribe issue resolved. Validation: `pnpm test convex/lib/relationships.test.ts convex/lib/relationships_overflow.test.ts` => `7 passed`; overflow coverage still enforces safe behavior at `BOUNDED_DELETE_BATCH + 1` fanout.
 - Priority `04` update (2026-03-02, batch B): retried lodash remediation (`pnpm --store-dir /home/mikhail/.local/share/pnpm/store/v10 up @boxyhq/saml-jackson@latest`) and reconfirmed transitive vulnerable path with `pnpm why lodash` (`@boxyhq/saml-jackson@1.52.2 -> lodash@4.17.21`). Upgrade remains blocked by external DNS/registry failures (`EAI_AGAIN`), with no lockfile changes.
+- Priority `05` update (2026-03-02, batch B): revalidated API key hash dedup and marked spectra issue resolved. Validation: `pnpm test convex/apiKeys.test.ts` => `13 passed`; test file continues to reuse production `hashApiKey` from `convex/lib/apiAuth.ts`.

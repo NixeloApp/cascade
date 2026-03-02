@@ -45,3 +45,15 @@ Refactor `convex/apiKeys.test.ts` to use `hashApiKey` from `convex/lib/apiAuth.t
   - none.
 - Next Step:
   - no follow-up required for this issue; keep API key hashing behavior aligned through shared helper usage.
+
+### 2026-03-02 - Batch B (resolution confirmation)
+
+- Decision:
+  - close as resolved; test hashing remains deduplicated and aligned to production helper.
+- Validation:
+  - `pnpm test convex/apiKeys.test.ts` => pass (`13 passed`)
+  - confirmed `convex/apiKeys.test.ts` imports `hashApiKey` from `convex/lib/apiAuth.ts` and has no local duplicate implementation.
+- Blockers:
+  - none.
+- Next Step:
+  - move to Priority `06` (`multi-level-views.md`).
