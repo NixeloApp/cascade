@@ -363,15 +363,17 @@ function CommentAttachmentLink({
   }
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 text-sm text-ui-text-secondary hover:text-brand hover:underline"
-    >
-      <Paperclip className="w-3.5 h-3.5" />
-      {getFilenameFromUrl(url)}
-    </a>
+    <Button variant="link" size="sm" className="h-auto p-0" asChild>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 text-ui-text-secondary hover:text-brand"
+      >
+        <Paperclip className="w-3.5 h-3.5" />
+        {getFilenameFromUrl(url)}
+      </a>
+    </Button>
   );
 }
 

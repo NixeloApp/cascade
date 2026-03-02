@@ -121,10 +121,10 @@ export function AdvancedSearchModal({
             selectedValues={selectedType}
             onToggle={(type) => toggleFilter(type, selectedType, setSelectedType)}
             renderLabel={(type) => (
-              <span className="inline-flex items-center gap-1">
+              <Flex align="center" gap="xs" as="span">
                 <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
                 <span>{type}</span>
-              </span>
+              </Flex>
             )}
           />
 

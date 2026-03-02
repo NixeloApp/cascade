@@ -28,6 +28,8 @@ export function run() {
     "documents.ts", // Complex background processing with acceptable N+1
     "pushNotifications.ts", // Complex background processing with acceptable N+1
     "templates.ts", // Complex background processing with acceptable N+1
+    "documentTemplates.ts", // Migration function with sequential patches
+    "slackCommandsCore.ts", // Slack search queries multiple projects (small count)
   ];
 
   function findTsFiles(dir) {

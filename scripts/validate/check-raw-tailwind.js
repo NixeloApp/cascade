@@ -47,6 +47,8 @@ export function run() {
   const ALLOWED_FILES = [
     "/AppSidebar.tsx", // Contains NavItem, CollapsibleSection internal components
     "/AppHeader.tsx", // Navigation header with internal components
+    "/PortalProjectView.tsx", // Client portal layout
+    "/PortalTimeline.tsx", // Client portal timeline
     "/BulkOperationsBar.tsx", // Responsive layout patterns
     "/CommandPalette.tsx", // Keyboard shortcut styling
     "/CreateIssueModal.tsx", // Inline label creation popover
@@ -60,7 +62,10 @@ export function run() {
     "/GlobalSearch.tsx", // Search modal
     "/ImportExportModal.tsx", // flex-1 on Button components
     "/InboxList.tsx", // TabsContent styling
+    "/InvoiceEditor.tsx", // CardContent spacing with space-y-4
+    "/InvoicePdfTemplate.tsx", // CardContent spacing with space-y-4
     "/IssueCard.tsx", // Responsive card layout
+    "/IssueComments.tsx", // Button asChild with inline-flex pattern
     "/IssueDependencies.tsx", // min-w-0 truncation pattern
     "/IssueDetailSheet.tsx", // Sheet panel styling
     "/IssuesCalendarView.tsx", // Calendar grid styling

@@ -11,6 +11,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalMutation, internalQuery, type QueryCtx } from "./_generated/server";
 import { organizationAdminMutation, organizationQuery } from "./customFunctions";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 
@@ -221,7 +222,7 @@ async function getUnbilledBillableEntries(
   const entries = await ctx.db
     .query("timeEntries")
     .withIndex("by_date", (q) => q.gte("date", startDate).lte("date", endDate))
-    .collect();
+    .take(BOUNDED_LIST_LIMIT);
 
   const candidateEntries = entries.filter(
     (entry) =>
@@ -322,12 +323,12 @@ export const list = organizationQuery({
             q.eq("organizationId", ctx.organizationId).eq("status", args.status),
           )
           .order("desc")
-          .collect()
+          .take(BOUNDED_LIST_LIMIT)
       : await ctx.db
           .query("invoices")
           .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
           .order("desc")
-          .collect();
+          .take(BOUNDED_LIST_LIMIT);
 
     if (!args.clientId) {
       return invoices;

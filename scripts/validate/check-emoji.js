@@ -22,6 +22,8 @@ export function run() {
     /routes\/forgot-password\.tsx$/, // Arrow in link text (Mintlify pattern)
     /src\/components\/KeyboardShortcutsHelp\.tsx$/, // Uses emoji for keyboard keys
     /workspaces\/\$workspaceSlug\/settings\.tsx$/, // Workspace icon picker
+    /MentionInput\.tsx$/, // Emoji picker for comments
+    /IconPicker\.tsx$/, // Icon/emoji picker component
   ];
 
   // Emoji regex - matches most common emoji ranges

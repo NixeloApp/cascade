@@ -7,6 +7,8 @@ import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
 import { Typography } from "@/components/ui/Typography";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -170,7 +172,7 @@ function ClientsListPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <Grid cols={1} gap="md" className="mt-4 lg:grid-cols-2">
         {clients.map((client: Doc<"clients">) => (
           <Card key={client._id}>
             <CardHeader>
@@ -187,24 +189,21 @@ function ClientsListPage() {
                 Default rate: ${client.hourlyRate?.toFixed(2) ?? "0.00"}
               </Typography>
               <div className="pt-2">
-                <div className="flex flex-wrap items-center gap-2">
+                <Flex wrap gap="sm">
                   <Button variant="secondary" onClick={() => handleGeneratePortalLink(client._id)}>
                     Generate portal link
                   </Button>
                   <Button variant="ghost" onClick={() => handleRefreshPortalTokens(client._id)}>
                     Refresh tokens
                   </Button>
-                </div>
+                </Flex>
                 {generatedPortalLinks[client._id] ? (
                   <Typography variant="caption" className="mt-2 block text-brand">
                     {generatedPortalLinks[client._id]}
                   </Typography>
                 ) : null}
                 {(portalTokensByClient[client._id] || []).map((token) => (
-                  <div
-                    key={token._id}
-                    className="mt-2 rounded-md border border-ui-border p-2 text-xs text-ui-text-secondary"
-                  >
+                  <Card key={token._id} padding="sm" className="mt-2">
                     <Typography variant="caption" className="block">
                       Token: {token._id}
                     </Typography>
@@ -233,13 +232,13 @@ function ClientsListPage() {
                         Revoke token
                       </Button>
                     ) : null}
-                  </div>
+                  </Card>
                 ))}
               </div>
             </CardContent>
           </Card>
         ))}
-      </div>
+      </Grid>
     </PageLayout>
   );
 }

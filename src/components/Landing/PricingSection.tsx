@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
@@ -85,13 +86,12 @@ export function PricingSection() {
 
               <ul className="space-y-2 mb-6">
                 {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-2 text-sm text-ui-text-secondary"
-                  >
+                  <Flex key={feature} as="li" align="center" gap="sm">
                     <Check className="w-4 h-4 text-status-success-text shrink-0" />
-                    <span>{feature}</span>
-                  </li>
+                    <Typography variant="small" color="secondary">
+                      {feature}
+                    </Typography>
+                  </Flex>
                 ))}
               </ul>
 

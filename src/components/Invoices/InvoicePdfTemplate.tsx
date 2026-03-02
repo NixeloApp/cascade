@@ -1,4 +1,6 @@
+import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
 
 type InvoiceLineItem = {
@@ -48,17 +50,18 @@ export function InvoicePdfTemplate({
         <CardTitle>PDF Preview</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+        <Grid cols={1} gap="sm" className="md:grid-cols-3">
           <Typography variant="small">Invoice: {invoiceNumber}</Typography>
           <Typography variant="small">Issued: {formatDate(issueDate)}</Typography>
           <Typography variant="small">Due: {formatDate(dueDate)}</Typography>
-        </div>
+        </Grid>
 
         <div className="space-y-2 rounded-lg border border-ui-border p-3">
           {lineItems.map((line) => (
-            <div
+            <Grid
               key={`${line.description}-${line.quantity}-${line.rate}-${line.amount}`}
-              className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2"
+              gap="sm"
+              className="grid-cols-[2fr_1fr_1fr_1fr]"
             >
               <Typography variant="small">{line.description}</Typography>
               <Typography variant="small" color="secondary">
@@ -68,7 +71,7 @@ export function InvoicePdfTemplate({
                 {formatCurrency(line.rate)}
               </Typography>
               <Typography variant="small">{formatCurrency(line.amount)}</Typography>
-            </div>
+            </Grid>
           ))}
         </div>
 
@@ -80,14 +83,11 @@ export function InvoicePdfTemplate({
 
         {notes ? <Typography variant="small">Notes: {notes}</Typography> : null}
         {pdfUrl ? (
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-brand underline text-sm"
-          >
-            Open generated PDF
-          </a>
+          <Button variant="link" size="sm" asChild>
+            <a href={pdfUrl} target="_blank" rel="noreferrer">
+              Open generated PDF
+            </a>
+          </Button>
         ) : (
           <Typography variant="small" color="secondary">
             No PDF generated yet.

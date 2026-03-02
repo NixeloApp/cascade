@@ -6,6 +6,8 @@ import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -55,7 +57,7 @@ function InvoicesListPage() {
         title="Invoices"
         description="Create, track, and deliver agency invoices."
         actions={
-          <div className="flex items-center gap-2">
+          <Flex align="center" gap="sm">
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value as InvoiceStatusFilter)}
@@ -69,11 +71,11 @@ function InvoicesListPage() {
               <option value="overdue">Overdue</option>
             </select>
             <Button onClick={handleCreateDraft}>New draft</Button>
-          </div>
+          </Flex>
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <Grid cols={1} gap="md" className="lg:grid-cols-2">
         {invoices.map((invoice: Doc<"invoices">) => (
           <Card key={invoice._id}>
             <CardHeader>
@@ -95,7 +97,7 @@ function InvoicesListPage() {
             </CardContent>
           </Card>
         ))}
-      </div>
+      </Grid>
     </PageLayout>
   );
 }

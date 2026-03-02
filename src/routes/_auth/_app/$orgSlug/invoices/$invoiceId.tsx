@@ -7,6 +7,7 @@ import { InvoiceEditor } from "@/components/Invoices/InvoiceEditor";
 import { InvoicePdfTemplate } from "@/components/Invoices/InvoicePdfTemplate";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
+import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
@@ -86,7 +87,7 @@ function InvoiceDetailPage() {
         title={invoice.number}
         description={`Status: ${invoice.status}`}
         actions={
-          <div className="flex items-center gap-2">
+          <Flex align="center" gap="sm">
             <Button variant="secondary" onClick={handleGeneratePdf}>
               Generate PDF
             </Button>
@@ -96,7 +97,7 @@ function InvoiceDetailPage() {
             <Button onClick={handleMarkPaid} disabled={invoice.status === "draft"}>
               Mark Paid
             </Button>
-          </div>
+          </Flex>
         }
       />
 

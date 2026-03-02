@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
 import { Typography } from "@/components/ui/Typography";
 
@@ -73,9 +75,11 @@ export function InvoiceEditor({ initialLineItems, onSave, isSaving = false }: In
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         {lineItems.map((line, index) => (
-          <div
+          <Grid
             key={line.localId}
-            className="grid grid-cols-1 gap-2 rounded-lg border border-ui-border p-3 lg:grid-cols-[2fr_1fr_1fr_auto]"
+            cols={1}
+            gap="sm"
+            className="rounded-lg border border-ui-border p-3 lg:grid-cols-[2fr_1fr_1fr_auto]"
           >
             <Input
               value={line.description}
@@ -103,15 +107,15 @@ export function InvoiceEditor({ initialLineItems, onSave, isSaving = false }: In
             <Button variant="ghost" onClick={() => removeLine(index)}>
               Remove
             </Button>
-          </div>
+          </Grid>
         ))}
 
-        <div className="flex items-center justify-between gap-3">
+        <Flex align="center" justify="between" gap="md">
           <Button variant="secondary" onClick={addLine}>
             Add line
           </Button>
           <Typography variant="h4">Subtotal: {formatCurrency(subtotal)}</Typography>
-        </div>
+        </Flex>
 
         <Button
           onClick={() =>
