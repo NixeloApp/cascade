@@ -2,7 +2,7 @@
 
 > **Priority:** P2
 > **Effort:** Medium
-> **Status:** In Progress
+> **Status:** Blocked (External Slack Dashboard Actions Pending)
 
 ---
 
@@ -96,13 +96,23 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
 ### Milestones
 
 - [x] `S1` Complete rich-text comment parity (emoji picker + inline attachments) ✅ 2026-03-02
-- [ ] `S2` Slack outbound notifications MVP (workspace connect + event delivery)
-- [ ] `S3` Slash command + link unfurling follow-up
+- [ ] `S2` Slack outbound notifications MVP (workspace connect + event delivery) — blocked on manual Slack app setup
+- [ ] `S3` Slash command + link unfurling follow-up — blocked on manual Slack dashboard registrations
 
 ### Dependencies
 
 - OAuth app setup and secrets provisioning for Slack
 - Attachment storage constraints and moderation/security policy
+
+### External Blockers (As Of 2026-03-02)
+
+- Create/configure Slack OAuth app in Slack API dashboard (client credentials + scopes).
+- Register `/nixelo` slash command in Slack API dashboard and point it to `POST /slack/commands`.
+- Register URL unfurl patterns in Slack API dashboard and point unfurl callback to `POST /slack/unfurl`.
+- Provision production env vars:
+  - `SLACK_CLIENT_ID`
+  - `SLACK_CLIENT_SECRET`
+  - `SLACK_SIGNING_SECRET`
 
 ### Definition of Done
 
@@ -271,3 +281,17 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
   - Slack-side URL-pattern registration for unfurling is still manual/pending in Slack API dashboard.
 - Next Step:
   - complete manual Slack-side registrations (slash command + URL unfurl patterns) and env setup to fully enable `S2/S3` in production.
+
+### 2026-03-02 - Batch G (priority-09 closure decision)
+
+- Decision:
+  - stop further Priority `09` code changes because all remaining unchecked work is external/manual Slack dashboard configuration outside repository scope.
+- Change:
+  - reclassified todo status to `Blocked (External Slack Dashboard Actions Pending)`.
+  - documented exact external actions required to unblock.
+- Validation:
+  - no code changes in this batch; blocker classification only.
+- Blockers:
+  - unchanged external Slack setup tasks listed above.
+- Next Step:
+  - once Slack dashboard tasks are completed by operator, run live end-to-end Slack smoke checks (`/slack/commands`, `/slack/unfurl`, outbound issue event delivery), then mark `S2/S3` complete.
