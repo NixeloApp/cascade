@@ -12,6 +12,7 @@ import { pruneNull } from "convex-helpers";
 import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedQuery } from "./customFunctions";
 import { batchFetchProjects, batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { logQueryPayloadTelemetry } from "./lib/payloadTelemetry";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import {
   DEFAULT_SEARCH_PAGE_SIZE,
@@ -118,10 +119,17 @@ export const getMyIssues = authenticatedQuery({
       }),
     );
 
-    return {
+    const response = {
       ...results,
       page: enrichedIssues,
     };
+
+    logQueryPayloadTelemetry("dashboard.getMyIssues", response, {
+      pageSize: response.page.length,
+      isDone: response.isDone,
+    });
+
+    return response;
   },
 });
 
@@ -366,7 +374,13 @@ export const getMyRecentActivity = authenticatedQuery({
       }),
     );
 
-    return enrichedActivity.slice(0, limit);
+    const response = enrichedActivity.slice(0, limit);
+    logQueryPayloadTelemetry("dashboard.getMyRecentActivity", response, {
+      limit,
+      projectCount: projectIds.length,
+      returned: response.length,
+    });
+    return response;
   },
 });
 

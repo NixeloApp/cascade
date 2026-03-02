@@ -57,7 +57,7 @@ The primary bandwidth drains were identified as:
 ### Milestones
 
 - [x] `S1` Finish dashboard/activity query scoping and payload minimization
-- [ ] `S1` Add query-level payload telemetry for top bandwidth endpoints
+- [x] `S1` Add query-level payload telemetry for top bandwidth endpoints
 - [ ] `S2` Introduce counters/stats table for high-frequency counts
 - [ ] `S2` Publish before/after bandwidth report from Convex dashboard metrics
 
@@ -139,3 +139,27 @@ The primary bandwidth drains were identified as:
   - none for this subtask.
 - Next Step:
   - continue Priority `07` with query-level payload telemetry for top bandwidth endpoints (`S1` telemetry milestone).
+
+### 2026-03-02 - Batch D (query-level payload telemetry)
+
+- Decision:
+  - implement low-overhead query payload telemetry behind an explicit env flag so production noise/cost stays controlled.
+- Change:
+  - added `convex/lib/payloadTelemetry.ts`:
+    - `estimatePayloadBytes(payload)` for JSON payload byte estimates.
+    - `logQueryPayloadTelemetry(queryName, payload, meta)` gated by `ENABLE_QUERY_PAYLOAD_TELEMETRY` (`"1"`/`"true"`), auto-disabled in test env.
+  - instrumented top bandwidth endpoints:
+    - `convex/dashboard.ts`:
+      - `dashboard.getMyIssues` logs response payload size with page metadata.
+      - `dashboard.getMyRecentActivity` logs payload size with limit/project/result metadata.
+    - `convex/analytics.ts`:
+      - `analytics.getProjectAnalytics` logs payload size with workflow/assignee metadata.
+  - added unit coverage:
+    - `convex/lib/payloadTelemetry.test.ts` verifies byte estimation, enabled logging, and test-env suppression.
+- Validation:
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/dashboard.test.ts convex/analytics.test.ts convex/lib/payloadTelemetry.test.ts` => pass (`59 passed`)
+- Blockers:
+  - none for this subtask.
+- Next Step:
+  - continue Priority `07` with `S2` stats/counters-table design for high-frequency counts, or prepare before/after metrics collection path.

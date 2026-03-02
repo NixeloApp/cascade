@@ -7,6 +7,7 @@ import type { Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
+import { logQueryPayloadTelemetry } from "./lib/payloadTelemetry";
 import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY } from "./lib/timeUtils";
@@ -168,7 +169,7 @@ export const getProjectAnalytics = projectQuery({
       };
     }
 
-    return {
+    const response = {
       totalIssues,
       issuesByStatus,
       issuesByType,
@@ -176,6 +177,13 @@ export const getProjectAnalytics = projectQuery({
       issuesByAssignee,
       unassignedCount,
     };
+
+    logQueryPayloadTelemetry("analytics.getProjectAnalytics", response, {
+      workflowStates: ctx.project.workflowStates.length,
+      assignees: Object.keys(issuesByAssignee).length,
+    });
+
+    return response;
   },
 });
 
