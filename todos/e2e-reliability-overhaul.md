@@ -644,6 +644,34 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BC (completed XPath locator hard-rule enforcement)
+
+- Decision: lock out XPath selector regressions in E2E specs now that existing board drag-drop XPath usage has been removed.
+- Change:
+  - updated `scripts/ci/check-e2e-hard-rules.mjs`:
+    - added detection for `locator("xpath=...")` and `locator("//...")` usage
+    - emits dedicated hard-rule violations with file/line output
+    - includes XPath metric in pass summaries
+  - updated `scripts/ci/test-e2e-hard-rules.mjs`:
+    - added zero-violation assertions for XPath in clean/baseline cases
+    - extended violation fixture with XPath locator and asserted detection
+- Validation:
+  - `pnpm run e2e:hard-rules:self-test` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force/xpath violations: `0`; selector baseline remains `0`)
+  - `pnpm exec biome check scripts/ci/check-e2e-hard-rules.mjs scripts/ci/test-e2e-hard-rules.mjs` => pass
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BB (completed board drag-drop selector/wait hardening)
 
 - Decision: remove XPath dependencies and document-load waits from board drag-drop E2E flow in favor of test-id/role locators and deterministic post-drag state checks.
