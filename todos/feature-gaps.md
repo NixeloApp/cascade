@@ -68,8 +68,8 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
 ### Phase 2: Slash Commands
 
 - [ ] Register `/nixelo` command with Slack
-- [ ] Create `convex/http.ts` handler for slash commands
-- [ ] Support `create`, `search`, `assign` subcommands
+- [x] Create `convex/http.ts` handler for slash commands ✅ 2026-03-02
+- [x] Support `create`, `search`, `assign` subcommands ✅ 2026-03-02
 
 ### Phase 3: Link Unfurling
 
@@ -213,3 +213,32 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
   - Slack app provisioning in Slack dashboard remains manual and is still required before real production delivery can be enabled.
 - Next Step:
   - either (a) complete external Slack app provisioning and env setup to unblock real delivery, or (b) move to `S3` slash command work if provisioning stays blocked.
+
+### 2026-03-02 - Batch E (slash command handler + core subcommands)
+
+- Decision:
+  - proceed with local slash-command implementation despite manual Slack command registration blocker, so backend/runtime support is ready once Slack dashboard registration is completed.
+- Change:
+  - added slash command HTTP handler `convex/http/slackCommands.ts`:
+    - POST `/slack/commands` endpoint with Slack request-signature verification (`SLACK_SIGNING_SECRET`).
+    - parses slash payload and returns Slack-compatible JSON responses.
+  - added command execution core `convex/slackCommandsCore.ts`:
+    - internal command execution for `create`, `search`, `assign`.
+    - team-context resolution from `slackConnections`.
+    - issue creation path (project selection, key generation, activity logging, stats sync).
+    - issue search across user-accessible projects.
+    - issue assignment by issue key + assignee name.
+  - wired route in `convex/router.ts`:
+    - `POST /slack/commands`.
+  - extended env helpers (`convex/lib/env.ts`) for Slack signing-secret config checks.
+  - added regression coverage in `convex/slackCommands.test.ts` for `create`, `search`, and `assign` command flows.
+- Validation:
+  - `pnpm exec biome check --write convex/slackCommandsCore.ts convex/slackCommands.test.ts convex/http/slackCommands.ts convex/router.ts convex/lib/env.ts` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/slackCommands.test.ts convex/slack.test.ts` => pass (`9 passed`)
+  - `pnpm test convex/issues/mutations.test.ts` => pass (`24 passed`)
+- Blockers:
+  - Slack-side registration of `/nixelo` command is still manual and pending in Slack API dashboard.
+  - Full command production enablement also depends on setting `SLACK_SIGNING_SECRET` in environment.
+- Next Step:
+  - complete manual `/nixelo` command registration + signing-secret env setup, then move to `S3` link unfurling implementation.

@@ -140,6 +140,7 @@ import type * as shared_constants from "../shared/constants.js";
 import type * as shared_routes from "../shared/routes.js";
 import type * as shared_types from "../shared/types.js";
 import type * as slack from "../slack.js";
+import type * as slackCommands from "../slackCommands.js";
 import type * as softDeleteCleanup from "../softDeleteCleanup.js";
 import type * as sprints from "../sprints.js";
 import type * as sso from "../sso.js";
@@ -298,6 +299,7 @@ declare const fullApi: ApiFromModules<{
   "shared/routes": typeof shared_routes;
   "shared/types": typeof shared_types;
   slack: typeof slack;
+  slackCommands: typeof slackCommands;
   softDeleteCleanup: typeof softDeleteCleanup;
   sprints: typeof sprints;
   sso: typeof sso;

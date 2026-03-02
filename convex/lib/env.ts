@@ -95,6 +95,14 @@ export function isSlackOAuthConfigured(): boolean {
   return !!process.env.SLACK_CLIENT_ID && !!process.env.SLACK_CLIENT_SECRET;
 }
 
+export function getSlackSigningSecret(): string {
+  return requireEnv("SLACK_SIGNING_SECRET");
+}
+
+export function isSlackSigningSecretConfigured(): boolean {
+  return !!process.env.SLACK_SIGNING_SECRET;
+}
+
 // ===========================================
 // Bot Service
 // ===========================================

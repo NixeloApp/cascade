@@ -38,6 +38,7 @@ import {
   listRepos as listGitHubRepos,
 } from "./http/githubOAuth";
 import { handleCallback, initiateAuth, triggerSync } from "./http/googleOAuth";
+import { handleSlashCommand } from "./http/slackCommands";
 import {
   handleCallback as handleSlackCallback,
   initiateAuth as initiateSlackAuth,
@@ -101,6 +102,12 @@ http.route({
   path: "/slack/callback",
   method: "GET",
   handler: handleSlackCallback,
+});
+
+http.route({
+  path: "/slack/commands",
+  method: "POST",
+  handler: handleSlashCommand,
 });
 
 // Auth wrapper routes (security)
