@@ -20,7 +20,7 @@
 
 - [x] **Fuzzy matching** - Tolerate typos in search ✅ (`src/hooks/useFuzzySearch.ts`, `src/components/FuzzySearch/`)
 - [x] **Search shortcuts** - `type:bug`, `@me`, `status:done` ✅ (`src/lib/search-shortcuts.ts`, `src/components/GlobalSearch.tsx`)
-- [ ] **Advanced search modal** - Visual query builder
+- [x] **Advanced search modal** - Visual query builder ✅ (`src/components/AdvancedSearchModal.tsx`, `src/components/GlobalSearch.tsx`)
 
 ### Documents
 
@@ -53,7 +53,7 @@
 ### Milestones
 
 - [x] `S3` Implement search shortcuts/query syntax (`type:`, `status:`, `@me`)
-- [ ] `S4` Add advanced search modal with query-builder UX
+- [x] `S4` Add advanced search modal with query-builder UX
 - [x] `S4` Ship one integration growth lever (Slack create/unfurl or Outlook sync)
 - [ ] `S5` Prioritize remaining board/document enhancements based on usage data
 
@@ -120,3 +120,25 @@
 **Next step**
 
 - Start `Advanced search modal` scope (first pass: modal shell + structured filter controls wired to current search backend args).
+
+### 2026-03-02 (Batch C)
+
+**Progress**
+
+- Wired existing `AdvancedSearchModal` into `GlobalSearch` via footer action (`Advanced Search`).
+- Added issue-selection navigation from advanced results to project issue detail context.
+- Fixed advanced modal pagination behavior by resetting offset whenever query/filters change.
+
+**Decisions**
+
+- Reused and integrated the existing modal implementation instead of building a duplicate query-builder surface.
+- Marked advanced search task complete after integration into the main search entrypoint and routing flow.
+
+**Blockers**
+
+- Outlook calendar integration remains not started.
+- Board/document growth items (diff view, label hover descriptions, query language, auto-cycles) remain open.
+
+**Next step**
+
+- Move to the next unfinished growth item by impact: board query language (`status:done priority:high`) with shared parser contracts.

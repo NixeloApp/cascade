@@ -9,6 +9,8 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import { useState } from "react";
+import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
@@ -239,6 +241,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
 
 /** Global command palette for searching issues and documents across the app. */
 export function GlobalSearch() {
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const { isOpen, setIsOpen } = useSearchKeyboard();
   const { query, setQuery, activeTab, setActiveTab, issueOffset, documentOffset, limit, loadMore } =
     useSearchPagination(isOpen);
@@ -376,6 +379,16 @@ export function GlobalSearch() {
           {/* Footer */}
           <Flex align="center" justify="between" className="border-t border-ui-border">
             <Flex align="center" gap="lg">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsAdvancedOpen(true);
+                }}
+              >
+                Advanced Search
+              </Button>
               <ShortcutHint keys="up+down">Navigate</ShortcutHint>
               <ShortcutHint keys="Enter">Open</ShortcutHint>
             </Flex>
@@ -383,6 +396,16 @@ export function GlobalSearch() {
           </Flex>
         </Command>
       </CommandDialog>
+
+      {isAdvancedOpen ? (
+        <AdvancedSearchModal
+          open={isAdvancedOpen}
+          onOpenChange={setIsAdvancedOpen}
+          onSelectIssue={(issueId, projectId) => {
+            window.location.href = `/project/${projectId}?issue=${issueId}`;
+          }}
+        />
+      ) : null}
     </>
   );
 }

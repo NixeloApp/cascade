@@ -103,6 +103,18 @@ describe("GlobalSearch", () => {
     expect(screen.getByText(/Shortcuts:/i)).toBeInTheDocument();
   });
 
+  it("should open advanced search modal from footer action", async () => {
+    const user = userEvent.setup();
+    render(<GlobalSearch />);
+
+    await user.click(screen.getByRole("button"));
+    await user.click(screen.getByRole("button", { name: /Advanced Search/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Search Issues/i)).toBeInTheDocument();
+    });
+  });
+
   it("should filter by tab selection", async () => {
     const user = userEvent.setup();
     const mockIssues = [
