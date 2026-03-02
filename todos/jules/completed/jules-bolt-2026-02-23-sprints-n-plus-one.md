@@ -2,6 +2,7 @@
 **Severity:** medium
 **Files:** convex/sprints.ts
 **Status:** ✅ FIXED (2026-02-24)
+**Last Audited:** 2026-03-02
 
 ## Description
 The `listByProject` function in `convex/sprints.ts` iterates over up to 50 sprints and performs multiple queries for each sprint to calculate issue counts (total and completed). Specifically, it runs one `efficientCount` for the total and one `efficientCount` for EACH "done" status in the workflow. If there are 3 done statuses, this results in 4 queries per sprint. For 50 sprints, this triggers ~200 concurrent queries.

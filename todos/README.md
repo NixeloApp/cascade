@@ -1,104 +1,82 @@
 # Nixelo Todos
 
-Project todos and improvement tracking.
+Central index for all roadmap, audit, and automated issue todos.
+
+> **Last Audited:** 2026-03-02
+> **Structure:** `todos/active`, `todos/jules`, `todos/completed`
 
 ---
 
-## Roadmap Todos
+## Current Focus
+
+| File | Status | Notes |
+|------|--------|-------|
+| [active/consistency-tracking.md](./active/consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
+| [active/feature-gaps.md](./active/feature-gaps.md) | Active | Core gaps with partial completion |
+| [active/bandwidth_optimization.md](./active/bandwidth_optimization.md) | Active | High-impact backend efficiency work |
+| [active/oauth-monitoring-finalization.md](./active/oauth-monitoring-finalization.md) | Active | Monitoring mostly shipped; admin dashboard + feature flag pending |
+| [active/multi-level-views.md](./active/multi-level-views.md) | Active | Partial route foundation, major features pending |
+
+---
+
+## Active MVP
 
 | File | Status | Focus |
 |------|--------|-------|
-| [agency-mvp.md](./agency-mvp.md) | Active | Agency MVP features |
-| [enterprise.md](./enterprise.md) | Active | Enterprise features |
-| [growth-features.md](./growth-features.md) | Active | Growth features |
-| [public-launch.md](./public-launch.md) | Active | Public launch checklist |
-| [feature-gaps.md](./feature-gaps.md) | Active | Feature gaps to close |
-| [multi-level-views.md](./multi-level-views.md) | Active | Multi-level views |
-| [emoji-overhaul.md](./emoji-overhaul.md) | Active | Emoji system overhaul |
-| [uptime-monitoring.md](./uptime-monitoring.md) | Active | Uptime monitoring |
-| [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Active | OAuth monitoring |
-| [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | Database bandwidth fixes |
-| [bandwidth_burn_assessment.md](./bandwidth_burn_assessment.md) | Active | Bandwidth usage analysis |
-| [memoization-cleanup.md](./memoization-cleanup.md) | Active | Remove manual memoization (React Compiler) |
+| [active/agency-mvp.md](./active/agency-mvp.md) | Active | Agency workflows (invoicing, client portal) |
+| [active/emoji-overhaul.md](./active/emoji-overhaul.md) | Active | Icon picker + accessibility pass |
+| [active/sidebar-display-limits.md](./active/sidebar-display-limits.md) | Active | Core limit work done; UX follow-ups open |
+| [active/rich-text-description-followup.md](./active/rich-text-description-followup.md) | Active | Plain-text extraction for integrations |
+| [active/memoization-cleanup.md](./active/memoization-cleanup.md) | Active | React Compiler-driven cleanup |
 
 ---
 
-## Jules Tasks (Automated Issues)
+## Deferred (Post-MVP)
 
-| File | Status | Priority |
-|------|--------|----------|
-| [jules-sentinel-2026-02-26-issue-search-security.md](./jules-sentinel-2026-02-26-issue-search-security.md) | Open | High |
-| [jules-bolt-2026-02-23-sprints-n-plus-one.md](./jules-bolt-2026-02-23-sprints-n-plus-one.md) | Open | Medium |
-| [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules-librarian-2026-02-23-lodash-vulnerability.md) | Open | Low |
-| [jules-spectra-2025-02-24-deduplicate-hashapikey.md](./jules-spectra-2025-02-24-deduplicate-hashapikey.md) | Open | Low |
-| [jules-scribe-2024-05-22-fix-cascade-delete-limit.md](./jules-scribe-2024-05-22-fix-cascade-delete-limit.md) | Open | Medium |
-
----
-
-## Recursive Improvement (Completed Phases)
-
-> **Progress:** 133/278 (Phase 1-6 complete)
-> **Last Run:** 2026-02-27
-
-| Phase | File | Status | Summary |
-|-------|------|--------|---------|
-| 1 | [PHASE_1_USER_STORIES.md](./PHASE_1_USER_STORIES.md) | ✅ | Feature parity with Plane, Cal.com |
-| 2 | [PHASE_2_EDITOR_POLISH.md](./PHASE_2_EDITOR_POLISH.md) | ✅ | Editor features, markdown |
-| 3 | [PHASE_3_UI_UX_CONSISTENCY.md](./PHASE_3_UI_UX_CONSISTENCY.md) | ✅ | Design system, a11y, error handling |
-| 4 | [PHASE_4_FEATURE_POLISH.md](./PHASE_4_FEATURE_POLISH.md) | ✅ | Keyboard shortcuts, empty states, toasts |
-| 5 | [PHASE_5_QUALITY_DEEP_DIVE.md](./PHASE_5_QUALITY_DEEP_DIVE.md) | ✅ | 342 tests, 153 stories, N+1 fixes |
-| 6 | [PHASE_6_PERFORMANCE_BACKEND.md](./PHASE_6_PERFORMANCE_BACKEND.md) | ✅ | Bundle, Convex tests, CI |
-| 7 | [PHASE_7_CONSISTENCY_ENFORCEMENT.md](./PHASE_7_CONSISTENCY_ENFORCEMENT.md) | 🚧 | CVA expansion, validators, component recipes |
+| File | Status | Focus |
+|------|--------|-------|
+| [active/enterprise.md](./active/enterprise.md) | Deferred | Enterprise/SSO/infra roadmap |
+| [active/growth-features.md](./active/growth-features.md) | Deferred (partial shipped) | Fuzzy search, swimlanes, WIP limits, version history partially complete |
+| [active/public-launch.md](./active/public-launch.md) | Deferred | Distribution and community launch checklist |
+| [active/uptime-monitoring.md](./active/uptime-monitoring.md) | Deferred | Monitor + incident/status-page product area |
 
 ---
 
-## How Recursive Improvement Works
+## Jules Issues (Open)
 
-1. **Invoke with:** "work on this doc" or "recursive improvement"
-2. **Each run:** Pick the highest-priority incomplete section, research competitors, implement improvements
-3. **Update:** Mark items complete, add findings, increment progress
-4. **Repeat:** Until all sections reach 100%
+| File | Priority | Status |
+|------|----------|--------|
+| [jules/open/jules-sentinel-2026-02-26-issue-search-security.md](./jules/open/jules-sentinel-2026-02-26-issue-search-security.md) | High | Open (partially mitigated, still needs access-scoped search guarantees) |
+| [jules/open/jules-scribe-2024-05-22-fix-cascade-delete-limit.md](./jules/open/jules-scribe-2024-05-22-fix-cascade-delete-limit.md) | Medium | Open |
+| [jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) | Medium | Open |
+| [jules/open/jules-spectra-2025-02-24-deduplicate-hashapikey.md](./jules/open/jules-spectra-2025-02-24-deduplicate-hashapikey.md) | Low | Open |
 
----
+## Jules Issues (Resolved)
 
-## Competitor Repos
-
-| Competitor | Local Path | Focus |
-|------------|------------|-------|
-| **Plane** | `/home/mikhail/Desktop/plane` | Issue tracking, Kanban, workflows |
-| **Cal.com** | `/home/mikhail/Desktop/cal.com` | Scheduling, auth, enterprise features |
-| **Mintlify** | `docs/research/library/mintlify/` | Design polish, animations, premium feel |
+| File | Status |
+|------|--------|
+| [jules/completed/jules-bolt-2026-02-23-sprints-n-plus-one.md](./jules/completed/jules-bolt-2026-02-23-sprints-n-plus-one.md) | ✅ Fixed |
 
 ---
 
-## Nixelo Advantages Over Competitors
+## Completed
 
-| Feature | Plane | Cal.com | Nixelo |
-|---------|-------|---------|--------|
-| Column WIP limits | ❌ | N/A | ✅ |
-| Sprint templates | ❌ | N/A | ✅ |
-| Document comments | ❌ | N/A | ✅ |
-| IP restrictions | N/A | ❌ | ✅ |
-| Time tracking on issues | ❌ | N/A | ✅ |
-
----
-
-## Commands
-
-```bash
-# Run full validation
-pnpm run check
-
-# Run custom validators
-node scripts/validate.js
-
-# Generate bundle report
-pnpm vite build --mode analyze
-
-# Compare with Plane
-ls /home/mikhail/Desktop/plane/apps/web/core/components/
-```
+| File | Type | Status |
+|------|------|--------|
+| [completed/PHASE_1_USER_STORIES.md](./completed/PHASE_1_USER_STORIES.md) | Recursive improvement | ✅ Complete |
+| [completed/PHASE_2_EDITOR_POLISH.md](./completed/PHASE_2_EDITOR_POLISH.md) | Recursive improvement | ✅ Complete |
+| [completed/PHASE_3_UI_UX_CONSISTENCY.md](./completed/PHASE_3_UI_UX_CONSISTENCY.md) | Recursive improvement | ✅ Complete |
+| [completed/PHASE_4_FEATURE_POLISH.md](./completed/PHASE_4_FEATURE_POLISH.md) | Recursive improvement | ✅ Complete |
+| [completed/PHASE_5_QUALITY_DEEP_DIVE.md](./completed/PHASE_5_QUALITY_DEEP_DIVE.md) | Recursive improvement | ✅ Complete |
+| [completed/PHASE_6_PERFORMANCE_BACKEND.md](./completed/PHASE_6_PERFORMANCE_BACKEND.md) | Recursive improvement | ✅ Complete |
+| [completed/PHASE_7_CONSISTENCY_ENFORCEMENT.md](./completed/PHASE_7_CONSISTENCY_ENFORCEMENT.md) | Recursive improvement | ✅ Complete |
+| [completed/bandwidth_burn_assessment.md](./completed/bandwidth_burn_assessment.md) | Analysis snapshot | ✅ Complete |
+| [completed/feature-comparison-audit.md](./completed/feature-comparison-audit.md) | Research spec | ✅ Complete |
 
 ---
 
-*This is a living document. Update after each improvement session.*
+## Notes
+
+- `TODO.md` at repo root points to this file.
+- All todo documents have been migrated out of `docs/` into `todos/`.
+- Use this index as the source of truth for planning and status tracking.

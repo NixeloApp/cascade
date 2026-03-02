@@ -8,3 +8,9 @@ Found duplicate implementation of `hashApiKey` in `convex/apiKeys.test.ts`.
 
 ## Action
 Refactor `convex/apiKeys.test.ts` to use `hashApiKey` from `convex/lib/apiAuth.ts` to ensure tests use the same logic as production code.
+
+## Audit (2026-03-02)
+
+- Duplicate test-local `hashApiKey` still exists in `convex/apiKeys.test.ts`.
+- Production `hashApiKey` remains in `convex/lib/apiAuth.ts`.
+- Status: Open.

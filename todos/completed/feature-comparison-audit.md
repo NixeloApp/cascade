@@ -1,5 +1,9 @@
 # Feature Comparison: cal.com vs plane vs Cascade
 
+> **Status:** ✅ Complete
+> **Migrated:** 2026-03-02 (from `docs/feature-comparison/TODO.md`)
+> **Category:** Completed research todo
+
 ## Objective
 
 Compare UI/UX implementation of features across three codebases:
@@ -16,7 +20,7 @@ Compare UI/UX implementation of features across three codebases:
 ```
 ~/Desktop/cascade/docs/feature-comparison/
 ├── README.md                    # Index + summary of all features
-├── TODO.md                      # This file (task spec)
+├── TODO.md                      # Original task spec location (now moved to /todos/completed/)
 ├── scheduling/
 │   ├── create-booking.md
 │   ├── availability.md

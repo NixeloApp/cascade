@@ -33,3 +33,9 @@ Possible approaches:
 
 ## Action
 Implement a safe way to cascade delete/soft-delete large numbers of children, likely using `collectInBatches` or a loop with proper filters.
+
+## Audit (2026-03-02)
+
+- `convex/lib/relationships.ts` still enforces `BOUNDED_DELETE_BATCH` and throws when child count exceeds the batch limit.
+- The large-fanout cascade behavior is still unimplemented.
+- Status: Open.

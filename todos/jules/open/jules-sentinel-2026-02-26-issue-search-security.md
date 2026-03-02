@@ -19,3 +19,9 @@ The `search` query should:
 
 ## Priority
 High
+
+## Audit (2026-03-02)
+
+- `convex/issues/queries.ts` now returns empty results when no `query`, `projectId`, or `organizationId` is provided.
+- Search with free-text query still does not explicitly enforce per-project access checks in this query path.
+- Keep this item open until search results are guaranteed to be scoped by membership/organization at query time.

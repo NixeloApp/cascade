@@ -1,6 +1,8 @@
 # Database Bandwidth Optimization TODOs
 
 **Status**: Critical - Current usage (6.25 GB) exceeds free tier limits (1 GB).
+**Last Audited**: 2026-03-02
+**Note**: Bandwidth numbers are historical baseline values from the original investigation.
 
 ## 📊 Summary of Issues
 The primary bandwidth drains were identified as:

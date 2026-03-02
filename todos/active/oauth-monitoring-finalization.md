@@ -3,6 +3,8 @@
 **Effort:** Medium
 **Priority:** P2
 **Related:** `/docs/oauth-monitoring-runbook.md`
+**Status:** In Progress
+**Last Audited:** 2026-03-02
 
 ## Overview
 
@@ -21,9 +23,8 @@ OAuth synthetic monitoring is implemented. This task covers finalizing the remai
 
 ### Phase 4: Metrics Integration
 
-- [ ] Store health check results in `oauthHealthLogs` table
-  - Modify `recordHealthCheck` mutation to persist to DB
-  - Add fields: `success`, `latencyMs`, `error`, `errorCode`, `timestamp`
+- [x] Store health check results in DB ✅ (`oauthHealthChecks` table)
+  - `recordHealthCheck` persists `success`, `latencyMs`, `error`, `errorCode`, `timestamp`
 - [ ] Create admin dashboard query
   ```typescript
   export const getOAuthHealthStats = query({

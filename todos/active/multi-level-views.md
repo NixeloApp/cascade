@@ -2,7 +2,8 @@
 
 > **Priority:** P1 (Core MVP)
 > **Effort:** Large
-> **Status:** Not Started
+> **Status:** In Progress (foundation routes partial)
+> **Last Audited:** 2026-03-02
 
 ---
 
@@ -103,7 +104,7 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/calendar`
 Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 
 - [ ] Add `teamId` to calendarEvents (blocker)
-- [ ] Implement actual calendar (currently stub)
+- [ ] Implement actual calendar (currently stub route exists: `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar.tsx`)
 - [ ] Include project-level events
 
 ---
