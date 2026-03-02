@@ -139,3 +139,38 @@ Top targets:
 - Continue Priority `15` with batch C:
   - reduce remaining `useMemo` in board/roadmap/sprint surfaces,
   - begin `useCallback`/`memo` keep-vs-remove classification report.
+
+### 2026-03-02 (Priority 15, batch C)
+
+**Completed**
+- Removed additional safe `useMemo` sites in board/roadmap/editor/sprint/sidebar paths:
+  - `src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx` (URL-filter derivation)
+  - `src/components/Documents/DocumentSidebar.tsx` (headings extraction)
+  - `src/components/Sprints/SprintManager.tsx` (overlap detection derivations)
+  - `src/components/IssueDescriptionEditor.tsx` (initial/parsed value derivations)
+  - `src/components/RoadmapView.tsx` (`issueIndexMap`, dependency-line derivation)
+- Remaining `useMemo` count is now `1`:
+  - `src/hooks/useFuzzySearch.ts` (`Fuse` index instance)
+
+**Validation**
+- `pnpm exec biome check --write src/components/Documents/DocumentSidebar.tsx src/components/Sprints/SprintManager.tsx src/components/IssueDescriptionEditor.tsx src/components/RoadmapView.tsx src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx`
+- `pnpm test src/config/routes.test.ts src/components/Notifications/NotificationCenter.test.tsx` (`54 passed`)
+- `pnpm run typecheck` (pass)
+
+**Decisions**
+- Kept `useMemo` in `useFuzzySearch` as an intentional exception due non-React library integration (`Fuse`) where stable instance/index identity is required to avoid rebuilding the search index on every render.
+
+**Updated counts**
+- Total (`useMemo` + `useCallback` + `memo`) in `src/`: `46`
+- `useMemo`: `1`
+- `useCallback`: `38`
+- `memo`/`React.memo`: `7`
+
+**Blockers**
+- Compiler healthcheck remains network-blocked (`EAI_AGAIN registry.npmjs.org`), limiting confident bulk removal/classification of `useCallback` and `memo`.
+
+**Next step (strict order)**
+- Continue Priority `15` with batch D:
+  - classify remaining `useCallback`/`memo` into `remove` vs `keep-for-correctness`,
+  - remove low-risk callbacks where no identity-sensitive side effect exists,
+  - publish before/after callback/memo delta report.

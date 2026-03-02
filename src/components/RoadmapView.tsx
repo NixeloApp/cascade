@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
@@ -259,17 +259,17 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   }, [selectedIndex]);
 
   // Create issue index map for dependency line rendering
-  const issueIndexMap = useMemo(() => {
+  const issueIndexMap = (() => {
     if (!filteredIssues) return new Map<string, number>();
     const map = new Map<string, number>();
     filteredIssues.forEach((issue, index) => {
       map.set(issue._id, index);
     });
     return map;
-  }, [filteredIssues]);
+  })();
 
   // Calculate dependency lines for "blocks" relationships
-  const dependencyLines = useMemo((): DependencyLine[] => {
+  const dependencyLines = ((): DependencyLine[] => {
     if (!showDependencies || !issueLinks?.links || !filteredIssues) return [];
 
     const rowHeight = 56;
@@ -326,7 +326,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         })
         .filter((line): line is DependencyLine => line !== null)
     );
-  }, [showDependencies, issueLinks, filteredIssues, issueIndexMap, totalDays, startOfMonth]);
+  })();
 
   // Row renderer for virtualization
   type RowData = {

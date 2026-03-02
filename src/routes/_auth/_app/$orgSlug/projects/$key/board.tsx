@@ -10,7 +10,6 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { useMemo } from "react";
 import { ExportButton } from "@/components/ExportButton";
 import { type BoardFilters, FilterBar } from "@/components/FilterBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
@@ -53,29 +52,16 @@ function BoardPage() {
 
   // Derive filters from URL (URL is source of truth)
   // Use individual params as dependencies for stable memoization
-  const filters = useMemo(
-    () =>
-      searchParamsToFilters({
-        query: searchParams.query,
-        type: searchParams.type,
-        priority: searchParams.priority,
-        assigneeId: searchParams.assigneeId,
-        labels: searchParams.labels,
-        dueDate: searchParams.dueDate,
-        startDate: searchParams.startDate,
-        createdAt: searchParams.createdAt,
-      }),
-    [
-      searchParams.query,
-      searchParams.type,
-      searchParams.priority,
-      searchParams.assigneeId,
-      searchParams.labels,
-      searchParams.dueDate,
-      searchParams.startDate,
-      searchParams.createdAt,
-    ],
-  );
+  const filters = searchParamsToFilters({
+    query: searchParams.query,
+    type: searchParams.type,
+    priority: searchParams.priority,
+    assigneeId: searchParams.assigneeId,
+    labels: searchParams.labels,
+    dueDate: searchParams.dueDate,
+    startDate: searchParams.startDate,
+    createdAt: searchParams.createdAt,
+  });
 
   // Update URL when filters change
   const handleFilterChange = (newFilters: BoardFilters) => {

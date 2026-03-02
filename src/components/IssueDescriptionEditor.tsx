@@ -8,7 +8,7 @@
 
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import {
   getInitialValue,
@@ -92,7 +92,7 @@ export function IssueDescriptionEditor({
   testId,
 }: IssueDescriptionEditorProps) {
   // Parse initial value (handles both JSON and plain text)
-  const initialValue = useMemo(() => parseInitialValue(value), [value]);
+  const initialValue = parseInitialValue(value);
 
   // Create editor with lightweight plugins
   const editor = usePlateEditor({
@@ -157,7 +157,7 @@ export function IssueDescriptionReadOnly({
   testId?: string;
 }) {
   // Parse value (handles both JSON and plain text)
-  const parsedValue = useMemo(() => parseInitialValue(value), [value]);
+  const parsedValue = parseInitialValue(value);
 
   // Create read-only editor (must be called unconditionally for React hooks rules)
   const editor = usePlateEditor({

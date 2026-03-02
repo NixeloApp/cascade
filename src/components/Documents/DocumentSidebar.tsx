@@ -11,7 +11,7 @@
 import { ChevronDown, FileText, Hash, Info, List, User } from "lucide-react";
 import type { Value } from "platejs";
 import type { ReactNode } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -224,7 +224,7 @@ export function DocumentSidebar({
   onHeadingClick,
 }: DocumentSidebarProps) {
   // Extract headings from editor value
-  const headings = useMemo(() => extractHeadings(editorValue), [editorValue]);
+  const headings = extractHeadings(editorValue);
 
   // Handle heading click - scroll to element
   const handleHeadingClick = useCallback(

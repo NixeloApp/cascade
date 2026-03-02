@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { SprintBurnChart } from "@/components/Analytics/SprintBurnChart";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
@@ -219,17 +219,17 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
   );
 
   // Check for overlapping sprints when creating with custom dates
-  const createOverlappingSprints = useMemo(() => {
+  const createOverlappingSprints = (() => {
     if (!sprints || selectedPreset !== "custom" || !customStartDate || !customEndDate) {
       return [];
     }
     const startDate = new Date(customStartDate).getTime();
     const endDate = new Date(customEndDate).getTime();
     return findOverlappingSprints(sprints, startDate, endDate);
-  }, [sprints, selectedPreset, customStartDate, customEndDate]);
+  })();
 
   // Check for overlapping sprints when starting a sprint
-  const startOverlappingSprints = useMemo(() => {
+  const startOverlappingSprints = (() => {
     if (!sprints || !startingSprintId) return [];
 
     let startDate: number;
@@ -245,7 +245,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
     }
 
     return findOverlappingSprints(sprints, startDate, endDate, startingSprintId);
-  }, [sprints, startingSprintId, startPreset, startCustomStart, startCustomEnd]);
+  })();
 
   const handleCreateSprint = async (e: React.FormEvent) => {
     e.preventDefault();
