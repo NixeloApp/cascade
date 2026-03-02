@@ -41,6 +41,7 @@
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
     "e2e:debug": "playwright test --debug",
+    "e2e:hard-rules": "node scripts/ci/check-e2e-hard-rules.mjs",
     "e2e:setup-auth": "node node_modules/tsx/dist/cli.mjs e2e/setup-auth.ts",
     "screenshots": "node --env-file=.env.local node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/cli.mjs e2e/screenshot-pages.ts",
     "kill-port": "node scripts/kill-port.cjs 5555",

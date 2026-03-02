@@ -32,6 +32,12 @@ Use this checklist for any PR that modifies `e2e/` specs, fixtures, page objects
 - Selectors prioritize semantic roles and test ids over brittle text/CSS-only locators
 - PR includes exact E2E command(s) run and pass/fail/skip outcomes
 
+Automated guard command (same rule enforced in CI shard jobs):
+
+```bash
+pnpm run e2e:hard-rules
+```
+
 ## Configuration
 
 **File:** `playwright.config.ts`

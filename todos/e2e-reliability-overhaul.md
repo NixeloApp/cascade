@@ -517,11 +517,30 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - automated enforcement remains human-review based; no static CI rule yet for helper-use policy.
 
+### 2026-03-02 - Batch U (completed CI hard-rule guard for timeout anti-pattern)
+
+- Decision: add a lightweight automated CI guard so timeout anti-pattern regressions are blocked before shard execution.
+- Change:
+  - added `scripts/ci/check-e2e-hard-rules.mjs`
+    - scans `e2e/**/*.spec.ts(x)` for banned `waitForTimeout(` usage
+    - fails with file/line details when violations exist
+  - added npm script:
+    - `e2e:hard-rules` in `package.json`
+  - updated CI workflow:
+    - `.github/workflows/ci.yml` now runs `pnpm run e2e:hard-rules` before Playwright shard execution
+  - updated docs:
+    - `docs/testing/e2e.md` includes the automated guard command in checklist section
+- Validation:
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned, `0` violations)
+  - `pnpm run biome:check -- scripts/ci/check-e2e-hard-rules.mjs .github/workflows/ci.yml package.json` passes after formatting (with existing unrelated repo warnings only)
+- Blockers:
+  - guard currently covers hard timeout bans in spec files; helper-contract usage quality remains checklist/review-driven.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
   - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + script execution + summary rendering in `history-derived` mode)
   - if needed after first PR validation, tune `E2E_STREAK_SCAN_LIMIT` from observed branch run density
   - keep CI per-spec heatmap summary as single source of truth for streak/heatmap visibility
-  - evaluate adding a lightweight CI guard for banned E2E patterns (for example direct `waitForTimeout` in specs) to reduce reliance on manual checklist compliance
+  - evaluate whether additional static guards should be added beyond timeout bans (for example selector anti-pattern detection) without introducing noise
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement

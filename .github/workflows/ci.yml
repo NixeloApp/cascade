@@ -306,6 +306,9 @@ jobs:
           npx convex env set MAILTRAP_FROM_EMAIL "${{ secrets.MAILTRAP_FROM_EMAIL }}"
           npx convex env set MAILTRAP_MODE "${{ secrets.MAILTRAP_MODE }}"
 
+      - name: Enforce E2E Hard Rules
+        run: pnpm run e2e:hard-rules
+
       - name: Run E2E tests
         # Use 2 workers per shard on standard GitHub runners to avoid choking
         run: pnpm exec playwright test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --workers=2

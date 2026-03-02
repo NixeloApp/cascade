@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI streak/heatmap summary is in place and PR-level E2E reliability checklist enforcement surfaces are now added (template + docs) |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI now enforces a hard timeout-ban guard (`pnpm run e2e:hard-rules`) before shard execution, plus summary/streak reporting remains active |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): E2E review-checklist enforcement is now codified in `.github/PULL_REQUEST_TEMPLATE.md` and `docs/testing/e2e.md`, requiring helper-contract usage and anti-timeout reliability rules in PR reviews. CI summary/streak logic remains active via `scripts/ci/e2e-summary.mjs`; remaining blocker is real PR CI validation of `history-derived` checkpoint mode.
+- Priority `01` update (2026-03-02): automated hard-rule enforcement was added via `scripts/ci/check-e2e-hard-rules.mjs` + `pnpm run e2e:hard-rules`, and wired into CI before Playwright shard execution to block `waitForTimeout` regressions in spec files. CI heatmap/streak summary via `scripts/ci/e2e-summary.mjs` remains active; remaining blocker is real PR CI validation of `history-derived` checkpoint mode.
