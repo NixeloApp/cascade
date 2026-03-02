@@ -214,6 +214,18 @@ async function runLeadingZeroScanLimitFallbackCase() {
   assert.match(output, /Streak Scan Window: `3\/100` completed CI runs/);
 }
 
+async function runExcessiveSafeScanLimitCapCase() {
+  const lines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "5000",
+    }),
+  );
+  const output = lines.join("\n");
+  assert.match(output, /Streak Scan Window: `3\/1000` completed CI runs/);
+}
+
 async function runMissingMockHistoryFileCase() {
   await assert.rejects(
     () =>
@@ -356,6 +368,7 @@ await runMixedTokenScanLimitFallbackCase();
 await runTrimmedValidScanLimitCase();
 await runOversizedScanLimitFallbackCase();
 await runLeadingZeroScanLimitFallbackCase();
+await runExcessiveSafeScanLimitCapCase();
 await runMissingMockHistoryFileCase();
 await runInvalidMockHistoryFileCase();
 await runUnreadableMockHistoryFileCase();

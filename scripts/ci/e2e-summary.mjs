@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 
 const TREND_TARGET = 5;
 const DEFAULT_RUN_SCAN_LIMIT = 100;
+const MAX_RUN_SCAN_LIMIT = 1000;
 const RUNS_PAGE_SIZE = 50;
 
 function usage() {
@@ -56,7 +57,11 @@ export function parseScanLimit(env = process.env) {
   }
 
   const parsed = Number(rawValue);
-  return Number.isSafeInteger(parsed) ? parsed : DEFAULT_RUN_SCAN_LIMIT;
+  if (!Number.isSafeInteger(parsed)) {
+    return DEFAULT_RUN_SCAN_LIMIT;
+  }
+
+  return Math.min(parsed, MAX_RUN_SCAN_LIMIT);
 }
 
 export function accumulateBySpec(report) {
