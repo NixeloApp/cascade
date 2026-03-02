@@ -88,6 +88,7 @@ import type * as lib_dns from "../lib/dns.js";
 import type * as lib_e2eCrypto from "../lib/e2eCrypto.js";
 import type * as lib_encryption from "../lib/encryption.js";
 import type * as lib_env from "../lib/env.js";
+import type * as lib_envDetection from "../lib/envDetection.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_fetchWithTimeout from "../lib/fetchWithTimeout.js";
 import type * as lib_fileValidators from "../lib/fileValidators.js";
@@ -255,6 +256,7 @@ declare const fullApi: ApiFromModules<{
   "lib/e2eCrypto": typeof lib_e2eCrypto;
   "lib/encryption": typeof lib_encryption;
   "lib/env": typeof lib_env;
+  "lib/envDetection": typeof lib_envDetection;
   "lib/errors": typeof lib_errors;
   "lib/fetchWithTimeout": typeof lib_fetchWithTimeout;
   "lib/fileValidators": typeof lib_fileValidators;
