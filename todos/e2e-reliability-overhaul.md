@@ -644,6 +644,34 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BB (completed board drag-drop selector/wait hardening)
+
+- Decision: remove XPath dependencies and document-load waits from board drag-drop E2E flow in favor of test-id/role locators and deterministic post-drag state checks.
+- Change:
+  - updated `e2e/board-drag-drop.spec.ts`:
+    - replaced `xpath=..` parent lookup with `TEST_IDS.ISSUE.CARD` container filter
+    - replaced ancestor XPath source-column lookup with column locator `filter({ has: issueCard })`
+    - removed `waitForLoadState("domcontentloaded")` after drag
+    - switched drag execution to locator-level `dragTo(...)` with retried post-drag assertions:
+      - card remains rendered in board state after gesture
+      - if move lands in target column, source column is asserted empty
+- Validation:
+  - `pnpm exec biome check e2e/board-drag-drop.spec.ts` => pass
+  - `pnpm exec playwright test e2e/board-drag-drop.spec.ts --reporter=line` => pass (`5 passed`)
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force violations: `0`; selector baseline remains `0`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BA (completed force:true action override hard-rule enforcement)
 
 - Decision: ban `force: true` action overrides in E2E spec interactions to prevent masking actionability/state readiness regressions.
