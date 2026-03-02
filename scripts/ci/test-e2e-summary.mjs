@@ -16,6 +16,11 @@ const failingFirstHistoryFixturePath = path.join(
   "fixtures",
   "e2e-summary-history-failing-first.json",
 );
+const noE2EJobsHistoryFixturePath = path.join(
+  __dirname,
+  "fixtures",
+  "e2e-summary-history-no-e2e-jobs.json",
+);
 const reportFixture = JSON.parse(fs.readFileSync(reportFixturePath, "utf8"));
 
 function makeEnv(overrides = {}) {
@@ -226,6 +231,20 @@ async function runExcessiveSafeScanLimitCapCase() {
   assert.match(output, /Streak Scan Window: `3\/1000` completed CI runs/);
 }
 
+async function runHistoryDerivedNoE2EJobsCase() {
+  const lines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: noE2EJobsHistoryFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "250",
+    }),
+  );
+  const output = lines.join("\n");
+  assert.match(output, /Clean-Run Checkpoint: `0\/5` \(history-derived\)/);
+  assert.match(output, /Streak Scan Window: `2\/250` completed CI runs/);
+  assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
+}
+
 async function runMissingMockHistoryFileCase() {
   await assert.rejects(
     () =>
@@ -369,6 +388,7 @@ await runTrimmedValidScanLimitCase();
 await runOversizedScanLimitFallbackCase();
 await runLeadingZeroScanLimitFallbackCase();
 await runExcessiveSafeScanLimitCapCase();
+await runHistoryDerivedNoE2EJobsCase();
 await runMissingMockHistoryFileCase();
 await runInvalidMockHistoryFileCase();
 await runUnreadableMockHistoryFileCase();
