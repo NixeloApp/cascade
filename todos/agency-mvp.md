@@ -271,3 +271,10 @@ clientPortalTokens: defineTable({
 - **Validation:** `pnpm test convex/clients.test.ts convex/invoices.test.ts` (pass, `9` tests).
 - **Blockers:** None for MVP scope.
 - **Next Step:** Continue strict-priority execution at Priority `12` (`rich-text-description-followup.md`).
+
+### 2026-03-02 (Priority 11, batch I)
+
+- **Decision:** Keep Priority `11` closed; no additional implementation work required.
+- **Validation:** `pnpm test convex/clients.test.ts convex/invoices.test.ts` (pass, `9` tests).
+- **Blockers:** None for MVP scope.
+- **Next Step:** Continue strict-priority execution at Priority `12` (`rich-text-description-followup.md`).
