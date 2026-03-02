@@ -120,6 +120,18 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.myIssues.path).toBe("/$orgSlug/my-issues");
       expect(ROUTES.myIssues.build("acme")).toBe("/acme/my-issues");
     });
+
+    it("should have correct invoice list/detail routes", () => {
+      expect(ROUTES.invoices.list.path).toBe("/$orgSlug/invoices");
+      expect(ROUTES.invoices.list.build("acme")).toBe("/acme/invoices");
+      expect(ROUTES.invoices.detail.path).toBe("/$orgSlug/invoices/$invoiceId");
+      expect(ROUTES.invoices.detail.build("acme", "inv123")).toBe("/acme/invoices/inv123");
+    });
+
+    it("should have correct client list route", () => {
+      expect(ROUTES.clients.list.path).toBe("/$orgSlug/clients");
+      expect(ROUTES.clients.list.build("acme")).toBe("/acme/clients");
+    });
   });
 
   describe("workspace routes", () => {

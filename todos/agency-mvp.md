@@ -83,12 +83,12 @@ clients: defineTable({
   - [x] `generatePdf` - Create PDF (use react-pdf or similar)
 
 #### Frontend
-- [ ] Create `src/routes/$orgSlug/invoices/index.tsx` - Invoice list
-- [ ] Create `src/routes/$orgSlug/invoices/$invoiceId.tsx` - Invoice detail/edit
-- [ ] Create `src/routes/$orgSlug/clients/index.tsx` - Client list
-- [ ] Create `src/components/InvoiceEditor.tsx` - Line item editor
-- [ ] Create `src/components/InvoicePdfTemplate.tsx` - PDF template
-- [ ] Add sidebar links for Invoices and Clients
+- [x] Create `src/routes/$orgSlug/invoices/index.tsx` - Invoice list
+- [x] Create `src/routes/$orgSlug/invoices/$invoiceId.tsx` - Invoice detail/edit
+- [x] Create `src/routes/$orgSlug/clients/index.tsx` - Client list
+- [x] Create `src/components/InvoiceEditor.tsx` - Line item editor
+- [x] Create `src/components/InvoicePdfTemplate.tsx` - PDF template
+- [x] Add sidebar links for Invoices and Clients
 
 ---
 
@@ -188,7 +188,7 @@ clientPortalTokens: defineTable({
 
 - [x] `S1` Schema + backend foundation (`clients`, `invoices`, base CRUD)
 - [x] `S2` Invoice generation flow (from time entries + PDF + status lifecycle)
-- [ ] `S3` In-app invoice/client UI (list/detail/editor routes)
+- [x] `S3` In-app invoice/client UI (list/detail/editor routes)
 - [ ] `S4` Client portal token model + read-only portal views + revocation
 
 ### Dependencies
@@ -229,3 +229,11 @@ clientPortalTokens: defineTable({
 - **Decisions:** Implemented deterministic server-side minimal PDF generation (no new dependency install) due current network/codegen instability; retained explicit org-admin authorization for PDF generation and client-email requirement before sending.
 - **Blockers:** PDF output is currently a functional minimal template (summary-focused). Branded layout/theme templating is deferred to UI phase (`S3`) and PDF design pass.
 - **Next Step:** Move to `S3` invoice/client UI routes and editor components while keeping current backend contracts stable.
+
+### 2026-03-02 (Priority 11, batch D)
+
+- **Completed:** Shipped `S3` invoice/client UI foundation. Added new routes `src/routes/_auth/_app/$orgSlug/invoices/index.tsx`, `src/routes/_auth/_app/$orgSlug/invoices/$invoiceId.tsx`, and `src/routes/_auth/_app/$orgSlug/clients/index.tsx`; added reusable UI components `src/components/Invoices/InvoiceEditor.tsx` and `src/components/Invoices/InvoicePdfTemplate.tsx`; added sidebar navigation for Invoices/Clients in `src/components/App/AppSidebar.tsx`; and added route constants in `convex/shared/routes.ts`.
+- **Validation:** `pnpm run generate:routes` (pass), `pnpm run typecheck` (pass), `pnpm test src/config/routes.test.ts src/components/App/AppSidebar.test.ts` (pass, 48 tests).
+- **Decisions:** Kept S3 scope focused on management/list/detail/edit flows with existing backend contracts and minimal UI complexity; no new frontend state-management layer introduced.
+- **Blockers:** S4 client-portal token model and portal routes are still unimplemented; UI polish and branded invoice PDF templates can be iterated after portal baseline.
+- **Next Step:** Start `S4` by adding `clientPortalTokens` schema + `convex/clientPortal.ts` token lifecycle (generate/validate/revoke) with tests.

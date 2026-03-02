@@ -29,6 +29,7 @@ import {
   ChevronRight,
   Clock,
   Copy,
+  CreditCard,
   FileText,
   FolderKanban,
   Home,
@@ -40,6 +41,7 @@ import {
   Server,
   Settings,
   ShieldCheck,
+  Users,
   X,
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -268,6 +270,24 @@ export function AppSidebar() {
                 icon={FolderKanban}
                 label="My Board"
                 isActive={isActive("/my-issues")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.invoices.list.path}
+                params={{ orgSlug }}
+                icon={CreditCard}
+                label="Invoices"
+                isActive={isActive("/invoices")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.clients.list.path}
+                params={{ orgSlug }}
+                icon={Users}
+                label="Clients"
+                isActive={isActive("/clients")}
                 isCollapsed={showCollapsed}
                 onClick={handleNavClick}
               />

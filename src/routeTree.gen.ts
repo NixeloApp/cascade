@@ -35,9 +35,12 @@ import { Route as AuthAppOrgSlugWorkspacesIndexRouteImport } from './routes/_aut
 import { Route as AuthAppOrgSlugSettingsIndexRouteImport } from './routes/_auth/_app/$orgSlug/settings/index'
 import { Route as AuthAppOrgSlugProjectsIndexRouteImport } from './routes/_auth/_app/$orgSlug/projects/index'
 import { Route as AuthAppOrgSlugIssuesIndexRouteImport } from './routes/_auth/_app/$orgSlug/issues/index'
+import { Route as AuthAppOrgSlugInvoicesIndexRouteImport } from './routes/_auth/_app/$orgSlug/invoices/index'
 import { Route as AuthAppOrgSlugDocumentsIndexRouteImport } from './routes/_auth/_app/$orgSlug/documents/index'
+import { Route as AuthAppOrgSlugClientsIndexRouteImport } from './routes/_auth/_app/$orgSlug/clients/index'
 import { Route as AuthAppOrgSlugSettingsProfileRouteImport } from './routes/_auth/_app/$orgSlug/settings/profile'
 import { Route as AuthAppOrgSlugIssuesKeyRouteImport } from './routes/_auth/_app/$orgSlug/issues/$key'
+import { Route as AuthAppOrgSlugInvoicesInvoiceIdRouteImport } from './routes/_auth/_app/$orgSlug/invoices/$invoiceId'
 import { Route as AuthAppOrgSlugDocumentsTemplatesRouteImport } from './routes/_auth/_app/$orgSlug/documents/templates'
 import { Route as AuthAppOrgSlugDocumentsIdRouteImport } from './routes/_auth/_app/$orgSlug/documents/$id'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route'
@@ -204,10 +207,22 @@ const AuthAppOrgSlugIssuesIndexRoute =
     path: '/issues/',
     getParentRoute: () => AuthAppOrgSlugRouteRoute,
   } as any)
+const AuthAppOrgSlugInvoicesIndexRoute =
+  AuthAppOrgSlugInvoicesIndexRouteImport.update({
+    id: '/invoices/',
+    path: '/invoices/',
+    getParentRoute: () => AuthAppOrgSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugDocumentsIndexRoute =
   AuthAppOrgSlugDocumentsIndexRouteImport.update({
     id: '/documents/',
     path: '/documents/',
+    getParentRoute: () => AuthAppOrgSlugRouteRoute,
+  } as any)
+const AuthAppOrgSlugClientsIndexRoute =
+  AuthAppOrgSlugClientsIndexRouteImport.update({
+    id: '/clients/',
+    path: '/clients/',
     getParentRoute: () => AuthAppOrgSlugRouteRoute,
   } as any)
 const AuthAppOrgSlugSettingsProfileRoute =
@@ -221,6 +236,12 @@ const AuthAppOrgSlugIssuesKeyRoute = AuthAppOrgSlugIssuesKeyRouteImport.update({
   path: '/issues/$key',
   getParentRoute: () => AuthAppOrgSlugRouteRoute,
 } as any)
+const AuthAppOrgSlugInvoicesInvoiceIdRoute =
+  AuthAppOrgSlugInvoicesInvoiceIdRouteImport.update({
+    id: '/invoices/$invoiceId',
+    path: '/invoices/$invoiceId',
+    getParentRoute: () => AuthAppOrgSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugDocumentsTemplatesRoute =
   AuthAppOrgSlugDocumentsTemplatesRouteImport.update({
     id: '/documents/templates',
@@ -432,9 +453,12 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren
   '/$orgSlug/documents/$id': typeof AuthAppOrgSlugDocumentsIdRoute
   '/$orgSlug/documents/templates': typeof AuthAppOrgSlugDocumentsTemplatesRoute
+  '/$orgSlug/invoices/$invoiceId': typeof AuthAppOrgSlugInvoicesInvoiceIdRoute
   '/$orgSlug/issues/$key': typeof AuthAppOrgSlugIssuesKeyRoute
   '/$orgSlug/settings/profile': typeof AuthAppOrgSlugSettingsProfileRoute
+  '/$orgSlug/clients/': typeof AuthAppOrgSlugClientsIndexRoute
   '/$orgSlug/documents/': typeof AuthAppOrgSlugDocumentsIndexRoute
+  '/$orgSlug/invoices/': typeof AuthAppOrgSlugInvoicesIndexRoute
   '/$orgSlug/issues/': typeof AuthAppOrgSlugIssuesIndexRoute
   '/$orgSlug/projects/': typeof AuthAppOrgSlugProjectsIndexRoute
   '/$orgSlug/settings/': typeof AuthAppOrgSlugSettingsIndexRoute
@@ -488,9 +512,12 @@ export interface FileRoutesByTo {
   '/$orgSlug': typeof AuthAppOrgSlugIndexRoute
   '/$orgSlug/documents/$id': typeof AuthAppOrgSlugDocumentsIdRoute
   '/$orgSlug/documents/templates': typeof AuthAppOrgSlugDocumentsTemplatesRoute
+  '/$orgSlug/invoices/$invoiceId': typeof AuthAppOrgSlugInvoicesInvoiceIdRoute
   '/$orgSlug/issues/$key': typeof AuthAppOrgSlugIssuesKeyRoute
   '/$orgSlug/settings/profile': typeof AuthAppOrgSlugSettingsProfileRoute
+  '/$orgSlug/clients': typeof AuthAppOrgSlugClientsIndexRoute
   '/$orgSlug/documents': typeof AuthAppOrgSlugDocumentsIndexRoute
+  '/$orgSlug/invoices': typeof AuthAppOrgSlugInvoicesIndexRoute
   '/$orgSlug/issues': typeof AuthAppOrgSlugIssuesIndexRoute
   '/$orgSlug/projects': typeof AuthAppOrgSlugProjectsIndexRoute
   '/$orgSlug/settings': typeof AuthAppOrgSlugSettingsIndexRoute
@@ -549,9 +576,12 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren
   '/_auth/_app/$orgSlug/documents/$id': typeof AuthAppOrgSlugDocumentsIdRoute
   '/_auth/_app/$orgSlug/documents/templates': typeof AuthAppOrgSlugDocumentsTemplatesRoute
+  '/_auth/_app/$orgSlug/invoices/$invoiceId': typeof AuthAppOrgSlugInvoicesInvoiceIdRoute
   '/_auth/_app/$orgSlug/issues/$key': typeof AuthAppOrgSlugIssuesKeyRoute
   '/_auth/_app/$orgSlug/settings/profile': typeof AuthAppOrgSlugSettingsProfileRoute
+  '/_auth/_app/$orgSlug/clients/': typeof AuthAppOrgSlugClientsIndexRoute
   '/_auth/_app/$orgSlug/documents/': typeof AuthAppOrgSlugDocumentsIndexRoute
+  '/_auth/_app/$orgSlug/invoices/': typeof AuthAppOrgSlugInvoicesIndexRoute
   '/_auth/_app/$orgSlug/issues/': typeof AuthAppOrgSlugIssuesIndexRoute
   '/_auth/_app/$orgSlug/projects/': typeof AuthAppOrgSlugProjectsIndexRoute
   '/_auth/_app/$orgSlug/settings/': typeof AuthAppOrgSlugSettingsIndexRoute
@@ -610,9 +640,12 @@ export interface FileRouteTypes {
     | '/$orgSlug/workspaces/$workspaceSlug'
     | '/$orgSlug/documents/$id'
     | '/$orgSlug/documents/templates'
+    | '/$orgSlug/invoices/$invoiceId'
     | '/$orgSlug/issues/$key'
     | '/$orgSlug/settings/profile'
+    | '/$orgSlug/clients/'
     | '/$orgSlug/documents/'
+    | '/$orgSlug/invoices/'
     | '/$orgSlug/issues/'
     | '/$orgSlug/projects/'
     | '/$orgSlug/settings/'
@@ -666,9 +699,12 @@ export interface FileRouteTypes {
     | '/$orgSlug'
     | '/$orgSlug/documents/$id'
     | '/$orgSlug/documents/templates'
+    | '/$orgSlug/invoices/$invoiceId'
     | '/$orgSlug/issues/$key'
     | '/$orgSlug/settings/profile'
+    | '/$orgSlug/clients'
     | '/$orgSlug/documents'
+    | '/$orgSlug/invoices'
     | '/$orgSlug/issues'
     | '/$orgSlug/projects'
     | '/$orgSlug/settings'
@@ -726,9 +762,12 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug'
     | '/_auth/_app/$orgSlug/documents/$id'
     | '/_auth/_app/$orgSlug/documents/templates'
+    | '/_auth/_app/$orgSlug/invoices/$invoiceId'
     | '/_auth/_app/$orgSlug/issues/$key'
     | '/_auth/_app/$orgSlug/settings/profile'
+    | '/_auth/_app/$orgSlug/clients/'
     | '/_auth/_app/$orgSlug/documents/'
+    | '/_auth/_app/$orgSlug/invoices/'
     | '/_auth/_app/$orgSlug/issues/'
     | '/_auth/_app/$orgSlug/projects/'
     | '/_auth/_app/$orgSlug/settings/'
@@ -955,11 +994,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugIssuesIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
+    '/_auth/_app/$orgSlug/invoices/': {
+      id: '/_auth/_app/$orgSlug/invoices/'
+      path: '/invoices'
+      fullPath: '/$orgSlug/invoices/'
+      preLoaderRoute: typeof AuthAppOrgSlugInvoicesIndexRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/documents/': {
       id: '/_auth/_app/$orgSlug/documents/'
       path: '/documents'
       fullPath: '/$orgSlug/documents/'
       preLoaderRoute: typeof AuthAppOrgSlugDocumentsIndexRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/clients/': {
+      id: '/_auth/_app/$orgSlug/clients/'
+      path: '/clients'
+      fullPath: '/$orgSlug/clients/'
+      preLoaderRoute: typeof AuthAppOrgSlugClientsIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/settings/profile': {
@@ -974,6 +1027,13 @@ declare module '@tanstack/react-router' {
       path: '/issues/$key'
       fullPath: '/$orgSlug/issues/$key'
       preLoaderRoute: typeof AuthAppOrgSlugIssuesKeyRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/invoices/$invoiceId': {
+      id: '/_auth/_app/$orgSlug/invoices/$invoiceId'
+      path: '/invoices/$invoiceId'
+      fullPath: '/$orgSlug/invoices/$invoiceId'
+      preLoaderRoute: typeof AuthAppOrgSlugInvoicesInvoiceIdRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/documents/templates': {
@@ -1316,9 +1376,12 @@ interface AuthAppOrgSlugRouteRouteChildren {
   AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren
   AuthAppOrgSlugDocumentsIdRoute: typeof AuthAppOrgSlugDocumentsIdRoute
   AuthAppOrgSlugDocumentsTemplatesRoute: typeof AuthAppOrgSlugDocumentsTemplatesRoute
+  AuthAppOrgSlugInvoicesInvoiceIdRoute: typeof AuthAppOrgSlugInvoicesInvoiceIdRoute
   AuthAppOrgSlugIssuesKeyRoute: typeof AuthAppOrgSlugIssuesKeyRoute
   AuthAppOrgSlugSettingsProfileRoute: typeof AuthAppOrgSlugSettingsProfileRoute
+  AuthAppOrgSlugClientsIndexRoute: typeof AuthAppOrgSlugClientsIndexRoute
   AuthAppOrgSlugDocumentsIndexRoute: typeof AuthAppOrgSlugDocumentsIndexRoute
+  AuthAppOrgSlugInvoicesIndexRoute: typeof AuthAppOrgSlugInvoicesIndexRoute
   AuthAppOrgSlugIssuesIndexRoute: typeof AuthAppOrgSlugIssuesIndexRoute
   AuthAppOrgSlugProjectsIndexRoute: typeof AuthAppOrgSlugProjectsIndexRoute
   AuthAppOrgSlugSettingsIndexRoute: typeof AuthAppOrgSlugSettingsIndexRoute
@@ -1343,9 +1406,12 @@ const AuthAppOrgSlugRouteRouteChildren: AuthAppOrgSlugRouteRouteChildren = {
     AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren,
   AuthAppOrgSlugDocumentsIdRoute: AuthAppOrgSlugDocumentsIdRoute,
   AuthAppOrgSlugDocumentsTemplatesRoute: AuthAppOrgSlugDocumentsTemplatesRoute,
+  AuthAppOrgSlugInvoicesInvoiceIdRoute: AuthAppOrgSlugInvoicesInvoiceIdRoute,
   AuthAppOrgSlugIssuesKeyRoute: AuthAppOrgSlugIssuesKeyRoute,
   AuthAppOrgSlugSettingsProfileRoute: AuthAppOrgSlugSettingsProfileRoute,
+  AuthAppOrgSlugClientsIndexRoute: AuthAppOrgSlugClientsIndexRoute,
   AuthAppOrgSlugDocumentsIndexRoute: AuthAppOrgSlugDocumentsIndexRoute,
+  AuthAppOrgSlugInvoicesIndexRoute: AuthAppOrgSlugInvoicesIndexRoute,
   AuthAppOrgSlugIssuesIndexRoute: AuthAppOrgSlugIssuesIndexRoute,
   AuthAppOrgSlugProjectsIndexRoute: AuthAppOrgSlugProjectsIndexRoute,
   AuthAppOrgSlugSettingsIndexRoute: AuthAppOrgSlugSettingsIndexRoute,

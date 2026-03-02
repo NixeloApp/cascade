@@ -229,6 +229,22 @@ export const ROUTES = {
     path: "/$orgSlug/my-issues" as const,
     build: (orgSlug: string) => `/${orgSlug}/my-issues`,
   },
+  invoices: {
+    list: {
+      path: "/$orgSlug/invoices" as const,
+      build: (orgSlug: string) => `/${orgSlug}/invoices`,
+    },
+    detail: {
+      path: "/$orgSlug/invoices/$invoiceId" as const,
+      build: (orgSlug: string, invoiceId: string) => `/${orgSlug}/invoices/${invoiceId}`,
+    },
+  },
+  clients: {
+    list: {
+      path: "/$orgSlug/clients" as const,
+      build: (orgSlug: string) => `/${orgSlug}/clients`,
+    },
+  },
 
   settings: {
     profile: {
