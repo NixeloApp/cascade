@@ -33,6 +33,16 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Executed tests (`pass + fail`): `139`
 - Current full-suite error rate: `10.79%` (`15/139`)
 
+### Full Baseline Refresh (2026-03-02, latest full suite after tab/auth/search hardening)
+
+- Command: `pnpm exec playwright test --reporter=line`
+- Total tests: `155`
+- Passed: `140`
+- Failed: `11`
+- Skipped: `4`
+- Executed tests (`pass + fail`): `151`
+- Current full-suite error rate: `7.28%` (`11/151`)
+
 ### Focused Validation Snapshot (2026-03-02, targeted suite)
 
 - Command: `pnpm exec playwright test e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/issues.spec.ts e2e/auth.spec.ts --reporter=line`
@@ -234,6 +244,27 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - Latest full suite: `15` failures / `139` executed (`10.79%`)
   - Net: `-8` failures while increasing executed volume.
 
+### 2026-03-02 - Batch G (completed)
+
+- Decision: remove non-OAuth UI readiness races first to isolate remaining failures to one root-cause family.
+- Change: `e2e/pages/auth.page.ts` no longer gates email-form expansion on forgot-password link visibility; waits now target email form controls directly.
+- Change: `e2e/pages/dashboard.page.ts` filter controls now prefer role-`tab` locators (with button fallback), and enforce visible/enabled actionability before clicking.
+- Change: `e2e/search.spec.ts` migrated search tab selectors from role-`button` to role-`tab`.
+- Validation command: `pnpm exec playwright test e2e/auth.spec.ts e2e/dashboard.spec.ts e2e/integration-workflow.spec.ts e2e/search.spec.ts --reporter=line`
+- Validation outcome: `41 passed`, `0 failed`.
+- Full-suite validation command: `pnpm exec playwright test --reporter=line`
+- Full-suite outcome: `140 passed`, `11 failed`, `4 skipped` (`155 total`).
+- Failure heatmap (current):
+  - `e2e/oauth-mocked.spec.ts`: `7` failures
+  - `e2e/oauth-security.spec.ts`: `4` failures
+- Root-cause buckets (current):
+  - `OAuth instrumentation/routing mismatch`: `11/11`
+  - `UI readiness race (dashboard/auth/search tabs)`: `0/11` (resolved)
+- Progress vs original baseline:
+  - Original: `23` failures / `113` executed (`20.35%`)
+  - Current full suite: `11` failures / `151` executed (`7.28%`)
+  - Net: `-12` failures while increasing executed volume.
+
 ### Next Step (strictly next)
 
-- Fix the shared tab-readiness race affecting `auth`, `dashboard`, `integration-workflow`, and `search` (introduce/standardize deterministic tab readiness helper), rerun those four specs, then re-run full suite to cross the Phase 1 `<10%` failure gate.
+- Execute OAuth reliability batch: harden redirect capture/state propagation in `oauth-mocked` and `oauth-security`, rerun those two specs, then rerun full suite.

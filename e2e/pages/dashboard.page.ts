@@ -147,9 +147,13 @@ export class DashboardPage extends BasePage {
     this.workspacesSection = page.getByRole("heading", { name: /workspaces/i });
     this.recentActivitySection = page.getByText(/recent activity/i);
     this.quickStatsSection = page.getByText(/quick stats/i);
-    // Issue filter tabs: "Assigned (0)" and "Created (0)"
-    this.assignedTab = page.getByRole("button", { name: /filter assigned/i });
-    this.createdTab = page.getByRole("button", { name: /filter created/i });
+    // Issue filter tabs: tab role in Radix/Tabs, with button fallback for legacy markup.
+    this.assignedTab = page
+      .getByRole("tab", { name: /^assigned/i })
+      .or(page.getByRole("button", { name: /^assigned/i }));
+    this.createdTab = page
+      .getByRole("tab", { name: /^created/i })
+      .or(page.getByRole("button", { name: /^created/i }));
 
     // Modals - Command Palette (no aria-label, identify by input placeholder)
     this.commandPaletteInput = page.getByPlaceholder(/type a command/i);
@@ -440,6 +444,8 @@ export class DashboardPage extends BasePage {
       assigned: this.assignedTab,
       created: this.createdTab,
     };
+    await expect(tabs[filter]).toBeVisible();
+    await expect(tabs[filter]).toBeEnabled();
     await tabs[filter].click();
   }
 

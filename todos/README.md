@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full baseline refresh now 124 pass / 15 fail (10.79% of executed); failures concentrated in OAuth mocked/security specs plus dashboard/auth/search tab readiness races |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full suite now 140 pass / 11 fail (7.28% of executed); non-OAuth tab readiness cluster resolved, remaining failures isolated to OAuth mocked/security specs |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): full-suite baseline refresh completed (`155 total`: `124 pass`, `15 fail`, `4 skipped`, `12 did not run`). Current blockers are primarily OAuth mocked/security instrumentation (`11` fails) and shared tab readiness races across auth/dashboard/integration/search (`4` fails). Next: fix tab-readiness cluster first, rerun impacted specs, then rerun full suite.
+- Priority `01` update (2026-03-02): full-suite rerun after tab/auth/search hardening is `155 total` with `140 pass`, `11 fail`, `4 skipped` (`151` executed, `7.28%` fail rate). Shared tab readiness races across auth/dashboard/integration/search are resolved (`41/41` targeted rerun). Current blocker set is now only OAuth instrumentation/routing in `e2e/oauth-mocked.spec.ts` (`7` fails) and `e2e/oauth-security.spec.ts` (`4` fails). Next: execute focused OAuth reliability batch, rerun those two specs, then rerun full suite.

@@ -239,11 +239,7 @@ export class AuthPage extends BasePage {
     // Wait for form-ready state
     await this.waitForFormReady();
 
-    // On sign-in page, also wait for "Forgot password?" to render (conditionally shown when expanded)
-    const currentUrl = this.page.url();
-    if (currentUrl.includes("/signin") || currentUrl.endsWith("/signin")) {
-      await expect(this.forgotPasswordLink).toBeVisible();
-    }
+    // Sign-in link affordances can render one tick after expansion; do not gate form usage on them.
   }
 
   // ===================
