@@ -198,7 +198,7 @@ async function takeScreenshot(
 }
 
 async function waitForScreenshotReady(page: Page): Promise<void> {
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(() => document.readyState === "complete");
   await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
 
   // App shell loading indicator may appear during route/query transitions.

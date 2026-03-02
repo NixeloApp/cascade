@@ -152,8 +152,8 @@ export class DocumentsPage extends BasePage {
   }
 
   async expectEditorVisible() {
-    // Wait for React to be ready (avoid dispatcher errors)
-    await this.page.waitForLoadState("domcontentloaded");
+    // Wait for full document readiness before checking editor hydration state.
+    await this.page.waitForFunction(() => document.readyState === "complete");
 
     // Check for React error boundary
     const errorBoundary = this.page.locator("text=/Something went wrong/i");

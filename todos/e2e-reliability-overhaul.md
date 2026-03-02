@@ -644,6 +644,38 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BT (completed domcontentloaded wait removal in remaining E2E helpers)
+
+- Decision: finish eliminating `waitForLoadState("domcontentloaded")` from active E2E helpers/scripts and standardize on explicit page-readiness checks.
+- Change:
+  - updated `e2e/pages/documents.page.ts`:
+    - `expectEditorVisible()` now waits for `document.readyState === "complete"` instead of `domcontentloaded`.
+  - updated `e2e/pages/auth.page.ts`:
+    - `verifyEmail(...)` and `waitForFormReady()` fallback now wait for `document.readyState === "complete"` instead of `domcontentloaded`.
+  - updated `e2e/pages/settings.page.ts`:
+    - `switchToTab(...)` now waits for `document.readyState === "complete"` after URL-tab navigation.
+  - updated `e2e/screenshot-pages.ts`:
+    - `waitForScreenshotReady(...)` now waits for `document.readyState === "complete"` instead of `domcontentloaded`.
+  - verified no remaining E2E usage:
+    - `rg -n "waitForLoadState\\(\\s*['\\\"]domcontentloaded['\\\"]\\s*\\)" e2e` => no matches.
+- Validation:
+  - `pnpm exec biome check e2e/pages/documents.page.ts e2e/pages/auth.page.ts e2e/pages/settings.page.ts e2e/screenshot-pages.ts` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; all guarded violations `0`; selector baseline `0`)
+  - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line` => `1 failed`, `3 did not run` (fixture auth instability: `Failed to authenticate as e2e-teamlead-s0-w0@inbox.mailtrap.io`)
+  - `pnpm exec playwright test e2e/auth.spec.ts --reporter=line` => `1 failed`, `17 passed`, `1 did not run` (known unstable integration case `can sign in with existing user and lands on dashboard`)
+  - `pnpm exec playwright test e2e/settings.spec.ts --reporter=line` => command exited `1` (`No tests found`; spec file does not exist)
+- Blockers:
+  - targeted auth/documents validations are currently dominated by known sign-in fixture instability (`InvalidAccountId`/redirect timeout path), not by the wait-refactor itself.
+  - final live `history-derived` CI-summary confirmation still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Stabilize auth fixture/account bootstrap path (`InvalidAccountId` and post-submit redirect timeout branches) so `auth.spec.ts` and `documents.spec.ts` can be re-validated cleanly after this wait-refactor.
+- Re-run:
+  - `pnpm exec playwright test e2e/auth.spec.ts --reporter=line`
+  - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line`
+- Execute one real PR CI run and confirm `e2e-summary` renders in `history-derived` mode with expected checkpoint/heatmap/scan-window behavior.
+
 ### 2026-03-02 - Batch BM (completed dashboard/workspaces page-object wait hardening)
 
 - Decision: replace weak page-object `domcontentloaded` waits with deterministic route/UI-state waits and fix an observed dashboard tab-click detachment flake.

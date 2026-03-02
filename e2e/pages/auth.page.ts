@@ -403,8 +403,8 @@ export class AuthPage extends BasePage {
   async verifyEmail(code: string) {
     await this.verifyCodeInput.fill(code);
     await this.verifyEmailButton.click();
-    // Wait for verification to process - wait for DOM update after API call
-    await this.page.waitForLoadState("domcontentloaded");
+    // Wait for verification to process by requiring full document readiness.
+    await this.page.waitForFunction(() => document.readyState === "complete");
   }
 
   async resendVerificationCode() {
@@ -451,8 +451,8 @@ export class AuthPage extends BasePage {
       });
     } catch {
       // Form might not have data-form-ready attribute (e.g., forgot password page)
-      // Wait for DOM to be ready as fallback
-      await this.page.waitForLoadState("domcontentloaded");
+      // Use full document readiness as a generic fallback signal.
+      await this.page.waitForFunction(() => document.readyState === "complete");
     }
   }
 
