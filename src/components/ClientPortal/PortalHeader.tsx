@@ -5,6 +5,9 @@ interface PortalHeaderProps {
   subtitle?: string;
 }
 
+/**
+ * Renders the shared heading section for client portal pages.
+ */
 export function PortalHeader({ title, subtitle }: PortalHeaderProps) {
   return (
     <header className="mb-6 border-b border-ui-border pb-4">

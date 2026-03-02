@@ -3,6 +3,7 @@
 > **Purpose:** Recursive document for tracking consistency improvements across the codebase.
 > **Last Updated:** 2026-03-02
 > **Owner:** Engineering Team
+> **Status:** In Progress (operational tracking; strict-validator debt remains)
 
 ---
 
@@ -589,3 +590,33 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
   - none for this todo baseline scope.
 - Next Step:
   - continue strict-priority execution at Priority `11` (`agency-mvp.md`).
+
+### 2026-03-02 - Batch B (consistency snapshot refresh + JSDoc drift fix)
+
+- Decision:
+  - use this priority pass to reconcile documented consistency metrics with current validator reality, and immediately fix newly introduced JSDoc drift.
+- Change:
+  - added missing JSDoc on recent exported functions/components in:
+    - `src/lib/sso-discovery.ts`
+    - `src/lib/sso-oidc-presets.ts`
+    - `convex/lib/payloadTelemetry.ts`
+    - `convex/lib/projectIssueStats.ts`
+    - `src/components/Admin/OAuthFeatureFlagSettings.tsx`
+    - `src/components/Admin/OAuthHealthDashboard.tsx`
+    - `src/components/ClientPortal/PortalHeader.tsx`
+    - `src/components/ClientPortal/PortalProjectView.tsx`
+    - `src/components/ClientPortal/PortalTimeline.tsx`
+    - `src/components/Invoices/InvoiceEditor.tsx`
+    - `src/components/Invoices/InvoicePdfTemplate.tsx`
+- Validation:
+  - `node scripts/validate/check-jsdoc.js` => pass (no missing-export output).
+  - `pnpm run typecheck` => pass.
+  - `node scripts/validate.js` => fail (`41` errors) with current strict debt concentrated in:
+    - standards/raw-tailwind violations (`14`) across invoice/client-portal/new-route files,
+    - query-issues high/medium findings (`9`) in client-portal/invoice/slack command paths,
+    - emoji-rule violations (`4`) in mention/icon-picker contexts.
+  - JSDoc warnings reduced from `14` missing exports to `0`.
+- Blockers:
+  - remaining strict-validator failures require cross-feature refactors (layout primitive migration, query bounding, emoji policy alignment) spanning multiple priorities/files.
+- Next Step:
+  - proceed to Priority `11`, and schedule a dedicated strict-validator debt reduction batch after higher-priority feature blockers are cleared.

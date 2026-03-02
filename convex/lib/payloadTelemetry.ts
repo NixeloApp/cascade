@@ -8,6 +8,9 @@ function isEnabled(): boolean {
   return value === "1" || value === "true";
 }
 
+/**
+ * Estimates serialized payload size in bytes for lightweight telemetry reporting.
+ */
 export function estimatePayloadBytes(payload: unknown): number {
   try {
     return new TextEncoder().encode(JSON.stringify(payload)).length;
@@ -16,6 +19,9 @@ export function estimatePayloadBytes(payload: unknown): number {
   }
 }
 
+/**
+ * Emits query payload telemetry when enabled by environment configuration.
+ */
 export function logQueryPayloadTelemetry(
   queryName: string,
   payload: unknown,

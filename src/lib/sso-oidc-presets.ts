@@ -9,6 +9,9 @@ export interface OidcPresetConfig {
   scopes: string[];
 }
 
+/**
+ * Returns default OIDC metadata for a supported provider preset.
+ */
 export function getOidcPresetConfig(preset: OidcProviderPreset): OidcPresetConfig {
   if (preset === "google-workspace") {
     return {

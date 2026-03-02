@@ -20,6 +20,9 @@ async function getProjectIssueStatsDoc(ctx: QueryCtx | MutationCtx, projectId: I
   return docs[0] ?? null;
 }
 
+/**
+ * Recomputes and stores issue-count stats for a single project.
+ */
 export async function syncProjectIssueStats(
   ctx: MutationCtx,
   projectId: Id<"projects">,
@@ -44,6 +47,9 @@ export async function syncProjectIssueStats(
   return totalIssues;
 }
 
+/**
+ * Returns cached project issue counts with bounded fallback computation when cache rows are missing.
+ */
 export async function getProjectIssueCounts(
   ctx: QueryCtx,
   projectIds: Id<"projects">[],

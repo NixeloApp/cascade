@@ -24,6 +24,9 @@ function formatCurrency(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
+/**
+ * Interactive editor for invoice line items and subtotal calculation.
+ */
 export function InvoiceEditor({ initialLineItems, onSave, isSaving = false }: InvoiceEditorProps) {
   const [lineItems, setLineItems] = useState<EditableInvoiceLineItem[]>(
     initialLineItems.map((line, index) => ({

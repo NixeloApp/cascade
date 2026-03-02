@@ -25,6 +25,9 @@ function formatTime(timestamp: number | null) {
   return new Date(timestamp).toLocaleString();
 }
 
+/**
+ * Displays OAuth synthetic-monitoring health stats for organization admins.
+ */
 export function OAuthHealthDashboard() {
   const [days, setDays] = useState<RangeDays>(7);
   const { organizationId } = useOrganization();

@@ -7,6 +7,9 @@ type SsoConnectionSummary =
   | null
   | undefined;
 
+/**
+ * Extracts and normalizes the domain from an email address.
+ */
 export function getEmailDomain(email: string): string | null {
   const trimmed = email.trim().toLowerCase();
   const atIndex = trimmed.lastIndexOf("@");
@@ -22,6 +25,9 @@ export function getEmailDomain(email: string): string | null {
   return domain;
 }
 
+/**
+ * Detects whether an SSO connection should route users through Google Workspace login.
+ */
 export function isGoogleWorkspaceSsoConnection(connection: SsoConnectionSummary): boolean {
   if (!connection || connection.type !== "oidc") {
     return false;

@@ -28,6 +28,9 @@ function formatDate(timestamp: number): string {
   return new Date(timestamp).toISOString().slice(0, 10);
 }
 
+/**
+ * Renders the invoice PDF preview layout from normalized invoice data.
+ */
 export function InvoicePdfTemplate({
   invoiceNumber,
   issueDate,

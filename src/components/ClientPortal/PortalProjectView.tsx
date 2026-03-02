@@ -11,6 +11,9 @@ interface PortalProjectViewProps {
   };
 }
 
+/**
+ * Displays a client-portal project card with navigation into project details.
+ */
 export function PortalProjectView({ token, project }: PortalProjectViewProps) {
   return (
     <Card>

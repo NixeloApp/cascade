@@ -11,6 +11,9 @@ interface PortalTimelineProps {
   items: PortalTimelineItem[];
 }
 
+/**
+ * Renders timeline events for client-portal activity history.
+ */
 export function PortalTimeline({ items }: PortalTimelineProps) {
   return (
     <Card>

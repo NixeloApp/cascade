@@ -11,6 +11,9 @@ import { Input } from "../ui/form/Input";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
+/**
+ * Admin-facing kill switch for enabling or disabling Google OAuth sign-in.
+ */
 export function OAuthFeatureFlagSettings() {
   const { organizationId } = useOrganization();
   const [reason, setReason] = useState("");
