@@ -1,6 +1,6 @@
 # Database Bandwidth Optimization TODOs
 
-**Status**: Critical - Current usage (6.25 GB) exceeds free tier limits (1 GB).
+**Status**: Blocked (external Convex dashboard metrics capture required for final report).
 **Last Audited**: 2026-03-02
 **Note**: Bandwidth numbers are historical baseline values from the original investigation.
 
@@ -204,3 +204,16 @@ The primary bandwidth drains were identified as:
   - no documented Convex CLI command exists here for bandwidth-history extraction.
 - Next Step:
   - operator action required: open Convex dashboard metrics UI, capture before/after bandwidth values for optimized endpoints, then paste values into this todo so final report can be marked complete.
+
+### 2026-03-02 - Batch G (blocked-state reconciliation)
+
+- Decision:
+  - keep Priority `07` blocked until metrics are captured from Convex dashboard UI; all code-side optimization work is complete.
+- Change:
+  - reconciled todo status to explicitly blocked on external dashboard capture dependency.
+- Validation:
+  - no additional code changes required for this reconciliation.
+- Blockers:
+  - dashboard-only bandwidth charts are not exportable via available CLI in this environment.
+- Next Step:
+  - capture before/after endpoint bandwidth values in Convex dashboard and append them here to close `S2` report publication.
