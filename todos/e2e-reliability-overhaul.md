@@ -82,7 +82,7 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 
 ## Hard Rules (New Standard)
 
-- [ ] No fixed sleep waits (`waitForTimeout`) except for explicitly justified polling edge cases.
+- [x] No fixed sleep waits (`waitForTimeout`) except for explicitly justified polling edge cases.
 - [ ] Await specific UI state changes (`toBeVisible`, `toHaveText`, `toHaveURL`, `toHaveCount`) tied to user outcomes.
 - [ ] Prefer semantic/role selectors and stable test ids over brittle CSS/text fallbacks.
 - [ ] Every critical user action must wait for one deterministic completion signal.
@@ -100,7 +100,7 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 
 ### 2) Waiting Strategy Refactor
 
-- [ ] Replace weak waits with state-based helpers:
+- [x] Replace weak waits with state-based helpers:
   - `waitForDashboardReady`
   - `waitForBoardLoaded`
   - `waitForIssueCreateSuccess`
@@ -366,9 +366,43 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - No active blocker in helper slice 2 after fix.
   - Remaining fixed-sleep inventory is still isolated to `e2e/screenshot-pages.ts`.
 
+### 2026-03-02 - Batch M (completed fixed-sleep elimination in screenshot capture utility)
+
+- Decision: remove remaining fixed sleeps from `e2e/screenshot-pages.ts` and replace with deterministic screenshot readiness gating.
+- Change: `e2e/screenshot-pages.ts`
+  - removed all `waitForTimeout(...)` usage in the script
+  - added `waitForScreenshotReady(page)` that waits for:
+    - `domcontentloaded`
+    - best-effort `networkidle`
+    - loading spinner hidden (`aria-label="Loading"` or `[data-loading-spinner]`)
+    - two animation frames for paint/layout settle
+  - replaced modal-close fixed wait with explicit dialog-hidden wait
+- Validation:
+  - sleep inventory check: `rg -n "waitForTimeout\\(" e2e` returns no matches
+  - type safety check: `pnpm run typecheck` passes
+
+### 2026-03-02 - Batch N (completed auth reset stability hardening + full-suite reconfirm)
+
+- Decision: harden password-reset postcondition to avoid immediate-login race and restore full-suite green baseline.
+- Change: `e2e/auth.spec.ts`
+  - password reset integration now uses `expect.poll(...)` for post-reset API login success (`15s` bounded propagation window) instead of single immediate assertion.
+- Validation:
+  - full-suite run before fix: `150 passed`, `1 failed`, `4 skipped` (`155 total`), failing test:
+    - `e2e/auth.spec.ts` integration reset flow (`postResetLogin.success` false)
+  - isolated reproduction before fix:
+    - `pnpm exec playwright test e2e/auth.spec.ts --grep "password reset flow sends code and allows reset" --reporter=line`
+    - outcome: `1 failed`
+  - isolated retest after fix:
+    - same command outcome: `1 passed` (`38.8s`)
+  - final full-suite reconfirmation after fix:
+    - `pnpm exec playwright test --reporter=line`
+    - outcome: `151 passed`, `0 failed`, `4 skipped` (`155 total`, `151 executed`, `0.00%` error rate, `5.8m`)
+- Blockers:
+  - No active failing-spec blocker on current local baseline.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
-  - classify `e2e/screenshot-pages.ts` fixed sleeps as justified capture-settling waits vs refactor candidates, then either document rationale or refactor
-  - rerun one full suite (`pnpm exec playwright test --reporter=line`) to reconfirm global baseline after helper slice 2
-  - update failure heatmap section from latest full-suite artifact even when failures are `0`, so trend tracking remains explicit
+  - create and commit the latest per-spec heatmap snapshot from current full-suite output (explicitly recording `0` failures)
+  - add CI trend checkpointing for consecutive clean runs toward acceptance criteria (`<2%` for 5 consecutive CI runs)
+  - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement

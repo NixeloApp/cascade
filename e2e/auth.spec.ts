@@ -316,8 +316,20 @@ test.describe("Integration", () => {
     console.log("[Test] Password reset completed");
 
     // Verify the new password works via deterministic API login.
-    const postResetLogin = await testUserService.loginTestUser(testEmail, newPassword);
-    expect(postResetLogin.success).toBe(true);
+    // Password reset writes can race with immediate login; poll for propagation.
+    await expect
+      .poll(
+        async () => {
+          const postResetLogin = await testUserService.loginTestUser(testEmail, newPassword);
+          return postResetLogin.success;
+        },
+        {
+          timeout: 15000,
+          intervals: [500, 1000, 2000],
+          message: "Expected new password to become valid after reset",
+        },
+      )
+      .toBe(true);
     console.log("[Test] Successfully validated sign-in with new password");
   });
 });

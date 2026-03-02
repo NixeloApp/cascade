@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full suite stays clean (`151 passed / 0 failed / 4 skipped`, `155 total`); helper slices 1+2 validated (`22 passed / 0 failed`, then `30 passed / 0 failed / 1 skipped`) |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full suite reconfirmed clean (`151 passed / 0 failed / 4 skipped`, `155 total`, `5.8m`); wait-helper hardening + fixed-sleep elimination completed |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): helper slice 2 landed shared `waitForIssueCreateSuccess` and `waitForOAuthRedirectComplete`, with project+OAuth spec migration complete. One strict-locator regression was caught and fixed in the same batch; latest validation (`issues + search + oauth-mocked + oauth-security`) is `30 passed`, `0 failed`, `1 skipped` (`2.2m`). Next is `e2e/screenshot-pages.ts` fixed-sleep classification/refactor and then a fresh full-suite reconfirmation run.
+- Priority `01` update (2026-03-02): fixed-sleep removal is now complete across `e2e/` (including `screenshot-pages.ts`), and auth reset flake was hardened via poll-based post-reset login verification in `e2e/auth.spec.ts`. Full-suite reconfirmation after these changes: `151 passed`, `0 failed`, `4 skipped` (`155 total`, `151 executed`, `0.00%` error rate, `5.8m`). Next is heatmap/trend checkpoint updates for consecutive clean-run tracking.
