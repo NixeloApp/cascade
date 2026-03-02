@@ -58,3 +58,15 @@ High
   - none in code path; follow-up is optional performance tuning if access checks become expensive at higher search limits.
 - Next Step:
   - if desired, optimize access-scoping with a single membership-derived project set to avoid repeated `canAccessProject(...)` checks at larger result windows.
+
+### 2026-03-02 - Batch B (resolution confirmation)
+
+- Decision:
+  - close this issue as resolved; current search paths are access-scoped and regression-covered.
+- Validation:
+  - `pnpm test convex/issues.test.ts` => pass (`28 passed`)
+  - verified `issues.search` path in `convex/issues/queries.ts` keeps per-project access checks (`canAccessProject(...)`) and unauthorized scope early-deny behavior.
+- Blockers:
+  - none.
+- Next Step:
+  - move to Priority `03` (`jules-scribe-2024-05-22-fix-cascade-delete-limit.md`).
