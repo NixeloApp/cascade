@@ -30,7 +30,7 @@
 ### Board Enhancements (P3)
 
 - [ ] **Label descriptions** - Show description on hover
-- [ ] **Query language** - Simple `status:done priority:high` syntax
+- [x] **Query language** - Simple `status:done priority:high` syntax ✅ (`src/lib/board-query-language.ts`, `src/components/KanbanBoard.tsx`, `src/components/FilterBar.tsx`)
 - [x] **Swimlanes** - Group board rows by assignee/epic ✅ (`src/components/Kanban/SwimlanSelector.tsx`, `src/lib/swimlane-utils.ts`)
 - [x] **WIP limits** - Warn when column exceeds limit ✅ (`src/components/Kanban/KanbanColumn.tsx`, `convex/schema.ts`)
 - [ ] **Auto-cycles** - Auto-create next sprint like Linear
@@ -142,3 +142,29 @@
 **Next step**
 
 - Move to the next unfinished growth item by impact: board query language (`status:done priority:high`) with shared parser contracts.
+
+### 2026-03-02 (Batch D)
+
+**Progress**
+
+- Implemented board query-language parser/matcher with tests:
+  - `status:`
+  - `priority:`
+  - `type:`
+  - `label:` / `labels:`
+- Wired board query parser into Kanban filtering pipeline.
+- Updated board search input placeholder to advertise supported query syntax.
+
+**Decisions**
+
+- Implemented parser as a shared utility (`src/lib/board-query-language.ts`) for reuse in future board/list views.
+- Kept existing explicit dropdown filters intact and applied query-language filters as an additive search layer.
+
+**Blockers**
+
+- Outlook integration remains not started.
+- Remaining board/document growth items are still open (`Label descriptions`, `Diff view`, `Auto-cycles`).
+
+**Next step**
+
+- Implement `Label descriptions` hover UX on board cards/chips (next unfinished board enhancement).
