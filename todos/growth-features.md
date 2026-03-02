@@ -25,7 +25,7 @@
 ### Documents
 
 - [x] **Version history** - Track document changes over time ✅ (`convex/documentVersions.ts`, `src/components/VersionHistory.tsx`)
-- [ ] **Diff view** - Compare versions side-by-side
+- [x] **Diff view** - Compare versions side-by-side ✅ (`src/components/VersionHistory.tsx`, `src/components/VersionHistory.test.tsx`)
 
 ### Board Enhancements (P3)
 
@@ -191,3 +191,27 @@
 **Next step**
 
 - Continue with `Documents / Diff view` as the next unfinished growth feature.
+
+### 2026-03-02 (Batch F)
+
+**Progress**
+
+- Implemented side-by-side version comparison in `VersionHistory`:
+  - Select up to two historical versions via `Compare` buttons.
+  - Render `Diff View` panel with older/newer snapshots in parallel.
+  - Added clear-compare control and dialog-close selection reset.
+- Added component test coverage for two-version compare flow and rendered diff panel.
+
+**Decisions**
+
+- Shipped a practical JSON snapshot diff view first (fast to ship, deterministic, no new dependency).
+- Kept restore workflow unchanged and additive to comparison controls.
+
+**Blockers**
+
+- Outlook integration remains not started.
+- `Auto-cycles` remains open in board enhancements.
+
+**Next step**
+
+- Implement `Auto-cycles` (automatic next sprint creation) or classify it with concrete rollout dependencies if blocked.

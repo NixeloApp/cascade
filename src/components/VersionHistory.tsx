@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Clock, RotateCcw } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -41,6 +41,7 @@ function getRelativeTimeString(diffMs: number): string | null {
 
 interface DocumentVersion {
   _id: Id<"documentVersions">;
+  version: number;
   title: string;
   _creationTime: number;
   createdByName: string;
@@ -54,20 +55,38 @@ interface VersionHistoryProps {
   onRestoreVersion?: (snapshot: unknown, version: number, title: string) => void;
 }
 
+function stringifySnapshot(snapshot: unknown): string {
+  try {
+    return JSON.stringify(snapshot, null, 2);
+  } catch {
+    return String(snapshot);
+  }
+}
+
 export function VersionHistory({
   documentId,
   open,
   onOpenChange,
   onRestoreVersion,
 }: VersionHistoryProps) {
-  const [selectedVersionId, _setSelectedVersionId] = useState<Id<"documentVersions"> | null>(null);
+  const [compareVersionIds, setCompareVersionIds] = useState<Id<"documentVersions">[]>([]);
 
   const versions = useQuery(api.documentVersions.listVersions, { documentId });
-  const _selectedVersion = useQuery(
+  const leftVersion = useQuery(
     api.documentVersions.getVersion,
-    selectedVersionId ? { documentId, versionId: selectedVersionId } : "skip",
+    compareVersionIds[0] ? { documentId, versionId: compareVersionIds[0] } : "skip",
+  );
+  const rightVersion = useQuery(
+    api.documentVersions.getVersion,
+    compareVersionIds[1] ? { documentId, versionId: compareVersionIds[1] } : "skip",
   );
   const restoreVersion = useMutation(api.documentVersions.restoreVersion);
+
+  useEffect(() => {
+    if (!open) {
+      setCompareVersionIds([]);
+    }
+  }, [open]);
 
   const handleRestore = async (versionId: Id<"documentVersions">) => {
     try {
@@ -82,6 +101,22 @@ export function VersionHistory({
       showError(error, "Failed to restore version");
     }
   };
+
+  const handleToggleCompare = (versionId: Id<"documentVersions">) => {
+    setCompareVersionIds((prev) => {
+      if (prev.includes(versionId)) {
+        return prev.filter((id) => id !== versionId);
+      }
+      if (prev.length < 2) {
+        return [...prev, versionId];
+      }
+      return [prev[1], versionId];
+    });
+  };
+
+  const isComparing = compareVersionIds.length === 2;
+  const diffLeft = leftVersion?.snapshot ? stringifySnapshot(leftVersion.snapshot) : "";
+  const diffRight = rightVersion?.snapshot ? stringifySnapshot(rightVersion.snapshot) : "";
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -136,9 +171,44 @@ export function VersionHistory({
         ) : (
           <Card padding="xs" variant="ghost" radius="none">
             <Stack gap="sm">
+              {isComparing && (
+                <Card padding="md" className="border border-brand-ring/40 bg-brand-subtle/20">
+                  <Flex align="center" justify="between" className="mb-3">
+                    <Typography variant="label">Diff View</Typography>
+                    <Button variant="ghost" size="sm" onClick={() => setCompareVersionIds([])}>
+                      Clear Compare
+                    </Button>
+                  </Flex>
+                  {leftVersion === undefined || rightVersion === undefined ? (
+                    <Typography variant="small" color="secondary">
+                      Loading versions for comparison...
+                    </Typography>
+                  ) : (
+                    <Flex direction="column" gap="md" className="lg:flex-row">
+                      <FlexItem flex="1">
+                        <Typography variant="caption" className="mb-2 block">
+                          Older: v{leftVersion?.version} {leftVersion?.title}
+                        </Typography>
+                        <pre className="max-h-64 overflow-auto rounded bg-ui-bg p-3 text-xs">
+                          {diffLeft}
+                        </pre>
+                      </FlexItem>
+                      <FlexItem flex="1">
+                        <Typography variant="caption" className="mb-2 block">
+                          Newer: v{rightVersion?.version} {rightVersion?.title}
+                        </Typography>
+                        <pre className="max-h-64 overflow-auto rounded bg-ui-bg p-3 text-xs">
+                          {diffRight}
+                        </pre>
+                      </FlexItem>
+                    </Flex>
+                  )}
+                </Card>
+              )}
+
               {versions.map((version: DocumentVersion, index: number) => {
                 const isLatest = index === 0;
-                const isSelected = selectedVersionId === version._id;
+                const isSelected = compareVersionIds.includes(version._id);
 
                 return (
                   <Card
@@ -171,15 +241,24 @@ export function VersionHistory({
                       </FlexItem>
 
                       {!isLatest && (
-                        <Button
-                          onClick={() => handleRestore(version._id)}
-                          size="sm"
-                          variant="outline"
-                          className="ml-4 border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                          Restore
-                        </Button>
+                        <Flex align="center" gap="sm" className="ml-4">
+                          <Button
+                            onClick={() => handleToggleCompare(version._id)}
+                            size="sm"
+                            variant={isSelected ? "secondary" : "ghost"}
+                          >
+                            {isSelected ? "Compared" : "Compare"}
+                          </Button>
+                          <Button
+                            onClick={() => handleRestore(version._id)}
+                            size="sm"
+                            variant="outline"
+                            className="border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                            Restore
+                          </Button>
+                        </Flex>
                       )}
                     </Flex>
                   </Card>
