@@ -1948,6 +1948,24 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - scan-window accounting and truncation note behavior are correct
   - merged heatmap table renders in step summary from blob artifacts
 
+### 2026-03-02 - Batch BA (strict-order revalidation, no code changes)
+
+- Decision: keep Priority `01` blocked until live PR CI `history-derived` proof is captured.
+- Validation:
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; all hard-rule violations `0`; selector baseline `0`)
+  - `pnpm run e2e:hard-rules:self-test` => pass
+  - `pnpm run e2e:summary:self-test` => pass
+- Blockers:
+  - one live PR CI run with real GitHub Actions history + step-summary output is still required to prove `history-derived` behavior end-to-end.
+
+### Next Step (strictly next)
+
+- Trigger one PR CI run and capture evidence from `E2E Summary` job:
+  - checkpoint line reports `history-derived`
+  - streak/checkpoint value matches expected recent clean-run history
+  - scan-window accounting and truncation note behavior are correct
+  - merged heatmap table renders in step summary from blob artifacts
+
 ### 2026-03-02 - Batch AZ (strict-order revalidation, no code changes)
 
 - Decision: keep Priority `01` blocked until the single external acceptance gap (live PR CI `history-derived` proof) is satisfied.
