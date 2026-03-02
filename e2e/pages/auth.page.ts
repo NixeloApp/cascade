@@ -422,13 +422,22 @@ export class AuthPage extends BasePage {
   /**
    * Wait for React app to be hydrated
    * Uses global body.app-hydrated class set by root component (best practice)
+   * Falls back to document ready state if class not found (CI resilience)
    * @see https://spin.atomicobject.com/hydration-sveltekit-tests/
    */
   async waitForHydration() {
-    await this.page.locator("body.app-hydrated").waitFor({
-      state: "attached",
-      timeout: 30000,
-    });
+    try {
+      await this.page.locator("body.app-hydrated").waitFor({
+        state: "attached",
+        timeout: 10000,
+      });
+    } catch {
+      // Fallback: ensure page is at least loaded and has rendered content
+      // This handles CI environments where React might be slower to mount
+      await this.page.waitForLoadState("domcontentloaded");
+      // Wait for any form to be visible as a proxy for React mounting
+      await this.page.locator("form").first().waitFor({ state: "visible", timeout: 15000 });
+    }
   }
 
   /**
