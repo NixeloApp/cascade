@@ -63,6 +63,7 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
 - [x] Implement OAuth callback handler ✅ 2026-03-02
 - [x] Create `convex/slack.ts` adapting Pumble patterns ✅ 2026-03-02
 - [x] Add Slack workspace connection UI in settings ✅ 2026-03-02
+- [x] Implement Slack outbound event delivery and issue-event triggers ✅ 2026-03-02
 
 ### Phase 2: Slash Commands
 
@@ -181,3 +182,34 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
   - Outbound event delivery to Slack channels is not fully wired yet (connection is now available; delivery path remains pending).
 - Next Step:
   - implement Slack outbound delivery path (`sendMessage`/`sendIssueNotification`) using stored webhook/token and wire issue-event triggers.
+
+### 2026-03-02 - Batch D (Slack outbound delivery + event triggers)
+
+- Decision:
+  - complete the remaining local `S2` work by wiring Slack event delivery end-to-end, but gate scheduler enqueue in issue mutations unless at least one Slack destination exists for the project to avoid unnecessary scheduled jobs.
+- Change:
+  - expanded `convex/slack.ts` with delivery pipeline:
+    - added authenticated `sendMessage` action (owner-only delivery path).
+    - added internal delivery action (`deliverMessageInternal`) for scheduler/internal flows.
+    - added internal `sendIssueNotification` action for event fanout.
+    - added internal queries for issue context and project Slack destinations.
+    - added internal delivery stats mutation.
+    - added Slack webhook URL validation in `connectSlack`.
+  - updated `convex/schema.ts`:
+    - extended `slackConnections` with optional delivery stats (`messagesSent`, `lastMessageAt`, `lastError`).
+  - updated `convex/issues/mutations.ts`:
+    - wired event triggers for `issue.created`, `issue.updated`, `issue.assigned`, and `comment.created`.
+    - added pre-check (`hasSlackDestinationsForProject`) so scheduler jobs are enqueued only when Slack destinations exist.
+  - expanded `convex/slack.test.ts`:
+    - added send-message owner flow coverage.
+    - added internal issue-notification fanout coverage.
+    - added mutation-to-scheduler comment-trigger coverage.
+- Validation:
+  - `pnpm exec biome check --write convex/slack.ts convex/slack.test.ts convex/issues/mutations.ts convex/schema.ts` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/slack.test.ts` => pass (`6 passed`)
+  - `pnpm test convex/issues/mutations.test.ts` => pass (`24 passed`)
+- Blockers:
+  - Slack app provisioning in Slack dashboard remains manual and is still required before real production delivery can be enabled.
+- Next Step:
+  - either (a) complete external Slack app provisioning and env setup to unblock real delivery, or (b) move to `S3` slash command work if provisioning stays blocked.

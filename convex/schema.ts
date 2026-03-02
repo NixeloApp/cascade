@@ -1145,6 +1145,9 @@ const applicationTables = {
     incomingWebhookUrl: v.optional(v.string()),
     incomingWebhookChannel: v.optional(v.string()),
     isActive: v.boolean(),
+    messagesSent: v.optional(v.number()),
+    lastMessageAt: v.optional(v.number()),
+    lastError: v.optional(v.string()),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
