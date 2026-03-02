@@ -181,13 +181,24 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Change: Auth password-reset helpers tightened around deterministic control visibility (`sendResetCode` enabled, reset step signal check).
 - Result: Project/issue/analytics slices are stable in the targeted run; only password-reset transition remains failing.
 
+### 2026-03-02 - Batch D (completed)
+
+- Decision: Treat remaining auth failure as backend/flow-level OTP generation problem, not UI actionability.
+- Change: `e2e/pages/auth.page.ts` forgot-password submission now:
+  - asserts email field value explicitly
+  - submits via `form.requestSubmit()`
+  - waits for deterministic reset-step UI (`Check your email` + code input) without strict-mode `.or(...)` collisions
+- Validation: isolated reset test now consistently reaches `Reset code form appeared` before failing at OTP retrieval.
+- Validation command: `pnpm exec playwright test e2e/auth.spec.ts --grep "password reset flow sends code and allows reset" --reporter=line`
+- Current isolated failure point: timeout while polling reset OTP (`waitForMockOTP(..., { type: "reset" })`).
+
 ### Remaining Blockers (current)
 
-- `e2e/auth.spec.ts` - `Integration › password reset flow sends code and allows reset` still fails because reset-code form transition is not consistently reached after requesting reset, even after clearing cookies + storage and waiting for deterministic reset-step signals.
+- `e2e/auth.spec.ts` - `Integration › password reset flow sends code and allows reset` fails because reset OTP is not available via `/e2e/get-latest-otp` with `type: "reset"` after forgot-password submit, despite reset-step UI rendering correctly.
 
 ### Next Step (strictly next)
 
-- Investigate the forgot-password product flow end-to-end (frontend + backend):
-  - instrument `/forgot-password` request and route transition to `showReset` state.
-  - confirm why reset-step UI (`Check your email` / code input) is intermittently absent after successful submit.
-  - fix app flow (preferred) or explicitly redefine product behavior and update tests to match that contract.
+- Investigate reset OTP generation/storage pipeline end-to-end:
+  - verify `/auth/request-reset` returns success and invokes `otpPasswordReset.sendVerificationRequest`.
+  - verify `internal.e2e.storeTestOtp` writes `type: "reset"` for the test email in this environment.
+  - if provider contract changed, update `waitForMockOTP` type mapping and reset-flow test expectations accordingly.
