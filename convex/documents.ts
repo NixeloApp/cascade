@@ -1509,7 +1509,7 @@ export const archiveDocument = authenticatedMutation({
   args: {
     id: v.id("documents"),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -1530,7 +1530,7 @@ export const archiveDocument = authenticatedMutation({
       archivedBy: ctx.userId,
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
 
@@ -1541,7 +1541,7 @@ export const unarchiveDocument = authenticatedMutation({
   args: {
     id: v.id("documents"),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -1562,7 +1562,7 @@ export const unarchiveDocument = authenticatedMutation({
       archivedBy: undefined,
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
 
@@ -1648,7 +1648,7 @@ export const lockDocument = authenticatedMutation({
   args: {
     id: v.id("documents"),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -1675,7 +1675,7 @@ export const lockDocument = authenticatedMutation({
       lockedAt: Date.now(),
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
 
@@ -1687,7 +1687,7 @@ export const unlockDocument = authenticatedMutation({
   args: {
     id: v.id("documents"),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -1699,7 +1699,7 @@ export const unlockDocument = authenticatedMutation({
 
     // Not locked
     if (!document.isLocked) {
-      return null; // No-op if not locked
+      return { success: true } as const; // No-op if not locked
     }
 
     // Only the user who locked it or org admin can unlock
@@ -1714,7 +1714,7 @@ export const unlockDocument = authenticatedMutation({
       lockedAt: undefined,
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
 
@@ -1774,7 +1774,7 @@ export const moveToProject = authenticatedMutation({
     id: v.id("documents"),
     projectId: v.optional(v.id("projects")),
   },
-  returns: v.null(),
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.id);
     if (!document) {
@@ -1809,6 +1809,6 @@ export const moveToProject = authenticatedMutation({
       updatedAt: Date.now(),
     });
 
-    return null;
+    return { success: true } as const;
   },
 });
