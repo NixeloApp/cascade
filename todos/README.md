@@ -48,6 +48,6 @@ Central index for active roadmap and issue todos.
 
 ## Notes
 
-- `TODO.md` at repo root points to this file.
+- `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
