@@ -287,6 +287,30 @@ export const getWorkspaceStats = workspaceQuery({
 /** @deprecated Use getWorkspaceStats instead */
 export const getStats = getWorkspaceStats;
 
+/**
+ * List backlog issues for a workspace across all projects.
+ * Backlog is defined as non-deleted issues that are not assigned to a sprint and not done.
+ */
+export const getBacklogIssues = workspaceQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const rawLimit = args.limit ?? 200;
+    const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
+
+    const issues = await ctx.db
+      .query("issues")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+      .filter(notDeleted)
+      .take(limit);
+
+    return issues
+      .filter((issue) => issue.sprintId === undefined && issue.status !== "done")
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+  },
+});
+
 // =============================================================================
 // Workspace Members
 // =============================================================================

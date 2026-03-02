@@ -31,9 +31,9 @@ Before implementing calendar views, the schema needs updates:
 
 Route: `/:orgSlug/workspaces/:workspaceSlug/backlog`
 
-- [ ] Create `convex/workspaces.ts` → `getBacklogIssues` query
-- [ ] Create route file `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog.tsx`
-- [ ] Add sidebar link
+- [x] Create `convex/workspaces.ts` → `getBacklogIssues` query
+- [x] Create route file `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog.tsx`
+- [x] Add sidebar link
 
 ### 2. Workspace Sprints
 
@@ -171,3 +171,26 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - no hard blocker for `S2`; one non-blocking lint warning remains (`canAccessDocument` complexity 16 > 15).
 - Next Step:
   - start `S2`: implement workspace backlog route/query (`workspaces.getBacklogIssues`) and wire the workspace navigation entry.
+
+### 2026-03-02 - Batch B (completed workspace backlog slice of S2)
+
+- Decision:
+  - ship the first `S2` deliverable end-to-end (query + route + nav) before workspace sprints/dependencies.
+- Change:
+  - updated `convex/workspaces.ts`:
+    - added `getBacklogIssues` (workspace-scoped query) returning unsprinted, non-deleted, non-`done` issues for the workspace.
+  - updated shared routing:
+    - added `ROUTES.workspaces.backlog` in `convex/shared/routes.ts`.
+  - added route:
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog.tsx`
+    - renders workspace backlog cards with key/title/status/priority and empty-state handling.
+  - updated workspace nav:
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route.tsx` now includes a Backlog tab link.
+- Validation:
+  - `pnpm exec biome check convex/shared/routes.ts convex/workspaces.ts src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog.tsx` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/workspaces.test.ts` => pass (`34 passed`)
+- Blockers:
+  - none for continuing `S2`.
+- Next Step:
+  - implement workspace sprints query/route and then evaluate whether `S2` milestone can be marked complete.
