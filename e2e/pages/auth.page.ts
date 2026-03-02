@@ -420,12 +420,14 @@ export class AuthPage extends BasePage {
   // ===================
 
   /**
-   * Wait for component to be hydrated
-   * Uses Playwright's default timeout (no hardcoded value)
+   * Wait for React app to be hydrated
+   * Uses global body.app-hydrated class set by root component (best practice)
+   * @see https://spin.atomicobject.com/hydration-sveltekit-tests/
    */
   async waitForHydration() {
-    await this.page.locator('form[data-hydrated="true"]').waitFor({
+    await this.page.locator("body.app-hydrated").waitFor({
       state: "attached",
+      timeout: 30000,
     });
   }
 
