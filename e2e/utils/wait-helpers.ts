@@ -39,8 +39,8 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
     });
     return true;
   } catch {
-    // Fallback: wait for DOM to be ready if attribute not found
-    await page.waitForLoadState("domcontentloaded");
+    // Fallback: require full document readiness if form-ready attribute is absent.
+    await page.waitForFunction(() => document.readyState === "complete");
     return false;
   }
 }
@@ -66,8 +66,7 @@ export async function waitForAnimation(page: Page): Promise<void> {
  * Use this on cold starts when elements might not be interactive yet.
  */
 export async function waitForReactHydration(page: Page): Promise<void> {
-  // Wait for DOM to be ready
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(() => document.readyState === "complete");
 }
 
 /**
@@ -131,7 +130,7 @@ export async function waitForNavigation(page: Page, urlPattern?: RegExp): Promis
   if (urlPattern) {
     await page.waitForURL(urlPattern);
   }
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(() => document.readyState === "complete");
 }
 
 /**
@@ -157,7 +156,7 @@ export async function waitForClickable(
  * This is the shared readiness contract for dashboard-adjacent specs.
  */
 export async function waitForDashboardReady(page: Page): Promise<void> {
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(() => document.readyState === "complete");
   await expect(page.getByRole("main").last()).toBeVisible();
   await expect(page.getByRole("button", { name: /open command palette/i })).toBeVisible();
   const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));

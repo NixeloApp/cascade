@@ -774,6 +774,35 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BR (completed wait-helpers domcontentloaded removal)
+
+- Decision: remove remaining `domcontentloaded` waits from shared wait-helper contracts and standardize on document-ready + explicit UI assertions.
+- Change:
+  - updated `e2e/utils/wait-helpers.ts`:
+    - `waitForFormReady(...)` fallback now waits for `document.readyState === "complete"`
+    - `waitForReactHydration(...)` now waits for `document.readyState === "complete"`
+    - `waitForNavigation(...)` now waits for `document.readyState === "complete"` after optional URL match
+    - `waitForDashboardReady(...)` now uses `document.readyState === "complete"` + existing main/app-shell/loading assertions
+- Validation:
+  - `pnpm exec biome check e2e/utils/wait-helpers.ts` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/force/xpath/selector-baseline violations: `0`)
+  - `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line` => pass (`11 passed`)
+  - `pnpm exec playwright test e2e/issues.spec.ts --reporter=line`:
+    - initial run hit transient create-project button timeout (`1 failed`, `2 passed`)
+    - rerun => pass (`3 passed`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BL (completed RBAC role-flow domcontentloaded wait removal)
 
 - Decision: remove remaining `domcontentloaded` document-load waits from RBAC role-flow specs and rely on explicit route/UI outcome assertions.
