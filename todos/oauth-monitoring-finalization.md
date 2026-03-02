@@ -41,7 +41,7 @@ OAuth synthetic monitoring is implemented. This task covers finalizing the remai
 
 ### Phase 5: Fallback UI
 
-- [ ] Add feature flag in Convex
+- [x] Add feature flag in Convex
   ```typescript
   // convex/featureFlags.ts
   export const isGoogleAuthEnabled = query({
@@ -53,8 +53,8 @@ OAuth synthetic monitoring is implemented. This task covers finalizing the remai
     }
   });
   ```
-- [ ] Update `GoogleAuthButton.tsx` to check flag
-- [ ] Create admin UI to toggle flag in emergencies
+- [x] Update `GoogleAuthButton.tsx` to check flag
+- [x] Create admin UI to toggle flag in emergencies
 - [ ] Document runbook for disabling Google auth
 
 ## Environment Variables Required
@@ -91,7 +91,7 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
 - [ ] `S1` Admin health query + dashboard view (7d/30d success rate, p95 latency, recent failures)
 - [x] `S1` Admin health query + dashboard view (7d/30d success rate, p95 latency, recent failures)
 - [x] `S1` Incident-oriented health summary fields (`firstFailAt`, `lastFailAt`, `recoveredAt`)
-- [ ] `S2` Feature flag table + admin toggle + GoogleAuthButton fallback UX
+- [x] `S2` Feature flag table + admin toggle + GoogleAuthButton fallback UX
 - [ ] `S2` Runbook hardening: emergency disable/re-enable checklist + verification steps
 
 ### Alerting Details
@@ -139,3 +139,28 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
   - none for this subtask.
 - Next Step:
   - continue Priority `08` with S2 feature-flag path: add backend feature-flag storage/query + GoogleAuthButton fallback + admin toggle UI.
+
+### 2026-03-02 - Batch B (S2 feature-flag emergency controls)
+
+- Decision:
+  - implement Google-auth kill-switch as a global feature flag with org-admin write access, while keeping public read access for unauthenticated auth pages.
+- Change:
+  - backend:
+    - added `featureFlags` table to `convex/schema.ts` (`name`, `enabled`, `reason`, `updatedAt`, `updatedBy`) + indexes.
+    - added `convex/featureFlags.ts`:
+      - `api.featureFlags.isGoogleAuthEnabled` (public query, defaults to `true` if unset).
+      - `api.featureFlags.setGoogleAuthEnabled` (organization-admin mutation).
+    - added `featureFlags` to purge coverage in `convex/purge.ts`.
+  - frontend:
+    - updated `src/components/Auth/GoogleAuthButton.tsx` to check `api.featureFlags.isGoogleAuthEnabled` and render a disabled fallback state + guidance text when Google auth is off.
+    - added `src/components/Admin/OAuthFeatureFlagSettings.tsx` for admin emergency toggle + reason input.
+    - integrated feature-flag admin card into settings admin tab (`src/components/Settings.tsx`).
+  - tests:
+    - added `convex/featureFlags.test.ts` covering default-on behavior, admin toggle flow, and non-admin rejection.
+- Validation:
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/featureFlags.test.ts convex/oauthHealthCheck.test.ts` => pass (`17 passed`)
+- Blockers:
+  - none for this subtask.
+- Next Step:
+  - complete remaining Priority `08` item: runbook hardening for emergency disable/re-enable checklist + verification steps.

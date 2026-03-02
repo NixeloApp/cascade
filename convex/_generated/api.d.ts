@@ -48,6 +48,7 @@ import type * as email_sendpulse from "../email/sendpulse.js";
 import type * as eventReminders from "../eventReminders.js";
 import type * as examples_rateLimitExample from "../examples/rateLimitExample.js";
 import type * as export_ from "../export.js";
+import type * as featureFlags from "../featureFlags.js";
 import type * as files from "../files.js";
 import type * as github from "../github.js";
 import type * as googleCalendar from "../googleCalendar.js";
@@ -203,6 +204,7 @@ declare const fullApi: ApiFromModules<{
   eventReminders: typeof eventReminders;
   "examples/rateLimitExample": typeof examples_rateLimitExample;
   export: typeof export_;
+  featureFlags: typeof featureFlags;
   files: typeof files;
   github: typeof github;
   googleCalendar: typeof googleCalendar;

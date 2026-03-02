@@ -15,6 +15,11 @@ import { Typography } from "../ui/Typography";
 const ranges = [7, 30] as const;
 type RangeDays = (typeof ranges)[number];
 
+type HealthStats = NonNullable<
+  ReturnType<typeof useQuery<typeof api.oauthHealthCheck.getOAuthHealthStats>>
+>;
+type FailureEntry = HealthStats["recentFailures"][number];
+
 function formatTime(timestamp: number | null) {
   if (!timestamp) return "N/A";
   return new Date(timestamp).toLocaleString();
@@ -34,7 +39,9 @@ export function OAuthHealthDashboard() {
       : "skip",
   );
 
-  if (!organizationId) return null;
+  if (!organizationId) {
+    return null;
+  }
 
   return (
     <Card>
@@ -56,81 +63,112 @@ export function OAuthHealthDashboard() {
           </Flex>
         }
       />
-
       <CardBody>
-        {!stats ? (
-          <Typography variant="small" color="secondary">
-            Loading OAuth health stats...
-          </Typography>
-        ) : stats.totalChecks === 0 ? (
-          <EmptyState
-            icon={Clock}
-            title="No health checks in selected range"
-            description="Synthetic OAuth monitoring has not produced data for this period."
-          />
-        ) : (
-          <Stack gap="lg">
-            <Grid cols={2} colsMd={4} gap="md">
-              <StatCard label="Success Rate" value={`${stats.successRate}%`} />
-              <StatCard label="P95 Latency" value={`${stats.p95LatencyMs ?? 0}ms`} />
-              <StatCard label="Avg Latency" value={`${stats.avgLatencyMs ?? 0}ms`} />
-              <StatCard label="Consecutive Failures" value={String(stats.consecutiveFailures)} />
-            </Grid>
-
-            <Flex gap="sm" align="center" wrap>
-              <Badge variant={stats.consecutiveFailures > 0 ? "error" : "success"}>
-                {stats.consecutiveFailures > 0 ? "Degraded" : "Healthy"}
-              </Badge>
-              <Typography variant="small" color="secondary">
-                Last check: {formatTime(stats.lastCheckAt)}
-              </Typography>
-            </Flex>
-
-            <Grid cols={1} colsMd={3} gap="md">
-              <IncidentField label="First Failure" value={formatTime(stats.firstFailAt)} />
-              <IncidentField label="Last Failure" value={formatTime(stats.lastFailAt)} />
-              <IncidentField label="Recovered At" value={formatTime(stats.recoveredAt)} />
-            </Grid>
-
-            <Stack gap="sm">
-              <Typography variant="label">Recent Failures</Typography>
-              {stats.recentFailures.length === 0 ? (
-                <Typography variant="small" color="secondary">
-                  No failures in this range.
-                </Typography>
-              ) : (
-                <Stack gap="xs">
-                  {stats.recentFailures.map((failure) => (
-                    <Flex
-                      key={`${failure.timestamp}-${failure.error}`}
-                      justify="between"
-                      align="start"
-                      className="rounded-md border border-ui-border-primary p-3"
-                    >
-                      <Stack gap="xs">
-                        <Flex gap="xs" align="center">
-                          <AlertTriangle className="text-status-error size-4" />
-                          <Typography variant="small">{failure.error}</Typography>
-                        </Flex>
-                        <Typography variant="caption" color="secondary">
-                          {formatTime(failure.timestamp)}
-                        </Typography>
-                      </Stack>
-                      <Flex gap="xs" align="center">
-                        <Badge variant="neutral">{failure.latencyMs}ms</Badge>
-                        {failure.errorCode ? (
-                          <Badge variant="warning">{failure.errorCode}</Badge>
-                        ) : null}
-                      </Flex>
-                    </Flex>
-                  ))}
-                </Stack>
-              )}
-            </Stack>
-          </Stack>
-        )}
+        <OAuthHealthContent stats={stats} />
       </CardBody>
     </Card>
+  );
+}
+
+function OAuthHealthContent({ stats }: { stats: HealthStats | undefined }) {
+  if (!stats) {
+    return (
+      <Typography variant="small" color="secondary">
+        Loading OAuth health stats...
+      </Typography>
+    );
+  }
+
+  if (stats.totalChecks === 0) {
+    return (
+      <EmptyState
+        icon={Clock}
+        title="No health checks in selected range"
+        description="Synthetic OAuth monitoring has not produced data for this period."
+      />
+    );
+  }
+
+  return (
+    <Stack gap="lg">
+      <OAuthStatsGrid stats={stats} />
+      <OAuthStatusHeader stats={stats} />
+      <OAuthIncidentSummary stats={stats} />
+      <RecentFailures failures={stats.recentFailures} />
+    </Stack>
+  );
+}
+
+function OAuthStatsGrid({ stats }: { stats: HealthStats }) {
+  return (
+    <Grid cols={2} colsMd={4} gap="md">
+      <StatCard label="Success Rate" value={`${stats.successRate}%`} />
+      <StatCard label="P95 Latency" value={`${stats.p95LatencyMs ?? 0}ms`} />
+      <StatCard label="Avg Latency" value={`${stats.avgLatencyMs ?? 0}ms`} />
+      <StatCard label="Consecutive Failures" value={String(stats.consecutiveFailures)} />
+    </Grid>
+  );
+}
+
+function OAuthStatusHeader({ stats }: { stats: HealthStats }) {
+  const healthVariant = stats.consecutiveFailures > 0 ? "error" : "success";
+  const healthLabel = stats.consecutiveFailures > 0 ? "Degraded" : "Healthy";
+
+  return (
+    <Flex gap="sm" align="center" wrap>
+      <Badge variant={healthVariant}>{healthLabel}</Badge>
+      <Typography variant="small" color="secondary">
+        Last check: {formatTime(stats.lastCheckAt)}
+      </Typography>
+    </Flex>
+  );
+}
+
+function OAuthIncidentSummary({ stats }: { stats: HealthStats }) {
+  return (
+    <Grid cols={1} colsMd={3} gap="md">
+      <IncidentField label="First Failure" value={formatTime(stats.firstFailAt)} />
+      <IncidentField label="Last Failure" value={formatTime(stats.lastFailAt)} />
+      <IncidentField label="Recovered At" value={formatTime(stats.recoveredAt)} />
+    </Grid>
+  );
+}
+
+function RecentFailures({ failures }: { failures: FailureEntry[] }) {
+  return (
+    <Stack gap="sm">
+      <Typography variant="label">Recent Failures</Typography>
+      {failures.length === 0 ? (
+        <Typography variant="small" color="secondary">
+          No failures in this range.
+        </Typography>
+      ) : (
+        <Stack gap="xs">
+          {failures.map((failure) => (
+            <Flex
+              key={`${failure.timestamp}-${failure.error}`}
+              justify="between"
+              align="start"
+              className="rounded-md border border-ui-border-primary p-3"
+            >
+              <Stack gap="xs">
+                <Flex gap="xs" align="center">
+                  <AlertTriangle className="text-status-error size-4" />
+                  <Typography variant="small">{failure.error}</Typography>
+                </Flex>
+                <Typography variant="caption" color="secondary">
+                  {formatTime(failure.timestamp)}
+                </Typography>
+              </Stack>
+              <Flex gap="xs" align="center">
+                <Badge variant="neutral">{failure.latencyMs}ms</Badge>
+                {failure.errorCode ? <Badge variant="warning">{failure.errorCode}</Badge> : null}
+              </Flex>
+            </Flex>
+          ))}
+        </Stack>
+      )}
+    </Stack>
   );
 }
 

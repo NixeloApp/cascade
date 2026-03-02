@@ -155,6 +155,17 @@ const applicationTables = {
     .index("by_connection", ["connectionId"])
     .index("by_organization", ["organizationId"]),
 
+  featureFlags: defineTable({
+    name: v.string(),
+    enabled: v.boolean(),
+    description: v.optional(v.string()),
+    reason: v.optional(v.string()),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  })
+    .index("by_name", ["name"])
+    .index("by_enabled", ["enabled"]),
+
   invites: defineTable({
     email: v.string(),
     role: inviteRoles, // Platform role

@@ -73,6 +73,7 @@ export const TABLES: TableNames[] = [
   "organizationMembers",
   "ssoConnections",
   "ssoDomains",
+  "featureFlags",
   "teams",
   "teamMembers",
   "meetingRecordings",
