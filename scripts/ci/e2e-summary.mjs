@@ -82,8 +82,10 @@ export async function computeConsecutiveCleanRuns(env = process.env) {
     const runs = mock.workflow_runs || [];
     const jobsByRun = mock.jobs_by_run || {};
     let streak = 0;
+    let scannedRuns = 0;
 
     for (const run of runs) {
+      scannedRuns += 1;
       const jobsPayload = jobsByRun[String(run.id)] || { jobs: [] };
       const e2eJobs = (jobsPayload.jobs || []).filter((job) => job.name.startsWith("E2E Tests"));
       if (e2eJobs.length === 0) {
@@ -98,7 +100,7 @@ export async function computeConsecutiveCleanRuns(env = process.env) {
       streak += 1;
     }
 
-    return streak;
+    return { streak, scannedRuns };
   }
 
   const token = env.GITHUB_TOKEN;
@@ -147,8 +149,10 @@ export async function computeConsecutiveCleanRuns(env = process.env) {
   }
 
   let streak = 0;
+  let scannedRuns = 0;
 
   for (const run of runs) {
+    scannedRuns += 1;
     const jobsResponse = await fetch(
       `https://api.github.com/repos/${repo}/actions/runs/${run.id}/jobs?per_page=100`,
       { headers },
@@ -171,7 +175,7 @@ export async function computeConsecutiveCleanRuns(env = process.env) {
     streak += 1;
   }
 
-  return streak;
+  return { streak, scannedRuns };
 }
 
 function appendSummary(lines, env = process.env) {
@@ -195,9 +199,10 @@ export async function buildSummaryLines(report, env = process.env) {
   const errorRate = executed > 0 ? ((failed / executed) * 100).toFixed(2) : "0.00";
 
   const cleanRun = failed === 0 && flaky === 0;
-  const streakFromHistory = await computeConsecutiveCleanRuns(env);
-  const runStreak = streakFromHistory ?? (cleanRun ? 1 : 0);
-  const checkpointMode = streakFromHistory === null ? "fallback-local" : "history-derived";
+  const streakSummary = await computeConsecutiveCleanRuns(env);
+  const runStreak = streakSummary?.streak ?? (cleanRun ? 1 : 0);
+  const checkpointMode = streakSummary === null ? "fallback-local" : "history-derived";
+  const scannedRuns = streakSummary?.scannedRuns ?? 0;
   const scanLimit = parseScanLimit(env);
 
   const lines = [];
@@ -209,7 +214,7 @@ export async function buildSummaryLines(report, env = process.env) {
   lines.push(`- Executed: \`${executed}\` (pass + fail)`);
   lines.push(`- Error Rate: \`${errorRate}%\``);
   lines.push(`- Clean-Run Checkpoint: \`${runStreak}/${TREND_TARGET}\` (${checkpointMode})`);
-  lines.push(`- Streak Scan Window: \`${scanLimit}\` completed CI runs`);
+  lines.push(`- Streak Scan Window: \`${scannedRuns}/${scanLimit}\` completed CI runs`);
   lines.push("");
   lines.push("| Spec | Passed | Failed | Skipped | Flaky | TimedOut |");
   lines.push("|------|--------|--------|---------|-------|----------|");

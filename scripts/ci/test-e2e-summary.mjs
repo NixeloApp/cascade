@@ -30,7 +30,7 @@ async function runFallbackCase() {
   const output = lines.join("\n");
 
   assert.match(output, /Clean-Run Checkpoint: `1\/5` \(fallback-local\)/);
-  assert.match(output, /Streak Scan Window: `100` completed CI runs/);
+  assert.match(output, /Streak Scan Window: `0\/100` completed CI runs/);
   assert.match(output, /\| `e2e\/auth\.spec\.ts` \| 2 \| 0 \| 1 \| 0 \| 0 \|/);
 }
 
@@ -45,7 +45,7 @@ async function runHistoryDerivedCase() {
   const output = lines.join("\n");
 
   assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
-  assert.match(output, /Streak Scan Window: `250` completed CI runs/);
+  assert.match(output, /Streak Scan Window: `3\/250` completed CI runs/);
 }
 
 await runFallbackCase();
