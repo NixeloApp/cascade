@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): `scripts/ci/e2e-summary.mjs` now supports `E2E_SUMMARY_MOCK_HISTORY_FILE` to locally simulate `history-derived` streak logic; fixture validation confirms expected mode/count behavior (`fallback-local: 1/5`, mock `history-derived: 2/5`). Selector baseline debt remains zero. Remaining blocker is live PR CI validation against real Actions API + step summary output.
+- Priority `01` update (2026-03-02): CI summary reliability now includes deterministic self-tests (`pnpm run e2e:summary:self-test`) that validate both checkpoint modes (`fallback-local: 1/5`, mock `history-derived: 2/5`) and scan-window rendering before publishing summary output in CI. Selector baseline debt remains zero. Remaining blocker is one live PR CI validation against real Actions API + step summary output.

@@ -360,6 +360,9 @@ jobs:
       - name: Merge blob reports to JSON
         run: pnpm exec playwright merge-reports --reporter=json blob-reports > e2e-merged.json
 
+      - name: Validate E2E summary script
+        run: pnpm run e2e:summary:self-test
+
       - name: Publish E2E Heatmap And Trend Checkpoint
         env:
           GITHUB_TOKEN: ${{ github.token }}

@@ -61,7 +61,8 @@
     "setup:auth": "node scripts/setup_auth.js",
     "auth:manual": "node scripts/manual_handshake.js",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "e2e:summary:self-test": "node scripts/ci/test-e2e-summary.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",

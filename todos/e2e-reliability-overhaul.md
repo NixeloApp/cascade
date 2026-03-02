@@ -601,11 +601,35 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - final end-to-end confirmation still requires actual PR CI execution context (`GITHUB_TOKEN`, workflow run/job APIs, step summary rendering).
 
+### 2026-03-02 - Batch Y (completed deterministic self-test coverage for CI summary script)
+
+- Decision: harden the remaining unblocked CI-summary path by adding deterministic self-tests for both checkpoint modes on every CI run.
+- Change:
+  - added fixture report:
+    - `scripts/ci/fixtures/e2e-summary-report-mock.json`
+    - provides stable per-spec pass/skip totals for assertion coverage
+  - added test harness:
+    - `scripts/ci/test-e2e-summary.mjs`
+    - validates fallback-local mode (`1/5`) when CI env is absent
+    - validates history-derived mode (`2/5`) using `E2E_SUMMARY_MOCK_HISTORY_FILE`
+    - validates `E2E_STREAK_SCAN_LIMIT` rendering contract in summary output
+  - added npm script:
+    - `e2e:summary:self-test` in `package.json`
+  - updated CI workflow:
+    - `.github/workflows/ci.yml` now runs `pnpm run e2e:summary:self-test` in `e2e-summary` job before publishing summary output
+  - updated docs:
+    - `docs/testing/e2e.md` now includes `e2e:summary:self-test` in automated guard commands
+- Validation:
+  - `pnpm run e2e:summary:self-test` => pass (`fallback-local` + `history-derived` assertions)
+  - `pnpm run biome:check -- scripts/ci/test-e2e-summary.mjs scripts/ci/fixtures/e2e-summary-report-mock.json docs/testing/e2e.md .github/workflows/ci.yml package.json` => pass (with existing unrelated repo warnings only)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
 ### Next Step (strictly next)
 
-- Continue deterministic-wait hardening on currently passing specs:
-  - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + script execution + summary rendering in `history-derived` mode)
-  - if needed after first PR validation, tune `E2E_STREAK_SCAN_LIMIT` from observed branch run density
-  - keep CI per-spec heatmap summary as single source of truth for streak/heatmap visibility
-  - keep selector baseline at `0` by blocking new regressions through `e2e:hard-rules`
-  - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.

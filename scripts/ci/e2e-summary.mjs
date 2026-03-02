@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { pathToFileURL } from "node:url";
 
 const TREND_TARGET = 5;
 const DEFAULT_RUN_SCAN_LIMIT = 100;
@@ -24,7 +25,12 @@ function ensure(byFile, file) {
   return byFile.get(file);
 }
 
-function accumulateBySpec(report) {
+export function parseScanLimit(env = process.env) {
+  const scanLimitRaw = Number.parseInt(env.E2E_STREAK_SCAN_LIMIT || "", 10);
+  return Number.isFinite(scanLimitRaw) && scanLimitRaw > 0 ? scanLimitRaw : DEFAULT_RUN_SCAN_LIMIT;
+}
+
+export function accumulateBySpec(report) {
   const byFile = new Map();
 
   function visitSuite(suite) {
@@ -69,8 +75,8 @@ function accumulateBySpec(report) {
   return rows;
 }
 
-async function computeConsecutiveCleanRuns() {
-  const mockHistoryPath = process.env.E2E_SUMMARY_MOCK_HISTORY_FILE;
+export async function computeConsecutiveCleanRuns(env = process.env) {
+  const mockHistoryPath = env.E2E_SUMMARY_MOCK_HISTORY_FILE;
   if (mockHistoryPath) {
     const mock = JSON.parse(fs.readFileSync(mockHistoryPath, "utf8"));
     const runs = mock.workflow_runs || [];
@@ -95,9 +101,9 @@ async function computeConsecutiveCleanRuns() {
     return streak;
   }
 
-  const token = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_REPOSITORY;
-  const branch = process.env.GITHUB_REF_NAME;
+  const token = env.GITHUB_TOKEN;
+  const repo = env.GITHUB_REPOSITORY;
+  const branch = env.GITHUB_REF_NAME;
   if (!token || !repo || !branch) {
     return null;
   }
@@ -108,9 +114,7 @@ async function computeConsecutiveCleanRuns() {
     "User-Agent": "nixelo-e2e-summary",
   };
 
-  const scanLimitRaw = Number.parseInt(process.env.E2E_STREAK_SCAN_LIMIT || "", 10);
-  const scanLimit =
-    Number.isFinite(scanLimitRaw) && scanLimitRaw > 0 ? scanLimitRaw : DEFAULT_RUN_SCAN_LIMIT;
+  const scanLimit = parseScanLimit(env);
   const runs = [];
   let page = 1;
 
@@ -170,8 +174,8 @@ async function computeConsecutiveCleanRuns() {
   return streak;
 }
 
-function appendSummary(lines) {
-  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+function appendSummary(lines, env = process.env) {
+  const summaryPath = env.GITHUB_STEP_SUMMARY;
   if (summaryPath) {
     fs.appendFileSync(summaryPath, `${lines.join("\n")}\n`);
   } else {
@@ -179,14 +183,7 @@ function appendSummary(lines) {
   }
 }
 
-async function main() {
-  const reportPath = process.argv[2];
-  if (!reportPath) {
-    usage();
-    process.exit(1);
-  }
-
-  const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+export async function buildSummaryLines(report, env = process.env) {
   const rows = accumulateBySpec(report);
 
   const stats = report.stats || {};
@@ -198,12 +195,10 @@ async function main() {
   const errorRate = executed > 0 ? ((failed / executed) * 100).toFixed(2) : "0.00";
 
   const cleanRun = failed === 0 && flaky === 0;
-  const streakFromHistory = await computeConsecutiveCleanRuns();
+  const streakFromHistory = await computeConsecutiveCleanRuns(env);
   const runStreak = streakFromHistory ?? (cleanRun ? 1 : 0);
   const checkpointMode = streakFromHistory === null ? "fallback-local" : "history-derived";
-  const scanLimitRaw = Number.parseInt(process.env.E2E_STREAK_SCAN_LIMIT || "", 10);
-  const scanLimit =
-    Number.isFinite(scanLimitRaw) && scanLimitRaw > 0 ? scanLimitRaw : DEFAULT_RUN_SCAN_LIMIT;
+  const scanLimit = parseScanLimit(env);
 
   const lines = [];
   lines.push("## E2E Heatmap");
@@ -225,10 +220,29 @@ async function main() {
   }
   lines.push("");
 
-  appendSummary(lines);
+  return lines;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+export async function run(reportPath, env = process.env) {
+  const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+  const lines = await buildSummaryLines(report, env);
+  appendSummary(lines, env);
+}
+
+async function main() {
+  const reportPath = process.argv[2];
+  if (!reportPath) {
+    usage();
+    process.exit(1);
+  }
+
+  await run(reportPath);
+}
+
+const invokedPath = process.argv[1] ? pathToFileURL(process.argv[1]).href : "";
+if (import.meta.url === invokedPath) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
