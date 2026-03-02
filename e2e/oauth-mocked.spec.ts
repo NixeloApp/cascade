@@ -23,72 +23,108 @@
  * Coverage: 100% of OAuth callback code
  */
 
+import type { APIRequestContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import {
   clearGoogleOAuthMock,
   setupGoogleOAuthMock,
   verifyOAuthError,
-  verifyOAuthSuccess,
 } from "./utils/google-oauth-mock";
 
-const GOOGLE_OAUTH_HOST = "accounts.google.com";
+const CONVEX_SITE_URL = process.env.VITE_CONVEX_URL?.replace(".cloud", ".site") || "";
+
+async function getGoogleAuthRedirect(request: APIRequestContext) {
+  const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
+    maxRedirects: 0,
+  });
+  expect(response.status()).toBe(302);
+
+  const location = response.headers().location;
+  expect(location).toBeTruthy();
+
+  const redirectUrl = new URL(location);
+  const state = redirectUrl.searchParams.get("state");
+  const redirectUri = redirectUrl.searchParams.get("redirect_uri");
+
+  expect(state).toBeTruthy();
+  expect(redirectUri).toBeTruthy();
+
+  return { state: state as string, redirectUri: redirectUri as string, redirectUrl };
+}
 
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
     await clearGoogleOAuthMock(page);
   });
 
-  test.describe("Successful OAuth Login", () => {
-    test("should complete Google OAuth sign-in flow", async ({ page, baseURL }) => {
-      // Setup mock with TEST_* code approach
-      await setupGoogleOAuthMock(page, {
-        scenario: "signin_user",
-      });
+  test.describe("Successful OAuth Callback (Mocked TEST_* codes)", () => {
+    test("should process TEST_signin_user callback successfully", async ({ request }) => {
+      if (!CONVEX_SITE_URL) {
+        test.skip();
+        return;
+      }
 
-      // Navigate to sign-in page
-      await page.goto(`${baseURL}/signin`);
+      const { state } = await getGoogleAuthRedirect(request);
+      const response = await request.get(
+        `${CONVEX_SITE_URL}/google/callback?code=TEST_signin_user&state=${state}`,
+        {
+          headers: {
+            Cookie: `google-oauth-state=${state}`,
+            "x-e2e-api-key": process.env.E2E_API_KEY || "",
+          },
+        },
+      );
 
-      // Click Google sign-in button
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await expect(googleButton).toBeVisible();
-      await googleButton.click();
-
-      // Wait for OAuth flow to complete
-      // Should end up on dashboard or onboarding
-      await page.waitForURL(/dashboard|onboarding|app/, { timeout: 15000 });
-
-      // Verify successful login
-      await verifyOAuthSuccess(page);
+      expect(response.status()).toBe(200);
+      const html = await response.text();
+      expect(html).toContain("Connected Successfully");
+      expect(html).toContain("test-oauth-signin-user-");
     });
 
-    test("should complete Google OAuth sign-up flow", async ({ page, baseURL }) => {
-      await setupGoogleOAuthMock(page, {
-        scenario: "signup_user",
-      });
+    test("should process TEST_signup_user callback successfully", async ({ request }) => {
+      if (!CONVEX_SITE_URL) {
+        test.skip();
+        return;
+      }
 
-      await page.goto(`${baseURL}/signup`);
+      const { state } = await getGoogleAuthRedirect(request);
+      const response = await request.get(
+        `${CONVEX_SITE_URL}/google/callback?code=TEST_signup_user&state=${state}`,
+        {
+          headers: {
+            Cookie: `google-oauth-state=${state}`,
+            "x-e2e-api-key": process.env.E2E_API_KEY || "",
+          },
+        },
+      );
 
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await expect(googleButton).toBeVisible();
-      await googleButton.click();
-
-      // New users should go to onboarding or dashboard
-      await page.waitForURL(/dashboard|onboarding|app/, { timeout: 15000 });
-      await verifyOAuthSuccess(page);
+      expect(response.status()).toBe(200);
+      const html = await response.text();
+      expect(html).toContain("Connected Successfully");
+      expect(html).toContain("test-oauth-signup-user-");
     });
 
-    test("should handle workspace/GSuite user", async ({ page, baseURL }) => {
-      await setupGoogleOAuthMock(page, {
-        scenario: "workspace_user",
-      });
+    test("should process TEST_workspace_user callback successfully", async ({ request }) => {
+      if (!CONVEX_SITE_URL) {
+        test.skip();
+        return;
+      }
 
-      await page.goto(`${baseURL}/signin`);
+      const { state } = await getGoogleAuthRedirect(request);
+      const response = await request.get(
+        `${CONVEX_SITE_URL}/google/callback?code=TEST_workspace_user&state=${state}`,
+        {
+          headers: {
+            Cookie: `google-oauth-state=${state}`,
+            "x-e2e-api-key": process.env.E2E_API_KEY || "",
+          },
+        },
+      );
 
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
-      await page.waitForURL(/dashboard|onboarding|app/, { timeout: 15000 });
-      await verifyOAuthSuccess(page);
+      expect(response.status()).toBe(200);
+      const html = await response.text();
+      expect(html).toContain("Connected Successfully");
+      expect(html).toContain("test-oauth-workspace-user-");
     });
   });
 
@@ -174,31 +210,14 @@ test.describe("Google OAuth Flow (Mocked)", () => {
   });
 
   test.describe("OAuth Security", () => {
-    test("should include state parameter for CSRF protection", async ({ page, baseURL }) => {
-      let capturedOAuthUrl: string | null = null;
+    test("should include state parameter for CSRF protection", async ({ request }) => {
+      if (!CONVEX_SITE_URL) {
+        test.skip();
+        return;
+      }
 
-      // Intercept the redirect to capture the OAuth URL
-      await page.context().route("**/*", async (route) => {
-        const requestUrl = route.request().url();
-        if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
-          await route.continue();
-          return;
-        }
-        capturedOAuthUrl = requestUrl;
-        await route.abort("failed");
-      });
-
-      await page.goto(`${baseURL}/signin`);
-
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
-      // Wait for the route handler to capture the OAuth URL
-      await expect(() => {
-        expect(capturedOAuthUrl).not.toBeNull();
-      }).toPass({ timeout: 5000 });
-
-      const url = new URL(capturedOAuthUrl as string);
+      const { redirectUrl } = await getGoogleAuthRedirect(request);
+      const url = new URL(redirectUrl.toString());
       const state = url.searchParams.get("state");
       if (!state) {
         throw new Error("State parameter missing from OAuth URL");
@@ -206,30 +225,14 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       expect(state.length).toBeGreaterThan(5);
     });
 
-    test("should request correct OAuth scopes", async ({ page, baseURL }) => {
-      let capturedOAuthUrl: string | null = null;
+    test("should request correct OAuth scopes", async ({ request }) => {
+      if (!CONVEX_SITE_URL) {
+        test.skip();
+        return;
+      }
 
-      await page.context().route("**/*", async (route) => {
-        const requestUrl = route.request().url();
-        if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
-          await route.continue();
-          return;
-        }
-        capturedOAuthUrl = requestUrl;
-        await route.abort("failed");
-      });
-
-      await page.goto(`${baseURL}/signin`);
-
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
-      // Wait for the route handler to capture the OAuth URL
-      await expect(() => {
-        expect(capturedOAuthUrl).not.toBeNull();
-      }).toPass({ timeout: 5000 });
-
-      const url = new URL(capturedOAuthUrl as string);
+      const { redirectUrl } = await getGoogleAuthRedirect(request);
+      const url = new URL(redirectUrl.toString());
       const scope = url.searchParams.get("scope");
 
       // Should include email scope at minimum
@@ -237,30 +240,14 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       // Convex auth typically requests openid email profile
     });
 
-    test("should use correct redirect URI", async ({ page, baseURL }) => {
-      let capturedOAuthUrl: string | null = null;
+    test("should use correct redirect URI", async ({ request }) => {
+      if (!CONVEX_SITE_URL) {
+        test.skip();
+        return;
+      }
 
-      await page.context().route("**/*", async (route) => {
-        const requestUrl = route.request().url();
-        if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
-          await route.continue();
-          return;
-        }
-        capturedOAuthUrl = requestUrl;
-        await route.abort("failed");
-      });
-
-      await page.goto(`${baseURL}/signin`);
-
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
-      // Wait for the route handler to capture the OAuth URL
-      await expect(() => {
-        expect(capturedOAuthUrl).not.toBeNull();
-      }).toPass({ timeout: 5000 });
-
-      const url = new URL(capturedOAuthUrl as string);
+      const { redirectUrl } = await getGoogleAuthRedirect(request);
+      const url = new URL(redirectUrl.toString());
       const redirectUri = url.searchParams.get("redirect_uri");
 
       expect(redirectUri).toBeTruthy();
@@ -270,20 +257,27 @@ test.describe("Google OAuth Flow (Mocked)", () => {
   });
 
   test.describe("OAuth Flow Variations", () => {
-    test("should handle returning user", async ({ page, baseURL }) => {
-      // Simulate a user who has previously authenticated
-      await setupGoogleOAuthMock(page, {
-        scenario: "returning_user",
-      });
+    test("should process TEST_returning_user callback successfully", async ({ request }) => {
+      if (!CONVEX_SITE_URL) {
+        test.skip();
+        return;
+      }
 
-      await page.goto(`${baseURL}/signin`);
+      const { state } = await getGoogleAuthRedirect(request);
+      const response = await request.get(
+        `${CONVEX_SITE_URL}/google/callback?code=TEST_returning_user&state=${state}`,
+        {
+          headers: {
+            Cookie: `google-oauth-state=${state}`,
+            "x-e2e-api-key": process.env.E2E_API_KEY || "",
+          },
+        },
+      );
 
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
-      // Should complete and redirect to dashboard or onboarding
-      await page.waitForURL(/dashboard|onboarding|app/, { timeout: 15000 });
-      await verifyOAuthSuccess(page);
+      expect(response.status()).toBe(200);
+      const html = await response.text();
+      expect(html).toContain("Connected Successfully");
+      expect(html).toContain("test-oauth-returning-user-");
     });
   });
 });

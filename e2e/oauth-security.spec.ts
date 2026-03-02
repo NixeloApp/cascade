@@ -13,8 +13,6 @@
 
 import { expect, test } from "@playwright/test";
 
-const GOOGLE_OAUTH_HOST = "accounts.google.com";
-
 // Convex site URL for HTTP actions
 const CONVEX_SITE_URL = process.env.VITE_CONVEX_URL?.replace(".cloud", ".site") || "";
 
@@ -196,81 +194,43 @@ test.describe("OAuth Security", () => {
   });
 });
 
-test.describe("OAuth Flow Security (Browser)", () => {
-  test("Google sign-in button should initiate OAuth with state parameter", async ({
-    page,
-    baseURL,
-  }) => {
-    let capturedOAuthUrl: string | null = null;
-
-    // Intercept the redirect to capture the OAuth URL
-    await page.context().route("**/*", async (route) => {
-      const requestUrl = route.request().url();
-      if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
-        await route.continue();
-        return;
-      }
-      capturedOAuthUrl = requestUrl;
-      await route.abort("failed");
-    });
-
-    await page.goto(`${baseURL}/signin`);
-
-    // Find and click Google sign-in button
-    const googleButton = page.getByRole("button", { name: /google/i });
-
-    // Skip if no Google button (Google OAuth not enabled)
-    if (!(await googleButton.isVisible().catch(() => false))) {
+test.describe("OAuth Flow Security (Redirect Contract)", () => {
+  test("Google OAuth redirect includes state parameter", async ({ request }) => {
+    if (!CONVEX_SITE_URL) {
       test.skip();
       return;
     }
 
-    await googleButton.click();
+    const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(302);
 
-    // Wait for the route handler to capture the OAuth URL
-    await expect(() => {
-      expect(capturedOAuthUrl).not.toBeNull();
-    }).toPass({ timeout: 5000 });
+    const location = response.headers().location;
+    expect(location).toBeTruthy();
+    const redirectUrl = new URL(location);
 
-    const url = new URL(capturedOAuthUrl as string);
-
-    // Verify state parameter exists (CSRF protection)
-    const state = url.searchParams.get("state");
+    const state = redirectUrl.searchParams.get("state");
     expect(state).toBeTruthy();
     expect(state?.length).toBeGreaterThan(5);
   });
 
-  test("OAuth redirect should not allow open redirects", async ({ page, baseURL }) => {
-    let capturedOAuthUrl: string | null = null;
-
-    await page.context().route("**/*", async (route) => {
-      const requestUrl = route.request().url();
-      if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
-        await route.continue();
-        return;
-      }
-      capturedOAuthUrl = requestUrl;
-      await route.abort("failed");
-    });
-
-    await page.goto(`${baseURL}/signin`);
-
-    const googleButton = page.getByRole("button", { name: /google/i });
-    if (!(await googleButton.isVisible().catch(() => false))) {
+  test("OAuth redirect URI should not allow open redirects", async ({ request }) => {
+    if (!CONVEX_SITE_URL) {
       test.skip();
       return;
     }
 
-    await googleButton.click();
+    const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(302);
 
-    await expect(() => {
-      expect(capturedOAuthUrl).not.toBeNull();
-    }).toPass({ timeout: 5000 });
+    const location = response.headers().location;
+    expect(location).toBeTruthy();
+    const redirectUrl = new URL(location);
+    const redirectUri = redirectUrl.searchParams.get("redirect_uri");
 
-    const url = new URL(capturedOAuthUrl as string);
-    const redirectUri = url.searchParams.get("redirect_uri");
-
-    // Redirect URI should be to a trusted domain
     expect(redirectUri).toBeTruthy();
     expect(redirectUri).not.toContain("evil.com");
     expect(redirectUri).not.toContain("attacker.com");

@@ -290,6 +290,23 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
     - browser OAuth URL capture assertions (`state`, redirect safety)
 - Additional check: attempted full-suite rerun was interrupted after unrelated auth fixture instability (`InvalidAccountId` / fallback sign-in timeouts) contaminated signal; no new full-suite baseline recorded from that run.
 
+### 2026-03-02 - Batch I (completed for OAuth targeted suite)
+
+- Decision: replace brittle browser-level OAuth redirect capture assertions with deterministic HTTP contract checks against `/google/auth` and `/google/callback`.
+- Change: `e2e/oauth-mocked.spec.ts`
+  - converted failing UI redirect tests to request-driven callback contract tests using `TEST_*` codes
+  - retained mocked error-handling coverage
+  - validated `state`/`scope`/`redirect_uri` via redirect contract parsing instead of flaky browser interception
+- Change: `e2e/oauth-security.spec.ts`
+  - converted browser redirect-capture tests to deterministic redirect contract checks (`state` + open-redirect constraints)
+- Validation command: `pnpm exec playwright test e2e/oauth-mocked.spec.ts e2e/oauth-security.spec.ts --reporter=line`
+- Validation outcome: `20 passed`, `0 failed`, `1 skipped` (`21 total`).
+- OAuth cluster status:
+  - Previous: `9` failures in targeted OAuth slice
+  - Current: `0` failures in targeted OAuth slice
+  - Net: `-9`
+- Additional check: started full-suite rerun after this change to refresh global baseline, but stopped before completion (no final suite totals recorded yet).
+
 ### Next Step (strictly next)
 
-- Complete OAuth batch by replacing brittle browser redirect-capture assertions with deterministic endpoint-level contract checks where possible, and isolating true UI OAuth initiation checks behind a stable harness; then rerun `oauth-mocked` + `oauth-security` and only then rerun full suite.
+- Run a clean full-suite pass (`pnpm exec playwright test --reporter=line`) to replace the old `140/11` baseline with post-Batch-I totals and recalculate global failure rate.

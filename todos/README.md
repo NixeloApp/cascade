@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: full suite baseline remains 140 pass / 11 fail (7.28% of executed); OAuth-focused rerun improved from 11 to 9 failures, with redirect-capture/login-flow harness still blocking closure |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: OAuth targeted blockers are cleared (`20 passed / 0 failed / 1 skipped` across oauth-mocked+oauth-security); next required step is a clean full-suite baseline refresh |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): OAuth-focused rerun (`e2e/oauth-mocked.spec.ts` + `e2e/oauth-security.spec.ts`) is now `11 passed`, `9 failed`, `1 skipped` (`21 total`), down from `11` failures previously. Fixed items: callback error assertion drift in `oauth-security`. Remaining blockers: OAuth URL capture and login completion flow in `oauth-mocked` (`7`) plus browser OAuth URL capture assertions in `oauth-security` (`2`). Full-suite baseline remains `155 total` with `140 pass`, `11 fail`, `4 skipped` (`151` executed, `7.28%`) from the last clean run; a subsequent full-suite attempt was interrupted due unrelated auth fixture instability (`InvalidAccountId` fallback/login timeouts), so it was not used as baseline.
+- Priority `01` update (2026-03-02): OAuth targeted rerun (`e2e/oauth-mocked.spec.ts` + `e2e/oauth-security.spec.ts`) is now `20 passed`, `0 failed`, `1 skipped` (`21 total`) after replacing flaky browser redirect interception with deterministic redirect/callback contract checks. Full-suite baseline is still the last clean `155 total` with `140 pass`, `11 fail`, `4 skipped` (`151` executed, `7.28%`); a post-fix full-suite rerun was started but not completed, so updated global totals are still pending.
