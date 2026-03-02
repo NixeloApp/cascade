@@ -644,6 +644,30 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BJ (completed domcontentloaded wait removal in onboarding completion flow)
+
+- Decision: remove dashboard-transition document-load waits from onboarding completion/skip paths and depend on explicit dashboard readiness signals.
+- Change:
+  - updated `e2e/onboarding.spec.ts`:
+    - removed `waitForLoadState("domcontentloaded")` after onboarding-to-dashboard URL transitions (`2` call sites)
+    - retained deterministic readiness assertion via dashboard feed heading test id
+- Validation:
+  - `pnpm exec biome check e2e/onboarding.spec.ts` => pass
+  - `pnpm exec playwright test e2e/onboarding.spec.ts --reporter=line` => pass (`7 passed`)
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force/xpath violations: `0`; selector baseline remains `0`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BI (completed domcontentloaded wait removal in permission-cascade flow)
 
 - Decision: remove remaining document-load waits in permission-cascade checks and rely on deterministic route-content/state assertions.
