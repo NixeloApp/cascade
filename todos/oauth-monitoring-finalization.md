@@ -3,7 +3,7 @@
 **Effort:** Medium
 **Priority:** P2
 **Related:** `/docs/oauth-monitoring-runbook.md`
-**Status:** In Progress
+**Status:** Blocked (awaiting external monitoring destination decision)
 **Last Audited:** 2026-03-02
 
 ## Overview
@@ -75,7 +75,7 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
 - [x] Health check logs persisted to DB
 - [x] Admin can view OAuth health stats
 - [x] Feature flag can disable Google auth gracefully
-- [ ] Alerts fire on failures (already working via Slack)
+- [x] Alerts fire on failures (already working via Slack)
 
 ---
 
@@ -180,3 +180,18 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
   - none for this subtask.
 - Next Step:
   - decide whether to complete the remaining optional integration track (`external monitoring`) or close Priority `08` as done for current Convex+Slack scope.
+
+### 2026-03-02 - Batch D (external monitoring integration status)
+
+- Decision:
+  - treat DataDog/Grafana push integration as blocked optional scope until an external metrics destination and owner are explicitly selected.
+- Change:
+  - kept `Integrate with external monitoring` unchecked.
+  - marked todo status as blocked with clear reason (`external monitoring destination decision` pending).
+  - marked Slack-based alert acceptance criterion as complete (`alerts fire on failures`).
+- Validation:
+  - no code change required for this status alignment.
+- Blockers:
+  - no configured external destination (DataDog/Grafana endpoint/API key/project owner) in current environment.
+- Next Step:
+  - once destination is chosen, implement HTTP push action + delivery validation; until then, proceed to next priority using existing Convex + Slack monitoring path.
