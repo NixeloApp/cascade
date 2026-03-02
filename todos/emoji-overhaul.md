@@ -34,6 +34,7 @@ Users must manually type emoji without visual feedback.
 - [x] Update `DocumentTemplatesManager.tsx` to use IconPicker
 
 - [ ] Schema migration for icon field
+- [x] Schema migration for icon field
   ```typescript
   // Current
   icon: v.string(), // "📄"
@@ -45,7 +46,7 @@ Users must manually type emoji without visual feedback.
   )
   ```
 
-- [ ] Migration script for existing templates
+- [x] Migration script for existing templates
 
 ---
 
@@ -85,7 +86,7 @@ Users must manually type emoji without visual feedback.
 
 - [x] `S2` Build reusable `IconPicker` with keyboard navigation + search
 - [x] `S2` Replace template icon input usage and keep emoji backward compatibility
-- [ ] `S3` Execute schema migration for structured icon type
+- [x] `S3` Execute schema migration for structured icon type
 - [ ] `S3` Complete accessibility audit for icon-only controls
 
 ### Dependencies
@@ -137,3 +138,37 @@ Users must manually type emoji without visual feedback.
 
 **Next step (strict order)**
 - Continue Priority `14` with `S3`: schema migration to structured icon type + migration script + accessibility audit pass.
+
+### 2026-03-02 (Priority 14, batch B)
+
+**Completed**
+- Implemented structured template icon model in backend:
+  - `convex/schema.ts` `documentTemplates.icon` now supports structured icon objects via union:
+    - `{ type: "lucide", name: string }`
+    - `{ type: "emoji", value: string }`
+  - Transitional compatibility retained with legacy string icon values during migration window.
+- Added backend normalization/serialization in `convex/documentTemplates.ts`:
+  - `create`/`update` now accept string or structured icon input and normalize to structured storage.
+  - `get`/`list` serialize icon values for existing frontend compatibility.
+  - Built-in template seeding now normalizes icon values at insert time.
+- Added migration mutation:
+  - `internal.documentTemplates.migrateLegacyIconStrings`
+  - Scans in batches and converts remaining string icons to structured objects.
+- Added migration + structured-storage test coverage in `convex/documentTemplates.test.ts`.
+
+**Validation**
+- `pnpm exec biome check --write convex/documentTemplates.ts convex/documentTemplates.test.ts convex/schema.ts src/components/ui/IconPicker.tsx src/components/Documents/DocumentTemplatesManager.tsx`
+- `pnpm test convex/documentTemplates.test.ts src/components/ui/IconPicker.test.tsx` (`29 passed`)
+- `pnpm run typecheck` (pass)
+
+**Decisions**
+- Kept transitional schema compatibility (`string` + structured union) while migration rolls out to avoid hard failure on pre-existing template rows.
+- Kept API response icon serialization stable for current frontend routes while backend storage migrates.
+
+**Blockers**
+- None for migration rollout.
+
+**Next step (strict order)**
+- Continue Priority `14` with remaining scope:
+  - Phase 3 emoji usage audits (project/team/workspace/custom-fields/user-status).
+  - Phase 4 accessibility audit (icon-only labels, decorative aria-hidden, contrast + screen reader checks).

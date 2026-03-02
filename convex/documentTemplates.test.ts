@@ -56,6 +56,22 @@ describe("Document Templates", () => {
       expect(template?.isPublic).toBe(true);
     });
 
+    it("stores icon values as structured objects", async () => {
+      const t = convexTest(schema, modules);
+      const { asUser } = await createTestContext(t);
+
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
+        name: "Structured Icon Template",
+        category: "shared",
+        icon: "lucide:FileText",
+        content: sampleContent,
+        isPublic: false,
+      });
+
+      const stored = await t.run(async (ctx) => await ctx.db.get(templateId));
+      expect(stored?.icon).toEqual({ type: "lucide", name: "FileText" });
+    });
+
     it("should reject unauthenticated users", async () => {
       const t = convexTest(schema, modules);
 
@@ -480,6 +496,35 @@ describe("Document Templates", () => {
       const result = await t.mutation(internal.documentTemplates.initializeBuiltInTemplates, {});
 
       expect(result.message).toContain("already exist");
+    });
+  });
+
+  describe("migrateLegacyIconStrings", () => {
+    it("converts legacy string icons to structured values", async () => {
+      const t = convexTest(schema, modules);
+      const { asUser } = await createTestContext(t);
+
+      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
+        name: "Legacy Icon Template",
+        category: "migration",
+        icon: "📄",
+        content: sampleContent,
+        isPublic: false,
+      });
+
+      // Simulate legacy row shape to validate migration behavior.
+      await t.run(async (ctx) => {
+        await ctx.db.patch(templateId, { icon: "📄" });
+      });
+
+      const result = await t.mutation(internal.documentTemplates.migrateLegacyIconStrings, {
+        limit: 50,
+      });
+
+      expect(result.migrated).toBeGreaterThanOrEqual(1);
+
+      const stored = await t.run(async (ctx) => await ctx.db.get(templateId));
+      expect(stored?.icon).toEqual({ type: "emoji", value: "📄" });
     });
   });
 });

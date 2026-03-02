@@ -14,10 +14,71 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { forbidden, notFound } from "./lib/errors";
 import { blockNoteContent } from "./validators";
 
+const templateIcon = v.union(
+  v.object({
+    type: v.literal("lucide"),
+    name: v.string(),
+  }),
+  v.object({
+    type: v.literal("emoji"),
+    value: v.string(),
+  }),
+);
+
+const templateIconInput = v.union(v.string(), templateIcon);
+
+type TemplateIcon =
+  | {
+      type: "lucide";
+      name: string;
+    }
+  | {
+      type: "emoji";
+      value: string;
+    };
+
 type TemplateData = Omit<
   Doc<"documentTemplates">,
   "_id" | "_creationTime" | "createdBy" | "projectId"
 >;
+
+type BuiltInTemplateSeed = Omit<TemplateData, "icon"> & {
+  icon: string;
+};
+
+function normalizeTemplateIcon(icon: string | TemplateIcon): TemplateIcon {
+  if (typeof icon !== "string") {
+    return icon;
+  }
+  if (icon.startsWith("lucide:")) {
+    const name = icon.slice("lucide:".length).trim();
+    return {
+      type: "lucide",
+      name: name || "FileText",
+    };
+  }
+  return {
+    type: "emoji",
+    value: icon,
+  };
+}
+
+function serializeTemplateIcon(icon: string | TemplateIcon): string {
+  if (typeof icon === "string") {
+    return icon;
+  }
+  if (icon.type === "lucide") {
+    return `lucide:${icon.name}`;
+  }
+  return icon.value;
+}
+
+function serializeTemplate(template: Doc<"documentTemplates">) {
+  return {
+    ...template,
+    icon: serializeTemplateIcon(template.icon),
+  };
+}
 
 // Create a document template
 export const create = authenticatedMutation({
@@ -25,7 +86,7 @@ export const create = authenticatedMutation({
     name: v.string(),
     description: v.optional(v.string()),
     category: v.string(),
-    icon: v.string(),
+    icon: templateIconInput,
     content: blockNoteContent, // BlockNote content structure
     isPublic: v.boolean(),
     projectId: v.optional(v.id("projects")),
@@ -36,7 +97,7 @@ export const create = authenticatedMutation({
       name: args.name,
       description: args.description,
       category: args.category,
-      icon: args.icon,
+      icon: normalizeTemplateIcon(args.icon),
       content: args.content,
       isBuiltIn: false,
       isPublic: args.isPublic,
@@ -81,7 +142,7 @@ export const list = authenticatedQuery({
       return false;
     });
 
-    return filtered;
+    return filtered.map(serializeTemplate);
   },
 });
 
@@ -101,7 +162,7 @@ export const get = authenticatedQuery({
       throw forbidden();
     }
 
-    return template;
+    return serializeTemplate(template);
   },
 });
 
@@ -112,7 +173,7 @@ export const update = authenticatedMutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     category: v.optional(v.string()),
-    icon: v.optional(v.string()),
+    icon: v.optional(templateIconInput),
     content: v.optional(blockNoteContent),
     isPublic: v.optional(v.boolean()),
   },
@@ -135,7 +196,7 @@ export const update = authenticatedMutation({
     if (args.name !== undefined) updates.name = args.name;
     if (args.description !== undefined) updates.description = args.description;
     if (args.category !== undefined) updates.category = args.category;
-    if (args.icon !== undefined) updates.icon = args.icon;
+    if (args.icon !== undefined) updates.icon = normalizeTemplateIcon(args.icon);
     if (args.content !== undefined) updates.content = args.content;
     if (args.isPublic !== undefined) updates.isPublic = args.isPublic;
 
@@ -228,7 +289,7 @@ export const initializeBuiltInTemplates = internalMutation({
     }
 
     const now = Date.now();
-    const builtInTemplates: TemplateData[] = [
+    const builtInTemplates: BuiltInTemplateSeed[] = [
       {
         name: "Meeting Notes",
         description: "Template for team meeting notes with agenda and action items",
@@ -709,6 +770,7 @@ export const initializeBuiltInTemplates = internalMutation({
       builtInTemplates.map((template) =>
         ctx.db.insert("documentTemplates", {
           ...template,
+          icon: normalizeTemplateIcon(template.icon),
           createdBy: undefined,
           projectId: undefined,
         }),
@@ -716,5 +778,36 @@ export const initializeBuiltInTemplates = internalMutation({
     );
 
     return { message: `Created ${builtInTemplates.length} built-in templates` };
+  },
+});
+
+/**
+ * Migration: convert legacy string icon values to structured icon objects.
+ *
+ * Run repeatedly until `migrated` is `0`.
+ */
+export const migrateLegacyIconStrings = internalMutation({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 200;
+    const templates = await ctx.db.query("documentTemplates").take(limit);
+
+    let migrated = 0;
+    for (const template of templates) {
+      if (typeof template.icon !== "string") {
+        continue;
+      }
+      await ctx.db.patch(template._id, {
+        icon: normalizeTemplateIcon(template.icon),
+      });
+      migrated += 1;
+    }
+
+    return {
+      scanned: templates.length,
+      migrated,
+    };
   },
 });

@@ -20,7 +20,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
-import { IconPicker, TemplateIcon } from "@/components/ui/IconPicker";
+import { IconPicker, TemplateIcon, toTemplateIconString } from "@/components/ui/IconPicker";
 import { Label } from "@/components/ui/Label";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -141,14 +141,23 @@ export function DocumentTemplatesManager({
     name: string;
     description?: string;
     category: string;
-    icon: string;
+    icon:
+      | string
+      | {
+          type: "lucide";
+          name: string;
+        }
+      | {
+          type: "emoji";
+          value: string;
+        };
     isPublic: boolean;
   }) => {
     setEditingId(template._id);
     form.setFieldValue("name", template.name);
     form.setFieldValue("description", template.description || "");
     form.setFieldValue("category", template.category as (typeof categories)[number]);
-    form.setFieldValue("icon", template.icon);
+    form.setFieldValue("icon", toTemplateIconString(template.icon));
     form.setFieldValue("isPublic", template.isPublic);
     setShowModal(true);
   };

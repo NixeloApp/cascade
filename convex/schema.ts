@@ -405,7 +405,17 @@ const applicationTables = {
     name: v.string(),
     description: v.optional(v.string()),
     category: v.string(), // "meeting", "planning", "design", "engineering"
-    icon: v.string(),
+    icon: v.union(
+      v.string(),
+      v.object({
+        type: v.literal("lucide"),
+        name: v.string(),
+      }),
+      v.object({
+        type: v.literal("emoji"),
+        value: v.string(),
+      }),
+    ),
     content: blockNoteContent,
     isBuiltIn: v.boolean(),
     isPublic: v.boolean(),

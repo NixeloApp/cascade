@@ -54,6 +54,17 @@ type IconOption = {
   keywords: string[];
 };
 
+export type TemplateIconValue =
+  | string
+  | {
+      type: "lucide";
+      name: string;
+    }
+  | {
+      type: "emoji";
+      value: string;
+    };
+
 const ICON_OPTIONS: IconOption[] = [
   { name: "FileText", icon: FileText, keywords: ["document", "page", "note"] },
   { name: "BookOpen", icon: BookOpen, keywords: ["docs", "knowledge", "guide"] },
@@ -105,8 +116,8 @@ function formatOptionLabel(option: IconOption): string {
   return option.name.replace(/([a-z])([A-Z])/g, "$1 $2");
 }
 
-function getSelectedOption(value: string): IconOption | undefined {
-  const selectedName = parseLucideName(value);
+function getSelectedOption(value: TemplateIconValue): IconOption | undefined {
+  const selectedName = parseLucideName(toTemplateIconString(value));
   if (!selectedName) {
     return undefined;
   }
@@ -114,18 +125,19 @@ function getSelectedOption(value: string): IconOption | undefined {
 }
 
 interface TemplateIconProps {
-  value: string;
+  value: TemplateIconValue;
   className?: string;
 }
 
 export function TemplateIcon({ value, className }: TemplateIconProps) {
-  const selected = getSelectedOption(value);
+  const stringValue = toTemplateIconString(value);
+  const selected = getSelectedOption(stringValue);
   if (selected) {
     return <Icon icon={selected.icon} className={cn("w-6 h-6", className)} aria-hidden="true" />;
   }
   return (
     <span className={cn("inline-flex items-center justify-center", className)} aria-hidden="true">
-      {value || "📄"}
+      {stringValue || "📄"}
     </span>
   );
 }
@@ -253,6 +265,16 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
       </div>
     </div>
   );
+}
+
+export function toTemplateIconString(value: TemplateIconValue): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (value.type === "lucide") {
+    return `${LUCIDE_ICON_PREFIX}${value.name}`;
+  }
+  return value.value;
 }
 
 function FlexRow({ label, children }: { label: string; children: React.ReactNode }) {
