@@ -6,6 +6,7 @@ import { modules } from "./testSetup.test-helper";
 import {
   addUserToOrganization,
   asAuthenticatedUser,
+  createProjectInOrganization,
   createTestContext,
   createTestUser,
 } from "./testUtils";
@@ -121,5 +122,96 @@ describe("invoices", () => {
         notes: "Should fail",
       }),
     ).rejects.toThrow(/admin/i);
+  });
+
+  it("generates invoices from unbilled time entries and supports send/paid lifecycle", async () => {
+    const t = convexTest(schema, modules);
+    const { asUser, organizationId, userId } = await createTestContext(t);
+    const projectId = await createProjectInOrganization(t, userId, organizationId, {
+      name: "Agency Project",
+      key: "AGC",
+    });
+
+    const now = Date.now();
+    const startOfDay = new Date(now).setHours(0, 0, 0, 0);
+
+    await t.run(async (ctx) => {
+      await ctx.db.insert("timeEntries", {
+        userId,
+        projectId,
+        issueId: undefined,
+        startTime: now - 7200000,
+        endTime: now - 3600000,
+        duration: 3600,
+        date: startOfDay,
+        description: "API implementation",
+        activity: "Development",
+        tags: [],
+        hourlyRate: 150,
+        totalCost: 150,
+        currency: "USD",
+        billable: true,
+        billed: false,
+        invoiceId: undefined,
+        isEquityHour: false,
+        equityValue: undefined,
+        isLocked: false,
+        isApproved: false,
+        approvedBy: undefined,
+        approvedAt: undefined,
+        updatedAt: now,
+      });
+    });
+
+    const generated = await asUser.mutation(invoicesApi.generateFromTimeEntries, {
+      organizationId,
+      issueDate: now,
+      dueDate: now + 7 * 86400000,
+      startDate: startOfDay,
+      endDate: startOfDay + 86400000,
+      projectId,
+    });
+
+    expect(generated.linkedEntries).toBe(1);
+
+    const invoice = await asUser.query(invoicesApi.get, {
+      organizationId,
+      invoiceId: generated.invoiceId,
+    });
+    expect(invoice.status).toBe("draft");
+    expect(invoice.subtotal).toBe(150);
+    expect(invoice.lineItems[0]?.timeEntryIds?.length).toBe(1);
+
+    await expect(
+      asUser.mutation(invoicesApi.markPaid, {
+        organizationId,
+        invoiceId: generated.invoiceId,
+      }),
+    ).rejects.toThrow(/sent/i);
+
+    await asUser.mutation(invoicesApi.send, {
+      organizationId,
+      invoiceId: generated.invoiceId,
+    });
+    await asUser.mutation(invoicesApi.markPaid, {
+      organizationId,
+      invoiceId: generated.invoiceId,
+    });
+
+    const paidInvoice = await asUser.query(invoicesApi.get, {
+      organizationId,
+      invoiceId: generated.invoiceId,
+    });
+    expect(paidInvoice.status).toBe("paid");
+    expect(typeof paidInvoice.paidAt).toBe("number");
+
+    const linkedEntry = await t.run(async (ctx) => {
+      return await ctx.db
+        .query("timeEntries")
+        .withIndex("by_project", (q) => q.eq("projectId", projectId))
+        .first();
+    });
+    expect(linkedEntry?.billed).toBe(true);
+    expect(linkedEntry?.invoiceId).toBe(generated.invoiceId);
   });
 });

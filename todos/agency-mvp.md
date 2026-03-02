@@ -77,10 +77,10 @@ clients: defineTable({
 - [x] Add `invoices` table to schema
 - [x] Create `convex/clients.ts` with CRUD operations
 - [ ] Extend `convex/invoices.ts` beyond base CRUD with:
-  - `generateFromTimeEntries` - Auto-populate from time tracking
-  - `send` - Mark as sent, trigger email
-  - `markPaid` - Update status
-  - `generatePdf` - Create PDF (use react-pdf or similar)
+  - [x] `generateFromTimeEntries` - Auto-populate from time tracking
+  - [x] `send` - Mark as sent, trigger email
+  - [x] `markPaid` - Update status
+  - [ ] `generatePdf` - Create PDF (use react-pdf or similar)
 
 #### Frontend
 - [ ] Create `src/routes/$orgSlug/invoices/index.tsx` - Invoice list
@@ -213,3 +213,11 @@ clientPortalTokens: defineTable({
 - **Decisions:** Kept S1 scoped to schema + base CRUD only; advanced lifecycle features (`generateFromTimeEntries`, send/paid workflow, PDF output) intentionally deferred to `S2`.
 - **Blockers:** Convex codegen is currently network-blocked in this environment (`fetch failed`), so tests use `anyApi` function references instead of newly generated typed `api` entries.
 - **Next Step:** Start `S2` by implementing `generateFromTimeEntries` and invoice status transitions (`send`, `markPaid`) with tests, then add PDF generation path.
+
+### 2026-03-02 (Priority 11, batch B)
+
+- **Completed:** Implemented invoice lifecycle functions in `convex/invoices.ts`: `generateFromTimeEntries` (builds draft invoices from unbilled billable entries and links time entries as billed), `send`, and `markPaid` state transitions with guardrails.
+- **Validation:** `pnpm run typecheck` (pass), `pnpm test convex/clients.test.ts convex/invoices.test.ts` (pass, 8/8 tests), including lifecycle regression covering draft->sent->paid flow and time-entry linking.
+- **Decisions:** Time-entry invoice generation is currently project/org-scoped only (entries without project linkage are excluded), to keep org-boundary checks deterministic.
+- **Blockers:** `generatePdf` remains open pending concrete PDF rendering/storage approach (`react-pdf` template + file upload/storage path) and outbound send-channel decision.
+- **Next Step:** Finish remaining `S2` PDF path (`generatePdf`) and wire `send` to email delivery event once provider/template contract is selected.

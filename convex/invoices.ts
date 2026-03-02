@@ -91,6 +91,43 @@ async function generateInvoiceNumber(
   return `INV-${year}-${String(sequence).padStart(3, "0")}`;
 }
 
+async function getUnbilledBillableEntries(
+  ctx: Pick<QueryCtx, "db">,
+  organizationId: Id<"organizations">,
+  startDate: number,
+  endDate: number,
+  userId?: Id<"users">,
+  projectId?: Id<"projects">,
+) {
+  const entries = await ctx.db
+    .query("timeEntries")
+    .withIndex("by_date", (q) => q.gte("date", startDate).lte("date", endDate))
+    .collect();
+
+  const candidateEntries = entries.filter(
+    (entry) =>
+      entry.billable &&
+      !entry.billed &&
+      entry.endTime !== undefined &&
+      entry.projectId !== undefined &&
+      (userId === undefined || entry.userId === userId) &&
+      (projectId === undefined || entry.projectId === projectId),
+  );
+
+  const projectIds = [...new Set(candidateEntries.map((entry) => entry.projectId).filter(Boolean))];
+  const projects = await Promise.all(projectIds.map((id) => ctx.db.get(id)));
+  const projectOrgMap = new Map(
+    projects.filter(Boolean).map((project) => [project._id, project.organizationId]),
+  );
+
+  return candidateEntries.filter((entry) => {
+    if (!entry.projectId) {
+      return false;
+    }
+    return projectOrgMap.get(entry.projectId) === organizationId;
+  });
+}
+
 export const create = organizationAdminMutation({
   args: {
     clientId: v.optional(v.id("clients")),
@@ -244,6 +281,144 @@ export const update = organizationAdminMutation({
       pdfUrl: args.pdfUrl ?? invoice.pdfUrl,
       sentAt: status === "sent" && !invoice.sentAt ? now : invoice.sentAt,
       paidAt: status === "paid" && !invoice.paidAt ? now : invoice.paidAt,
+      updatedAt: now,
+    });
+
+    return { success: true } as const;
+  },
+});
+
+export const generateFromTimeEntries = organizationAdminMutation({
+  args: {
+    clientId: v.optional(v.id("clients")),
+    issueDate: v.number(),
+    dueDate: v.number(),
+    startDate: v.number(),
+    endDate: v.number(),
+    userId: v.optional(v.id("users")),
+    projectId: v.optional(v.id("projects")),
+    tax: v.optional(v.number()),
+    notes: v.optional(v.string()),
+  },
+  returns: v.object({
+    success: v.literal(true),
+    invoiceId: v.id("invoices"),
+    linkedEntries: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    if (args.endDate < args.startDate) {
+      throw validation("endDate", "End date must be greater than or equal to start date");
+    }
+    if (args.dueDate < args.issueDate) {
+      throw validation("dueDate", "Due date must be greater than or equal to issue date");
+    }
+    await assertClientInOrganization(ctx, ctx.organizationId, args.clientId);
+
+    const timeEntries = await getUnbilledBillableEntries(
+      ctx,
+      ctx.organizationId,
+      args.startDate,
+      args.endDate,
+      args.userId,
+      args.projectId,
+    );
+
+    if (timeEntries.length === 0) {
+      throw validation(
+        "startDate",
+        "No unbilled billable time entries found in the requested range",
+      );
+    }
+
+    const lineItems = normalizeLineItems(
+      timeEntries.map((entry) => ({
+        description:
+          entry.description || `Time entry ${new Date(entry.date).toISOString().slice(0, 10)}`,
+        quantity: entry.duration / 3600,
+        rate: entry.hourlyRate ?? 0,
+        timeEntryIds: [entry._id],
+      })),
+    );
+    const totals = calculateTotals(lineItems, args.tax);
+    const number = await generateInvoiceNumber(ctx, ctx.organizationId);
+    const now = Date.now();
+
+    const invoiceId = await ctx.db.insert("invoices", {
+      organizationId: ctx.organizationId,
+      clientId: args.clientId,
+      number,
+      status: "draft",
+      issueDate: args.issueDate,
+      dueDate: args.dueDate,
+      lineItems,
+      subtotal: totals.subtotal,
+      tax: args.tax,
+      total: totals.total,
+      notes: args.notes,
+      pdfUrl: undefined,
+      createdBy: ctx.userId,
+      sentAt: undefined,
+      paidAt: undefined,
+      updatedAt: now,
+    });
+
+    await Promise.all(
+      timeEntries.map((entry) =>
+        ctx.db.patch(entry._id, {
+          billed: true,
+          invoiceId,
+          updatedAt: now,
+        }),
+      ),
+    );
+
+    return { success: true, invoiceId, linkedEntries: timeEntries.length } as const;
+  },
+});
+
+export const send = organizationAdminMutation({
+  args: {
+    invoiceId: v.id("invoices"),
+  },
+  returns: v.object({ success: v.literal(true) }),
+  handler: async (ctx, args) => {
+    const invoice = await ctx.db.get(args.invoiceId);
+    if (!invoice || invoice.organizationId !== ctx.organizationId) {
+      throw notFound("invoice", args.invoiceId);
+    }
+    if (invoice.status === "paid") {
+      throw conflict("Paid invoices cannot be moved back to sent");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(args.invoiceId, {
+      status: "sent",
+      sentAt: invoice.sentAt ?? now,
+      updatedAt: now,
+    });
+
+    return { success: true } as const;
+  },
+});
+
+export const markPaid = organizationAdminMutation({
+  args: {
+    invoiceId: v.id("invoices"),
+  },
+  returns: v.object({ success: v.literal(true) }),
+  handler: async (ctx, args) => {
+    const invoice = await ctx.db.get(args.invoiceId);
+    if (!invoice || invoice.organizationId !== ctx.organizationId) {
+      throw notFound("invoice", args.invoiceId);
+    }
+    if (invoice.status === "draft") {
+      throw conflict("Draft invoices must be sent before marking as paid");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(args.invoiceId, {
+      status: "paid",
+      paidAt: invoice.paidAt ?? now,
       updatedAt: now,
     });
 
