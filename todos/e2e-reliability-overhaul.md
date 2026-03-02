@@ -644,6 +644,31 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BK (completed domcontentloaded wait removal in auth integration flow)
+
+- Decision: eliminate residual document-load waits in auth integration transitions and rely on explicit route/auth-shell readiness checks.
+- Change:
+  - updated `e2e/auth.spec.ts`:
+    - removed `waitForLoadState("domcontentloaded")` after fallback app navigation in email verification integration
+    - removed `waitForLoadState("domcontentloaded")` after verification completion in password-reset integration
+    - retained deterministic assertions for authenticated shell visibility and dashboard feed readiness
+- Validation:
+  - `pnpm exec biome check e2e/auth.spec.ts` => pass
+  - `pnpm exec playwright test e2e/auth.spec.ts --reporter=line` => pass (`19 passed`)
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force/xpath violations: `0`; selector baseline remains `0`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BJ (completed domcontentloaded wait removal in onboarding completion flow)
 
 - Decision: remove dashboard-transition document-load waits from onboarding completion/skip paths and depend on explicit dashboard readiness signals.

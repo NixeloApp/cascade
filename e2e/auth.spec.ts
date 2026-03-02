@@ -184,7 +184,6 @@ test.describe("Integration", () => {
     // Navigate to app gateway to trigger proper auth check
     if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
       await page.goto(ROUTES.app.build());
-      await page.waitForLoadState("domcontentloaded");
     }
 
     // Should redirect to dashboard or onboarding
@@ -277,7 +276,6 @@ test.describe("Integration", () => {
     await authPage.verifyEmail(signupOtp);
 
     // Wait for navigation away from verification
-    await page.waitForLoadState("domcontentloaded");
     console.log("[Test] User created and verified");
 
     // Clear session to test password reset as unauthenticated user
