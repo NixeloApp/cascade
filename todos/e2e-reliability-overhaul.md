@@ -644,6 +644,31 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BE (completed domcontentloaded wait removal in error scenarios)
+
+- Decision: reduce load-state-driven flake surface in error-path coverage by replacing `waitForLoadState("domcontentloaded")` gates with explicit route-outcome assertions.
+- Change:
+  - updated `e2e/error-scenarios.spec.ts`:
+    - removed all `waitForLoadState("domcontentloaded")` usage in this spec (`4` call sites)
+    - unauthenticated protected-route check now uses `expect.poll(...)` on concrete UI outcomes (signin heading or landing heading)
+    - authenticated not-found/resource-error cases rely directly on deterministic heading/text expectations after navigation
+- Validation:
+  - `pnpm exec biome check e2e/error-scenarios.spec.ts` => pass
+  - `pnpm exec playwright test e2e/error-scenarios.spec.ts --reporter=line` => pass (`4 passed`)
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/promise-sleep/page.$/force/xpath violations: `0`; selector baseline remains `0`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BD (completed GitHub API history-path fallback hardening)
 
 - Decision: harden `history-derived` checkpoint reliability when GitHub Actions API calls fail by guaranteeing explicit fallback to local clean-run semantics instead of partial/ambiguous history output.
