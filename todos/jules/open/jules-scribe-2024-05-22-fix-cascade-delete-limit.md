@@ -48,6 +48,31 @@ Implement a safe way to cascade delete/soft-delete large numbers of children, li
 
 ### Steps
 
-- [ ] Replace single-batch traversal with looped/paginated traversal in cascade operations
-- [ ] Ensure soft-delete/restore paths avoid reprocessing already-handled rows
-- [ ] Add tests for fanout >100 on delete, soft-delete, and restore
+- [x] Replace single-batch traversal with looped/paginated traversal in cascade operations
+- [x] Ensure soft-delete/restore paths avoid reprocessing already-handled rows
+- [x] Add tests for fanout >100 on delete, soft-delete, and restore
+
+## Progress Log
+
+### 2026-03-02 - Batch A (fanout-safe cascade traversal complete)
+
+- Decision:
+  - remove overflow throw behavior and make cascade traversal intrinsically fanout-safe with bounded iterative loops.
+- Change:
+  - updated `convex/lib/relationships.ts`:
+    - `cascadeDelete` relation handling now loops in `BOUNDED_DELETE_BATCH` chunks until no children remain.
+    - `set_null` relation handling now also loops in bounded batches until fully unlinked.
+    - `restrict` relation check reduced to existence probe (`take(1)`).
+    - `cascadeSoftDelete` now processes only active children (`isDeleted !== true`) in bounded loops to avoid reprocessing.
+    - `cascadeRestore` now processes only soft-deleted children (`isDeleted === true`) in bounded loops to avoid reprocessing.
+    - removed overflow error throws tied to child-count > `BOUNDED_DELETE_BATCH`.
+  - updated `convex/lib/relationships_overflow.test.ts`:
+    - converted previous overflow-failure assertion into success assertions for fanout `BOUNDED_DELETE_BATCH + 1`.
+    - added dedicated overflow tests for hard delete, soft delete, and restore.
+- Validation:
+  - `pnpm exec biome check convex/lib/relationships.ts convex/lib/relationships_overflow.test.ts` => pass (non-blocking complexity warning only)
+  - `pnpm test convex/lib/relationships.test.ts convex/lib/relationships_overflow.test.ts` => pass (`7 passed`)
+- Blockers:
+  - none.
+- Next Step:
+  - optional follow-up: split `handleDeleteRelation` into smaller helpers to eliminate the complexity warning.

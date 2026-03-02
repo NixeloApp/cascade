@@ -13,7 +13,7 @@ import type { GenericDatabaseWriter, GenericDataModel } from "convex/server";
 import type { Id, TableNames } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { BOUNDED_DELETE_BATCH } from "./boundedQueries";
-import { conflict, internal } from "./errors";
+import { conflict } from "./errors";
 
 // Loose type for dynamic table access
 type AnyDataModel = GenericDataModel;
@@ -327,38 +327,47 @@ export const RELATIONSHIPS: Relationship[] = [
 ];
 
 async function handleDeleteRelation(ctx: MutationCtx, rel: Relationship, recordId: Id<TableNames>) {
-  // Bounded query for cascade operations - process in batches to prevent memory issues
-  const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
-    .query(rel.child)
-    .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-    .take(BOUNDED_DELETE_BATCH + 1);
-
-  if (children.length > BOUNDED_DELETE_BATCH) {
-    throw internal(
-      `Cannot cascade delete: ${rel.parent} ${recordId} has too many ${rel.child} records (${children.length}+). ` +
-        `This exceeds the batch limit of ${BOUNDED_DELETE_BATCH}. ` +
-        `Please delete the ${rel.child} records in batches or use a background job.`,
-    );
-  }
-
   if (rel.onDelete === "cascade") {
-    // Recursively delete children
-    for (const child of children) {
-      // Recursion needs a cast because TS can't prove child[rel.child] matches the recursion
-      await cascadeDelete(ctx, rel.child, child._id as Id<TableNames>);
-      await ctx.db.delete(child._id as Id<TableNames>);
+    while (true) {
+      const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
+        .query(rel.child)
+        .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
+        .take(BOUNDED_DELETE_BATCH);
+
+      if (children.length === 0) break;
+
+      // Recursively delete children
+      for (const child of children) {
+        // Recursion needs a cast because TS can't prove child[rel.child] matches the recursion
+        await cascadeDelete(ctx, rel.child, child._id as Id<TableNames>);
+        await ctx.db.delete(child._id as Id<TableNames>);
+      }
     }
   } else if (rel.onDelete === "set_null") {
-    // Set foreign key to null instead of deleting
-    for (const child of children) {
-      await ctx.db.patch(
-        child._id as Id<TableNames>,
-        {
-          [rel.foreignKey]: undefined,
-        } as Record<string, unknown>,
-      );
+    while (true) {
+      const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
+        .query(rel.child)
+        .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
+        .take(BOUNDED_DELETE_BATCH);
+
+      if (children.length === 0) break;
+
+      // Set foreign key to null instead of deleting
+      for (const child of children) {
+        await ctx.db.patch(
+          child._id as Id<TableNames>,
+          {
+            [rel.foreignKey]: undefined,
+          } as Record<string, unknown>,
+        );
+      }
     }
   } else if (rel.onDelete === "restrict") {
+    const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
+      .query(rel.child)
+      .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
+      .take(1);
+
     // Don't allow delete if children exist
     if (children.length > 0) {
       throw conflict(
@@ -380,13 +389,6 @@ async function handleDeleteRelation(ctx: MutationCtx, rel: Relationship, recordI
  * @param ctx - Mutation context
  * @param table - Parent table name
  * @param recordId - ID of parent record being deleted
- *
- * @warning ⚠️ BATCH LIMIT: This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
- * If a parent has more than 100 children in a relationship (e.g. >100 comments), the remaining
- * children will be ORPHANED (not deleted).
- *
- * For large deletions (e.g. deleting a project with thousands of issues), do NOT use this function.
- * Instead, use a background job with `collectInBatches` to handle the cleanup.
  *
  * @example
  * // Delete children first
@@ -417,12 +419,6 @@ export async function cascadeDelete<T extends TableNames>(
  * @param deletedBy - User ID who performed the deletion
  * @param deletedAt - Timestamp of deletion
  *
- * @warning ⚠️ BATCH LIMIT: This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
- * If a parent has more than 100 children in a relationship, the remaining children will NOT be
- * soft-deleted (they will remain active).
- *
- * For large datasets, handle deletion manually or in batches.
- *
  * @example
  * const now = Date.now();
  * await cascadeSoftDelete(ctx, "issues", issueId, userId, now);
@@ -436,33 +432,30 @@ async function handleSoftDeleteRelation(
   deletedAt: number,
 ) {
   if (rel.onDelete === "cascade") {
-    // Bounded query for cascade operations
-    const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
-      .query(rel.child)
-      .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-      .take(BOUNDED_DELETE_BATCH + 1);
+    while (true) {
+      // Process only active children so each batch makes forward progress.
+      const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
+        .query(rel.child)
+        .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
+        .filter((q) => q.neq(q.field("isDeleted"), true))
+        .take(BOUNDED_DELETE_BATCH);
 
-    if (children.length > BOUNDED_DELETE_BATCH) {
-      throw internal(
-        `Cannot cascade soft-delete: ${rel.parent} ${recordId} has too many ${rel.child} records (${children.length}+). ` +
-          `This exceeds the batch limit of ${BOUNDED_DELETE_BATCH}. ` +
-          `Please soft-delete the ${rel.child} records in batches or use a background job.`,
-      );
-    }
+      if (children.length === 0) break;
 
-    for (const child of children) {
-      // Recursively soft delete children
-      await cascadeSoftDelete(ctx, rel.child, child._id as Id<TableNames>, deletedBy, deletedAt);
+      for (const child of children) {
+        // Recursively soft delete children
+        await cascadeSoftDelete(ctx, rel.child, child._id as Id<TableNames>, deletedBy, deletedAt);
 
-      // Mark this child as deleted
-      await ctx.db.patch(
-        child._id as Id<TableNames>,
-        {
-          isDeleted: true,
-          deletedAt,
-          deletedBy,
-        } as Record<string, unknown>,
-      ); // Partial update of dynamic fields is easier with alias
+        // Mark this child as deleted
+        await ctx.db.patch(
+          child._id as Id<TableNames>,
+          {
+            isDeleted: true,
+            deletedAt,
+            deletedBy,
+          } as Record<string, unknown>,
+        ); // Partial update of dynamic fields is easier with alias
+      }
     }
   }
 }
@@ -508,33 +501,30 @@ async function handleRestoreRelation(
   recordId: Id<TableNames>,
 ) {
   if (rel.onDelete === "cascade") {
-    // Find children (including soft-deleted ones) - bounded query
-    const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
-      .query(rel.child)
-      .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-      .take(BOUNDED_DELETE_BATCH + 1);
+    while (true) {
+      // Restore only currently soft-deleted children to avoid reprocessing.
+      const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
+        .query(rel.child)
+        .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
+        .filter((q) => q.eq(q.field("isDeleted"), true))
+        .take(BOUNDED_DELETE_BATCH);
 
-    if (children.length > BOUNDED_DELETE_BATCH) {
-      throw internal(
-        `Cannot cascade restore: ${rel.parent} ${recordId} has too many ${rel.child} records (${children.length}+). ` +
-          `This exceeds the batch limit of ${BOUNDED_DELETE_BATCH}. ` +
-          `Please restore the ${rel.child} records in batches or use a background job.`,
-      );
-    }
+      if (children.length === 0) break;
 
-    for (const child of children) {
-      // Recursively restore children
-      await cascadeRestore(ctx, rel.child, child._id as Id<TableNames>);
+      for (const child of children) {
+        // Recursively restore children
+        await cascadeRestore(ctx, rel.child, child._id as Id<TableNames>);
 
-      // Remove deleted flags
-      await ctx.db.patch(
-        child._id as Id<TableNames>,
-        {
-          isDeleted: undefined,
-          deletedAt: undefined,
-          deletedBy: undefined,
-        } as Record<string, unknown>,
-      );
+        // Remove deleted flags
+        await ctx.db.patch(
+          child._id as Id<TableNames>,
+          {
+            isDeleted: undefined,
+            deletedAt: undefined,
+            deletedBy: undefined,
+          } as Record<string, unknown>,
+        );
+      }
     }
   }
 }
@@ -550,10 +540,6 @@ async function handleRestoreRelation(
  * @param ctx - Mutation context
  * @param table - Parent table name
  * @param recordId - ID of parent record being restored
- *
- * @warning ⚠️ BATCH LIMIT: This function processes only the first `BOUNDED_DELETE_BATCH` (100) items per relationship.
- * If a parent has more than 100 children in a relationship, the remaining children will NOT be
- * restored. For large datasets, handle restoration manually or in batches.
  *
  * @example
  * // Restore children
