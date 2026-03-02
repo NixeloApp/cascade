@@ -42,6 +42,7 @@ import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteImport } from '
 import { Route as AuthAppOrgSlugProjectsKeyRouteRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/route'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/index'
 import { Route as AuthAppOrgSlugProjectsKeyIndexRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/index'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
 import { Route as AuthAppOrgSlugProjectsKeyTimesheetRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/timesheet'
@@ -240,6 +241,12 @@ const AuthAppOrgSlugProjectsKeyIndexRoute =
     path: '/',
     getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
   } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport.update({
+    id: '/sprints',
+    path: '/sprints',
+    getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute =
   AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport.update({
     id: '/settings',
@@ -402,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
   '/$orgSlug/projects/$key/': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
@@ -451,6 +459,7 @@ export interface FileRoutesByTo {
   '/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
   '/$orgSlug/projects/$key': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute
@@ -505,6 +514,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
   '/_auth/_app/$orgSlug/projects/$key/': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/timesheet'
     | '/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
+    | '/$orgSlug/workspaces/$workspaceSlug/sprints'
     | '/$orgSlug/projects/$key/'
     | '/$orgSlug/workspaces/$workspaceSlug/'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug'
@@ -608,6 +619,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/timesheet'
     | '/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
+    | '/$orgSlug/workspaces/$workspaceSlug/sprints'
     | '/$orgSlug/projects/$key'
     | '/$orgSlug/workspaces/$workspaceSlug'
     | '/$orgSlug/workspaces/$workspaceSlug/teams'
@@ -661,6 +673,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/projects/$key/timesheet'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
     | '/_auth/_app/$orgSlug/projects/$key/'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug'
@@ -914,6 +927,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
     }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
+      path: '/sprints'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/sprints'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings': {
       id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
       path: '/settings'
@@ -1122,6 +1142,7 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren =
 interface AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren {
   AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute
@@ -1133,6 +1154,8 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren: AuthAppOrgSlugWor
       AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute:

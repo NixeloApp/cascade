@@ -39,9 +39,9 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/backlog`
 
 Route: `/:orgSlug/workspaces/:workspaceSlug/sprints`
 
-- [ ] Create `convex/workspaces.ts` → `getActiveSprints` query
-- [ ] Create sprint overview component
-- [ ] Create route file and sidebar link
+- [x] Create `convex/workspaces.ts` → `getActiveSprints` query
+- [x] Create sprint overview component
+- [x] Create route file and sidebar link
 
 ### 3. Cross-Team Dependencies
 
@@ -128,7 +128,7 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 ### Milestones
 
 - [x] `S1` Resolve schema blockers (`organizationId/workspaceId/teamId` + indexes)
-- [ ] `S2` Ship workspace backlog + workspace sprints routes with real queries
+- [x] `S2` Ship workspace backlog + workspace sprints routes with real queries
 - [ ] `S3` Ship workspace wiki + team wiki data model/route support
 - [ ] `S4` Replace team calendar stub with real data
 - [ ] `S5` Add org/workspace/team calendar aggregation + filters
@@ -194,3 +194,26 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - none for continuing `S2`.
 - Next Step:
   - implement workspace sprints query/route and then evaluate whether `S2` milestone can be marked complete.
+
+### 2026-03-02 - Batch C (completed workspace sprints slice and closed S2)
+
+- Decision:
+  - complete `S2` before moving to wiki/calendar scope by shipping workspace sprints in the same pattern as workspace backlog.
+- Change:
+  - updated `convex/workspaces.ts`:
+    - added `getActiveSprints` workspace-scoped query aggregating active sprints across workspace projects with per-sprint issue counts.
+  - updated shared routing:
+    - added `ROUTES.workspaces.sprints` in `convex/shared/routes.ts`.
+  - added route:
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints.tsx`
+    - renders active sprint overview cards (project context, sprint name, issue count, end date).
+  - updated workspace nav:
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route.tsx` now includes a Sprints tab link.
+- Validation:
+  - `pnpm exec biome check convex/shared/routes.ts convex/workspaces.ts src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints.tsx` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/workspaces.test.ts` => pass (`34 passed`)
+- Blockers:
+  - none for `S3`.
+- Next Step:
+  - start `S3`: implement workspace wiki route/data filter, then team wiki route backed by `documents.teamId`.

@@ -311,6 +311,57 @@ export const getBacklogIssues = workspaceQuery({
   },
 });
 
+/**
+ * List active sprints for all projects in a workspace.
+ */
+export const getActiveSprints = workspaceQuery({
+  args: {},
+  handler: async (ctx) => {
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    const sprintsWithProject = await Promise.all(
+      projects.map(async (project) => {
+        const sprints = await ctx.db
+          .query("sprints")
+          .withIndex("by_project", (q) => q.eq("projectId", project._id))
+          .filter((q) => q.eq(q.field("status"), "active"))
+          .take(BOUNDED_LIST_LIMIT);
+
+        const enriched = await Promise.all(
+          sprints.map(async (sprint) => {
+            const issueCount = (
+              await ctx.db
+                .query("issues")
+                .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
+                .filter(notDeleted)
+                .take(BOUNDED_LIST_LIMIT)
+            ).length;
+            return {
+              ...sprint,
+              issueCount,
+              projectId: project._id,
+              projectName: project.name,
+              projectKey: project.key,
+            };
+          }),
+        );
+
+        return enriched;
+      }),
+    );
+
+    return sprintsWithProject
+      .flat()
+      .sort(
+        (a, b) => (a.endDate ?? Number.POSITIVE_INFINITY) - (b.endDate ?? Number.POSITIVE_INFINITY),
+      );
+  },
+});
+
 // =============================================================================
 // Workspace Members
 // =============================================================================
