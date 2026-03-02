@@ -2,7 +2,7 @@
 
 > **Priority:** P4 (Post-Launch)
 > **Effort:** Large
-> **Status:** In progress
+> **Status:** Blocked (external dependencies)
 
 ---
 
@@ -199,3 +199,31 @@
 **Next step**
 
 - Execute end-to-end Google Workspace IdP tenant validation (auth callback + org membership provisioning assertions) and decide if remaining provider tasks are implement-now or external-blocked.
+
+### 2026-03-02 (Batch F)
+
+**Progress**
+
+- Classified remaining enterprise items with explicit external gating after shipping all in-repo tasks currently feasible without third-party tenancy/billing decisions.
+- Set todo status to `Blocked (external dependencies)` to unblock strict-order progression.
+
+**Decisions**
+
+- Treated enterprise as blocked until external prerequisites are provided, instead of continuing speculative implementation for provider/billing paths that cannot be validated in this environment.
+
+**Blockers**
+
+- **Stripe integration / Subscription management**
+  - Requires billing architecture decisions (plan catalog, entitlements, trial model, tax/compliance handling) and live provider keys/webhook env.
+- **SSO provider completion (Google, Entra, Okta, Generic SAML)**
+  - Requires real IdP tenant credentials, redirect URI registration, callback-domain setup, and validation environments for end-to-end assertions.
+- **Visual regression**
+  - Requires tool selection/procurement (Percy or equivalent) and baseline-approval workflow.
+- **OAuth flow tests (actual providers)**
+  - Requires dedicated non-prod provider apps + secrets lifecycle policy for CI.
+- **Technical debt lane (SendPulse, caching/CDN, monitoring, archiving)**
+  - Requires infra ownership and operational SLO/SLA targets to design correctly.
+
+**Next step**
+
+- Move to Priority `19` (`uptime-monitoring.md`) while waiting for enterprise unblock inputs.
